@@ -2,7 +2,7 @@
 
 This repository preserves the historical specification revisions as individual local Git commits and immutable copies under `history/v0.x/`.
 
-Current revision: **v0.4**.
+Current revision: **v0.5**.
 
 - `docs/`: current specification documents as of HEAD.
 - `history/v0.x/`: exact original version snapshots (no retrospective rewrites).

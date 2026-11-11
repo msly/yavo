@@ -1,0 +1,16 @@
+// id: T-GP6
+// kind: check-fail
+// phase: P3
+// rule: P3
+// summary: join 句柄是一次性拥有资源
+
+fn work() -> int {
+    return 1
+}
+fn main() {
+    scope {
+        let h = spawn work()
+        println(h.join())
+        println(h.join()) //~ ERROR E0402
+    }
+}

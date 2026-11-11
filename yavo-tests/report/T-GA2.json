@@ -1,0 +1,22 @@
+{
+  "id": "T-GA2",
+  "kind": "report",
+  "phase": "P3",
+  "rule": "M3",
+  "summary": "分配查询保留已知分配与未知调用的区别",
+  "setup": {
+    "program": "fixtures/alloc-unknown.yv",
+    "command": [
+      "yavo",
+      "allocations",
+      "demo",
+      "--file",
+      "{program}",
+      "--json"
+    ]
+  },
+  "expect": {
+    "subject": "demo",
+    "status": "unknown"
+  }
+}

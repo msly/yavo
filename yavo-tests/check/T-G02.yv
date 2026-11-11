@@ -1,0 +1,11 @@
+// id: T-G02
+// kind: check-fail
+// phase: P1
+// rule: A6, A1
+// summary: var 引用绑定不能升级只读目标权限
+
+fn main() {
+    let value = 1
+    var p: &int = &value
+    *p = 2 //~ ERROR E0101
+}

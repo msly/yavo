@@ -1,0 +1,28 @@
+// id: T-A3f
+// kind: check-fail
+// phase: P1
+// rule: A4
+// summary: 再借用存活期间，原路径不能做冲突访问
+
+struct Node {
+    key: int
+    size: int
+    left: ?Box[Node]
+    right: ?Box[Node]
+}
+
+fn link(child: inout ?Box[Node], parent: inout Box[Node]) {
+    parent.size += 1
+    child = none
+}
+
+fn shrink(t: inout ?Box[Node]) {
+    if let n = t {
+        link(&n.left, &n)           //~ ERROR E0102
+    }
+}
+
+fn main() {
+    var root: ?Box[Node] = Box(Node{key: 1, size: 1})
+    shrink(&root)
+}

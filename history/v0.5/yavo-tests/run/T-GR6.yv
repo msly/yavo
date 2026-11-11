@@ -1,0 +1,15 @@
+// id: T-GR6
+// kind: run-pass
+// phase: P2
+// rule: N1
+// summary: 未执行分支中的常量错误不触发 panic
+// expect-stdout:
+// | ok
+// modes: debug, release
+
+fn main() {
+    if false {
+        println(1 / 0)
+    }
+    println("ok")
+}

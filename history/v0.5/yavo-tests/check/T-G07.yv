@@ -1,0 +1,12 @@
+// id: T-G07
+// kind: check-fail
+// phase: P1
+// rule: C7
+// summary: 可选 match 必须覆盖 none
+
+fn main() {
+    let opt: ?int = some(3)
+    match opt { //~ ERROR E0602
+        some(n) => println(n)
+    }
+}

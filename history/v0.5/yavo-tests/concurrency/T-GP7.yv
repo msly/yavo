@@ -1,0 +1,17 @@
+// id: T-GP7
+// kind: check-fail
+// phase: P3
+// rule: P3
+// summary: 显式 join 不提前解除 v1 的 scope 借用
+
+fn sum(xs: []int) -> int {
+    return xs[0]
+}
+fn main() {
+    var data: Vec[int] = [1]
+    scope {
+        let h = spawn sum(data)
+        println(h.join())
+        data.push(2) //~ ERROR E0102
+    }
+}

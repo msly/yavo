@@ -1,0 +1,16 @@
+// id: T-G06
+// kind: check-fail
+// phase: P1
+// rule: C5, C7
+// summary: 直接匹配已有可选变量不能搬走非 Copy 有效载荷
+
+fn consume(s: sink String) {
+    println(s)
+}
+fn main() {
+    let opt: ?String = some("job".toString())
+    match opt {
+        some(job) => consume(job) //~ ERROR E0401
+        none => println("empty")
+    }
+}

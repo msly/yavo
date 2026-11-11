@@ -1,0 +1,21 @@
+// id: T-GR10
+// kind: run-pass
+// phase: P2
+// rule: C6
+// summary: Map.remove 返回拥有值且删除键
+// expect-stdout:
+// | value
+// | 0
+
+fn consume(s: sink String) {
+    println(s)
+}
+fn main() {
+    var m: Map[String, String] = [:]
+    m.set("a".toString(), "value".toString())
+    match m.remove("a") {
+        some(value) => consume(value)
+        none => println("missing")
+    }
+    println(m.len())
+}

@@ -1,0 +1,12 @@
+// id: T-GR5
+// kind: run-panic
+// phase: P2
+// rule: N1
+// summary: 常量可知的移位错误仍在运行时触发
+// expect-panic: P-SHIFT
+// modes: debug, release
+
+fn main() {
+    let value: i64 = 1
+    println(value << 64)
+}

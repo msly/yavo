@@ -1,0 +1,17 @@
+// id: T-G15
+// kind: check-pass
+// phase: P1
+// rule: C8
+// summary: 从唯一拥有字段用 take 取值后原字段仍有效
+
+struct Holder {
+    text: String
+}
+fn keep(s: sink String) {
+    println(s)
+}
+fn main() {
+    var h = Holder{text: "x".toString()}
+    keep(take(&h.text))
+    println(h.text.len())
+}

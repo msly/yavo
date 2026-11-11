@@ -1,0 +1,14 @@
+// id: T-S3
+// kind: run-exit
+// phase: P2
+// rule: S5, M5
+// summary: 命令行参数不是合法 UTF-8：启动即报错退出，main 不执行
+// platforms: linux, macos
+// args-hex: 66ff
+// expect-exit: nonzero
+// expect-stderr-code: YAVO-STARTUP-UTF8
+// expect-stdout:
+
+fn main() {
+    println("should not run")
+}

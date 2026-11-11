@@ -1,0 +1,15 @@
+// id: T-G03
+// kind: check-pass
+// phase: P1
+// rule: A6, A7
+// summary: 可变引用绑定的重绑定与目标写入分开
+
+fn main() {
+    var a = 1
+    var b = 2
+    var p: &inout int = &a
+    *p = 3
+    p = &b
+    *p = 4
+    println(a + b)
+}

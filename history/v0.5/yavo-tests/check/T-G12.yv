@@ -1,0 +1,18 @@
+// id: T-G12
+// kind: check-fail
+// phase: P1
+// rule: V10
+// summary: Drop 方法不能返回可失败结果
+
+enum E {
+    Failed
+}
+struct Token: Drop {
+    n: int
+    fn drop(inout self) -> () ! E { //~ ERROR E0802
+        return ()
+    }
+}
+fn main() {
+    let _t = Token{n: 1}
+}

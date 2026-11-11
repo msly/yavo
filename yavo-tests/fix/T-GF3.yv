@@ -1,0 +1,12 @@
+// id: T-GF3
+// kind: fix-auto
+// phase: P1
+// rule: V13, V7
+// summary: 未使用变量修复不能捕获已有 _count
+// expect-fixed: T-GF3.fixed.yv
+
+fn main() {
+    let _count = 1
+    let count = 2 //~ WARN W0001
+    println(_count)
+}

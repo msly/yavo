@@ -1,828 +1,2289 @@
 [
   {
     "id": "T-A1",
-    "category": "check",
     "kind": "check-fail",
     "phase": "P1",
     "rule": "A1",
-    "file": "check/T-A1.yv",
     "summary": "把只读借用放进 var，也不能通过它写入",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0101",
+        "line": 16
+      }
+    ],
     "expect": [
       "E0101"
-    ]
+    ],
+    "category": "check",
+    "file": "check/T-A1.yv",
+    "source_sha256": "994815f20c35157a5e9e1b02d3c4c225c25862f931f8449a5c286f20b89ab97e",
+    "execution_status": "not_run"
   },
   {
     "id": "T-A1p",
-    "category": "check",
     "kind": "check-pass",
     "phase": "P1",
     "rule": "A1",
-    "file": "check/T-A1p.yv",
     "summary": "用 getMut 取得可写借用后写入",
-    "expect": null
+    "diagnostics": [],
+    "expect": null,
+    "category": "check",
+    "file": "check/T-A1p.yv",
+    "source_sha256": "c0e6ddb9a6749cda595497f2a1b30c06dbdb95603e34abec7f985890f0427160",
+    "execution_status": "not_run"
   },
   {
     "id": "T-A2",
-    "category": "check",
     "kind": "check-fail",
     "phase": "P1",
     "rule": "A3",
-    "file": "check/T-A2.yv",
     "summary": "同一个位置同时形成两个可变借用",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0102",
+        "line": 14
+      }
+    ],
     "expect": [
       "E0102"
-    ]
+    ],
+    "category": "check",
+    "file": "check/T-A2.yv",
+    "source_sha256": "a652d81e1242b8ce61c72296cc15df8ea23d7fa0178552e2de904961ca65ef06",
+    "execution_status": "not_run"
   },
   {
     "id": "T-A2p",
-    "category": "check",
     "kind": "check-pass",
     "phase": "P1",
     "rule": "A3",
-    "file": "check/T-A2p.yv",
     "summary": "两个不同位置各有一个可变借用",
-    "expect": null
+    "diagnostics": [],
+    "expect": null,
+    "category": "check",
+    "file": "check/T-A2p.yv",
+    "source_sha256": "c186e2ea88337c06a8a5664ad0d357002945488f46dac8e1ae3d38e5726977cf",
+    "execution_status": "not_run"
   },
   {
     "id": "T-A3",
-    "category": "check",
     "kind": "check-pass",
     "phase": "P1",
     "rule": "A4",
-    "file": "check/T-A3.yv",
     "summary": "再借用子字段结束后，继续通过原借用修改",
-    "expect": null
+    "diagnostics": [],
+    "expect": null,
+    "category": "check",
+    "file": "check/T-A3.yv",
+    "source_sha256": "a2fcf39afec9d4c45355562d8a6bbc4f10c872f7aa79ffaed753798ac768ebed",
+    "execution_status": "not_run"
   },
   {
     "id": "T-A3f",
-    "category": "check",
     "kind": "check-fail",
     "phase": "P1",
     "rule": "A4",
-    "file": "check/T-A3f.yv",
     "summary": "再借用存活期间，原路径不能做冲突访问",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0102",
+        "line": 21
+      }
+    ],
     "expect": [
       "E0102"
-    ]
+    ],
+    "category": "check",
+    "file": "check/T-A3f.yv",
+    "source_sha256": "482f1f6e2389faecce28ca56db996f28c967b74ae3c951fc27f56e985210ad81",
+    "execution_status": "not_run"
   },
   {
     "id": "T-A4",
-    "category": "check",
     "kind": "check-fail",
     "phase": "P1",
     "rule": "A5",
-    "file": "check/T-A4.yv",
     "summary": "遍历 Map 时修改键",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0103",
+        "line": 11
+      }
+    ],
     "expect": [
       "E0103"
-    ]
+    ],
+    "category": "check",
+    "file": "check/T-A4.yv",
+    "source_sha256": "b897b2ac1b6b8881249c537a69658d642729a7bd37824058cf4c1b9fe0cde521",
+    "execution_status": "not_run"
   },
   {
     "id": "T-A4p",
-    "category": "check",
     "kind": "check-pass",
     "phase": "P1",
     "rule": "A5",
-    "file": "check/T-A4p.yv",
     "summary": "要改键就先删除再重新插入",
-    "expect": null
+    "diagnostics": [],
+    "expect": null,
+    "category": "check",
+    "file": "check/T-A4p.yv",
+    "source_sha256": "cf3a572fd1653988cc5770a4752b1c2a8eae055731cac3779251e412556a3a08",
+    "execution_status": "not_run"
   },
   {
     "id": "T-C1",
-    "category": "check",
     "kind": "check-fail",
     "phase": "P1",
     "rule": "第 2 节",
-    "file": "check/T-C1.yv",
     "summary": "&inout 不可复制：赋值即移动，之后原借用不能再用",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0402",
+        "line": 13
+      }
+    ],
     "expect": [
       "E0402"
-    ]
+    ],
+    "category": "check",
+    "file": "check/T-C1.yv",
+    "source_sha256": "c6133555405493e02f47fa1bfa7f81665067f4c708e1fc30585f95bf2ce3b811",
+    "execution_status": "not_run"
   },
   {
     "id": "T-C1p",
-    "category": "check",
     "kind": "check-pass",
     "phase": "P1",
     "rule": "第 2 节",
-    "file": "check/T-C1p.yv",
     "summary": "移动可变借用后只用新的那份",
-    "expect": null
+    "diagnostics": [],
+    "expect": null,
+    "category": "check",
+    "file": "check/T-C1p.yv",
+    "source_sha256": "fab915607bf52be7f1c72765ba7bec5378e252700d0c6c30f74f57cc79afaae8",
+    "execution_status": "not_run"
   },
   {
     "id": "T-C2",
-    "category": "check",
     "kind": "check-pass",
     "phase": "P1",
     "rule": "C1",
-    "file": "check/T-C2.yv",
     "summary": "Vec[str] 移动后继续访问，来源仍存活",
-    "expect": null
+    "diagnostics": [],
+    "expect": null,
+    "category": "check",
+    "file": "check/T-C2.yv",
+    "source_sha256": "6cce8b66285267fa5c325fca96591cffab6000cb70dbefebcc1b4cb35846642d",
+    "execution_status": "not_run"
   },
   {
     "id": "T-C2f",
-    "category": "check",
     "kind": "check-fail",
     "phase": "P1",
     "rule": "C1, E4",
-    "file": "check/T-C2f.yv",
     "summary": "来源先销毁，携带借用的容器还在外层使用",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0305",
+        "line": 11
+      }
+    ],
     "expect": [
       "E0305"
-    ]
+    ],
+    "category": "check",
+    "file": "check/T-C2f.yv",
+    "source_sha256": "ec9eee00e765f7597765943ad5e6a3e56e5746dbaa4b492e43aa227c41b1db5d",
+    "execution_status": "not_run"
   },
   {
     "id": "T-C3",
-    "category": "check",
     "kind": "check-pass",
     "phase": "P1",
     "rule": "C2",
-    "file": "check/T-C3.yv",
     "summary": "临时 Vec[str] 销毁后，复制出的 str 仍指向存活的来源",
-    "expect": null
+    "diagnostics": [],
+    "expect": null,
+    "category": "check",
+    "file": "check/T-C3.yv",
+    "source_sha256": "30806f78a59cb0bf54d8de05b9dc2e4fc72fadc3161b4f3faba0216c57dda006",
+    "execution_status": "not_run"
   },
   {
     "id": "T-C3f",
-    "category": "check",
     "kind": "check-fail",
     "phase": "P1",
     "rule": "C2, O2",
-    "file": "check/T-C3f.yv",
     "summary": "不可复制的元素读出来是借用，不能指向局部容器后返回",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0303",
+        "line": 9
+      }
+    ],
     "expect": [
       "E0303"
-    ]
+    ],
+    "category": "check",
+    "file": "check/T-C3f.yv",
+    "source_sha256": "daf8240fab7002f32565319386ffaf5a8b7bd145fcfe3dd5862250c55ff4c5e8",
+    "execution_status": "not_run"
   },
   {
     "id": "T-C4",
-    "category": "check",
     "kind": "check-fail",
     "phase": "P1",
     "rule": "C3, E1",
-    "file": "check/T-C4.yv",
     "summary": "[]str 经 .toVec() 后仍携带借用，不能做普通字段",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0301",
+        "line": 8
+      }
+    ],
     "expect": [
       "E0301"
-    ]
+    ],
+    "category": "check",
+    "file": "check/T-C4.yv",
+    "source_sha256": "86d2bae7df947866cdc05bd2f3f45fa17a775c51bfe6044103a7662b8a63eb8c",
+    "execution_status": "not_run"
   },
   {
     "id": "T-C4p",
-    "category": "check",
     "kind": "check-pass",
     "phase": "P1",
     "rule": "C3, E5",
-    "file": "check/T-C4p.yv",
     "summary": "逐个转成 String 后可以做字段",
-    "expect": null
+    "diagnostics": [],
+    "expect": null,
+    "category": "check",
+    "file": "check/T-C4p.yv",
+    "source_sha256": "583b1b067809adc34d3d63c15be5791901e197cc76e8fab6d219f9436e6e9134",
+    "execution_status": "not_run"
   },
   {
     "id": "T-C5",
-    "category": "check",
     "kind": "check-pass",
     "phase": "P1",
     "rule": "C5",
-    "file": "check/T-C5.yv",
     "summary": "匹配拥有的临时值，可以移出其中的值",
-    "expect": null
+    "diagnostics": [],
+    "expect": null,
+    "category": "check",
+    "file": "check/T-C5.yv",
+    "source_sha256": "47e0cf3a9136273852c45af8496c0d0e97a78862868fd8a6a42635210d59ee27",
+    "execution_status": "not_run"
   },
   {
     "id": "T-C6",
-    "category": "check",
     "kind": "check-fail",
     "phase": "P1",
     "rule": "C5",
-    "file": "check/T-C6.yv",
     "summary": "匹配已有位置得到的是借用，不能移走",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0401",
+        "line": 17
+      }
+    ],
     "expect": [
       "E0401"
-    ]
+    ],
+    "category": "check",
+    "file": "check/T-C6.yv",
+    "source_sha256": "4b1dcd452c43dedef22772e1bb6dd42dc446967e97a9ad36f998e595f52141cd",
+    "execution_status": "not_run"
   },
   {
     "id": "T-C6p",
-    "category": "check",
     "kind": "check-pass",
     "phase": "P1",
     "rule": "C5",
-    "file": "check/T-C6p.yv",
     "summary": "用 take 消费已有的可选字段",
-    "expect": null
+    "diagnostics": [],
+    "expect": null,
+    "category": "check",
+    "file": "check/T-C6p.yv",
+    "source_sha256": "45ab92afe83d70938c181b7f4b70fea00937c06371ed9c30f76a72c12faa50bb",
+    "execution_status": "not_run"
   },
   {
     "id": "T-C7",
-    "category": "check",
     "kind": "check-pass",
     "phase": "P1",
     "rule": "C4, A2",
-    "file": "check/T-C7.yv",
     "summary": "从 &inout int 自动读取一份参与计算",
-    "expect": null
+    "diagnostics": [],
+    "expect": null,
+    "category": "check",
+    "file": "check/T-C7.yv",
+    "source_sha256": "8d3282986b1a573cbc583ce35de681c382839963dbdcc8596578095167ecb54b",
+    "execution_status": "not_run"
   },
   {
     "id": "T-C7f",
-    "category": "check",
     "kind": "check-fail",
     "phase": "P1",
     "rule": "C4",
-    "file": "check/T-C7f.yv",
     "summary": "不可复制的值不能从借用里隐式取得",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0404",
+        "line": 11
+      }
+    ],
     "expect": [
       "E0404"
-    ]
+    ],
+    "category": "check",
+    "file": "check/T-C7f.yv",
+    "source_sha256": "130609fd7b1c92cb9861f7db90c5f8759094eb3b58220688248b4ae90b0870bd",
+    "execution_status": "not_run"
   },
   {
     "id": "T-C8",
-    "category": "check",
     "kind": "check-pass",
     "phase": "P1",
     "rule": "C6",
-    "file": "check/T-C8.yv",
     "summary": "Map[String, int] 用 str 键查询",
-    "expect": null
+    "diagnostics": [],
+    "expect": null,
+    "category": "check",
+    "file": "check/T-C8.yv",
+    "source_sha256": "54f31aa155d84dad9e639187870632c10bd898f3c0a3a0fa51ead58cba4f5a52",
+    "execution_status": "not_run"
   },
   {
     "id": "T-C8f",
-    "category": "check",
     "kind": "check-fail",
     "phase": "P1",
     "rule": "C6",
-    "file": "check/T-C8f.yv",
     "summary": "插入要拥有的键，str 不会被隐式转成 String",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0001",
+        "line": 9
+      }
+    ],
     "expect": [
       "E0001"
-    ]
+    ],
+    "category": "check",
+    "file": "check/T-C8f.yv",
+    "source_sha256": "2384dd5071e083e9e1aa966a5a1c9f9b9d147a34524e34f7e856d86dd22912ae",
+    "execution_status": "not_run"
   },
   {
     "id": "T-E1",
-    "category": "check",
     "kind": "check-fail",
     "phase": "P1",
     "rule": "E2",
-    "file": "check/T-E1.yv",
     "summary": "借用藏进泛型包装结构",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0301",
+        "line": 13
+      }
+    ],
     "expect": [
       "E0301"
-    ]
+    ],
+    "category": "check",
+    "file": "check/T-E1.yv",
+    "source_sha256": "c0c30cee52085af442af9df19a973179be04790005d82c2384262d3e754c8e97",
+    "execution_status": "not_run"
   },
   {
     "id": "T-E1p",
-    "category": "check",
     "kind": "check-pass",
     "phase": "P1",
     "rule": "E2",
-    "file": "check/T-E1p.yv",
     "summary": "泛型包装结构里放拥有值",
-    "expect": null
+    "diagnostics": [],
+    "expect": null,
+    "category": "check",
+    "file": "check/T-E1p.yv",
+    "source_sha256": "688e815bb57a9a16417a99064b38f3b0f01b7ee8ade6f1b3268c7473794760c9",
+    "execution_status": "not_run"
   },
   {
     "id": "T-E2",
-    "category": "check",
     "kind": "check-fail",
     "phase": "P1",
     "rule": "E2",
-    "file": "check/T-E2.yv",
     "summary": "Box[Vec[str]]",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0301",
+        "line": 9
+      }
+    ],
     "expect": [
       "E0301"
-    ]
+    ],
+    "category": "check",
+    "file": "check/T-E2.yv",
+    "source_sha256": "f14644e0c4ffb55cece11e4c4d1d6286dd8ee887d837ce240b1ba64a25ad69b5",
+    "execution_status": "not_run"
   },
   {
     "id": "T-E2p",
-    "category": "check",
     "kind": "check-pass",
     "phase": "P1",
     "rule": "E2",
-    "file": "check/T-E2p.yv",
     "summary": "Box[Vec[String]]",
-    "expect": null
+    "diagnostics": [],
+    "expect": null,
+    "category": "check",
+    "file": "check/T-E2p.yv",
+    "source_sha256": "3c29eb46313c3a6fabe037f877fd71ba29a729c395a17b276111c801bb250a06",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-G01",
+    "kind": "check-pass",
+    "phase": "P1",
+    "rule": "A6, A1",
+    "summary": "通过 let 绑定的可变借用写标量",
+    "diagnostics": [],
+    "expect": null,
+    "category": "check",
+    "file": "check/T-G01.yv",
+    "source_sha256": "dc6cc70bfcc5552a114fb7de2dc96594594dc09ae708388904bb05d0a027426b",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-G02",
+    "kind": "check-fail",
+    "phase": "P1",
+    "rule": "A6, A1",
+    "summary": "var 引用绑定不能升级只读目标权限",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0101",
+        "line": 10
+      }
+    ],
+    "expect": [
+      "E0101"
+    ],
+    "category": "check",
+    "file": "check/T-G02.yv",
+    "source_sha256": "d453afcfec2a119ffbdc1bb9d252af669618cd133f67d276738500e73cd1600d",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-G03",
+    "kind": "check-pass",
+    "phase": "P1",
+    "rule": "A6, A7",
+    "summary": "可变引用绑定的重绑定与目标写入分开",
+    "diagnostics": [],
+    "expect": null,
+    "category": "check",
+    "file": "check/T-G03.yv",
+    "source_sha256": "e1cecdd9f1a0c81d3fb66a6ecb12a5a0111f3623b21d4c57789eb86919789949",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-G04",
+    "kind": "check-fail",
+    "phase": "P1",
+    "rule": "A7",
+    "summary": "独立借用构造必须给出期望权限类型",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0004",
+        "line": 9
+      }
+    ],
+    "expect": [
+      "E0004"
+    ],
+    "category": "check",
+    "file": "check/T-G04.yv",
+    "source_sha256": "041a79494c56d01c239c778a766b780e7cf9e930d887bb88f101a69291a96ea7",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-G05",
+    "kind": "check-pass",
+    "phase": "P1",
+    "rule": "C5, C7",
+    "summary": "some/none 完整匹配 take 后的拥有可选值",
+    "diagnostics": [],
+    "expect": null,
+    "category": "check",
+    "file": "check/T-G05.yv",
+    "source_sha256": "9a276c2b0acb75d44a3fc3e962bfbffac88a29e4916a01fe34e5fb6c718a233a",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-G06",
+    "kind": "check-fail",
+    "phase": "P1",
+    "rule": "C5, C7",
+    "summary": "直接匹配已有可选变量不能搬走非 Copy 有效载荷",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0401",
+        "line": 13
+      }
+    ],
+    "expect": [
+      "E0401"
+    ],
+    "category": "check",
+    "file": "check/T-G06.yv",
+    "source_sha256": "f1a14803532ffa55cd520cd352f3036a8e00ecc3674c4fa395e09893f042df06",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-G07",
+    "kind": "check-fail",
+    "phase": "P1",
+    "rule": "C7",
+    "summary": "可选 match 必须覆盖 none",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0602",
+        "line": 9
+      }
+    ],
+    "expect": [
+      "E0602"
+    ],
+    "category": "check",
+    "file": "check/T-G07.yv",
+    "source_sha256": "a0ea80e6e5bda2cb05180ef32fac9b80026ac7069529bb25c0e945e6b9f4b9b6",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-G08",
+    "kind": "check-pass",
+    "phase": "P1",
+    "rule": "O6, 第 8 节",
+    "summary": "Vec 参数自动只读借用成切片而不移动数组",
+    "diagnostics": [],
+    "expect": null,
+    "category": "check",
+    "file": "check/T-G08.yv",
+    "source_sha256": "b9ff5edcf81b8c50aee476adc3832de725c427014b4e7d476f3578fd6611d205",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-G09",
+    "kind": "check-fail",
+    "phase": "P1",
+    "rule": "A3, O6",
+    "summary": "切片仍在使用时不能扩容拥有数组",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0102",
+        "line": 10
+      }
+    ],
+    "expect": [
+      "E0102"
+    ],
+    "category": "check",
+    "file": "check/T-G09.yv",
+    "source_sha256": "cbfb10ddbe6e57b9e82fddac4ca64e70a3323c33d1e8a6d307b90780a251f08d",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-G10",
+    "kind": "check-fail",
+    "phase": "P1",
+    "rule": "V10, V11",
+    "summary": "含标量但实现 Drop 的类型不能 Copy",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0402",
+        "line": 16
+      }
+    ],
+    "expect": [
+      "E0402"
+    ],
+    "category": "check",
+    "file": "check/T-G10.yv",
+    "source_sha256": "817417074877c3eff1dbf699adb963053d7e5178a5ade760e1a5ad11475eed70",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-G11",
+    "kind": "check-fail",
+    "phase": "P1",
+    "rule": "V10",
+    "summary": "用户不能直接调用 drop 方法",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0801",
+        "line": 15
+      }
+    ],
+    "expect": [
+      "E0801"
+    ],
+    "category": "check",
+    "file": "check/T-G11.yv",
+    "source_sha256": "898fe7c7ba8bf786d4dae2462455b96895247f54a487628fe78fc31a735be150",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-G12",
+    "kind": "check-fail",
+    "phase": "P1",
+    "rule": "V10",
+    "summary": "Drop 方法不能返回可失败结果",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0802",
+        "line": 12
+      }
+    ],
+    "expect": [
+      "E0802"
+    ],
+    "category": "check",
+    "file": "check/T-G12.yv",
+    "source_sha256": "0db20a953a785de242cf9f41d72e1fdbcaa1dc266eb28f3acbb91e51876069db",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-G13",
+    "kind": "check-fail",
+    "phase": "P1",
+    "rule": "V11",
+    "summary": "析构体不能替换整个 self",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0803",
+        "line": 10
+      }
+    ],
+    "expect": [
+      "E0803"
+    ],
+    "category": "check",
+    "file": "check/T-G13.yv",
+    "source_sha256": "47fbde29f53ad691d1d4955e443e8b3d3e60ae6d3d192b0bb5dbf4d5b762efd8",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-G14",
+    "kind": "check-fail",
+    "phase": "P1",
+    "rule": "C8",
+    "summary": "拥有普通结构体也不能直接移动非 Copy 字段",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0401",
+        "line": 15
+      }
+    ],
+    "expect": [
+      "E0401"
+    ],
+    "category": "check",
+    "file": "check/T-G14.yv",
+    "source_sha256": "7b7501a13d6e12123387bea38590302dd8364eb2bbf16cc3c24648584a2051e8",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-G15",
+    "kind": "check-pass",
+    "phase": "P1",
+    "rule": "C8",
+    "summary": "从唯一拥有字段用 take 取值后原字段仍有效",
+    "diagnostics": [],
+    "expect": null,
+    "category": "check",
+    "file": "check/T-G15.yv",
+    "source_sha256": "77768c595ddfbabdb94ef9fc5bdba438414ba7a5cdbecf1131abfe7717469965",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-G16",
+    "kind": "check-pass",
+    "phase": "P1",
+    "rule": "V12",
+    "summary": "catch 通配符允许省略错误绑定",
+    "diagnostics": [],
+    "expect": null,
+    "category": "check",
+    "file": "check/T-G16.yv",
+    "source_sha256": "8bcb32c55dc926f43bb3096596ddf152a68d149106b32679ac955a4bb4f923a9",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-G17",
+    "kind": "check-fail",
+    "phase": "P1",
+    "rule": "A2, A6",
+    "summary": "默认 for 即使来自 var 也只读",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0101",
+        "line": 10
+      }
+    ],
+    "expect": [
+      "E0101"
+    ],
+    "category": "check",
+    "file": "check/T-G17.yv",
+    "source_sha256": "ea7bfa60b0020cce9cc9dccdd5078446d2f0aa229ca3300035855d2452af6f99",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-G18",
+    "kind": "check-pass",
+    "phase": "P1",
+    "rule": "A2, A6",
+    "summary": "显式可变遍历可修改元素",
+    "diagnostics": [],
+    "expect": null,
+    "category": "check",
+    "file": "check/T-G18.yv",
+    "source_sha256": "923a7e7be8dbffe00e63a35eb5875ee22e77f337edfa4ea88318c8885c15fed1",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-G19",
+    "kind": "check-fail",
+    "phase": "P1",
+    "rule": "A2",
+    "summary": "var 切片描述符不允许可变遍历底层数据",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0101",
+        "line": 10
+      }
+    ],
+    "expect": [
+      "E0101"
+    ],
+    "category": "check",
+    "file": "check/T-G19.yv",
+    "source_sha256": "e10c5eb2f079be0d991548e19e98bafffff4fa16369f36846d9e39a5cdf6e0a5",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-G20",
+    "kind": "check-pass",
+    "phase": "P1",
+    "rule": "A8",
+    "summary": "只读遍历期间允许继续只读访问同一容器",
+    "diagnostics": [],
+    "expect": null,
+    "category": "check",
+    "file": "check/T-G20.yv",
+    "source_sha256": "a23dce941cb15dafcd55d8098fb7915bdd3f61cd8588ba849ccbf50b8124aa26",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-G21",
+    "kind": "check-fail",
+    "phase": "P1",
+    "rule": "A8",
+    "summary": "可变遍历期间禁止直接访问原容器",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0102",
+        "line": 10
+      }
+    ],
+    "expect": [
+      "E0102"
+    ],
+    "category": "check",
+    "file": "check/T-G21.yv",
+    "source_sha256": "e7238f580633cca0184346da0ae89e91043ad078d6c82583d18ba17e5dece33f",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-G22",
+    "kind": "check-fail",
+    "phase": "P1",
+    "rule": "N2",
+    "summary": "字面量类型超界不是运行时转换",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0003",
+        "line": 8
+      }
+    ],
+    "expect": [
+      "E0003"
+    ],
+    "category": "check",
+    "file": "check/T-G22.yv",
+    "source_sha256": "3cf004b5ecf2fc99af5b6a0ddfa7d82eef4ea162564de7d6f28bf8fca5d96232",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-G23",
+    "kind": "check-pass",
+    "phase": "P1",
+    "rule": "N1",
+    "summary": "常量可知的合法运行时转换不变成编译错误",
+    "diagnostics": [],
+    "expect": null,
+    "category": "check",
+    "file": "check/T-G23.yv",
+    "source_sha256": "ed873c45ba9d66644ee9ec65fdd45cdfce8303c90e7eef3362e6d82fe0ee50a2",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-G24",
+    "kind": "check-fail",
+    "phase": "P1",
+    "rule": "O4",
+    "summary": "replace 不能绕过 inout 输出来源限制",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0306",
+        "line": 8
+      }
+    ],
+    "expect": [
+      "E0306"
+    ],
+    "category": "check",
+    "file": "check/T-G24.yv",
+    "source_sha256": "49a0141de80e66be168166f5bc2ed2ac2fa6cbb358b9017ce7a371ff8a7234ad",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-G25",
+    "kind": "check-pass",
+    "phase": "P1",
+    "rule": "K2",
+    "summary": "用户 Ord 和 Ordering 枚举契约",
+    "diagnostics": [],
+    "expect": null,
+    "category": "check",
+    "file": "check/T-G25.yv",
+    "source_sha256": "169b847d8e9b672f81b11b1fb5ce547385fa3b590f54cfd4724b52e03567e1f8",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-G26",
+    "kind": "check-fail",
+    "phase": "P1",
+    "rule": "K2",
+    "summary": "比较协议签名不正确应在实现处报错",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0502",
+        "line": 9
+      }
+    ],
+    "expect": [
+      "E0502"
+    ],
+    "category": "check",
+    "file": "check/T-G26.yv",
+    "source_sha256": "93c046cc81c0ba8c3abb428ed3898a3e15f6832964ee8b69815a8cdd2a97ec7b",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-G27",
+    "kind": "check-fail",
+    "phase": "P1",
+    "rule": "第 7 节",
+    "summary": "wrap 只接受整数不接受浮点数",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0001",
+        "line": 8
+      }
+    ],
+    "expect": [
+      "E0001"
+    ],
+    "category": "check",
+    "file": "check/T-G27.yv",
+    "source_sha256": "b509495a3a687db13377d8238f3af20b09cb44841c1cafe50f1079b18e2e0a85",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-G28",
+    "kind": "check-fail",
+    "phase": "P1",
+    "rule": "E1, E3",
+    "summary": "即使来源为 static 也不开放 Box[str] 例外",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0301",
+        "line": 8
+      }
+    ],
+    "expect": [
+      "E0301"
+    ],
+    "category": "check",
+    "file": "check/T-G28.yv",
+    "source_sha256": "010944c9b208ae830ee8e3ff0fb004b5e147d3c178ed35fb27537f6609d066ae",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-G29",
+    "kind": "check-fail",
+    "phase": "P1",
+    "rule": "V11, C8",
+    "summary": "无默认值的 Box 不能 take",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0405",
+        "line": 9
+      }
+    ],
+    "expect": [
+      "E0405"
+    ],
+    "category": "check",
+    "file": "check/T-G29.yv",
+    "source_sha256": "7773e66cce44c766566cc3e5521a6b64156cba1d2815b9980311ac2e3fe6fa55",
+    "execution_status": "not_run"
   },
   {
     "id": "T-K1",
-    "category": "check",
     "kind": "check-fail",
     "phase": "P1",
     "rule": "K1",
-    "file": "check/T-K1.yv",
     "summary": "f64 不满足 Ord",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0501",
+        "line": 9
+      }
+    ],
     "expect": [
       "E0501"
-    ]
+    ],
+    "category": "check",
+    "file": "check/T-K1.yv",
+    "source_sha256": "7de1d1d1eddd3d35dc024db0e2a0f48a7e5fa26228bfc5aec497621859d48147",
+    "execution_status": "not_run"
   },
   {
     "id": "T-K1p",
-    "category": "check",
     "kind": "check-pass",
     "phase": "P1",
     "rule": "K1",
-    "file": "check/T-K1p.yv",
     "summary": "浮点数用 sortBy 加 totalCmp 排序",
-    "expect": null
+    "diagnostics": [],
+    "expect": null,
+    "category": "check",
+    "file": "check/T-K1p.yv",
+    "source_sha256": "f2fd3c742e04da8250711a7881aa1215dfac524a9e2e442ea7103539716dac96",
+    "execution_status": "not_run"
   },
   {
     "id": "T-O1",
-    "category": "check",
     "kind": "check-fail",
     "phase": "P1",
     "rule": "O1",
-    "file": "check/T-O1.yv",
     "summary": "私有函数返回 str 但没写 of",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0302",
+        "line": 7
+      }
+    ],
     "expect": [
       "E0302"
-    ]
+    ],
+    "category": "check",
+    "file": "check/T-O1.yv",
+    "source_sha256": "c91429e0935c89dad37b518c2408e9f8a6c49717eb07fc1399a3ef7e49f9a92e",
+    "execution_status": "not_run"
   },
   {
     "id": "T-O1p",
-    "category": "check",
     "kind": "check-pass",
     "phase": "P1",
     "rule": "O1",
-    "file": "check/T-O1p.yv",
     "summary": "私有函数写明来源",
-    "expect": null
+    "diagnostics": [],
+    "expect": null,
+    "category": "check",
+    "file": "check/T-O1p.yv",
+    "source_sha256": "d31bb5c95d5adcf5b91c857fc7792cf7c9553fc16646bfec635edb2650ffe6f2",
+    "execution_status": "not_run"
   },
   {
     "id": "T-O2",
-    "category": "check",
     "kind": "check-fail",
     "phase": "P1",
     "rule": "O2",
-    "file": "check/T-O2.yv",
     "summary": "声明 of a，实际返回 b 的视图；错误报在函数内",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0303",
+        "line": 8
+      }
+    ],
     "expect": [
       "E0303"
-    ]
+    ],
+    "category": "check",
+    "file": "check/T-O2.yv",
+    "source_sha256": "58b50d6b7e09770ec511a0b5140155f35a7d38ce17cc890b43b5e63fd7702a1f",
+    "execution_status": "not_run"
   },
   {
     "id": "T-O2p",
-    "category": "check",
     "kind": "check-pass",
     "phase": "P1",
     "rule": "O1, O2",
-    "file": "check/T-O2p.yv",
     "summary": "多个来源写 of (a, b)",
-    "expect": null
+    "diagnostics": [],
+    "expect": null,
+    "category": "check",
+    "file": "check/T-O2p.yv",
+    "source_sha256": "374ac082c13542436d5dde3d675df6c6d9e415b6ee3fd18f1c2d47475cdbdabd",
+    "execution_status": "not_run"
   },
   {
     "id": "T-O3",
-    "category": "check",
     "kind": "check-fail",
     "phase": "P1",
     "rule": "O1",
-    "file": "check/T-O3.yv",
     "summary": "of (a, b) 的结果按全部来源保守检查：b 先销毁就不能再用",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0305",
+        "line": 19
+      }
+    ],
     "expect": [
       "E0305"
-    ]
+    ],
+    "category": "check",
+    "file": "check/T-O3.yv",
+    "source_sha256": "b447c788086ea01fc8b4783a474da0faf7cbc615a747993f9fbb127dbeaa048d",
+    "execution_status": "not_run"
   },
   {
     "id": "T-O3p",
-    "category": "check",
     "kind": "check-pass",
     "phase": "P1",
     "rule": "O1",
-    "file": "check/T-O3p.yv",
     "summary": "两个来源都活得比结果长",
-    "expect": null
+    "diagnostics": [],
+    "expect": null,
+    "category": "check",
+    "file": "check/T-O3p.yv",
+    "source_sha256": "66f19cbc6d5c48ea88f772b607cb26aca8b0913d6e7d0779836257a71b598bec",
+    "execution_status": "not_run"
   },
   {
     "id": "T-O4",
-    "category": "check",
     "kind": "check-fail",
     "phase": "P1",
     "rule": "O4",
-    "file": "check/T-O4.yv",
     "summary": "辅助函数通过 inout Vec[str] 写入外部借用",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0306",
+        "line": 8
+      }
+    ],
     "expect": [
       "E0306"
-    ]
+    ],
+    "category": "check",
+    "file": "check/T-O4.yv",
+    "source_sha256": "d54c53e3b60547acc63913b63ae622398fef0516aec188fe6dbfbd4838061f30",
+    "execution_status": "not_run"
   },
   {
     "id": "T-O4p",
-    "category": "check",
     "kind": "check-pass",
     "phase": "P1",
     "rule": "O4",
-    "file": "check/T-O4p.yv",
     "summary": "改为返回带 of 的结果",
-    "expect": null
+    "diagnostics": [],
+    "expect": null,
+    "category": "check",
+    "file": "check/T-O4p.yv",
+    "source_sha256": "7b9a4b9d97be43d57b34946ddb0fd32eced5663dbda3b52ffb9ce348933396db",
+    "execution_status": "not_run"
   },
   {
     "id": "T-O5",
-    "category": "check",
     "kind": "check-fail",
     "phase": "P1",
     "rule": "O5",
-    "file": "check/T-O5.yv",
     "summary": "会被保存的比较闭包捕获局部 str",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0307",
+        "line": 12
+      }
+    ],
     "expect": [
       "E0307"
-    ]
+    ],
+    "category": "check",
+    "file": "check/T-O5.yv",
+    "source_sha256": "53489b4f7e2d561f5cc182ccd0a06e519d97c3b786180d234f9b29b6f33eeb8b",
+    "execution_status": "not_run"
   },
   {
     "id": "T-O5p",
-    "category": "check",
     "kind": "check-pass",
     "phase": "P1",
     "rule": "O5",
-    "file": "check/T-O5p.yv",
     "summary": "不逃逸的闭包可以借用外部变量",
-    "expect": null
+    "diagnostics": [],
+    "expect": null,
+    "category": "check",
+    "file": "check/T-O5p.yv",
+    "source_sha256": "fac82f33ab4348c9c7b1653b268f6c67ddebc507f8ad5e6e9c667efb5f9eae2a",
+    "execution_status": "not_run"
   },
   {
     "id": "T-O6",
-    "category": "check",
     "kind": "check-fail",
     "phase": "P1",
     "rule": "O1",
-    "file": "check/T-O6.yv",
     "summary": "largest[str] 的结果携带来源，来源销毁后不能再用",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0305",
+        "line": 25
+      }
+    ],
     "expect": [
       "E0305"
-    ]
+    ],
+    "category": "check",
+    "file": "check/T-O6.yv",
+    "source_sha256": "1ced58f938bf962c005794d5305fa21fd4423a9b6dd916af26c7877566d27749",
+    "execution_status": "not_run"
   },
   {
     "id": "T-O7",
-    "category": "check",
     "kind": "check-pass",
     "phase": "P1",
     "rule": "O1",
-    "file": "check/T-O7.yv",
     "summary": "largest[int] 的结果不借用数组",
-    "expect": null
+    "diagnostics": [],
+    "expect": null,
+    "category": "check",
+    "file": "check/T-O7.yv",
+    "source_sha256": "6bc4dc398b714fc803ee16e217c523d082bc23d3e639b4d8949ca8ca52fb3a3c",
+    "execution_status": "not_run"
   },
   {
     "id": "T-O8",
-    "category": "check",
     "kind": "check-fail",
     "phase": "P1",
     "rule": "O2",
-    "file": "check/T-O8.yv",
     "summary": "of 不能指向 sink 参数",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0304",
+        "line": 7
+      }
+    ],
     "expect": [
       "E0304"
-    ]
+    ],
+    "category": "check",
+    "file": "check/T-O8.yv",
+    "source_sha256": "311584f1f767332b03d317088beb7d31ef58e9398c03644cd1cba526501f6f93",
+    "execution_status": "not_run"
   },
   {
     "id": "T-O8p",
-    "category": "check",
     "kind": "check-pass",
     "phase": "P1",
     "rule": "O2",
-    "file": "check/T-O8p.yv",
     "summary": "of 指向借用参数",
-    "expect": null
+    "diagnostics": [],
+    "expect": null,
+    "category": "check",
+    "file": "check/T-O8p.yv",
+    "source_sha256": "7938082889d554c771c3c9f9bd26d222e5ddef827d4a75abf953ed85d90eddb5",
+    "execution_status": "not_run"
   },
   {
     "id": "T-V2",
-    "category": "check",
     "kind": "check-fail",
     "phase": "P1",
     "rule": "V1",
-    "file": "check/T-V2.yv",
     "summary": "第一个实参已移动 v，第二个实参不能再用",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0402",
+        "line": 13
+      }
+    ],
     "expect": [
       "E0402"
-    ]
+    ],
+    "category": "check",
+    "file": "check/T-V2.yv",
+    "source_sha256": "30fa314e1ea37c36cb94fea9b372873d935d7a509667e64f3cfc0870d13adbe0",
+    "execution_status": "not_run"
   },
   {
     "id": "T-V2p",
-    "category": "check",
     "kind": "check-pass",
     "phase": "P1",
     "rule": "V1",
-    "file": "check/T-V2p.yv",
     "summary": "先算出长度，再移动",
-    "expect": null
+    "diagnostics": [],
+    "expect": null,
+    "category": "check",
+    "file": "check/T-V2p.yv",
+    "source_sha256": "3a3503456aa394cf73e1b19f6118fefbad646adf08fc235ff62efafed67583ec",
+    "execution_status": "not_run"
   },
   {
     "id": "T-V4",
-    "category": "check",
     "kind": "check-fail",
     "phase": "P1",
     "rule": "V8",
-    "file": "check/T-V4.yv",
     "summary": "块形式的 catch 能正常走到结束花括号",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0601",
+        "line": 17
+      }
+    ],
     "expect": [
       "E0601"
-    ]
+    ],
+    "category": "check",
+    "file": "check/T-V4.yv",
+    "source_sha256": "396f4bd191efc2d74eb19079322e6ef0099d0de2424170f3d667cfbdd0b317a1",
+    "execution_status": "not_run"
   },
   {
     "id": "T-V4p",
-    "category": "check",
     "kind": "check-pass",
     "phase": "P1",
     "rule": "V8",
-    "file": "check/T-V4p.yv",
     "summary": "表达式形式给替代值；块形式必须离开",
-    "expect": null
+    "diagnostics": [],
+    "expect": null,
+    "category": "check",
+    "file": "check/T-V4p.yv",
+    "source_sha256": "ec64817880856e3330b2182c386e778cd31ffbd1fde56215d68111f61260b3f0",
+    "execution_status": "not_run"
   },
   {
     "id": "T-F1",
-    "category": "fix",
     "kind": "fix-auto",
     "phase": "P1",
     "rule": "V7",
-    "file": "fix/T-F1.yv",
     "summary": "未使用的变量改名为 _name，不改变对象寿命",
+    "diagnostics": [
+      {
+        "severity": "WARN",
+        "code": "W0001",
+        "line": 9
+      }
+    ],
     "expect": [
       "W0001"
-    ]
+    ],
+    "expect_fixed": "T-F1.fixed.yv",
+    "category": "fix",
+    "file": "fix/T-F1.yv",
+    "source_sha256": "a9cb0ff5141053037daade2b09953198bab922e5aa97fc95882232ee633f9656",
+    "execution_status": "not_run"
   },
   {
     "id": "T-F2",
-    "category": "fix",
     "kind": "fix-candidate",
     "phase": "P1",
     "rule": "第 2 节",
-    "file": "fix/T-F2.yv",
     "summary": "从 Box 的字段移出：take、clone、改为借用三者语义不同，只给候选",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0401",
+        "line": 20
+      }
+    ],
     "expect": [
       "E0401"
-    ]
+    ],
+    "expect_candidates": [
+      "take",
+      "clone",
+      "borrow"
+    ],
+    "candidate_recheck": "required",
+    "candidate_note": "take 必须同时把 let b 改为 var b；borrow 必须包含 keep 签名和调用的完整修改",
+    "category": "fix",
+    "file": "fix/T-F2.yv",
+    "source_sha256": "d072970398dd60da43807b0fe059b6267c052f2f45ba4e856bc5ede66eb65164",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-GF1",
+    "kind": "fix-candidate",
+    "phase": "P1",
+    "rule": "O3",
+    "summary": "缺失 of 只提供候选，不自动扩大签名",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0302",
+        "line": 9
+      }
+    ],
+    "expect": [
+      "E0302"
+    ],
+    "expect_candidates": [
+      "add-of"
+    ],
+    "candidate_recheck": "required",
+    "category": "fix",
+    "file": "fix/T-GF1.yv",
+    "source_sha256": "b821aeb9a8fc31190ec77cc2aaef4e5b672c3755857200b16015bcb2f95473a1",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-GF2",
+    "kind": "fix-auto",
+    "phase": "P1",
+    "rule": "V13",
+    "summary": "自动拆分临时名冲突时取 vLen2",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0403",
+        "line": 11
+      }
+    ],
+    "expect": [
+      "E0403"
+    ],
+    "expect_fixed": "T-GF2.fixed.yv",
+    "category": "fix",
+    "file": "fix/T-GF2.yv",
+    "source_sha256": "4e34fc9673a60e7902787d362af84cd6aa85208d3b83b046c0f8b168edd30a35",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-GF3",
+    "kind": "fix-auto",
+    "phase": "P1",
+    "rule": "V13, V7",
+    "summary": "未使用变量修复不能捕获已有 _count",
+    "diagnostics": [
+      {
+        "severity": "WARN",
+        "code": "W0001",
+        "line": 10
+      }
+    ],
+    "expect": [
+      "W0001"
+    ],
+    "expect_fixed": "T-GF3.fixed.yv",
+    "category": "fix",
+    "file": "fix/T-GF3.yv",
+    "source_sha256": "881fb8bfc0dcf12f5b6c2ca2c4af537ee3dcf61637cc3bcbe31572dc243baf54",
+    "execution_status": "not_run"
   },
   {
     "id": "T-V1",
-    "category": "fix",
     "kind": "fix-auto",
     "phase": "P1",
     "rule": "V2",
-    "file": "fix/T-V1.yv",
     "summary": "v.push(v.len()) 自动拆出临时变量",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0403",
+        "line": 10
+      }
+    ],
     "expect": [
       "E0403"
-    ]
+    ],
+    "expect_fixed": "T-V1.fixed.yv",
+    "category": "fix",
+    "file": "fix/T-V1.yv",
+    "source_sha256": "2854519a6e6ec9333480fdf4c43484a22221fa9647e7e4d711c5de7439c42974",
+    "execution_status": "not_run"
   },
   {
     "id": "T-V3",
-    "category": "fix",
     "kind": "fix-candidate",
     "phase": "P1",
     "rule": "V2",
-    "file": "fix/T-V3.yv",
     "summary": "接收者里有函数调用：提前计算实参会改变调用顺序，只给候选",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0403",
+        "line": 14
+      }
+    ],
     "expect": [
       "E0403"
-    ]
+    ],
+    "expect_candidates": [
+      "hoist-argument"
+    ],
+    "category": "fix",
+    "file": "fix/T-V3.yv",
+    "source_sha256": "04ae26125ef5696ec67e944cf9f3bb4cde74a44369a35659264af1b53245cb53",
+    "execution_status": "not_run"
   },
   {
     "id": "T-D1",
-    "category": "run",
     "kind": "run-pass",
     "phase": "P2",
     "rule": "V3, V4, V5, V6",
-    "file": "run/T-D1.yv",
     "summary": "析构顺序：覆盖赋值、逆序析构、try 提前退出、部分初始化",
-    "expect": null
+    "diagnostics": [],
+    "expect": null,
+    "expected_stdout": "drop x1\nassigned\nstep done\ndrop b\ndrop a\ndrop b\ndrop a\nsteps 1 0\ndrop l\nbuild failed\ndrop x2\n",
+    "category": "run",
+    "file": "run/T-D1.yv",
+    "source_sha256": "995ee1d0ef0346e344cc7cd06abf8ff9ca1d3225f69e1dba665748b60937e0df",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-GR1",
+    "kind": "run-pass",
+    "phase": "P2",
+    "rule": "V10, V12",
+    "summary": "catch _ 与 _e 的错误析构时点不同",
+    "diagnostics": [],
+    "expect": null,
+    "expected_stdout": "drop ignored\nfallback ignored\nfallback named\ndrop named\n",
+    "category": "run",
+    "file": "run/T-GR1.yv",
+    "source_sha256": "2dfe19999adec8c9ddace1b0ee6879ec52e8e195de6cb1d320f8d4fdb3cefe9f",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-GR10",
+    "kind": "run-pass",
+    "phase": "P2",
+    "rule": "C6",
+    "summary": "Map.remove 返回拥有值且删除键",
+    "diagnostics": [],
+    "expect": null,
+    "expected_stdout": "value\n0\n",
+    "category": "run",
+    "file": "run/T-GR10.yv",
+    "source_sha256": "b72e823f5982cfc8bd0c6cb1a7a39179e20cab6a2dc30b827bdec84dc646e80d",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-GR11",
+    "kind": "run-pass",
+    "phase": "P2",
+    "rule": "A2, A6",
+    "summary": "显式可变遍历写入后可读遍历",
+    "diagnostics": [],
+    "expect": null,
+    "expected_stdout": "2\n3\n",
+    "category": "run",
+    "file": "run/T-GR11.yv",
+    "source_sha256": "9339546c12199f2f6ac31edcdeb94b4cb1019675582374e3c5755651a507a55a",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-GR12",
+    "kind": "run-panic",
+    "phase": "P2",
+    "rule": "N1, 第 7 节",
+    "summary": "常量可知的窄化转换必须保留先前输出",
+    "diagnostics": [],
+    "expect": "P-CONVERT",
+    "expect_panic": "P-CONVERT",
+    "expect_stderr_contains": "before",
+    "modes": [
+      "debug",
+      "release"
+    ],
+    "category": "run",
+    "file": "run/T-GR12.yv",
+    "source_sha256": "88f77b7eb1b55ce7bd40e43abe56942f90c05f1b11881fe4dfc1191189376fc7",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-GR2",
+    "kind": "run-pass",
+    "phase": "P2",
+    "rule": "V10, V4, V6",
+    "summary": "完整对象先本体析构再按字段声明逆序清理",
+    "diagnostics": [],
+    "expect": null,
+    "expected_stdout": "make b\nmake a\nparent\nchild b\nchild a\n",
+    "category": "run",
+    "file": "run/T-GR2.yv",
+    "source_sha256": "87526ba8b0f0e55ca69f08c504e8ef10f8ff00900cd6a0aaf10326a7284d9ef8",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-GR3",
+    "kind": "run-pass",
+    "phase": "P2",
+    "rule": "S1, S2",
+    "summary": "UTF8 字符串长度和下标按字节",
+    "diagnostics": [],
+    "expect": null,
+    "expected_stdout": "2\n195\n169\n",
+    "category": "run",
+    "file": "run/T-GR3.yv",
+    "source_sha256": "1a964f04fd429192bbbdeef9a03078d07778d8735521f2c934d46e79a055245b",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-GR4",
+    "kind": "run-pass",
+    "phase": "P2",
+    "rule": "S4",
+    "summary": "字节数组转字符串验证成功和失败偏移",
+    "diagnostics": [],
+    "expect": null,
+    "expected_stdout": "AB\n1\n",
+    "category": "run",
+    "file": "run/T-GR4.yv",
+    "source_sha256": "df513d36aeabbec9cb63ad143736cc3bed94eaaf8d7f61215b293b6189a5ce92",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-GR5",
+    "kind": "run-panic",
+    "phase": "P2",
+    "rule": "N1",
+    "summary": "常量可知的移位错误仍在运行时触发",
+    "diagnostics": [],
+    "expect": "P-SHIFT",
+    "expect_panic": "P-SHIFT",
+    "modes": [
+      "debug",
+      "release"
+    ],
+    "category": "run",
+    "file": "run/T-GR5.yv",
+    "source_sha256": "b0e3dcc5b7b2b1f0acce7f013e29fd7e9923334af9608b23da0cf844dc71fce0",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-GR6",
+    "kind": "run-pass",
+    "phase": "P2",
+    "rule": "N1",
+    "summary": "未执行分支中的常量错误不触发 panic",
+    "diagnostics": [],
+    "expect": null,
+    "modes": [
+      "debug",
+      "release"
+    ],
+    "expected_stdout": "ok\n",
+    "category": "run",
+    "file": "run/T-GR6.yv",
+    "source_sha256": "8bc6b02b08aa0bd2c46aa829ae34c72313e6e77ede558c2b58ce88b4abab57d2",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-GR7",
+    "kind": "run-panic",
+    "phase": "P2",
+    "rule": "M2",
+    "summary": "容量乘法超界必须先于分配被检查",
+    "diagnostics": [],
+    "expect": "P-CAPACITY",
+    "expect_panic": "P-CAPACITY",
+    "category": "run",
+    "file": "run/T-GR7.yv",
+    "source_sha256": "17101eae45f927a368e8e86c3e1b53695ebd6c890282d1d1c33c960921ffd2f1",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-GR8",
+    "kind": "run-panic",
+    "phase": "P2",
+    "rule": "M1",
+    "summary": "运行器注入首次用户分配失败",
+    "diagnostics": [],
+    "expect": "P-OOM",
+    "expect_panic": "P-OOM",
+    "fault_alloc_at": "1",
+    "fault_scope": "after-main-entry",
+    "category": "run",
+    "file": "run/T-GR8.yv",
+    "source_sha256": "efa3e5353259ed4865559d713b690e5023e37168d818da05e6494f2be827b0df",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-GR9",
+    "kind": "run-allowed",
+    "phase": "P2",
+    "rule": "K3",
+    "summary": "错误比较器不能破坏元素或产生内存错误",
+    "diagnostics": [],
+    "expect": null,
+    "timeout_ms": "3000",
+    "sanitizer_profiles": [
+      "address+undefined"
+    ],
+    "allowed_outcomes": [
+      "stdout:intact",
+      "panic:P-COMPARATOR"
+    ],
+    "category": "run",
+    "file": "run/T-GR9.yv",
+    "source_sha256": "f3d2526a7f073a6058e9913a5c1dae9e4070617c26740c95a76af93391e9029a",
+    "execution_status": "not_run"
   },
   {
     "id": "T-N1a",
-    "category": "run",
     "kind": "run-panic",
     "phase": "P2",
     "rule": "第 7 节",
-    "file": "run/T-N1a.yv",
     "summary": "最小整数除以 -1",
-    "expect": "P-DIV-OVERFLOW"
+    "diagnostics": [],
+    "expect": "P-DIV-OVERFLOW",
+    "expect_panic": "P-DIV-OVERFLOW",
+    "category": "run",
+    "file": "run/T-N1a.yv",
+    "source_sha256": "452a0fab153a2a4b43c8268641b1fc8909bb7925098883b11fe7eb2be8cf0d35",
+    "execution_status": "not_run"
   },
   {
     "id": "T-N1b",
-    "category": "run",
     "kind": "run-panic",
     "phase": "P2",
     "rule": "第 7 节",
-    "file": "run/T-N1b.yv",
     "summary": "移位量不小于位宽",
-    "expect": "P-SHIFT"
+    "diagnostics": [],
+    "expect": "P-SHIFT",
+    "expect_panic": "P-SHIFT",
+    "category": "run",
+    "file": "run/T-N1b.yv",
+    "source_sha256": "c81b634da93dcb7931b467607c3231017133f8b4c708b05ab9a508bd120e660c",
+    "execution_status": "not_run"
   },
   {
     "id": "T-N1c",
-    "category": "run",
     "kind": "run-panic",
     "phase": "P2",
     "rule": "第 7 节",
-    "file": "run/T-N1c.yv",
     "summary": "窄化转换超出范围",
-    "expect": "P-CONVERT"
+    "diagnostics": [],
+    "expect": "P-CONVERT",
+    "expect_panic": "P-CONVERT",
+    "category": "run",
+    "file": "run/T-N1c.yv",
+    "source_sha256": "c931b9984da51303cc70583b807de5ef0ed0e04181a5e4f387beb46f98f4afe0",
+    "execution_status": "not_run"
   },
   {
     "id": "T-N1d",
-    "category": "run",
     "kind": "run-panic",
     "phase": "P2",
     "rule": "第 7 节",
-    "file": "run/T-N1d.yv",
     "summary": "NaN 转整数",
-    "expect": "P-FLOAT-CONVERT"
+    "diagnostics": [],
+    "expect": "P-FLOAT-CONVERT",
+    "expect_panic": "P-FLOAT-CONVERT",
+    "category": "run",
+    "file": "run/T-N1d.yv",
+    "source_sha256": "53e8a6903499a8101f26836a40d349e4cb530c42ccb7448d0838df745ec8f9cc",
+    "execution_status": "not_run"
   },
   {
     "id": "T-N2",
-    "category": "run",
     "kind": "run-pass",
     "phase": "P2",
     "rule": "第 7 节",
-    "file": "run/T-N2.yv",
     "summary": "wrap 的取模语义与移位结果",
-    "expect": null
+    "diagnostics": [],
+    "expect": null,
+    "expected_stdout": "-126\n255\n-4\n100\n2\n",
+    "category": "run",
+    "file": "run/T-N2.yv",
+    "source_sha256": "0f7c8367930a2923db979cd2602c54ec9a829d460074a6a46fc20b4819ddc115",
+    "execution_status": "not_run"
   },
   {
     "id": "T-S1",
-    "category": "run",
     "kind": "run-panic",
     "phase": "P2",
     "rule": "S3",
-    "file": "run/T-S1.yv",
     "summary": "子串切在多字节字符中间",
-    "expect": "P-STR-BOUNDARY"
+    "diagnostics": [],
+    "expect": "P-STR-BOUNDARY",
+    "expect_panic": "P-STR-BOUNDARY",
+    "category": "run",
+    "file": "run/T-S1.yv",
+    "source_sha256": "74d56c534e23800928cb9bc09d90f5f00b53d19b9f0f9d2ccf0457b883f6ad14",
+    "execution_status": "not_run"
   },
   {
     "id": "T-S2",
-    "category": "run",
     "kind": "run-pass",
     "phase": "P2",
     "rule": "S5",
-    "file": "run/T-S2.yv",
     "summary": "读取含非法 UTF-8 的文件得到编码错误，不替换",
-    "expect": null
+    "diagnostics": [],
+    "expect": null,
+    "fixture": "T-S2.input.bin",
+    "fixture_hex": "66ff6f",
+    "cwd": "test-dir",
+    "expected_stdout": "utf8 error at 1\n",
+    "fixture_sha256": "90bffc373a2f59fb08febc2e658c277ff0d3751a37abcb4ca6381a3439a08125",
+    "category": "run",
+    "file": "run/T-S2.yv",
+    "source_sha256": "762748605b9fae6e76498663f13c675dd66a8206ef624b05e9ab014482dbff13",
+    "execution_status": "not_run"
   },
   {
     "id": "T-S3",
-    "category": "run",
     "kind": "run-exit",
     "phase": "P2",
     "rule": "S5, M5",
-    "file": "run/T-S3.yv",
     "summary": "命令行参数不是合法 UTF-8：启动即报错退出，main 不执行",
-    "expect": null
+    "diagnostics": [],
+    "expect": null,
+    "platforms": [
+      "linux",
+      "macos"
+    ],
+    "args_hex": [
+      "66ff"
+    ],
+    "expect_exit": "nonzero",
+    "expect_stderr_code": "YAVO-STARTUP-UTF8",
+    "expected_stdout": "",
+    "category": "run",
+    "file": "run/T-S3.yv",
+    "source_sha256": "3ccb62b99658b8d416d165119c5553d83938ea8711812b0002ab0a7f7ee6e2b4",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-GP1",
+    "kind": "run-pass",
+    "phase": "P3",
+    "rule": "P7, O6",
+    "summary": "scope 外拥有数组的临时切片可直接传给线程",
+    "diagnostics": [],
+    "expect": null,
+    "expected_stdout": "3\n",
+    "category": "concurrency",
+    "file": "concurrency/T-GP1.yv",
+    "source_sha256": "ad79c4a36fa561bcf9aa2d102ffed246b5e8cf695f66ecf9a99cc819d27f7009",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-GP2",
+    "kind": "check-fail",
+    "phase": "P3",
+    "rule": "P7",
+    "summary": "临时拥有数组不能借给 scope 线程",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0705",
+        "line": 15
+      }
+    ],
+    "expect": [
+      "E0705"
+    ],
+    "category": "concurrency",
+    "file": "concurrency/T-GP2.yv",
+    "source_sha256": "11a941b38b3a474995ab87c0d56834b151d10d320e184cfd67b63cbb9e1cedbe",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-GP3",
+    "kind": "run-pass",
+    "phase": "P3",
+    "rule": "P5, P8",
+    "summary": "关闭后的 send 返还原拥有值",
+    "diagnostics": [],
+    "expect": null,
+    "expected_stdout": "job\nclosed\n",
+    "category": "concurrency",
+    "file": "concurrency/T-GP3.yv",
+    "source_sha256": "1b3290f3318da52e28d47cb893c46b22d3352a744ec5d539d7ce9b46391ee440",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-GP4",
+    "kind": "run-pass",
+    "phase": "P3",
+    "rule": "P5, P8",
+    "summary": "重复关闭幂等并先排空队列",
+    "diagnostics": [],
+    "expect": null,
+    "expected_stdout": "1\n2\n-1\n",
+    "category": "concurrency",
+    "file": "concurrency/T-GP4.yv",
+    "source_sha256": "8d560f140eb1dcfff769c4c3173d97ab736c6e6a5e8752f294b7cf0b3e9417f1",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-GP5",
+    "kind": "run-panic",
+    "phase": "P3",
+    "rule": "P8",
+    "summary": "同线程递归 lock 是明确 panic 不是无期限死锁",
+    "diagnostics": [],
+    "expect": "P-LOCK-REENTRANT",
+    "expect_panic": "P-LOCK-REENTRANT",
+    "timeout_ms": "3000",
+    "category": "concurrency",
+    "file": "concurrency/T-GP5.yv",
+    "source_sha256": "abe176758de56763334c90878f6ed73dde9c56cf11bef7027d50567e5ae36c80",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-GP6",
+    "kind": "check-fail",
+    "phase": "P3",
+    "rule": "P3",
+    "summary": "join 句柄是一次性拥有资源",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0402",
+        "line": 14
+      }
+    ],
+    "expect": [
+      "E0402"
+    ],
+    "category": "concurrency",
+    "file": "concurrency/T-GP6.yv",
+    "source_sha256": "ef595291ab443f0d5f04b4c227eabe61ef871c766173019886e07f482ad48b7b",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-GP7",
+    "kind": "check-fail",
+    "phase": "P3",
+    "rule": "P3",
+    "summary": "显式 join 不提前解除 v1 的 scope 借用",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0102",
+        "line": 15
+      }
+    ],
+    "expect": [
+      "E0102"
+    ],
+    "category": "concurrency",
+    "file": "concurrency/T-GP7.yv",
+    "source_sha256": "67cbf9826629b9e9da6148baea67a5f8c12ca74c7bbc620d4295cbbb10f92b32",
+    "execution_status": "not_run"
   },
   {
     "id": "T-P1",
-    "category": "concurrency",
     "kind": "check-fail",
     "phase": "P3",
     "rule": "P1",
-    "file": "concurrency/T-P1.yv",
     "summary": "Arc[Mutex[Rc[T]]] 交给另一个线程",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0701",
+        "line": 18
+      }
+    ],
     "expect": [
       "E0701"
-    ]
+    ],
+    "category": "concurrency",
+    "file": "concurrency/T-P1.yv",
+    "source_sha256": "7476d7d9c30098445f6476b20902322d42158c022e33618e8db4db139aad54e3",
+    "execution_status": "not_run"
   },
   {
     "id": "T-P1p",
-    "category": "concurrency",
     "kind": "run-pass",
     "phase": "P3",
     "rule": "P1",
-    "file": "concurrency/T-P1p.yv",
     "summary": "Arc[Mutex[T]]，T 满足 Send",
-    "expect": null
+    "diagnostics": [],
+    "expect": null,
+    "expected_stdout": "2\n",
+    "category": "concurrency",
+    "file": "concurrency/T-P1p.yv",
+    "source_sha256": "d151b7c3e04e320c8e03957553b426e41d86dcc9d28a60ec567b7237cac38210",
+    "execution_status": "not_run"
   },
   {
     "id": "T-P2",
-    "category": "concurrency",
     "kind": "check-fail",
     "phase": "P3",
     "rule": "P2",
-    "file": "concurrency/T-P2.yv",
     "summary": "没声明 Send 的接口值交给另一个线程",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0701",
+        "line": 24
+      }
+    ],
     "expect": [
       "E0701"
-    ]
+    ],
+    "category": "concurrency",
+    "file": "concurrency/T-P2.yv",
+    "source_sha256": "45b9528235017b963cee4cf04eb70d222ae6655dbd60c292f7673a3a5dfa95e3",
+    "execution_status": "not_run"
   },
   {
     "id": "T-P2p",
-    "category": "concurrency",
     "kind": "run-pass",
     "phase": "P3",
     "rule": "P2",
-    "file": "concurrency/T-P2p.yv",
     "summary": "Box[Named + Send] 可以转交给另一个线程",
-    "expect": null
+    "diagnostics": [],
+    "expect": null,
+    "expected_stdout": "dog\n",
+    "category": "concurrency",
+    "file": "concurrency/T-P2p.yv",
+    "source_sha256": "4eee0787b1880a92327a73a3224905fb7032a302bc1bb2675b5c745580b0f285",
+    "execution_status": "not_run"
   },
   {
     "id": "T-P2s",
-    "category": "concurrency",
     "kind": "check-fail",
     "phase": "P3",
     "rule": "P2",
-    "file": "concurrency/T-P2s.yv",
     "summary": "+ Send 只能转交；借给另一个线程共享还需要 Sync",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0702",
+        "line": 24
+      }
+    ],
     "expect": [
       "E0702"
-    ]
+    ],
+    "category": "concurrency",
+    "file": "concurrency/T-P2s.yv",
+    "source_sha256": "0ff77472cf57aff23fe3343c0e5b3402e00221e6c0d771cf77ed22df5a8f4349",
+    "execution_status": "not_run"
   },
   {
     "id": "T-P3",
-    "category": "concurrency",
     "kind": "run-pass",
     "phase": "P3",
     "rule": "P3",
-    "file": "concurrency/T-P3.yv",
     "summary": "scope 中途 return：先等线程结束，再释放被借用的数据",
-    "expect": null
+    "diagnostics": [],
+    "expect": null,
+    "sanitize_mode": "separate-artifacts",
+    "expected_stdout": "-1\n10\n",
+    "sanitizer_profiles": [
+      "address+undefined",
+      "thread"
+    ],
+    "category": "concurrency",
+    "file": "concurrency/T-P3.yv",
+    "source_sha256": "f52bcdc8c68de13956a966a7438455a370718abc2c064dbf85572d433acc5156",
+    "execution_status": "not_run"
   },
   {
     "id": "T-P3f",
-    "category": "concurrency",
     "kind": "check-fail",
     "phase": "P3",
     "rule": "P3",
-    "file": "concurrency/T-P3f.yv",
     "summary": "线程不能借用在 scope 内部声明、比 scope 更短命的局部变量",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0705",
+        "line": 18
+      }
+    ],
     "expect": [
       "E0705"
-    ]
+    ],
+    "category": "concurrency",
+    "file": "concurrency/T-P3f.yv",
+    "source_sha256": "3313976829a4c32bf59ecb1974c4f36f4685ead5864e7f52d7f4fb6a5647291a",
+    "execution_status": "not_run"
   },
   {
     "id": "T-P4",
-    "category": "concurrency",
     "kind": "check-fail",
     "phase": "P3",
     "rule": "P4",
-    "file": "concurrency/T-P4.yv",
     "summary": "锁内借出的引用在 with 块外使用",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0703",
+        "line": 17
+      }
+    ],
     "expect": [
       "E0703"
-    ]
+    ],
+    "category": "concurrency",
+    "file": "concurrency/T-P4.yv",
+    "source_sha256": "9c32b801701ede6b88ef945c1b44e5c2e63d3b0f0e93a0f81d3387259fd320aa",
+    "execution_status": "not_run"
   },
   {
     "id": "T-P4p",
-    "category": "concurrency",
     "kind": "run-pass",
     "phase": "P3",
     "rule": "P4",
-    "file": "concurrency/T-P4p.yv",
     "summary": "在块内 clone 出拥有值",
-    "expect": null
+    "diagnostics": [],
+    "expect": null,
+    "expected_stdout": "apple\n",
+    "category": "concurrency",
+    "file": "concurrency/T-P4p.yv",
+    "source_sha256": "37355d8495f8f3d2c66513ef1af08343371abffdd0ba428d767acf0aaa9552a4",
+    "execution_status": "not_run"
   },
   {
     "id": "T-P5",
-    "category": "concurrency",
     "kind": "check-fail",
     "phase": "P3",
     "rule": "P5",
-    "file": "concurrency/T-P5.yv",
     "summary": "channel 的元素不能携带借用",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0704",
+        "line": 11
+      }
+    ],
     "expect": [
       "E0704"
-    ]
+    ],
+    "category": "concurrency",
+    "file": "concurrency/T-P5.yv",
+    "source_sha256": "b3ce802c39a69f19efe3ecb80c6621b1419e6676f8156fa0b4717c1d55b252a2",
+    "execution_status": "not_run"
   },
   {
     "id": "T-P5p",
-    "category": "concurrency",
     "kind": "run-pass",
     "phase": "P3",
     "rule": "P5, C5",
-    "file": "concurrency/T-P5p.yv",
     "summary": "channel 传拥有值；recv 的结果可以移走",
-    "expect": null
+    "diagnostics": [],
+    "expect": null,
+    "expected_stdout": "2\n",
+    "category": "concurrency",
+    "file": "concurrency/T-P5p.yv",
+    "source_sha256": "8a4b6d6297f8493b85d58dbca45226ed184445fe66bbc470af07e3eb47636cb6",
+    "execution_status": "not_run"
   },
   {
     "id": "T-P6",
-    "category": "concurrency",
     "kind": "check-fail",
     "phase": "P3",
     "rule": "P6",
-    "file": "concurrency/T-P6.yv",
     "summary": "锁守卫不能移到另一个线程",
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "code": "E0701",
+        "line": 17
+      }
+    ],
     "expect": [
       "E0701"
-    ]
+    ],
+    "category": "concurrency",
+    "file": "concurrency/T-P6.yv",
+    "source_sha256": "ea7c2601330be1f2364c023d2aad5c1f168e8d101df78e273ea04311175d670c",
+    "execution_status": "not_run"
   },
   {
     "id": "T-P6p",
-    "category": "concurrency",
     "kind": "run-pass",
     "phase": "P3",
     "rule": "P6",
-    "file": "concurrency/T-P6p.yv",
     "summary": "在取得锁的线程里释放守卫",
-    "expect": null
+    "diagnostics": [],
+    "expect": null,
+    "expected_stdout": "released\n",
+    "category": "concurrency",
+    "file": "concurrency/T-P6p.yv",
+    "source_sha256": "6ca220054b38e2353a6be12229ff685c4571fa843334a658a5846a5a2093ffd2",
+    "execution_status": "not_run"
   },
   {
     "id": "T-V5",
-    "category": "concurrency",
     "kind": "run-pass",
     "phase": "P3",
-    "rule": "V7",
-    "file": "concurrency/T-V5.yv",
+    "rule": "V7, P8",
     "summary": "let _ 立即释放锁，let _guard 持锁到作用域结束",
-    "expect": null
+    "diagnostics": [],
+    "expect": null,
+    "expected_stdout": "true\nfalse\n",
+    "category": "concurrency",
+    "file": "concurrency/T-V5.yv",
+    "source_sha256": "57c0feecb6f44d8aead5378f153612fa15311c636c3680c3aa07e0860593c618",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-GA1",
+    "kind": "report",
+    "phase": "P3",
+    "rule": "M3",
+    "summary": "分配查询保留已知分配与未知调用的区别",
+    "setup": {
+      "program": "fixtures/alloc-known.yv",
+      "command": [
+        "yavo",
+        "allocations",
+        "demo",
+        "--file",
+        "{program}",
+        "--json"
+      ]
+    },
+    "expected_report": {
+      "subject": "demo",
+      "status": "may_alloc"
+    },
+    "category": "report",
+    "file": "report/T-GA1.json",
+    "source_sha256": "07e97795a06c50b8c4996795a8430c6ea2a05d64f8b34600500203603e9ce0d3",
+    "execution_status": "not_run"
+  },
+  {
+    "id": "T-GA2",
+    "kind": "report",
+    "phase": "P3",
+    "rule": "M3",
+    "summary": "分配查询保留已知分配与未知调用的区别",
+    "setup": {
+      "program": "fixtures/alloc-unknown.yv",
+      "command": [
+        "yavo",
+        "allocations",
+        "demo",
+        "--file",
+        "{program}",
+        "--json"
+      ]
+    },
+    "expected_report": {
+      "subject": "demo",
+      "status": "unknown"
+    },
+    "category": "report",
+    "file": "report/T-GA2.json",
+    "source_sha256": "3fe7718b8e97d6f41bd7ea2a6cae1d6e167139e507290906141c2cd3eac95a33",
+    "execution_status": "not_run"
   },
   {
     "id": "T-R1",
-    "category": "report",
     "kind": "report",
     "phase": "P3",
     "rule": "规划·验证报告",
+    "summary": "没有 Windows 运行环境时，Windows 测试必须是 not_run，总体是 not_verified",
+    "setup": {
+      "program": "../run/T-N2.yv",
+      "command": "yavo verify --target x86_64-windows-gnu",
+      "available_runners": [
+        "x86_64-linux-gnu"
+      ]
+    },
+    "expected_report": {
+      "overall": "not_verified",
+      "checks[name=build, target=x86_64-windows-gnu].status": "passed",
+      "checks[name=tests, target=x86_64-windows-gnu].status": "not_run"
+    },
+    "category": "report",
     "file": "report/T-R1.json",
-    "summary": "没有 Windows 运行环境时，Windows 测试必须是 not_run，总体是 not_verified"
+    "source_sha256": "13fc48710fb02e92b85cba3206fe485f316b96509afd04ea141270941dc371b5",
+    "execution_status": "not_run"
   },
   {
     "id": "T-R2",
-    "category": "report",
     "kind": "report",
     "phase": "P3",
     "rule": "规划·验证报告",
+    "summary": "Linux 上跑 Sanitizer 的工件，不能改变 Windows 工件的测试状态",
+    "setup": {
+      "program": "../run/T-N2.yv",
+      "command": "yavo verify --target x86_64-windows-gnu --sanitize",
+      "available_runners": [
+        "x86_64-linux-gnu"
+      ]
+    },
+    "expected_report": {
+      "overall": "not_verified",
+      "checks[name=sanitizers].target": "x86_64-linux-gnu",
+      "checks[name=sanitizers].artifact != checks[name=build, target=x86_64-windows-gnu].artifact": true,
+      "checks[name=tests, target=x86_64-windows-gnu].status": "not_run"
+    },
+    "category": "report",
     "file": "report/T-R2.json",
-    "summary": "Linux 上跑 Sanitizer 的工件，不能改变 Windows 工件的测试状态"
+    "source_sha256": "95c998b84a36a0782f555c9f1e2be005290f6c45f35f49ae53a6da112562350f",
+    "execution_status": "not_run"
   }
 ]

@@ -1,0 +1,23 @@
+// id: T-G25
+// kind: check-pass
+// phase: P1
+// rule: K2
+// summary: 用户 Ord 和 Ordering 枚举契约
+
+struct Version: Ord {
+    number: int
+    fn cmp(self, other: &Version) -> Ordering {
+        if self.number < other.number {
+            return .Less
+        }
+        if self.number > other.number {
+            return .Greater
+        }
+        return .Equal
+    }
+}
+fn main() {
+    var versions: Vec[Version] = [Version{number: 2}, Version{number: 1}]
+    versions.sort()
+    println(versions[0].number)
+}

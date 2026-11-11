@@ -1,0 +1,10 @@
+// id: T-G28
+// kind: check-fail
+// phase: P1
+// rule: E1, E3
+// summary: 即使来源为 static 也不开放 Box[str] 例外
+
+fn main() {
+    let boxed: Box[str] = Box("static") //~ ERROR E0301
+    println(boxed)
+}

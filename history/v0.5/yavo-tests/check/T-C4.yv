@@ -1,0 +1,17 @@
+// id: T-C4
+// kind: check-fail
+// phase: P1
+// rule: C3, E1
+// summary: []str 经 .toVec() 后仍携带借用，不能做普通字段
+
+struct Index {
+    words: Vec[str]                 //~ ERROR E0301
+}
+
+fn main() {
+    let text = "a b".toString()
+    let parts = text.fields()
+    let slice = parts[0..parts.len()]
+    let idx = Index{words: slice.toVec()}
+    println(idx.words.len())
+}

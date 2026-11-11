@@ -1,0 +1,16 @@
+// id: T-G11
+// kind: check-fail
+// phase: P1
+// rule: V10
+// summary: 用户不能直接调用 drop 方法
+
+struct Token: Drop {
+    n: int
+    fn drop(inout self) {
+        println(self.n)
+    }
+}
+fn main() {
+    var t = Token{n: 1}
+    t.drop() //~ ERROR E0801
+}

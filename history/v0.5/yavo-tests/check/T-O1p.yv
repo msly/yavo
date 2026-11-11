@@ -1,0 +1,13 @@
+// id: T-O1p
+// kind: check-pass
+// phase: P1
+// rule: O1
+// summary: 私有函数写明来源
+
+fn trimmed(text: str) -> str of text {
+    return text.trim()
+}
+
+fn main() {
+    println(trimmed("  hi  "))
+}

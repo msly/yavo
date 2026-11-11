@@ -1,0 +1,24 @@
+// id: T-C6p
+// kind: check-pass
+// phase: P1
+// rule: C5
+// summary: 用 take 消费已有的可选字段
+
+struct Holder {
+    item: ?String
+}
+
+fn keep(s: sink String) {
+    println(s)
+}
+
+fn drain(h: inout Holder) {
+    if let s = take(&h.item) {      // take 返回拥有的 ?String，原处留下 none
+        keep(s)
+    }
+}
+
+fn main() {
+    var h = Holder{item: "x".toString()}
+    drain(&h)
+}

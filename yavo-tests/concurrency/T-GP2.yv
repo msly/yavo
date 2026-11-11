@@ -1,0 +1,18 @@
+// id: T-GP2
+// kind: check-fail
+// phase: P3
+// rule: P7
+// summary: 临时拥有数组不能借给 scope 线程
+
+fn values() -> Vec[int] {
+    return [1, 2]
+}
+fn sum(xs: []int) -> int {
+    return xs[0] + xs[1]
+}
+fn main() {
+    scope {
+        let h = spawn sum(values()[0..2]) //~ ERROR E0705
+        println(h.join())
+    }
+}

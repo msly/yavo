@@ -3,7 +3,8 @@
 // phase: P3
 // rule: P3
 // summary: scope 中途 return：先等线程结束，再释放被借用的数据
-// sanitize: address, thread
+// sanitize: address+undefined; thread
+// sanitize-mode: separate-artifacts
 // expect-stdout:
 // | -1
 // | 10

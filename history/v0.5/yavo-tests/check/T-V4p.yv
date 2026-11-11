@@ -1,0 +1,23 @@
+// id: T-V4p
+// kind: check-pass
+// phase: P1
+// rule: V8
+// summary: 表达式形式给替代值；块形式必须离开
+
+enum ParseError {
+    Bad
+}
+
+fn parse(s: str) -> int ! ParseError {
+    let n = s.parseInt() ?? return err(.Bad)
+    return n
+}
+
+fn main() {
+    let a = parse("x") catch _e => 0
+    let b = parse("7") catch _e {
+        eprintln("bad input")
+        return
+    }
+    println(a + b)
+}

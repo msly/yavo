@@ -1,0 +1,13 @@
+// id: T-C2
+// kind: check-pass
+// phase: P1
+// rule: C1
+// summary: Vec[str] 移动后继续访问，来源仍存活
+
+fn main() {
+    let text = "a b c".toString()
+    let ws = text.fields()          // Vec[str]，元素借用 text
+    let moved = ws                  // 移动的是容器，借用关系随之移动
+    println(moved.len())
+    println(moved[0])
+}

@@ -1,0 +1,21 @@
+// id: T-GP4
+// kind: run-pass
+// phase: P3
+// rule: P5, P8
+// summary: 重复关闭幂等并先排空队列
+// expect-stdout:
+// | 1
+// | 2
+// | -1
+
+use std/sync
+fn main() {
+    let ch = Channel[int]{cap: 2}
+    ch.send(1) catch _ { return }
+    ch.send(2) catch _ { return }
+    ch.close()
+    ch.close()
+    println(ch.recv() ?? -1)
+    println(ch.recv() ?? -1)
+    println(ch.recv() ?? -1)
+}

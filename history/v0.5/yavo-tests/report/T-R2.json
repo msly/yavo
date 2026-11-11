@@ -1,0 +1,20 @@
+{
+  "id": "T-R2",
+  "kind": "report",
+  "phase": "P3",
+  "rule": "规划·验证报告",
+  "summary": "Linux 上跑 Sanitizer 的工件，不能改变 Windows 工件的测试状态",
+  "setup": {
+    "program": "../run/T-N2.yv",
+    "command": "yavo verify --target x86_64-windows-gnu --sanitize",
+    "available_runners": [
+      "x86_64-linux-gnu"
+    ]
+  },
+  "expect": {
+    "overall": "not_verified",
+    "checks[name=sanitizers].target": "x86_64-linux-gnu",
+    "checks[name=sanitizers].artifact != checks[name=build, target=x86_64-windows-gnu].artifact": true,
+    "checks[name=tests, target=x86_64-windows-gnu].status": "not_run"
+  }
+}

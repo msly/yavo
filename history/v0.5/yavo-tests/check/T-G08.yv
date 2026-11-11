@@ -1,0 +1,18 @@
+// id: T-G08
+// kind: check-pass
+// phase: P1
+// rule: O6, 第 8 节
+// summary: Vec 参数自动只读借用成切片而不移动数组
+
+fn sum(xs: []int) -> int {
+    var n = 0
+    for x in xs {
+        n += x
+    }
+    return n
+}
+fn main() {
+    let values: Vec[int] = [1, 2, 3]
+    println(sum(values))
+    println(values.len())
+}

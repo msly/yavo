@@ -1,0 +1,11 @@
+// id: T-G29
+// kind: check-fail
+// phase: P1
+// rule: V11, C8
+// summary: 无默认值的 Box 不能 take
+
+fn main() {
+    var value = Box(3)
+    let taken = take(&value) //~ ERROR E0405
+    println(taken)
+}

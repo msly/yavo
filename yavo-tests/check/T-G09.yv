@@ -1,0 +1,12 @@
+// id: T-G09
+// kind: check-fail
+// phase: P1
+// rule: A3, O6
+// summary: 切片仍在使用时不能扩容拥有数组
+
+fn main() {
+    var v: Vec[int] = [1, 2]
+    let part = v[0..1]
+    v.push(3) //~ ERROR E0102
+    println(part[0])
+}

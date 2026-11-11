@@ -1,0 +1,29 @@
+{
+  "schema": "yavo.toolchain-policy/0.5",
+  "status": "design-policy-not-release-certification",
+  "language": "C17",
+  "standalone_support_floor": {"clang": 16, "gcc": 12},
+  "vendor_compilers": "Apple Clang and zig cc require their own version/content lock plus feature probe; do not equate vendor version numbers to upstream Clang",
+  "required_common_flags": ["-std=c17", "-fwrapv", "-fno-strict-aliasing", "-fno-fast-math", "-ffp-contract=off", "-Wall", "-Wextra", "-Werror=implicit-function-declaration"],
+  "optimization": {"debug": "-O0", "release": "-O2"},
+  "sanitizer_profiles": {
+    "memory": ["-O1", "-g", "-fno-omit-frame-pointer", "-fsanitize=address,undefined", "-fno-sanitize-recover=all"],
+    "thread": ["-O1", "-g", "-fno-omit-frame-pointer", "-fsanitize=thread"]
+  },
+  "sanitizer_profile_rules": "Compile separately. Replace, do not append, optimization setting. Never combine address and thread. Validate native toolchain/libc support. Missing support is unsupported/not_run, not passed.",
+  "target_rules": {
+    "linux_release": "x86_64 or aarch64, musl static",
+    "linux_sanitizers": "separately pinned, known-supported dynamic libc profile; auxiliary artifacts are not release binaries",
+    "windows_release": "x86_64-windows-gnu",
+    "macos": "SDK + deployment target + arch must be locked"
+  },
+  "release_zig_lock": null,
+  "sdk_locks": null,
+  "lock_requirement": "Fill from verified downloaded artifacts in P0; null forbids claims of a reproducible release build",
+  "official_references": [
+    "https://releases.llvm.org/16.0.0/tools/clang/docs/LanguageExtensions.html",
+    "https://releases.llvm.org/16.0.0/tools/clang/docs/UsersManual.html",
+    "https://gcc.gnu.org/onlinedocs/gcc-12.5.0/gcc/Code-Gen-Options.html",
+    "https://gcc.gnu.org/onlinedocs/gcc-12.5.0/gcc/Instrumentation-Options.html"
+  ]
+}

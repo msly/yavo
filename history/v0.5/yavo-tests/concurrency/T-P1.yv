@@ -1,0 +1,21 @@
+// id: T-P1
+// kind: check-fail
+// phase: P3
+// rule: P1
+// summary: Arc[Mutex[Rc[T]]] 交给另一个线程
+
+use std/sync
+
+fn touch(p: sink Arc[Mutex[Rc[int]]]) {
+    with _g = p.lock() {
+        println("locked")
+    }
+}
+
+fn main() {
+    let shared = Arc(Mutex(Rc(5)))
+    scope {
+        let h = spawn touch(shared.clone())   //~ ERROR E0701
+        h.join()
+    }
+}

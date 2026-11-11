@@ -1,0 +1,34 @@
+// id: T-A3
+// kind: check-pass
+// phase: P1
+// rule: A4
+// summary: 再借用子字段结束后，继续通过原借用修改
+
+struct Node {
+    key: int
+    size: int
+    left: ?Box[Node]
+    right: ?Box[Node]
+}
+
+fn insert(t: inout ?Box[Node], k: int) {
+    if let n = t {                  // t 是 inout，n 可写
+        if k < n.key {
+            insert(&n.left, k)      // 再借用 n.left
+        } else if k > n.key {
+            insert(&n.right, k)
+        } else {
+            return
+        }
+        n.size += 1                 // 再借用已结束，继续通过 n 修改
+        return
+    }
+    t = Box(Node{key: k, size: 1})
+}
+
+fn main() {
+    var root: ?Box[Node] = none
+    insert(&root, 5)
+    insert(&root, 3)
+    insert(&root, 8)
+}

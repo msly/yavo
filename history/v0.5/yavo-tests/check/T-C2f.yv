@@ -1,0 +1,14 @@
+// id: T-C2f
+// kind: check-fail
+// phase: P1
+// rule: C1, E4
+// summary: 来源先销毁，携带借用的容器还在外层使用
+
+fn main() {
+    var ws: Vec[str] = []
+    {
+        let text = "a b c".toString()
+        ws = text.fields()          //~ ERROR E0305
+    }
+    println(ws.len())
+}

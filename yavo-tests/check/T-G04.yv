@@ -1,0 +1,11 @@
+// id: T-G04
+// kind: check-fail
+// phase: P1
+// rule: A7
+// summary: 独立借用构造必须给出期望权限类型
+
+fn main() {
+    var n = 1
+    let p = &n //~ ERROR E0004
+    println(p)
+}

@@ -1,0 +1,14 @@
+// id: T-C7f
+// kind: check-fail
+// phase: P1
+// rule: C4
+// summary: 不可复制的值不能从借用里隐式取得
+
+fn main() {
+    var names: Map[String, String] = [:]
+    names.set("a".toString(), "ann".toString())
+    if let p = names.get("a") {     // p: &String
+        let owned: String = p       //~ ERROR E0404
+        println(owned)
+    }
+}

@@ -1,0 +1,13 @@
+// id: T-O2
+// kind: check-fail
+// phase: P1
+// rule: O2
+// summary: 声明 of a，实际返回 b 的视图；错误报在函数内
+
+fn pick(a: str, b: str) -> str of a {
+    return b                        //~ ERROR E0303
+}
+
+fn main() {
+    println(pick("x", "y"))
+}

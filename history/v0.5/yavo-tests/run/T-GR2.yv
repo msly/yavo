@@ -1,0 +1,32 @@
+// id: T-GR2
+// kind: run-pass
+// phase: P2
+// rule: V10, V4, V6
+// summary: 完整对象先本体析构再按字段声明逆序清理
+// expect-stdout:
+// | make b
+// | make a
+// | parent
+// | child b
+// | child a
+
+struct Child: Drop {
+    name: String
+    fn drop(inout self) {
+        println("child ${self.name}")
+    }
+}
+struct Parent: Drop {
+    a: Child
+    b: Child
+    fn drop(inout self) {
+        println("parent")
+    }
+}
+fn make(name: str) -> Child {
+    println("make ${name}")
+    return Child{name: name.toString()}
+}
+fn main() {
+    let _p = Parent{b: make("b"), a: make("a")}
+}

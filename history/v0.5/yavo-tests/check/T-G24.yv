@@ -1,0 +1,14 @@
+// id: T-G24
+// kind: check-fail
+// phase: P1
+// rule: O4
+// summary: replace 不能绕过 inout 输出来源限制
+
+fn store(out: inout str, text: str) {
+    let _old = replace(&out, text) //~ ERROR E0306
+}
+fn main() {
+    var out: str = ""
+    let text = "hello".toString()
+    store(&out, text.trim())
+}

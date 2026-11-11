@@ -1,0 +1,13 @@
+// id: T-O8
+// kind: check-fail
+// phase: P1
+// rule: O2
+// summary: of 不能指向 sink 参数
+
+fn bad(text: sink String) -> str of text {   //~ ERROR E0304
+    return text.trim()
+}
+
+fn main() {
+    println(bad("x".toString()))
+}

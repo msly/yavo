@@ -1,0 +1,15 @@
+// id: T-C1p
+// kind: check-pass
+// phase: P1
+// rule: 第 2 节
+// summary: 移动可变借用后只用新的那份
+
+fn main() {
+    var m: Map[String, Vec[int]] = [:]
+    m.set("a".toString(), [])
+    if let p = m.getMut("a") {
+        let q = p
+        q.push(1)
+        q.push(2)
+    }
+}

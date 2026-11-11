@@ -1,0 +1,12 @@
+// id: T-N1d
+// kind: run-panic
+// phase: P2
+// rule: 第 7 节
+// summary: NaN 转整数
+// expect-panic: P-FLOAT-CONVERT
+
+fn main() {
+    let z = 0.0
+    let nan = z / z
+    println(int(nan))
+}

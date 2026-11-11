@@ -1,0 +1,13 @@
+// id: T-GR8
+// kind: run-panic
+// phase: P2
+// rule: M1
+// summary: 运行器注入首次用户分配失败
+// expect-panic: P-OOM
+// fault-alloc-at: 1
+// fault-scope: after-main-entry
+
+fn main() {
+    var values: Vec[int] = []
+    values.reserve(16)
+}

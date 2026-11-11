@@ -1,0 +1,9 @@
+// id: T-G27
+// kind: check-fail
+// phase: P1
+// rule: 第 7 节
+// summary: wrap 只接受整数不接受浮点数
+
+fn main() {
+    println(i32.wrap(1.5)) //~ ERROR E0001
+}

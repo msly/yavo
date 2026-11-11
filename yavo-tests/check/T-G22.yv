@@ -1,0 +1,10 @@
+// id: T-G22
+// kind: check-fail
+// phase: P1
+// rule: N2
+// summary: 字面量类型超界不是运行时转换
+
+fn main() {
+    let n: u8 = 256 //~ ERROR E0003
+    println(n)
+}

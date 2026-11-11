@@ -1,0 +1,15 @@
+// id: T-E1p
+// kind: check-pass
+// phase: P1
+// rule: E2
+// summary: 泛型包装结构里放拥有值
+
+struct Wrapper[T] {
+    value: T
+}
+
+fn main() {
+    let text = "abc".toString()
+    let w = Wrapper[String]{value: text.trim().toString()}
+    println(w.value)
+}

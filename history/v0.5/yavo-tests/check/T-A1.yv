@@ -1,0 +1,18 @@
+// id: T-A1
+// kind: check-fail
+// phase: P1
+// rule: A1
+// summary: 把只读借用放进 var，也不能通过它写入
+
+struct Counter {
+    n: int
+}
+
+fn main() {
+    var m: Map[String, Counter] = [:]
+    m.set("a".toString(), Counter{n: 1})
+    var r = m.get("a")              // r: ?&Counter；var 只允许给 r 重新赋值
+    if let c = r {
+        c.n = 2                     //~ ERROR E0101
+    }
+}

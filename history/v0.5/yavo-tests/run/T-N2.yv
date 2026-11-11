@@ -1,0 +1,22 @@
+// id: T-N2
+// kind: run-pass
+// phase: P2
+// rule: 第 7 节
+// summary: wrap 的取模语义与移位结果
+// expect-stdout:
+// | -126
+// | 255
+// | -4
+// | 100
+// | 2
+
+fn main() {
+    println(i8.wrap(130))
+    println(u8.wrap(-1))
+    let i: i8 = -8
+    println(i >> 1)                 // 有符号右移补符号位
+    let u: u8 = 200
+    println(u >> 1)                 // 无符号右移补零
+    let b: u8 = 129
+    println(b << 1)                 // 左移丢弃高位
+}

@@ -1,0 +1,22 @@
+// id: T-GP3
+// kind: run-pass
+// phase: P3
+// rule: P5, P8
+// summary: 关闭后的 send 返还原拥有值
+// expect-stdout:
+// | job
+// | closed
+
+use std/sync
+fn main() {
+    let ch = Channel[String]{cap: 1}
+    ch.close()
+    match ch.send("job".toString()) {
+        ok(_u) => println("unexpected")
+        err(.Closed(value)) => println(value)
+    }
+    match ch.recv() {
+        some(_value) => println("unexpected")
+        none => println("closed")
+    }
+}

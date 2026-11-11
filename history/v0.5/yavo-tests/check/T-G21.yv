@@ -1,0 +1,13 @@
+// id: T-G21
+// kind: check-fail
+// phase: P1
+// rule: A8
+// summary: 可变遍历期间禁止直接访问原容器
+
+fn main() {
+    var values: Vec[int] = [1, 2]
+    for value in &values {
+        println(values.len()) //~ ERROR E0102
+        *value += 1
+    }
+}

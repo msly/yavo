@@ -1,0 +1,12 @@
+// id: T-G20
+// kind: check-pass
+// phase: P1
+// rule: A8
+// summary: 只读遍历期间允许继续只读访问同一容器
+
+fn main() {
+    var values: Vec[int] = [1, 2]
+    for value in values {
+        println(value + values.len())
+    }
+}

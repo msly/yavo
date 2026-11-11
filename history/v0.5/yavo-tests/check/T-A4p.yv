@@ -1,0 +1,13 @@
+// id: T-A4p
+// kind: check-pass
+// phase: P1
+// rule: A5
+// summary: 要改键就先删除再重新插入
+
+fn main() {
+    var m: Map[String, int] = [:]
+    m.set("a".toString(), 1)
+    let old = m.remove("a")         // ?int，拥有的值
+    m.set("ax".toString(), old ?? 0)
+    println(m.getCopy("ax") ?? -1)
+}

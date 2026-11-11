@@ -1,0 +1,22 @@
+// id: T-GP1
+// kind: run-pass
+// phase: P3
+// rule: P7, O6
+// summary: scope 外拥有数组的临时切片可直接传给线程
+// expect-stdout:
+// | 3
+
+fn sum(xs: []int) -> int {
+    var n = 0
+    for x in xs {
+        n += x
+    }
+    return n
+}
+fn main() {
+    let data: Vec[int] = [1, 2, 3]
+    scope {
+        let h = spawn sum(data[0..2])
+        println(h.join())
+    }
+}

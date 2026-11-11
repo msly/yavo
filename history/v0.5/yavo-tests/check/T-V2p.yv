@@ -1,0 +1,15 @@
+// id: T-V2p
+// kind: check-pass
+// phase: P1
+// rule: V1
+// summary: 先算出长度，再移动
+
+fn consume(v: sink Vec[int], n: int) {
+    println(n + v.len())
+}
+
+fn main() {
+    let v: Vec[int] = [1, 2]
+    let n = v.len()
+    consume(v, n)
+}

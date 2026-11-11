@@ -4,6 +4,8 @@
 // rule: 第 2 节
 // summary: 从 Box 的字段移出：take、clone、改为借用三者语义不同，只给候选
 // expect-candidates: take, clone, borrow
+// candidate-recheck: required
+// candidate-note: take 必须同时把 let b 改为 var b；borrow 必须包含 keep 签名和调用的完整修改
 
 struct Node {
     name: String

@@ -1,0 +1,20 @@
+// id: T-G16
+// kind: check-pass
+// phase: P1
+// rule: V12
+// summary: catch 通配符允许省略错误绑定
+
+enum E {
+    Failed
+}
+fn fail() -> int ! E {
+    return err(.Failed)
+}
+fn main() {
+    let a = fail() catch _ => 3
+    let b = fail() catch _ {
+        println(a)
+        return
+    }
+    println(b)
+}

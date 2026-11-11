@@ -1,0 +1,27 @@
+// id: T-P2
+// kind: check-fail
+// phase: P3
+// rule: P2
+// summary: 没声明 Send 的接口值交给另一个线程
+
+interface Named {
+    fn name(self) -> String
+}
+
+struct Dog: Named {
+    fn name(self) -> String {
+        return "dog".toString()
+    }
+}
+
+fn show(x: sink Box[Named]) {
+    println(x.name())
+}
+
+fn main() {
+    let d: Box[Named] = Box(Dog{})
+    scope {
+        let h = spawn show(d)            //~ ERROR E0701
+        h.join()
+    }
+}

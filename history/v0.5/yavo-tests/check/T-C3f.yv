@@ -1,0 +1,14 @@
+// id: T-C3f
+// kind: check-fail
+// phase: P1
+// rule: C2, O2
+// summary: 不可复制的元素读出来是借用，不能指向局部容器后返回
+
+fn firstName(s: str) -> &String of s {
+    let names: Vec[String] = [s.toString()]
+    return names[0]                 //~ ERROR E0303
+}
+
+fn main() {
+    let _n = firstName("ann")
+}

@@ -1,0 +1,21 @@
+// id: T-V4
+// kind: check-fail
+// phase: P1
+// rule: V8
+// summary: 块形式的 catch 能正常走到结束花括号
+
+enum ParseError {
+    Bad
+}
+
+fn parse(s: str) -> int ! ParseError {
+    let n = s.parseInt() ?? return err(.Bad)
+    return n
+}
+
+fn main() {
+    let n = parse("x") catch _e {   //~ ERROR E0601
+        eprintln("bad input")
+    }
+    println(n)
+}

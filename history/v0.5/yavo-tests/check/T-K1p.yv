@@ -1,0 +1,11 @@
+// id: T-K1p
+// kind: check-pass
+// phase: P1
+// rule: K1
+// summary: 浮点数用 sortBy 加 totalCmp 排序
+
+fn main() {
+    var xs: Vec[f64] = [2.5, 1.0]
+    xs.sortBy((a, b) => a.totalCmp(b) == .Less)
+    println(xs[0])
+}

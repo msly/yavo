@@ -1,0 +1,13 @@
+// id: T-G19
+// kind: check-fail
+// phase: P1
+// rule: A2
+// summary: var 切片描述符不允许可变遍历底层数据
+
+fn main() {
+    var values: Vec[int] = [1, 2]
+    var part = values[0..2]
+    for value in &part { //~ ERROR E0101
+        println(value)
+    }
+}

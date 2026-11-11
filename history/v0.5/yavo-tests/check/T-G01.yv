@@ -1,0 +1,13 @@
+// id: T-G01
+// kind: check-pass
+// phase: P1
+// rule: A6, A1
+// summary: 通过 let 绑定的可变借用写标量
+
+fn main() {
+    var value = 1
+    let p: &inout int = &value
+    *p = 2
+    *p += 3
+    println(value)
+}

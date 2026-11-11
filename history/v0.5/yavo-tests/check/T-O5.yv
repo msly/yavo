@@ -1,0 +1,14 @@
+// id: T-O5
+// kind: check-fail
+// phase: P1
+// rule: O5
+// summary: 会被保存的比较闭包捕获局部 str
+
+use std/collections
+
+fn main() {
+    let name = "keep".toString()
+    let target: str = name.trim()
+    var h = Heap[(int, int)].by((a, b) => a.0 + target.len() < b.0)   //~ ERROR E0307
+    h.push((1, 2))
+}

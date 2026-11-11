@@ -1,0 +1,16 @@
+// id: T-G05
+// kind: check-pass
+// phase: P1
+// rule: C5, C7
+// summary: some/none 完整匹配 take 后的拥有可选值
+
+fn consume(s: sink String) {
+    println(s)
+}
+fn main() {
+    var opt: ?String = some("job".toString())
+    match take(&opt) {
+        some(job) => consume(job)
+        none => println("empty")
+    }
+}

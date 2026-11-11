@@ -1,0 +1,28 @@
+// id: T-GR1
+// kind: run-pass
+// phase: P2
+// rule: V10, V12
+// summary: catch _ 与 _e 的错误析构时点不同
+// expect-stdout:
+// | drop ignored
+// | fallback ignored
+// | fallback named
+// | drop named
+
+struct Failure: Drop {
+    name: String
+    fn drop(inout self) {
+        println("drop ${self.name}")
+    }
+}
+fn fail(name: str) -> int ! Failure {
+    return err(Failure{name: name.toString()})
+}
+fn fallback(name: str) -> int {
+    println("fallback ${name}")
+    return 0
+}
+fn main() {
+    let _a = fail("ignored") catch _ => fallback("ignored")
+    let _b = fail("named") catch _e => fallback("named")
+}

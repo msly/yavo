@@ -1,0 +1,18 @@
+// id: T-GR9
+// kind: run-allowed
+// phase: P2
+// rule: K3
+// summary: 错误比较器不能破坏元素或产生内存错误
+// allow-outcomes: stdout:intact; panic:P-COMPARATOR
+// sanitize: address+undefined
+// timeout-ms: 3000
+
+fn main() {
+    var values: Vec[int] = [3, 1, 2]
+    values.sortBy((a, b) => a <= b)
+    assert(values.len() == 3)
+    assert(values.contains(1))
+    assert(values.contains(2))
+    assert(values.contains(3))
+    println("intact")
+}

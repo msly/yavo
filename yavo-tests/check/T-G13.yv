@@ -1,0 +1,15 @@
+// id: T-G13
+// kind: check-fail
+// phase: P1
+// rule: V11
+// summary: 析构体不能替换整个 self
+
+struct Token: Drop {
+    n: int
+    fn drop(inout self) {
+        self = Token{n: 2} //~ ERROR E0803
+    }
+}
+fn main() {
+    let _t = Token{n: 1}
+}

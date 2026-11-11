@@ -1,0 +1,18 @@
+// id: T-V5
+// kind: run-pass
+// phase: P3
+// rule: V7, P8
+// summary: let _ 立即释放锁，let _guard 持锁到作用域结束
+// expect-stdout:
+// | true
+// | false
+
+use std/sync
+
+fn main() {
+    let m = Mutex(0)
+    let _ = m.lock()                // 立即丢弃守卫
+    println(m.tryLock().isSome())
+    let _guard = m.lock()           // 守卫活到作用域结束
+    println(m.tryLock().isSome())
+}

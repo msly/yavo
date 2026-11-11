@@ -9,7 +9,7 @@ fn main() {
     counts.update("a".toString(), 0, (n) => n + 1)
     counts.update("b".toString(), 0, (n) => n + 1)
     var total = 0
-    for _k, n in counts {           // var 的 Map：n 是 &inout int
+    for _k, n in &counts {          // 显式可变遍历：n 是 &inout int
         total += n                  // 自动读取一份 int
     }
     println(total)

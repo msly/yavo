@@ -1,0 +1,13 @@
+// id: T-G18
+// kind: check-pass
+// phase: P1
+// rule: A2, A6
+// summary: 显式可变遍历可修改元素
+
+fn main() {
+    var values: Vec[int] = [1, 2]
+    for value in &values {
+        *value += 1
+    }
+    println(values[0])
+}

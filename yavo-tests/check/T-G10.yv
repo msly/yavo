@@ -1,0 +1,18 @@
+// id: T-G10
+// kind: check-fail
+// phase: P1
+// rule: V10, V11
+// summary: 含标量但实现 Drop 的类型不能 Copy
+
+struct Token: Drop {
+    n: int
+    fn drop(inout self) {
+        println(self.n)
+    }
+}
+fn main() {
+    let a = Token{n: 1}
+    let b = a
+    println(a.n) //~ ERROR E0402
+    println(b.n)
+}

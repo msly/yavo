@@ -1,0 +1,14 @@
+// id: T-GP5
+// kind: run-panic
+// phase: P3
+// rule: P8
+// summary: 同线程递归 lock 是明确 panic 不是无期限死锁
+// expect-panic: P-LOCK-REENTRANT
+// timeout-ms: 3000
+
+use std/sync
+fn main() {
+    let m = Mutex(1)
+    let _first = m.lock()
+    let _second = m.lock()
+}

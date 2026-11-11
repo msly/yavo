@@ -1,0 +1,17 @@
+// id: T-O4p
+// kind: check-pass
+// phase: P1
+// rule: O4
+// summary: 改为返回带 of 的结果
+
+fn collect(text: str) -> Vec[str] of text {
+    var out: Vec[str] = []
+    out.push(text)                  // 局部容器可以写入借用
+    return out
+}
+
+fn main() {
+    let kept = "kept".toString()
+    let saved = collect(kept.trim())
+    println(saved.len())
+}

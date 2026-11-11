@@ -1,0 +1,14 @@
+// id: T-GF1
+// kind: fix-candidate
+// phase: P1
+// rule: O3
+// summary: 缺失 of 只提供候选，不自动扩大签名
+// expect-candidates: add-of
+// candidate-recheck: required
+
+fn trimmed(text: str) -> str { //~ ERROR E0302
+    return text.trim()
+}
+fn main() {
+    println(trimmed(" x "))
+}

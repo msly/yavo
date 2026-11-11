@@ -1,0 +1,18 @@
+// id: T-O4
+// kind: check-fail
+// phase: P1
+// rule: O4
+// summary: 辅助函数通过 inout Vec[str] 写入外部借用
+
+fn appendView(out: inout Vec[str], text: str) {
+    out.push(text)                  //~ ERROR E0306
+}
+
+fn main() {
+    var saved: Vec[str] = []
+    {
+        let temporary = "temporary".toString()
+        appendView(&saved, temporary.trim())
+    }
+    println(saved.len())
+}

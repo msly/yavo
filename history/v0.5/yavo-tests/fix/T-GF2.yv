@@ -1,0 +1,13 @@
+// id: T-GF2
+// kind: fix-auto
+// phase: P1
+// rule: V13
+// summary: 自动拆分临时名冲突时取 vLen2
+// expect-fixed: T-GF2.fixed.yv
+
+fn main() {
+    var v: Vec[int] = [1, 2]
+    let vLen = 99
+    v.push(v.len()) //~ ERROR E0403
+    println(vLen + v.len())
+}

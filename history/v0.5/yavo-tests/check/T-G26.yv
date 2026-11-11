@@ -1,0 +1,15 @@
+// id: T-G26
+// kind: check-fail
+// phase: P1
+// rule: K2
+// summary: 比较协议签名不正确应在实现处报错
+
+struct Version: Ord {
+    number: int
+    fn cmp(self, other: &Version) -> int { //~ ERROR E0502
+        return self.number - other.number
+    }
+}
+fn main() {
+    let _v = Version{number: 1}
+}

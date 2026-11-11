@@ -1,0 +1,11 @@
+--- v0.4/yavo-tests/check/T-A4.yv
++++ v0.5/yavo-tests/check/T-A4.yv
+@@ -7,7 +7,7 @@
+ fn main() {
+     var m: Map[String, int] = [:]
+     m.set("a".toString(), 1)
+-    for k, _v in m {
++    for k, _v in &m {
+         k.push("x")                 //~ ERROR E0103
+     }
+ }

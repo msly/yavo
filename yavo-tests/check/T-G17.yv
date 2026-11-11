@@ -1,0 +1,12 @@
+// id: T-G17
+// kind: check-fail
+// phase: P1
+// rule: A2, A6
+// summary: 默认 for 即使来自 var 也只读
+
+fn main() {
+    var values: Vec[int] = [1, 2]
+    for value in values {
+        *value = 3 //~ ERROR E0101
+    }
+}

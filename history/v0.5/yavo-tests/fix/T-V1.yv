@@ -1,0 +1,12 @@
+// id: T-V1
+// kind: fix-auto
+// phase: P1
+// rule: V2
+// summary: v.push(v.len()) 自动拆出临时变量
+// expect-fixed: T-V1.fixed.yv
+
+fn main() {
+    var v: Vec[int] = [1, 2]
+    v.push(v.len())                 //~ ERROR E0403
+    println(v.len())
+}

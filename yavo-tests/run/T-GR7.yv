@@ -1,0 +1,11 @@
+// id: T-GR7
+// kind: run-panic
+// phase: P2
+// rule: M2
+// summary: 容量乘法超界必须先于分配被检查
+// expect-panic: P-CAPACITY
+
+fn main() {
+    var values: Vec[i64] = []
+    values.reserve(i64.max)
+}

@@ -1,0 +1,13 @@
+// id: T-GR12
+// kind: run-panic
+// phase: P2
+// rule: N1, 第 7 节
+// summary: 常量可知的窄化转换必须保留先前输出
+// expect-panic: P-CONVERT
+// expect-stderr-contains: before
+// modes: debug, release
+
+fn main() {
+    eprintln("before")
+    println(u8(256))
+}
