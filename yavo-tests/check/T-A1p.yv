@@ -1,0 +1,17 @@
+// id: T-A1p
+// kind: check-pass
+// phase: P1
+// rule: A1
+// summary: 用 getMut 取得可写借用后写入
+
+struct Counter {
+    n: int
+}
+
+fn main() {
+    var m: Map[String, Counter] = [:]
+    m.set("a".toString(), Counter{n: 1})
+    if let c = m.getMut("a") {      // c: &inout Counter
+        c.n = 2
+    }
+}

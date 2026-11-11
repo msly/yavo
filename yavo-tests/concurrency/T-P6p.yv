@@ -1,0 +1,19 @@
+// id: T-P6p
+// kind: run-pass
+// phase: P3
+// rule: P6
+// summary: 在取得锁的线程里释放守卫
+// expect-stdout:
+// | released
+
+use std/sync
+
+fn release(_g: sink Guard[int]) {
+    println("released")
+}
+
+fn main() {
+    let m = Mutex(0)
+    let g = m.lock()
+    release(g)
+}

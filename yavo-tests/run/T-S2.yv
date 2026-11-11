@@ -1,0 +1,19 @@
+// id: T-S2
+// kind: run-pass
+// phase: P2
+// rule: S5
+// summary: 读取含非法 UTF-8 的文件得到编码错误，不替换
+// fixture: T-S2.input.bin（字节 66 FF 6F）
+// cwd: 测试文件所在目录
+// expect-stdout:
+// | utf8 error at 1
+
+use std/fs
+
+fn main() {
+    match fs.readText("T-S2.input.bin") {
+        ok(t) => println("unexpected: ${t}")
+        err(.Utf8(offset)) => println("utf8 error at ${offset}")
+        err(_e) => println("other error")
+    }
+}

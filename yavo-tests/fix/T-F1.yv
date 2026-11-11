@@ -1,0 +1,11 @@
+// id: T-F1
+// kind: fix-auto
+// phase: P1
+// rule: V7
+// summary: 未使用的变量改名为 _name，不改变对象寿命
+// expect-fixed: T-F1.fixed.yv
+
+fn main() {
+    let count = 3                   //~ WARN W0001
+    println("done")
+}

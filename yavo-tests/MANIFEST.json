@@ -1,0 +1,828 @@
+[
+  {
+    "id": "T-A1",
+    "category": "check",
+    "kind": "check-fail",
+    "phase": "P1",
+    "rule": "A1",
+    "file": "check/T-A1.yv",
+    "summary": "把只读借用放进 var，也不能通过它写入",
+    "expect": [
+      "E0101"
+    ]
+  },
+  {
+    "id": "T-A1p",
+    "category": "check",
+    "kind": "check-pass",
+    "phase": "P1",
+    "rule": "A1",
+    "file": "check/T-A1p.yv",
+    "summary": "用 getMut 取得可写借用后写入",
+    "expect": null
+  },
+  {
+    "id": "T-A2",
+    "category": "check",
+    "kind": "check-fail",
+    "phase": "P1",
+    "rule": "A3",
+    "file": "check/T-A2.yv",
+    "summary": "同一个位置同时形成两个可变借用",
+    "expect": [
+      "E0102"
+    ]
+  },
+  {
+    "id": "T-A2p",
+    "category": "check",
+    "kind": "check-pass",
+    "phase": "P1",
+    "rule": "A3",
+    "file": "check/T-A2p.yv",
+    "summary": "两个不同位置各有一个可变借用",
+    "expect": null
+  },
+  {
+    "id": "T-A3",
+    "category": "check",
+    "kind": "check-pass",
+    "phase": "P1",
+    "rule": "A4",
+    "file": "check/T-A3.yv",
+    "summary": "再借用子字段结束后，继续通过原借用修改",
+    "expect": null
+  },
+  {
+    "id": "T-A3f",
+    "category": "check",
+    "kind": "check-fail",
+    "phase": "P1",
+    "rule": "A4",
+    "file": "check/T-A3f.yv",
+    "summary": "再借用存活期间，原路径不能做冲突访问",
+    "expect": [
+      "E0102"
+    ]
+  },
+  {
+    "id": "T-A4",
+    "category": "check",
+    "kind": "check-fail",
+    "phase": "P1",
+    "rule": "A5",
+    "file": "check/T-A4.yv",
+    "summary": "遍历 Map 时修改键",
+    "expect": [
+      "E0103"
+    ]
+  },
+  {
+    "id": "T-A4p",
+    "category": "check",
+    "kind": "check-pass",
+    "phase": "P1",
+    "rule": "A5",
+    "file": "check/T-A4p.yv",
+    "summary": "要改键就先删除再重新插入",
+    "expect": null
+  },
+  {
+    "id": "T-C1",
+    "category": "check",
+    "kind": "check-fail",
+    "phase": "P1",
+    "rule": "第 2 节",
+    "file": "check/T-C1.yv",
+    "summary": "&inout 不可复制：赋值即移动，之后原借用不能再用",
+    "expect": [
+      "E0402"
+    ]
+  },
+  {
+    "id": "T-C1p",
+    "category": "check",
+    "kind": "check-pass",
+    "phase": "P1",
+    "rule": "第 2 节",
+    "file": "check/T-C1p.yv",
+    "summary": "移动可变借用后只用新的那份",
+    "expect": null
+  },
+  {
+    "id": "T-C2",
+    "category": "check",
+    "kind": "check-pass",
+    "phase": "P1",
+    "rule": "C1",
+    "file": "check/T-C2.yv",
+    "summary": "Vec[str] 移动后继续访问，来源仍存活",
+    "expect": null
+  },
+  {
+    "id": "T-C2f",
+    "category": "check",
+    "kind": "check-fail",
+    "phase": "P1",
+    "rule": "C1, E4",
+    "file": "check/T-C2f.yv",
+    "summary": "来源先销毁，携带借用的容器还在外层使用",
+    "expect": [
+      "E0305"
+    ]
+  },
+  {
+    "id": "T-C3",
+    "category": "check",
+    "kind": "check-pass",
+    "phase": "P1",
+    "rule": "C2",
+    "file": "check/T-C3.yv",
+    "summary": "临时 Vec[str] 销毁后，复制出的 str 仍指向存活的来源",
+    "expect": null
+  },
+  {
+    "id": "T-C3f",
+    "category": "check",
+    "kind": "check-fail",
+    "phase": "P1",
+    "rule": "C2, O2",
+    "file": "check/T-C3f.yv",
+    "summary": "不可复制的元素读出来是借用，不能指向局部容器后返回",
+    "expect": [
+      "E0303"
+    ]
+  },
+  {
+    "id": "T-C4",
+    "category": "check",
+    "kind": "check-fail",
+    "phase": "P1",
+    "rule": "C3, E1",
+    "file": "check/T-C4.yv",
+    "summary": "[]str 经 .toVec() 后仍携带借用，不能做普通字段",
+    "expect": [
+      "E0301"
+    ]
+  },
+  {
+    "id": "T-C4p",
+    "category": "check",
+    "kind": "check-pass",
+    "phase": "P1",
+    "rule": "C3, E5",
+    "file": "check/T-C4p.yv",
+    "summary": "逐个转成 String 后可以做字段",
+    "expect": null
+  },
+  {
+    "id": "T-C5",
+    "category": "check",
+    "kind": "check-pass",
+    "phase": "P1",
+    "rule": "C5",
+    "file": "check/T-C5.yv",
+    "summary": "匹配拥有的临时值，可以移出其中的值",
+    "expect": null
+  },
+  {
+    "id": "T-C6",
+    "category": "check",
+    "kind": "check-fail",
+    "phase": "P1",
+    "rule": "C5",
+    "file": "check/T-C6.yv",
+    "summary": "匹配已有位置得到的是借用，不能移走",
+    "expect": [
+      "E0401"
+    ]
+  },
+  {
+    "id": "T-C6p",
+    "category": "check",
+    "kind": "check-pass",
+    "phase": "P1",
+    "rule": "C5",
+    "file": "check/T-C6p.yv",
+    "summary": "用 take 消费已有的可选字段",
+    "expect": null
+  },
+  {
+    "id": "T-C7",
+    "category": "check",
+    "kind": "check-pass",
+    "phase": "P1",
+    "rule": "C4, A2",
+    "file": "check/T-C7.yv",
+    "summary": "从 &inout int 自动读取一份参与计算",
+    "expect": null
+  },
+  {
+    "id": "T-C7f",
+    "category": "check",
+    "kind": "check-fail",
+    "phase": "P1",
+    "rule": "C4",
+    "file": "check/T-C7f.yv",
+    "summary": "不可复制的值不能从借用里隐式取得",
+    "expect": [
+      "E0404"
+    ]
+  },
+  {
+    "id": "T-C8",
+    "category": "check",
+    "kind": "check-pass",
+    "phase": "P1",
+    "rule": "C6",
+    "file": "check/T-C8.yv",
+    "summary": "Map[String, int] 用 str 键查询",
+    "expect": null
+  },
+  {
+    "id": "T-C8f",
+    "category": "check",
+    "kind": "check-fail",
+    "phase": "P1",
+    "rule": "C6",
+    "file": "check/T-C8f.yv",
+    "summary": "插入要拥有的键，str 不会被隐式转成 String",
+    "expect": [
+      "E0001"
+    ]
+  },
+  {
+    "id": "T-E1",
+    "category": "check",
+    "kind": "check-fail",
+    "phase": "P1",
+    "rule": "E2",
+    "file": "check/T-E1.yv",
+    "summary": "借用藏进泛型包装结构",
+    "expect": [
+      "E0301"
+    ]
+  },
+  {
+    "id": "T-E1p",
+    "category": "check",
+    "kind": "check-pass",
+    "phase": "P1",
+    "rule": "E2",
+    "file": "check/T-E1p.yv",
+    "summary": "泛型包装结构里放拥有值",
+    "expect": null
+  },
+  {
+    "id": "T-E2",
+    "category": "check",
+    "kind": "check-fail",
+    "phase": "P1",
+    "rule": "E2",
+    "file": "check/T-E2.yv",
+    "summary": "Box[Vec[str]]",
+    "expect": [
+      "E0301"
+    ]
+  },
+  {
+    "id": "T-E2p",
+    "category": "check",
+    "kind": "check-pass",
+    "phase": "P1",
+    "rule": "E2",
+    "file": "check/T-E2p.yv",
+    "summary": "Box[Vec[String]]",
+    "expect": null
+  },
+  {
+    "id": "T-K1",
+    "category": "check",
+    "kind": "check-fail",
+    "phase": "P1",
+    "rule": "K1",
+    "file": "check/T-K1.yv",
+    "summary": "f64 不满足 Ord",
+    "expect": [
+      "E0501"
+    ]
+  },
+  {
+    "id": "T-K1p",
+    "category": "check",
+    "kind": "check-pass",
+    "phase": "P1",
+    "rule": "K1",
+    "file": "check/T-K1p.yv",
+    "summary": "浮点数用 sortBy 加 totalCmp 排序",
+    "expect": null
+  },
+  {
+    "id": "T-O1",
+    "category": "check",
+    "kind": "check-fail",
+    "phase": "P1",
+    "rule": "O1",
+    "file": "check/T-O1.yv",
+    "summary": "私有函数返回 str 但没写 of",
+    "expect": [
+      "E0302"
+    ]
+  },
+  {
+    "id": "T-O1p",
+    "category": "check",
+    "kind": "check-pass",
+    "phase": "P1",
+    "rule": "O1",
+    "file": "check/T-O1p.yv",
+    "summary": "私有函数写明来源",
+    "expect": null
+  },
+  {
+    "id": "T-O2",
+    "category": "check",
+    "kind": "check-fail",
+    "phase": "P1",
+    "rule": "O2",
+    "file": "check/T-O2.yv",
+    "summary": "声明 of a，实际返回 b 的视图；错误报在函数内",
+    "expect": [
+      "E0303"
+    ]
+  },
+  {
+    "id": "T-O2p",
+    "category": "check",
+    "kind": "check-pass",
+    "phase": "P1",
+    "rule": "O1, O2",
+    "file": "check/T-O2p.yv",
+    "summary": "多个来源写 of (a, b)",
+    "expect": null
+  },
+  {
+    "id": "T-O3",
+    "category": "check",
+    "kind": "check-fail",
+    "phase": "P1",
+    "rule": "O1",
+    "file": "check/T-O3.yv",
+    "summary": "of (a, b) 的结果按全部来源保守检查：b 先销毁就不能再用",
+    "expect": [
+      "E0305"
+    ]
+  },
+  {
+    "id": "T-O3p",
+    "category": "check",
+    "kind": "check-pass",
+    "phase": "P1",
+    "rule": "O1",
+    "file": "check/T-O3p.yv",
+    "summary": "两个来源都活得比结果长",
+    "expect": null
+  },
+  {
+    "id": "T-O4",
+    "category": "check",
+    "kind": "check-fail",
+    "phase": "P1",
+    "rule": "O4",
+    "file": "check/T-O4.yv",
+    "summary": "辅助函数通过 inout Vec[str] 写入外部借用",
+    "expect": [
+      "E0306"
+    ]
+  },
+  {
+    "id": "T-O4p",
+    "category": "check",
+    "kind": "check-pass",
+    "phase": "P1",
+    "rule": "O4",
+    "file": "check/T-O4p.yv",
+    "summary": "改为返回带 of 的结果",
+    "expect": null
+  },
+  {
+    "id": "T-O5",
+    "category": "check",
+    "kind": "check-fail",
+    "phase": "P1",
+    "rule": "O5",
+    "file": "check/T-O5.yv",
+    "summary": "会被保存的比较闭包捕获局部 str",
+    "expect": [
+      "E0307"
+    ]
+  },
+  {
+    "id": "T-O5p",
+    "category": "check",
+    "kind": "check-pass",
+    "phase": "P1",
+    "rule": "O5",
+    "file": "check/T-O5p.yv",
+    "summary": "不逃逸的闭包可以借用外部变量",
+    "expect": null
+  },
+  {
+    "id": "T-O6",
+    "category": "check",
+    "kind": "check-fail",
+    "phase": "P1",
+    "rule": "O1",
+    "file": "check/T-O6.yv",
+    "summary": "largest[str] 的结果携带来源，来源销毁后不能再用",
+    "expect": [
+      "E0305"
+    ]
+  },
+  {
+    "id": "T-O7",
+    "category": "check",
+    "kind": "check-pass",
+    "phase": "P1",
+    "rule": "O1",
+    "file": "check/T-O7.yv",
+    "summary": "largest[int] 的结果不借用数组",
+    "expect": null
+  },
+  {
+    "id": "T-O8",
+    "category": "check",
+    "kind": "check-fail",
+    "phase": "P1",
+    "rule": "O2",
+    "file": "check/T-O8.yv",
+    "summary": "of 不能指向 sink 参数",
+    "expect": [
+      "E0304"
+    ]
+  },
+  {
+    "id": "T-O8p",
+    "category": "check",
+    "kind": "check-pass",
+    "phase": "P1",
+    "rule": "O2",
+    "file": "check/T-O8p.yv",
+    "summary": "of 指向借用参数",
+    "expect": null
+  },
+  {
+    "id": "T-V2",
+    "category": "check",
+    "kind": "check-fail",
+    "phase": "P1",
+    "rule": "V1",
+    "file": "check/T-V2.yv",
+    "summary": "第一个实参已移动 v，第二个实参不能再用",
+    "expect": [
+      "E0402"
+    ]
+  },
+  {
+    "id": "T-V2p",
+    "category": "check",
+    "kind": "check-pass",
+    "phase": "P1",
+    "rule": "V1",
+    "file": "check/T-V2p.yv",
+    "summary": "先算出长度，再移动",
+    "expect": null
+  },
+  {
+    "id": "T-V4",
+    "category": "check",
+    "kind": "check-fail",
+    "phase": "P1",
+    "rule": "V8",
+    "file": "check/T-V4.yv",
+    "summary": "块形式的 catch 能正常走到结束花括号",
+    "expect": [
+      "E0601"
+    ]
+  },
+  {
+    "id": "T-V4p",
+    "category": "check",
+    "kind": "check-pass",
+    "phase": "P1",
+    "rule": "V8",
+    "file": "check/T-V4p.yv",
+    "summary": "表达式形式给替代值；块形式必须离开",
+    "expect": null
+  },
+  {
+    "id": "T-F1",
+    "category": "fix",
+    "kind": "fix-auto",
+    "phase": "P1",
+    "rule": "V7",
+    "file": "fix/T-F1.yv",
+    "summary": "未使用的变量改名为 _name，不改变对象寿命",
+    "expect": [
+      "W0001"
+    ]
+  },
+  {
+    "id": "T-F2",
+    "category": "fix",
+    "kind": "fix-candidate",
+    "phase": "P1",
+    "rule": "第 2 节",
+    "file": "fix/T-F2.yv",
+    "summary": "从 Box 的字段移出：take、clone、改为借用三者语义不同，只给候选",
+    "expect": [
+      "E0401"
+    ]
+  },
+  {
+    "id": "T-V1",
+    "category": "fix",
+    "kind": "fix-auto",
+    "phase": "P1",
+    "rule": "V2",
+    "file": "fix/T-V1.yv",
+    "summary": "v.push(v.len()) 自动拆出临时变量",
+    "expect": [
+      "E0403"
+    ]
+  },
+  {
+    "id": "T-V3",
+    "category": "fix",
+    "kind": "fix-candidate",
+    "phase": "P1",
+    "rule": "V2",
+    "file": "fix/T-V3.yv",
+    "summary": "接收者里有函数调用：提前计算实参会改变调用顺序，只给候选",
+    "expect": [
+      "E0403"
+    ]
+  },
+  {
+    "id": "T-D1",
+    "category": "run",
+    "kind": "run-pass",
+    "phase": "P2",
+    "rule": "V3, V4, V5, V6",
+    "file": "run/T-D1.yv",
+    "summary": "析构顺序：覆盖赋值、逆序析构、try 提前退出、部分初始化",
+    "expect": null
+  },
+  {
+    "id": "T-N1a",
+    "category": "run",
+    "kind": "run-panic",
+    "phase": "P2",
+    "rule": "第 7 节",
+    "file": "run/T-N1a.yv",
+    "summary": "最小整数除以 -1",
+    "expect": "P-DIV-OVERFLOW"
+  },
+  {
+    "id": "T-N1b",
+    "category": "run",
+    "kind": "run-panic",
+    "phase": "P2",
+    "rule": "第 7 节",
+    "file": "run/T-N1b.yv",
+    "summary": "移位量不小于位宽",
+    "expect": "P-SHIFT"
+  },
+  {
+    "id": "T-N1c",
+    "category": "run",
+    "kind": "run-panic",
+    "phase": "P2",
+    "rule": "第 7 节",
+    "file": "run/T-N1c.yv",
+    "summary": "窄化转换超出范围",
+    "expect": "P-CONVERT"
+  },
+  {
+    "id": "T-N1d",
+    "category": "run",
+    "kind": "run-panic",
+    "phase": "P2",
+    "rule": "第 7 节",
+    "file": "run/T-N1d.yv",
+    "summary": "NaN 转整数",
+    "expect": "P-FLOAT-CONVERT"
+  },
+  {
+    "id": "T-N2",
+    "category": "run",
+    "kind": "run-pass",
+    "phase": "P2",
+    "rule": "第 7 节",
+    "file": "run/T-N2.yv",
+    "summary": "wrap 的取模语义与移位结果",
+    "expect": null
+  },
+  {
+    "id": "T-S1",
+    "category": "run",
+    "kind": "run-panic",
+    "phase": "P2",
+    "rule": "S3",
+    "file": "run/T-S1.yv",
+    "summary": "子串切在多字节字符中间",
+    "expect": "P-STR-BOUNDARY"
+  },
+  {
+    "id": "T-S2",
+    "category": "run",
+    "kind": "run-pass",
+    "phase": "P2",
+    "rule": "S5",
+    "file": "run/T-S2.yv",
+    "summary": "读取含非法 UTF-8 的文件得到编码错误，不替换",
+    "expect": null
+  },
+  {
+    "id": "T-S3",
+    "category": "run",
+    "kind": "run-exit",
+    "phase": "P2",
+    "rule": "S5, M5",
+    "file": "run/T-S3.yv",
+    "summary": "命令行参数不是合法 UTF-8：启动即报错退出，main 不执行",
+    "expect": null
+  },
+  {
+    "id": "T-P1",
+    "category": "concurrency",
+    "kind": "check-fail",
+    "phase": "P3",
+    "rule": "P1",
+    "file": "concurrency/T-P1.yv",
+    "summary": "Arc[Mutex[Rc[T]]] 交给另一个线程",
+    "expect": [
+      "E0701"
+    ]
+  },
+  {
+    "id": "T-P1p",
+    "category": "concurrency",
+    "kind": "run-pass",
+    "phase": "P3",
+    "rule": "P1",
+    "file": "concurrency/T-P1p.yv",
+    "summary": "Arc[Mutex[T]]，T 满足 Send",
+    "expect": null
+  },
+  {
+    "id": "T-P2",
+    "category": "concurrency",
+    "kind": "check-fail",
+    "phase": "P3",
+    "rule": "P2",
+    "file": "concurrency/T-P2.yv",
+    "summary": "没声明 Send 的接口值交给另一个线程",
+    "expect": [
+      "E0701"
+    ]
+  },
+  {
+    "id": "T-P2p",
+    "category": "concurrency",
+    "kind": "run-pass",
+    "phase": "P3",
+    "rule": "P2",
+    "file": "concurrency/T-P2p.yv",
+    "summary": "Box[Named + Send] 可以转交给另一个线程",
+    "expect": null
+  },
+  {
+    "id": "T-P2s",
+    "category": "concurrency",
+    "kind": "check-fail",
+    "phase": "P3",
+    "rule": "P2",
+    "file": "concurrency/T-P2s.yv",
+    "summary": "+ Send 只能转交；借给另一个线程共享还需要 Sync",
+    "expect": [
+      "E0702"
+    ]
+  },
+  {
+    "id": "T-P3",
+    "category": "concurrency",
+    "kind": "run-pass",
+    "phase": "P3",
+    "rule": "P3",
+    "file": "concurrency/T-P3.yv",
+    "summary": "scope 中途 return：先等线程结束，再释放被借用的数据",
+    "expect": null
+  },
+  {
+    "id": "T-P3f",
+    "category": "concurrency",
+    "kind": "check-fail",
+    "phase": "P3",
+    "rule": "P3",
+    "file": "concurrency/T-P3f.yv",
+    "summary": "线程不能借用在 scope 内部声明、比 scope 更短命的局部变量",
+    "expect": [
+      "E0705"
+    ]
+  },
+  {
+    "id": "T-P4",
+    "category": "concurrency",
+    "kind": "check-fail",
+    "phase": "P3",
+    "rule": "P4",
+    "file": "concurrency/T-P4.yv",
+    "summary": "锁内借出的引用在 with 块外使用",
+    "expect": [
+      "E0703"
+    ]
+  },
+  {
+    "id": "T-P4p",
+    "category": "concurrency",
+    "kind": "run-pass",
+    "phase": "P3",
+    "rule": "P4",
+    "file": "concurrency/T-P4p.yv",
+    "summary": "在块内 clone 出拥有值",
+    "expect": null
+  },
+  {
+    "id": "T-P5",
+    "category": "concurrency",
+    "kind": "check-fail",
+    "phase": "P3",
+    "rule": "P5",
+    "file": "concurrency/T-P5.yv",
+    "summary": "channel 的元素不能携带借用",
+    "expect": [
+      "E0704"
+    ]
+  },
+  {
+    "id": "T-P5p",
+    "category": "concurrency",
+    "kind": "run-pass",
+    "phase": "P3",
+    "rule": "P5, C5",
+    "file": "concurrency/T-P5p.yv",
+    "summary": "channel 传拥有值；recv 的结果可以移走",
+    "expect": null
+  },
+  {
+    "id": "T-P6",
+    "category": "concurrency",
+    "kind": "check-fail",
+    "phase": "P3",
+    "rule": "P6",
+    "file": "concurrency/T-P6.yv",
+    "summary": "锁守卫不能移到另一个线程",
+    "expect": [
+      "E0701"
+    ]
+  },
+  {
+    "id": "T-P6p",
+    "category": "concurrency",
+    "kind": "run-pass",
+    "phase": "P3",
+    "rule": "P6",
+    "file": "concurrency/T-P6p.yv",
+    "summary": "在取得锁的线程里释放守卫",
+    "expect": null
+  },
+  {
+    "id": "T-V5",
+    "category": "concurrency",
+    "kind": "run-pass",
+    "phase": "P3",
+    "rule": "V7",
+    "file": "concurrency/T-V5.yv",
+    "summary": "let _ 立即释放锁，let _guard 持锁到作用域结束",
+    "expect": null
+  },
+  {
+    "id": "T-R1",
+    "category": "report",
+    "kind": "report",
+    "phase": "P3",
+    "rule": "规划·验证报告",
+    "file": "report/T-R1.json",
+    "summary": "没有 Windows 运行环境时，Windows 测试必须是 not_run，总体是 not_verified"
+  },
+  {
+    "id": "T-R2",
+    "category": "report",
+    "kind": "report",
+    "phase": "P3",
+    "rule": "规划·验证报告",
+    "file": "report/T-R2.json",
+    "summary": "Linux 上跑 Sanitizer 的工件，不能改变 Windows 工件的测试状态"
+  }
+]

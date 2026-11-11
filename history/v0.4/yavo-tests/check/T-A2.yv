@@ -1,0 +1,15 @@
+// id: T-A2
+// kind: check-fail
+// phase: P1
+// rule: A3
+// summary: 同一个位置同时形成两个可变借用
+
+fn fill(a: inout Vec[int], b: inout Vec[int]) {
+    a.push(1)
+    b.push(2)
+}
+
+fn main() {
+    var v: Vec[int] = []
+    fill(&v, &v)                    //~ ERROR E0102
+}

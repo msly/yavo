@@ -1,0 +1,77 @@
+// id: T-D1
+// kind: run-pass
+// phase: P2
+// rule: V3, V4, V5, V6
+// summary: 析构顺序：覆盖赋值、逆序析构、try 提前退出、部分初始化
+// expect-stdout:
+// | drop x1
+// | assigned
+// | step done
+// | drop b
+// | drop a
+// | drop b
+// | drop a
+// | steps 1 0
+// | drop l
+// | build failed
+// | drop x2
+
+enum E {
+    Fail
+}
+
+struct Tracer: Drop {
+    name: String
+
+    fn drop(inout self) {
+        println("drop ${self.name}")
+    }
+}
+
+struct Pair {
+    left: Tracer
+    right: Tracer
+}
+
+fn make(name: str) -> Tracer {
+    return Tracer{name: name.toString()}
+}
+
+fn makeOr(name: str, fail: bool) -> Tracer ! E {
+    if fail {
+        return err(.Fail)
+    }
+    return make(name)
+}
+
+fn mayFail(fail: bool) -> int ! E {
+    if fail {
+        return err(.Fail)
+    }
+    return 1
+}
+
+fn step(fail: bool) -> int ! E {
+    let _a = make("a")
+    let _b = make("b")
+    let n = try mayFail(fail)       // 失败时提前返回：先析构 _b，再析构 _a
+    println("step done")
+    return n
+}
+
+fn build(fail: bool) -> Pair ! E {
+    return Pair{left: make("l"), right: try makeOr("r", fail)}   // 右边失败：已构造的 left 被析构
+}
+
+fn main() {
+    var x = make("x1")
+    x = make("x2")                  // 先构造 x2，再析构 x1
+    println("assigned")
+    let r1 = step(false) catch _e => 0
+    let r2 = step(true) catch _e => 0
+    println("steps ${r1} ${r2}")
+    match build(true) {
+        ok(_p) => println("built")
+        err(_e) => println("build failed")
+    }
+}

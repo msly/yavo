@@ -1,0 +1,19 @@
+// id: T-O3p
+// kind: check-pass
+// phase: P1
+// rule: O1
+// summary: 两个来源都活得比结果长
+
+fn choose(a: str, b: str, pickA: bool) -> str of (a, b) {
+    if pickA {
+        return a
+    }
+    return b
+}
+
+fn main() {
+    let a = "left".toString()
+    let b = "right".toString()
+    let r = choose(a, b, true)
+    println(r)
+}

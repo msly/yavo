@@ -1,0 +1,23 @@
+// id: T-P5p
+// kind: run-pass
+// phase: P3
+// rule: P5, C5
+// summary: channel 传拥有值；recv 的结果可以移走
+// expect-stdout:
+// | 2
+
+use std/sync
+
+fn consume(job: sink Vec[String]) {
+    println(job.len())
+}
+
+fn main() {
+    let ch = Channel[Vec[String]]{cap: 1}
+    ch.send(["a".toString(), "b".toString()]) catch _e {
+        return
+    }
+    if let job = ch.recv() {             // 拥有的 Vec[String]：可以移走
+        consume(job)
+    }
+}

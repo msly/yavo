@@ -1,0 +1,15 @@
+// id: T-E1
+// kind: check-fail
+// phase: P1
+// rule: E2
+// summary: 借用藏进泛型包装结构
+
+struct Wrapper[T] {
+    value: T
+}
+
+fn main() {
+    let text = "abc".toString()
+    let w = Wrapper[str]{value: text.trim()}   //~ ERROR E0301
+    println(w.value)
+}

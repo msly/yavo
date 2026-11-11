@@ -1,0 +1,11 @@
+// id: T-E2
+// kind: check-fail
+// phase: P1
+// rule: E2
+// summary: Box[Vec[str]]
+
+fn main() {
+    let text = "a b".toString()
+    let b: Box[Vec[str]] = Box(text.fields())  //~ ERROR E0301
+    println(b.len())
+}

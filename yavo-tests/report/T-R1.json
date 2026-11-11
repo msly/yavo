@@ -1,0 +1,19 @@
+{
+  "id": "T-R1",
+  "kind": "report",
+  "phase": "P3",
+  "rule": "规划·验证报告",
+  "summary": "没有 Windows 运行环境时，Windows 测试必须是 not_run，总体是 not_verified",
+  "setup": {
+    "program": "../run/T-N2.yv",
+    "command": "yavo verify --target x86_64-windows-gnu",
+    "available_runners": [
+      "x86_64-linux-gnu"
+    ]
+  },
+  "expect": {
+    "overall": "not_verified",
+    "checks[name=build, target=x86_64-windows-gnu].status": "passed",
+    "checks[name=tests, target=x86_64-windows-gnu].status": "not_run"
+  }
+}

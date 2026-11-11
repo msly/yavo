@@ -1,0 +1,14 @@
+// id: T-N1c
+// kind: run-panic
+// phase: P2
+// rule: 第 7 节
+// summary: 窄化转换超出范围
+// expect-panic: P-CONVERT
+
+fn big() -> int {
+    return 3000000000
+}
+
+fn main() {
+    println(i32(big()))
+}

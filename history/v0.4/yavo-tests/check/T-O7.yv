@@ -1,0 +1,25 @@
+// id: T-O7
+// kind: check-pass
+// phase: P1
+// rule: O1
+// summary: largest[int] 的结果不借用数组
+
+fn largest[T: Ord + Copy](xs: []T) -> ?T of xs {
+    if xs.len() == 0 {
+        return none
+    }
+    var best = xs[0]
+    for i in 0..xs.len() {
+        if xs[i] > best {
+            best = xs[i]
+        }
+    }
+    return best
+}
+
+fn main() {
+    var nums: Vec[int] = [3, 9, 4]
+    let top = largest(nums)         // ?int：不借用 nums
+    nums.push(10)
+    println(top ?? 0)
+}

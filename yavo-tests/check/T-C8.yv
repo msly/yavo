@@ -1,0 +1,12 @@
+// id: T-C8
+// kind: check-pass
+// phase: P1
+// rule: C6
+// summary: Map[String, int] 用 str 键查询
+
+fn main() {
+    var m: Map[String, int] = [:]
+    m.set("apple".toString(), 3)
+    let key: str = "apple"
+    println(m.getCopy(key) ?? 0)    // 用 str 查询，不创建临时 String
+}

@@ -1,0 +1,22 @@
+// id: T-P4p
+// kind: run-pass
+// phase: P3
+// rule: P4
+// summary: 在块内 clone 出拥有值
+// expect-stdout:
+// | apple
+
+use std/sync
+
+struct Inventory {
+    items: Vec[String]
+}
+
+fn main() {
+    let m = Mutex(Inventory{items: ["apple".toString()]})
+    var name = String{}
+    with g = m.lock() {
+        name = g.items[0].clone()
+    }
+    println(name)
+}

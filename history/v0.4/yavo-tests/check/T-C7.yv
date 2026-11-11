@@ -1,0 +1,16 @@
+// id: T-C7
+// kind: check-pass
+// phase: P1
+// rule: C4, A2
+// summary: 从 &inout int 自动读取一份参与计算
+
+fn main() {
+    var counts: Map[String, int] = [:]
+    counts.update("a".toString(), 0, (n) => n + 1)
+    counts.update("b".toString(), 0, (n) => n + 1)
+    var total = 0
+    for _k, n in counts {           // var 的 Map：n 是 &inout int
+        total += n                  // 自动读取一份 int
+    }
+    println(total)
+}

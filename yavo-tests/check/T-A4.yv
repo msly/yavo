@@ -1,0 +1,13 @@
+// id: T-A4
+// kind: check-fail
+// phase: P1
+// rule: A5
+// summary: 遍历 Map 时修改键
+
+fn main() {
+    var m: Map[String, int] = [:]
+    m.set("a".toString(), 1)
+    for k, _v in m {
+        k.push("x")                 //~ ERROR E0103
+    }
+}

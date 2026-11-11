@@ -1,0 +1,20 @@
+// id: T-P4
+// kind: check-fail
+// phase: P3
+// rule: P4
+// summary: 锁内借出的引用在 with 块外使用
+
+use std/sync
+
+struct Inventory {
+    items: Vec[String]
+}
+
+fn main() {
+    let m = Mutex(Inventory{items: ["apple".toString()]})
+    var name: str = ""
+    with g = m.lock() {
+        name = g.items[0].trim()        //~ ERROR E0703
+    }
+    println(name)
+}

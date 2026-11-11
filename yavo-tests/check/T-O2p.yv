@@ -1,0 +1,13 @@
+// id: T-O2p
+// kind: check-pass
+// phase: P1
+// rule: O1, O2
+// summary: 多个来源写 of (a, b)
+
+fn pick(a: str, b: str) -> str of (a, b) {
+    return b
+}
+
+fn main() {
+    println(pick("x", "y"))
+}

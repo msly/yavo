@@ -1,0 +1,20 @@
+// id: T-P6
+// kind: check-fail
+// phase: P3
+// rule: P6
+// summary: 锁守卫不能移到另一个线程
+
+use std/sync
+
+fn release(_g: sink Guard[int]) {
+    println("released")
+}
+
+fn main() {
+    let m = Mutex(0)
+    let g = m.lock()
+    scope {
+        let h = spawn release(g)         //~ ERROR E0701
+        h.join()
+    }
+}

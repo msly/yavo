@@ -1,0 +1,27 @@
+// id: T-P2s
+// kind: check-fail
+// phase: P3
+// rule: P2
+// summary: + Send 只能转交；借给另一个线程共享还需要 Sync
+
+interface Named {
+    fn name(self) -> String
+}
+
+struct Dog: Named {
+    fn name(self) -> String {
+        return "dog".toString()
+    }
+}
+
+fn look(x: Box[Named + Send]) {      // 默认参数是只读借用
+    println(x.name())
+}
+
+fn main() {
+    let d: Box[Named + Send] = Box(Dog{})
+    scope {
+        let h = spawn look(d)            //~ ERROR E0702
+        h.join()
+    }
+}

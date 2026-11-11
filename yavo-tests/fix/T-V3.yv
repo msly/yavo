@@ -1,0 +1,15 @@
+// id: T-V3
+// kind: fix-candidate
+// phase: P1
+// rule: V2
+// summary: 接收者里有函数调用：提前计算实参会改变调用顺序，只给候选
+// expect-candidates: hoist-argument
+
+fn pick(lists: inout Vec[Vec[int]]) -> &inout Vec[int] of lists {
+    return &lists[0]
+}
+
+fn main() {
+    var lists: Vec[Vec[int]] = [[1], [2]]
+    pick(&lists).push(lists.len())  //~ ERROR E0403
+}

@@ -1,0 +1,10 @@
+// id: T-E2p
+// kind: check-pass
+// phase: P1
+// rule: E2
+// summary: Box[Vec[String]]
+
+fn main() {
+    let b: Box[Vec[String]] = Box(["a".toString(), "b".toString()])
+    println(b.len())
+}

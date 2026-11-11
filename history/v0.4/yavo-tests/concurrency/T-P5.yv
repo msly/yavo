@@ -1,0 +1,15 @@
+// id: T-P5
+// kind: check-fail
+// phase: P3
+// rule: P5
+// summary: channel 的元素不能携带借用
+
+use std/sync
+
+fn main() {
+    let text = "a b".toString()
+    let ch = Channel[Vec[str]]{cap: 1}   //~ ERROR E0704
+    ch.send(text.fields()) catch _e {
+        return
+    }
+}

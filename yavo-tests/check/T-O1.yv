@@ -1,0 +1,13 @@
+// id: T-O1
+// kind: check-fail
+// phase: P1
+// rule: O1
+// summary: 私有函数返回 str 但没写 of
+
+fn trimmed(text: str) -> str {      //~ ERROR E0302
+    return text.trim()
+}
+
+fn main() {
+    println(trimmed("  hi  "))
+}

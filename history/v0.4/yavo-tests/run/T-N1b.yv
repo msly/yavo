@@ -1,0 +1,15 @@
+// id: T-N1b
+// kind: run-panic
+// phase: P2
+// rule: 第 7 节
+// summary: 移位量不小于位宽
+// expect-panic: P-SHIFT
+
+fn shiftBy() -> int {
+    return 64
+}
+
+fn main() {
+    let one: i64 = 1
+    println(one << shiftBy())
+}

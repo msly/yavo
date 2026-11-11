@@ -1,0 +1,11 @@
+// id: T-S1
+// kind: run-panic
+// phase: P2
+// rule: S3
+// summary: 子串切在多字节字符中间
+// expect-panic: P-STR-BOUNDARY
+
+fn main() {
+    let s = "é".toString()          // 两个字节
+    println(s[0..1])
+}

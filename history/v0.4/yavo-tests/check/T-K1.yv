@@ -1,0 +1,10 @@
+// id: T-K1
+// kind: check-fail
+// phase: P1
+// rule: K1
+// summary: f64 不满足 Ord
+
+fn main() {
+    var xs: Vec[f64] = [2.5, 1.0]
+    xs.sort()                       //~ ERROR E0501
+}

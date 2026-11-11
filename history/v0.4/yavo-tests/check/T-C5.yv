@@ -1,0 +1,16 @@
+// id: T-C5
+// kind: check-pass
+// phase: P1
+// rule: C5
+// summary: 匹配拥有的临时值，可以移出其中的值
+
+fn keep(s: sink String) {
+    println(s)
+}
+
+fn main() {
+    var v: Vec[String] = ["a".toString(), "b".toString()]
+    if let s = v.pop() {            // v.pop() 返回拥有的 ?String
+        keep(s)
+    }
+}

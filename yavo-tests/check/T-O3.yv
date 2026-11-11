@@ -1,0 +1,22 @@
+// id: T-O3
+// kind: check-fail
+// phase: P1
+// rule: O1
+// summary: of (a, b) 的结果按全部来源保守检查：b 先销毁就不能再用
+
+fn choose(a: str, b: str, pickA: bool) -> str of (a, b) {
+    if pickA {
+        return a
+    }
+    return b
+}
+
+fn main() {
+    let a = "left".toString()
+    var r: str = ""
+    {
+        let b = "right".toString()
+        r = choose(a, b, true)      //~ ERROR E0305
+    }
+    println(r)
+}

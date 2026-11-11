@@ -1,0 +1,15 @@
+// id: T-C1
+// kind: check-fail
+// phase: P1
+// rule: 第 2 节
+// summary: &inout 不可复制：赋值即移动，之后原借用不能再用
+
+fn main() {
+    var m: Map[String, Vec[int]] = [:]
+    m.set("a".toString(), [])
+    if let p = m.getMut("a") {      // p: &inout Vec[int]
+        let q = p                   // 移动可变借用
+        q.push(1)
+        p.push(2)                   //~ ERROR E0402
+    }
+}

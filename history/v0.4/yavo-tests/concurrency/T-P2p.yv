@@ -1,0 +1,29 @@
+// id: T-P2p
+// kind: run-pass
+// phase: P3
+// rule: P2
+// summary: Box[Named + Send] 可以转交给另一个线程
+// expect-stdout:
+// | dog
+
+interface Named {
+    fn name(self) -> String
+}
+
+struct Dog: Named {
+    fn name(self) -> String {
+        return "dog".toString()
+    }
+}
+
+fn show(x: sink Box[Named + Send]) {
+    println(x.name())
+}
+
+fn main() {
+    let d: Box[Named + Send] = Box(Dog{})
+    scope {
+        let h = spawn show(d)
+        h.join()
+    }
+}

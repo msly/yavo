@@ -1,0 +1,14 @@
+// id: T-O8p
+// kind: check-pass
+// phase: P1
+// rule: O2
+// summary: of 指向借用参数
+
+fn good(text: str) -> str of text {
+    return text.trim()
+}
+
+fn main() {
+    let owned = " x ".toString()
+    println(good(owned))
+}

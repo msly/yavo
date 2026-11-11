@@ -1,0 +1,14 @@
+// id: T-V2
+// kind: check-fail
+// phase: P1
+// rule: V1
+// summary: 第一个实参已移动 v，第二个实参不能再用
+
+fn consume(v: sink Vec[int], n: int) {
+    println(n + v.len())
+}
+
+fn main() {
+    let v: Vec[int] = [1, 2]
+    consume(v, v.len())             //~ ERROR E0402
+}

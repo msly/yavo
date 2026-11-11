@@ -1,0 +1,19 @@
+// id: T-C4p
+// kind: check-pass
+// phase: P1
+// rule: C3, E5
+// summary: 逐个转成 String 后可以做字段
+
+struct Index {
+    words: Vec[String]
+}
+
+fn main() {
+    let text = "a b".toString()
+    var owned: Vec[String] = []
+    for w in text.fields() {
+        owned.push(w.toString())
+    }
+    let idx = Index{words: owned}
+    println(idx.words.len())
+}

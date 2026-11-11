@@ -1,0 +1,14 @@
+// id: T-C3
+// kind: check-pass
+// phase: P1
+// rule: C2
+// summary: 临时 Vec[str] 销毁后，复制出的 str 仍指向存活的来源
+
+fn firstWord(s: str) -> str of s {
+    return s.fields()[0]            // 复制出的 str 指向 s，不指向临时的 Vec
+}
+
+fn main() {
+    let text = "hello world".toString()
+    println(firstWord(text))
+}

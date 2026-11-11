@@ -1,0 +1,32 @@
+// id: T-P1p
+// kind: run-pass
+// phase: P3
+// rule: P1
+// summary: Arc[Mutex[T]]，T 满足 Send
+// expect-stdout:
+// | 2
+
+use std/sync
+
+struct Counter {
+    n: int
+}
+
+fn bump(p: sink Arc[Mutex[Counter]]) {
+    with g = p.lock() {
+        g.n += 1
+    }
+}
+
+fn main() {
+    let shared = Arc(Mutex(Counter{n: 0}))
+    scope {
+        let a = spawn bump(shared.clone())
+        let b = spawn bump(shared.clone())
+        a.join()
+        b.join()
+    }
+    with g = shared.lock() {
+        println(g.n)
+    }
+}

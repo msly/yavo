@@ -1,0 +1,13 @@
+// id: T-O5p
+// kind: check-pass
+// phase: P1
+// rule: O5
+// summary: 不逃逸的闭包可以借用外部变量
+
+fn main() {
+    let name = "keep".toString()
+    let target: str = name.trim()
+    var v: Vec[(int, int)] = [(3, 1), (1, 2)]
+    v.sortBy((a, b) => a.0 + target.len() < b.0)
+    println(v[0].0)
+}

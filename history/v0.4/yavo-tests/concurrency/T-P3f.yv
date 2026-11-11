@@ -1,0 +1,21 @@
+// id: T-P3f
+// kind: check-fail
+// phase: P3
+// rule: P3
+// summary: 线程不能借用在 scope 内部声明、比 scope 更短命的局部变量
+
+fn sumAll(xs: []int) -> int {
+    var s = 0
+    for i in 0..xs.len() {
+        s += xs[i]
+    }
+    return s
+}
+
+fn main() {
+    scope {
+        let local: Vec[int] = [1, 2, 3]
+        let h = spawn sumAll(local)     //~ ERROR E0705
+        println(h.join())
+    }
+}

@@ -1,4 +1,4 @@
-# Yavo 速查卡（草案 v0.3）
+# Yavo 速查卡（草案 v0.4）
 
 这是给 agent 放进上下文的一页语言写法。语法是草案，编译器还不存在；命令是 `yavo`，源文件扩展名是 `.yv`。本卡只给常用写法，精确的安全规则以“语义表”标签页为准。
 
@@ -86,7 +86,7 @@ struct Dog: Named {                   // 实现接口要显式声明
     }
 }
 
-fn largest[T: Ord + Copy](xs: []T) -> ?T {   // 泛型和接口约束
+fn largest[T: Ord + Copy](xs: []T) -> ?T of xs {   // 泛型和接口约束
     if xs.len() == 0 {
         return none
     }
@@ -102,7 +102,8 @@ fn largest[T: Ord + Copy](xs: []T) -> ?T {   // 泛型和接口约束
 
 - 构造：`Point{x: 1.0}`、`Shape.Circle(r: 2.0)`；类型已知时可以简写成 `.Circle(r: 2.0)`。
 - 类型转换必须显式：`f64(n)`、`int(x)`。没有隐式转换，只有语义表第 8 节列出的几种自动操作。
-- 比较：`==` 需要类型实现 `Eq`，`<` 等需要实现 `Ord`；数字、`str`、`String`、可比较元素组成的元组自动实现。自定义类型写 `struct Version: Ord` 并实现 `cmp` 方法。
+- 比较：`==` 需要类型实现 `Eq`，`<` 等需要实现 `Ord`；整数、`str`、`String`、可比较元素组成的元组自动实现。浮点数可以直接用 `==`、`<`（按 IEEE 754），但不满足 `Eq`、`Ord`：不能用 `v.sort()` 或 `largest[f64]`，排序写 `v.sortBy((a, b) => a.totalCmp(b) == .Less)`。自定义类型写 `struct Version: Ord` 并实现 `cmp` 方法。
+- 泛型函数的返回值可能携带借用时也写来源，例如上面的 `largest` 写 `-> ?T of xs`；用在 `int` 上时不会借住数组。
 - 接口值放进集合或字段时要显式装箱，不会在背后分配：`var all: Vec[Box[Named]] = []`，`all.push(Box(Dog{}))`。
 
 ## 3. 可选值和错误
@@ -139,7 +140,7 @@ fn main() {
         ok(p) => println(p)
         err(e) => eprintln("bad port: ${e}")
     }
-    let p = parsePort("x") catch e {      // catch：处理错误并给出替代值，或者离开
+    let p = parsePort("x") catch e {      // 块形式的 catch：处理错误后必须离开；要替代值写 catch e => 值
         eprintln("${e}")
         return
     }
@@ -156,14 +157,14 @@ fn main() {
 
 没有 GC，也没有生命周期标注。写代码时记住下面九条；完整规则和边界情况见语义表。
 
-1. **移动与复制。** 赋值、放进集合、传给 `sink` 参数时，拥有值（`String`、`Vec`、`Box` 等）被移动，之后原变量不能再用。标量和字段全是标量的结构体自动复制；`str`、`&T` 复制的只是描述符；`&inout T` 不能复制。要第二份拥有值时写 `.clone()`。
+1. **移动与复制。** 按值赋值、放进集合、传给 `sink` 参数时，拥有值（`String`、`Vec`、`Box` 等）被移动，之后原变量不能再用。标量和字段全是标量的结构体自动复制；`str`、`&T` 复制的只是描述符；`&inout T` 不能复制。要第二份拥有值时写 `.clone()`。
 2. **参数默认是只读借用。** 要修改调用者的值，参数写 `inout`，调用处写 `&x`；要拿走所有权，参数写 `sink`。
-3. **权限看借用类型，不看 `var`。** `let`/`var` 只管能否重新赋值；`&T` 只读，`&inout T` 可写；把 `&T` 放进 `var` 也不能写。`if let`、`for`、`match` 的绑定继承来源的权限。`Map` 的键永远只读。
-4. **视图不能逃逸。** 视图（`str`、`[]T`、`&T`、`&inout T`）和携带视图的值（如 `Vec[str]`）可以做局部变量、参数和返回值，不能进入普通字段、`Box`、接口值、channel 或被保存的闭包。`.toVec()` 不会消除元素里的借用；要长期保存，逐个 `.toString()`，或者只存下标区间。
-5. **每个具名函数返回借用时都写来源**，私有函数也一样：`-> str of s`、`-> str of (a, b)`、`-> str of self`、`-> str of static`。
+3. **权限看借用类型，不看 `var`。** `let`/`var` 只管能否重新赋值；`&T` 只读，`&inout T` 可写；把 `&T` 放进 `var` 也不能写。`if let`、`for`、`match` 的绑定继承来源的权限：遍历 `var` 的 `Map` 时值是 `&inout V`，循环体里不能再读这个 `Map`。`Map` 的键永远只读。
+4. **视图不能逃逸。** 视图（`str`、`[]T`、`&T`、`&inout T`）和携带视图的值（如 `Vec[str]`）可以做局部变量、参数和返回值，不能进入普通字段、`Box`、接口值、channel 或被保存的闭包。`.toVec()` 不会消除元素里的借用；要长期保存，逐个 `.toString()`，或者只存下标区间。v1 没有可变切片。
+5. **每个具名函数返回借用时都写来源**，私有函数和泛型函数也一样：`-> str of s`、`-> str of (a, b)`、`-> str of self`、`-> str of static`、`-> ?T of xs`。`of` 只能指向借用参数：`fn bad(text: sink String) -> str of text` 会被拒绝，因为 `text` 在函数结束时就被释放了。
 6. **不能通过参数写入新借用。** 函数不能把来自其他参数的借用写进 `inout` 参数（如 `out: inout Vec[str]`），要改为返回 `Vec[str] of text`。
-7. **借用持续到最后一次使用；实参从左到右，每个立即完成移动或借用。** `v.push(v.len())` 会被拒绝，写成 `let n = v.len()` 再 `v.push(n)`（`yavo fix` 会自动拆开）。
-8. **不能从字段或集合元素里直接移出值。** 有默认值的类型用 `take(&x)` 取走并留下默认值（可选值留下 `none`，数字留下 0，`String`、`Vec`、`Map` 留下空值）；其他类型用 `replace(&x, 新值)` 或 `swap(&a, &b)`。
+7. **借用持续到最后一次使用；实参从左到右，每个立即完成移动或借用。** `v.push(v.len())` 会被拒绝，写成 `let n = v.len()` 再 `v.push(n)`；`yavo fix` 对这类已证明安全的固定写法会自动拆开，其他情况只给候选。
+8. **不能从字段或集合元素里直接移出值。** 有默认值的类型用 `take(&x)` 取走并留下默认值（可选值留下 `none`，数字留下 0，`String`、`Vec`、`Map` 留下空值）；其他类型用 `replace(&x, 新值)` 或 `swap(&a, &b)`。例外：匹配拥有的临时值（如 `match ch.recv()`）可以移出其中的值；要消费已有的可选变量，写 `match take(&opt)`。
 9. **结构的选择。** 递归结构用 `?Box[T]`；单线程共享用 `Rc[T]`；跨线程共享用 `Arc[T]`，条件见第 6 节；互相引用的图用 `Arena[T]` 加 `Id[T]`。
 
 ```
@@ -248,10 +249,10 @@ fn main() {
 
 | 要做的事 | 写法 | 可能分配 |
 | --- | --- | --- |
-| 读入全部标准输入 | `let text = try io.readAll()`，返回 `String ! io.Error` | 是 |
+| 读入全部标准输入 | `let text = try io.readAll()`，返回 `String ! io.Error`；内容不是合法 UTF-8 时得到编码错误 | 是 |
 | 逐行读标准输入 | `while let line = try io.readLine() { }`，返回 `?String ! io.Error`，不含换行符 | 是 |
 | 读写文件 | `try fs.readText(path)`、`try fs.writeText(path, s)` | 读文件时是 |
-| 命令行参数、退出 | `os.args()` 返回 `[]str of static`（启动时已解析）、`os.exit(1)` | 否 |
+| 命令行参数、退出 | `os.args()` 返回 `[]str of static`（启动时已转换，参数不是合法 UTF-8 时程序启动即报错退出）、`os.exit(1)` | 否 |
 | 按行、按空白、按分隔符切分 | `s.lines()`、`s.fields()`、`s.split(",")`，结果是 `Vec[str]`，不复制字符串 | 只分配集合本身 |
 | 字符串长度、字节、子串 | `s.len()`、`s[i]`（`byte`）按字节；`s[a..b]` 是视图，两端必须落在字符边界上 | 否 |
 | 修剪、大小写、查找 | `s.trim()`（视图）、`s.toLower()`、`s.toUpper()`（新 `String`）、`s.contains(t)`、`s.startsWith(t)`、`s.find(t)`（`?int`） | 只有大小写转换 |
@@ -259,10 +260,10 @@ fn main() {
 | 拼接字符串 | `var out = String{}`，`out.push("text")`；或 `format("${a}-${b}")` | 是 |
 | 字节转字符串 | 先放进 `Vec[byte]`，再 `String.fromUtf8(bytes)`，得到 `String ! Utf8Error` | 是 |
 | 字节字面量 | `'a'`、`'\n'`；判断：`c >= '0' && c <= '9'` | 否 |
-| `Vec` 基本操作 | `v.push(x)`、`v.pop()`（`?T`）、`v.len()`、`v[i]`、`v[a..b]`、`v.contains(x)`、`v.join(", ")` | `push` 扩容和 `join` 时会 |
-| 排序 | `v.sort()`；`v.sortBy((a, b) => a.1 > b.1)`，两者都是稳定排序 | 是（临时缓冲区） |
-| `Map` 读取 | `m.get(k)`（`?&V`）、`m.getMut(k)`（`?&inout V`）、`m.getCopy(k)`（`?V`，要求可复制）、`m.has(k)`、`m.len()`；默认值写 `m.getCopy(k) ?? 0` | 否 |
-| `Map` 写入和计数 | `m.set(k, v)`、`m.remove(k)`；计数写 `m.update(w, 0, (n) => n + 1)` | 插入新键时会 |
+| `Vec` 基本操作 | `v.push(x)`、`v.pop()`（`?T`，拥有的值）、`v.len()`、`v[i]`、`v[a..b]`、`v.contains(x)`、`v.join(", ")` | `push` 扩容和 `join` 时会 |
+| 排序 | `v.sort()`（要求 `Ord`）；`v.sortBy((a, b) => a.1 > b.1)`；浮点数用 `sortBy` 加 `totalCmp`；两者都是稳定排序 | 是（临时缓冲区） |
+| `Map` 读取 | `m.get(k)`（`?&V`）、`m.getMut(k)`（`?&inout V`）、`m.getCopy(k)`（`?V`，要求可复制）、`m.has(k)`、`m.len()`；`Map[String, V]` 的查询键直接写 `str`，如 `m.get("a")`；默认值写 `m.getCopy(k) ?? 0` | 否 |
+| `Map` 写入和计数 | `m.set(k, v)`（键要是拥有的 `String`）、`m.remove(k)`；计数写 `m.update(w, 0, (n) => n + 1)` | 插入新键时会 |
 | 遍历 | `for x in v { }`、`for i, x in v { }`、`for k, v in m { }`（绑定是借用，键只读） | 否 |
 | 优先队列 | `use std/collections`；`var h = Heap[(int, int)].by((a, b) => a.0 < b.0)`，`h.push(x)`、`h.pop()`（`?T`）；比较闭包会被保存，不能捕获借用 | `push` 扩容时会 |
 | 双端队列、集合 | `Deque[T]`：`pushBack`、`popFront`；`Set[T]`：`add`、`has`、`remove` | 插入时会 |
@@ -323,9 +324,10 @@ fn parallelSum(nums: Vec[int]) -> int {
 ```
 
 - 线程借用的数据要等 `scope` 结束、所有线程都结束后才释放；中途 `return` 或 `try` 离开时也会先等线程结束。
-- 线程之间传值用 channel：`let ch = Channel[Job]{cap: 8}`；`ch.send(v)` 移动值，关闭后返回 `err(.Closed(v))` 把值还回来；`ch.recv()` 关闭后先取完缓冲区，再返回 `none`。channel 只传拥有值，不传 `str`、`Vec[str]` 这类携带借用的值。
-- 共享可变状态用 `Arc[Mutex[T]]`，要求 `T` 可以交给别的线程（`Send`）：`with g = m.lock() { g.count += 1 }`。从 `g` 借出的引用不能带出 `with` 块。
-- `Arc[T]` 跨线程要求 `T` 同时满足 `Send` 和 `Sync`；`Rc` 永远不能跨线程，所以 `Arc[Mutex[Rc[T]]]` 也不行。接口值默认不能跨线程，需要时写 `Box[Named + Send]`。
+- 线程之间传值用 channel：`let ch = Channel[Job]{cap: 8}`；`ch.send(v)` 移动值，关闭后返回 `err(.Closed(v))` 把值还回来；`ch.recv()` 返回拥有的 `?Job`，关闭后先取完缓冲区，再返回 `none`。channel 只传拥有值，不传 `str`、`Vec[str]` 这类携带借用的值。
+- 共享可变状态用 `Arc[Mutex[T]]`，要求 `T` 可以交给别的线程（`Send`）：`with g = m.lock() { g.count += 1 }`。从 `g` 借出的引用不能带出 `with` 块；锁守卫也不能交给别的线程。
+- 通过 `Rc`、`Arc` 只能读里面的值，把句柄放进 `var` 也一样；要修改就用 `Mutex`。
+- `Arc[T]` 跨线程要求 `T` 同时满足 `Send` 和 `Sync`；`Rc` 永远不能跨线程，所以 `Arc[Mutex[Rc[T]]]` 也不行。接口值默认不能跨线程；`Box[Named + Send]` 只能转交给另一个线程，要被多个线程共享还需要 `+ Sync`。
 - panic 直接终止整个进程，不展开栈，也不会只结束一个线程；可能失败的操作要用 `T ! E`。
 
 测试写在同一个文件里，用 `yavo test` 运行；每个测试在单独的子进程里跑并带超时，一个测试 panic 或卡死不影响其他测试。随机测试的种子只保证随机输入可以重放，不保证线程调度可以重放：
@@ -359,21 +361,24 @@ test "sum adds up" {
 | --- | --- | --- |
 | 不能从字段或 `Box` 的内容里移出 | 规则 8 | 按意图选：要取走用 `take(&x.field)`，要保留原值用 `.clone()`，只读就改成借用；三者语义不同，`yavo fix` 只列候选 |
 | 借用期间不能修改 | 规则 7 | 先把需要的值取到局部变量里，等借用结束后再修改 |
-| 线程借用了临时值 | 传给 `spawn` 的切片是临时的 | 先 `let part = v[a..b]`，再 `spawn f(part)` |
+| 线程借用的数据活得不够久 | 数据在 `scope` 内部声明，比 `scope` 更短命 | 把数据放到 `scope` 外面声明；切片可以直接传，如 `spawn f(v[a..b])` |
 | 变量或导入未使用（警告） | 多写了 | 改名为 `_name`，对象照常活到作用域结束；`yavo fix` 会这样改。注意 `_` 会立即丢弃对象 |
-| 实参用了已被借用或移动的值，如 `v.push(v.len())` | 规则 7 | 先 `let n = v.len()`，再 `v.push(n)`；`yavo fix` 自动处理 |
+| 实参用了已被借用或移动的值，如 `v.push(v.len())` | 规则 7 | 先 `let n = v.len()`，再 `v.push(n)`；`yavo fix` 只对已证明安全的固定写法自动拆开 |
 | 使用了已移动的值 | 规则 1 | 改成借用传参；确实需要两份时写 `.clone()` |
 | 只读借用不能写入 | 规则 3 | 改用 `getMut`，或从可写的来源借用；`var` 不能让 `&T` 变成可写 |
 | 视图不能存进字段、`Box` 或接口值 | 规则 4 | `.toString()`、逐个转成 `String`，或只存下标区间 |
-| 函数返回借用，没写来源 | 规则 5 | 在返回类型后加 `of <参数名>`；`yavo fix` 只给候选，不自动加 |
+| 函数返回借用，没写来源（包括泛型函数） | 规则 5 | 在返回类型后加 `of <参数名>`；`yavo fix` 只给候选，不自动加 |
+| `of` 指向了 `sink` 参数 | 规则 5 | 改成借用参数，或者返回拥有的 `String` |
 | 不能把借用写进 `inout` 参数 | 规则 6 | 改为返回 `Vec[str] of text` 这类带来源的结果 |
 | 这个类型没有默认值，不能 `take` | 规则 8 | `replace(&x, 新值)` 或 `swap(&a, &b)` |
+| 不能从已有的可选变量里移出值 | 规则 8 | `match take(&opt)` |
 | 接口值不能直接放进集合 | 需要显式装箱 | `all.push(Box(x))`，集合类型写 `Vec[Box[Named]]` |
+| `f64` 不满足 `Ord` | 浮点数没有全序 | 排序用 `sortBy` 加 `totalCmp` |
 | 这个值不能交给别的线程 | 缺少 `Send` 或 `Sync` | 把 `Rc` 换成 `Arc`；`Arc[Mutex[T]]` 只在 `T: Send` 时成立，包住 `Rc` 也不行；接口值写 `Box[Named + Send]` |
-| 锁内借出的引用离开了 `with` 块 | 访问只在持锁期间受保护 | 在块内用完，或在块内 `.clone()` 出拥有值 |
+| 锁内借出的引用离开了 `with` 块，或锁守卫被交给别的线程 | 访问只在持锁期间、持锁的线程里受保护 | 在块内用完，或在块内 `.clone()` 出拥有值 |
 | `?T` 不能当 `T` 用 | 可选值没有处理 | `if let`、`??` |
 | 结果没有处理 | 调用了返回 `T ! E` 的函数 | `try`、`catch`、`match` |
-| 块形式的 `catch` 没有离开 | 块里要 `return`、`break`、`continue` 或 `panic` | 需要替代值时改用 `catch e => 替代值` |
+| 块形式的 `catch` 能走到结尾 | 块里必须离开 | 需要替代值时改用 `catch e => 替代值` |
 | `match` 没有覆盖所有情况 | 少了分支 | 补上分支或 `_ =>` |
 | 类型不匹配：`int` 和 `f64` | 没有隐式转换 | `f64(n)`、`int(x)` |
 | 函数缺少 `return` | 没有尾表达式返回 | 在每条路径末尾写 `return` |

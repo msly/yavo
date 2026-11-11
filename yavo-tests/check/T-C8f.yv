@@ -1,0 +1,10 @@
+// id: T-C8f
+// kind: check-fail
+// phase: P1
+// rule: C6
+// summary: 插入要拥有的键，str 不会被隐式转成 String
+
+fn main() {
+    var m: Map[String, int] = [:]
+    m.set("apple", 3)               //~ ERROR E0001
+}
