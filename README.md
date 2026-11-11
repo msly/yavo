@@ -2,7 +2,7 @@
 
 This repository preserves the historical specification revisions as individual local Git commits and immutable copies under `history/v0.x/`.
 
-Current revision: **v0.1** (original unnamed `nl` draft).
+Current revision: **v0.2**.
 
 - `docs/`: current specification documents as of HEAD.
 - `history/v0.x/`: exact original version snapshots (no retrospective rewrites).
