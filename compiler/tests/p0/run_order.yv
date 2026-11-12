@@ -1,0 +1,36 @@
+// Arguments and operands evaluate left to right; && and || short-circuit.
+// expect-stdout:
+// | abc
+// | 6
+// | xy-1
+// | rhs skipped
+// | rhs evaluated
+fn t(name: str, v: int) -> int {
+    print(name)
+    return v
+}
+
+fn sum3(a: int, b: int, c: int) -> int {
+    return a + b + c
+}
+
+fn side(v: bool) -> bool {
+    print("rhs ")
+    return v
+}
+
+fn main() {
+    let s = sum3(t("a", 1), t("b", 2), t("c", 3))
+    println()
+    println(s)
+    println(t("x", 1) - t("y", 2))
+    if false && side(true) {
+        println("unreachable")
+    }
+    if true || side(false) {
+        println("rhs skipped")
+    }
+    if true && side(true) {
+        println("evaluated")
+    }
+}

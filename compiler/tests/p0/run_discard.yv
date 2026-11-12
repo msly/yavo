@@ -1,0 +1,29 @@
+// expect-stdout:
+// | 1
+// | 2
+// | unit
+// | 9
+// | 3
+// | loop
+// | loop
+fn tick(n: int) -> int {
+    println(n)
+    return n
+}
+fn unit() {
+    println("unit")
+}
+fn ignored(_: int, _: int) -> int {
+    return 9
+}
+fn main() {
+    let _ = tick(1)
+    let _ = tick(2)
+    let _ = unit()
+    println(ignored(7, 8))
+    let _value = 3
+    println(_value)
+    for _ in 0..2 {
+        println("loop")
+    }
+}

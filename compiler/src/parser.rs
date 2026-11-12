@@ -1,0 +1,565 @@
+use crate::ast::*;
+use crate::diag::{Diags, Span};
+use crate::lexer::{self, describe, StrPiece, Tok, Token};
+
+pub const KEYWORDS: &[&str] = &[
+    "fn", "pub", "let", "var", "if", "else", "while", "for", "in", "loop", "break", "continue", "return",
+    "true", "false", "use", "struct", "enum", "match", "interface", "impl", "const", "type", "none", "err",
+    "try", "catch", "inout", "sink", "of", "with", "scope", "unsafe", "self", "Self", "defer", "spawn",
+];
+
+type PResult<T> = Result<T, ()>;
+
+pub fn parse(toks: Vec<Token>, src: &str, diags: &mut Diags) -> Program {
+    let mut p = Parser { toks, pos: 0, src, diags };
+    p.program()
+}
+
+struct Parser<'a, 'd> {
+    toks: Vec<Token>,
+    pos: usize,
+    src: &'a str,
+    diags: &'d mut Diags,
+}
+
+impl Parser<'_, '_> {
+    fn peek(&self) -> &Tok {
+        &self.toks[self.pos].tok
+    }
+
+    fn peek_at(&self, n: usize) -> &Tok {
+        &self.toks[(self.pos + n).min(self.toks.len() - 1)].tok
+    }
+
+    fn span(&self) -> Span {
+        self.toks[self.pos].span
+    }
+
+    fn bump(&mut self) -> Token {
+        let t = self.toks[self.pos].clone();
+        if !matches!(t.tok, Tok::Eof) {
+            self.pos += 1;
+        }
+        t
+    }
+
+    fn is_kw(&self, kw: &str) -> bool {
+        matches!(self.peek(), Tok::Ident(s) if s == kw)
+    }
+
+    fn eat(&mut self, tok: &Tok) -> bool {
+        if self.peek() == tok {
+            self.bump();
+            true
+        } else {
+            false
+        }
+    }
+
+    fn err_here(&mut self, msg: impl Into<String>) {
+        let sp = self.span();
+        self.diags.error("E0020", sp, msg);
+    }
+
+    fn unsupported(&mut self, span: Span, msg: impl Into<String>) -> PResult<()> {
+        self.diags.error("E0021", span, msg);
+        Err(())
+    }
+
+    fn expect(&mut self, tok: Tok, what: &str) -> PResult<Span> {
+        if *self.peek() == tok {
+            Ok(self.bump().span)
+        } else {
+            let found = describe(self.peek());
+            self.err_here(format!("expected {what}, found {found}"));
+            Err(())
+        }
+    }
+
+    fn skip_newlines(&mut self) {
+        while matches!(self.peek(), Tok::Newline) {
+            self.bump();
+        }
+    }
+
+    fn ident(&mut self, what: &str) -> PResult<(String, Span)> {
+        match self.peek().clone() {
+            Tok::Ident(s) if !KEYWORDS.contains(&s.as_str()) => {
+                let sp = self.bump().span;
+                Ok((s, sp))
+            }
+            Tok::Ident(s) => {
+                self.err_here(format!("`{s}` is a reserved word and cannot be used as {what}"));
+                Err(())
+            }
+            other => {
+                self.err_here(format!("expected {what}, found {}", describe(&other)));
+                Err(())
+            }
+        }
+    }
+
+    fn program(&mut self) -> Program {
+        let mut fns = Vec::new();
+        loop {
+            self.skip_newlines();
+            if matches!(self.peek(), Tok::Eof) {
+                break;
+            }
+            match self.item() {
+                Ok(Some(f)) => fns.push(f),
+                Ok(None) => {}
+                Err(()) => self.sync_item(),
+            }
+        }
+        Program { fns }
+    }
+
+    fn sync_item(&mut self) {
+        let mut depth = 0i32;
+        loop {
+            match self.peek() {
+                Tok::Eof => return,
+                Tok::LBrace => depth += 1,
+                Tok::RBrace => depth = (depth - 1).max(0),
+                Tok::Newline if depth == 0 => {
+                    self.bump();
+                    self.skip_newlines();
+                    if self.is_kw("fn") || self.is_kw("pub") {
+                        return;
+                    }
+                    continue;
+                }
+                _ => {}
+            }
+            self.bump();
+        }
+    }
+
+    fn item(&mut self) -> PResult<Option<FnDecl>> {
+        let start = self.span();
+        if self.is_kw("use") {
+            self.diags.error("E0021", start, "imports are not supported in P0; there is no standard library yet");
+            while !matches!(self.peek(), Tok::Newline | Tok::Eof) {
+                self.bump();
+            }
+            return Ok(None);
+        }
+        // P0 compiles a single file, so `pub` is accepted and has no effect yet.
+        if self.is_kw("pub") {
+            self.bump();
+        }
+        if self.is_kw("fn") {
+            return self.function().map(Some);
+        }
+        for kw in ["struct", "enum", "interface", "impl", "const", "type"] {
+            if self.is_kw(kw) {
+                self.unsupported(start, format!("`{kw}` declarations are not supported in P0"))?;
+            }
+        }
+        let found = describe(self.peek());
+        self.err_here(format!("expected `fn`, found {found}"));
+        Err(())
+    }
+
+    fn function(&mut self) -> PResult<FnDecl> {
+        self.bump();
+        let (name, name_span) = self.ident("a function name")?;
+        if matches!(self.peek(), Tok::LBracket) {
+            let sp = self.span();
+            self.unsupported(sp, "generic functions are not supported in P0")?;
+        }
+        self.expect(Tok::LParen, "`(`")?;
+        let mut params = Vec::new();
+        while !matches!(self.peek(), Tok::RParen) {
+            for m in ["inout", "sink"] {
+                if self.is_kw(m) {
+                    let sp = self.span();
+                    self.unsupported(sp, format!("`{m}` parameters are not supported in P0"))?;
+                }
+            }
+            if self.is_kw("self") {
+                let sp = self.span();
+                self.unsupported(sp, "methods are not supported in P0")?;
+            }
+            let (pname, pspan) = self.ident("a parameter name")?;
+            self.expect(Tok::Colon, "`:` followed by the parameter type")?;
+            let ty = self.ty()?;
+            params.push(Param { name: pname, span: pspan, ty });
+            if !self.eat(&Tok::Comma) {
+                break;
+            }
+        }
+        self.expect(Tok::RParen, "`,` or `)`")?;
+        let ret = if self.eat(&Tok::Arrow) {
+            let t = self.ty()?;
+            if self.is_kw("of") {
+                let sp = self.span();
+                self.unsupported(sp, "borrowed return values (`-> T of x`) are not supported in P0")?;
+            }
+            Some(t)
+        } else {
+            None
+        };
+        if matches!(self.peek(), Tok::Bang) {
+            let sp = self.span();
+            self.unsupported(sp, "error-returning functions (`T ! E`) are not supported in P0")?;
+        }
+        let body = self.block()?;
+        Ok(FnDecl { name, name_span, params, ret, body })
+    }
+
+    fn ty(&mut self) -> PResult<TypeExpr> {
+        if matches!(self.peek(), Tok::Amp | Tok::Question | Tok::LBracket | Tok::LParen) {
+            let sp = self.span();
+            self.unsupported(sp, "only integer types, `bool` and `str` are supported in P0")?;
+        }
+        let (name, span) = self.ident("a type")?;
+        if matches!(self.peek(), Tok::LBracket) {
+            let sp = self.span();
+            self.unsupported(sp, "generic types are not supported in P0")?;
+        }
+        Ok(TypeExpr { name, span })
+    }
+
+    fn block(&mut self) -> PResult<Block> {
+        let open = self.expect(Tok::LBrace, "`{`")?;
+        let mut stmts = Vec::new();
+        loop {
+            self.skip_newlines();
+            match self.peek() {
+                Tok::RBrace => break,
+                Tok::Eof => {
+                    self.diags.error("E0020", open, "this `{` is never closed");
+                    return Err(());
+                }
+                _ => {}
+            }
+            match self.stmt() {
+                Ok(s) => {
+                    stmts.push(s);
+                    if !matches!(self.peek(), Tok::Newline | Tok::RBrace) {
+                        let found = describe(self.peek());
+                        self.err_here(format!("expected a newline after the statement, found {found}"));
+                        self.sync_stmt();
+                    }
+                }
+                Err(()) => self.sync_stmt(),
+            }
+        }
+        let close = self.bump().span;
+        Ok(Block { stmts, close })
+    }
+
+    fn sync_stmt(&mut self) {
+        let mut depth = 0i32;
+        loop {
+            match self.peek() {
+                Tok::Eof => return,
+                Tok::Newline if depth == 0 => {
+                    self.bump();
+                    return;
+                }
+                Tok::RBrace if depth == 0 => return,
+                Tok::LBrace => depth += 1,
+                Tok::RBrace => depth -= 1,
+                _ => {}
+            }
+            self.bump();
+        }
+    }
+
+    fn stmt(&mut self) -> PResult<Stmt> {
+        let start = self.span();
+        if self.is_kw("let") || self.is_kw("var") {
+            let mutable = self.is_kw("var");
+            self.bump();
+            if matches!(self.peek(), Tok::LParen) {
+                let sp = self.span();
+                self.unsupported(sp, "tuple destructuring is not supported in P0")?;
+            }
+            let (name, name_span) = self.ident("a variable name")?;
+            let ty = if self.eat(&Tok::Colon) { Some(self.ty()?) } else { None };
+            self.expect(Tok::Assign, "`=` followed by an initial value")?;
+            let init = self.expr()?;
+            let span = start.to(init.span);
+            return Ok(Stmt { span, kind: StmtKind::Let { mutable, name, name_span, ty, init } });
+        }
+        if self.is_kw("if") {
+            return self.if_stmt();
+        }
+        if self.is_kw("while") {
+            self.bump();
+            let cond = self.expr()?;
+            let body = self.block()?;
+            return Ok(Stmt { span: start, kind: StmtKind::While { cond, body } });
+        }
+        if self.is_kw("loop") {
+            self.bump();
+            let body = self.block()?;
+            return Ok(Stmt { span: start, kind: StmtKind::Loop { body } });
+        }
+        if self.is_kw("for") {
+            self.bump();
+            let (var, var_span) = self.ident("a loop variable")?;
+            if !self.is_kw("in") {
+                let found = describe(self.peek());
+                self.err_here(format!("expected `in`, found {found}"));
+                return Err(());
+            }
+            self.bump();
+            let range_start = self.expr()?;
+            if !self.eat(&Tok::DotDot) {
+                self.unsupported(range_start.span, "only integer ranges (`for i in a..b`) are supported in P0")?;
+            }
+            let range_end = self.expr()?;
+            let body = self.block()?;
+            return Ok(Stmt {
+                span: start,
+                kind: StmtKind::For { var, var_span, start: range_start, end: range_end, body },
+            });
+        }
+        if self.is_kw("return") {
+            self.bump();
+            if matches!(self.peek(), Tok::Newline | Tok::RBrace) {
+                return Ok(Stmt { span: start, kind: StmtKind::Return(None) });
+            }
+            let e = self.expr()?;
+            return Ok(Stmt { span: start.to(e.span), kind: StmtKind::Return(Some(e)) });
+        }
+        if self.is_kw("break") {
+            self.bump();
+            return Ok(Stmt { span: start, kind: StmtKind::Break });
+        }
+        if self.is_kw("continue") {
+            self.bump();
+            return Ok(Stmt { span: start, kind: StmtKind::Continue });
+        }
+        for kw in ["match", "scope", "defer", "unsafe", "with"] {
+            if self.is_kw(kw) {
+                self.unsupported(start, format!("`{kw}` is not supported in P0"))?;
+            }
+        }
+        if matches!(self.peek(), Tok::LBrace) {
+            let b = self.block()?;
+            return Ok(Stmt { span: start, kind: StmtKind::Block(b) });
+        }
+        let e = self.expr()?;
+        let op = match self.peek() {
+            Tok::Assign => Some(None),
+            Tok::PlusEq => Some(Some(BinOp::Add)),
+            Tok::MinusEq => Some(Some(BinOp::Sub)),
+            Tok::StarEq => Some(Some(BinOp::Mul)),
+            Tok::SlashEq => Some(Some(BinOp::Div)),
+            Tok::PercentEq => Some(Some(BinOp::Rem)),
+            _ => None,
+        };
+        if let Some(op) = op {
+            let op_span = self.bump().span;
+            let value = self.expr()?;
+            let span = start.to(value.span);
+            return Ok(Stmt { span, kind: StmtKind::Assign { target: e, op, op_span, value } });
+        }
+        Ok(Stmt { span: e.span, kind: StmtKind::Expr(e) })
+    }
+
+    fn if_stmt(&mut self) -> PResult<Stmt> {
+        let start = self.bump().span;
+        let cond = self.expr()?;
+        let then = self.block()?;
+        if matches!(self.peek(), Tok::Newline) && matches!(self.peek_at(1), Tok::Ident(s) if s == "else") {
+            self.bump();
+            self.err_here("`else` must be on the same line as the closing `}` of the `if` block");
+        }
+        let els = if self.is_kw("else") {
+            self.bump();
+            if self.is_kw("if") {
+                Some(Else::If(Box::new(self.if_stmt()?)))
+            } else {
+                Some(Else::Block(self.block()?))
+            }
+        } else {
+            None
+        };
+        Ok(Stmt { span: start, kind: StmtKind::If { cond, then, els } })
+    }
+
+    fn expr(&mut self) -> PResult<Expr> {
+        self.binary(1)
+    }
+
+    /// Precedence, lowest first: `||`, `&&`, comparisons (non-associative), `|`, `^`,
+    /// `&`, shifts, additive (incl. wrapping), multiplicative (incl. wrapping).
+    fn binop_at(&self, level: u8) -> Option<BinOp> {
+        let (l, op) = match self.peek() {
+            Tok::OrOr => (1, BinOp::Or),
+            Tok::AndAnd => (2, BinOp::And),
+            Tok::EqEq => (3, BinOp::Eq),
+            Tok::NotEq => (3, BinOp::Ne),
+            Tok::Lt => (3, BinOp::Lt),
+            Tok::Le => (3, BinOp::Le),
+            Tok::Gt => (3, BinOp::Gt),
+            Tok::Ge => (3, BinOp::Ge),
+            Tok::Pipe => (4, BinOp::BitOr),
+            Tok::Caret => (5, BinOp::BitXor),
+            Tok::Amp => (6, BinOp::BitAnd),
+            Tok::Shl => (7, BinOp::Shl),
+            Tok::Shr => (7, BinOp::Shr),
+            Tok::Plus => (8, BinOp::Add),
+            Tok::Minus => (8, BinOp::Sub),
+            Tok::PlusWrap => (8, BinOp::AddWrap),
+            Tok::MinusWrap => (8, BinOp::SubWrap),
+            Tok::Star => (9, BinOp::Mul),
+            Tok::Slash => (9, BinOp::Div),
+            Tok::Percent => (9, BinOp::Rem),
+            Tok::StarWrap => (9, BinOp::MulWrap),
+            _ => return None,
+        };
+        (l == level).then_some(op)
+    }
+
+    fn binary(&mut self, level: u8) -> PResult<Expr> {
+        if level > 9 {
+            return self.unary();
+        }
+        let mut lhs = self.binary(level + 1)?;
+        while let Some(op) = self.binop_at(level) {
+            let op_span = self.bump().span;
+            let rhs = self.binary(level + 1)?;
+            let span = lhs.span.to(rhs.span);
+            lhs = Expr { span, kind: ExprKind::Binary { op, op_span, lhs: Box::new(lhs), rhs: Box::new(rhs) } };
+            if level == 3 && self.binop_at(3).is_some() {
+                self.err_here("comparison operators cannot be chained; combine comparisons with `&&`");
+                return Err(());
+            }
+        }
+        Ok(lhs)
+    }
+
+    fn unary(&mut self) -> PResult<Expr> {
+        let start = self.span();
+        let op = match self.peek() {
+            Tok::Minus => UnOp::Neg,
+            Tok::Bang => UnOp::Not,
+            Tok::Amp => {
+                self.unsupported(start, "borrow expressions (`&x`) are not supported in P0")?;
+                unreachable!()
+            }
+            _ => return self.postfix(),
+        };
+        self.bump();
+        let e = self.unary()?;
+        Ok(Expr { span: start.to(e.span), kind: ExprKind::Unary { op, op_span: start, expr: Box::new(e) } })
+    }
+
+    fn postfix(&mut self) -> PResult<Expr> {
+        let mut e = self.primary()?;
+        loop {
+            match self.peek() {
+                Tok::LParen => {
+                    self.bump();
+                    let mut args = Vec::new();
+                    while !matches!(self.peek(), Tok::RParen) {
+                        args.push(self.expr()?);
+                        if !self.eat(&Tok::Comma) {
+                            break;
+                        }
+                    }
+                    let close = self.expect(Tok::RParen, "`,` or `)`")?;
+                    e = Expr { span: e.span.to(close), kind: ExprKind::Call { callee: Box::new(e), args } };
+                }
+                Tok::Dot => {
+                    self.bump();
+                    let (name, name_span) = match self.peek().clone() {
+                        Tok::Ident(s) => {
+                            let sp = self.bump().span;
+                            (s, sp)
+                        }
+                        other => {
+                            self.err_here(format!("expected a field or method name, found {}", describe(&other)));
+                            return Err(());
+                        }
+                    };
+                    e = Expr { span: e.span.to(name_span), kind: ExprKind::Field { base: Box::new(e), name } };
+                }
+                Tok::LBracket => {
+                    let sp = self.span();
+                    self.unsupported(sp, "indexing is not supported in P0")?;
+                }
+                Tok::Question => {
+                    let sp = self.span();
+                    self.unsupported(sp, "optional chaining (`?`) is not supported in P0")?;
+                }
+                _ => return Ok(e),
+            }
+        }
+    }
+
+    fn primary(&mut self) -> PResult<Expr> {
+        let span = self.span();
+        match self.peek().clone() {
+            Tok::Int(v) => {
+                self.bump();
+                Ok(Expr { span, kind: ExprKind::Int(v) })
+            }
+            Tok::Str(pieces) => {
+                self.bump();
+                self.string(pieces, span)
+            }
+            Tok::Ident(s) if s == "true" || s == "false" => {
+                self.bump();
+                Ok(Expr { span, kind: ExprKind::Bool(s == "true") })
+            }
+            Tok::Ident(s) if KEYWORDS.contains(&s.as_str()) => {
+                if matches!(s.as_str(), "none" | "err" | "try" | "match" | "self") {
+                    self.unsupported(span, format!("`{s}` is not supported in P0"))?;
+                }
+                self.err_here(format!("expected an expression, found `{s}`"));
+                Err(())
+            }
+            Tok::Ident(s) => {
+                self.bump();
+                Ok(Expr { span, kind: ExprKind::Ident(s) })
+            }
+            Tok::LParen => {
+                self.bump();
+                let e = self.expr()?;
+                let close = self.expect(Tok::RParen, "`)`")?;
+                Ok(Expr { span: span.to(close), kind: ExprKind::Paren(Box::new(e)) })
+            }
+            Tok::LBracket => {
+                self.unsupported(span, "collection literals are not supported in P0")?;
+                unreachable!()
+            }
+            other => {
+                self.err_here(format!("expected an expression, found {}", describe(&other)));
+                Err(())
+            }
+        }
+    }
+
+    fn string(&mut self, pieces: Vec<StrPiece>, span: Span) -> PResult<Expr> {
+        let mut segs = Vec::new();
+        for piece in pieces {
+            match piece {
+                StrPiece::Text(t) => segs.push(StrSeg::Text(t)),
+                StrPiece::Interp { start, end, line, col, spec } => {
+                    let ispan = Span { start, end, line, col };
+                    let toks = lexer::lex_range(self.src, start, end, line, col, false, self.diags);
+                    if toks.len() == 1 {
+                        self.diags.error("E0020", ispan, "empty `${}` in string literal");
+                        continue;
+                    }
+                    let mut sub = Parser { toks, pos: 0, src: self.src, diags: &mut *self.diags };
+                    let Ok(expr) = sub.expr() else { continue };
+                    if !matches!(sub.peek(), Tok::Eof) {
+                        sub.err_here("only a single expression is allowed inside `${...}`");
+                        continue;
+                    }
+                    segs.push(StrSeg::Expr { expr, spec });
+                }
+            }
+        }
+        Ok(Expr { span, kind: ExprKind::Str(segs) })
+    }
+}

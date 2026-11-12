@@ -1,0 +1,13 @@
+// expect-stdout:
+// | 300 44 -1 255 65535
+// | 200 -56
+fn main() {
+    let a: int = 300
+    let b: u8 = u8.wrap(a)
+    let c: i8 = i8.wrap(255)
+    let d: u8 = u8(255)
+    let e: u16 = u16.wrap(-1)
+    println("${a} ${b} ${c} ${d} ${e}")
+    let f: u8 = 200
+    println("${int(f)} ${i8.wrap(f)}")
+}

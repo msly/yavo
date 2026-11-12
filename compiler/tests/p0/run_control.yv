@@ -1,0 +1,79 @@
+// expect-stdout:
+// | 0 1 2 3 4
+// | 120
+// | 3628800
+// | 1 2 fizz 4 buzz fizz 7 8 fizz buzz 11 fizz 13 14 fizzbuzz
+// | outer 7
+// | y=2 x=1
+fn fact(n: int) -> int {
+    if n <= 1 {
+        return 1
+    }
+    return n * fact(n - 1)
+}
+
+fn fizz(n: int) -> str {
+    if n % 15 == 0 {
+        return "fizzbuzz"
+    }
+    if n % 3 == 0 {
+        return "fizz"
+    }
+    if n % 5 == 0 {
+        return "buzz"
+    }
+    return ""
+}
+
+fn main() {
+    var i = 0
+    while i < 5 {
+        if i > 0 {
+            print(" ")
+        }
+        print(i)
+        i += 1
+    }
+    println()
+
+    var acc = 1
+    var k = 1
+    loop {
+        acc *= k
+        if k == 5 {
+            break
+        }
+        k += 1
+    }
+    println(acc)
+    println(fact(10))
+
+    for n in 1..16 {
+        let w = fizz(n)
+        if w == "" {
+            print(n)
+        } else {
+            print(w)
+        }
+        if n < 15 {
+            print(" ")
+        }
+    }
+    println()
+
+    var found = 0
+    for a in 0..10 {
+        if a * a > 40 {
+            found = a
+            break
+        }
+    }
+    println("outer ${found}")
+
+    let x = 1
+    {
+        let y = 2
+        print("y=${y} ")
+    }
+    println("x=${x}")
+}

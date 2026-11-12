@@ -1,0 +1,9 @@
+// expect-stdout:
+// | before
+// expect-panic: P-OVERFLOW 7:15
+fn main() {
+    println("before")
+    let a: i8 = 127
+    let b = a + 1
+    println(b)
+}

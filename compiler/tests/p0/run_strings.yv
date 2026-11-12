@@ -1,0 +1,21 @@
+// expect-stdout:
+// | a"b\c ${x}
+// | HI
+// | hi Yavo, true true
+// | 33
+// | héllo ✓
+fn greet(name: str) -> str {
+    return name
+}
+
+fn main() {
+    println("a\"b\\c \${x}")
+    println("\u{48}\u{49}")
+    let n = "Yavo"
+    let same = n == "Yavo"
+    let differs = n != "yavo"
+    println("hi ${greet(n)}, ${same} ${differs}")
+    println("${1 + 2}${3}")
+    eprintln("stderr is not part of stdout")
+    println("héllo ✓")
+}

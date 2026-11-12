@@ -1,0 +1,9 @@
+// expect-stdout:
+// expect-panic: P-DIV-ZERO 5:15
+fn fail() -> int {
+    let zero = 0
+    return 10 / zero
+}
+fn main() {
+    println("PREFIX${fail()}SUFFIX")
+}

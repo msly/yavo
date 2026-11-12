@@ -1,0 +1,201 @@
+mod ast;
+mod check;
+mod codegen;
+mod diag;
+mod lexer;
+mod parser;
+mod toolchain;
+mod types;
+
+use std::fs;
+use std::path::{Path, PathBuf};
+use std::process::{exit, Command};
+
+use diag::Diags;
+
+const EXIT_COMPILE_ERROR: i32 = 1;
+const EXIT_USAGE: i32 = 2;
+const EXIT_TOOLCHAIN: i32 = 3;
+const EXIT_INTERNAL: i32 = 4;
+
+const USAGE: &str = "\
+yavo - the Yavo compiler (P0 vertical slice)
+
+USAGE:
+    yavo check <file.yv> [--json-diagnostics]
+    yavo build <file.yv> [-o <output>] [--release] [--emit-c <file.c>] [--json-diagnostics]
+    yavo run   <file.yv> [--release] [--json-diagnostics]
+    yavo toolchain [status | install]
+    yavo --version
+
+EXIT CODES:
+    0 success, 1 compile errors, 2 usage error, 3 C toolchain unavailable, 4 internal error.
+    `yavo run` exits with the program's own status (101 on panic).";
+
+struct Options {
+    input: PathBuf,
+    output: Option<PathBuf>,
+    emit_c: Option<PathBuf>,
+    release: bool,
+    json: bool,
+}
+
+fn usage_error(msg: &str) -> ! {
+    eprintln!("error: {msg}\n\n{USAGE}");
+    exit(EXIT_USAGE);
+}
+
+fn parse_options(args: &[String]) -> Options {
+    let mut input = None;
+    let mut opts = Options { input: PathBuf::new(), output: None, emit_c: None, release: false, json: false };
+    let mut it = args.iter();
+    while let Some(a) = it.next() {
+        match a.as_str() {
+            "--release" => opts.release = true,
+            "--json-diagnostics" => opts.json = true,
+            "-o" => opts.output = Some(it.next().unwrap_or_else(|| usage_error("`-o` needs a path")).into()),
+            "--emit-c" => opts.emit_c = Some(it.next().unwrap_or_else(|| usage_error("`--emit-c` needs a path")).into()),
+            flag if flag.starts_with('-') => usage_error(&format!("unknown option `{flag}`")),
+            path if input.is_none() => input = Some(PathBuf::from(path)),
+            extra => usage_error(&format!("unexpected argument `{extra}`")),
+        }
+    }
+    opts.input = input.unwrap_or_else(|| usage_error("missing input file"));
+    opts
+}
+
+/// Front end: source text to C. Prints diagnostics and returns `None` on errors.
+fn compile_to_c(opts: &Options) -> Option<String> {
+    let display = opts.input.to_string_lossy().replace('\\', "/");
+    let bytes = fs::read(&opts.input).unwrap_or_else(|e| {
+        eprintln!("error: cannot read {display}: {e}");
+        exit(EXIT_USAGE);
+    });
+    let mut diags = Diags::default();
+    let src = match String::from_utf8(bytes) {
+        Ok(s) => s,
+        Err(_) => {
+            let span = diag::Span { start: 0, end: 0, line: 1, col: 1 };
+            diags.error("E0020", span, "source file is not valid UTF-8");
+            report(&display, "", &mut diags, opts.json);
+            return None;
+        }
+    };
+    let toks = lexer::lex_file(&src, &mut diags);
+    let program = parser::parse(toks, &src, &mut diags);
+    let typed = if diags.has_errors() { None } else { check::check(&program, &mut diags) };
+    report(&display, &src, &mut diags, opts.json);
+    typed.map(|p| codegen::generate(&p, &display))
+}
+
+fn report(path: &str, src: &str, diags: &mut Diags, json: bool) {
+    diags.sort();
+    if json {
+        println!("{}", diag::render_json(path, src, diags));
+    } else if !diags.items.is_empty() {
+        eprint!("{}", diag::render_human(path, src, diags));
+    }
+}
+
+fn scratch_dir() -> PathBuf {
+    let dir = std::env::temp_dir().join(format!("yavo-{}", std::process::id()));
+    fs::create_dir_all(&dir).unwrap_or_else(|e| {
+        eprintln!("error: cannot create {}: {e}", dir.display());
+        exit(EXIT_INTERNAL);
+    });
+    dir
+}
+
+fn default_output(input: &Path) -> PathBuf {
+    let stem = input.file_stem().map(|s| s.to_os_string()).unwrap_or_else(|| "a".into());
+    let mut out = PathBuf::from(stem);
+    if cfg!(windows) {
+        out.set_extension("exe");
+    }
+    out
+}
+
+fn build(opts: &Options, output: &Path) {
+    let Some(c_code) = compile_to_c(opts) else { exit(EXIT_COMPILE_ERROR) };
+    let scratch = scratch_dir();
+    let c_file = scratch.join("main.c");
+    let write = |p: &Path, s: &str| {
+        fs::write(p, s).unwrap_or_else(|e| {
+            eprintln!("error: cannot write {}: {e}", p.display());
+            exit(EXIT_INTERNAL);
+        })
+    };
+    write(&c_file, &c_code);
+    write(&scratch.join("yavo_rt.h"), codegen::RUNTIME_HEADER);
+    if let Some(path) = &opts.emit_c {
+        write(path, &c_code);
+    }
+    let tc = toolchain::find().unwrap_or_else(|e| {
+        eprintln!("error: {e}");
+        exit(EXIT_TOOLCHAIN);
+    });
+    let result = tc.compile(&c_file, &scratch, output, opts.release);
+    let _ = fs::remove_dir_all(&scratch);
+    if let Err(e) = result {
+        eprintln!("error: {e}");
+        exit(EXIT_INTERNAL);
+    }
+}
+
+fn main() {
+    let args: Vec<String> = std::env::args().skip(1).collect();
+    let Some(cmd) = args.first() else {
+        println!("{USAGE}");
+        exit(EXIT_USAGE);
+    };
+    let rest = &args[1..];
+    match cmd.as_str() {
+        "--version" | "-V" => println!("yavo {} (P0, zig {})", env!("CARGO_PKG_VERSION"), toolchain::lock().version),
+        "--help" | "-h" | "help" => println!("{USAGE}"),
+        "check" => {
+            let opts = parse_options(rest);
+            if compile_to_c(&opts).is_none() {
+                exit(EXIT_COMPILE_ERROR);
+            }
+        }
+        "build" => {
+            let opts = parse_options(rest);
+            let output = opts.output.clone().unwrap_or_else(|| default_output(&opts.input));
+            build(&opts, &output);
+        }
+        "run" => {
+            let opts = parse_options(rest);
+            let dir = scratch_dir().with_extension("bin");
+            let _ = fs::create_dir_all(&dir);
+            let exe = dir.join(default_output(&opts.input));
+            build(&opts, &exe);
+            let status = Command::new(&exe).status();
+            let _ = fs::remove_dir_all(&dir);
+            match status {
+                Ok(s) => exit(s.code().unwrap_or(EXIT_INTERNAL)),
+                Err(e) => {
+                    eprintln!("error: cannot start {}: {e}", exe.display());
+                    exit(EXIT_INTERNAL);
+                }
+            }
+        }
+        "toolchain" => match rest.first().map(String::as_str).unwrap_or("status") {
+            "status" => match toolchain::find() {
+                Ok(tc) => println!("C toolchain: {}", tc.description),
+                Err(e) => {
+                    eprintln!("error: {e}");
+                    exit(EXIT_TOOLCHAIN);
+                }
+            },
+            "install" => match toolchain::install() {
+                Ok(msg) => println!("{msg}"),
+                Err(e) => {
+                    eprintln!("error: {e}");
+                    exit(EXIT_TOOLCHAIN);
+                }
+            },
+            other => usage_error(&format!("unknown toolchain command `{other}`")),
+        },
+        other => usage_error(&format!("unknown command `{other}`")),
+    }
+}

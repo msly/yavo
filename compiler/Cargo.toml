@@ -1,0 +1,19 @@
+[package]
+name = "yavo"
+version = "0.0.1"
+edition = "2021"
+description = "Yavo compiler (P0 vertical slice)"
+license = "MIT OR Apache-2.0"
+publish = false
+
+[[bin]]
+name = "yavo"
+path = "src/main.rs"
+
+[dependencies]
+serde_json = "1"
+sha2 = "0.10"
+
+[profile.release]
+opt-level = 3
+strip = true

@@ -1,0 +1,10 @@
+// P0 forbids redeclaring a name anywhere in the same function.
+// expect-error: E0011 6:13
+fn main() {
+    let x = 1
+    {
+        let x = 2
+        println(x)
+    }
+    println(x)
+}
