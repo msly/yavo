@@ -3,7 +3,7 @@
 // expect-error: U0001 16:13
 // expect-error: U0001 19:8
 // expect-error: U0001 23:10
-// expect-error: U0001 27:20
+// expect-error: U0001 27:13
 // expect-error: U0001 30:21
 // expect-error: U0001 33:13
 // Valid v0.5 syntax that P0 does not implement must be reported as U0001, never as a syntax error (E0020).
@@ -23,8 +23,8 @@ fn pairs() {
     for k, v in m {
     }
 }
-fn literal() {
-    let c = Counter{n: 1}
+fn shorthand() {
+    let c = .Less
 }
 fn handled() {
     let n = parse() catch _ => 0

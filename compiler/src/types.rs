@@ -1,4 +1,26 @@
+use std::cell::RefCell;
 use std::fmt;
+
+thread_local! {
+    /// Struct names and their C names, indexed by struct id. The compiler checks one file per
+    /// process, so a per-thread table keeps `Ty` small and `Copy`.
+    static STRUCTS: RefCell<Vec<(&'static str, &'static str)>> = const { RefCell::new(Vec::new()) };
+}
+
+/// Registers a struct name and returns its id.
+pub fn register_struct(name: &str) -> u32 {
+    let name: &'static str = Box::leak(name.to_string().into_boxed_str());
+    let c_name: &'static str = Box::leak(format!("yv_s_{name}").into_boxed_str());
+    STRUCTS.with(|s| {
+        let mut s = s.borrow_mut();
+        s.push((name, c_name));
+        (s.len() - 1) as u32
+    })
+}
+
+fn struct_names(id: u32) -> (&'static str, &'static str) {
+    STRUCTS.with(|s| s.borrow()[id as usize])
+}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum IntTy {
@@ -100,6 +122,8 @@ pub enum Ty {
     Bool,
     Str,
     Unit,
+    /// A user-defined struct, by id (see `register_struct`).
+    Struct(u32),
     /// Produced after an error has been reported; suppresses cascading diagnostics.
     Error,
 }
@@ -111,6 +135,7 @@ impl Ty {
             Ty::Bool => "bool",
             Ty::Str => "yv_str",
             Ty::Unit => "void",
+            Ty::Struct(id) => struct_names(id).1,
             Ty::Error => "void",
         }
     }
@@ -123,6 +148,7 @@ impl fmt::Display for Ty {
             Ty::Bool => f.write_str("bool"),
             Ty::Str => f.write_str("str"),
             Ty::Unit => f.write_str("()"),
+            Ty::Struct(id) => f.write_str(struct_names(*id).0),
             Ty::Error => f.write_str("{error}"),
         }
     }

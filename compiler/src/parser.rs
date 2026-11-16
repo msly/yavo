@@ -10,6 +10,11 @@ pub const KEYWORDS: &[&str] = &[
 
 type PResult<T> = Result<T, ()>;
 
+enum Item {
+    Fn(FnDecl),
+    Struct(StructDecl),
+}
+
 pub fn parse(toks: Vec<Token>, src: &str, diags: &mut Diags) -> Program {
     let mut p = Parser { toks, pos: 0, src, diags };
     p.program()
@@ -101,18 +106,20 @@ impl Parser<'_, '_> {
 
     fn program(&mut self) -> Program {
         let mut fns = Vec::new();
+        let mut structs = Vec::new();
         loop {
             self.skip_newlines();
             if matches!(self.peek(), Tok::Eof) {
                 break;
             }
             match self.item() {
-                Ok(Some(f)) => fns.push(f),
+                Ok(Some(Item::Fn(f))) => fns.push(f),
+                Ok(Some(Item::Struct(s))) => structs.push(s),
                 Ok(None) => {}
                 Err(()) => self.sync_item(),
             }
         }
-        Program { fns }
+        Program { fns, structs }
     }
 
     fn sync_item(&mut self) {
@@ -125,7 +132,7 @@ impl Parser<'_, '_> {
                 Tok::Newline if depth == 0 => {
                     self.bump();
                     self.skip_newlines();
-                    if self.is_kw("fn") || self.is_kw("pub") {
+                    if self.is_kw("fn") || self.is_kw("pub") || self.is_kw("struct") {
                         return;
                     }
                     continue;
@@ -136,7 +143,7 @@ impl Parser<'_, '_> {
         }
     }
 
-    fn item(&mut self) -> PResult<Option<FnDecl>> {
+    fn item(&mut self) -> PResult<Option<Item>> {
         let start = self.span();
         if self.is_kw("use") {
             self.diags.error("U0001", start, "imports are not supported in P0; there is no standard library yet");
@@ -150,9 +157,12 @@ impl Parser<'_, '_> {
             self.bump();
         }
         if self.is_kw("fn") {
-            return self.function().map(Some);
+            return self.function().map(|f| Some(Item::Fn(f)));
         }
-        for kw in ["struct", "enum", "interface", "impl", "const", "type"] {
+        if self.is_kw("struct") {
+            return self.struct_decl().map(|s| Some(Item::Struct(s)));
+        }
+        for kw in ["enum", "interface", "impl", "const", "type"] {
             if self.is_kw(kw) {
                 self.unsupported(start, format!("`{kw}` declarations are not supported in P0"))?;
             }
@@ -160,6 +170,48 @@ impl Parser<'_, '_> {
         let found = describe(self.peek());
         self.err_here(format!("expected `fn`, found {found}"));
         Err(())
+    }
+
+    /// `struct Name { field: Type ... }`, one field per line (commas are also accepted).
+    fn struct_decl(&mut self) -> PResult<StructDecl> {
+        self.bump();
+        let (name, name_span) = self.ident("a struct name")?;
+        if matches!(self.peek(), Tok::LBracket) {
+            let sp = self.span();
+            self.unsupported(sp, "generic structs are not supported in P0")?;
+        }
+        if matches!(self.peek(), Tok::Colon) {
+            let sp = self.span();
+            self.unsupported(sp, "implementing interfaces (`struct X: Named`) is not supported in P0")?;
+        }
+        self.expect(Tok::LBrace, "`{` to start the struct body")?;
+        let mut fields = Vec::new();
+        loop {
+            while matches!(self.peek(), Tok::Newline | Tok::Comma) {
+                self.bump();
+            }
+            if self.eat(&Tok::RBrace) {
+                break;
+            }
+            if self.is_kw("fn") || self.is_kw("pub") {
+                let sp = self.span();
+                self.unsupported(sp, "methods are not supported in P0")?;
+            }
+            let (fname, fspan) = self.ident("a field name")?;
+            self.expect(Tok::Colon, "`:` followed by the field type")?;
+            let ty = self.ty()?;
+            if matches!(self.peek(), Tok::Assign) {
+                let sp = self.span();
+                self.unsupported(sp, "field default values are not supported in P0")?;
+            }
+            fields.push(FieldDecl { name: fname, span: fspan, ty });
+            if !matches!(self.peek(), Tok::Newline | Tok::Comma | Tok::RBrace) {
+                let found = describe(self.peek());
+                self.err_here(format!("expected a newline or `,` after the field, found {found}"));
+                return Err(());
+            }
+        }
+        Ok(StructDecl { name, name_span, fields })
     }
 
     fn function(&mut self) -> PResult<FnDecl> {
@@ -545,8 +597,29 @@ impl Parser<'_, '_> {
                     if matches!(&e.kind, ExprKind::Ident(n) if n.starts_with(|c: char| c.is_ascii_uppercase()))
                         && self.span().start == e.span.end =>
                 {
-                    let sp = self.span();
-                    self.unsupported(sp, "struct literals are not supported in P0")?;
+                    let ExprKind::Ident(name) = &e.kind else { unreachable!() };
+                    let (name, name_span) = (name.clone(), e.span);
+                    self.bump();
+                    let mut fields = Vec::new();
+                    loop {
+                        while matches!(self.peek(), Tok::Newline | Tok::Comma) {
+                            self.bump();
+                        }
+                        if matches!(self.peek(), Tok::RBrace) {
+                            break;
+                        }
+                        let (fname, fspan) = self.ident("a field name")?;
+                        self.expect(Tok::Colon, "`:` followed by the field value")?;
+                        let value = self.expr()?;
+                        fields.push(FieldInit { name: fname, span: fspan, value });
+                        if !matches!(self.peek(), Tok::Newline | Tok::Comma | Tok::RBrace) {
+                            let found = describe(self.peek());
+                            self.err_here(format!("expected `,` or `}}` after the field value, found {found}"));
+                            return Err(());
+                        }
+                    }
+                    let close = self.bump().span;
+                    e = Expr { span: name_span.to(close), kind: ExprKind::StructLit { name, name_span, fields } };
                 }
                 _ => return Ok(e),
             }

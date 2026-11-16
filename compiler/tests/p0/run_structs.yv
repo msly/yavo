@@ -1,0 +1,58 @@
+// expect-stdout:
+// | 3 4
+// | 10 3
+// | 13 8
+// | 10
+// | 2
+// | 1
+// | 1 2
+// | 3
+struct Point {
+    x: int
+    y: int
+}
+
+struct Segment {
+    from: Point
+    to: Point
+}
+
+struct Order {
+    a: int
+    b: int
+}
+
+fn add(p: Point, q: Point) -> Point {
+    return Point{x: p.x + q.x, y: p.y + q.y}
+}
+
+fn length2(s: Segment) -> int {
+    let dx = s.to.x - s.from.x
+    let dy = s.to.y - s.from.y
+    return dx * dx + dy * dy
+}
+
+fn tick(n: int) -> int {
+    println(n)
+    return n
+}
+
+fn main() {
+    let p = Point{x: 3, y: 4}
+    println("${p.x} ${p.y}")
+    var q = p
+    q.x = 10
+    println("${q.x} ${p.x}")
+    let r = add(p, q)
+    println("${r.x} ${r.y}")
+    var s = Segment{from: Point{x: 0, y: 0}, to: Point{x: 1, y: 2}}
+    s.to.y += 1
+    println(length2(s))
+    let o = Order{b: tick(2), a: tick(1)}
+    println("${o.a} ${o.b}")
+    let multi = Point{
+        x: 1,
+        y: 2,
+    }
+    println(multi.x + multi.y)
+}

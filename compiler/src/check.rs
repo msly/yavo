@@ -4,12 +4,19 @@ use std::collections::HashMap;
 
 use crate::ast::*;
 use crate::diag::{Diags, Span};
-use crate::types::{IntTy, Ty};
+use crate::types::{register_struct, IntTy, Ty};
 
 pub type LocalId = usize;
 
 pub struct HProgram {
     pub fns: Vec<HFn>,
+    /// Struct definitions, ordered so that every struct comes after the structs it contains.
+    pub structs: Vec<HStruct>,
+}
+
+pub struct HStruct {
+    pub ty: Ty,
+    pub fields: Vec<(String, Ty)>,
 }
 
 pub struct HFn {
@@ -35,7 +42,8 @@ pub enum HStmtKind {
     Let { local: LocalId, init: HExpr },
     /// Evaluate and immediately discard without introducing a name or local slot.
     Discard(HExpr),
-    Assign { local: LocalId, value: HExpr },
+    /// `local.path[0].path[1]... = value`; `path` holds field indexes and is empty for a plain variable.
+    Assign { local: LocalId, path: Vec<usize>, value: HExpr },
     Expr(HExpr),
     If { cond: HExpr, then: Vec<HStmt>, els: Vec<HStmt> },
     While { cond: HExpr, body: Vec<HStmt> },
@@ -72,6 +80,9 @@ pub enum HExprKind {
     Not(Box<HExpr>),
     Binary { op: BinOp, lhs: Box<HExpr>, rhs: Box<HExpr> },
     Convert { to: IntTy, checked: bool, expr: Box<HExpr> },
+    /// Field values in the order they were written (`usize` is the field index).
+    StructLit { fields: Vec<(usize, HExpr)> },
+    Field { base: Box<HExpr>, field: usize },
     Error,
 }
 
@@ -116,16 +127,34 @@ struct Checker<'d> {
     diags: &'d mut Diags,
     sigs: Vec<Sig>,
     index: HashMap<String, usize>,
+    structs: Vec<StructDef>,
+    struct_index: HashMap<String, usize>,
+}
+
+struct StructDef {
+    name: String,
+    span: Span,
+    ty: Ty,
+    fields: Vec<(String, Ty, Span)>,
 }
 
 pub fn check(prog: &Program, diags: &mut Diags) -> Option<HProgram> {
-    let mut ck = Checker { diags, sigs: Vec::new(), index: HashMap::new() };
+    let mut ck =
+        Checker { diags, sigs: Vec::new(), index: HashMap::new(), structs: Vec::new(), struct_index: HashMap::new() };
+    let order = ck.collect_structs(prog);
     ck.collect(prog);
     let fns = prog.fns.iter().enumerate().map(|(i, f)| ck.function(f, i)).collect();
     if ck.diags.has_errors() {
         None
     } else {
-        Some(HProgram { fns })
+        let structs = order
+            .into_iter()
+            .map(|i| {
+                let s = &ck.structs[i];
+                HStruct { ty: s.ty, fields: s.fields.iter().map(|(n, t, _)| (n.clone(), *t)).collect() }
+            })
+            .collect();
+        Some(HProgram { fns, structs })
     }
 }
 
@@ -222,6 +251,151 @@ fn contains_break(stmts: &[Stmt]) -> bool {
 }
 
 impl Checker<'_> {
+    /// Registers every struct, resolves field types and returns the structs in dependency order.
+    fn collect_structs(&mut self, prog: &Program) -> Vec<usize> {
+        for s in &prog.structs {
+            if is_type_name(&s.name) || UNSUPPORTED_TYPES.contains(&s.name.as_str()) {
+                self.diags.error("E0011", s.name_span, format!("`{}` is a built-in type name and cannot be redefined", s.name));
+            } else if let Some(&prev) = self.struct_index.get(&s.name) {
+                let line = self.structs[prev].span.line;
+                self.diags
+                    .error("E0011", s.name_span, format!("struct `{}` is defined more than once", s.name))
+                    .note(format!("first defined on line {line}"));
+            } else {
+                self.struct_index.insert(s.name.clone(), self.structs.len());
+            }
+            // Every declaration gets an id, even a duplicate, so ids and indexes stay equal.
+            let ty = Ty::Struct(register_struct(&s.name));
+            self.structs.push(StructDef { name: s.name.clone(), span: s.name_span, ty, fields: Vec::new() });
+        }
+        for (i, s) in prog.structs.iter().enumerate() {
+            let mut fields: Vec<(String, Ty, Span)> = Vec::new();
+            for f in &s.fields {
+                let ty = self.resolve_ty(&f.ty);
+                if ty == Ty::Str {
+                    self.diags
+                        .error("E0301", f.ty.span, format!("field `{}` cannot hold a `str`: a view cannot be stored in a struct field", f.name))
+                        .note("store an owned string instead (`String` is not available in P0 yet)");
+                }
+                if let Some((_, _, first)) = fields.iter().find(|(n, _, _)| *n == f.name) {
+                    let line = first.line;
+                    self.diags
+                        .error("E0011", f.span, format!("field `{}` is declared more than once in `{}`", f.name, s.name))
+                        .note(format!("first declared on line {line}"));
+                }
+                fields.push((f.name.clone(), ty, f.span));
+            }
+            self.structs[i].fields = fields;
+        }
+        let mut state = vec![0u8; self.structs.len()];
+        let mut order = Vec::new();
+        for i in 0..self.structs.len() {
+            self.visit_struct(i, &mut state, &mut order, &mut Vec::new());
+        }
+        order
+    }
+
+    /// Depth-first walk over by-value containment; a back edge means infinite size.
+    fn visit_struct(&mut self, i: usize, state: &mut [u8], order: &mut Vec<usize>, stack: &mut Vec<usize>) {
+        match state[i] {
+            2 => return,
+            1 => {
+                let start = stack.iter().position(|&s| s == i).unwrap_or(0);
+                let mut path: Vec<&str> = stack[start..].iter().map(|&s| self.structs[s].name.as_str()).collect();
+                path.push(&self.structs[i].name);
+                let msg = format!(
+                    "struct `{}` contains itself by value ({}), so it would have infinite size",
+                    self.structs[i].name,
+                    path.join(" -> ")
+                );
+                let span = self.structs[i].span;
+                self.diags.error("E0017", span, msg).note("break the cycle with `?Box[T]` (not available in P0 yet)");
+                return;
+            }
+            _ => {}
+        }
+        state[i] = 1;
+        stack.push(i);
+        let deps: Vec<usize> = self.structs[i]
+            .fields
+            .iter()
+            .filter_map(|(_, t, _)| if let Ty::Struct(id) = t { Some(*id as usize) } else { None })
+            .collect();
+        for d in deps {
+            self.visit_struct(d, state, order, stack);
+        }
+        stack.pop();
+        state[i] = 2;
+        order.push(i);
+    }
+
+    fn struct_field(&self, ty: Ty, name: &str) -> Option<(usize, Ty)> {
+        let Ty::Struct(id) = ty else { return None };
+        let fields = &self.structs[id as usize].fields;
+        fields.iter().position(|(n, _, _)| n == name).map(|i| (i, fields[i].1))
+    }
+
+    fn no_field(&mut self, ty: Ty, name: &str, span: Span) {
+        let Ty::Struct(id) = ty else { return };
+        let candidates: Vec<String> = self.structs[id as usize].fields.iter().map(|(n, _, _)| n.clone()).collect();
+        let d = self.diags.error("E0010", span, format!("struct `{ty}` has no field `{name}`"));
+        if !candidates.is_empty() {
+            d.note(format!("its fields are: {}", candidates.join(", ")));
+        }
+    }
+
+    fn struct_lit(&mut self, name: &str, name_span: Span, inits: &[FieldInit], span: Span, cx: &mut FnCx) -> HExpr {
+        let Some(&si) = self.struct_index.get(name) else {
+            if UNSUPPORTED_TYPES.contains(&name) {
+                self.diags.error("U0001", name_span, format!("constructing `{name}` is not supported in P0"));
+            } else {
+                self.diags.error("E0010", name_span, format!("cannot find struct `{name}`"));
+            }
+            for init in inits {
+                self.expr(&init.value, None, cx);
+            }
+            return err_expr(span);
+        };
+        let decl: Vec<(String, Ty)> = self.structs[si].fields.iter().map(|(n, t, _)| (n.clone(), *t)).collect();
+        let sty = self.structs[si].ty;
+        let mut seen = vec![false; decl.len()];
+        let mut out = Vec::new();
+        let mut ok = true;
+        for init in inits {
+            match decl.iter().position(|(n, _)| *n == init.name) {
+                Some(fi) if !seen[fi] => {
+                    seen[fi] = true;
+                    let fty = decl[fi].1;
+                    let h = self.expr(&init.value, Some(fty), cx);
+                    self.expect_ty(&h, fty);
+                    out.push((fi, h));
+                }
+                Some(_) => {
+                    self.diags.error("E0011", init.span, format!("field `{}` is given more than once", init.name));
+                    self.expr(&init.value, None, cx);
+                    ok = false;
+                }
+                None => {
+                    self.no_field(sty, &init.name, init.span);
+                    self.expr(&init.value, None, cx);
+                    ok = false;
+                }
+            }
+        }
+        let missing: Vec<String> =
+            decl.iter().zip(&seen).filter(|(_, s)| !**s).map(|((n, _), _)| format!("`{n}`")).collect();
+        if !missing.is_empty() {
+            self.diags
+                .error("E0018", name_span, format!("missing {} in `{name}`: {}", plural(missing.len(), "field"), missing.join(", ")))
+                .note("every field must be given; Yavo has no implicit default values");
+            ok = false;
+        }
+        if !ok {
+            return err_expr(span);
+        }
+        HExpr { kind: HExprKind::StructLit { fields: out }, ty: sty, span, at: span }
+    }
+
     fn collect(&mut self, prog: &Program) {
         for f in &prog.fns {
             let params = f.params.iter().map(|p| self.resolve_ty(&p.ty)).collect();
@@ -261,6 +435,9 @@ impl Checker<'_> {
     fn resolve_ty(&mut self, t: &TypeExpr) -> Ty {
         if let Some(it) = IntTy::from_name(&t.name) {
             return Ty::Int(it);
+        }
+        if let Some(&i) = self.struct_index.get(&t.name) {
+            return self.structs[i].ty;
         }
         match t.name.as_str() {
             "bool" => Ty::Bool,
@@ -413,8 +590,21 @@ impl Checker<'_> {
                 }
             }
             StmtKind::Assign { target, op, op_span, value } => {
-                let ExprKind::Ident(name) = &target.kind else {
-                    self.diags.error("U0001", target.span, "only plain variables can be assigned in P0");
+                // The target is a variable, or a chain of struct fields rooted at a variable.
+                let mut fields_rev: Vec<(&str, Span)> = Vec::new();
+                let mut root = target;
+                loop {
+                    match &root.kind {
+                        ExprKind::Field { base, name } => {
+                            fields_rev.push((name.as_str(), root.span));
+                            root = base;
+                        }
+                        ExprKind::Paren(inner) => root = inner,
+                        _ => break,
+                    }
+                }
+                let ExprKind::Ident(name) = &root.kind else {
+                    self.diags.error("U0001", target.span, "only variables and their struct fields can be assigned in P0");
                     return None;
                 };
                 let Some(id) = self.lookup(cx, name) else {
@@ -422,7 +612,6 @@ impl Checker<'_> {
                     self.expr(value, None, cx);
                     return None;
                 };
-                let lty = cx.locals[id].ty;
                 match cx.locals[id].kind {
                     LocalKind::Var => {}
                     LocalKind::Let => {
@@ -439,6 +628,27 @@ impl Checker<'_> {
                         self.diags.error("E0014", target.span, format!("cannot assign to loop variable `{name}`"));
                     }
                 }
+                let mut lty = cx.locals[id].ty;
+                let mut path = Vec::new();
+                for (fname, fspan) in fields_rev.iter().rev() {
+                    match self.struct_field(lty, fname) {
+                        Some((fi, fty)) => {
+                            path.push(fi);
+                            lty = fty;
+                        }
+                        None => {
+                            match lty {
+                                Ty::Struct(_) => self.no_field(lty, fname, *fspan),
+                                Ty::Error => {}
+                                other => {
+                                    self.diags.error("E0001", *fspan, format!("a value of type `{other}` has no fields"));
+                                }
+                            }
+                            self.expr(value, None, cx);
+                            return None;
+                        }
+                    }
+                }
                 let value = match op {
                     None => {
                         let v = self.expr(value, Some(lty), cx);
@@ -447,12 +657,19 @@ impl Checker<'_> {
                     }
                     Some(op) => {
                         cx.locals[id].used = true;
-                        let lhs = HExpr { kind: HExprKind::Local(id), ty: lty, span: target.span, at: target.span };
+                        let mut lhs =
+                            HExpr { kind: HExprKind::Local(id), ty: cx.locals[id].ty, span: root.span, at: root.span };
+                        let mut ty = lhs.ty;
+                        for &fi in &path {
+                            let Ty::Struct(sid) = ty else { unreachable!() };
+                            ty = self.structs[sid as usize].fields[fi].1;
+                            lhs = HExpr { kind: HExprKind::Field { base: Box::new(lhs), field: fi }, ty, span: target.span, at: target.span };
+                        }
                         let rhs = self.expr(value, Some(lty), cx);
                         self.arith(*op, lhs, rhs, *op_span, s.span)
                     }
                 };
-                HStmtKind::Assign { local: id, value }
+                HStmtKind::Assign { local: id, path, value }
             }
             StmtKind::Expr(e) => {
                 let ExprKind::Call { callee, args } = &e.kind else {
@@ -600,6 +817,11 @@ impl Checker<'_> {
         if h.ty == Ty::Unit {
             self.diags.error("E0001", h.span, "this call returns nothing, so there is nothing to print");
         }
+        if let Ty::Struct(_) = h.ty {
+            self.diags
+                .error("E0001", h.span, format!("a value of type `{}` cannot be printed directly", h.ty))
+                .note("print its fields instead, e.g. `println(\"${p.x} ${p.y}\")`");
+        }
     }
 
     fn int_lit(&mut self, mag: u128, negative: bool, expected: Option<Ty>, span: Span) -> HExpr {
@@ -727,7 +949,7 @@ impl Checker<'_> {
                         span,
                         format!("functions cannot be used as values in P0; call it with `{name}(...)`"),
                     );
-                } else if is_type_name(name) {
+                } else if is_type_name(name) || self.struct_index.contains_key(name) {
                     self.diags.error("E0001", span, format!("`{name}` is a type, not a value"));
                 } else if OUTPUT_FNS.contains(&name.as_str()) {
                     self.diags.error("E0001", span, format!("`{name}` must be called"));
@@ -755,6 +977,27 @@ impl Checker<'_> {
                         }
                     }
                 }
+                // A field of a struct value. A bare name that is not a variable (a type or module)
+                // keeps the "not supported" diagnostic below.
+                let named_non_local = matches!(&base.kind, ExprKind::Ident(n) if self.lookup(cx, n).is_none());
+                if !named_non_local {
+                    let b = self.expr(base, None, cx);
+                    match b.ty {
+                        Ty::Struct(_) => {
+                            return match self.struct_field(b.ty, name) {
+                                Some((field, ty)) => {
+                                    HExpr { kind: HExprKind::Field { base: Box::new(b), field }, ty, span, at: span }
+                                }
+                                None => {
+                                    self.no_field(b.ty, name, span);
+                                    err_expr(span)
+                                }
+                            };
+                        }
+                        Ty::Error => return err_expr(span),
+                        _ => {}
+                    }
+                }
                 self.diags.error(
                     "U0001",
                     span,
@@ -762,6 +1005,7 @@ impl Checker<'_> {
                 );
                 err_expr(span)
             }
+            ExprKind::StructLit { name, name_span, fields } => self.struct_lit(name, *name_span, fields, span, cx),
             ExprKind::Call { callee, args } => self.call(callee, args, span, cx),
         }
     }

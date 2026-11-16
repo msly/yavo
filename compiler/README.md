@@ -30,13 +30,33 @@ It is superseded by `tests/conformance.rs` (below), which makes that distinction
 
 | Class | Meaning |
 | --- | --- |
-| `E0xxx` | An error about the program. Codes from `yavo-tests/ERRORS.md` follow the spec; the front-end codes `E0010`–`E0016` (names, arity, missing return, assignment, loop control, `main`) and `E0020` (syntax) are not in `ERRORS.md` yet. |
+| `E0xxx` | An error about the program, as listed in `yavo-tests/ERRORS.md` (the front-end codes `E0010`–`E0018` and `E0020` were added there on 2026-11-16). |
 | `U0001` | Valid v0.5 syntax that this compiler does not implement yet. It says nothing about whether the program is correct. |
 | `W0001` | Warning: unused variable. |
 
 Valid v0.5 syntax must never be reported as a syntax error. `tests/p0/errors_unsupported.yv`
 locks this in for `sink`/`inout` parameter types, `*p`, closures, `if let`, `for k, v in`,
-struct literals, `catch` and tuple literals; no file under `yavo-tests/` produces `E0020`.
+`.Case`, `catch` and tuple literals; no file under `yavo-tests/` produces `E0020`.
+
+## Structs (first P1 feature)
+
+Supported: `struct` declarations whose fields are integers, `bool` or other structs; struct
+literals `Name{a: 1, b: 2}` (every field given exactly once, values evaluated in the order
+written); reading fields, including nested ones; assigning and compound-assigning fields of a
+`var` (`s.to.y += 1`); structs as parameters and return values. Such structs are copied on
+assignment and when passed, as v0.5 specifies for structs whose fields are all copyable.
+
+Checked: a `str` field is rejected with `E0301` (a view cannot be stored in a field); a struct
+that contains itself by value is `E0017`; missing literal fields are `E0018`; unknown and
+duplicate fields are `E0010`/`E0011`; structs cannot be compared (`E0501`) or printed directly.
+`tests/p0/run_structs.yv` and `tests/p0/errors_structs.yv` cover these.
+
+Not yet: `String`/`Vec`/`Map` fields (and with them moves and `Drop`), methods, generic
+structs, `struct X: Interface`, field defaults. A struct literal must be written as an
+uppercase name immediately followed by `{` (no space), which keeps it apart from `if c {`.
+
+Effect on the spec cases: none changed status. Every case that uses `struct` is also blocked
+by generic types, imports or `String`; those are the next features to implement.
 
 ## Spec conformance
 
@@ -71,7 +91,7 @@ yavo build hello.yv --release --target x86_64-windows-gnu -o hello.exe
 | Target | Output |
 | --- | --- |
 | `x86_64-linux-musl`, `aarch64-linux-musl` | static ELF (no dynamic loader, no host libc dependency) |
-| `x86_64-windows-gnu`, `aarch64-windows-gnu` | PE `.exe` (the default output name gets `.exe`); zig also writes a `.pdb` next to it |
+| `x86_64-windows-gnu`, `aarch64-windows-gnu` | PE `.exe` (the default output name gets `.exe`) |
 | `x86_64-macos`, `aarch64-macos` | Mach-O |
 
 Cross-compilation always uses the pinned zig; with `YAVO_CC` set, `--target` exits with 3.
@@ -86,9 +106,12 @@ programs for all six targets, 84 builds, no failures):
 - the `x86_64-linux-musl` output runs here and matches the expected stdout.
 
 Not verified: running the Windows, macOS and aarch64 outputs (no such machines or emulators
-here). Release builds are not stripped: `run_arith.yv` for `x86_64-linux-musl` is 1.3 MB with
-debug info, and 12 KB when the same C is compiled with `-s`. The default for debug info and
-stripping is still to be decided (the plan says debug info should be separated by default).
+here).
+
+Release builds are stripped (`-O2 -s`, decided 2026-11-16): `run_arith.yv` for
+`x86_64-linux-musl` went from 1.3 MB to 12 KB, for `x86_64-windows-gnu` from 222 KB to 76 KB,
+and Windows targets no longer leave a `.pdb` next to the output. Debug builds keep debug info
+(`-O0 -g`); a Windows debug build still writes a `.pdb`.
 
 ## Four behavior fixes in this prototype commit
 

@@ -2,6 +2,25 @@ use crate::diag::Span;
 
 pub struct Program {
     pub fns: Vec<FnDecl>,
+    pub structs: Vec<StructDecl>,
+}
+
+pub struct StructDecl {
+    pub name: String,
+    pub name_span: Span,
+    pub fields: Vec<FieldDecl>,
+}
+
+pub struct FieldDecl {
+    pub name: String,
+    pub span: Span,
+    pub ty: TypeExpr,
+}
+
+pub struct FieldInit {
+    pub name: String,
+    pub span: Span,
+    pub value: Expr,
 }
 
 pub struct FnDecl {
@@ -64,6 +83,8 @@ pub enum ExprKind {
     Ident(String),
     Call { callee: Box<Expr>, args: Vec<Expr> },
     Field { base: Box<Expr>, name: String },
+    /// `Name{field: value, ...}`; fields are evaluated in the order written.
+    StructLit { name: String, name_span: Span, fields: Vec<FieldInit> },
     Unary { op: UnOp, op_span: Span, expr: Box<Expr> },
     Binary { op: BinOp, op_span: Span, lhs: Box<Expr>, rhs: Box<Expr> },
     Paren(Box<Expr>),

@@ -1,0 +1,35 @@
+// expect-error: E0301 13:11
+// expect-error: E0017 15:8
+// expect-error: E0011 20:5
+// expect-error: E0018 27:14
+// expect-error: E0010 28:28
+// expect-error: E0010 30:14
+// expect-error: E0014 31:5
+// expect-error: E0501 32:17
+// expect-error: E0001 33:13
+// expect-error: E0001 34:21
+// Struct diagnostics.
+struct Label {
+    text: str
+}
+struct Node {
+    next: Node
+}
+struct Pair {
+    a: int
+    a: int
+}
+struct P {
+    x: int
+    y: int
+}
+fn main() {
+    let _p = P{x: 1}
+    let _q = P{x: 1, y: 2, z: 3}
+    let r = P{x: 1, y: 2}
+    let _v = r.w
+    r.x = 5
+    let _same = r == r
+    println(r)
+    let _bad = P{x: true, y: 2}
+}

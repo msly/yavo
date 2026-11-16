@@ -166,7 +166,9 @@ impl Toolchain {
             cmd.arg("-target").arg(t.zig_triple);
         }
         if release {
-            cmd.arg("-O2");
+            // Release binaries carry no debug info or symbols (decision 2026-11-16): a static musl
+            // build drops from ~1.3 MB to ~12 KB and Windows targets no longer leave a `.pdb` file.
+            cmd.args(["-O2", "-s"]);
         } else {
             cmd.args(["-O0", "-g"]);
         }
