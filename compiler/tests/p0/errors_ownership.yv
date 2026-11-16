@@ -1,0 +1,72 @@
+// expect-error: E0402 22:13
+// expect-error: E0402 27:23
+// expect-error: E0402 35:13
+// expect-error: E0401 46:12
+// expect-error: E0102 50:22
+// expect-error: E0403 54:12
+// expect-error: E0014 58:5
+// expect-error: E0001 61:14
+// expect-error: U0001 65:18
+// expect-error: E0001 69:13
+// Ownership diagnostics. `diverging_branch` must compile: a move in a branch that returns
+// does not affect the code after the `if`.
+fn take(s: sink String) -> int {
+    return s.len()
+}
+fn both(a: String, b: sink String) -> int {
+    return a.len() + b.len()
+}
+fn after_move() {
+    let s = "a".toString()
+    let _t = s
+    println(s)
+}
+fn in_loop() {
+    let s = "a".toString()
+    for _i in 0..2 {
+        let _n = take(s)
+    }
+}
+fn after_if(c: bool) {
+    let x = "a".toString()
+    if c {
+        let _n = take(x)
+    }
+    println(x)
+}
+fn diverging_branch(c: bool) {
+    let y = "a".toString()
+    if c {
+        let _n = take(y)
+        return
+    }
+    println(y)
+}
+fn give_back(p: String) -> String {
+    return p
+}
+fn borrow_then_move() {
+    let s = "a".toString()
+    let _n = both(s, s)
+}
+fn push_self() {
+    var v: Vec[int] = []
+    v.push(v.len())
+}
+fn push_let() {
+    let w: Vec[int] = []
+    w.push(1)
+}
+fn infer() {
+    let _e = []
+}
+fn element() {
+    let names: Vec[String] = []
+    let _first = names[0]
+}
+fn print_vec() {
+    let v: Vec[int] = [1]
+    println(v)
+}
+fn main() {
+}

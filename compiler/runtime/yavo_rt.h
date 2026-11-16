@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
 
 #ifdef _WIN32
@@ -162,8 +163,36 @@ YV_NORETURN static void yv_output_failure(uint32_t line, uint32_t col) {
 
 static void yv_rt_init(const char *file) { yv_rt_file = file; }
 
+/* Test builds (`YAVO_ALLOC_CHECK=1` adds -DYV_ALLOC_CHECK) count live heap blocks. Freeing more
+ * blocks than were allocated (two copies of one value both dropped) stops the program at once;
+ * blocks still alive at a normal exit (a missed drop) are reported. Both exit with status 102.
+ * Use-after-free is not detected by this check. */
+#ifdef YV_ALLOC_CHECK
+static int64_t yv_live_blocks = 0;
+#define YV_COUNT_ALLOC() (yv_live_blocks++)
+#define YV_COUNT_FREE()                                                                   \
+    do {                                                                                  \
+        if (--yv_live_blocks < 0) {                                                       \
+            yv_flush();                                                                   \
+            yv_write(2, "yavo alloc-check: a heap block was freed twice\n", 47);          \
+            yv_exit_process(102);                                                         \
+        }                                                                                 \
+    } while (0)
+#else
+#define YV_COUNT_ALLOC() ((void)0)
+#define YV_COUNT_FREE() ((void)0)
+#endif
+
 static int yv_rt_exit(void) {
     yv_flush();
+#ifdef YV_ALLOC_CHECK
+    if (yv_live_blocks != 0) {
+        yv_write(2, "yavo alloc-check: ", 18);
+        yv_write_i64(2, yv_live_blocks);
+        yv_write(2, " heap block(s) still alive at exit\n", 35);
+        return 102;
+    }
+#endif
     return 0;
 }
 
@@ -284,5 +313,124 @@ YV_CONV_TO_ALL(YV_CONV_U, u8, uint8_t)
 YV_CONV_TO_ALL(YV_CONV_U, u16, uint16_t)
 YV_CONV_TO_ALL(YV_CONV_U, u32, uint32_t)
 YV_CONV_TO_ALL(YV_CONV_U, u64, uint64_t)
+
+/* ---- Owned heap values: String and Vec. ----
+ * A moved-from or empty value is all zeros, so dropping it is a no-op. Growth checks the
+ * capacity arithmetic (P-CAPACITY) and the allocation itself (P-OOM). */
+
+typedef struct {
+    char *ptr;
+    int64_t len;
+    int64_t cap;
+} yv_string;
+
+typedef struct {
+    void *ptr;
+    int64_t len;
+    int64_t cap;
+} yv_vec;
+
+YV_NORETURN static void yv_capacity_overflow(uint32_t line, uint32_t col) {
+    yv_panic("P-CAPACITY", "capacity overflow", line, col);
+}
+
+/* Makes room for at least `need` elements of `elem` bytes, growing geometrically. */
+static void yv_grow(void **ptr, int64_t *cap, int64_t elem, int64_t need, uint32_t line, uint32_t col) {
+    if (need <= *cap) return;
+    int64_t newcap = *cap < 4 ? 4 : *cap;
+    while (newcap < need) {
+        if (__builtin_mul_overflow(newcap, (int64_t)2, &newcap)) {
+            newcap = need;
+            break;
+        }
+    }
+    size_t bytes;
+    if (__builtin_mul_overflow((size_t)newcap, (size_t)elem, &bytes) || bytes > (size_t)PTRDIFF_MAX) {
+        yv_capacity_overflow(line, col);
+    }
+    bool fresh = *ptr == NULL;
+    void *p = realloc(*ptr, bytes);
+    if (p == NULL) yv_panic("P-OOM", "out of memory", line, col);
+    if (fresh) YV_COUNT_ALLOC();
+    *ptr = p;
+    *cap = newcap;
+}
+
+static inline yv_str yv_string_view(const yv_string *s) {
+    yv_str v = {s->ptr ? s->ptr : "", (size_t)s->len};
+    return v;
+}
+
+static void yv_string_push(yv_string *s, yv_str t, uint32_t line, uint32_t col) {
+    int64_t need;
+    if (t.len > (size_t)INT64_MAX || __builtin_add_overflow(s->len, (int64_t)t.len, &need)) {
+        yv_capacity_overflow(line, col);
+    }
+    yv_grow((void **)&s->ptr, &s->cap, 1, need, line, col);
+    if (t.len) memcpy(s->ptr + s->len, t.ptr, t.len);
+    s->len = need;
+}
+
+static yv_string yv_string_from(yv_str t, uint32_t line, uint32_t col) {
+    yv_string s = {0};
+    yv_string_push(&s, t, line, col);
+    return s;
+}
+
+static void yv_string_drop(yv_string *s) {
+    if (s->ptr) {
+        YV_COUNT_FREE();
+        free(s->ptr);
+    }
+    s->ptr = NULL;
+    s->len = s->cap = 0;
+}
+
+static int yv_str_cmp(yv_str a, yv_str b) {
+    size_t n = a.len < b.len ? a.len : b.len;
+    int c = n ? memcmp(a.ptr, b.ptr, n) : 0;
+    if (c != 0) return c < 0 ? -1 : 1;
+    return a.len < b.len ? -1 : (a.len > b.len ? 1 : 0);
+}
+
+/* `s[i]`: the byte at index `i`. */
+static inline uint8_t yv_str_at(yv_str s, int64_t i, uint32_t line, uint32_t col) {
+    if (i < 0 || (uint64_t)i >= (uint64_t)s.len) yv_panic("P-INDEX", "index out of bounds", line, col);
+    return (uint8_t)s.ptr[i];
+}
+
+/* Appends one element slot and returns its address; the caller stores the value. */
+static void *yv_vec_push_slot(yv_vec *v, int64_t elem, uint32_t line, uint32_t col) {
+    int64_t need;
+    if (__builtin_add_overflow(v->len, (int64_t)1, &need)) yv_capacity_overflow(line, col);
+    yv_grow(&v->ptr, &v->cap, elem, need, line, col);
+    void *slot = (char *)v->ptr + v->len * elem;
+    v->len = need;
+    return slot;
+}
+
+static void *yv_vec_at(const yv_vec *v, int64_t elem, int64_t i, uint32_t line, uint32_t col) {
+    if (i < 0 || i >= v->len) yv_panic("P-INDEX", "index out of bounds", line, col);
+    return (char *)v->ptr + i * elem;
+}
+
+/* An empty vector with room for exactly `n` elements (vector literals, clones). */
+static yv_vec yv_vec_with_cap(int64_t elem, int64_t n, uint32_t line, uint32_t col) {
+    yv_vec v = {0};
+    if (n > 0) {
+        v.cap = 0;
+        yv_grow(&v.ptr, &v.cap, elem, n, line, col);
+    }
+    return v;
+}
+
+static void yv_vec_free(yv_vec *v) {
+    if (v->ptr) {
+        YV_COUNT_FREE();
+        free(v->ptr);
+    }
+    v->ptr = NULL;
+    v->len = v->cap = 0;
+}
 
 #endif

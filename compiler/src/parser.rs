@@ -236,8 +236,12 @@ impl Parser<'_, '_> {
             }
             let (pname, pspan) = self.ident("a parameter name")?;
             self.expect(Tok::Colon, "`:` followed by the parameter type")?;
+            let sink = self.is_kw("sink");
+            if sink {
+                self.bump();
+            }
             let ty = self.ty()?;
-            params.push(Param { name: pname, span: pspan, ty });
+            params.push(Param { name: pname, span: pspan, sink, ty });
             if !self.eat(&Tok::Comma) {
                 break;
             }
@@ -272,14 +276,24 @@ impl Parser<'_, '_> {
         }
         if matches!(self.peek(), Tok::Amp | Tok::Question | Tok::LBracket | Tok::LParen) {
             let sp = self.span();
-            self.unsupported(sp, "only integer types, `bool` and `str` are supported in P0")?;
+            self.unsupported(sp, "optional, borrow, slice and tuple types are not supported in P0")?;
         }
         let (name, span) = self.ident("a type")?;
-        if matches!(self.peek(), Tok::LBracket) {
-            let sp = self.span();
-            self.unsupported(sp, "generic types are not supported in P0")?;
+        let mut args = Vec::new();
+        if self.eat(&Tok::LBracket) {
+            loop {
+                args.push(self.ty()?);
+                if !self.eat(&Tok::Comma) {
+                    break;
+                }
+            }
+            self.expect(Tok::RBracket, "`]` to close the type arguments")?;
         }
-        Ok(TypeExpr { name, span })
+        if matches!(self.peek(), Tok::Plus) {
+            let sp = self.span();
+            self.unsupported(sp, "capability bounds (`T + Send`) are not supported in P0")?;
+        }
+        Ok(TypeExpr { name, span, args })
     }
 
     fn block(&mut self) -> PResult<Block> {
@@ -576,6 +590,11 @@ impl Parser<'_, '_> {
                             let sp = self.bump().span;
                             (s, sp)
                         }
+                        Tok::Int(_) => {
+                            let sp = self.span();
+                            self.unsupported(sp, "tuple fields (`t.0`) are not supported in P0")?;
+                            unreachable!()
+                        }
                         other => {
                             self.err_here(format!("expected a field or method name, found {}", describe(&other)));
                             return Err(());
@@ -584,8 +603,27 @@ impl Parser<'_, '_> {
                     e = Expr { span: e.span.to(name_span), kind: ExprKind::Field { base: Box::new(e), name } };
                 }
                 Tok::LBracket => {
-                    let sp = self.span();
-                    self.unsupported(sp, "indexing is not supported in P0")?;
+                    let open = self.bump().span;
+                    if matches!(self.peek(), Tok::DotDot) {
+                        self.unsupported(open, "slices (`x[a..b]`) are not supported in P0")?;
+                    }
+                    let index = self.expr()?;
+                    if matches!(self.peek(), Tok::DotDot) {
+                        self.unsupported(open, "slices (`x[a..b]`) are not supported in P0")?;
+                    }
+                    if matches!(self.peek(), Tok::Comma) {
+                        self.unsupported(open, "type arguments in expressions (`Name[A, B]`) are not supported in P0")?;
+                    }
+                    let close = self.expect(Tok::RBracket, "`]`")?;
+                    e = Expr { span: e.span.to(close), kind: ExprKind::Index { base: Box::new(e), index: Box::new(index) } };
+                }
+                // `Wrapper[str]{...}`: a generic struct literal.
+                Tok::LBrace
+                    if matches!(&e.kind, ExprKind::Index { base, .. }
+                        if matches!(&base.kind, ExprKind::Ident(n) if n.starts_with(|c: char| c.is_ascii_uppercase())))
+                        && self.span().start == e.span.end =>
+                {
+                    self.unsupported(e.span, "generic struct literals are not supported in P0")?;
                 }
                 Tok::Question => {
                     let sp = self.span();
@@ -665,8 +703,27 @@ impl Parser<'_, '_> {
                 Ok(Expr { span: span.to(close), kind: ExprKind::Paren(Box::new(e)) })
             }
             Tok::LBracket => {
-                self.unsupported(span, "collection literals are not supported in P0")?;
-                unreachable!()
+                self.bump();
+                if matches!(self.peek(), Tok::Colon) {
+                    self.unsupported(span, "map literals (`[:]`) are not supported in P0")?;
+                }
+                let mut items = Vec::new();
+                loop {
+                    while matches!(self.peek(), Tok::Newline | Tok::Comma) {
+                        self.bump();
+                    }
+                    if matches!(self.peek(), Tok::RBracket) {
+                        break;
+                    }
+                    items.push(self.expr()?);
+                    if !matches!(self.peek(), Tok::Newline | Tok::Comma | Tok::RBracket) {
+                        let found = describe(self.peek());
+                        self.err_here(format!("expected `,` or `]` in the vector literal, found {found}"));
+                        return Err(());
+                    }
+                }
+                let close = self.bump().span;
+                Ok(Expr { span: span.to(close), kind: ExprKind::VecLit(items) })
             }
             Tok::Dot => {
                 self.unsupported(span, "enum case shorthand (`.Case`) is not supported in P0")?;

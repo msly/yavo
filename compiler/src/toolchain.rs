@@ -165,6 +165,10 @@ impl Toolchain {
         if let Some(t) = target {
             cmd.arg("-target").arg(t.zig_triple);
         }
+        // Test hook: count heap blocks to catch leaks and double drops (see `yavo_rt.h`).
+        if std::env::var_os("YAVO_ALLOC_CHECK").is_some() {
+            cmd.arg("-DYV_ALLOC_CHECK");
+        }
         if release {
             // Release binaries carry no debug info or symbols (decision 2026-11-16): a static musl
             // build drops from ~1.3 MB to ~12 KB and Windows targets no longer leave a `.pdb` file.

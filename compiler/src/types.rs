@@ -5,6 +5,9 @@ thread_local! {
     /// Struct names and their C names, indexed by struct id. The compiler checks one file per
     /// process, so a per-thread table keeps `Ty` small and `Copy`.
     static STRUCTS: RefCell<Vec<(&'static str, &'static str)>> = const { RefCell::new(Vec::new()) };
+    /// Element type of each `Vec[T]`, indexed by vec id. An element is always registered
+    /// before the vectors that contain it, so ids are in dependency order.
+    static VECS: RefCell<Vec<Ty>> = const { RefCell::new(Vec::new()) };
 }
 
 /// Registers a struct name and returns its id.
@@ -20,6 +23,27 @@ pub fn register_struct(name: &str) -> u32 {
 
 fn struct_names(id: u32) -> (&'static str, &'static str) {
     STRUCTS.with(|s| s.borrow()[id as usize])
+}
+
+/// Interns `Vec[elem]` and returns its id.
+pub fn vec_of(elem: Ty) -> u32 {
+    VECS.with(|v| {
+        let mut v = v.borrow_mut();
+        if let Some(i) = v.iter().position(|t| *t == elem) {
+            return i as u32;
+        }
+        v.push(elem);
+        (v.len() - 1) as u32
+    })
+}
+
+pub fn vec_elem(id: u32) -> Ty {
+    VECS.with(|v| v.borrow()[id as usize])
+}
+
+/// Every `Vec` type created so far, in dependency order.
+pub fn all_vecs() -> Vec<(u32, Ty)> {
+    VECS.with(|v| v.borrow().iter().enumerate().map(|(i, t)| (i as u32, *t)).collect())
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -121,6 +145,10 @@ pub enum Ty {
     Int(IntTy),
     Bool,
     Str,
+    /// Owned, growable UTF-8 text.
+    String,
+    /// `Vec[T]`, by vec id (see `vec_of`).
+    Vec(u32),
     Unit,
     /// A user-defined struct, by id (see `register_struct`).
     Struct(u32),
@@ -129,11 +157,31 @@ pub enum Ty {
 }
 
 impl Ty {
+    /// Copyable values are duplicated by assignment; the others (`String`, `Vec`) are moved.
+    pub fn is_copy(self) -> bool {
+        !matches!(self, Ty::String | Ty::Vec(_))
+    }
+
+    /// A name usable inside C identifiers, e.g. `Vec_Vec_String` for `Vec[Vec[String]]`.
+    pub fn key(self) -> String {
+        match self {
+            Ty::Int(t) => t.suffix().to_string(),
+            Ty::Bool => "bool".into(),
+            Ty::Str => "str".into(),
+            Ty::String => "String".into(),
+            Ty::Vec(id) => format!("Vec_{}", vec_elem(id).key()),
+            Ty::Struct(id) => format!("S_{}", struct_names(id).0),
+            Ty::Unit | Ty::Error => "void".into(),
+        }
+    }
+
     pub fn c_name(self) -> &'static str {
         match self {
             Ty::Int(t) => t.c_name(),
             Ty::Bool => "bool",
             Ty::Str => "yv_str",
+            Ty::String => "yv_string",
+            Ty::Vec(_) => "yv_vec",
             Ty::Unit => "void",
             Ty::Struct(id) => struct_names(id).1,
             Ty::Error => "void",
@@ -147,6 +195,8 @@ impl fmt::Display for Ty {
             Ty::Int(t) => write!(f, "{t}"),
             Ty::Bool => f.write_str("bool"),
             Ty::Str => f.write_str("str"),
+            Ty::String => f.write_str("String"),
+            Ty::Vec(id) => write!(f, "Vec[{}]", vec_elem(*id)),
             Ty::Unit => f.write_str("()"),
             Ty::Struct(id) => f.write_str(struct_names(*id).0),
             Ty::Error => f.write_str("{error}"),

@@ -1,0 +1,96 @@
+// expect-stdout:
+// | hello, world 12
+// | true false true
+// | 3 30 3
+// | 2 abc
+// | 6
+// | moved: abcde
+// | 0 1 2 3 4
+// | 3
+// | 104
+// | 7
+// | done
+fn greet(name: String) -> String {
+    var s = "hello, ".toString()
+    s.push(name)
+    return s
+}
+
+fn take(s: sink String) -> int {
+    return s.len()
+}
+
+fn build(n: int) -> Vec[String] {
+    var out: Vec[String] = []
+    for i in 0..n {
+        var s = "x".toString()
+        if i == 1 {
+            continue
+        }
+        s.push("y")
+        out.push(s)
+    }
+    return out
+}
+
+fn first_over(limit: int) -> int {
+    var i = 0
+    loop {
+        let tmp = "abc".toString()
+        if i >= limit {
+            return i
+        }
+        i += tmp.len()
+    }
+}
+
+fn main() {
+    let world = "world".toString()
+    let g = greet(world)
+    println("${g} ${g.len()}")
+    let a = "abc".toString()
+    let b = a.clone()
+    let ab = "ab".toString()
+    let lit_ab = "ab"
+    let lit_b = "b"
+    println("${a == b} ${a < ab} ${lit_ab < lit_b}")
+    var v: Vec[int] = [10, 20]
+    v.push(30)
+    let w = v.clone()
+    v.push(40)
+    println("${w.len()} ${w[2]} ${v.len() - 1}")
+    let names = build(3)
+    var last = "a".toString()
+    last.push("bc")
+    println("${names.len()} ${last}")
+    println(first_over(5))
+    var text = "abc".toString()
+    let moved = text
+    text = "de".toString()
+    var both = moved.clone()
+    both.push(text)
+    println("moved: ${both}")
+    let n = take(both)
+    var seq: Vec[int] = []
+    for i in 0..5 {
+        seq.push(i)
+    }
+    for i in 0..seq.len() {
+        if i > 0 {
+            print(" ")
+        }
+        print(seq[i])
+    }
+    println()
+    var grid: Vec[Vec[int]] = []
+    for i in 0..3 {
+        grid.push([i, i])
+    }
+    println(grid.len())
+    println("hi".toString()[0])
+    println(n + 2)
+    let _ = build(2)
+    if "q".toString().len() > 0 && "zz".toString() == "zz".toString() {
+        println("done")
+    }
+}

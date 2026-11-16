@@ -118,6 +118,11 @@ fn classify(entry: &Value, root: &Path) -> Outcome {
         Ok(e) => e,
         Err(o) => return o,
     };
+    // Every spec case is valid v0.5 syntax (negative cases must parse too), so a syntax error is
+    // always a compiler bug, even when the case also uses unsupported features.
+    if let Some((_, line, msg)) = errors.iter().find(|(code, _, _)| code == "E0020") {
+        return outcome(Status::Wrong, format!("syntax error on valid v0.5 syntax at line {line}: {msg}"));
+    }
     if let Some((_, _, msg)) = errors.iter().find(|(code, _, _)| code.starts_with('U')) {
         return outcome(Status::Unsupported, msg.clone());
     }

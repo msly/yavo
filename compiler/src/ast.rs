@@ -34,12 +34,16 @@ pub struct FnDecl {
 pub struct Param {
     pub name: String,
     pub span: Span,
+    /// `x: sink T`: the argument is moved into the function. Otherwise parameters are read-only borrows.
+    pub sink: bool,
     pub ty: TypeExpr,
 }
 
 pub struct TypeExpr {
     pub name: String,
     pub span: Span,
+    /// Type arguments, e.g. `[int]` in `Vec[int]`.
+    pub args: Vec<TypeExpr>,
 }
 
 pub struct Block {
@@ -85,6 +89,10 @@ pub enum ExprKind {
     Field { base: Box<Expr>, name: String },
     /// `Name{field: value, ...}`; fields are evaluated in the order written.
     StructLit { name: String, name_span: Span, fields: Vec<FieldInit> },
+    /// `[a, b, c]`
+    VecLit(Vec<Expr>),
+    /// `base[index]`
+    Index { base: Box<Expr>, index: Box<Expr> },
     Unary { op: UnOp, op_span: Span, expr: Box<Expr> },
     Binary { op: BinOp, op_span: Span, lhs: Box<Expr>, rhs: Box<Expr> },
     Paren(Box<Expr>),
