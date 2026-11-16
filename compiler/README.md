@@ -35,8 +35,9 @@ It is superseded by `tests/conformance.rs` (below), which makes that distinction
 | `W0001` | Warning: unused variable. |
 
 Valid v0.5 syntax must never be reported as a syntax error. `tests/p0/errors_unsupported.yv`
-locks this in for `sink`/`inout` parameter types, `*p`, closures, `if let`, `for k, v in`,
-`.Case`, `catch` and tuple literals; no file under `yavo-tests/` produces `E0020`.
+locks this in for `inout` parameter types, `*p`, closures, `if let`, `for k, v in`, `.Case`,
+`catch` and tuple literals, and the conformance test counts any `E0020` on a spec case as
+wrong (slices `x[a..b]`, tuple fields `t.0` and bounds `T + Send` are reported as `U0001`).
 
 ## Structs (first P1 feature)
 
@@ -58,6 +59,43 @@ uppercase name immediately followed by `{` (no space), which keeps it apart from
 Effect on the spec cases: none changed status. Every case that uses `struct` is also blocked
 by generic types, imports or `String`; those are the next features to implement.
 
+## Ownership: `String` and `Vec[T]`
+
+Supported: `String`; `Vec[T]` for integer, `bool`, `str`, `String`, `Vec` and struct elements;
+vector literals `[a, b]` (`[]` needs a type annotation); `s.len()`, `s.clone()`, `s.push(text)`,
+`"..".toString()`, `v.len()`, `v.clone()`, `v.push(x)`; `v[i]` for copyable elements and `s[i]`
+(a byte); printing and comparing `String` (`==`, `<`, ...); `x: sink T` parameters.
+
+Rules checked:
+
+- Assigning, returning, pushing, or passing to a `sink` parameter moves a `String`/`Vec`; using
+  it afterwards is `E0402`. The analysis follows `if`/`else` (a branch that returns, breaks or
+  continues does not count), and re-checks loop bodies so a value moved in one iteration cannot
+  be used by the next. Assigning a new value makes the variable usable again.
+- A non-`sink` parameter is a read-only borrow: moving out of it is `E0401`.
+- Arguments are handled left to right: `consume(v, v.len())` is `E0402`; borrowing a variable
+  and moving it in the same call is `E0102`; `v.push(v.len())` is `E0403` (no two-phase borrows).
+
+Code generation: moving a variable copies it and zeroes the source; an empty or moved-from value
+is all zeros, so drops never need runtime flags. Owned variables are dropped in reverse order at
+the end of their scope and before `return`, `break` and `continue`; owned temporaries that are
+only borrowed (e.g. `f().len()`) are dropped at the end of the statement. Heap growth checks
+capacity arithmetic (`P-CAPACITY`) and allocation failure (`P-OOM`); `v[i]` checks bounds
+(`P-INDEX`).
+
+Soundness rests on one restriction: a `String` never turns into a `str` yet, so every `str`
+(including inside `Vec[str]`) is a string literal and cannot dangle. `String` -> `str` borrows,
+`String`/`Vec` struct fields, reading non-copyable elements (`names[0]`), `v[i] = x`, iterating
+with `for x in v`, `Map` and `inout` come next and need borrow tracking.
+
+Leak and double-drop check: `YAVO_ALLOC_CHECK=1` builds with `-DYV_ALLOC_CHECK`, where the
+runtime counts live heap blocks and exits with 102 on a leak or an extra free.
+`tests/alloc_check.rs` runs every `run_*.yv` that way in debug and release. A mutation test
+confirmed it: deleting one generated drop was reported as a leak, and deleting one move's
+zeroing made the program fail (the C library's own double-free check fired first). It does not
+detect use-after-free. AddressSanitizer is not available here: zig ships no ASan runtime, and
+the machine has no gcc, clang or valgrind; UBSan does work.
+
 ## Spec conformance
 
 ```sh
@@ -74,8 +112,8 @@ runs all 129 cases in `yavo-tests/MANIFEST.json`, after checking each fixture ag
 | unsupported | the compiler reported `U0001` |
 | not_run | needs `yavo fix`, `yavo verify`, fixtures, sanitizers or other platforms |
 
-At this commit: pass 9, wrong 0, unsupported 107, not_run 13 (P1: 2 / 0 / 74 / 7;
-P2: 7 / 0 / 12 / 2; P3: 0 / 0 / 21 / 4). The per-case report is written to
+At this commit: pass 12, wrong 0, unsupported 104, not_run 13 (P1: 4 / 0 / 72 / 7;
+P2: 8 / 0 / 11 / 2; P3: 0 / 0 / 21 / 4). The per-case report is written to
 `target/tmp/conformance-report.json`.
 
 The test is a ratchet, not a gate: it fails only when a case listed in
