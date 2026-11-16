@@ -23,10 +23,13 @@ yavo - the Yavo compiler (P0 vertical slice)
 
 USAGE:
     yavo check <file.yv> [--json-diagnostics]
-    yavo build <file.yv> [-o <output>] [--release] [--emit-c <file.c>] [--json-diagnostics]
-    yavo run   <file.yv> [--release] [--json-diagnostics]
+    yavo build <file.yv> [-o <output>] [--release] [--target <target>] [--emit-c <file.c>] [--json-diagnostics]
+    yavo run   <file.yv> [--release] [--target <target>] [--json-diagnostics]
     yavo toolchain [status | install]
     yavo --version
+
+TARGETS (cross-compilation uses the pinned zig toolchain; `run` only accepts targets this machine can execute):
+    x86_64-linux-musl, aarch64-linux-musl, x86_64-windows-gnu, aarch64-windows-gnu, x86_64-macos, aarch64-macos
 
 EXIT CODES:
     0 success, 1 compile errors, 2 usage error, 3 C toolchain unavailable, 4 internal error.
@@ -38,6 +41,7 @@ struct Options {
     emit_c: Option<PathBuf>,
     release: bool,
     json: bool,
+    target: Option<&'static toolchain::Target>,
 }
 
 fn usage_error(msg: &str) -> ! {
@@ -47,7 +51,8 @@ fn usage_error(msg: &str) -> ! {
 
 fn parse_options(args: &[String]) -> Options {
     let mut input = None;
-    let mut opts = Options { input: PathBuf::new(), output: None, emit_c: None, release: false, json: false };
+    let mut opts =
+        Options { input: PathBuf::new(), output: None, emit_c: None, release: false, json: false, target: None };
     let mut it = args.iter();
     while let Some(a) = it.next() {
         match a.as_str() {
@@ -55,6 +60,12 @@ fn parse_options(args: &[String]) -> Options {
             "--json-diagnostics" => opts.json = true,
             "-o" => opts.output = Some(it.next().unwrap_or_else(|| usage_error("`-o` needs a path")).into()),
             "--emit-c" => opts.emit_c = Some(it.next().unwrap_or_else(|| usage_error("`--emit-c` needs a path")).into()),
+            "--target" => {
+                let name = it.next().unwrap_or_else(|| usage_error("`--target` needs a target name"));
+                opts.target = Some(toolchain::Target::lookup(name).unwrap_or_else(|| {
+                    usage_error(&format!("unknown target `{name}`; supported targets: {}", toolchain::Target::names()))
+                }));
+            }
             flag if flag.starts_with('-') => usage_error(&format!("unknown option `{flag}`")),
             path if input.is_none() => input = Some(PathBuf::from(path)),
             extra => usage_error(&format!("unexpected argument `{extra}`")),
@@ -106,10 +117,14 @@ fn scratch_dir() -> PathBuf {
     dir
 }
 
-fn default_output(input: &Path) -> PathBuf {
+fn default_output(input: &Path, target: Option<&toolchain::Target>) -> PathBuf {
     let stem = input.file_stem().map(|s| s.to_os_string()).unwrap_or_else(|| "a".into());
     let mut out = PathBuf::from(stem);
-    if cfg!(windows) {
+    let windows = match target {
+        Some(t) => t.os == "windows",
+        None => cfg!(windows),
+    };
+    if windows {
         out.set_extension("exe");
     }
     out
@@ -134,7 +149,12 @@ fn build(opts: &Options, output: &Path) {
         eprintln!("error: {e}");
         exit(EXIT_TOOLCHAIN);
     });
-    let result = tc.compile(&c_file, &scratch, output, opts.release);
+    if opts.target.is_some() && !tc.can_cross_compile() {
+        let _ = fs::remove_dir_all(&scratch);
+        eprintln!("error: `--target` needs the pinned zig toolchain; unset YAVO_CC ({})", tc.description);
+        exit(EXIT_TOOLCHAIN);
+    }
+    let result = tc.compile(&c_file, &scratch, output, opts.release, opts.target);
     let _ = fs::remove_dir_all(&scratch);
     if let Err(e) = result {
         eprintln!("error: {e}");
@@ -160,14 +180,22 @@ fn main() {
         }
         "build" => {
             let opts = parse_options(rest);
-            let output = opts.output.clone().unwrap_or_else(|| default_output(&opts.input));
+            let output = opts.output.clone().unwrap_or_else(|| default_output(&opts.input, opts.target));
             build(&opts, &output);
         }
         "run" => {
             let opts = parse_options(rest);
+            if let Some(t) = opts.target {
+                if !t.runs_on_host() {
+                    usage_error(&format!(
+                        "a `{}` binary cannot run on this machine; use `yavo build --target {}` and run it there",
+                        t.name, t.name
+                    ));
+                }
+            }
             let dir = scratch_dir().with_extension("bin");
             let _ = fs::create_dir_all(&dir);
-            let exe = dir.join(default_output(&opts.input));
+            let exe = dir.join(default_output(&opts.input, opts.target));
             build(&opts, &exe);
             let status = Command::new(&exe).status();
             let _ = fs::remove_dir_all(&dir);

@@ -79,7 +79,10 @@ const OUTPUT_FNS: [&str; 3] = ["println", "print", "eprintln"];
 const UNSUPPORTED_TYPES: &[&str] = &[
     "f32", "f64", "String", "Vec", "Map", "Set", "Box", "Rc", "Arc", "Arena", "Id", "Mutex", "Atomic", "Channel",
 ];
-const UNSUPPORTED_FNS: &[&str] = &["panic", "assert", "format", "len", "min", "max", "abs"];
+const UNSUPPORTED_FNS: &[&str] = &[
+    "panic", "assert", "format", "len", "min", "max", "abs", "some", "take", "replace", "swap", "Box", "Rc", "Arc",
+    "Mutex",
+];
 
 struct Sig {
     params: Vec<Ty>,
@@ -264,7 +267,7 @@ impl Checker<'_> {
             "str" => Ty::Str,
             name if UNSUPPORTED_TYPES.contains(&name) => {
                 self.diags.error(
-                    "E0021",
+                    "U0001",
                     t.span,
                     format!("type `{name}` is not supported in P0 (available: int, i8-i64, u8-u64, byte, bool, str)"),
                 );
@@ -411,7 +414,7 @@ impl Checker<'_> {
             }
             StmtKind::Assign { target, op, op_span, value } => {
                 let ExprKind::Ident(name) = &target.kind else {
-                    self.diags.error("E0021", target.span, "only plain variables can be assigned in P0");
+                    self.diags.error("U0001", target.span, "only plain variables can be assigned in P0");
                     return None;
                 };
                 let Some(id) = self.lookup(cx, name) else {
@@ -565,7 +568,7 @@ impl Checker<'_> {
                             StrSeg::Expr { expr, spec } => {
                                 if spec.is_some() {
                                     self.diags.error(
-                                        "E0021",
+                                        "U0001",
                                         expr.span,
                                         "format specifiers such as `${x:.2}` are not supported in P0",
                                     );
@@ -720,7 +723,7 @@ impl Checker<'_> {
                 }
                 if self.index.contains_key(name) {
                     self.diags.error(
-                        "E0021",
+                        "U0001",
                         span,
                         format!("functions cannot be used as values in P0; call it with `{name}(...)`"),
                     );
@@ -753,7 +756,7 @@ impl Checker<'_> {
                     }
                 }
                 self.diags.error(
-                    "E0021",
+                    "U0001",
                     span,
                     "fields and methods are not supported in P0 (only `T.min`, `T.max` and `T.wrap(x)` on integer types)",
                 );
@@ -838,7 +841,7 @@ impl Checker<'_> {
                 }
                 let Some(&fi) = self.index.get(name) else {
                     if UNSUPPORTED_FNS.contains(&name.as_str()) {
-                        self.diags.error("E0021", callee.span, format!("`{name}` is not available in P0"));
+                        self.diags.error("U0001", callee.span, format!("`{name}` is not available in P0"));
                     } else {
                         let suggestion = self.similar_name(cx, name, true);
                         let d = self.diags.error("E0010", callee.span, format!("cannot find function `{name}`"));
@@ -884,11 +887,11 @@ impl Checker<'_> {
                         }
                     }
                 }
-                self.diags.error("E0021", callee.span, "methods are not supported in P0 (only `T.wrap(x)` on integer types)");
+                self.diags.error("U0001", callee.span, "methods are not supported in P0 (only `T.wrap(x)` on integer types)");
                 err_expr(span)
             }
             _ => {
-                self.diags.error("E0021", callee.span, "only calls to named functions are supported in P0");
+                self.diags.error("U0001", callee.span, "only calls to named functions are supported in P0");
                 err_expr(span)
             }
         }

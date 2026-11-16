@@ -62,7 +62,7 @@ impl Parser<'_, '_> {
     }
 
     fn unsupported(&mut self, span: Span, msg: impl Into<String>) -> PResult<()> {
-        self.diags.error("E0021", span, msg);
+        self.diags.error("U0001", span, msg);
         Err(())
     }
 
@@ -139,7 +139,7 @@ impl Parser<'_, '_> {
     fn item(&mut self) -> PResult<Option<FnDecl>> {
         let start = self.span();
         if self.is_kw("use") {
-            self.diags.error("E0021", start, "imports are not supported in P0; there is no standard library yet");
+            self.diags.error("U0001", start, "imports are not supported in P0; there is no standard library yet");
             while !matches!(self.peek(), Tok::Newline | Tok::Eof) {
                 self.bump();
             }
@@ -210,6 +210,14 @@ impl Parser<'_, '_> {
     }
 
     fn ty(&mut self) -> PResult<TypeExpr> {
+        // `x: inout T`, `x: sink T` and `&T` are valid v0.5 syntax that P0 does not implement yet:
+        // report them as unsupported (U0001), not as syntax errors.
+        for m in ["inout", "sink"] {
+            if self.is_kw(m) {
+                let sp = self.span();
+                self.unsupported(sp, format!("`{m}` parameters are not supported in P0"))?;
+            }
+        }
         if matches!(self.peek(), Tok::Amp | Tok::Question | Tok::LBracket | Tok::LParen) {
             let sp = self.span();
             self.unsupported(sp, "only integer types, `bool` and `str` are supported in P0")?;
@@ -290,6 +298,10 @@ impl Parser<'_, '_> {
         }
         if self.is_kw("while") {
             self.bump();
+            if self.is_kw("let") {
+                let sp = self.span();
+                self.unsupported(sp, "`while let` is not supported in P0")?;
+            }
             let cond = self.expr()?;
             let body = self.block()?;
             return Ok(Stmt { span: start, kind: StmtKind::While { cond, body } });
@@ -302,6 +314,10 @@ impl Parser<'_, '_> {
         if self.is_kw("for") {
             self.bump();
             let (var, var_span) = self.ident("a loop variable")?;
+            if matches!(self.peek(), Tok::Comma) {
+                let sp = self.span();
+                self.unsupported(sp, "multiple loop variables (`for k, v in m`) are not supported in P0")?;
+            }
             if !self.is_kw("in") {
                 let found = describe(self.peek());
                 self.err_here(format!("expected `in`, found {found}"));
@@ -365,6 +381,10 @@ impl Parser<'_, '_> {
 
     fn if_stmt(&mut self) -> PResult<Stmt> {
         let start = self.bump().span;
+        if self.is_kw("let") {
+            let sp = self.span();
+            self.unsupported(sp, "`if let` is not supported in P0")?;
+        }
         let cond = self.expr()?;
         let then = self.block()?;
         if matches!(self.peek(), Tok::Newline) && matches!(self.peek_at(1), Tok::Ident(s) if s == "else") {
@@ -385,7 +405,32 @@ impl Parser<'_, '_> {
     }
 
     fn expr(&mut self) -> PResult<Expr> {
-        self.binary(1)
+        let e = self.binary(1)?;
+        if self.is_kw("catch") {
+            let sp = self.span();
+            self.unsupported(sp, "`catch` is not supported in P0")?;
+        }
+        Ok(e)
+    }
+
+    /// True when the `(` at the current position closes into `) =>`, i.e. a closure `(a, b) => expr`.
+    fn at_closure(&self) -> bool {
+        let mut depth = 0usize;
+        let mut n = 0usize;
+        loop {
+            match self.peek_at(n) {
+                Tok::LParen => depth += 1,
+                Tok::RParen => {
+                    depth -= 1;
+                    if depth == 0 {
+                        return matches!(self.peek_at(n + 1), Tok::FatArrow);
+                    }
+                }
+                Tok::Eof | Tok::Newline | Tok::LBrace | Tok::RBrace => return false,
+                _ => {}
+            }
+            n += 1;
+        }
     }
 
     /// Precedence, lowest first: `||`, `&&`, comparisons (non-associative), `|`, `^`,
@@ -445,6 +490,10 @@ impl Parser<'_, '_> {
                 self.unsupported(start, "borrow expressions (`&x`) are not supported in P0")?;
                 unreachable!()
             }
+            Tok::Star => {
+                self.unsupported(start, "dereference (`*p`) is not supported in P0")?;
+                unreachable!()
+            }
             _ => return self.postfix(),
         };
         self.bump();
@@ -490,6 +539,15 @@ impl Parser<'_, '_> {
                     let sp = self.span();
                     self.unsupported(sp, "optional chaining (`?`) is not supported in P0")?;
                 }
+                // `Name{field: value}`: a struct literal. Written without a space, which keeps it
+                // apart from `if cond {` blocks.
+                Tok::LBrace
+                    if matches!(&e.kind, ExprKind::Ident(n) if n.starts_with(|c: char| c.is_ascii_uppercase()))
+                        && self.span().start == e.span.end =>
+                {
+                    let sp = self.span();
+                    self.unsupported(sp, "struct literals are not supported in P0")?;
+                }
                 _ => return Ok(e),
             }
         }
@@ -522,13 +580,23 @@ impl Parser<'_, '_> {
                 Ok(Expr { span, kind: ExprKind::Ident(s) })
             }
             Tok::LParen => {
+                if self.at_closure() {
+                    self.unsupported(span, "closures (`(a, b) => expr`) are not supported in P0")?;
+                }
                 self.bump();
                 let e = self.expr()?;
+                if matches!(self.peek(), Tok::Comma) {
+                    self.unsupported(span, "tuple literals are not supported in P0")?;
+                }
                 let close = self.expect(Tok::RParen, "`)`")?;
                 Ok(Expr { span: span.to(close), kind: ExprKind::Paren(Box::new(e)) })
             }
             Tok::LBracket => {
                 self.unsupported(span, "collection literals are not supported in P0")?;
+                unreachable!()
+            }
+            Tok::Dot => {
+                self.unsupported(span, "enum case shorthand (`.Case`) is not supported in P0")?;
                 unreachable!()
             }
             other => {

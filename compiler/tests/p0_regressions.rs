@@ -115,7 +115,7 @@ fn build_c(scratch: &Scratch, name: &str, source: &str, release: bool) -> PathBu
     let input = scratch.file(&format!("{name}.c"), source);
     let exe = scratch.exe(name);
     toolchain::find().expect("install the pinned C toolchain")
-        .compile(&input, &scratch.0, &exe, release).expect("build C regression helper");
+        .compile(&input, &scratch.0, &exe, release, None).expect("build C regression helper");
     exe
 }
 

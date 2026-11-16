@@ -147,9 +147,24 @@ fn sha256_file(path: &Path) -> Result<String, String> {
 }
 
 impl Toolchain {
-    pub fn compile(&self, c_file: &Path, include_dir: &Path, output: &Path, release: bool) -> Result<(), String> {
+    /// True for the pinned `zig cc`; false for a `YAVO_CC` development override.
+    pub fn can_cross_compile(&self) -> bool {
+        self.prefix_args.first().map(String::as_str) == Some("cc") && !self.description.starts_with("YAVO_CC=")
+    }
+
+    pub fn compile(
+        &self,
+        c_file: &Path,
+        include_dir: &Path,
+        output: &Path,
+        release: bool,
+        target: Option<&Target>,
+    ) -> Result<(), String> {
         let mut cmd = Command::new(&self.program);
         cmd.args(&self.prefix_args).args(["-std=c17", "-fno-strict-aliasing"]);
+        if let Some(t) = target {
+            cmd.arg("-target").arg(t.zig_triple);
+        }
         if release {
             cmd.arg("-O2");
         } else {
@@ -173,5 +188,38 @@ impl Toolchain {
                 out.status
             ))
         }
+    }
+}
+
+/// A compilation target accepted by `yavo build --target`. All of them are produced by the pinned
+/// `zig cc`; Linux targets link musl statically, so the binaries do not depend on the host libc.
+pub struct Target {
+    pub name: &'static str,
+    pub zig_triple: &'static str,
+    pub arch: &'static str,
+    pub os: &'static str,
+}
+
+pub const TARGETS: &[Target] = &[
+    Target { name: "x86_64-linux-musl", zig_triple: "x86_64-linux-musl", arch: "x86_64", os: "linux" },
+    Target { name: "aarch64-linux-musl", zig_triple: "aarch64-linux-musl", arch: "aarch64", os: "linux" },
+    Target { name: "x86_64-windows-gnu", zig_triple: "x86_64-windows-gnu", arch: "x86_64", os: "windows" },
+    Target { name: "aarch64-windows-gnu", zig_triple: "aarch64-windows-gnu", arch: "aarch64", os: "windows" },
+    Target { name: "x86_64-macos", zig_triple: "x86_64-macos", arch: "x86_64", os: "macos" },
+    Target { name: "aarch64-macos", zig_triple: "aarch64-macos", arch: "aarch64", os: "macos" },
+];
+
+impl Target {
+    pub fn lookup(name: &str) -> Option<&'static Target> {
+        TARGETS.iter().find(|t| t.name == name)
+    }
+
+    pub fn names() -> String {
+        TARGETS.iter().map(|t| t.name).collect::<Vec<_>>().join(", ")
+    }
+
+    /// Whether a binary for this target can be started on the machine running the compiler.
+    pub fn runs_on_host(&self) -> bool {
+        self.arch == std::env::consts::ARCH && self.os == std::env::consts::OS
     }
 }

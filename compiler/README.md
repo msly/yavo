@@ -24,6 +24,71 @@ it is separate from the generated program's optimization setting.
 The ignored `conformance_report` is exploratory: rejected inputs are skipped
 without distinguishing unsupported features from false rejections. Do not
 use its pass count as full conformance or as an acceptance gate.
+It is superseded by `tests/conformance.rs` (below), which makes that distinction.
+
+## Diagnostic code classes
+
+| Class | Meaning |
+| --- | --- |
+| `E0xxx` | An error about the program. Codes from `yavo-tests/ERRORS.md` follow the spec; the front-end codes `E0010`–`E0016` (names, arity, missing return, assignment, loop control, `main`) and `E0020` (syntax) are not in `ERRORS.md` yet. |
+| `U0001` | Valid v0.5 syntax that this compiler does not implement yet. It says nothing about whether the program is correct. |
+| `W0001` | Warning: unused variable. |
+
+Valid v0.5 syntax must never be reported as a syntax error. `tests/p0/errors_unsupported.yv`
+locks this in for `sink`/`inout` parameter types, `*p`, closures, `if let`, `for k, v in`,
+struct literals, `catch` and tuple literals; no file under `yavo-tests/` produces `E0020`.
+
+## Spec conformance
+
+```sh
+cargo test --locked --offline --test conformance -- --nocapture
+```
+
+runs all 129 cases in `yavo-tests/MANIFEST.json`, after checking each fixture against its
+`source_sha256`, and classifies every case:
+
+| Status | Meaning |
+| --- | --- |
+| pass | the compiler does what the spec case expects (exact error codes and lines for check-fail; exact stdout or panic category in every listed build mode for run cases) |
+| wrong | the compiler disagrees with the spec case: a bug, or a spec gap |
+| unsupported | the compiler reported `U0001` |
+| not_run | needs `yavo fix`, `yavo verify`, fixtures, sanitizers or other platforms |
+
+At this commit: pass 9, wrong 0, unsupported 107, not_run 13 (P1: 2 / 0 / 74 / 7;
+P2: 7 / 0 / 12 / 2; P3: 0 / 0 / 21 / 4). The per-case report is written to
+`target/tmp/conformance-report.json`.
+
+The test is a ratchet, not a gate: it fails only when a case listed in
+`tests/conformance_baseline.txt` stops passing. After real progress, refresh the baseline with
+`YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance`.
+
+## Cross-compilation
+
+```sh
+yavo build hello.yv --release --target x86_64-windows-gnu -o hello.exe
+```
+
+| Target | Output |
+| --- | --- |
+| `x86_64-linux-musl`, `aarch64-linux-musl` | static ELF (no dynamic loader, no host libc dependency) |
+| `x86_64-windows-gnu`, `aarch64-windows-gnu` | PE `.exe` (the default output name gets `.exe`); zig also writes a `.pdb` next to it |
+| `x86_64-macos`, `aarch64-macos` | Mach-O |
+
+Cross-compilation always uses the pinned zig; with `YAVO_CC` set, `--target` exits with 3.
+`yavo run --target` only accepts a target this machine can execute; otherwise it is a usage
+error (exit 2). Unknown targets are a usage error that lists the supported ones.
+
+Verified on Linux x86-64 (`tests/targets.rs`, plus a one-off build of all 14 `run_*`/`panic_*`
+programs for all six targets, 84 builds, no failures):
+
+- every target produces the right executable format and architecture (ELF / Mach-O / PE header);
+- Linux outputs are statically linked;
+- the `x86_64-linux-musl` output runs here and matches the expected stdout.
+
+Not verified: running the Windows, macOS and aarch64 outputs (no such machines or emulators
+here). Release builds are not stripped: `run_arith.yv` for `x86_64-linux-musl` is 1.3 MB with
+debug info, and 12 KB when the same C is compiled with `-s`. The default for debug info and
+stripping is still to be decided (the plan says debug info should be separated by default).
 
 ## Four behavior fixes in this prototype commit
 

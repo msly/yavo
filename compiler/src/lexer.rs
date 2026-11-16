@@ -310,7 +310,7 @@ impl Lexer<'_, '_> {
                 self.bump();
             }
             let span = self.span_from(start, line, col);
-            self.diags.error("E0021", span, "floating-point numbers are not supported in P0 yet");
+            self.diags.error("U0001", span, "floating-point numbers are not supported in P0 yet");
             self.push(Tok::Int(0), span);
             return;
         }
