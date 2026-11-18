@@ -247,11 +247,34 @@ impl Parser<'_, '_> {
             }
         }
         self.expect(Tok::RParen, "`,` or `)`")?;
+        let mut ret_of = None;
         let ret = if self.eat(&Tok::Arrow) {
             let t = self.ty()?;
             if self.is_kw("of") {
-                let sp = self.span();
-                self.unsupported(sp, "borrowed return values (`-> T of x`) are not supported in P0")?;
+                self.bump();
+                let paren = self.eat(&Tok::LParen);
+                let mut names = Vec::new();
+                loop {
+                    match self.peek().clone() {
+                        // `static` and `self` are written like names here.
+                        Tok::Ident(s) => {
+                            let sp = self.bump().span;
+                            names.push((s, sp));
+                        }
+                        _ => {
+                            let found = describe(self.peek());
+                            self.err_here(format!("expected a parameter name or `static` after `of`, found {found}"));
+                            return Err(());
+                        }
+                    }
+                    if !(paren && self.eat(&Tok::Comma)) {
+                        break;
+                    }
+                }
+                if paren {
+                    self.expect(Tok::RParen, "`)` to close the `of` list")?;
+                }
+                ret_of = Some(names);
             }
             Some(t)
         } else {
@@ -262,7 +285,7 @@ impl Parser<'_, '_> {
             self.unsupported(sp, "error-returning functions (`T ! E`) are not supported in P0")?;
         }
         let body = self.block()?;
-        Ok(FnDecl { name, name_span, params, ret, body })
+        Ok(FnDecl { name, name_span, params, ret, ret_of, body })
     }
 
     fn ty(&mut self) -> PResult<TypeExpr> {

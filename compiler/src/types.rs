@@ -162,6 +162,15 @@ impl Ty {
         !matches!(self, Ty::String | Ty::Vec(_))
     }
 
+    /// Whether a value of this type points into data it does not own (`str`, `Vec[str]`, ...).
+    pub fn carries_borrow(self) -> bool {
+        match self {
+            Ty::Str => true,
+            Ty::Vec(id) => vec_elem(id).carries_borrow(),
+            _ => false,
+        }
+    }
+
     /// A name usable inside C identifiers, e.g. `Vec_Vec_String` for `Vec[Vec[String]]`.
     pub fn key(self) -> String {
         match self {

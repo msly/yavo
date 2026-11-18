@@ -28,6 +28,8 @@ pub struct FnDecl {
     pub name_span: Span,
     pub params: Vec<Param>,
     pub ret: Option<TypeExpr>,
+    /// `-> T of a` / `of (a, b)` / `of static`: where a returned borrow may come from.
+    pub ret_of: Option<Vec<(String, Span)>>,
     pub body: Block,
 }
 

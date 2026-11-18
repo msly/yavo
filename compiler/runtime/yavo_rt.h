@@ -433,4 +433,50 @@ static void yv_vec_free(yv_vec *v) {
     v->len = v->cap = 0;
 }
 
+/* ---- Views into text. The results point into the original bytes; nothing is copied. ---- */
+
+static inline bool yv_is_space(char c) { return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\v' || c == '\f'; }
+
+/* ASCII whitespace removed from both ends. */
+static yv_str yv_str_trim(yv_str s) {
+    size_t a = 0, b = s.len;
+    while (a < b && yv_is_space(s.ptr[a])) a++;
+    while (b > a && yv_is_space(s.ptr[b - 1])) b--;
+    yv_str r = {s.ptr + a, b - a};
+    return r;
+}
+
+static void yv_push_view(yv_vec *v, const char *p, size_t n, uint32_t line, uint32_t col) {
+    yv_str piece = {p, n};
+    *(yv_str *)yv_vec_push_slot(v, (int64_t)sizeof(yv_str), line, col) = piece;
+}
+
+/* Maximal runs of non-whitespace. */
+static yv_vec yv_str_fields(yv_str s, uint32_t line, uint32_t col) {
+    yv_vec v = {0};
+    size_t i = 0;
+    while (i < s.len) {
+        while (i < s.len && yv_is_space(s.ptr[i])) i++;
+        size_t start = i;
+        while (i < s.len && !yv_is_space(s.ptr[i])) i++;
+        if (i > start) yv_push_view(&v, s.ptr + start, i - start, line, col);
+    }
+    return v;
+}
+
+/* Lines without their `\n` (and a `\r` before it); a final newline does not start a new line. */
+static yv_vec yv_str_lines(yv_str s, uint32_t line, uint32_t col) {
+    yv_vec v = {0};
+    size_t start = 0;
+    for (size_t i = 0; i < s.len; i++) {
+        if (s.ptr[i] == '\n') {
+            size_t end = (i > start && s.ptr[i - 1] == '\r') ? i - 1 : i;
+            yv_push_view(&v, s.ptr + start, end - start, line, col);
+            start = i + 1;
+        }
+    }
+    if (start < s.len) yv_push_view(&v, s.ptr + start, s.len - start, line, col);
+    return v;
+}
+
 #endif

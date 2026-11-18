@@ -1,0 +1,47 @@
+// expect-stdout:
+// | [hello yavo world]
+// | 3 yavo
+// | hello
+// | other
+// | label
+// | 2 a b c
+// | a b c
+// | a b c!
+// | 3 z
+fn first(s: str) -> str of s {
+    return s.fields()[0]
+}
+
+fn pick(a: str, b: str, left: bool) -> str of (a, b) {
+    if left {
+        return a
+    }
+    return b
+}
+
+fn label() -> str of static {
+    return "label"
+}
+
+fn main() {
+    let text = "  hello yavo world  ".toString()
+    let t = text.trim()
+    println("[${t}]")
+    let words = text.fields()
+    println("${words.len()} ${words[1]}")
+    println(first(text))
+    let other = "other".toString()
+    println(pick(text, other, false))
+    println(label())
+    var s = "a b".toString()
+    let n = s.fields().len()
+    s.push(" c")
+    println("${n} ${s}")
+    let view = s.trim()
+    println(view)
+    s.push("!")
+    println(s)
+    let lines = "x\ny\nz\n".toString()
+    let ls = lines.lines()
+    println("${ls.len()} ${ls[2]}")
+}

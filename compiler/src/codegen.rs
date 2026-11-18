@@ -552,7 +552,24 @@ impl Gen {
                         let s = self.borrowed(recv, f);
                         self.bind_mut(e.ty, &format!("{}(&{s}, {at})", clone_fn(recv.ty)))
                     }
+                    Builtin::Trim | Builtin::Fields | Builtin::Lines => {
+                        let view = if recv.ty == Ty::String {
+                            let s = self.borrowed(recv, f);
+                            format!("yv_string_view(&{s})")
+                        } else {
+                            self.expr(recv, f)
+                        };
+                        match method {
+                            Builtin::Trim => self.bind(e.ty, &format!("yv_str_trim({view})")),
+                            Builtin::Fields => self.bind_mut(e.ty, &format!("yv_str_fields({view}, {at})")),
+                            _ => self.bind_mut(e.ty, &format!("yv_str_lines({view}, {at})")),
+                        }
+                    }
                 }
+            }
+            HExprKind::StrView(inner) => {
+                let s = self.borrowed(inner, f);
+                self.bind(e.ty, &format!("yv_string_view(&{s})"))
             }
             HExprKind::Push { local, value } => {
                 let name = local_name(&f.locals, *local);

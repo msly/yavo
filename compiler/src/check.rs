@@ -96,6 +96,8 @@ pub enum HExprKind {
     Method { method: Builtin, recv: Box<HExpr> },
     /// `local.push(value)`; `value` is moved into a vector or appended to a `String`.
     Push { local: LocalId, value: Box<HExpr> },
+    /// A `String` borrowed as a `str` (passing it to a `str` parameter).
+    StrView(Box<HExpr>),
     Error,
 }
 
@@ -107,6 +109,10 @@ pub enum Builtin {
     StringClone,
     VecLen,
     VecClone,
+    /// View-producing methods on `str`/`String`: the result points into the receiver's text.
+    Trim,
+    Fields,
+    Lines,
 }
 
 const OUTPUT_FNS: [&str; 3] = ["println", "print", "eprintln"];
@@ -122,6 +128,9 @@ struct Sig {
     params: Vec<Ty>,
     sinks: Vec<bool>,
     ret: Ty,
+    /// Parameters a returned borrow may come from (`of a, b`); `Some(vec![])` for `of static`,
+    /// `None` when no `of` was written.
+    ret_of: Option<Vec<usize>>,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -139,6 +148,172 @@ struct LocalState {
     kind: LocalKind,
     used: bool,
     span: Span,
+    /// Statement number of the declaration (0 for parameters) and of the last statement of
+    /// the block that contains it.
+    decl: usize,
+    scope_end: usize,
+    /// Number of enclosing scopes; a smaller depth outlives a larger one.
+    depth: usize,
+    /// For a value that carries a borrow: the variables it points into.
+    loans: Vec<Loan>,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+enum Loan {
+    /// Points into this variable (an owned `String`/`Vec`, or a parameter).
+    Local(LocalId),
+    /// Points into a temporary that is dropped at the end of the statement.
+    Temp,
+}
+
+/// Statement numbering and name uses of one function body, computed before checking it.
+/// The checker visits statements in the same order, so `FnCx::cur` matches these numbers.
+#[derive(Default)]
+struct Pre {
+    next: usize,
+    occ: Vec<Occ>,
+    /// (first, last) statement number of every loop, condition included.
+    loops: Vec<(usize, usize)>,
+    /// Last statement number of the block containing each `let` (keyed by the `let`'s number).
+    let_end: HashMap<usize, usize>,
+}
+
+struct Occ {
+    idx: usize,
+    line: u32,
+    name: String,
+    loops: Vec<usize>,
+}
+
+impl Pre {
+    fn build(body: &Block) -> Pre {
+        let mut p = Pre::default();
+        p.block(&body.stmts, &mut Vec::new());
+        p
+    }
+
+    fn block(&mut self, stmts: &[Stmt], stack: &mut Vec<usize>) {
+        let mut lets = Vec::new();
+        for s in stmts {
+            if matches!(s.kind, StmtKind::Let { .. }) {
+                lets.push(self.next + 1);
+            }
+            self.stmt(s, stack);
+        }
+        for l in lets {
+            self.let_end.insert(l, self.next);
+        }
+    }
+
+    fn stmt(&mut self, s: &Stmt, stack: &mut Vec<usize>) {
+        self.next += 1;
+        let idx = self.next;
+        match &s.kind {
+            StmtKind::Let { init, .. } => self.expr(init, idx, stack),
+            StmtKind::Assign { target, value, .. } => {
+                self.expr(target, idx, stack);
+                self.expr(value, idx, stack);
+            }
+            StmtKind::Expr(e) | StmtKind::Return(Some(e)) => self.expr(e, idx, stack),
+            StmtKind::If { cond, then, els } => {
+                self.expr(cond, idx, stack);
+                self.block(&then.stmts, stack);
+                match els {
+                    Some(Else::Block(b)) => self.block(&b.stmts, stack),
+                    Some(Else::If(s2)) => self.stmt(s2, stack),
+                    None => {}
+                }
+            }
+            StmtKind::While { cond, body } => {
+                let l = self.open_loop(idx, stack);
+                self.expr(cond, idx, stack);
+                self.block(&body.stmts, stack);
+                self.close_loop(l, stack);
+            }
+            StmtKind::Loop { body } => {
+                let l = self.open_loop(idx, stack);
+                self.block(&body.stmts, stack);
+                self.close_loop(l, stack);
+            }
+            StmtKind::For { start, end, body, .. } => {
+                self.expr(start, idx, stack);
+                self.expr(end, idx, stack);
+                let l = self.open_loop(idx, stack);
+                self.block(&body.stmts, stack);
+                self.close_loop(l, stack);
+            }
+            StmtKind::Block(b) => self.block(&b.stmts, stack),
+            StmtKind::Break | StmtKind::Continue | StmtKind::Return(None) => {}
+        }
+    }
+
+    fn open_loop(&mut self, idx: usize, stack: &mut Vec<usize>) -> usize {
+        self.loops.push((idx, idx));
+        stack.push(self.loops.len() - 1);
+        self.loops.len() - 1
+    }
+
+    fn close_loop(&mut self, l: usize, stack: &mut Vec<usize>) {
+        stack.pop();
+        self.loops[l].1 = self.next;
+    }
+
+    fn expr(&mut self, e: &Expr, idx: usize, stack: &[usize]) {
+        match &e.kind {
+            ExprKind::Ident(n) => {
+                self.occ.push(Occ { idx, line: e.span.line, name: n.clone(), loops: stack.to_vec() })
+            }
+            ExprKind::Int(_) | ExprKind::Bool(_) => {}
+            ExprKind::Str(segs) => {
+                for s in segs {
+                    if let StrSeg::Expr { expr, .. } = s {
+                        self.expr(expr, idx, stack);
+                    }
+                }
+            }
+            ExprKind::Call { callee, args } => {
+                self.expr(callee, idx, stack);
+                for a in args {
+                    self.expr(a, idx, stack);
+                }
+            }
+            ExprKind::Field { base, .. } => self.expr(base, idx, stack),
+            ExprKind::StructLit { fields, .. } => {
+                for f in fields {
+                    self.expr(&f.value, idx, stack);
+                }
+            }
+            ExprKind::VecLit(items) => {
+                for i in items {
+                    self.expr(i, idx, stack);
+                }
+            }
+            ExprKind::Index { base, index } => {
+                self.expr(base, idx, stack);
+                self.expr(index, idx, stack);
+            }
+            ExprKind::Unary { expr, .. } | ExprKind::Paren(expr) => self.expr(expr, idx, stack),
+            ExprKind::Binary { lhs, rhs, .. } => {
+                self.expr(lhs, idx, stack);
+                self.expr(rhs, idx, stack);
+            }
+        }
+    }
+
+    /// If the variable `v` is used again at or after statement `p` (a use inside a loop that
+    /// started after `v` was declared counts until the end of that loop), the line of that use.
+    fn live_after(&self, v: &LocalState, p: usize) -> Option<u32> {
+        self.occ.iter().filter(|o| o.name == v.name && o.idx > v.decl && o.idx <= v.scope_end).find_map(|o| {
+            let eff = o
+                .loops
+                .iter()
+                .map(|&l| self.loops[l])
+                .filter(|&(start, _)| start > v.decl)
+                .map(|(_, end)| end)
+                .fold(o.idx, usize::max);
+            (eff >= p).then_some(o.line)
+        })
+    }
 }
 
 struct FnCx {
@@ -151,6 +326,11 @@ struct FnCx {
     /// Move states that leave each enclosing loop through `break` or reach its next iteration
     /// through `continue`.
     loops: Vec<LoopFlow>,
+    /// Statement numbering and name uses of this function; `cur` is the current statement.
+    pre: Pre,
+    cur: usize,
+    /// Names listed after `of` in the signature (`static` included), if any.
+    ret_of: Option<Vec<String>>,
 }
 
 type Moved = Vec<Option<Span>>;
@@ -478,6 +658,9 @@ impl Checker<'_> {
             let params = f.params.iter().map(|p| self.resolve_ty(&p.ty)).collect();
             let sinks = f.params.iter().map(|p| p.sink).collect();
             let ret = f.ret.as_ref().map(|t| self.resolve_ty(t)).unwrap_or(Ty::Unit);
+            let ret_of = f.ret_of.as_ref().map(|names| {
+                names.iter().filter_map(|(n, _)| f.params.iter().position(|p| p.name == *n)).collect()
+            });
             if OUTPUT_FNS.contains(&f.name.as_str()) || is_type_name(&f.name) {
                 self.diags.error("E0011", f.name_span, format!("`{}` is a built-in name and cannot be redefined", f.name));
             } else if let Some(&prev) = self.index.get(&f.name) {
@@ -488,7 +671,7 @@ impl Checker<'_> {
             } else {
                 self.index.insert(f.name.clone(), self.sigs.len());
             }
-            self.sigs.push(Sig { params, sinks, ret });
+            self.sigs.push(Sig { params, sinks, ret, ret_of });
         }
         match self.index.get("main") {
             None => {
@@ -560,15 +743,30 @@ impl Checker<'_> {
         let ret = self.sigs[idx].ret;
         let param_tys = self.sigs[idx].params.clone();
         let sinks = self.sigs[idx].sinks.clone();
-        let mut cx =
-            FnCx { locals: Vec::new(), scopes: vec![Vec::new()], ret, loop_depth: 0, moved: Vec::new(), loops: Vec::new() };
+        let mut cx = FnCx {
+            locals: Vec::new(),
+            scopes: vec![Vec::new()],
+            ret,
+            loop_depth: 0,
+            moved: Vec::new(),
+            loops: Vec::new(),
+            pre: Pre::build(&f.body),
+            cur: 0,
+            ret_of: f.ret_of.as_ref().map(|v| v.iter().map(|(n, _)| n.clone()).collect()),
+        };
+        self.check_ret_of(f, ret);
         let params = f
             .params
             .iter()
             .zip(param_tys)
             .map(|(p, ty)| {
                 let kind = if p.sink { LocalKind::SinkParam } else { LocalKind::Param };
-                self.declare(&mut cx, &p.name, p.span, ty, kind)
+                let id = self.declare(&mut cx, &p.name, p.span, ty, kind);
+                // A borrowed parameter that carries a borrow points into the caller's data.
+                if ty.carries_borrow() || (!p.sink && !ty.is_copy()) {
+                    cx.locals[id].loans = vec![Loan::Local(id)];
+                }
+                id
             })
             .collect();
         let body = self.stmts(&f.body.stmts, &mut cx);
@@ -614,7 +812,21 @@ impl Checker<'_> {
             }
         }
         let id = cx.locals.len();
-        cx.locals.push(LocalState { name: name.to_string(), ty, kind, used: false, span });
+        let decl = cx.cur;
+        let fn_end = cx.pre.next;
+        let scope_end = if decl == 0 { fn_end } else { cx.pre.let_end.get(&decl).copied().unwrap_or(fn_end) };
+        let depth = cx.scopes.len();
+        cx.locals.push(LocalState {
+            name: name.to_string(),
+            ty,
+            kind,
+            used: false,
+            span,
+            decl,
+            scope_end,
+            depth,
+            loans: Vec::new(),
+        });
         cx.moved.resize(cx.locals.len(), None);
         cx.moved[id] = None;
         // Parameters and range iterators still need an IR slot, but `_` never
@@ -677,6 +889,139 @@ impl Checker<'_> {
         }
     }
 
+    /// Signature rules for returned borrows (semantic table O1, O2).
+    fn check_ret_of(&mut self, f: &FnDecl, ret: Ty) {
+        let span = f.ret.as_ref().map(|t| t.span).unwrap_or(f.name_span);
+        let Some(names) = &f.ret_of else {
+            if ret.carries_borrow() {
+                self.diags
+                    .error("E0302", span, format!("`{ret}` points into other data, so the signature must say where it comes from"))
+                    .note("add `of <parameter>`, e.g. `-> str of text`, or `of static` for string literals");
+            }
+            return;
+        };
+        for (n, sp) in names {
+            if n == "static" {
+                continue;
+            }
+            if n == "self" {
+                self.diags.error("U0001", *sp, "`of self` needs methods, which are not supported in P0");
+                continue;
+            }
+            match f.params.iter().find(|p| p.name == *n) {
+                None => {
+                    self.diags.error("E0010", *sp, format!("`of {n}`: there is no parameter named `{n}`"));
+                }
+                Some(p) if p.sink => {
+                    self.diags
+                        .error("E0304", *sp, format!("`of {n}` names a `sink` parameter, which is dropped when the function returns"))
+                        .note(format!("borrow it instead (`{n}: {}`), or return an owned value", p.ty.name));
+                }
+                Some(_) => {}
+            }
+        }
+    }
+
+    /// The variables a value of a borrow-carrying type points into.
+    fn loans_of(&self, h: &HExpr, cx: &FnCx) -> Vec<Loan> {
+        let recv_loans = |r: &HExpr| -> Vec<Loan> {
+            match (&r.kind, r.ty) {
+                (HExprKind::Local(id), Ty::String) => vec![Loan::Local(*id)],
+                (_, Ty::String) => vec![Loan::Temp],
+                _ => self.loans_of(r, cx),
+            }
+        };
+        match &h.kind {
+            HExprKind::Local(id) | HExprKind::Move(id) => cx.locals[*id].loans.clone(),
+            HExprKind::StrView(inner) => recv_loans(inner),
+            HExprKind::Method { method: Builtin::Trim | Builtin::Fields | Builtin::Lines, recv } => recv_loans(recv),
+            // A cloned `Vec[str]` owns new storage, but its elements still point into the same text.
+            HExprKind::Method { method: Builtin::VecClone, recv } if h.ty.carries_borrow() => self.loans_of(recv, cx),
+            HExprKind::Index { base, .. } if h.ty.carries_borrow() => self.loans_of(base, cx),
+            HExprKind::VecLit(items) => {
+                let mut out = Vec::new();
+                for i in items {
+                    for l in self.loans_of(i, cx) {
+                        if !out.contains(&l) {
+                            out.push(l);
+                        }
+                    }
+                }
+                out
+            }
+            HExprKind::Call { func, args } if h.ty.carries_borrow() => {
+                let picked: Vec<usize> = match &self.sigs[*func].ret_of {
+                    Some(p) => p.clone(),
+                    None => (0..args.len()).collect(),
+                };
+                let mut out = Vec::new();
+                for i in picked {
+                    if let Some(a) = args.get(i) {
+                        for l in recv_loans(a) {
+                            if !out.contains(&l) {
+                                out.push(l);
+                            }
+                        }
+                    }
+                }
+                out
+            }
+            _ => Vec::new(),
+        }
+    }
+
+    fn outlives(cx: &FnCx, s: LocalId, v: LocalId) -> bool {
+        let (a, b) = (&cx.locals[s], &cx.locals[v]);
+        a.depth < b.depth || (a.depth == b.depth && s < v)
+    }
+
+    /// Records that variable `v` now points into `loans`; each source must live at least as
+    /// long as `v` (semantic table E4).
+    fn store_loans(&mut self, cx: &mut FnCx, v: LocalId, loans: Vec<Loan>, span: Span, replace: bool) {
+        for l in &loans {
+            match *l {
+                Loan::Temp => {
+                    self.diags
+                        .error("E0305", span, "this value points into a temporary that is dropped at the end of the statement")
+                        .note("store the owned value in a variable first, then take the view from it");
+                }
+                Loan::Local(s) if !Self::outlives(cx, s, v) => {
+                    let (sn, vn) = (cx.locals[s].name.clone(), cx.locals[v].name.clone());
+                    self.diags
+                        .error("E0305", span, format!("`{sn}` does not live long enough: `{vn}` would still point into it after it is dropped"))
+                        .note(format!("declare `{sn}` before `{vn}`, in the same or an enclosing block"));
+                }
+                Loan::Local(_) => {}
+            }
+        }
+        if replace {
+            cx.locals[v].loans = loans;
+        } else {
+            for l in loans {
+                if !cx.locals[v].loans.contains(&l) {
+                    cx.locals[v].loans.push(l);
+                }
+            }
+        }
+    }
+
+    /// Moving or modifying `s` while a view into it is still used later is an error (A3).
+    fn check_not_borrowed(&mut self, cx: &FnCx, s: LocalId, span: Span, what: &str) {
+        let p = cx.cur;
+        for (v, lv) in cx.locals.iter().enumerate() {
+            if v == s || !lv.loans.contains(&Loan::Local(s)) || !(lv.decl < p && p <= lv.scope_end) {
+                continue;
+            }
+            if let Some(line) = cx.pre.live_after(lv, p) {
+                let (sn, vn) = (cx.locals[s].name.clone(), lv.name.clone());
+                self.diags
+                    .error("E0102", span, format!("cannot {what} `{sn}` while `{vn}` still points into it"))
+                    .note(format!("`{vn}` is used again on line {line}"));
+                return;
+            }
+        }
+    }
+
     /// The value of `h` is moved: stored, returned, or passed to a `sink` parameter. A local of a
     /// non-copyable type is moved out and must not be used again.
     fn consume(&mut self, mut h: HExpr, cx: &mut FnCx) -> HExpr {
@@ -694,9 +1039,39 @@ impl Checker<'_> {
         if cx.moved.len() <= id {
             cx.moved.resize(id + 1, None);
         }
+        self.check_not_borrowed(cx, id, h.span, "move");
         cx.moved[id] = Some(h.span);
         h.kind = HExprKind::Move(id);
         h
+    }
+
+    /// A returned borrow may only point into parameters listed after `of` (O2).
+    fn check_returned(&mut self, h: &HExpr, cx: &FnCx) {
+        let Some(names) = &cx.ret_of else { return };
+        for l in self.loans_of(h, cx) {
+            match l {
+                Loan::Temp => {
+                    self.diags.error("E0303", h.span, "the returned value points into a temporary that is dropped here");
+                }
+                Loan::Local(id) => {
+                    let local = &cx.locals[id];
+                    let is_param = matches!(local.kind, LocalKind::Param | LocalKind::SinkParam);
+                    if is_param && names.contains(&local.name) {
+                        continue;
+                    }
+                    let d = self.diags.error(
+                        "E0303",
+                        h.span,
+                        format!("the returned value points into `{}`, which the signature's `of` does not list", local.name),
+                    );
+                    if is_param {
+                        d.note(format!("list it: `of {}`, or `of (a, b)` for several sources", local.name));
+                    } else {
+                        d.note("a local variable is dropped when the function returns; return an owned value instead");
+                    }
+                }
+            }
+        }
     }
 
     /// Checks a loop body. A value moved in one iteration must not be used by the next, so when
@@ -704,6 +1079,7 @@ impl Checker<'_> {
     /// at the end of the first iteration.
     fn loop_body(&mut self, body: &Block, cx: &mut FnCx, infinite: bool) -> Vec<HStmt> {
         let before = cx.moved.clone();
+        let start_cur = cx.cur;
         cx.loops.push(LoopFlow::default());
         cx.loop_depth += 1;
         let out = self.block(body, cx);
@@ -717,11 +1093,14 @@ impl Checker<'_> {
         let grew = next.iter().enumerate().any(|(i, m)| m.is_some() && before.get(i).copied().flatten().is_none());
         if grew {
             let saved = std::mem::take(&mut *self.diags);
+            let end_cur = cx.cur;
+            cx.cur = start_cur;
             cx.moved = next.clone();
             cx.loops.push(LoopFlow::default());
             cx.loop_depth += 1;
             let _ = self.block(body, cx);
             cx.loop_depth -= 1;
+            cx.cur = end_cur;
             if let Some(b) = cx.loops.pop().and_then(|f| f.breaks) {
                 union_into(&mut flow.breaks, &b);
             }
@@ -751,6 +1130,7 @@ impl Checker<'_> {
     }
 
     fn stmt(&mut self, s: &Stmt, cx: &mut FnCx) -> Option<HStmt> {
+        cx.cur += 1;
         let kind = match &s.kind {
             StmtKind::Let { mutable, name, name_span, ty, init } => {
                 let declared = ty.as_ref().map(|t| self.resolve_ty(t));
@@ -770,8 +1150,12 @@ impl Checker<'_> {
                     HStmtKind::Discard(init)
                 } else {
                     let init = self.consume(init, cx);
+                    let loans = if ty.carries_borrow() { self.loans_of(&init, cx) } else { Vec::new() };
                     let kind = if *mutable { LocalKind::Var } else { LocalKind::Let };
                     let local = self.declare(cx, name, *name_span, ty, kind);
+                    if ty.carries_borrow() {
+                        self.store_loans(cx, local, loans, init.span, true);
+                    }
                     HStmtKind::Let { local, init }
                 }
             }
@@ -837,9 +1221,16 @@ impl Checker<'_> {
                 }
                 let value = match op {
                     None => {
+                        if path.is_empty() && !lty.is_copy() {
+                            self.check_not_borrowed(cx, id, target.span, "assign to");
+                        }
                         let v = self.expr(value, Some(lty), cx);
                         self.expect_ty(&v, lty);
                         let v = self.consume(v, cx);
+                        if path.is_empty() && lty.carries_borrow() {
+                            let loans = self.loans_of(&v, cx);
+                            self.store_loans(cx, id, loans, v.span, true);
+                        }
                         if path.is_empty() && id < cx.moved.len() {
                             // Assigning a new value makes a moved-from variable usable again.
                             cx.moved[id] = None;
@@ -966,7 +1357,11 @@ impl Checker<'_> {
                     Some(e) => {
                         let h = self.expr(e, Some(ret), cx);
                         self.expect_ty(&h, ret);
-                        HStmtKind::Return(Some(self.consume(h, cx)))
+                        let h = self.consume(h, cx);
+                        if ret.carries_borrow() {
+                            self.check_returned(&h, cx);
+                        }
+                        HStmtKind::Return(Some(h))
                     }
                 }
             }
@@ -1324,6 +1719,18 @@ impl Checker<'_> {
                 for (i, a) in args.iter().enumerate() {
                     let exp = params.get(i).copied();
                     let h = self.expr(a, exp, cx);
+                    // Passing a `String` to a `str` parameter borrows it for the call (whitelist).
+                    let h = if exp == Some(Ty::Str) && h.ty == Ty::String {
+                        let (span, at) = (h.span, h.at);
+                        HExpr { kind: HExprKind::StrView(Box::new(h)), ty: Ty::Str, span, at }
+                    } else {
+                        h
+                    };
+                    if let HExprKind::StrView(inner) = &h.kind {
+                        if let HExprKind::Local(id) = inner.kind {
+                            borrowed.push(id);
+                        }
+                    }
                     if let Some(t) = exp {
                         self.expect_ty(&h, t);
                     }
@@ -1380,6 +1787,9 @@ impl Checker<'_> {
             (Ty::String, "clone") => (Builtin::StringClone, Ty::String),
             (Ty::Vec(_), "len") => (Builtin::VecLen, Ty::Int(IntTy::I64)),
             (Ty::Vec(_), "clone") => (Builtin::VecClone, recv.ty),
+            (Ty::Str | Ty::String, "trim") => (Builtin::Trim, Ty::Str),
+            (Ty::Str | Ty::String, "fields") => (Builtin::Fields, Ty::Vec(vec_of(Ty::Str))),
+            (Ty::Str | Ty::String, "lines") => (Builtin::Lines, Ty::Vec(vec_of(Ty::Str))),
             (Ty::Error, _) => return err_expr(span),
             (t, m) => {
                 self.diags.error("U0001", at, format!("method `{m}` on `{t}` is not supported in P0"));
@@ -1408,6 +1818,7 @@ impl Checker<'_> {
         };
         cx.locals[id].used = true;
         self.check_moved(cx, id, base.span);
+        self.check_not_borrowed(cx, id, base.span, "modify");
         match cx.locals[id].kind {
             LocalKind::Var => {}
             LocalKind::Let => {
@@ -1436,7 +1847,12 @@ impl Checker<'_> {
                 let et = vec_elem(vid);
                 let h = self.expr(arg, Some(et), cx);
                 self.expect_ty(&h, et);
-                self.consume(h, cx)
+                let h = self.consume(h, cx);
+                if et.carries_borrow() {
+                    let loans = self.loans_of(&h, cx);
+                    self.store_loans(cx, id, loans, h.span, false);
+                }
+                h
             }
             Ty::String => {
                 let h = self.expr(arg, None, cx);

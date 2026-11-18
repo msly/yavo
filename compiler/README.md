@@ -83,10 +83,8 @@ only borrowed (e.g. `f().len()`) are dropped at the end of the statement. Heap g
 capacity arithmetic (`P-CAPACITY`) and allocation failure (`P-OOM`); `v[i]` checks bounds
 (`P-INDEX`).
 
-Soundness rests on one restriction: a `String` never turns into a `str` yet, so every `str`
-(including inside `Vec[str]`) is a string literal and cannot dangle. `String` -> `str` borrows,
-`String`/`Vec` struct fields, reading non-copyable elements (`names[0]`), `v[i] = x`, iterating
-with `for x in v`, `Map` and `inout` come next and need borrow tracking.
+Not yet: `String`/`Vec` struct fields, reading non-copyable elements (`names[0]`), `v[i] = x`,
+iterating with `for x in v`, `Map` and `inout`; these need `&T` references.
 
 Leak and double-drop check: `YAVO_ALLOC_CHECK=1` builds with `-DYV_ALLOC_CHECK`, where the
 runtime counts live heap blocks and exits with 102 on a leak or an extra free.
@@ -95,6 +93,30 @@ confirmed it: deleting one generated drop was reported as a leak, and deleting o
 zeroing made the program fail (the C library's own double-free check fired first). It does not
 detect use-after-free. AddressSanitizer is not available here: zig ships no ASan runtime, and
 the machine has no gcc, clang or valgrind; UBSan does work.
+
+## Views: `str` borrowed from a `String`
+
+Supported: passing a `String` to a `str` parameter borrows it for the call (the whitelist's
+only automatic borrow); `s.trim()`, `s.fields()`, `s.lines()` return views into `s` (no
+copying); functions return views with `-> str of a`, `of (a, b)` or `of static`.
+
+Rules checked (semantic table O1, O2, E4, A3):
+
+- A function returning a borrow-carrying type (`str`, `Vec[str]`) without `of` is `E0302`;
+  returning a view of something `of` does not list (another parameter, a local, a temporary)
+  is `E0303`; `of` naming a `sink` parameter is `E0304`.
+- Each variable holding a view records which variables it points into. Storing a view into a
+  variable that outlives its source, or a view of a temporary, is `E0305`.
+- Moving or modifying a variable (`push`, assignment) while a view into it is still used later
+  is `E0102`. "Later" means the view's last use (a borrow ends there); a use inside a loop
+  that began after the view was created counts until the end of the loop, so a view printed
+  before a `push` in the loop body is still live for the next iteration.
+
+Implementation: before checking a function, a pre-pass numbers its statements in checking order
+and records where each name is used and which loops enclose that use. A call's result points
+into the arguments named by the callee's `of`. Tests: `tests/p0/run_views.yv`,
+`tests/p0/errors_views.yv` (10 diagnostics, including the loop case and a cloned `Vec[str]`).
+Three older P0 fixtures that returned `str` without `of` now say `of static` / `of name`.
 
 ## Spec conformance
 
@@ -112,7 +134,7 @@ runs all 129 cases in `yavo-tests/MANIFEST.json`, after checking each fixture ag
 | unsupported | the compiler reported `U0001` |
 | not_run | needs `yavo fix`, `yavo verify`, fixtures, sanitizers or other platforms |
 
-At this commit: pass 12, wrong 0, unsupported 104, not_run 13 (P1: 4 / 0 / 72 / 7;
+At this commit: pass 24, wrong 0, unsupported 92, not_run 13 (P1: 16 / 0 / 60 / 7;
 P2: 8 / 0 / 11 / 2; P3: 0 / 0 / 21 / 4). The per-case report is written to
 `target/tmp/conformance-report.json`.
 

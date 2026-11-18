@@ -1,0 +1,65 @@
+// expect-error: E0302 12:21
+// expect-error: E0303 16:12
+// expect-error: E0304 18:38
+// expect-error: E0303 23:12
+// expect-error: E0102 28:5
+// expect-error: E0102 34:14
+// expect-error: E0102 42:9
+// expect-error: E0305 49:16
+// expect-error: E0305 54:13
+// expect-error: E0102 63:5
+// View (borrow) diagnostics.
+fn no_of(s: str) -> str {
+    return s
+}
+fn wrong_source(_a: str, b: str) -> str of _a {
+    return b
+}
+fn of_sink(s: sink String) -> str of s {
+    return s.trim()
+}
+fn local_view() -> str of static {
+    let owned = "x".toString()
+    return owned.trim()
+}
+fn modify_while_viewed() {
+    var s = "a b".toString()
+    let v = s.trim()
+    s.push("c")
+    println(v)
+}
+fn move_while_viewed() {
+    let s = "a".toString()
+    let v = s.trim()
+    let _t = s
+    println(v)
+}
+fn loop_view() {
+    var s = "a".toString()
+    let v = s.trim()
+    for _i in 0..2 {
+        println(v)
+        s.push("b")
+    }
+}
+fn outlive() {
+    var keep: str = ""
+    {
+        let inner = "x".toString()
+        keep = inner.trim()
+    }
+    println(keep)
+}
+fn temp_view() {
+    let v = "x".toString().trim()
+    println(v)
+}
+fn main() {
+}
+fn clone_view() {
+    var text = "a b".toString()
+    let words = text.fields()
+    let copy = words.clone()
+    text.push("c")
+    println(copy.len())
+}
