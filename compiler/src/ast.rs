@@ -38,6 +38,8 @@ pub struct Param {
     pub span: Span,
     /// `x: sink T`: the argument is moved into the function. Otherwise parameters are read-only borrows.
     pub sink: bool,
+    /// `x: inout T`: the caller passes `&place`; `x` is that place, readable and writable.
+    pub inout: bool,
     pub ty: TypeExpr,
 }
 
@@ -66,6 +68,8 @@ pub enum StmtKind {
     While { cond: Expr, body: Block },
     Loop { body: Block },
     For { var: String, var_span: Span, start: Expr, end: Expr, body: Block },
+    /// `for x in v`: copyable elements by value, others as `&T`.
+    ForIn { var: String, var_span: Span, iter: Expr, body: Block },
     Break,
     Continue,
     Return(Option<Expr>),
@@ -95,6 +99,8 @@ pub enum ExprKind {
     VecLit(Vec<Expr>),
     /// `base[index]`
     Index { base: Box<Expr>, index: Box<Expr> },
+    /// `&x`, for an `inout` argument.
+    Borrow(Box<Expr>),
     Unary { op: UnOp, op_span: Span, expr: Box<Expr> },
     Binary { op: BinOp, op_span: Span, lhs: Box<Expr>, rhs: Box<Expr> },
     Paren(Box<Expr>),

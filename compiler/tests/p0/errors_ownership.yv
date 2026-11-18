@@ -6,7 +6,7 @@
 // expect-error: E0403 54:12
 // expect-error: E0014 58:5
 // expect-error: E0001 61:14
-// expect-error: U0001 65:18
+// expect-error: E0404 65:26
 // expect-error: E0001 69:13
 // Ownership diagnostics. `diverging_branch` must compile: a move in a branch that returns
 // does not affect the code after the `if`.
@@ -62,7 +62,7 @@ fn infer() {
 }
 fn element() {
     let names: Vec[String] = []
-    let _first = names[0]
+    let _first: String = names[0]
 }
 fn print_vec() {
     let v: Vec[int] = [1]

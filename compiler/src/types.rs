@@ -8,6 +8,8 @@ thread_local! {
     /// Element type of each `Vec[T]`, indexed by vec id. An element is always registered
     /// before the vectors that contain it, so ids are in dependency order.
     static VECS: RefCell<Vec<Ty>> = const { RefCell::new(Vec::new()) };
+    /// Referent type and C pointer type of each `&T`, indexed by ref id.
+    static REFS: RefCell<Vec<(Ty, &'static str)>> = const { RefCell::new(Vec::new()) };
 }
 
 /// Registers a struct name and returns its id.
@@ -39,6 +41,25 @@ pub fn vec_of(elem: Ty) -> u32 {
 
 pub fn vec_elem(id: u32) -> Ty {
     VECS.with(|v| v.borrow()[id as usize])
+}
+
+/// Interns `&inner` and returns its id.
+pub fn ref_of(inner: Ty) -> u32 {
+    // Computed before borrowing the table: `c_name` of a nested `&T` reads the same table.
+    let c_name = inner.c_name();
+    REFS.with(|r| {
+        let mut r = r.borrow_mut();
+        if let Some(i) = r.iter().position(|(t, _)| *t == inner) {
+            return i as u32;
+        }
+        let c: &'static str = Box::leak(format!("const {c_name} *").into_boxed_str());
+        r.push((inner, c));
+        (r.len() - 1) as u32
+    })
+}
+
+pub fn ref_inner(id: u32) -> Ty {
+    REFS.with(|r| r.borrow()[id as usize].0)
 }
 
 /// Every `Vec` type created so far, in dependency order.
@@ -149,6 +170,8 @@ pub enum Ty {
     String,
     /// `Vec[T]`, by vec id (see `vec_of`).
     Vec(u32),
+    /// `&T`: a read-only reference, by ref id (see `ref_of`). Copyable; it carries a borrow.
+    Ref(u32),
     Unit,
     /// A user-defined struct, by id (see `register_struct`).
     Struct(u32),
@@ -165,7 +188,7 @@ impl Ty {
     /// Whether a value of this type points into data it does not own (`str`, `Vec[str]`, ...).
     pub fn carries_borrow(self) -> bool {
         match self {
-            Ty::Str => true,
+            Ty::Str | Ty::Ref(_) => true,
             Ty::Vec(id) => vec_elem(id).carries_borrow(),
             _ => false,
         }
@@ -179,6 +202,7 @@ impl Ty {
             Ty::Str => "str".into(),
             Ty::String => "String".into(),
             Ty::Vec(id) => format!("Vec_{}", vec_elem(id).key()),
+            Ty::Ref(id) => format!("Ref_{}", ref_inner(id).key()),
             Ty::Struct(id) => format!("S_{}", struct_names(id).0),
             Ty::Unit | Ty::Error => "void".into(),
         }
@@ -191,6 +215,7 @@ impl Ty {
             Ty::Str => "yv_str",
             Ty::String => "yv_string",
             Ty::Vec(_) => "yv_vec",
+            Ty::Ref(id) => REFS.with(|r| r.borrow()[id as usize].1),
             Ty::Unit => "void",
             Ty::Struct(id) => struct_names(id).1,
             Ty::Error => "void",
@@ -206,6 +231,7 @@ impl fmt::Display for Ty {
             Ty::Str => f.write_str("str"),
             Ty::String => f.write_str("String"),
             Ty::Vec(id) => write!(f, "Vec[{}]", vec_elem(*id)),
+            Ty::Ref(id) => write!(f, "&{}", ref_inner(*id)),
             Ty::Unit => f.write_str("()"),
             Ty::Struct(id) => f.write_str(struct_names(*id).0),
             Ty::Error => f.write_str("{error}"),

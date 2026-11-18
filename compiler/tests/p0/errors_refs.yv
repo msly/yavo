@@ -1,0 +1,60 @@
+// expect-error: E0102 21:9
+// expect-error: E0102 26:15
+// expect-error: E0014 31:12
+// expect-error: E0001 36:11
+// expect-error: E0306 39:14
+// expect-error: E0404 42:12
+// expect-error: E0102 47:5
+// expect-error: E0401 52:19
+// expect-error: E0305 55:14
+// Reference, iteration and `inout` diagnostics.
+fn twice(a: inout Vec[int], b: inout Vec[int]) {
+    a.push(1)
+    b.push(2)
+}
+fn take(s: sink String) -> int {
+    return s.len()
+}
+fn modify_in_loop() {
+    var v: Vec[int] = [1]
+    for x in v {
+        v.push(x)
+    }
+}
+fn alias() {
+    var v: Vec[int] = []
+    twice(&v, &v)
+}
+fn inout_let() {
+    let w: Vec[int] = []
+    var z: Vec[int] = []
+    twice(&w, &z)
+}
+fn missing_amp() {
+    var p: Vec[int] = []
+    var q: Vec[int] = []
+    twice(p, &q)
+}
+fn keep(out: inout Vec[str], t: str) {
+    out.push(t)
+}
+fn steal(names: Vec[String]) -> String {
+    return names[0]
+}
+fn dangling() {
+    var r: Vec[String] = ["a".toString()]
+    let p = r[0]
+    r.push("b".toString())
+    println(p)
+}
+fn sink_from_ref() {
+    let names: Vec[String] = ["a".toString()]
+    let _n = take(names[0])
+}
+fn temp_views() {
+    for w in "a b".toString().fields() {
+        println(w)
+    }
+}
+fn main() {
+}

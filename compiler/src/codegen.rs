@@ -146,7 +146,17 @@ fn clone_fn(ty: Ty) -> String {
 }
 
 fn local_name(locals: &[HLocal], id: LocalId) -> String {
-    format!("l{}_{}", id, locals[id].name)
+    // An `inout` parameter is a pointer to the caller's place.
+    if locals[id].inout {
+        format!("(*{})", raw_local_name(locals, id))
+    } else {
+        raw_local_name(locals, id)
+    }
+}
+
+/// The C variable itself (hidden locals are named `$iter<n>`; `$` is not valid in C).
+fn raw_local_name(locals: &[HLocal], id: LocalId) -> String {
+    format!("l{}_{}", id, locals[id].name.replace('$', "h_"))
 }
 
 fn c_string(bytes: &[u8]) -> String {
@@ -203,7 +213,10 @@ impl Gen {
         let params: Vec<String> = f
             .params
             .iter()
-            .map(|&id| format!("{} {}", f.locals[id].ty.c_name(), local_name(&f.locals, id)))
+            .map(|&id| {
+                let ptr = if f.locals[id].inout { "*" } else { "" };
+                format!("{} {ptr}{}", f.locals[id].ty.c_name(), raw_local_name(&f.locals, id))
+            })
             .collect();
         let params = if params.is_empty() { "void".to_string() } else { params.join(", ") };
         format!("{} {}({})", f.ret.c_name(), self.fn_names[idx], params)
@@ -389,6 +402,24 @@ impl Gen {
                 self.drop_scopes(n);
                 self.line(if matches!(s.kind, HStmtKind::Break) { "break;" } else { "continue;" });
             }
+            HStmtKind::ForEach { vec, elem, by_ref, body } => {
+                let v = local_name(&f.locals, *vec);
+                let Ty::Vec(vid) = f.locals[*vec].ty else { unreachable!() };
+                let ec = vec_elem(vid).c_name();
+                let i = self.fresh();
+                let x = local_name(&f.locals, *elem);
+                // The checker forbids changing `v` during the loop, so `len` and `ptr` stay valid.
+                self.line(&format!("for (int64_t {i} = 0; {i} < ({v}).len; {i}++) {{"));
+                self.indent += 1;
+                if *by_ref {
+                    self.line(&format!("const {ec} *{x} = &(({ec} *)({v}).ptr)[{i}];"));
+                } else {
+                    self.line(&format!("{ec} {x} = (({ec} *)({v}).ptr)[{i}];"));
+                }
+                self.scoped(body, f, true);
+                self.indent -= 1;
+                self.line("}");
+            }
             HStmtKind::Return(value) => {
                 let v = value.as_ref().map(|e| {
                     let v = self.owned(e, f);
@@ -424,7 +455,9 @@ impl Gen {
                                 Ty::Bool => format!("yv_write_bool({fd}, {v});"),
                                 Ty::Str => format!("yv_write_str({fd}, {v});"),
                                 Ty::String => format!("yv_write_str({fd}, yv_string_view(&{v}));"),
-                                Ty::Unit | Ty::Error | Ty::Struct(_) | Ty::Vec(_) => unreachable!("rejected by the checker"),
+                                Ty::Unit | Ty::Error | Ty::Struct(_) | Ty::Vec(_) | Ty::Ref(_) => {
+                                    unreachable!("rejected or dereferenced by the checker")
+                                }
                             };
                             writes.push(call);
                         }
@@ -523,6 +556,11 @@ impl Gen {
                 let i = self.expr(index, f);
                 let at = pos(e.at);
                 let text = match base.ty {
+                    // A non-copyable element is read in place: the value is a pointer into `v`.
+                    Ty::Vec(vid) if matches!(e.ty, Ty::Ref(_)) => {
+                        let et = vec_elem(vid).c_name();
+                        format!("(({et} *)yv_vec_at(&{b}, (int64_t)sizeof({et}), (int64_t){i}, {at}))")
+                    }
                     Ty::Vec(vid) => {
                         let et = vec_elem(vid).c_name();
                         format!("(*({et} *)yv_vec_at(&{b}, (int64_t)sizeof({et}), (int64_t){i}, {at}))")
@@ -570,6 +608,17 @@ impl Gen {
             HExprKind::StrView(inner) => {
                 let s = self.borrowed(inner, f);
                 self.bind(e.ty, &format!("yv_string_view(&{s})"))
+            }
+            HExprKind::Deref(inner) => {
+                let p = self.expr(inner, f);
+                format!("(*{p})")
+            }
+            HExprKind::InoutArg(id) => {
+                if f.locals[*id].inout {
+                    raw_local_name(&f.locals, *id)
+                } else {
+                    format!("&{}", local_name(&f.locals, *id))
+                }
             }
             HExprKind::Push { local, value } => {
                 let name = local_name(&f.locals, *local);
@@ -646,7 +695,19 @@ impl Gen {
     /// clone, a literal) is dropped at the end of the statement.
     fn borrowed(&mut self, e: &HExpr, f: &HFn) -> String {
         let v = self.expr(e, f);
-        if !e.ty.is_copy() && e.ty != Ty::Error && !matches!(e.kind, HExprKind::Local(_)) {
+        // Only values this statement created and owns are dropped; a value read through a
+        // reference or a parameter belongs to someone else.
+        let fresh = matches!(
+            e.kind,
+            HExprKind::Call { .. }
+                | HExprKind::VecLit(_)
+                | HExprKind::Move(_)
+                | HExprKind::Method {
+                    method: Builtin::StrToString | Builtin::StringClone | Builtin::VecClone | Builtin::Fields | Builtin::Lines,
+                    ..
+                }
+        );
+        if fresh && !e.ty.is_copy() {
             self.temps.push((v.clone(), e.ty));
         }
         v
@@ -661,7 +722,9 @@ impl Gen {
 
     fn bind(&mut self, ty: Ty, value: &str) -> String {
         let t = self.fresh();
-        self.line(&format!("const {} {t} = {value};", ty.c_name()));
+        // `&T` is already `const T *`; a second `const` would only trigger warnings.
+        let q = if matches!(ty, Ty::Ref(_)) { "" } else { "const " };
+        self.line(&format!("{q}{} {t} = {value};", ty.c_name()));
         t
     }
 

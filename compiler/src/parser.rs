@@ -237,11 +237,12 @@ impl Parser<'_, '_> {
             let (pname, pspan) = self.ident("a parameter name")?;
             self.expect(Tok::Colon, "`:` followed by the parameter type")?;
             let sink = self.is_kw("sink");
-            if sink {
+            let inout = self.is_kw("inout");
+            if sink || inout {
                 self.bump();
             }
             let ty = self.ty()?;
-            params.push(Param { name: pname, span: pspan, sink, ty });
+            params.push(Param { name: pname, span: pspan, sink, inout, ty });
             if !self.eat(&Tok::Comma) {
                 break;
             }
@@ -297,9 +298,17 @@ impl Parser<'_, '_> {
                 self.unsupported(sp, format!("`{m}` parameters are not supported in P0"))?;
             }
         }
-        if matches!(self.peek(), Tok::Amp | Tok::Question | Tok::LBracket | Tok::LParen) {
+        if matches!(self.peek(), Tok::Amp) {
+            let amp = self.bump().span;
+            if self.is_kw("inout") {
+                self.unsupported(amp, "`&inout T` values are not supported in P0 (use an `inout` parameter)")?;
+            }
+            let inner = self.ty()?;
+            return Ok(TypeExpr { name: "&".into(), span: amp.to(inner.span), args: vec![inner] });
+        }
+        if matches!(self.peek(), Tok::Question | Tok::LBracket | Tok::LParen) {
             let sp = self.span();
-            self.unsupported(sp, "optional, borrow, slice and tuple types are not supported in P0")?;
+            self.unsupported(sp, "optional, slice and tuple types are not supported in P0")?;
         }
         let (name, span) = self.ident("a type")?;
         let mut args = Vec::new();
@@ -415,7 +424,8 @@ impl Parser<'_, '_> {
             self.bump();
             let range_start = self.expr()?;
             if !self.eat(&Tok::DotDot) {
-                self.unsupported(range_start.span, "only integer ranges (`for i in a..b`) are supported in P0")?;
+                let body = self.block()?;
+                return Ok(Stmt { span: start, kind: StmtKind::ForIn { var, var_span, iter: range_start, body } });
             }
             let range_end = self.expr()?;
             let body = self.block()?;
@@ -576,8 +586,9 @@ impl Parser<'_, '_> {
             Tok::Minus => UnOp::Neg,
             Tok::Bang => UnOp::Not,
             Tok::Amp => {
-                self.unsupported(start, "borrow expressions (`&x`) are not supported in P0")?;
-                unreachable!()
+                self.bump();
+                let inner = self.unary()?;
+                return Ok(Expr { span: start.to(inner.span), kind: ExprKind::Borrow(Box::new(inner)) });
             }
             Tok::Star => {
                 self.unsupported(start, "dereference (`*p`) is not supported in P0")?;

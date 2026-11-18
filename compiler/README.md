@@ -83,8 +83,8 @@ only borrowed (e.g. `f().len()`) are dropped at the end of the statement. Heap g
 capacity arithmetic (`P-CAPACITY`) and allocation failure (`P-OOM`); `v[i]` checks bounds
 (`P-INDEX`).
 
-Not yet: `String`/`Vec` struct fields, reading non-copyable elements (`names[0]`), `v[i] = x`,
-iterating with `for x in v`, `Map` and `inout`; these need `&T` references.
+Not yet: `String`/`Vec` struct fields, `v[i] = x`, `Map` (see the references section for
+`for x in v`, `names[0]` and `inout`).
 
 Leak and double-drop check: `YAVO_ALLOC_CHECK=1` builds with `-DYV_ALLOC_CHECK`, where the
 runtime counts live heap blocks and exits with 102 on a leak or an extra free.
@@ -118,6 +118,29 @@ into the arguments named by the callee's `of`. Tests: `tests/p0/run_views.yv`,
 `tests/p0/errors_views.yv` (10 diagnostics, including the loop case and a cloned `Vec[str]`).
 Three older P0 fixtures that returned `str` without `of` now say `of static` / `of name`.
 
+## References, iteration and `inout`
+
+Supported:
+
+- `for x in v` over a `Vec[T]`: copyable elements are copied into `x`; other elements are
+  borrowed as `x: &T`. Iterating over a temporary (`for x in v.clone()`) keeps it in a hidden
+  variable until the loop ends.
+- `v[i]` on a non-copyable element is a `&T` into `v`. A `&T` is read through automatically when
+  printed, compared, used as a method receiver, indexed, or passed to a read-only parameter;
+  functions may return one (`-> &String of names`).
+- `x: inout T` parameters, called with `f(&v)`: inside, `x` is the caller's variable (it can be
+  assigned and pushed to); in C it is a pointer.
+
+Rules checked: changing or moving `v` while a `for` loop iterates over it is `E0102`; passing a
+variable as `inout` together with any other use in the same call (`twice(&v, &v)`) is `E0102`;
+an `inout` argument must be a `var` written as `&x` (`E0014`, `E0001`); storing a borrow into an
+`inout` parameter is `E0306`; taking a `String` out of a `&String` is `E0404` (use `.clone()`);
+moving out of a reference is `E0401`; iterating views of a temporary is `E0305`. A `&T` into
+`v` is a borrow of `v`, so `v.push` while it is still used is `E0102`.
+
+Not yet: `for x in &v` (mutable iteration), `&inout T` values, `getMut`, `take`/`replace`.
+Tests: `tests/p0/run_refs.yv`, `tests/p0/errors_refs.yv` (9 diagnostics).
+
 ## Spec conformance
 
 ```sh
@@ -134,7 +157,7 @@ runs all 129 cases in `yavo-tests/MANIFEST.json`, after checking each fixture ag
 | unsupported | the compiler reported `U0001` |
 | not_run | needs `yavo fix`, `yavo verify`, fixtures, sanitizers or other platforms |
 
-At this commit: pass 24, wrong 0, unsupported 92, not_run 13 (P1: 16 / 0 / 60 / 7;
+At this commit: pass 29, wrong 0, unsupported 87, not_run 13 (P1: 21 / 0 / 55 / 7;
 P2: 8 / 0 / 11 / 2; P3: 0 / 0 / 21 / 4). The per-case report is written to
 `target/tmp/conformance-report.json`.
 

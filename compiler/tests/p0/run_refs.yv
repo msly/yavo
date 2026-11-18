@@ -1,0 +1,72 @@
+// expect-stdout:
+// | 6
+// | alpha beta gamma
+// | 3 5
+// | alpha
+// | 2 [ab] [cd]
+// | 11 21 31
+// | 6
+fn total(xs: Vec[int]) -> int {
+    var s = 0
+    for x in xs {
+        s += x
+    }
+    return s
+}
+
+fn longest(names: Vec[String]) -> &String of names {
+    var best = 0
+    for i in 0..names.len() {
+        if names[i].len() > names[best].len() {
+            best = i
+        }
+    }
+    return names[best]
+}
+
+fn bump_all(v: inout Vec[int]) {
+    var out: Vec[int] = []
+    for x in v {
+        out.push(x + 1)
+    }
+    v = out
+}
+
+fn add_word(words: inout Vec[String], w: str) {
+    words.push(w.toString())
+}
+
+fn main() {
+    let nums: Vec[int] = [1, 2, 3]
+    println(total(nums))
+    var names: Vec[String] = []
+    add_word(&names, "alpha")
+    add_word(&names, "beta")
+    add_word(&names, "gamma")
+    var line = "".toString()
+    for n in names {
+        if line.len() > 0 {
+            line.push(" ")
+        }
+        line.push(n)
+    }
+    println(line)
+    let first = names[0]
+    println("${names.len()} ${first.len()}")
+    println(longest(names))
+    let text = "ab cd".toString()
+    let parts = text.fields()
+    print(parts.len())
+    for w in parts {
+        print(" [${w}]")
+    }
+    println()
+    var v: Vec[int] = [10, 20, 30]
+    bump_all(&v)
+    println("${v[0]} ${v[1]} ${v[2]}")
+    var acc = 0
+    for x in v.clone() {
+        acc += x / 10
+    }
+    println(acc)
+}
