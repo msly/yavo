@@ -46,7 +46,8 @@ pub struct Param {
 pub struct TypeExpr {
     pub name: String,
     pub span: Span,
-    /// Type arguments, e.g. `[int]` in `Vec[int]`.
+    /// Type arguments, e.g. `[int]` in `Vec[int]`. `?T` is `name: "?"` and `&T` is `name: "&"`,
+    /// with `T` as the only argument.
     pub args: Vec<TypeExpr>,
 }
 
@@ -65,6 +66,10 @@ pub enum StmtKind {
     Assign { target: Expr, op: Option<BinOp>, op_span: Span, value: Expr },
     Expr(Expr),
     If { cond: Expr, then: Block, els: Option<Else> },
+    /// `if let name = value { } else { }`: runs `then` when `value` (an optional) holds a value.
+    IfLet { name: String, name_span: Span, value: Expr, then: Block, els: Option<Else> },
+    /// `match value { pattern => body ... }`; a single-statement arm body is wrapped in a block.
+    Match { value: Expr, arms: Vec<Arm> },
     While { cond: Expr, body: Block },
     Loop { body: Block },
     For { var: String, var_span: Span, start: Expr, end: Expr, body: Block },
@@ -79,6 +84,20 @@ pub enum StmtKind {
 pub enum Else {
     Block(Block),
     If(Box<Stmt>),
+}
+
+pub struct Arm {
+    pub pat: Pattern,
+    pub span: Span,
+    pub body: Block,
+}
+
+pub enum Pattern {
+    /// `some(name)`; `name` may be `_`.
+    Some { name: String, name_span: Span },
+    None,
+    /// `_`
+    Wild,
 }
 
 pub struct Expr {
@@ -104,6 +123,14 @@ pub enum ExprKind {
     Unary { op: UnOp, op_span: Span, expr: Box<Expr> },
     Binary { op: BinOp, op_span: Span, lhs: Box<Expr>, rhs: Box<Expr> },
     Paren(Box<Expr>),
+    /// `none`
+    None,
+    /// `lhs ?? rhs`: the value inside `lhs`, or `rhs` (evaluated only when `lhs` is `none`).
+    Coalesce { op_span: Span, lhs: Box<Expr>, rhs: Box<Expr> },
+    /// `return [value]`, `break`, `continue`; only as the right side of `??`.
+    Return(Option<Box<Expr>>),
+    Break,
+    Continue,
 }
 
 pub enum StrSeg {

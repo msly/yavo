@@ -1,0 +1,245 @@
+// expect-stdout:
+// | 7 none
+// | some 5
+// | some 9
+// | none
+// | wild 1
+// | wild none
+// | 3 -1
+// | rhs
+// | 4 2
+// | job
+// | took job, left empty
+// | old new
+// | b a 2 1
+// | cc bb aa
+// | popped 3
+// | first 10
+// | stop at 9
+// | odd 1 odd 3 odd 5
+// | point 0 none 4
+// | 42 none
+// | [x] 2 2
+// | ab
+// | vec 2
+// | nested 8
+// | word beta -
+// | some true false
+// | flag 5 none
+// | dropped ok
+struct Point {
+    x: int
+    y: ?int
+}
+
+fn find(v: Vec[int], want: int) -> ?int {
+    for i in 0..v.len() {
+        if v[i] == want {
+            return i
+        }
+    }
+    return none
+}
+
+fn noisy(n: int) -> int {
+    println("rhs")
+    return n
+}
+
+fn describe(o: ?int) {
+    match o {
+        some(n) => println("some ${n}")
+        none => println("none")
+    }
+}
+
+fn wild(o: ?int) {
+    match o {
+        none => println("wild none")
+        _ => println("wild 1")
+    }
+}
+
+fn keep(s: sink String) -> String {
+    return s
+}
+
+fn bump(o: inout ?int) {
+    o = (o ?? 0) + 1
+}
+
+fn second(text: str) -> ?str of text {
+    let ws = text.fields()
+    if ws.len() < 2 {
+        return none
+    }
+    return ws[1]
+}
+
+fn firstOdd(v: Vec[int]) -> int {
+    var all = v.clone()
+    loop {
+        let n = all.pop() ?? return -1
+        if n % 2 == 1 {
+            return n
+        }
+    }
+}
+
+fn main() {
+    // Construction, auto-wrapping and `??`.
+    let a: ?int = 7
+    let b: ?int = none
+    println("${a ?? 0} ${if1(b)}")
+    describe(some(5))
+    describe(9)
+    describe(none)
+    wild(some(1))
+    wild(none)
+    let v: Vec[int] = [4, 5, 6, 7]
+    println("${find(v, 7) ?? -1} ${find(v, 8) ?? -1}")
+    // The right side of `??` runs only for `none` (V9).
+    let c = a ?? noisy(1)
+    let d = b ?? noisy(4)
+    var counter: ?int = none
+    bump(&counter)
+    bump(&counter)
+    println("${d} ${counter ?? 0}")
+    if c != 7 {
+        println("wrong")
+    }
+
+    // Owned payloads: borrow from a place, take, replace, swap.
+    var job: ?String = some("job".toString())
+    if let j = job {
+        println(j)
+    }
+    match take(&job) {
+        some(s) => {
+            let k = keep(s)
+            if let _left = job {
+                println("still here")
+            } else {
+                println("took ${k}, left empty")
+            }
+        }
+        none => println("nothing")
+    }
+    var old: ?String = "old".toString()
+    let prev = replace(&old, "new".toString())
+    let q = "?"
+    let pv = prev ?? q.toString()
+    let ov = old ?? q.toString()
+    println("${pv} ${ov}")
+    var s1 = "a".toString()
+    var s2 = "b".toString()
+    var n1 = 1
+    var n2 = 2
+    swap(&s1, &s2)
+    swap(&n1, &n2)
+    println("${s1} ${s2} ${n1} ${n2}")
+
+    // `pop` and `while let`.
+    var names: Vec[String] = ["aa".toString(), "bb".toString(), "cc".toString()]
+    var popped = 0
+    while let name = names.pop() {
+        print("${name}")
+        popped += 1
+        if names.len() > 0 {
+            print(" ")
+        }
+    }
+    println("")
+    println("popped ${popped}")
+    var nums: Vec[int] = [10, 20]
+    var firsts: Vec[int] = []
+    loop {
+        let n = nums.pop() ?? break
+        firsts.push(n)
+    }
+    println("first ${firsts[1]}")
+    var stops: Vec[int] = [9, 8, 7]
+    var last = 0
+    while true {
+        let n = stops.pop() ?? break
+        last = n
+        if n == 8 {
+            continue
+        }
+    }
+    println("stop at ${last}")
+    println("odd ${firstOdd([2, 1])} odd ${firstOdd([3])} odd ${firstOdd([6, 4, 5])}")
+
+    // Optional struct fields default to `none`.
+    var p = Point{x: 4}
+    let py = take(&p.y)
+    p.y = 42
+    println("point ${py ?? 0} ${if1(py)} ${p.x}")
+    let taken = take(&p.y)
+    println("${taken ?? 0} ${if1(p.y)}")
+
+    // Collections of optionals and optional collections.
+    var opts: Vec[?String] = [some("x".toString()), none]
+    opts.push("z".toString())
+    let copy = opts.clone()
+    if let first = copy[0] {
+        println("[${first}] ${copy.len() - 1} ${count(opts)}")
+    }
+    var maybe: ?Vec[String] = ["a".toString(), "b".toString()]
+    if let list = maybe {
+        println("${list[0]}${list[1]}")
+    }
+    let got = take(&maybe) ?? []
+    println("vec ${got.len()}")
+    let nested: ??int = some(some(8))
+    if let inner = nested {
+        println("nested ${inner ?? 0}")
+    }
+    let dash = "-"
+    let two = "alpha beta"
+    let one = "alpha"
+    println("word ${second(two) ?? dash} ${second(one) ?? dash}")
+    println("some ${a.isSome()} ${a.isNone()}")
+    // A binding into a place borrows it until its last use; then the place can change.
+    var flag: ?int = 5
+    if let f0 = flag {
+        print("flag ${f0} ")
+        flag = none
+    }
+    println(if1(flag))
+    drops()
+    println("dropped ok")
+}
+
+fn if1(o: ?int) -> str of static {
+    if let _n = o {
+        return "some"
+    }
+    return "none"
+}
+
+fn count(v: Vec[?String]) -> int {
+    var n = 0
+    for o in v {
+        if let _s = o {
+            n += 1
+        }
+    }
+    return n
+}
+
+fn drops() {
+    // Every owned payload is dropped exactly once on every path.
+    var keepers: Vec[String] = ["p".toString(), "q".toString()]
+    let _ = keepers.pop()
+    match keepers.pop() {
+        some(_) => {}
+        none => {}
+    }
+    let unused: ?String = "u".toString()
+    let _moved = unused
+    var o: ?String = none
+    o = "first".toString()
+    o = "second".toString()
+    let _w = o ?? "w".toString()
+}

@@ -306,9 +306,22 @@ impl Parser<'_, '_> {
             let inner = self.ty()?;
             return Ok(TypeExpr { name: "&".into(), span: amp.to(inner.span), args: vec![inner] });
         }
-        if matches!(self.peek(), Tok::Question | Tok::LBracket | Tok::LParen) {
+        if matches!(self.peek(), Tok::Question) {
+            let q = self.bump().span;
+            let inner = self.ty()?;
+            return Ok(TypeExpr { name: "?".into(), span: q.to(inner.span), args: vec![inner] });
+        }
+        // `??T` is lexed as the `??` operator.
+        if matches!(self.peek(), Tok::Coalesce) {
+            let q = self.bump().span;
+            let inner = self.ty()?;
+            let inner_span = Span { start: q.start + 1, col: q.col + 1, ..q }.to(inner.span);
+            let opt = TypeExpr { name: "?".into(), span: inner_span, args: vec![inner] };
+            return Ok(TypeExpr { name: "?".into(), span: q.to(opt.span), args: vec![opt] });
+        }
+        if matches!(self.peek(), Tok::LBracket | Tok::LParen) {
             let sp = self.span();
-            self.unsupported(sp, "optional, slice and tuple types are not supported in P0")?;
+            self.unsupported(sp, "slice and tuple types are not supported yet")?;
         }
         let (name, span) = self.ident("a type")?;
         let mut args = Vec::new();
@@ -397,8 +410,14 @@ impl Parser<'_, '_> {
         if self.is_kw("while") {
             self.bump();
             if self.is_kw("let") {
-                let sp = self.span();
-                self.unsupported(sp, "`while let` is not supported in P0")?;
+                // `while let x = e { body }` is `loop { if let x = e { body } else { break } }`.
+                let (name, name_span, value) = self.let_head()?;
+                let then = self.block()?;
+                let close = then.close;
+                let brk = Stmt { kind: StmtKind::Break, span: start };
+                let els = Some(Else::Block(Block { stmts: vec![brk], close }));
+                let if_let = Stmt { kind: StmtKind::IfLet { name, name_span, value, then, els }, span: start };
+                return Ok(Stmt { span: start, kind: StmtKind::Loop { body: Block { stmts: vec![if_let], close } } });
             }
             let cond = self.expr()?;
             let body = self.block()?;
@@ -450,7 +469,10 @@ impl Parser<'_, '_> {
             self.bump();
             return Ok(Stmt { span: start, kind: StmtKind::Continue });
         }
-        for kw in ["match", "scope", "defer", "unsafe", "with"] {
+        if self.is_kw("match") {
+            return self.match_stmt();
+        }
+        for kw in ["scope", "defer", "unsafe", "with"] {
             if self.is_kw(kw) {
                 self.unsupported(start, format!("`{kw}` is not supported in P0"))?;
             }
@@ -480,11 +502,11 @@ impl Parser<'_, '_> {
 
     fn if_stmt(&mut self) -> PResult<Stmt> {
         let start = self.bump().span;
-        if self.is_kw("let") {
-            let sp = self.span();
-            self.unsupported(sp, "`if let` is not supported in P0")?;
-        }
-        let cond = self.expr()?;
+        let head = if self.is_kw("let") { Some(self.let_head()?) } else { None };
+        let cond = match head {
+            Some(_) => None,
+            None => Some(self.expr()?),
+        };
         let then = self.block()?;
         if matches!(self.peek(), Tok::Newline) && matches!(self.peek_at(1), Tok::Ident(s) if s == "else") {
             self.bump();
@@ -500,7 +522,115 @@ impl Parser<'_, '_> {
         } else {
             None
         };
-        Ok(Stmt { span: start, kind: StmtKind::If { cond, then, els } })
+        let kind = match (head, cond) {
+            (Some((name, name_span, value)), _) => StmtKind::IfLet { name, name_span, value, then, els },
+            (None, Some(cond)) => StmtKind::If { cond, then, els },
+            (None, None) => unreachable!(),
+        };
+        Ok(Stmt { span: start, kind })
+    }
+
+    /// `let name = value` after `if` or `while`.
+    fn let_head(&mut self) -> PResult<(String, Span, Expr)> {
+        self.bump();
+        if matches!(self.peek(), Tok::LParen) {
+            let sp = self.span();
+            self.unsupported(sp, "tuple destructuring is not supported yet")?;
+        }
+        let (name, name_span) = self.ident("a variable name")?;
+        if matches!(self.peek(), Tok::LParen) {
+            let sp = self.span();
+            self.unsupported(sp, "patterns after `if let` are not supported; write `if let x = value`")?;
+        }
+        self.expect(Tok::Assign, "`=` followed by an optional value")?;
+        let value = self.expr()?;
+        Ok((name, name_span, value))
+    }
+
+    /// `match value { pattern => body ... }`, one arm per line (commas are also accepted).
+    fn match_stmt(&mut self) -> PResult<Stmt> {
+        let start = self.bump().span;
+        let value = self.expr()?;
+        let open = self.pos;
+        self.expect(Tok::LBrace, "`{` to start the match arms")?;
+        let arms = self.match_arms(start);
+        if arms.is_err() {
+            // Resume after the `}` that closes the match, so that an unsupported pattern does
+            // not turn the rest of the arms into syntax errors.
+            let mut depth = 0i32;
+            let mut i = open;
+            while i < self.toks.len() && !matches!(self.toks[i].tok, Tok::Eof) {
+                match self.toks[i].tok {
+                    Tok::LBrace => depth += 1,
+                    Tok::RBrace => {
+                        depth -= 1;
+                        if depth == 0 {
+                            i += 1;
+                            break;
+                        }
+                    }
+                    _ => {}
+                }
+                i += 1;
+            }
+            self.pos = i.min(self.toks.len() - 1);
+        }
+        Ok(Stmt { span: start, kind: StmtKind::Match { value, arms: arms? } })
+    }
+
+    fn match_arms(&mut self, start: Span) -> PResult<Vec<Arm>> {
+        let mut arms = Vec::new();
+        loop {
+            while matches!(self.peek(), Tok::Newline | Tok::Comma) {
+                self.bump();
+            }
+            if matches!(self.peek(), Tok::RBrace) {
+                break;
+            }
+            if matches!(self.peek(), Tok::Eof) {
+                self.diags.error("E0020", start, "this `match` is never closed");
+                return Err(());
+            }
+            let pstart = self.span();
+            let pat = match self.peek().clone() {
+                Tok::Ident(s) if s == "some" && matches!(self.peek_at(1), Tok::LParen) => {
+                    self.bump();
+                    self.bump();
+                    let (name, name_span) = self.ident("a binding name")?;
+                    self.expect(Tok::RParen, "`)` to close `some(...)`")?;
+                    Pattern::Some { name, name_span }
+                }
+                Tok::Ident(s) if s == "none" => {
+                    self.bump();
+                    Pattern::None
+                }
+                Tok::Ident(s) if s == "_" => {
+                    self.bump();
+                    Pattern::Wild
+                }
+                _ => {
+                    self.unsupported(pstart, "this kind of pattern is not supported yet (only `some(x)`, `none` and `_`)")?;
+                    unreachable!()
+                }
+            };
+            let pspan = pstart.to(self.toks[self.pos.saturating_sub(1)].span);
+            self.expect(Tok::FatArrow, "`=>` after the pattern")?;
+            let body = if matches!(self.peek(), Tok::LBrace) {
+                self.block()?
+            } else {
+                let s = self.stmt()?;
+                let close = s.span;
+                Block { stmts: vec![s], close }
+            };
+            arms.push(Arm { pat, span: pspan, body });
+            if !matches!(self.peek(), Tok::Newline | Tok::Comma | Tok::RBrace) {
+                let found = describe(self.peek());
+                self.err_here(format!("expected a newline or `,` after the match arm, found {found}"));
+                return Err(());
+            }
+        }
+        self.bump();
+        Ok(arms)
     }
 
     fn expr(&mut self) -> PResult<Expr> {
@@ -532,8 +662,8 @@ impl Parser<'_, '_> {
         }
     }
 
-    /// Precedence, lowest first: `||`, `&&`, comparisons (non-associative), `|`, `^`,
-    /// `&`, shifts, additive (incl. wrapping), multiplicative (incl. wrapping).
+    /// Precedence, lowest first: `||`, `&&`, comparisons (non-associative), `??` (right
+    /// associative), `|`, `^`, `&`, shifts, additive (incl. wrapping), multiplicative (incl. wrapping).
     fn binop_at(&self, level: u8) -> Option<BinOp> {
         let (l, op) = match self.peek() {
             Tok::OrOr => (1, BinOp::Or),
@@ -544,27 +674,30 @@ impl Parser<'_, '_> {
             Tok::Le => (3, BinOp::Le),
             Tok::Gt => (3, BinOp::Gt),
             Tok::Ge => (3, BinOp::Ge),
-            Tok::Pipe => (4, BinOp::BitOr),
-            Tok::Caret => (5, BinOp::BitXor),
-            Tok::Amp => (6, BinOp::BitAnd),
-            Tok::Shl => (7, BinOp::Shl),
-            Tok::Shr => (7, BinOp::Shr),
-            Tok::Plus => (8, BinOp::Add),
-            Tok::Minus => (8, BinOp::Sub),
-            Tok::PlusWrap => (8, BinOp::AddWrap),
-            Tok::MinusWrap => (8, BinOp::SubWrap),
-            Tok::Star => (9, BinOp::Mul),
-            Tok::Slash => (9, BinOp::Div),
-            Tok::Percent => (9, BinOp::Rem),
-            Tok::StarWrap => (9, BinOp::MulWrap),
+            Tok::Pipe => (5, BinOp::BitOr),
+            Tok::Caret => (6, BinOp::BitXor),
+            Tok::Amp => (7, BinOp::BitAnd),
+            Tok::Shl => (8, BinOp::Shl),
+            Tok::Shr => (8, BinOp::Shr),
+            Tok::Plus => (9, BinOp::Add),
+            Tok::Minus => (9, BinOp::Sub),
+            Tok::PlusWrap => (9, BinOp::AddWrap),
+            Tok::MinusWrap => (9, BinOp::SubWrap),
+            Tok::Star => (10, BinOp::Mul),
+            Tok::Slash => (10, BinOp::Div),
+            Tok::Percent => (10, BinOp::Rem),
+            Tok::StarWrap => (10, BinOp::MulWrap),
             _ => return None,
         };
         (l == level).then_some(op)
     }
 
     fn binary(&mut self, level: u8) -> PResult<Expr> {
-        if level > 9 {
+        if level > 10 {
             return self.unary();
+        }
+        if level == 4 {
+            return self.coalesce();
         }
         let mut lhs = self.binary(level + 1)?;
         while let Some(op) = self.binop_at(level) {
@@ -578,6 +711,33 @@ impl Parser<'_, '_> {
             }
         }
         Ok(lhs)
+    }
+
+    /// `a ?? b`, right associative. The right side may also be `return [value]`, `break` or
+    /// `continue`.
+    fn coalesce(&mut self) -> PResult<Expr> {
+        let lhs = self.binary(5)?;
+        if !matches!(self.peek(), Tok::Coalesce) {
+            return Ok(lhs);
+        }
+        let op_span = self.bump().span;
+        let rhs = if self.is_kw("return") {
+            let sp = self.bump().span;
+            if matches!(self.peek(), Tok::Newline | Tok::RBrace | Tok::RParen | Tok::Comma | Tok::Eof) {
+                Expr { span: sp, kind: ExprKind::Return(None) }
+            } else {
+                let v = self.expr()?;
+                Expr { span: sp.to(v.span), kind: ExprKind::Return(Some(Box::new(v))) }
+            }
+        } else if self.is_kw("break") {
+            Expr { span: self.bump().span, kind: ExprKind::Break }
+        } else if self.is_kw("continue") {
+            Expr { span: self.bump().span, kind: ExprKind::Continue }
+        } else {
+            self.coalesce()?
+        };
+        let span = lhs.span.to(rhs.span);
+        Ok(Expr { span, kind: ExprKind::Coalesce { op_span, lhs: Box::new(lhs), rhs: Box::new(rhs) } })
     }
 
     fn unary(&mut self) -> PResult<Expr> {
@@ -714,7 +874,11 @@ impl Parser<'_, '_> {
                 Ok(Expr { span, kind: ExprKind::Bool(s == "true") })
             }
             Tok::Ident(s) if KEYWORDS.contains(&s.as_str()) => {
-                if matches!(s.as_str(), "none" | "err" | "try" | "match" | "self") {
+                if s == "none" {
+                    self.bump();
+                    return Ok(Expr { span, kind: ExprKind::None });
+                }
+                if matches!(s.as_str(), "err" | "try" | "match" | "self") {
                     self.unsupported(span, format!("`{s}` is not supported in P0"))?;
                 }
                 self.err_here(format!("expected an expression, found `{s}`"));

@@ -10,6 +10,9 @@ thread_local! {
     static VECS: RefCell<Vec<Ty>> = const { RefCell::new(Vec::new()) };
     /// Referent type and C pointer type of each `&T`, indexed by ref id.
     static REFS: RefCell<Vec<(Ty, &'static str)>> = const { RefCell::new(Vec::new()) };
+    /// Payload type and C struct name of each `?T`, indexed by opt id. A payload is always
+    /// registered before the optionals that contain it.
+    static OPTS: RefCell<Vec<(Ty, &'static str)>> = const { RefCell::new(Vec::new()) };
 }
 
 /// Registers a struct name and returns its id.
@@ -60,6 +63,30 @@ pub fn ref_of(inner: Ty) -> u32 {
 
 pub fn ref_inner(id: u32) -> Ty {
     REFS.with(|r| r.borrow()[id as usize].0)
+}
+
+/// Interns `?inner` and returns its id.
+pub fn opt_of(inner: Ty) -> u32 {
+    // Computed before borrowing the table: the key of a nested `??T` reads the same table.
+    let key = inner.key();
+    OPTS.with(|o| {
+        let mut o = o.borrow_mut();
+        if let Some(i) = o.iter().position(|(t, _)| *t == inner) {
+            return i as u32;
+        }
+        let c: &'static str = Box::leak(format!("yv_opt_{key}").into_boxed_str());
+        o.push((inner, c));
+        (o.len() - 1) as u32
+    })
+}
+
+pub fn opt_inner(id: u32) -> Ty {
+    OPTS.with(|o| o.borrow()[id as usize].0)
+}
+
+/// Every `?T` type created so far, in dependency order (payloads first).
+pub fn all_opts() -> Vec<(u32, Ty)> {
+    OPTS.with(|o| o.borrow().iter().enumerate().map(|(i, (t, _))| (i as u32, *t)).collect())
 }
 
 /// Every `Vec` type created so far, in dependency order.
@@ -172,6 +199,9 @@ pub enum Ty {
     Vec(u32),
     /// `&T`: a read-only reference, by ref id (see `ref_of`). Copyable; it carries a borrow.
     Ref(u32),
+    /// `?T`: a value that may be absent, by opt id (see `opt_of`). In C a `{ bool has; T val; }`
+    /// struct; all-zero is `none`, so a moved-out optional is `none`.
+    Opt(u32),
     Unit,
     /// A user-defined struct, by id (see `register_struct`).
     Struct(u32),
@@ -182,7 +212,11 @@ pub enum Ty {
 impl Ty {
     /// Copyable values are duplicated by assignment; the others (`String`, `Vec`) are moved.
     pub fn is_copy(self) -> bool {
-        !matches!(self, Ty::String | Ty::Vec(_))
+        match self {
+            Ty::String | Ty::Vec(_) => false,
+            Ty::Opt(id) => opt_inner(id).is_copy(),
+            _ => true,
+        }
     }
 
     /// Whether a value of this type points into data it does not own (`str`, `Vec[str]`, ...).
@@ -190,8 +224,14 @@ impl Ty {
         match self {
             Ty::Str | Ty::Ref(_) => true,
             Ty::Vec(id) => vec_elem(id).carries_borrow(),
+            Ty::Opt(id) => opt_inner(id).carries_borrow(),
             _ => false,
         }
+    }
+
+    /// `take(&x)` leaves this value behind (stdlib contract §1). In C it is all-zero bytes.
+    pub fn has_default(self) -> bool {
+        matches!(self, Ty::Int(_) | Ty::Bool | Ty::String | Ty::Vec(_) | Ty::Opt(_))
     }
 
     /// A name usable inside C identifiers, e.g. `Vec_Vec_String` for `Vec[Vec[String]]`.
@@ -203,6 +243,7 @@ impl Ty {
             Ty::String => "String".into(),
             Ty::Vec(id) => format!("Vec_{}", vec_elem(id).key()),
             Ty::Ref(id) => format!("Ref_{}", ref_inner(id).key()),
+            Ty::Opt(id) => format!("Opt_{}", opt_inner(id).key()),
             Ty::Struct(id) => format!("S_{}", struct_names(id).0),
             Ty::Unit | Ty::Error => "void".into(),
         }
@@ -216,6 +257,7 @@ impl Ty {
             Ty::String => "yv_string",
             Ty::Vec(_) => "yv_vec",
             Ty::Ref(id) => REFS.with(|r| r.borrow()[id as usize].1),
+            Ty::Opt(id) => OPTS.with(|o| o.borrow()[id as usize].1),
             Ty::Unit => "void",
             Ty::Struct(id) => struct_names(id).1,
             Ty::Error => "void",
@@ -232,6 +274,7 @@ impl fmt::Display for Ty {
             Ty::String => f.write_str("String"),
             Ty::Vec(id) => write!(f, "Vec[{}]", vec_elem(*id)),
             Ty::Ref(id) => write!(f, "&{}", ref_inner(*id)),
+            Ty::Opt(id) => write!(f, "?{}", opt_inner(*id)),
             Ty::Unit => f.write_str("()"),
             Ty::Struct(id) => f.write_str(struct_names(*id).0),
             Ty::Error => f.write_str("{error}"),

@@ -46,6 +46,8 @@ pub enum Tok {
     Arrow,
     FatArrow,
     Question,
+    /// `??`
+    Coalesce,
     Newline,
     Eof,
 }
@@ -118,6 +120,7 @@ fn punct_text(tok: &Tok) -> &'static str {
         Tok::Arrow => "->",
         Tok::FatArrow => "=>",
         Tok::Question => "?",
+        Tok::Coalesce => "??",
         _ => "?",
     }
 }
@@ -520,6 +523,7 @@ impl Lexer<'_, '_> {
             (':', _) => (Tok::Colon, false),
             ('.', Some('.')) => (Tok::DotDot, true),
             ('.', _) => (Tok::Dot, false),
+            ('?', Some('?')) => (Tok::Coalesce, true),
             ('?', _) => (Tok::Question, false),
             _ => {
                 let span = self.span_from(start, line, col);

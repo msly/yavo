@@ -1,13 +1,15 @@
-// expect-error: U0001 10:14
-// expect-error: U0001 13:5
-// expect-error: U0001 16:13
-// expect-error: U0001 19:8
-// expect-error: U0001 23:10
-// expect-error: U0001 27:13
-// expect-error: U0001 30:21
-// expect-error: U0001 33:13
+// expect-error: U0001 12:14
+// expect-error: U0001 15:5
+// expect-error: U0001 18:13
+// expect-error: U0001 21:8
+// expect-error: U0001 25:10
+// expect-error: U0001 29:13
+// expect-error: U0001 32:21
+// expect-error: U0001 35:13
+// expect-error: U0001 39:9
+// expect-error: U0001 45:13
 // Valid v0.5 syntax that P0 does not implement must be reported as U0001, never as a syntax error (E0020).
-fn change(x: ?int) {
+fn change(x: [int]) {
 }
 fn deref(p: int) {
     *p = 2
@@ -15,8 +17,8 @@ fn deref(p: int) {
 fn closure() {
     let f = (a, b) => a + b
 }
-fn optional() {
-    if let x = y {
+fn tried() {
+    if try y() {
     }
 }
 fn pairs() {
@@ -31,6 +33,16 @@ fn handled() {
 }
 fn tuple() {
     let t = (1, 2)
+}
+fn results(r: int) {
+    match r {
+        ok(v) => println(v)
+        err(e) => {
+            println(e)
+        }
+    }
+    let after = r
+    let t = (after, 2)
 }
 fn main() {
 }

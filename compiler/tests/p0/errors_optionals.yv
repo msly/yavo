@@ -1,0 +1,112 @@
+// expect-error: E0401 29:17
+// expect-error: E0602 33:5
+// expect-error: E0602 38:5
+// expect-error: E0405 44:19
+// expect-error: E0405 46:19
+// expect-error: E0102 50:28
+// expect-error: E0102 52:14
+// expect-error: E0014 56:20
+// expect-error: E0101 58:9
+// expect-error: E0001 62:14
+// expect-error: E0001 64:14
+// expect-error: E0102 69:9
+// expect-error: E0402 76:17
+// expect-error: E0015 80:19
+// expect-warning: W0002 87:9
+// expect-error: U0001 91:18
+// expect-error: E0306 94:30
+// expect-error: E0102 102:9
+// expect-error: E0102 107:9
+// Optional values: `if let`, `match`, `??`, `take`, `replace`, `swap` and `pop`.
+struct P {
+    x: int
+}
+fn consume(s: sink String) {
+    println(s)
+}
+fn moveOut(opt: ?String) {
+    if let s = opt {
+        consume(s)
+    }
+}
+fn missingNone(o: ?int) {
+    match o {
+        some(n) => println(n)
+    }
+}
+fn missingSome(o: ?int) {
+    match o {
+        none => println("none")
+    }
+}
+fn noDefault() {
+    var p = P{x: 1}
+    let _q = take(&p)
+    var s = "a"
+    let _t = take(&s)
+}
+fn selfReplace() {
+    var v: Vec[int] = [1]
+    let _old = replace(&v, v.clone())
+    var a = 1
+    swap(&a, &a)
+}
+fn readOnly() {
+    let o: ?int = 3
+    let _x = take(&o)
+    if let n = o {
+        n += 1
+    }
+}
+fn untyped() {
+    let _x = none
+    let y = 3
+    let _z = y ?? 4
+}
+fn borrowed() {
+    var job: ?String = "job".toString()
+    if let s = job {
+        job = none
+        println(s)
+    }
+}
+fn consumed() {
+    let opt: ?String = "x".toString()
+    let _a = opt ?? "y".toString()
+    if let _b = opt {
+    }
+}
+fn jumps(o: ?int) -> int {
+    let _n = o ?? break
+    return 0
+}
+fn unreachable(o: ?int) {
+    match o {
+        some(_) => println("some")
+        none => println("none")
+        _ => println("never")
+    }
+}
+fn nested(o: ?int) {
+    println(o ?? return)
+}
+fn intoCaller(out: inout ?str, s: str) {
+    let _old = replace(&out, s)
+}
+struct Q {
+    y: ?int
+}
+fn copyBorrow() {
+    var o: ?int = 1
+    if let n = o {
+        o = none
+        println(n)
+    }
+    var q = Q{y: 2}
+    if let m = q.y {
+        q.y = none
+        println(m)
+    }
+}
+fn main() {
+}

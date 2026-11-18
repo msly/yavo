@@ -33,11 +33,13 @@ It is superseded by `tests/conformance.rs` (below), which makes that distinction
 | `E0xxx` | An error about the program, as listed in `yavo-tests/ERRORS.md` (the front-end codes `E0010`–`E0018` and `E0020` were added there on 2026-11-16). |
 | `U0001` | Valid v0.5 syntax that this compiler does not implement yet. It says nothing about whether the program is correct. |
 | `W0001` | Warning: unused variable. |
+| `W0002` | Warning: a `match` arm that can never run (added to `ERRORS.md` on 2026-11-18). |
 
 Valid v0.5 syntax must never be reported as a syntax error. `tests/p0/errors_unsupported.yv`
-locks this in for `inout` parameter types, `*p`, closures, `if let`, `for k, v in`, `.Case`,
-`catch` and tuple literals, and the conformance test counts any `E0020` on a spec case as
-wrong (slices `x[a..b]`, tuple fields `t.0` and bounds `T + Send` are reported as `U0001`).
+locks this in for slice types, `*p`, closures, `try`, `for k, v in`, `.Case`, `catch`, tuple
+literals and `match` patterns other than `some(x)`/`none`/`_` (the parser resumes after the
+`match`), and the conformance test counts any `E0020` on a spec case as wrong (slices
+`x[a..b]`, tuple fields `t.0` and bounds `T + Send` are reported as `U0001`).
 
 ## Structs (first P1 feature)
 
@@ -55,6 +57,8 @@ duplicate fields are `E0010`/`E0011`; structs cannot be compared (`E0501`) or pr
 Not yet: `String`/`Vec`/`Map` fields (and with them moves and `Drop`), methods, generic
 structs, `struct X: Interface`, field defaults. A struct literal must be written as an
 uppercase name immediately followed by `{` (no space), which keeps it apart from `if c {`.
+Fields of a copyable optional type (`?int`, `?Point`) are supported and default to `none` when
+the literal leaves them out; `?String` fields wait for owned fields.
 
 Effect on the spec cases: none changed status. Every case that uses `struct` is also blocked
 by generic types, imports or `String`; those are the next features to implement.
@@ -138,8 +142,56 @@ an `inout` argument must be a `var` written as `&x` (`E0014`, `E0001`); storing 
 moving out of a reference is `E0401`; iterating views of a temporary is `E0305`. A `&T` into
 `v` is a borrow of `v`, so `v.push` while it is still used is `E0102`.
 
-Not yet: `for x in &v` (mutable iteration), `&inout T` values, `getMut`, `take`/`replace`.
+Not yet: `for x in &v` (mutable iteration), `&inout T` values, `getMut`.
 Tests: `tests/p0/run_refs.yv`, `tests/p0/errors_refs.yv` (9 diagnostics).
+
+## Optional values
+
+Supported (semantic table C5, C7, V9; stdlib contract §1):
+
+- `?T` for any supported `T`, including `??T`, `?Vec[String]`, `Vec[?String]` and `?str`
+  (which carries a borrow and needs `of` when returned); `none`; `some(x)`; a `T` used where a
+  `?T` is expected is wrapped automatically (`let a: ?int = 7`, `return i`, `describe(9)`).
+- `if let x = opt { } else { }`, `while let x = opt { }` (lowered to
+  `loop { if let ... else { break } }`), and `match` statements on optionals with `some(x)`,
+  `some(_)`, `none` and `_` arms; an arm body is a block or a single statement.
+- `a ?? b`: `b` is evaluated only when `a` is `none`. The right side may be `return [value]`,
+  `break` or `continue` when the `??` is a whole `let` initializer or assigned value.
+- `take(&p)`, `replace(&p, v)`, `swap(&a, &b)` on variables and their fields; `v.pop()`;
+  `opt.isSome()`, `opt.isNone()`. A program's own function named `take` (etc.) wins over the
+  prelude one.
+
+Ownership: matching an existing place (a variable, its fields, an element read through `&`)
+borrows it. A non-copyable payload is bound as `&T` (so moving it is `E0401`, as in T-G06); a
+copyable payload is copied but still counts as a borrow of the place, so changing the place
+while the binding is used later is `E0102`. Matching an owned temporary (`v.pop()`,
+`take(&opt)`, a call) gives its payload to the binding. `a ?? b` consumes `a` as a whole, like
+an assignment would (moving out of a parameter is `E0401`). `some(_)` on a temporary drops
+the payload before the arm runs.
+
+Rules checked: a `match` missing `none` or `some` (and without `_`) is `E0602`; an arm after
+its case is covered is warning `W0002` (its body is still checked); `take` of a type without a
+default (structs, `str`) is `E0405`; `replace(&v, v.clone())` is `E0102` (the place is borrowed
+by the first argument); overlapping `swap` places are `E0102`; `take`/`replace`/`swap` need a
+writable place (`E0014`); writing through a binding into a read-only place is `E0101`; an
+untyped `none` and `??` on a non-optional are `E0001`; storing a borrow into an `inout`
+optional through `replace` is `E0306` (T-G24); `?? break` outside a loop is `E0015`.
+Assigning to a struct field now also checks for live borrows of the variable.
+
+Not yet (`U0001`): writing through a binding into a writable place (valid v0.5, e.g. T-A3's
+`n.size += 1`), `match` as an expression and on results or enums, `?? return` nested inside
+another expression, printing or comparing optionals, `?String` struct fields.
+
+Code generation: `?T` is `struct { bool has; T val; }`; all-zero is `none`, so moved-from and
+`take`n optionals need no flag. Owned optionals get drop and clone helpers, declared before
+any is defined because `Vec[?String]` and `?Vec[String]` call each other's. `if let` on a
+temporary holds it in a C variable, moves the payload into the binding and never drops the
+holder (it is `none` on the other branch). `??` evaluates its right side in a nested C block,
+whose temporaries are dropped there; a jump on the right drops the statement's temporaries and
+the scopes it leaves, while the normal path still drops them at the end of the statement.
+Tests: `tests/p0/run_optionals.yv` (28 lines of output, also run under the heap-block check;
+once also built with UBSan, which was clean) and `tests/p0/errors_optionals.yv`
+(18 errors, 1 warning).
 
 ## Spec conformance
 
@@ -157,9 +209,10 @@ runs all 129 cases in `yavo-tests/MANIFEST.json`, after checking each fixture ag
 | unsupported | the compiler reported `U0001` |
 | not_run | needs `yavo fix`, `yavo verify`, fixtures, sanitizers or other platforms |
 
-At this commit: pass 29, wrong 0, unsupported 87, not_run 13 (P1: 21 / 0 / 55 / 7;
-P2: 8 / 0 / 11 / 2; P3: 0 / 0 / 21 / 4). The per-case report is written to
-`target/tmp/conformance-report.json`.
+At this commit: pass 34, wrong 0, unsupported 82, not_run 13 (P1: 26 / 0 / 50 / 7;
+P2: 8 / 0 / 11 / 2; P3: 0 / 0 / 21 / 4). Optional values added T-C5, T-G05, T-G06, T-G07 and
+T-G24; T-C6/T-C6p now wait for `?String` struct fields and T-A3/T-A3f for `Box`. The per-case
+report is written to `target/tmp/conformance-report.json`.
 
 The test is a ratchet, not a gate: it fails only when a case listed in
 `tests/conformance_baseline.txt` stops passing. After real progress, refresh the baseline with

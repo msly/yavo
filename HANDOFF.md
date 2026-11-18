@@ -4,9 +4,10 @@
 
 ## 1. 一句话状态
 
-规范 v0.5 已冻结（`docs/`、`yavo-tests/`）；Rust 写的编译器（约 5,800 行，含 C 运行时）已实现 P0 和 P1 的一部分：
-结构体、`String`/`Vec[T]`、移动与析构、字符串视图与 `of` 来源、`&T` 引用、`for x in v`、`inout` 参数、六个目标的交叉编译。
-规范一致性：**129 项中通过 29、判错 0、不支持 87、未运行 13**。全部提交只在本地，**按用户决定暂不推远端**。
+规范 v0.5 已冻结（`docs/`、`yavo-tests/`）；Rust 写的编译器（约 7,000 行，含 C 运行时）已实现 P0 和 P1 的一部分：
+结构体、`String`/`Vec[T]`、移动与析构、字符串视图与 `of` 来源、`&T` 引用、`for x in v`、`inout` 参数、
+可选值 `?T`（`if let`/`while let`/`match`/`??`/`take`/`replace`/`swap`/`pop`）、六个目标的交叉编译。
+规范一致性：**129 项中通过 34、判错 0、不支持 82、未运行 13**。全部提交只在本地，**按用户决定暂不推远端**。
 
 ## 2. 仓库与环境
 
@@ -49,6 +50,7 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 
 | 提交 | 内容 | 一致性通过数 |
 | --- | --- | --- |
+| `feat(p1): optional values` | 可选值：`?T`、`some`/`none`、`if let`、`while let`、`match`、`??`、`take`/`replace`/`swap`、`pop`；`tools/expect_header.sh` | 34 |
 | `c0f0ad7` | `&T`、`for x in v`、`inout` 参数、`v[i]` 取不可复制元素 | 29 |
 | `8313043` | 字符串视图（`trim`/`fields`/`lines`）、`of` 来源、按最后一次使用的借用检查 | 24 |
 | `31c2b0a` `5db1b75` | `String`/`Vec[T]`、移动与 `E0402`、析构、`sink` 参数、堆块检查 | 12 |
@@ -71,12 +73,15 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 
 - 错误码：规范错误 `E0xxx`（见 `yavo-tests/ERRORS.md`，前端码 `E0010`–`E0018`、`E0020` 已登记）；**合法但未实现的写法一律报 `U0001`，绝不能报 `E0020`**；警告 `W0001`。
 - `tests/p0/errors_*.yv` 开头是 `// expect-error: CODE 行:列`。头部每多一行，正文行号整体加一；做法是先写无头文件，用 `yavo check` 取位置，再按头部行数加偏移生成头部。
+  现在用 `tools/expect_header.sh compiler/tests/p0/errors_x.yv` 自动完成（去掉旧头部、重跑 `yavo check`、按头部行数加偏移写回）；它记录的是编译器当前的输出，生成后要逐条核对。
+- 解析阶段的 `U0001`（parser 报的）会让整个文件不再进入检查器，所以它们只能和别的解析期 `U0001` 放在一起（`errors_unsupported.yv`），不能和检查器的错误混在一个测试文件里。
 - 一个特性做完：补 `run_*` 和 `errors_*` 两类测试；跑全部测试（debug、release）；跑堆块检查；交叉编译抽查；刷新一致性基线；更新 `compiler/README.md` 对应小节和根 `README.md` 的数字；本地提交。
 - 已解锁的旧写法可能让旧测试失效（例如某行不再报 `U0001`），改测试时保持行列不变，换成仍然成立的用例。
 
 ## 7. 已知限制与保守之处
 
 - 借用检查按语句粒度和语句顺序：`if` 里修改、只在 `else` 里用视图也会报错；`E0305` 不看存储目标之后是否还被使用。只会多报，不会漏报。
+- 可选值：对已有位置的 `if let`/`match` 绑定一律只读；规范允许通过可写位置的绑定写入（如 T-A3 的 `n.size += 1`），这里报 `U0001`。可复制的载荷虽然按值复制，仍算作借用原位置（保守）。`a ?? b` 把 `a` 整体消费（移动）。`?? return/break/continue` 只允许作为整个 `let` 初值或赋值右侧。`match` 只做语句、只支持可选值模式。
 - 堆块检查发现不了释放后使用。机器上没有 ASan。
 - Windows、macOS、aarch64 的产物只验证了文件格式，没有实际运行（没有真机和 CI）。
 - 共享的 Claude 文档仍是 v0.4；以仓库 `docs/` 为准。
@@ -88,15 +93,17 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 | 卡点 | 测试数 |
 | --- | --- |
 | `use` 导入 | 14 |
-| `?T` 可选类型（以及切片、元组类型） | 14 |
 | `Map` 字面量 `[:]` | 11 |
 | `struct X: Interface` | 7 |
+| 切片、元组类型 | 7 |
 | `enum` | 5 |
 | 解引用 `*p` | 5 |
+| `Box` | 5 |
 | 浮点数 | 4 |
 | 切片 `x[a..b]` | 4 |
 | `interface` 声明 | 3 |
-| `Box` | 3 |
+
+另外 T-C6/T-C6p 卡在 `?String` 结构体字段（计划表第 7 项），T-A3/T-A3f 卡在 `Box`。
 
 未运行 13 项：`yavo fix` 7 项、`yavo verify` 报告 4 项、需要夹具或特定平台 2 项。
 
@@ -104,7 +111,7 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 
 | 序号 | 任务 | 依赖 | 预计解锁 | 规范位置 |
 | --- | --- | --- | --- | --- |
-| 1 | `?T`、`some`/`none`、`if let`、`match`（先支持可选值）、`??`、`take`/`replace`/`swap` | 无 | C5、C6，并为 `Map` 铺路 | 语义表 C5、V9；速查卡第 3 节 |
+| ~~1~~ | ~~`?T`、`some`/`none`、`if let`、`match`（先支持可选值）、`??`、`take`/`replace`/`swap`~~ **已完成**（新增通过 T-C5、T-G05、T-G06、T-G07、T-G24） | 无 | C5、C6，并为 `Map` 铺路 | 语义表 C5、V9；速查卡第 3 节 |
 | 2 | `Map[K, V]`、`[:]`、`get`/`getMut`/`getCopy`/`set`/`remove`/`update`、`str` 键查询、`for k, v in m` | 1 | A1、A4、A5、C7、C8 等 | C6、A2、A5；`docs/stdlib_contract.md` |
 | 3 | `use std/...` 导入（先把标准库模块名映射到内建函数） | 无 | 14 项的第一卡点 | 速查卡第 5 节 |
 | 4 | `enum` 与 `match`；`T ! E`、`try`、`catch`、`ok`/`err` | 1 | V4、N 类、错误处理用例 | 速查卡第 3 节，语义表 V8 |
@@ -123,5 +130,5 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 ## 10. 下一个会话的第一步
 
 1. 设置第 2 节的环境变量，`cargo build --locked --offline --release`。
-2. 跑 `cargo test --locked --offline`，确认全部通过；跑 conformance，确认是 29 / 0 / 87 / 13。
-3. 读 `docs/semantics.md` 的 C5、V9 和 `docs/cheatsheet.md` 第 3 节，开始计划表第 1 项。
+2. 跑 `cargo test --locked --offline`，确认全部通过；跑 conformance，确认是 34 / 0 / 82 / 13。
+3. 读 `docs/stdlib_contract.md` 的 Map 部分和语义表 A1–A5、C6，开始计划表第 2 项（`Map`）。第 3 项（`use` 导入）不依赖别的项、是最大的第一卡点，也可以先做。

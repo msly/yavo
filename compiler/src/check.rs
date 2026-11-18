@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 use crate::ast::*;
 use crate::diag::{Diags, Span};
-use crate::types::{ref_inner, ref_of, register_struct, vec_elem, vec_of, IntTy, Ty};
+use crate::types::{opt_inner, opt_of, ref_inner, ref_of, register_struct, vec_elem, vec_of, IntTy, Ty};
 
 pub type LocalId = usize;
 
@@ -58,6 +58,9 @@ pub enum HStmtKind {
     For { local: LocalId, start: HExpr, end: HExpr, body: Vec<HStmt> },
     /// `for elem in vec`: `elem` holds a copy (copyable elements) or a pointer (`by_ref`).
     ForEach { vec: LocalId, elem: LocalId, by_ref: bool, body: Vec<HStmt> },
+    /// `if let local = scrut` (and `match` on an optional): `then` runs with `local` bound to
+    /// the value inside `scrut`, `els` runs when it is `none`.
+    IfLet { scrut: HExpr, mode: BindMode, local: LocalId, then: Vec<HStmt>, els: Vec<HStmt> },
     Break,
     Continue,
     Return(Option<HExpr>),
@@ -68,6 +71,26 @@ pub enum HStmtKind {
 pub enum PrintPart {
     Text(String),
     Value(HExpr),
+}
+
+/// How an `if let`/`match` binding gets the value inside an optional (semantic table C5, C7).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum BindMode {
+    /// The optional is an existing place and its payload is copyable: the binding is a copy.
+    Copy,
+    /// The optional is an existing place and its payload is not copyable: the binding is a
+    /// `&T` into the place.
+    Ref,
+    /// The optional is an owned temporary: the binding takes its payload.
+    Owned,
+}
+
+/// A writable place: a variable or a chain of struct fields rooted at one.
+pub struct HPlace {
+    pub local: LocalId,
+    /// Field indexes from the variable to the place; empty for the variable itself.
+    pub path: Vec<usize>,
+    pub ty: Ty,
 }
 
 pub struct HExpr {
@@ -106,6 +129,24 @@ pub enum HExprKind {
     Deref(Box<HExpr>),
     /// `&local` passed to an `inout` parameter.
     InoutArg(LocalId),
+    /// `none`, of the optional type in `ty`.
+    None,
+    /// `some(value)`, written or implied (a `T` used where a `?T` is expected).
+    Some(Box<HExpr>),
+    /// `lhs ?? rhs`; `rhs` runs only when `lhs` is `none`.
+    Coalesce { lhs: Box<HExpr>, rhs: Box<HExpr> },
+    /// `return`, `break`, `continue` on the right side of `??`.
+    Return(Option<Box<HExpr>>),
+    Break,
+    Continue,
+    /// `take(&place)`: the old value; the place is left with its default (all-zero) value.
+    Take(HPlace),
+    /// `replace(&place, value)`: the old value; `value` is stored in the place.
+    Replace(HPlace, Box<HExpr>),
+    /// `swap(&a, &b)`
+    Swap(HPlace, HPlace),
+    /// `local.pop()`: the last element of a vector, or `none`.
+    Pop(LocalId),
     Error,
 }
 
@@ -121,6 +162,8 @@ pub enum Builtin {
     Trim,
     Fields,
     Lines,
+    IsSome,
+    IsNone,
 }
 
 const OUTPUT_FNS: [&str; 3] = ["println", "print", "eprintln"];
@@ -128,8 +171,7 @@ const UNSUPPORTED_TYPES: &[&str] = &[
     "f32", "f64", "Map", "Set", "Box", "Rc", "Arc", "Arena", "Id", "Mutex", "Atomic", "Channel",
 ];
 const UNSUPPORTED_FNS: &[&str] = &[
-    "panic", "assert", "format", "len", "min", "max", "abs", "some", "take", "replace", "swap", "Box", "Rc", "Arc",
-    "Mutex",
+    "panic", "assert", "format", "len", "min", "max", "abs", "Box", "Rc", "Arc", "Mutex",
 ];
 
 struct Sig {
@@ -150,6 +192,12 @@ enum LocalKind {
     Let,
     Var,
     LoopVar,
+    /// An `if let`/`match` binding into an existing place that is read-only.
+    Bind,
+    /// An `if let`/`match` binding into a writable place (writable by the spec, not supported yet).
+    BindMut,
+    /// An `if let`/`match` binding that owns the payload of a temporary.
+    BindOwned,
 }
 
 struct LocalState {
@@ -186,6 +234,9 @@ struct Pre {
     loops: Vec<(usize, usize)>,
     /// Last statement number of the block containing each `let` (keyed by the `let`'s number).
     let_end: HashMap<usize, usize>,
+    /// Last statement number of the block a statement binds a name for: the body of `for x in`,
+    /// the `then` block of `if let` and each `match` arm (keyed by statement number and arm).
+    bind_end: HashMap<(usize, usize), usize>,
 }
 
 struct Occ {
@@ -234,6 +285,23 @@ impl Pre {
                     None => {}
                 }
             }
+            StmtKind::IfLet { value, then, els, .. } => {
+                self.expr(value, idx, stack);
+                self.block(&then.stmts, stack);
+                self.bind_end.insert((idx, 0), self.next);
+                match els {
+                    Some(Else::Block(b)) => self.block(&b.stmts, stack),
+                    Some(Else::If(s2)) => self.stmt(s2, stack),
+                    None => {}
+                }
+            }
+            StmtKind::Match { value, arms } => {
+                self.expr(value, idx, stack);
+                for (i, arm) in arms.iter().enumerate() {
+                    self.block(&arm.body.stmts, stack);
+                    self.bind_end.insert((idx, i), self.next);
+                }
+            }
             StmtKind::While { cond, body } => {
                 let l = self.open_loop(idx, stack);
                 self.expr(cond, idx, stack);
@@ -256,6 +324,7 @@ impl Pre {
                 self.expr(iter, idx, stack);
                 let l = self.open_loop(idx, stack);
                 self.block(&body.stmts, stack);
+                self.bind_end.insert((idx, 0), self.next);
                 self.close_loop(l, stack);
             }
             StmtKind::Block(b) => self.block(&b.stmts, stack),
@@ -279,7 +348,12 @@ impl Pre {
             ExprKind::Ident(n) => {
                 self.occ.push(Occ { idx, line: e.span.line, name: n.clone(), loops: stack.to_vec() })
             }
-            ExprKind::Int(_) | ExprKind::Bool(_) => {}
+            ExprKind::Int(_) | ExprKind::Bool(_) | ExprKind::None | ExprKind::Break | ExprKind::Continue => {}
+            ExprKind::Return(v) => {
+                if let Some(v) = v {
+                    self.expr(v, idx, stack);
+                }
+            }
             ExprKind::Str(segs) => {
                 for s in segs {
                     if let StrSeg::Expr { expr, .. } = s {
@@ -310,7 +384,7 @@ impl Pre {
             }
             ExprKind::Unary { expr, .. } | ExprKind::Paren(expr) => self.expr(expr, idx, stack),
             ExprKind::Borrow(inner) => self.expr(inner, idx, stack),
-            ExprKind::Binary { lhs, rhs, .. } => {
+            ExprKind::Binary { lhs, rhs, .. } | ExprKind::Coalesce { lhs, rhs, .. } => {
                 self.expr(lhs, idx, stack);
                 self.expr(rhs, idx, stack);
             }
@@ -350,6 +424,9 @@ struct FnCx {
     ret_of: Option<Vec<String>>,
     /// Vectors being iterated by enclosing `for` loops; they must not change meanwhile.
     iterating: Vec<LocalId>,
+    /// The expression (by span) that may be `x ?? return/break/continue`: the whole initializer
+    /// of a `let` or right side of an assignment, or the right side of such a `??`.
+    diverge_ok: Option<Span>,
 }
 
 type Moved = Vec<Option<Span>>;
@@ -377,11 +454,42 @@ fn diverges(stmts: &[Stmt]) -> bool {
     terminates(stmts) || stmts.iter().any(|s| matches!(s.kind, StmtKind::Break | StmtKind::Continue))
 }
 
+/// One arm of an `if let` or `match` on an optional.
+struct OptArm<'a> {
+    pat: ArmPat<'a>,
+    body: Body<'a>,
+    span: Span,
+}
+
+enum ArmPat<'a> {
+    Some(&'a str, Span),
+    None,
+    Wild,
+}
+
+enum Body<'a> {
+    Block(&'a Block),
+    /// `else if ...`
+    Stmt(&'a Stmt),
+    /// An `if let` without `else`.
+    Empty,
+}
+
+/// The variable an existing place belongs to: `x`, `x.a.b`, or a place read through a `&`.
+fn place_root(h: &HExpr) -> Option<LocalId> {
+    match &h.kind {
+        HExprKind::Local(id) => Some(*id),
+        HExprKind::Field { base, .. } | HExprKind::Deref(base) => place_root(base),
+        _ => None,
+    }
+}
+
 /// Whether `e` mentions the variable `name` anywhere.
 fn mentions(e: &Expr, name: &str) -> bool {
     match &e.kind {
         ExprKind::Ident(n) => n == name,
-        ExprKind::Int(_) | ExprKind::Bool(_) => false,
+        ExprKind::Int(_) | ExprKind::Bool(_) | ExprKind::None | ExprKind::Break | ExprKind::Continue => false,
+        ExprKind::Return(v) => v.as_ref().is_some_and(|v| mentions(v, name)),
         ExprKind::Str(segs) => segs.iter().any(|s| matches!(s, StrSeg::Expr { expr, .. } if mentions(expr, name))),
         ExprKind::Call { callee, args } => mentions(callee, name) || args.iter().any(|a| mentions(a, name)),
         ExprKind::Field { base, .. } => mentions(base, name),
@@ -389,7 +497,9 @@ fn mentions(e: &Expr, name: &str) -> bool {
         ExprKind::VecLit(items) => items.iter().any(|i| mentions(i, name)),
         ExprKind::Index { base, index } => mentions(base, name) || mentions(index, name),
         ExprKind::Unary { expr, .. } | ExprKind::Paren(expr) | ExprKind::Borrow(expr) => mentions(expr, name),
-        ExprKind::Binary { lhs, rhs, .. } => mentions(lhs, name) || mentions(rhs, name),
+        ExprKind::Binary { lhs, rhs, .. } | ExprKind::Coalesce { lhs, rhs, .. } => {
+            mentions(lhs, name) || mentions(rhs, name)
+        }
     }
 }
 
@@ -490,15 +600,26 @@ fn terminates(stmts: &[Stmt]) -> bool {
 fn stmt_terminates(s: &Stmt) -> bool {
     match &s.kind {
         StmtKind::Return(_) => true,
-        StmtKind::If { then, els: Some(els), .. } => {
+        StmtKind::If { then, els: Some(els), .. } | StmtKind::IfLet { then, els: Some(els), .. } => {
             terminates(&then.stmts)
                 && match els {
                     Else::Block(b) => terminates(&b.stmts),
                     Else::If(s) => stmt_terminates(s),
                 }
         }
+        // A `match` that does not cover every case is an error, so its arms are all that runs.
+        StmtKind::Match { arms, .. } => !arms.is_empty() && arms.iter().all(|a| terminates(&a.body.stmts)),
         StmtKind::Loop { body } => !contains_break(&body.stmts),
         StmtKind::Block(b) => terminates(&b.stmts),
+        _ => false,
+    }
+}
+
+/// Whether `e` is `x ?? break` (possibly as the last link of a `??` chain).
+fn expr_breaks(e: &Expr) -> bool {
+    match &e.kind {
+        ExprKind::Coalesce { rhs, .. } => matches!(rhs.kind, ExprKind::Break) || expr_breaks(rhs),
+        ExprKind::Paren(inner) => expr_breaks(inner),
         _ => false,
     }
 }
@@ -507,7 +628,8 @@ fn stmt_terminates(s: &Stmt) -> bool {
 fn contains_break(stmts: &[Stmt]) -> bool {
     stmts.iter().any(|s| match &s.kind {
         StmtKind::Break => true,
-        StmtKind::If { then, els, .. } => {
+        StmtKind::Let { init: e, .. } | StmtKind::Assign { value: e, .. } | StmtKind::Expr(e) => expr_breaks(e),
+        StmtKind::If { then, els, .. } | StmtKind::IfLet { then, els, .. } => {
             contains_break(&then.stmts)
                 || match els {
                     Some(Else::Block(b)) => contains_break(&b.stmts),
@@ -515,6 +637,7 @@ fn contains_break(stmts: &[Stmt]) -> bool {
                     None => false,
                 }
         }
+        StmtKind::Match { arms, .. } => arms.iter().any(|a| contains_break(&a.body.stmts)),
         StmtKind::Block(b) => contains_break(&b.stmts),
         _ => false,
     })
@@ -592,11 +715,15 @@ impl Checker<'_> {
         }
         state[i] = 1;
         stack.push(i);
-        let deps: Vec<usize> = self.structs[i]
-            .fields
-            .iter()
-            .filter_map(|(_, t, _)| if let Ty::Struct(id) = t { Some(*id as usize) } else { None })
-            .collect();
+        // `?S` holds an `S` by value, so it counts as containment too.
+        fn by_value(t: Ty) -> Option<usize> {
+            match t {
+                Ty::Struct(id) => Some(id as usize),
+                Ty::Opt(o) => by_value(opt_inner(o)),
+                _ => None,
+            }
+        }
+        let deps: Vec<usize> = self.structs[i].fields.iter().filter_map(|(_, t, _)| by_value(*t)).collect();
         for d in deps {
             self.visit_struct(d, state, order, stack);
         }
@@ -643,7 +770,7 @@ impl Checker<'_> {
                     seen[fi] = true;
                     let fty = decl[fi].1;
                     let h = self.expr(&init.value, Some(fty), cx);
-                    self.expect_ty(&h, fty);
+                    let h = self.fit(h, fty, cx);
                     out.push((fi, h));
                 }
                 Some(_) => {
@@ -656,6 +783,13 @@ impl Checker<'_> {
                     self.expr(&init.value, None, cx);
                     ok = false;
                 }
+            }
+        }
+        // An optional field that is not written is `none` (stdlib contract §1).
+        for (fi, (_, fty)) in decl.iter().enumerate() {
+            if !seen[fi] && matches!(fty, Ty::Opt(_)) {
+                seen[fi] = true;
+                out.push((fi, HExpr { kind: HExprKind::None, ty: *fty, span, at: span }));
             }
         }
         let missing: Vec<String> =
@@ -720,6 +854,12 @@ impl Checker<'_> {
                 Some(inner) => Ty::Ref(ref_of(inner)),
             };
         }
+        if t.name == "?" {
+            return match t.args.first().map(|a| self.resolve_ty(a)) {
+                Some(Ty::Error) | None => Ty::Error,
+                Some(inner) => Ty::Opt(opt_of(inner)),
+            };
+        }
         if t.name == "Vec" {
             let [elem] = t.args.as_slice() else {
                 self.diags.error("E0001", t.span, "`Vec` takes exactly one type argument, e.g. `Vec[int]`");
@@ -780,6 +920,7 @@ impl Checker<'_> {
             cur: 0,
             ret_of: f.ret_of.as_ref().map(|v| v.iter().map(|(n, _)| n.clone()).collect()),
             iterating: Vec::new(),
+            diverge_ok: None,
         };
         self.check_ret_of(f, ret);
         let params = f
@@ -904,6 +1045,11 @@ impl Checker<'_> {
         if e.ty == expected || e.ty == Ty::Error || expected == Ty::Error {
             return;
         }
+        if let Ty::Opt(o) = expected {
+            if opt_inner(o) == Ty::Error {
+                return;
+            }
+        }
         if let Ty::Ref(id) = e.ty {
             if ref_inner(id) == expected && !expected.is_copy() {
                 self.diags
@@ -916,6 +1062,30 @@ impl Checker<'_> {
         if let (Ty::Int(_), Ty::Int(_)) = (e.ty, expected) {
             d.note(format!("Yavo has no implicit conversions; convert explicitly with `{expected}(...)`"));
         }
+    }
+
+    /// A `T` used where a `?T` is expected is wrapped as `some(...)` (section 8 whitelist), which
+    /// moves it; a copyable `T` read through a `&T` is copied first.
+    fn coerce(&mut self, h: HExpr, expected: Ty, cx: &mut FnCx) -> HExpr {
+        let Ty::Opt(o) = expected else { return h };
+        let inner = opt_inner(o);
+        let h = match h.ty {
+            Ty::Ref(r) if ref_inner(r) == inner && inner.is_copy() => self.deref(h),
+            _ => h,
+        };
+        if h.ty != inner || inner == Ty::Error {
+            return h;
+        }
+        let (span, at) = (h.span, h.at);
+        let h = self.consume(h, cx);
+        HExpr { kind: HExprKind::Some(Box::new(h)), ty: expected, span, at }
+    }
+
+    /// `coerce`, then report a type mismatch.
+    fn fit(&mut self, h: HExpr, expected: Ty, cx: &mut FnCx) -> HExpr {
+        let h = self.coerce(h, expected, cx);
+        self.expect_ty(&h, expected);
+        h
     }
 
     /// Reads through a `&T` where the value is only read (printing, operators, method
@@ -955,6 +1125,9 @@ impl Checker<'_> {
                     .error("E0014", inner.span, format!("cannot pass `{name}` as `inout`: it was declared with `let`"))
                     .note(format!("declare it with `var {name}` to make it mutable"));
             }
+            LocalKind::Bind | LocalKind::BindMut | LocalKind::BindOwned => {
+                self.binding_write(cx, id, inner.span);
+            }
             _ => {
                 self.diags.error("E0014", inner.span, format!("cannot pass `{name}` as `inout`: parameters and loop variables are read-only"));
             }
@@ -978,6 +1151,19 @@ impl Checker<'_> {
         let out = self.stmts(&b.stmts, cx);
         self.pop_scope(cx);
         out
+    }
+
+    /// Writing through an `if let`/`match` binding. A binding into a read-only place is
+    /// read-only (A2); writable bindings are valid v0.5 but not implemented yet.
+    fn binding_write(&mut self, cx: &FnCx, id: LocalId, span: Span) {
+        let name = cx.locals[id].name.clone();
+        if cx.locals[id].kind == LocalKind::Bind {
+            self.diags
+                .error("E0101", span, format!("cannot modify `{name}`: it is bound to a read-only value"))
+                .note("a binding made by `if let` or `match` has the access of the value it matches");
+        } else {
+            self.diags.error("U0001", span, format!("modifying the `if let`/`match` binding `{name}` is not supported yet"));
+        }
     }
 
     fn check_moved(&mut self, cx: &FnCx, id: LocalId, span: Span) {
@@ -1036,6 +1222,19 @@ impl Checker<'_> {
         match &h.kind {
             HExprKind::Local(id) | HExprKind::Move(id) => cx.locals[*id].loans.clone(),
             HExprKind::Deref(inner) => self.loans_of(inner, cx),
+            HExprKind::Some(inner) => self.loans_of(inner, cx),
+            HExprKind::Coalesce { lhs, rhs } => {
+                let mut out = self.loans_of(lhs, cx);
+                for l in self.loans_of(rhs, cx) {
+                    if !out.contains(&l) {
+                        out.push(l);
+                    }
+                }
+                out
+            }
+            // Elements taken out of a vector keep pointing where the vector's elements point.
+            HExprKind::Pop(id) => cx.locals[*id].loans.clone(),
+            HExprKind::Take(p) | HExprKind::Replace(p, _) => cx.locals[p.local].loans.clone(),
             // `&v[i]` points into `v`'s storage (and into whatever `v`'s elements point into).
             HExprKind::Index { base, .. } if matches!(h.ty, Ty::Ref(_)) => match &base.kind {
                 HExprKind::Local(id) => {
@@ -1145,6 +1344,10 @@ impl Checker<'_> {
     /// The value of `h` is moved: stored, returned, or passed to a `sink` parameter. A local of a
     /// non-copyable type is moved out and must not be used again.
     fn consume(&mut self, mut h: HExpr, cx: &mut FnCx) -> HExpr {
+        if let HExprKind::Some(inner) = h.kind {
+            h.kind = HExprKind::Some(Box::new(self.consume(*inner, cx)));
+            return h;
+        }
         if let HExprKind::Deref(_) = h.kind {
             if !h.ty.is_copy() {
                 self.diags
@@ -1262,16 +1465,18 @@ impl Checker<'_> {
         let kind = match &s.kind {
             StmtKind::Let { mutable, name, name_span, ty, init } => {
                 let declared = ty.as_ref().map(|t| self.resolve_ty(t));
+                cx.diverge_ok = Some(init.span);
                 let init = self.expr(init, declared, cx);
+                cx.diverge_ok = None;
                 if init.ty == Ty::Unit && name != "_" {
                     self.diags.error("E0001", init.span, "this call returns nothing, so it cannot initialize a variable");
                 }
-                let ty = match declared {
-                    Some(d) => {
-                        self.expect_ty(&init, d);
-                        d
+                let (init, ty) = match declared {
+                    Some(d) => (self.fit(init, d, cx), d),
+                    None => {
+                        let t = init.ty;
+                        (init, t)
                     }
-                    None => init.ty,
                 };
                 if name == "_" {
                     // `let _ = x` neither moves nor drops a variable; any other value is dropped now.
@@ -1325,6 +1530,7 @@ impl Checker<'_> {
                     LocalKind::LoopVar => {
                         self.diags.error("E0014", target.span, format!("cannot assign to loop variable `{name}`"));
                     }
+                    LocalKind::Bind | LocalKind::BindMut | LocalKind::BindOwned => self.binding_write(cx, id, target.span),
                 }
                 let mut lty = cx.locals[id].ty;
                 let mut path = Vec::new();
@@ -1349,11 +1555,11 @@ impl Checker<'_> {
                 }
                 let value = match op {
                     None => {
-                        if path.is_empty() && !lty.is_copy() {
-                            self.check_not_borrowed(cx, id, target.span, "assign to");
-                        }
+                        self.check_not_borrowed(cx, id, target.span, "assign to");
+                        cx.diverge_ok = Some(value.span);
                         let v = self.expr(value, Some(lty), cx);
-                        self.expect_ty(&v, lty);
+                        cx.diverge_ok = None;
+                        let v = self.fit(v, lty, cx);
                         let v = self.consume(v, cx);
                         if cx.locals[id].kind == LocalKind::InoutParam && lty.carries_borrow() && !self.loans_of(&v, cx).is_empty() {
                             self.diags
@@ -1371,6 +1577,7 @@ impl Checker<'_> {
                     }
                     Some(op) => {
                         cx.locals[id].used = true;
+                        self.check_not_borrowed(cx, id, target.span, "assign to");
                         let mut lhs =
                             HExpr { kind: HExprKind::Local(id), ty: cx.locals[id].ty, span: root.span, at: root.span };
                         let mut ty = lhs.ty;
@@ -1426,6 +1633,34 @@ impl Checker<'_> {
                     _ => union(&after_then, &after_else),
                 };
                 HStmtKind::If { cond, then: then_h, els: els_h }
+            }
+            StmtKind::IfLet { name, name_span, value, then, els } => {
+                let mut arms = vec![OptArm { pat: ArmPat::Some(name, *name_span), body: Body::Block(then), span: *name_span }];
+                arms.push(OptArm {
+                    pat: ArmPat::None,
+                    body: match els {
+                        None => Body::Empty,
+                        Some(Else::Block(b)) => Body::Block(b),
+                        Some(Else::If(s)) => Body::Stmt(s),
+                    },
+                    span: s.span,
+                });
+                self.match_opt(value, &arms, "if let", s.span, cx)?
+            }
+            StmtKind::Match { value, arms } => {
+                let arms: Vec<OptArm> = arms
+                    .iter()
+                    .map(|a| OptArm {
+                        pat: match &a.pat {
+                            Pattern::Some { name, name_span } => ArmPat::Some(name, *name_span),
+                            Pattern::None => ArmPat::None,
+                            Pattern::Wild => ArmPat::Wild,
+                        },
+                        body: Body::Block(&a.body),
+                        span: a.span,
+                    })
+                    .collect();
+                self.match_opt(value, &arms, "match", s.span, cx)?
             }
             StmtKind::While { cond, body } => {
                 let cond = self.cond(cond, cx);
@@ -1496,6 +1731,9 @@ impl Checker<'_> {
                 let by_ref = !elem.is_copy();
                 let xty = if by_ref { Ty::Ref(ref_of(elem)) } else { elem };
                 let x = self.declare(cx, var, *var_span, xty, LocalKind::LoopVar);
+                if let Some(&end) = cx.pre.bind_end.get(&(cx.cur, 0)) {
+                    cx.locals[x].scope_end = end;
+                }
                 if by_ref {
                     let mut l = vec![Loan::Local(vec_local)];
                     l.extend(cx.locals[vec_local].loans.iter().copied());
@@ -1531,35 +1769,201 @@ impl Checker<'_> {
                 }
             }
             StmtKind::Return(value) => {
-                let ret = cx.ret;
-                match value {
-                    None => {
-                        if ret != Ty::Unit && ret != Ty::Error {
-                            self.diags.error("E0001", s.span, format!("this function must return a value of type `{ret}`"));
-                        }
-                        HStmtKind::Return(None)
-                    }
-                    Some(e) if ret == Ty::Unit => {
-                        self.diags
-                            .error("E0001", e.span, "this function has no return type, so `return` cannot carry a value")
-                            .note("add `-> T` to the function signature");
-                        self.expr(e, None, cx);
-                        HStmtKind::Return(None)
-                    }
-                    Some(e) => {
-                        let h = self.expr(e, Some(ret), cx);
-                        self.expect_ty(&h, ret);
-                        let h = self.consume(h, cx);
-                        if ret.carries_borrow() {
-                            self.check_returned(&h, cx);
-                        }
-                        HStmtKind::Return(Some(h))
-                    }
-                }
+                HStmtKind::Return(self.return_value(value.as_ref(), s.span, cx))
             }
             StmtKind::Block(b) => HStmtKind::Block(self.block(b, cx)),
         };
         Some(HStmt { kind, span: s.span })
+    }
+
+    /// The checked value of `return [value]`.
+    fn return_value(&mut self, value: Option<&Expr>, span: Span, cx: &mut FnCx) -> Option<HExpr> {
+        let ret = cx.ret;
+        match value {
+            None => {
+                if ret != Ty::Unit && ret != Ty::Error {
+                    self.diags.error("E0001", span, format!("this function must return a value of type `{ret}`"));
+                }
+                None
+            }
+            Some(e) if ret == Ty::Unit => {
+                self.diags
+                    .error("E0001", e.span, "this function has no return type, so `return` cannot carry a value")
+                    .note("add `-> T` to the function signature");
+                self.expr(e, None, cx);
+                None
+            }
+            Some(e) => {
+                let h = self.expr(e, Some(ret), cx);
+                let h = self.fit(h, ret, cx);
+                let h = self.consume(h, cx);
+                if ret.carries_borrow() {
+                    self.check_returned(&h, cx);
+                }
+                Some(h)
+            }
+        }
+    }
+
+    /// `if let` and `match` on an optional (semantic table C5, C7). Arms are checked in source
+    /// order, so statement numbers stay in step with `Pre`.
+    fn match_opt(&mut self, value: &Expr, arms: &[OptArm], what: &str, span: Span, cx: &mut FnCx) -> Option<HStmtKind> {
+        let stmt_idx = cx.cur;
+        let scrut = self.expr(value, None, cx);
+        let opt_ty = match scrut.ty {
+            Ty::Ref(r) => ref_inner(r),
+            t => t,
+        };
+        let inner = match opt_ty {
+            Ty::Opt(o) => opt_inner(o),
+            Ty::Error => Ty::Error,
+            other => {
+                self.diags
+                    .error("E0001", scrut.span, format!("`{what}` needs an optional value (`?T`), found `{other}`"))
+                    .note("only optional values can be matched for now");
+                Ty::Error
+            }
+        };
+        // An existing place (a variable, its fields, or something read through a `&`) is only
+        // borrowed; an owned temporary gives its payload to the binding.
+        let via_ref = matches!(scrut.ty, Ty::Ref(_));
+        let root = place_root(&scrut);
+        let mode = match (via_ref || root.is_some(), inner.is_copy()) {
+            (true, true) => BindMode::Copy,
+            (true, false) => BindMode::Ref,
+            (false, _) => BindMode::Owned,
+        };
+        let scrut = if mode == BindMode::Owned { self.consume(scrut, cx) } else { scrut };
+        let (bind_ty, kind) = match mode {
+            BindMode::Owned => (inner, LocalKind::BindOwned),
+            _ => {
+                let writable = !via_ref
+                    && root.is_some_and(|r| matches!(cx.locals[r].kind, LocalKind::Var | LocalKind::InoutParam));
+                let ty = if mode == BindMode::Ref { Ty::Ref(ref_of(inner)) } else { inner };
+                (ty, if writable { LocalKind::BindMut } else { LocalKind::Bind })
+            }
+        };
+        // A binding into an existing place borrows it, even when the payload is copied: the
+        // place must not change while the binding is still used (A2, C7).
+        let loans = match (mode, root) {
+            (BindMode::Ref | BindMode::Copy, Some(r)) if !via_ref => {
+                let mut l = vec![Loan::Local(r)];
+                l.extend(cx.locals[r].loans.iter().copied());
+                l
+            }
+            _ if bind_ty.carries_borrow() => self.loans_of(&scrut, cx),
+            _ => Vec::new(),
+        };
+
+        // Which arm handles `some`, which handles `none`; `_` takes whatever is left.
+        #[derive(Clone, Copy, PartialEq)]
+        enum Role {
+            Some,
+            None,
+            Both,
+            Unreachable,
+        }
+        let (mut has_some, mut has_none) = (false, false);
+        let roles: Vec<Role> = arms
+            .iter()
+            .map(|a| {
+                let role = match a.pat {
+                    ArmPat::Some(..) if !has_some => Role::Some,
+                    ArmPat::None if !has_none => Role::None,
+                    ArmPat::Wild if !has_some && !has_none => Role::Both,
+                    ArmPat::Wild if !has_some => Role::Some,
+                    ArmPat::Wild if !has_none => Role::None,
+                    _ => Role::Unreachable,
+                };
+                has_some |= matches!(role, Role::Some | Role::Both);
+                has_none |= matches!(role, Role::None | Role::Both);
+                role
+            })
+            .collect();
+        let exhaustive = has_some && has_none;
+        if !exhaustive && inner != Ty::Error {
+            let missing = if has_some { "none" } else { "some(_)" };
+            self.diags
+                .error("E0602", span, format!("this `match` does not handle `{missing}`"))
+                .note(format!("add a `{missing} => ...` arm, or `_ => ...` for every remaining case"));
+        }
+
+        let before = cx.moved.clone();
+        let mut local = None;
+        let (mut then_h, mut els_h) = (Vec::new(), Vec::new());
+        let mut both_h = None;
+        let mut ends: Vec<(Moved, bool)> = Vec::new();
+        for (i, (arm, role)) in arms.iter().zip(&roles).enumerate() {
+            cx.moved = before.clone();
+            if *role == Role::Unreachable {
+                self.diags
+                    .warn("W0002", arm.span, "this arm can never run: an earlier arm already handles its case")
+                    .note("remove it");
+            }
+            let out = if *role == Role::Some {
+                cx.scopes.push(Vec::new());
+                let name = match arm.pat {
+                    ArmPat::Some(n, _) => n,
+                    _ => "_",
+                };
+                let name_span = match arm.pat {
+                    ArmPat::Some(_, sp) => sp,
+                    _ => arm.span,
+                };
+                let x = self.declare(cx, name, name_span, bind_ty, kind);
+                if let Some(&end) = cx.pre.bind_end.get(&(stmt_idx, i)) {
+                    cx.locals[x].scope_end = end;
+                }
+                if name == "_" {
+                    cx.locals[x].used = true;
+                }
+                if !loans.is_empty() || bind_ty.carries_borrow() {
+                    self.store_loans(cx, x, loans.clone(), scrut.span, true);
+                }
+                local = Some(x);
+                let out = match arm.body {
+                    Body::Block(b) => self.stmts(&b.stmts, cx),
+                    _ => unreachable!("an `if let` binds in its `then` block"),
+                };
+                self.pop_scope(cx);
+                out
+            } else {
+                match arm.body {
+                    Body::Block(b) => self.block(b, cx),
+                    Body::Stmt(s) => self.stmt(s, cx).into_iter().collect(),
+                    Body::Empty => Vec::new(),
+                }
+            };
+            let div = match arm.body {
+                Body::Block(b) => diverges(&b.stmts),
+                Body::Stmt(s) => diverges(std::slice::from_ref(s)),
+                Body::Empty => false,
+            };
+            match role {
+                Role::Some => then_h = out,
+                Role::None => els_h = out,
+                Role::Both => both_h = Some(out),
+                Role::Unreachable => continue,
+            }
+            ends.push((std::mem::take(&mut cx.moved), div));
+        }
+        // A branch that cannot fall through does not affect the code after the `match`.
+        let live: Vec<&Moved> = ends.iter().filter(|(_, d)| !d).map(|(m, _)| m).collect();
+        let merged: Vec<&Moved> = if live.is_empty() { ends.iter().map(|(m, _)| m).collect() } else { live };
+        cx.moved = match merged.split_first() {
+            Some((first, rest)) => rest.iter().fold((*first).clone(), |acc, m| union(&acc, m)),
+            None => before,
+        };
+        if !exhaustive || inner == Ty::Error {
+            return None;
+        }
+        if let Some(body) = both_h {
+            // Only `_`: the value is not bound. A temporary is dropped before the arm runs.
+            let mut out = vec![HStmt { kind: HStmtKind::Discard(scrut), span }];
+            out.extend(body);
+            return Some(HStmtKind::Block(out));
+        }
+        Some(HStmtKind::IfLet { scrut, mode, local: local.expect("a some arm"), then: then_h, els: els_h })
     }
 
     fn print(&mut self, name: &str, args: &[Expr], span: Span, cx: &mut FnCx) -> Option<HStmtKind> {
@@ -1614,6 +2018,11 @@ impl Checker<'_> {
             self.diags
                 .error("E0001", h.span, format!("a value of type `{}` cannot be printed directly", h.ty))
                 .note("print its parts instead, e.g. `println(\"${p.x} ${p.y}\")`");
+        }
+        if let Ty::Opt(_) = h.ty {
+            self.diags
+                .error("U0001", h.span, format!("printing an optional value (`{}`) is not supported yet", h.ty))
+                .note("print the value inside with `if let`, or give a default with `??`");
         }
     }
 
@@ -1809,7 +2218,286 @@ impl Checker<'_> {
                 self.diags.error("U0001", span, "borrow expressions (`&x`) are only supported as `inout` arguments in P0");
                 err_expr(span)
             }
-            ExprKind::Call { callee, args } => self.call(callee, args, span, cx),
+            ExprKind::Call { callee, args } => self.call(callee, args, expected, span, cx),
+            ExprKind::None => match expected {
+                Some(t @ Ty::Opt(_)) => HExpr { kind: HExprKind::None, ty: t, span, at: span },
+                Some(Ty::Error) => err_expr(span),
+                _ => {
+                    self.diags
+                        .error("E0001", span, "cannot tell which optional type this `none` has")
+                        .note("give the variable a type, e.g. `let x: ?int = none`");
+                    err_expr(span)
+                }
+            },
+            ExprKind::Coalesce { op_span, lhs, rhs } => self.coalesce(lhs, rhs, *op_span, expected, span, cx),
+            ExprKind::Return(_) | ExprKind::Break | ExprKind::Continue => {
+                // The parser only produces these on the right side of `??`, which handles them.
+                self.diags.error("E0020", span, "`return`, `break` and `continue` are statements here");
+                err_expr(span)
+            }
+        }
+    }
+
+    /// `lhs ?? rhs` (semantic table V9): `lhs` is consumed as a whole; `rhs` runs only when it is
+    /// `none`, and may leave with `return`, `break` or `continue`.
+    #[allow(clippy::too_many_arguments)]
+    fn coalesce(&mut self, lhs: &Expr, rhs: &Expr, at: Span, expected: Option<Ty>, span: Span, cx: &mut FnCx) -> HExpr {
+        let allowed = cx.diverge_ok == Some(span);
+        cx.diverge_ok = None;
+        let hint = match expected {
+            Some(t) if !matches!(t, Ty::Error | Ty::Unit) => Some(Ty::Opt(opt_of(t))),
+            _ => None,
+        };
+        let l = self.expr(lhs, hint, cx);
+        let l = self.deref(l);
+        let l = self.consume(l, cx);
+        let inner = match l.ty {
+            Ty::Opt(o) => opt_inner(o),
+            Ty::Error => Ty::Error,
+            other => {
+                self.diags
+                    .error("E0001", l.span, format!("the left side of `??` must be an optional value (`?T`), found `{other}`"));
+                Ty::Error
+            }
+        };
+        let r = match &rhs.kind {
+            ExprKind::Return(_) | ExprKind::Break | ExprKind::Continue => {
+                if !allowed {
+                    self.diags.error(
+                        "U0001",
+                        rhs.span,
+                        "`?? return`, `?? break` and `?? continue` are only supported as a whole `let` initializer or assigned value for now",
+                    );
+                    return err_expr(span);
+                }
+                // The jumping path does not reach the code after this expression.
+                let before = cx.moved.clone();
+                let r = self.diverge(rhs, cx);
+                cx.moved = before;
+                r
+            }
+            _ => {
+                cx.diverge_ok = if allowed { Some(rhs.span) } else { None };
+                let r = self.expr(rhs, (inner != Ty::Error).then_some(inner), cx);
+                cx.diverge_ok = None;
+                let r = match r.ty {
+                    Ty::Ref(x) if ref_inner(x) == inner && inner.is_copy() => self.deref(r),
+                    _ => r,
+                };
+                if inner != Ty::Error {
+                    self.expect_ty(&r, inner);
+                }
+                self.consume(r, cx)
+            }
+        };
+        HExpr { kind: HExprKind::Coalesce { lhs: Box::new(l), rhs: Box::new(r) }, ty: inner, span, at }
+    }
+
+    /// `return [value]`, `break` or `continue` on the right side of `??`.
+    fn diverge(&mut self, e: &Expr, cx: &mut FnCx) -> HExpr {
+        let span = e.span;
+        let kind = match &e.kind {
+            ExprKind::Return(v) => HExprKind::Return(self.return_value(v.as_deref(), span, cx).map(Box::new)),
+            _ => {
+                let is_break = matches!(e.kind, ExprKind::Break);
+                if cx.loop_depth == 0 {
+                    let word = if is_break { "break" } else { "continue" };
+                    self.diags.error("E0015", span, format!("`{word}` can only be used inside a loop"));
+                    return err_expr(span);
+                }
+                let state = cx.moved.clone();
+                if let Some(flow) = cx.loops.last_mut() {
+                    union_into(if is_break { &mut flow.breaks } else { &mut flow.continues }, &state);
+                }
+                if is_break {
+                    HExprKind::Break
+                } else {
+                    HExprKind::Continue
+                }
+            }
+        };
+        HExpr { kind, ty: Ty::Unit, span, at: span }
+    }
+
+    /// `some(value)`: moves `value` into a new optional.
+    fn some_call(&mut self, args: &[Expr], expected: Option<Ty>, span: Span, at: Span, cx: &mut FnCx) -> HExpr {
+        let [arg] = args else {
+            self.diags.error("E0012", span, "`some` takes exactly one argument");
+            return err_expr(span);
+        };
+        let exp_inner = match expected {
+            Some(Ty::Opt(o)) => Some(opt_inner(o)),
+            _ => None,
+        };
+        let h = self.expr(arg, exp_inner, cx);
+        let h = match (h.ty, exp_inner) {
+            (Ty::Ref(r), Some(i)) if ref_inner(r) == i && i.is_copy() => self.deref(h),
+            _ => h,
+        };
+        match h.ty {
+            Ty::Error => return err_expr(span),
+            Ty::Unit => {
+                self.diags.error("E0001", h.span, "this call returns nothing, so it cannot be wrapped in `some`");
+                return err_expr(span);
+            }
+            _ => {}
+        }
+        let h = self.consume(h, cx);
+        let ty = Ty::Opt(opt_of(h.ty));
+        HExpr { kind: HExprKind::Some(Box::new(h)), ty, span, at }
+    }
+
+    /// `&place` given to `take`, `replace` or `swap`: a writable variable or field of one.
+    fn place(&mut self, a: &Expr, what: &str, cx: &mut FnCx) -> Option<HPlace> {
+        let ExprKind::Borrow(inner) = &a.kind else {
+            self.diags.error("E0001", a.span, format!("`{what}` needs a place written with `&`, e.g. `{what}(&x)`"));
+            return None;
+        };
+        let mut fields_rev: Vec<(&str, Span)> = Vec::new();
+        let mut root: &Expr = inner;
+        loop {
+            match &root.kind {
+                ExprKind::Field { base, name } => {
+                    fields_rev.push((name.as_str(), root.span));
+                    root = base;
+                }
+                ExprKind::Paren(e) => root = e,
+                _ => break,
+            }
+        }
+        let ExprKind::Ident(name) = &root.kind else {
+            self.diags.error("U0001", inner.span, format!("only variables and their fields can be passed to `{what}` for now"));
+            return None;
+        };
+        let Some(id) = self.lookup(cx, name) else {
+            self.diags.error("E0010", root.span, format!("cannot find variable `{name}` in this scope"));
+            return None;
+        };
+        cx.locals[id].used = true;
+        self.check_moved(cx, id, root.span);
+        if !self.writable(cx, id, root.span) {
+            return None;
+        }
+        let mut ty = cx.locals[id].ty;
+        let mut path = Vec::new();
+        for (fname, fspan) in fields_rev.iter().rev() {
+            match self.struct_field(ty, fname) {
+                Some((fi, fty)) => {
+                    path.push(fi);
+                    ty = fty;
+                }
+                None => {
+                    match ty {
+                        Ty::Struct(_) => self.no_field(ty, fname, *fspan),
+                        Ty::Error => {}
+                        other => {
+                            self.diags.error("E0001", *fspan, format!("a value of type `{other}` has no fields"));
+                        }
+                    }
+                    return None;
+                }
+            }
+        }
+        self.check_not_borrowed(cx, id, inner.span, "modify");
+        Some(HPlace { local: id, path, ty })
+    }
+
+    /// Whether variable `id` may be modified; reports why not.
+    fn writable(&mut self, cx: &FnCx, id: LocalId, span: Span) -> bool {
+        let name = cx.locals[id].name.clone();
+        match cx.locals[id].kind {
+            LocalKind::Var | LocalKind::InoutParam => return true,
+            LocalKind::Let => {
+                self.diags
+                    .error("E0014", span, format!("cannot modify `{name}` because it was declared with `let`"))
+                    .note(format!("declare it with `var {name}` to make it mutable"));
+            }
+            LocalKind::Param | LocalKind::SinkParam | LocalKind::LoopVar => {
+                self.diags.error("E0014", span, format!("cannot modify `{name}`: parameters and loop variables are read-only"));
+            }
+            LocalKind::Bind | LocalKind::BindMut | LocalKind::BindOwned => self.binding_write(cx, id, span),
+        }
+        false
+    }
+
+    /// `take(&p)`, `replace(&p, v)`, `swap(&a, &b)` (stdlib contract §1).
+    fn place_builtin(&mut self, name: &str, args: &[Expr], span: Span, at: Span, cx: &mut FnCx) -> HExpr {
+        let want = if name == "take" { 1 } else { 2 };
+        if args.len() != want {
+            self.diags.error(
+                "E0012",
+                span,
+                format!("`{name}` takes {} but {} {} supplied", plural(want, "argument"), args.len(), if args.len() == 1 { "was" } else { "were" }),
+            );
+            return err_expr(span);
+        }
+        match name {
+            "take" => {
+                let Some(p) = self.place(&args[0], name, cx) else { return err_expr(span) };
+                if !p.ty.has_default() && p.ty != Ty::Error {
+                    self.diags
+                        .error("E0405", args[0].span, format!("`take` needs a type with a default value, and `{}` has none", p.ty))
+                        .note("defaults exist for integers, bool, optionals, String and Vec; use `replace(&x, value)` or `swap(&a, &b)`");
+                    return err_expr(span);
+                }
+                let ty = p.ty;
+                HExpr { kind: HExprKind::Take(p), ty, span, at }
+            }
+            "replace" => {
+                let Some(p) = self.place(&args[0], name, cx) else { return err_expr(span) };
+                let root = cx.locals[p.local].name.clone();
+                if mentions(&args[1], &root) {
+                    self.diags
+                        .error("E0102", args[1].span, format!("`{root}` is borrowed by the first argument of `replace`, so the new value cannot use it"))
+                        .note(format!("compute the new value first: `let x = ...` then `replace(&{root}, x)`"));
+                    return err_expr(span);
+                }
+                let v = self.expr(&args[1], Some(p.ty), cx);
+                let v = self.fit(v, p.ty, cx);
+                let v = self.consume(v, cx);
+                if p.ty.carries_borrow() {
+                    let loans = self.loans_of(&v, cx);
+                    if cx.locals[p.local].kind == LocalKind::InoutParam && !loans.is_empty() {
+                        self.diags
+                            .error("E0306", v.span, format!("cannot store a borrow into the caller's `{root}`"))
+                            .note("return it instead, e.g. `-> Vec[str] of text`");
+                    } else {
+                        self.store_loans(cx, p.local, loans, v.span, false);
+                    }
+                }
+                let ty = p.ty;
+                HExpr { kind: HExprKind::Replace(p, Box::new(v)), ty, span, at }
+            }
+            _ => {
+                let a = self.place(&args[0], name, cx);
+                let b = self.place(&args[1], name, cx);
+                let (Some(a), Some(b)) = (a, b) else { return err_expr(span) };
+                if a.ty != b.ty && a.ty != Ty::Error && b.ty != Ty::Error {
+                    self.diags.error(
+                        "E0001",
+                        args[1].span,
+                        format!("`swap` needs two places of the same type, found `{}` and `{}`", a.ty, b.ty),
+                    );
+                    return err_expr(span);
+                }
+                if a.local == b.local && (a.path.starts_with(&b.path) || b.path.starts_with(&a.path)) {
+                    self.diags
+                        .error("E0102", args[1].span, "the two places given to `swap` overlap")
+                        .note("`swap` needs two different places");
+                    return err_expr(span);
+                }
+                if a.ty.carries_borrow() {
+                    let inout = |p: &HPlace| cx.locals[p.local].kind == LocalKind::InoutParam;
+                    if inout(&a) || inout(&b) {
+                        self.diags.error("U0001", span, "swapping values that point into other data through an `inout` parameter is not supported yet");
+                        return err_expr(span);
+                    }
+                    let (la, lb) = (cx.locals[a.local].loans.clone(), cx.locals[b.local].loans.clone());
+                    self.store_loans(cx, a.local, lb, args[1].span, false);
+                    self.store_loans(cx, b.local, la, args[0].span, false);
+                }
+                HExpr { kind: HExprKind::Swap(a, b), ty: Ty::Unit, span, at }
+            }
         }
     }
 
@@ -1856,6 +2544,10 @@ impl Checker<'_> {
                         if let (Ty::Int(a), Ty::Int(_)) = (l.ty, r.ty) {
                             d.note(format!("convert one side explicitly, e.g. `{a}(...)`"));
                         }
+                    } else if let Ty::Opt(_) = l.ty {
+                        self.diags
+                            .error("U0001", span, format!("comparing optional values (`{}`) is not supported yet", l.ty))
+                            .note("use `if let`, `isSome()` or `??` instead");
                     } else if (ordering && !matches!(l.ty, Ty::Int(_) | Ty::Str | Ty::String))
                         || !matches!(l.ty, Ty::Int(_) | Ty::Bool | Ty::Str | Ty::String)
                     {
@@ -1872,7 +2564,7 @@ impl Checker<'_> {
         }
     }
 
-    fn call(&mut self, callee: &Expr, args: &[Expr], span: Span, cx: &mut FnCx) -> HExpr {
+    fn call(&mut self, callee: &Expr, args: &[Expr], expected: Option<Ty>, span: Span, cx: &mut FnCx) -> HExpr {
         match &callee.kind {
             ExprKind::Ident(name) => {
                 if self.lookup(cx, name).is_some() {
@@ -1885,6 +2577,14 @@ impl Checker<'_> {
                 if OUTPUT_FNS.contains(&name.as_str()) {
                     self.diags.error("E0001", span, format!("`{name}` does not produce a value; call it as a statement"));
                     return err_expr(span);
+                }
+                // Prelude functions, unless the program defines a function with the same name.
+                if !self.index.contains_key(name) {
+                    match name.as_str() {
+                        "some" => return self.some_call(args, expected, span, callee.span, cx),
+                        "take" | "replace" | "swap" => return self.place_builtin(name, args, span, callee.span, cx),
+                        _ => {}
+                    }
                 }
                 let Some(&fi) = self.index.get(name) else {
                     if UNSUPPORTED_FNS.contains(&name.as_str()) {
@@ -1957,9 +2657,10 @@ impl Checker<'_> {
                                 .note("a variable passed as `inout` cannot be used by any other argument of the same call");
                         }
                     }
-                    if let Some(t) = exp {
-                        self.expect_ty(&h, t);
-                    }
+                    let h = match exp {
+                        Some(t) => self.fit(h, t, cx),
+                        None => h,
+                    };
                     let h = if sinks.get(i).copied().unwrap_or(false) {
                         if let HExprKind::Local(id) = h.kind {
                             if borrowed.contains(&id) {
@@ -2005,6 +2706,9 @@ impl Checker<'_> {
         if name == "push" {
             return self.push_call(base, args, span, at, cx);
         }
+        if name == "pop" {
+            return self.pop_call(base, args, span, at, cx);
+        }
         let recv = self.expr(base, None, cx);
         let recv = self.deref(recv);
         let (method, ty) = match (recv.ty, name) {
@@ -2017,6 +2721,8 @@ impl Checker<'_> {
             (Ty::Str | Ty::String, "trim") => (Builtin::Trim, Ty::Str),
             (Ty::Str | Ty::String, "fields") => (Builtin::Fields, Ty::Vec(vec_of(Ty::Str))),
             (Ty::Str | Ty::String, "lines") => (Builtin::Lines, Ty::Vec(vec_of(Ty::Str))),
+            (Ty::Opt(_), "isSome") => (Builtin::IsSome, Ty::Bool),
+            (Ty::Opt(_), "isNone") => (Builtin::IsNone, Ty::Bool),
             (Ty::Error, _) => return err_expr(span),
             (t, m) => {
                 self.diags.error("U0001", at, format!("method `{m}` on `{t}` is not supported in P0"));
@@ -2033,30 +2739,45 @@ impl Checker<'_> {
         HExpr { kind: HExprKind::Method { method, recv: Box::new(recv) }, ty, span, at }
     }
 
-    /// `v.push(x)` moves `x` into the vector; `s.push(t)` appends text to a `String`.
-    fn push_call(&mut self, base: &Expr, args: &[Expr], span: Span, at: Span, cx: &mut FnCx) -> HExpr {
+    /// The variable a modifying method (`push`, `pop`) is called on.
+    fn mutable_receiver(&mut self, base: &Expr, method: &str, cx: &mut FnCx) -> Option<LocalId> {
         let ExprKind::Ident(name) = &base.kind else {
-            self.diags.error("U0001", base.span, "`push` is only supported on a variable in P0");
-            return err_expr(span);
+            self.diags.error("U0001", base.span, format!("`{method}` is only supported on a variable for now"));
+            return None;
         };
         let Some(id) = self.lookup(cx, name) else {
             self.diags.error("E0010", base.span, format!("cannot find variable `{name}` in this scope"));
-            return err_expr(span);
+            return None;
         };
         cx.locals[id].used = true;
         self.check_moved(cx, id, base.span);
         self.check_not_borrowed(cx, id, base.span, "modify");
-        match cx.locals[id].kind {
-            LocalKind::Var | LocalKind::InoutParam => {}
-            LocalKind::Let => {
-                self.diags
-                    .error("E0014", base.span, format!("cannot modify `{name}` because it was declared with `let`"))
-                    .note(format!("declare it with `var {name}` to make it mutable"));
-            }
-            LocalKind::Param | LocalKind::SinkParam | LocalKind::LoopVar => {
-                self.diags.error("E0014", base.span, format!("cannot modify `{name}`: parameters and loop variables are read-only"));
+        self.writable(cx, id, base.span);
+        Some(id)
+    }
+
+    /// `v.pop()`: the last element as an owned `?T`.
+    fn pop_call(&mut self, base: &Expr, args: &[Expr], span: Span, at: Span, cx: &mut FnCx) -> HExpr {
+        let Some(id) = self.mutable_receiver(base, "pop", cx) else { return err_expr(span) };
+        if !args.is_empty() {
+            self.diags.error("E0012", span, "`pop` takes no arguments");
+            return err_expr(span);
+        }
+        match cx.locals[id].ty {
+            Ty::Vec(vid) => HExpr { kind: HExprKind::Pop(id), ty: Ty::Opt(opt_of(vec_elem(vid))), span, at },
+            Ty::Error => err_expr(span),
+            other => {
+                self.diags.error("U0001", at, format!("method `pop` on `{other}` is not supported yet"));
+                err_expr(span)
             }
         }
+    }
+
+    /// `v.push(x)` moves `x` into the vector; `s.push(t)` appends text to a `String`.
+    fn push_call(&mut self, base: &Expr, args: &[Expr], span: Span, at: Span, cx: &mut FnCx) -> HExpr {
+        let Some(id) = self.mutable_receiver(base, "push", cx) else { return err_expr(span) };
+        let name = cx.locals[id].name.clone();
+        let name = &name;
         let [arg] = args else {
             self.diags.error("E0012", span, "`push` takes exactly one argument");
             return err_expr(span);
@@ -2073,7 +2794,7 @@ impl Checker<'_> {
             Ty::Vec(vid) => {
                 let et = vec_elem(vid);
                 let h = self.expr(arg, Some(et), cx);
-                self.expect_ty(&h, et);
+                let h = self.fit(h, et, cx);
                 let h = self.consume(h, cx);
                 if et.carries_borrow() {
                     let loans = self.loans_of(&h, cx);
@@ -2116,8 +2837,12 @@ impl Checker<'_> {
         let mut out = Vec::new();
         for it in items {
             let h = self.expr(it, elem, cx);
+            let h = match elem {
+                Some(e) => self.fit(h, e, cx),
+                None => h,
+            };
             match elem {
-                Some(e) => self.expect_ty(&h, e),
+                Some(_) => {}
                 None if h.ty == Ty::Unit => {
                     self.diags.error("E0001", h.span, "this call returns nothing, so it cannot be a vector element");
                 }
