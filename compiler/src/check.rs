@@ -6,7 +6,7 @@ use crate::ast::*;
 use crate::diag::{Diags, Span};
 use crate::types::{
     finish_agg, map_of, map_parts, opt_inner, opt_of, ref_inner, ref_mut_inner, ref_mut_of, ref_of, register_enum,
-    register_struct, res_of, res_parts, slice_elem, slice_of, vec_elem, vec_of, IntTy, Ty,
+    register_struct, res_of, res_parts, set_user_drop, has_user_drop, slice_elem, slice_of, vec_elem, vec_of, IntTy, Ty,
 };
 
 pub type LocalId = usize;
@@ -612,6 +612,8 @@ struct FnCx {
     /// The expression (by span) that may be `x ?? return/break/continue`: the whole initializer
     /// of a `let` or right side of an assignment, or the right side of such a `??`.
     diverge_ok: Option<Span>,
+    /// Checking the body of a `drop` method of a `T: Drop` type (V11).
+    in_drop: bool,
 }
 
 type Moved = Vec<Option<Span>>;
@@ -789,11 +791,15 @@ pub fn check(prog: &Program, diags: &mut Diags) -> Option<HProgram> {
     ck.collect_uses(prog);
     for (owner, impls) in prog.structs.iter().map(|s| (&s.name, &s.impls)).chain(prog.enums.iter().map(|e| (&e.name, &e.impls))) {
         for (i, sp) in impls {
+            if i == "Drop" {
+                continue;
+            }
             ck.diags.error("U0001", *sp, format!("implementing interfaces (`{owner}: {i}`) is not supported yet"));
         }
     }
     let order = ck.collect_structs(prog);
     ck.collect(prog);
+    ck.check_drops(prog);
     let fns = prog.fns.iter().enumerate().map(|(i, f)| ck.function(f, i)).collect();
     let mut unused: Vec<(Span, String)> =
         ck.imports.iter().filter(|(_, (_, used))| !used).map(|(m, (sp, _))| (*sp, m.clone())).collect();
@@ -1045,6 +1051,13 @@ impl Checker<'_> {
             self.visit_struct(i, &mut state, &mut order, &mut Vec::new());
         }
         // Copyability and drop obligations follow the members, which come first in `order`.
+        let decls = prog.structs.iter().map(|s| &s.impls).chain(prog.enums.iter().map(|e| &e.impls));
+        for (i, impls) in decls.enumerate() {
+            if impls.iter().any(|(n, _)| n == "Drop") {
+                let (Ty::Struct(id) | Ty::Enum(id)) = self.structs[i].ty else { unreachable!() };
+                set_user_drop(id);
+            }
+        }
         for &i in &order {
             let s = &self.structs[i];
             let members: Vec<Vec<Ty>> = if matches!(s.ty, Ty::Enum(_)) {
@@ -1214,6 +1227,41 @@ impl Checker<'_> {
             return err_expr(span);
         }
         HExpr { kind: HExprKind::StructLit { fields: out }, ty: sty, span, at: span }
+    }
+
+    /// `T: Drop` needs exactly `fn drop(inout self)` (V10, E0802); the name `drop` is reserved
+    /// for it.
+    fn check_drops(&mut self, prog: &Program) {
+        let decls = prog.structs.iter().map(|s| (&s.name, &s.impls)).chain(prog.enums.iter().map(|e| (&e.name, &e.impls)));
+        for (name, impls) in decls {
+            let declared = impls.iter().find(|(n, _)| n == "Drop").map(|(_, sp)| *sp);
+            let full = format!("{name}.drop");
+            let f = prog.fns.iter().find(|f| f.name == full);
+            match (declared, f) {
+                (Some(sp), None) => {
+                    self.diags
+                        .error("E0802", sp, format!("`{name}: Drop` needs a method `fn drop(inout self)`"))
+                        .note("write it inside the type's body");
+                }
+                (Some(_), Some(f)) => {
+                    let ok = f.params.len() == 1
+                        && f.params[0].name == "self"
+                        && f.params[0].inout
+                        && f.ret.as_ref().is_none_or(|t| t.name == "()");
+                    if !ok {
+                        self.diags
+                            .error("E0802", f.name_span, "a drop method must be declared exactly as `fn drop(inout self)`")
+                            .note("it takes no other parameters and returns nothing; handle failures inside it, or panic");
+                    }
+                }
+                (None, Some(f)) => {
+                    self.diags
+                        .error("E0802", f.name_span, format!("the method name `drop` is reserved for types that implement `Drop`"))
+                        .note(format!("declare `{name}: Drop` to run it when a value is dropped, or rename the method"));
+                }
+                (None, None) => {}
+            }
+        }
     }
 
     fn collect(&mut self, prog: &Program) {
@@ -1393,6 +1441,9 @@ impl Checker<'_> {
             iterating: Vec::new(),
             iterating_mut: Vec::new(),
             diverge_ok: None,
+            in_drop: f.owner.as_ref().is_some_and(|o| {
+                f.name == format!("{o}.drop") && self.struct_index.get(o).is_some_and(|&i| has_user_drop(self.structs[i].ty))
+            }),
         };
         self.check_ret_of(f, ret);
         let params = f
@@ -1495,7 +1546,7 @@ impl Checker<'_> {
         let scope = cx.scopes.pop().unwrap_or_default();
         for id in scope {
             let l = &cx.locals[id];
-            if !l.used && !l.name.starts_with('_') && l.ty != Ty::Error {
+            if !l.used && !l.name.starts_with('_') && l.name != "self" && l.ty != Ty::Error {
                 self.diags
                     .warn("W0001", l.span, format!("unused variable `{}`", l.name))
                     .note(format!("rename it to `_{}` if this is intentional", l.name));
@@ -1988,6 +2039,10 @@ impl Checker<'_> {
         }
         if matches!(cx.locals[id].kind, LocalKind::Param | LocalKind::InoutParam) {
             let name = cx.locals[id].name.clone();
+            if cx.in_drop && name == "self" {
+                self.diags.error("E0803", h.span, "a drop method cannot move `self` away");
+                return h;
+            }
             self.diags
                 .error("E0401", h.span, format!("cannot move out of `{name}`: it belongs to the caller"))
                 .note(format!("declare it as `{name}: sink {}` to take ownership, or pass `{name}.clone()`", h.ty));
@@ -2136,6 +2191,11 @@ impl Checker<'_> {
                     self.diags.error("U0001", target.span, "only variables and their struct fields can be assigned in P0");
                     return None;
                 };
+                if cx.in_drop && name == "self" && fields_rev.is_empty() {
+                    self.diags
+                        .error("E0803", target.span, "a drop method cannot overwrite `self`")
+                        .note("it may change fields, or `take`/`replace` a field that has a replacement value");
+                }
                 let Some(id) = self.lookup(cx, name) else {
                     self.diags.error("E0010", target.span, format!("cannot find variable `{name}` in this scope"));
                     self.expr(value, None, cx);
@@ -3251,6 +3311,12 @@ impl Checker<'_> {
             self.diags.error("E0001", a.span, format!("`{what}` needs a place written with `&`, e.g. `{what}(&x)`"));
             return None;
         };
+        if cx.in_drop && matches!(&inner.kind, ExprKind::Ident(n) if n == "self") {
+            self.diags
+                .error("E0803", a.span, format!("a drop method cannot `{what}` the whole `self`"))
+                .note("it may `take` or `replace` a field that has a replacement value");
+            return None;
+        }
         let mut fields_rev: Vec<(&str, Span)> = Vec::new();
         let mut root: &Expr = inner;
         loop {
@@ -3816,6 +3882,12 @@ impl Checker<'_> {
         let tn = &self.structs.iter().find(|s| s.ty == t)?.name;
         let full = format!("{tn}.{name}");
         let &fi = self.index.get(&full)?;
+        if name == "drop" && has_user_drop(t) {
+            self.diags
+                .error("E0801", at, format!("`{full}` is called by the compiler when the value is dropped; it cannot be called directly"))
+                .note("to drop a value early, write `let _ = value`");
+            return Some((NO_FN, full));
+        }
         if !self.sigs[fi].has_self {
             self.diags
                 .error("E0001", at, format!("`{full}` has no `self` parameter: call it on the type, as `{full}(...)`"));

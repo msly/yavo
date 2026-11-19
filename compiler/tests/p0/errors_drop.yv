@@ -1,0 +1,57 @@
+// expect-error: E0802 18:18
+// expect-error: E0802 24:8
+// expect-error: E0802 31:8
+// expect-error: E0803 38:22
+// expect-error: E0803 39:9
+// expect-warning: W0001 40:13
+// expect-error: E0803 40:17
+// expect-error: E0402 47:13
+// expect-warning: W0001 52:9
+// expect-error: E0801 53:5
+struct Token: Drop {
+    n: int
+    fn drop(inout self) {
+        println(self.n)
+    }
+}
+
+struct NoMethod: Drop {
+    n: int
+}
+
+struct Extra: Drop {
+    n: int
+    fn drop(inout self, k: int) {
+        println(k)
+    }
+}
+
+struct Plain {
+    n: int
+    fn drop(self) {
+    }
+}
+
+struct Bad: Drop {
+    name: String
+    fn drop(inout self) {
+        let t = take(&self)
+        self = Bad{name: "x".toString()}
+        let s = self
+    }
+}
+
+fn copies() {
+    let a = Token{n: 1}
+    let b = a
+    println(a.n)
+    println(b.n)
+}
+
+fn direct() {
+    var t = Token{n: 1}
+    t.drop()
+}
+
+fn main() {
+}

@@ -49,6 +49,9 @@ struct Agg {
     members: Vec<Vec<Ty>>,
     copy: bool,
     drop: bool,
+    /// `struct T: Drop`: the user's `drop` runs first. Such a value has a hidden `yv_live` flag
+    /// (all-zero, i.e. moved out, means "nothing to drop").
+    user_drop: bool,
 }
 
 fn register_agg(name: &str, prefix: &str) -> u32 {
@@ -56,7 +59,7 @@ fn register_agg(name: &str, prefix: &str) -> u32 {
     let name: &'static str = Box::leak(name.to_string().into_boxed_str());
     AGGS.with(|s| {
         let mut s = s.borrow_mut();
-        s.push(Agg { name, c_name, members: Vec::new(), copy: true, drop: false });
+        s.push(Agg { name, c_name, members: Vec::new(), copy: true, drop: false, user_drop: false });
         (s.len() - 1) as u32
     })
 }
@@ -77,12 +80,26 @@ pub fn register_enum(name: &str) -> u32 {
     id
 }
 
+/// Marks an aggregate as having a user `drop` (call before `finish_agg`).
+pub fn set_user_drop(id: u32) {
+    AGGS.with(|s| s.borrow_mut()[id as usize].user_drop = true);
+}
+
+/// Whether an aggregate type has a user `drop`.
+pub fn has_user_drop(t: Ty) -> bool {
+    match t {
+        Ty::Struct(id) | Ty::Enum(id) => AGGS.with(|s| s.borrow()[id as usize].user_drop),
+        _ => false,
+    }
+}
+
 /// Records the member types of an aggregate (struct fields as one list, or one list per enum
 /// case) and derives whether it is copyable and whether it must be dropped. Members are
 /// finished first (the checker walks aggregates in dependency order).
 pub fn finish_agg(id: u32, members: Vec<Vec<Ty>>) {
-    let copy = members.iter().flatten().all(|t| t.is_copy());
-    let drop = members.iter().flatten().any(|t| t.needs_drop());
+    let user_drop = AGGS.with(|s| s.borrow()[id as usize].user_drop);
+    let copy = !user_drop && members.iter().flatten().all(|t| t.is_copy());
+    let drop = user_drop || members.iter().flatten().any(|t| t.needs_drop());
     AGGS.with(|s| {
         let mut s = s.borrow_mut();
         let a = &mut s[id as usize];

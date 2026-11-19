@@ -1,0 +1,82 @@
+// expect-stdout:
+// | open a
+// | open b
+// | consume b
+// | close b (0 notes)
+// | open tmp
+// | close tmp (0 notes)
+// | after tmp
+// | open v1
+// | open v2
+// | popped
+// | open in slot
+// | open opt
+// | end 0
+// | zero 0
+// | close opt (0 notes)
+// | slot empty
+// | slot with in slot
+// | close in slot (0 notes)
+// | close v2 (0 notes)
+// | close v1 (0 notes)
+// | close a (1 notes)
+struct Res: Drop {
+    name: String
+    log: Vec[String]
+
+    fn new(name: str) -> Res {
+        println("open ${name}")
+        return Res{name: name.toString(), log: []}
+    }
+    fn note(inout self, s: str) {
+        self.log.push(s.toString())
+    }
+    fn drop(inout self) {
+        let old = take(&self.log)
+        println("close ${self.name} (${old.len()} notes)")
+    }
+}
+
+enum Slot: Drop {
+    Empty
+    Full(r: Res)
+
+    fn drop(inout self) {
+        match self {
+            .Empty => println("slot empty")
+            .Full(r) => println("slot with ${r.name}")
+        }
+    }
+}
+
+struct Zero: Drop {
+    n: int
+    fn drop(inout self) {
+        println("zero ${self.n}")
+    }
+}
+
+fn consume(r: sink Res) {
+    println("consume ${r.name}")
+}
+
+fn main() {
+    var a = Res.new("a")
+    a.note("x")
+    let b = Res.new("b")
+    consume(b)
+    let _ = Res.new("tmp")
+    println("after tmp")
+    var all: Vec[Res] = []
+    all.push(Res.new("v1"))
+    all.push(Res.new("v2"))
+    let _last = all.pop()
+    println("popped")
+    let _s1 = Slot.Full(r: Res.new("in slot"))
+    let _s2 = Slot.Empty
+    var _maybe: ?Res = none
+    _maybe = Res.new("opt")
+    let z = Zero{n: 0}
+    let moved = z
+    println("end ${moved.n}")
+}

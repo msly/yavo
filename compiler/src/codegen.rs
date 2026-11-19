@@ -8,7 +8,7 @@ use crate::ast::BinOp;
 use crate::check::*;
 use crate::diag::Span;
 use crate::types::{
-    all_maps, all_opts, all_ress, all_vecs, opt_inner, opt_of, ref_inner, ref_mut_inner, res_parts, vec_elem, IntTy, Ty,
+    all_maps, all_opts, all_ress, all_vecs, has_user_drop, opt_inner, opt_of, ref_inner, ref_mut_inner, res_parts, vec_elem, IntTy, Ty,
 };
 
 pub const RUNTIME_HEADER: &str = include_str!("../runtime/yavo_rt.h");
@@ -47,7 +47,9 @@ pub fn generate(prog: &HProgram, file: &str) -> String {
         match s.ty {
             Ty::Struct(id) => {
                 let _ = writeln!(g.out, "typedef struct {c} {{");
-                if s.fields.is_empty() {
+                if has_user_drop(s.ty) {
+                    g.out.push_str("    uint8_t yv_live;\n");
+                } else if s.fields.is_empty() {
                     g.out.push_str("    char yv_empty;\n");
                 }
                 for (name, ty) in &s.fields {
@@ -58,6 +60,9 @@ pub fn generate(prog: &HProgram, file: &str) -> String {
             }
             Ty::Enum(id) => {
                 let _ = writeln!(g.out, "typedef struct {c} {{\n    uint32_t tag;");
+                if has_user_drop(s.ty) {
+                    g.out.push_str("    uint8_t yv_live;\n");
+                }
                 if s.variants.iter().any(|v| !v.1.is_empty()) {
                     g.out.push_str("    union {\n");
                     for (vi, (_, fields)) in s.variants.iter().enumerate() {
@@ -259,6 +264,13 @@ fn agg_helpers(out: &mut String, s: &HStruct) {
             drops.push_str("\n    default: break;\n    }");
             clones.push_str("\n    default: break;\n    }");
         }
+    }
+    if has_user_drop(s.ty) {
+        // The user's drop runs on a complete, live value, then the fields are dropped (V10).
+        // A moved-out value is all zero, so `yv_live` is 0 and nothing runs.
+        let user = format!("yv_fn_{}__drop", s.ty);
+        let _ = writeln!(out, "static void {user}({c} *self);");
+        drops = format!("\n    if (!p->yv_live) return;\n    p->yv_live = 0;\n    {user}(p);{drops}");
     }
     let _ = writeln!(out, "static inline void yv_drop_{key}({c} *p) {{{drops}\n}}");
     let _ = writeln!(
@@ -1448,6 +1460,9 @@ impl Gen {
                     inits.push(format!(".f_{} = {v}", self.fields[&id][*fi].0));
                 }
                 self.release(&held);
+                if has_user_drop(e.ty) {
+                    inits.insert(0, ".yv_live = 1".to_string());
+                }
                 let body = if inits.is_empty() { "0".to_string() } else { inits.join(", ") };
                 let lit = format!("(({}){{{body}}})", e.ty.c_name());
                 if e.ty.is_copy() {
@@ -1470,7 +1485,8 @@ impl Gen {
                 }
                 self.release(&held);
                 let payload = if inits.is_empty() { String::new() } else { format!(", .u.v{variant} = {{{}}}", inits.join(", ")) };
-                let lit = format!("(({}){{.tag = {variant}{payload}}})", e.ty.c_name());
+                let live = if has_user_drop(e.ty) { ", .yv_live = 1" } else { "" };
+                let lit = format!("(({}){{.tag = {variant}{live}{payload}}})", e.ty.c_name());
                 if e.ty.is_copy() {
                     self.bind(e.ty, &lit)
                 } else {

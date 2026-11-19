@@ -363,6 +363,29 @@ Code generation: a method is an ordinary C function `yv_fn_Type__name` whose fir
 is the receiver (by value for `self`/`sink self`, a pointer for `inout self`). Tests:
 `tests/p0/run_methods.yv`, `tests/p0/errors_methods.yv` (11 errors).
 
+## User destructors (`Drop`)
+
+Supported (cheat sheet §5 "析构"; semantic table V4, V6, V10, V11):
+
+- `struct T: Drop { fn drop(inout self) { ... } }` (also on enums). The compiler calls `drop`
+  when a complete value is dropped: at the end of its scope, on overwrite (after the new value
+  is computed, V5), for `let _ = x`, for temporaries, for elements of a dropped `Vec`/`Map`/
+  optional, and when a `try` leaves early. The user's `drop` runs first, then the fields in
+  reverse declaration order. Moved-out values and fields of a struct literal that failed half
+  way are not given to the user's `drop` (only the finished fields are dropped).
+- A `Drop` type is never copyable, even if all its fields are scalars.
+- Errors: `x.drop()` is `E0801`; `T: Drop` without exactly `fn drop(inout self)` (missing,
+  extra parameters, a return type such as `() ! E`) is `E0802`, and so is a method named
+  `drop` on a type that does not declare `Drop`; inside `drop`, overwriting, moving, `take`,
+  `replace` or `swap` of the whole `self` is `E0803` (fields may still be taken or replaced).
+
+Code generation: a `Drop` type has a hidden `uint8_t yv_live` member that literals set to 1.
+Moves zero the source as before, so a moved-out value has `yv_live == 0`; its drop helper
+returns immediately, otherwise it clears the flag, calls `yv_fn_T__drop` and drops the
+fields. Tests: `tests/p0/run_drop.yv` (scope order, sink, `let _`, vectors, optionals, an enum
+with `Drop`, a field taken inside `drop`), `tests/p0/errors_drop.yv` (8 errors, 2 warnings);
+spec cases T-D1, T-GR1, T-GR2 and T-G10–T-G13 pass.
+
 ## Spec conformance
 
 ```sh
@@ -379,8 +402,9 @@ runs all 129 cases in `yavo-tests/MANIFEST.json`, after checking each fixture ag
 | unsupported | the compiler reported `U0001` |
 | not_run | needs `yavo fix`, `yavo verify`, fixtures, sanitizers or other platforms |
 
-At this commit: pass 54, wrong 0, unsupported 62, not_run 13 (P1: 44 / 0 / 32 / 7;
-P2: 10 / 0 / 9 / 2; P3: 0 / 0 / 21 / 4). The standard library step added T-G08, T-V4, T-V4p and
+At this commit: pass 61, wrong 0, unsupported 55, not_run 13 (P1: 48 / 0 / 28 / 7;
+P2: 13 / 0 / 6 / 2; P3: 0 / 0 / 21 / 4). User destructors added T-D1, T-GR1, T-GR2 and
+T-G10–T-G13. The standard library step added T-G08, T-V4, T-V4p and
 T-S2 (the runner now writes `fixture_hex` fixtures into a directory of their own and runs the case
 there). Enums, results and owning struct fields added T-C4p, T-C6, T-C6p, T-G14, T-G15 and
 T-G16. Optional values added T-C5, T-G05, T-G06, T-G07 and
