@@ -1,0 +1,53 @@
+// expect-error: E0010 29:11
+// expect-error: E0501 42:13
+// expect-error: E0001 44:13
+// expect-error: E0001 46:25
+// expect-error: E0001 47:13
+// expect-error: E0001 48:13
+// expect-error: E0001 49:13
+// expect-error: E0001 50:12
+// expect-error: E0301 52:13
+fn largest[T: Ord + Copy](xs: []T) -> ?T of xs {
+    if xs.len() == 0 {
+        return none
+    }
+    return xs[0]
+}
+
+fn count[T: Eq](xs: []T, x: T) -> int {
+    return xs.len()
+}
+
+fn make[T]() -> Vec[T] {
+    return []
+}
+
+fn plain(x: int) -> int {
+    return x
+}
+
+fn bad[T: Frobnicate](x: T) {
+}
+
+struct Wrapper[T] {
+    value: T
+}
+
+struct Point {
+    x: int
+}
+
+fn main() {
+    let pts: Vec[Point] = [Point{x: 1}]
+    let a = largest(pts)
+    let names: Vec[String] = ["a".toString()]
+    let b = largest(names)
+    let nums: Vec[int] = [1]
+    let c = count(nums, "x")
+    let d = make()
+    let e = largest[int, str](nums)
+    let f = plain[int](1)
+    let w: Wrapper = Wrapper[int]{value: 1}
+    let text = "abc".toString()
+    let v = Wrapper[str]{value: text.trim()}
+}

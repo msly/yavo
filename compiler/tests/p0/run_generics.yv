@@ -1,0 +1,147 @@
+// expect-stdout:
+// | 9
+// | 10
+// | pear
+// | 1.10
+// | b
+// | true
+// | 1
+// | 1
+// | 1
+// | 2
+// | y
+// | 1
+// | 7
+// | -1
+// | k=2
+// | 3
+// | 1
+fn largest[T: Ord + Copy](xs: []T) -> ?T of xs {
+    if xs.len() == 0 {
+        return none
+    }
+    var best = xs[0]
+    for i in 0..xs.len() {
+        if xs[i] > best {
+            best = xs[i]
+        }
+    }
+    return best
+}
+
+fn first[T](xs: Vec[T]) -> &T of xs {
+    return &xs[0]
+}
+
+fn swapPair[A: Copy, B: Copy](p: (A, B)) -> (B, A) {
+    return (p.1, p.0)
+}
+
+fn count[T: Eq](xs: []T, x: T) -> int {
+    var n = 0
+    for i in 0..xs.len() {
+        if xs[i] == x {
+            n += 1
+        }
+    }
+    return n
+}
+
+struct Version: Ord {
+    major: int
+    minor: int
+    fn cmp(self, other: &Version) -> Ordering {
+        if self.major != other.major {
+            if self.major < other.major {
+                return .Less
+            }
+            return .Greater
+        }
+        if self.minor < other.minor {
+            return .Less
+        }
+        if self.minor > other.minor {
+            return .Greater
+        }
+        return .Equal
+    }
+}
+
+struct Stack[T] {
+    items: Vec[T]
+    name: String
+
+    fn push(inout self, x: sink T) {
+        self.items.push(x)
+    }
+    fn pop(inout self) -> ?T {
+        return self.items.pop()
+    }
+    fn size(self) -> int {
+        return self.items.len()
+    }
+    fn make(name: str) -> Self {
+        return Stack{items: [], name: name.toString()}
+    }
+}
+
+struct Pair[A, B] {
+    a: A
+    b: B
+}
+
+struct Node[T] {
+    value: T
+    next: ?Box[Node[T]]
+}
+
+fn sumList(n: ?Box[Node[int]]) -> int {
+    if let x = n {
+        return x.value + sumList(x.next)
+    }
+    return 0
+}
+
+fn wrapIn[T](x: sink T) -> Stack[T] {
+    var s = Stack[T]{items: [], name: "w".toString()}
+    s.push(x)
+    return s
+}
+
+fn main() {
+    var nums: Vec[int] = [3, 9, 4]
+    let top = largest(nums)
+    nums.push(10)
+    println(top ?? 0)
+    println(largest[int](nums) ?? 0)
+    let text = "pear apple fig".toString()
+    let words = text.fields()
+    println(largest(words) ?? "")
+    let vs: Vec[Version] = [Version{major: 1, minor: 2}, Version{major: 1, minor: 10}, Version{major: 0, minor: 99}]
+    if let v = largest(vs) {
+        println("${v.major}.${v.minor}")
+    }
+    let names: Vec[String] = ["b".toString(), "a".toString()]
+    println(first(names))
+    let p = swapPair((1, true))
+    println(p.0)
+    println(p.1)
+    println(count(nums, 4))
+    println(count(words, "fig"))
+    var s = Stack[String]{items: [], name: "strs".toString()}
+    s.push("x".toString())
+    s.push("y".toString())
+    println(s.size())
+    println(s.pop() ?? "none".toString())
+    println(s.size())
+    var si = Stack[int]{items: [], name: "ints".toString()}
+    si.push(7)
+    println(si.pop() ?? 0)
+    println(si.pop() ?? -1)
+    let pr = Pair[String, int]{a: "k".toString(), b: 2}
+    println("${pr.a}=${pr.b}")
+    let list: ?Box[Node[int]] = Box(Node[int]{value: 1, next: Box(Node[int]{value: 2, next: none})})
+    println(sumList(list))
+    let w = wrapIn("boxed".toString())
+    println(w.size())
+}

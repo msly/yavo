@@ -372,6 +372,9 @@ pub enum Builtin {
 
 /// Stands for a function that was already reported as unusable here.
 const NO_FN: usize = usize::MAX;
+/// Signature numbers from here on are interface method slots (`Checker::dyn_sigs`); below it,
+/// a signature number is also the function's index (user functions, then lifted functions).
+const DYN_BASE: usize = 1 << 40;
 const OUTPUT_FNS: [&str; 3] = ["println", "print", "eprintln"];
 const UNSUPPORTED_TYPES: &[&str] = &[
     "f32", "f64", "Set", "Rc", "Arc", "Arena", "Id", "Mutex", "Atomic", "Channel", "Guard", "SendError", "Join",
@@ -574,7 +577,7 @@ impl Pre {
             ExprKind::Ident(n) => {
                 self.occ.push(Occ { idx, line: e.span.line, name: n.clone(), loops: stack.to_vec() })
             }
-            ExprKind::Int(_) | ExprKind::Byte(_) | ExprKind::Bool(_) | ExprKind::None | ExprKind::Break | ExprKind::Continue | ExprKind::Unit => {}
+            ExprKind::Int(_) | ExprKind::Byte(_) | ExprKind::Bool(_) | ExprKind::None | ExprKind::Break | ExprKind::Continue | ExprKind::Unit | ExprKind::Generic { .. } => {}
             ExprKind::Return(v) => {
                 if let Some(v) = v {
                     self.expr(v, idx, stack);
@@ -847,7 +850,7 @@ fn place_root(h: &HExpr) -> Option<LocalId> {
 fn mentions(e: &Expr, name: &str) -> bool {
     match &e.kind {
         ExprKind::Ident(n) => n == name,
-        ExprKind::Int(_) | ExprKind::Byte(_) | ExprKind::Bool(_) | ExprKind::None | ExprKind::Break | ExprKind::Continue | ExprKind::Unit => false,
+        ExprKind::Int(_) | ExprKind::Byte(_) | ExprKind::Bool(_) | ExprKind::None | ExprKind::Break | ExprKind::Continue | ExprKind::Unit | ExprKind::Generic { .. } => false,
         ExprKind::Return(v) => v.as_ref().is_some_and(|v| mentions(v, name)),
         ExprKind::Case { args, .. } => args.iter().flatten().any(|a| mentions(a, name)),
         ExprKind::Named { value, .. } | ExprKind::Err(value) | ExprKind::Try(value) => mentions(value, name),
@@ -880,7 +883,7 @@ fn idents_expr(e: &Expr, out: &mut Vec<(String, u32)>) {
     let sub = |x: &Expr, out: &mut Vec<(String, u32)>| idents_expr(x, out);
     match &e.kind {
         ExprKind::Ident(n) => out.push((n.clone(), e.span.line)),
-        ExprKind::Int(_) | ExprKind::Byte(_) | ExprKind::Bool(_) | ExprKind::None | ExprKind::Break | ExprKind::Continue | ExprKind::Unit => {}
+        ExprKind::Int(_) | ExprKind::Byte(_) | ExprKind::Bool(_) | ExprKind::None | ExprKind::Break | ExprKind::Continue | ExprKind::Unit | ExprKind::Generic { .. } => {}
         ExprKind::Return(v) => {
             if let Some(v) = v {
                 sub(v, out);
@@ -1004,6 +1007,29 @@ struct Checker<'d> {
     impl_index: HashMap<(Ty, usize), usize>,
     /// (type, interface) pairs declared with `struct T: I`, valid or not.
     declared_impls: std::collections::HashSet<(Ty, usize)>,
+    /// Signatures of interface method slots, numbered from `DYN_BASE`.
+    dyn_sigs: Vec<Sig>,
+    /// The program, for instantiating generic functions and structs from their declarations.
+    prog: &'d Program,
+    /// Generic functions and structs by name (index into `prog.fns` / `prog.structs`).
+    gen_fns: HashMap<String, usize>,
+    gen_structs: HashMap<String, usize>,
+    /// Instances made so far: generic functions (and methods of generic structs) by declaration
+    /// index and type arguments, as function indexes; generic structs as types.
+    fn_insts: HashMap<(usize, Vec<Ty>), usize>,
+    struct_insts: HashMap<(usize, Vec<Ty>), Ty>,
+    /// The generic struct and type arguments of each struct instance.
+    inst_of: HashMap<Ty, (usize, Vec<Ty>)>,
+    /// What type parameters (and, inside a generic struct's methods, its own name and `Self`)
+    /// stand for while an instance is resolved or checked.
+    subst: HashMap<String, Ty>,
+    /// Function instances whose bodies still have to be checked: (function index, declaration
+    /// index, substitution, C-safe name).
+    pending: Vec<(usize, usize, HashMap<String, Ty>, String)>,
+    /// `collect_structs` has finished: struct instances made from now on are finished at once
+    /// and listed in `late_structs` (after the ordered structs, which they only depend on).
+    structs_done: bool,
+    late_structs: Vec<usize>,
 }
 
 struct IfaceDef {
@@ -1051,17 +1077,46 @@ pub fn check(prog: &Program, diags: &mut Diags) -> Option<HProgram> {
         dyn_slots: HashMap::new(),
         impls: Vec::new(),
         impl_index: HashMap::new(),
+        dyn_sigs: Vec::new(),
+        prog,
+        gen_fns: HashMap::new(),
+        gen_structs: HashMap::new(),
+        fn_insts: HashMap::new(),
+        struct_insts: HashMap::new(),
+        inst_of: HashMap::new(),
+        subst: HashMap::new(),
+        pending: Vec::new(),
+        structs_done: false,
+        late_structs: Vec::new(),
         declared_impls: Default::default(),
     };
     ck.collect_uses(prog);
     ck.collect_iface_names(prog);
+    for (i, f) in prog.fns.iter().enumerate() {
+        if !f.type_params.is_empty() {
+            ck.gen_fns.insert(f.name.clone(), i);
+        }
+    }
+    for (i, s) in prog.structs.iter().enumerate() {
+        if !s.type_params.is_empty() {
+            ck.gen_structs.insert(s.name.clone(), i);
+        }
+    }
     let order = ck.collect_structs(prog);
     ck.collect(prog);
     ck.collect_iface_sigs(prog);
     ck.check_impls(prog);
     ck.check_drops(prog);
     ck.check_protocols(prog);
-    let mut fns: Vec<HFn> = prog.fns.iter().enumerate().map(|(i, f)| ck.function(f, i)).collect();
+    let mut fns: Vec<HFn> = prog.fns.iter().enumerate().map(|(i, f)| ck.function_or_template(f, i)).collect();
+    // Generic functions are checked once per instantiation; checking one may instantiate more.
+    while let Some((idx, di, subst, name)) = ck.pending.pop() {
+        let saved = std::mem::replace(&mut ck.subst, subst);
+        let mut h = ck.function(&prog.fns[di], idx);
+        ck.subst = saved;
+        h.name = name;
+        ck.lifted[idx - ck.n_fns] = h;
+    }
     fns.append(&mut ck.lifted);
     let mut unused: Vec<(Span, String)> =
         ck.imports.iter().filter(|(_, (_, used))| !used).map(|(m, (sp, _))| (*sp, m.clone())).collect();
@@ -1072,8 +1127,11 @@ pub fn check(prog: &Program, diags: &mut Diags) -> Option<HProgram> {
     if ck.diags.has_errors() {
         None
     } else {
+        let templates: Vec<usize> = ck.gen_structs.values().copied().collect();
         let structs = order
             .into_iter()
+            .filter(|i| !templates.contains(i))
+            .chain(std::mem::take(&mut ck.late_structs))
             .map(|i| {
                 let s = &ck.structs[i];
                 HStruct {
@@ -1097,7 +1155,7 @@ pub fn check(prog: &Program, diags: &mut Diags) -> Option<HProgram> {
                     .methods
                     .iter()
                     .map(|(_, s, _)| {
-                        let sig = &ck.sigs[*s];
+                        let sig = &ck.sig(*s);
                         HIfaceMethod { params: sig.params.clone(), inouts: sig.inouts.clone(), sinks: sig.sinks.clone(), ret: sig.ret }
                     })
                     .collect(),
@@ -1306,6 +1364,14 @@ impl Checker<'_> {
             self.structs.push(StructDef { name: lname.to_string(), span, ty, fields: Vec::new(), variants });
         }
         for (i, s) in prog.structs.iter().enumerate() {
+            // A generic struct's fields are resolved per instance.
+            if !s.type_params.is_empty() {
+                self.check_type_params(&s.type_params);
+                if let Some((n, sp)) = s.impls.first() {
+                    self.diags.error("U0001", *sp, format!("a generic struct cannot declare `{n}` yet"));
+                }
+                continue;
+            }
             self.structs[i].fields = self.member_fields(&s.fields, &s.name);
         }
         let base = prog.structs.len();
@@ -1346,6 +1412,7 @@ impl Checker<'_> {
             let (Ty::Struct(id) | Ty::Enum(id)) = s.ty else { unreachable!() };
             finish_agg(id, members);
         }
+        self.structs_done = true;
         order
     }
 
@@ -1439,11 +1506,30 @@ impl Checker<'_> {
         }
     }
 
-    fn struct_lit(&mut self, name: &str, name_span: Span, inits: &[FieldInit], span: Span, cx: &mut FnCx) -> HExpr {
+    fn struct_lit(&mut self, name: &str, name_span: Span, targs: &[TypeExpr], inits: &[FieldInit], span: Span, cx: &mut FnCx) -> HExpr {
         if name == "String" && inits.is_empty() {
             return HExpr { kind: HExprKind::EmptyString, ty: Ty::String, span, at: span };
         }
-        let Some(&si) = self.struct_index.get(name) else {
+        // `Wrapper[String]{...}`, or a generic struct's own name inside its methods.
+        let generic = if !targs.is_empty() || self.subst.contains_key(name) || self.gen_structs.contains_key(name) {
+            let te = TypeExpr { name: name.to_string(), span: name_span, args: targs.to_vec() };
+            match self.resolve_ty(&te) {
+                t @ Ty::Struct(_) => self.structs.iter().position(|s| s.ty == t),
+                Ty::Error => {
+                    for init in inits {
+                        self.expr(&init.value, Some(Ty::Error), cx);
+                    }
+                    return err_expr(span);
+                }
+                other => {
+                    self.diags.error("E0001", name_span, format!("`{other}` is not a struct"));
+                    return err_expr(span);
+                }
+            }
+        } else {
+            None
+        };
+        let Some(si) = generic.or_else(|| self.struct_index.get(name).copied()) else {
             if UNSUPPORTED_TYPES.contains(&name) {
                 self.mark_type_used(name);
                 self.diags.error("U0001", name_span, format!("constructing `{name}` is not supported in P0"));
@@ -1644,16 +1730,17 @@ impl Checker<'_> {
                     ret_of,
                     has_self: true,
                 };
-                self.dyn_slots.insert(self.sigs.len(), (ii, self.ifaces[ii].methods.len()));
-                self.ifaces[ii].methods.push((short, self.sigs.len(), m.name_span));
-                self.sigs.push(sig);
+                let s = DYN_BASE + self.dyn_sigs.len();
+                self.dyn_slots.insert(s, (ii, self.ifaces[ii].methods.len()));
+                self.ifaces[ii].methods.push((short, s, m.name_span));
+                self.dyn_sigs.push(sig);
             }
         }
     }
 
     /// `fn name(self, int, inout Vec[int]) -> String`, for diagnostics.
     fn sig_text(&self, name: &str, s: usize) -> String {
-        let sig = &self.sigs[s];
+        let sig = &self.sig(s);
         let mut parts = Vec::new();
         for (i, t) in sig.params.iter().enumerate() {
             let mode = if sig.inouts[i] {
@@ -1705,7 +1792,7 @@ impl Checker<'_> {
                             .note(format!("add `{want}` to `{owner}`'s body"));
                         continue;
                     };
-                    let (a, b) = (&self.sigs[fi], &self.sigs[*s]);
+                    let (a, b) = (&self.sig(fi), &self.sig(*s));
                     let same = a.has_self
                         && a.params.len() == b.params.len()
                         && a.params[1..] == b.params[1..]
@@ -1786,14 +1873,20 @@ impl Checker<'_> {
 
     fn collect(&mut self, prog: &Program) {
         for f in &prog.fns {
-            let params = f.params.iter().map(|p| self.resolve_ty(&p.ty)).collect();
-            let sinks = f.params.iter().map(|p| p.sink).collect();
-            let inouts = f.params.iter().map(|p| p.inout).collect();
-            let ret = f.ret.as_ref().map(|t| self.resolve_ty(t)).unwrap_or(Ty::Unit);
-            let ret_of = f.ret_of.as_ref().map(|names| {
-                names.iter().filter_map(|(n, _)| f.params.iter().position(|p| p.name == *n)).collect()
-            });
-            let has_self = f.owner.is_some() && f.params.first().is_some_and(|p| p.name == "self");
+            // A generic function, or a method of a generic struct, gets a signature per
+            // instance; its own slot keeps a placeholder so that indexes stay aligned.
+            let template = !f.type_params.is_empty() || f.owner.as_ref().is_some_and(|o| self.gen_structs.contains_key(o));
+            if !f.type_params.is_empty() && f.owner.is_some() {
+                self.diags.error("U0001", f.type_params[0].span, "generic methods are not supported yet; make the struct generic instead");
+            }
+            if !f.type_params.is_empty() {
+                self.check_type_params(&f.type_params);
+            }
+            let sig = if template {
+                Sig { params: Vec::new(), sinks: Vec::new(), inouts: Vec::new(), ret: Ty::Unit, ret_of: None, has_self: false }
+            } else {
+                self.make_sig(f)
+            };
             if f.owner.is_none() && (OUTPUT_FNS.contains(&f.name.as_str()) || is_type_name(&f.name)) {
                 self.diags.error("E0011", f.name_span, format!("`{}` is a built-in name and cannot be redefined", f.name));
             } else if let Some(&prev) = self.index.get(&f.name) {
@@ -1805,7 +1898,7 @@ impl Checker<'_> {
             } else {
                 self.index.insert(f.name.clone(), self.sigs.len());
             }
-            self.sigs.push(Sig { params, sinks, inouts, ret, ret_of, has_self });
+            self.sigs.push(sig);
         }
         match self.index.get("main") {
             None => {
@@ -1816,7 +1909,7 @@ impl Checker<'_> {
             }
             Some(&i) => {
                 let f = &prog.fns[i];
-                if !f.params.is_empty() || self.sigs[i].ret != Ty::Unit {
+                if !f.params.is_empty() || self.sig(i).ret != Ty::Unit || !f.type_params.is_empty() {
                     self.diags.error(
                         "E0016",
                         f.name_span,
@@ -1828,6 +1921,418 @@ impl Checker<'_> {
     }
 
     fn resolve_ty(&mut self, t: &TypeExpr) -> Ty {
+        self.resolve_ty_inner(t)
+    }
+
+    /// The signature of function `i` (a user function, a lifted function) or of an interface
+    /// method slot (`DYN_BASE` and up).
+    fn sig(&self, i: usize) -> &Sig {
+        if i >= DYN_BASE {
+            &self.dyn_sigs[i - DYN_BASE]
+        } else {
+            &self.sigs[i]
+        }
+    }
+
+    /// Resolves a function's parameter and return types (under the current substitution).
+    fn make_sig(&mut self, f: &FnDecl) -> Sig {
+        let params = f.params.iter().map(|p| self.resolve_ty(&p.ty)).collect();
+        let sinks = f.params.iter().map(|p| p.sink).collect();
+        let inouts = f.params.iter().map(|p| p.inout).collect();
+        let ret = f.ret.as_ref().map(|t| self.resolve_ty(t)).unwrap_or(Ty::Unit);
+        let ret_of = f.ret_of.as_ref().map(|names| {
+            names.iter().filter_map(|(n, _)| f.params.iter().position(|p| p.name == *n)).collect()
+        });
+        let has_self = f.owner.is_some() && f.params.first().is_some_and(|p| p.name == "self");
+        Sig { params, sinks, inouts, ret, ret_of, has_self }
+    }
+
+    /// Type parameter names must be distinct, and bounds must be protocols or interfaces.
+    fn check_type_params(&mut self, tps: &[TypeParam]) {
+        for (i, tp) in tps.iter().enumerate() {
+            if tps[..i].iter().any(|o| o.name == tp.name) {
+                self.diags.error("E0011", tp.span, format!("type parameter `{}` is declared more than once", tp.name));
+            }
+            if is_type_name(&tp.name) || self.struct_index.contains_key(&tp.name) {
+                self.diags.error("E0011", tp.span, format!("type parameter `{}` has the name of a type", tp.name));
+            }
+            for (b, sp) in &tp.bounds {
+                match b.as_str() {
+                    "Copy" | "Eq" | "Ord" => {}
+                    "Send" | "Sync" => {
+                        self.diags.error("U0001", *sp, format!("the bound `{b}` is not supported yet"));
+                    }
+                    _ if self.iface_index.contains_key(b) => {}
+                    _ => {
+                        self.diags.error("E0010", *sp, format!("cannot find the bound `{b}` (a protocol such as `Ord`, or an interface)"));
+                    }
+                }
+            }
+        }
+    }
+
+    /// A user function; a generic one (or a method of a generic struct) only has a placeholder
+    /// here, since it is checked per instance.
+    fn function_or_template(&mut self, f: &FnDecl, idx: usize) -> HFn {
+        let template = !f.type_params.is_empty() || f.owner.as_ref().is_some_and(|o| self.gen_structs.contains_key(o));
+        if template {
+            let name = format!("template.{idx}");
+            return HFn { name, params: Vec::new(), sinks: Vec::new(), ret: Ty::Unit, locals: Vec::new(), body: Vec::new() };
+        }
+        self.function(f, idx)
+    }
+
+    /// Whether `t` satisfies the bound `b` (K1, K2; an interface bound needs `struct T: I`).
+    fn satisfies(&self, t: Ty, b: &str) -> bool {
+        match b {
+            "Copy" => t.is_copy(),
+            "Eq" | "Ord" => {
+                let ord = b == "Ord";
+                match t {
+                    Ty::Int(_) | Ty::Bool | Ty::Str | Ty::String | Ty::Error => true,
+                    Ty::Tuple(id) => tuple_elems(id).iter().all(|e| self.satisfies(*e, b)),
+                    Ty::Struct(_) | Ty::Enum(_) => match self.protocol(t) {
+                        Some((cmp, eq)) => cmp.is_some() || (!ord && eq.is_some()),
+                        // Enums whose cases carry no payload compare by case (`==` only).
+                        None => !ord && self.ctors_of(t).is_some_and(|cs| cs.iter().all(|c| c.is_empty())) && matches!(t, Ty::Enum(_)),
+                    },
+                    _ => false,
+                }
+            }
+            _ => match self.iface_index.get(b) {
+                Some(&ii) => self.impl_index.contains_key(&(t, ii)),
+                None => true, // reported at the declaration
+            },
+        }
+    }
+
+    /// Checks `args` against the bounds of `tps`; reports each failure at `span`.
+    fn check_bounds(&mut self, what: &str, tps: &[TypeParam], args: &[Ty], span: Span) -> bool {
+        let mut ok = true;
+        for (tp, &t) in tps.iter().zip(args) {
+            for (b, _) in &tp.bounds {
+                if self.satisfies(t, b) {
+                    continue;
+                }
+                ok = false;
+                let code = if matches!(b.as_str(), "Eq" | "Ord") { "E0501" } else { "E0001" };
+                let d = self.diags.error(code, span, format!("`{t}` does not satisfy `{}: {b}`, which `{what}` requires", tp.name));
+                if b == "Copy" {
+                    d.note("pass a copyable type, or remove the `Copy` bound and borrow the values instead");
+                } else if self.iface_index.contains_key(b) {
+                    d.note(format!("declare it as `struct {t}: {b}`"));
+                }
+            }
+        }
+        ok
+    }
+
+    /// `Name[args]` for a generic struct: its instance, made on first use. A view cannot be a
+    /// type argument (E2: `Wrapper[str]` is rejected).
+    fn instantiate_struct(&mut self, di: usize, args: Vec<Ty>, span: Span) -> Ty {
+        let decl = &self.prog.structs[di];
+        if args.contains(&Ty::Error) {
+            return Ty::Error;
+        }
+        if args.len() != decl.type_params.len() {
+            self.diags.error(
+                "E0001",
+                span,
+                format!("`{}` takes {}, but {} were given", decl.name, plural(decl.type_params.len(), "type argument"), args.len()),
+            );
+            return Ty::Error;
+        }
+        if let Some(&t) = self.struct_insts.get(&(di, args.clone())) {
+            return t;
+        }
+        let shown: Vec<String> = args.iter().map(|t| t.to_string()).collect();
+        let inst_name = format!("{}[{}]", decl.name, shown.join(", "));
+        if let Some(&t) = args.iter().find(|t| t.carries_borrow()) {
+            self.diags
+                .error("E0301", span, format!("`{inst_name}` cannot be made: a generic struct cannot hold a `{t}`, which is a view"))
+                .note("use an owned type argument, e.g. `String` (call `.toString()`)");
+            return Ty::Error;
+        }
+        if !self.check_bounds(&decl.name, &decl.type_params, &args, span) {
+            return Ty::Error;
+        }
+        let ty = Ty::Struct(register_struct(&inst_name));
+        let si = self.structs.len();
+        self.structs.push(StructDef { name: inst_name.clone(), span: decl.name_span, ty, fields: Vec::new(), variants: Vec::new() });
+        // Registered before the fields are resolved, so `?Box[List[T]]` inside `List[T]` works.
+        self.struct_insts.insert((di, args.clone()), ty);
+        self.inst_of.insert(ty, (di, args.clone()));
+        let mut subst: HashMap<String, Ty> = decl.type_params.iter().map(|tp| tp.name.clone()).zip(args.iter().copied()).collect();
+        subst.insert(decl.name.clone(), ty);
+        let saved = std::mem::replace(&mut self.subst, subst);
+        let fields = self.member_fields(&decl.fields, &inst_name);
+        self.subst = saved;
+        self.structs[si].fields = fields;
+        if self.structs_done {
+            let (Ty::Struct(id) | Ty::Enum(id)) = ty else { unreachable!() };
+            finish_agg(id, vec![self.structs[si].fields.iter().map(|f| f.1).collect()]);
+            self.late_structs.push(si);
+        }
+        ty
+    }
+
+    /// The instance of generic function `di` (or of a method of a generic struct) for
+    /// `args`: a function index, reserved now and checked later.
+    fn instantiate_fn(&mut self, di: usize, args: Vec<Ty>, extra: Option<(String, Ty)>, span: Span) -> usize {
+        let key = (di, args.clone());
+        if let Some(&fi) = self.fn_insts.get(&key) {
+            return fi;
+        }
+        let decl = &self.prog.fns[di];
+        let mut subst: HashMap<String, Ty> = HashMap::new();
+        let mut keys: Vec<String> = Vec::new();
+        match &extra {
+            // A method of a generic struct: the struct's parameters, its name and `Self`.
+            Some((owner, inst)) => {
+                let sdecl = &self.prog.structs[self.gen_structs[owner]];
+                subst.extend(sdecl.type_params.iter().map(|tp| tp.name.clone()).zip(args.iter().copied()));
+                subst.insert(owner.clone(), *inst);
+                keys.push(inst.key());
+            }
+            None => {
+                if !self.check_bounds(&decl.name, &decl.type_params, &args, span) {
+                    return NO_FN;
+                }
+                subst.extend(decl.type_params.iter().map(|tp| tp.name.clone()).zip(args.iter().copied()));
+                keys.extend(args.iter().map(|t| t.key()));
+            }
+        }
+        let idx = self.n_fns + self.lifted.len();
+        debug_assert_eq!(idx, self.sigs.len());
+        let short = decl.name.rsplit('.').next().unwrap_or(&decl.name).to_string();
+        let name = match &extra {
+            Some(_) => format!("{}.{short}", keys.join("_")),
+            None => format!("{}.{}", decl.name, keys.join("_")),
+        };
+        self.lifted.push(HFn { name: name.clone(), params: Vec::new(), sinks: Vec::new(), ret: Ty::Unit, locals: Vec::new(), body: Vec::new() });
+        let saved = std::mem::replace(&mut self.subst, subst.clone());
+        let sig = self.make_sig(decl);
+        self.subst = saved;
+        self.sigs.push(sig);
+        self.fn_insts.insert(key, idx);
+        self.pending.push((idx, di, subst, name));
+        idx
+    }
+
+    /// A call of generic function `di`: explicit type arguments, or inferred from the
+    /// arguments' types.
+    fn generic_call(&mut self, di: usize, targs: Option<&[TypeExpr]>, args: &[Expr], span: Span, at: Span, cx: &mut FnCx) -> HExpr {
+        let decl = &self.prog.fns[di];
+        let name = decl.name.clone();
+        let tys = match targs {
+            Some(ts) => {
+                let tys: Vec<Ty> = ts.iter().map(|t| self.resolve_ty(t)).collect();
+                if tys.len() != decl.type_params.len() {
+                    self.diags.error(
+                        "E0001",
+                        at,
+                        format!("`{name}` takes {}, but {} were given", plural(decl.type_params.len(), "type argument"), tys.len()),
+                    );
+                    None
+                } else if tys.contains(&Ty::Error) {
+                    None
+                } else {
+                    Some(tys)
+                }
+            }
+            None => self.infer(di, args, at, cx),
+        };
+        let Some(tys) = tys else {
+            for a in args {
+                self.expr(a, None, cx);
+            }
+            return err_expr(span);
+        };
+        let fi = self.instantiate_fn(di, tys, None, at);
+        if fi == NO_FN {
+            for a in args {
+                self.expr(a, None, cx);
+            }
+            return err_expr(span);
+        }
+        self.call_fn(fi, &name, None, args, span, at, cx)
+    }
+
+    /// Infers the type arguments of generic function `di` from its arguments' types.
+    fn infer(&mut self, di: usize, args: &[Expr], at: Span, cx: &FnCx) -> Option<Vec<Ty>> {
+        let decl = &self.prog.fns[di];
+        let names: Vec<String> = decl.type_params.iter().map(|tp| tp.name.clone()).collect();
+        let mut bound: Vec<Option<Ty>> = vec![None; names.len()];
+        for (p, a) in decl.params.iter().zip(args) {
+            let a = match (&a.kind, p.inout) {
+                (ExprKind::Borrow(inner), true) => inner.as_ref(),
+                _ => a,
+            };
+            let Some(t) = self.peek_ty(a, cx) else { continue };
+            if let Err((n, a1, a2)) = self.unify(&p.ty, t, &names, &mut bound) {
+                self.diags
+                    .error("E0001", a.span, format!("`{}` is used as both `{a1}` and `{a2}` in this call of `{}`", n, decl.name))
+                    .note(format!("write the type arguments, e.g. `{}[{a1}](...)`", decl.name));
+                return None;
+            }
+        }
+        if let Some(i) = bound.iter().position(|b| b.is_none()) {
+            let shown = names.join(", ");
+            self.diags
+                .error("E0001", at, format!("cannot tell what `{}` is in this call of `{}`", names[i], decl.name))
+                .note(format!("write the type arguments: `{}[{shown}](...)` with types in place of {shown}", decl.name));
+            return None;
+        }
+        Some(bound.into_iter().map(|b| b.unwrap()).collect())
+    }
+
+    /// Matches a parameter type written with type parameters against an argument's type.
+    fn unify(&self, te: &TypeExpr, t: Ty, names: &[String], bound: &mut [Option<Ty>]) -> Result<(), (String, Ty, Ty)> {
+        if te.args.is_empty() {
+            if let Some(i) = names.iter().position(|n| *n == te.name) {
+                // A value read through a reference stands for its target.
+                let t = match t {
+                    Ty::Ref(r) => ref_inner(r),
+                    Ty::RefMut(r) => ref_mut_inner(r),
+                    t => t,
+                };
+                return match bound[i] {
+                    None => {
+                        bound[i] = Some(t);
+                        Ok(())
+                    }
+                    Some(b) if b == t => Ok(()),
+                    Some(b) => Err((te.name.clone(), b, t)),
+                };
+            }
+            return Ok(());
+        }
+        let t = match t {
+            Ty::Ref(r) if te.name != "&" => ref_inner(r),
+            Ty::RefMut(r) => ref_mut_inner(r),
+            t => t,
+        };
+        let sub = |s: &Self, i: usize, t: Ty, bound: &mut [Option<Ty>]| s.unify(&te.args[i], t, names, bound);
+        match (te.name.as_str(), t) {
+            ("[]" | "Vec", Ty::Vec(v)) => sub(self, 0, vec_elem(v), bound),
+            ("[]", Ty::Slice(s)) => sub(self, 0, slice_elem(s), bound),
+            ("?", Ty::Opt(o)) => sub(self, 0, opt_inner(o), bound),
+            // A `T` passed where `?T` is expected is wrapped.
+            ("?", t) => sub(self, 0, t, bound),
+            ("&", Ty::Ref(r)) => sub(self, 0, ref_inner(r), bound),
+            ("&", t) => sub(self, 0, t, bound),
+            ("Box", Ty::Box(b)) => sub(self, 0, box_inner(b), bound),
+            ("Map", Ty::Map(m)) => {
+                let (k, v) = map_parts(m);
+                sub(self, 0, k, bound)?;
+                sub(self, 1, v, bound)
+            }
+            ("!", Ty::Res(r)) => {
+                let (o, e) = res_parts(r);
+                sub(self, 0, o, bound)?;
+                sub(self, 1, e, bound)
+            }
+            ("(,)", Ty::Tuple(id)) => {
+                let elems = tuple_elems(id);
+                for (i, e) in elems.into_iter().enumerate().take(te.args.len()) {
+                    sub(self, i, e, bound)?;
+                }
+                Ok(())
+            }
+            (n, Ty::Struct(_)) => match self.inst_of.get(&t) {
+                Some((di, targs)) if self.prog.structs[*di].name == n => {
+                    for (i, a) in targs.clone().into_iter().enumerate().take(te.args.len()) {
+                        sub(self, i, a, bound)?;
+                    }
+                    Ok(())
+                }
+                _ => Ok(()),
+            },
+            _ => Ok(()),
+        }
+    }
+
+    /// The type of `e`, worked out without checking it (no diagnostics, no moves), for type
+    /// argument inference; `None` when that needs a full check.
+    fn peek_ty(&self, e: &Expr, cx: &FnCx) -> Option<Ty> {
+        Some(match &e.kind {
+            ExprKind::Ident(n) => cx.locals[self.lookup(cx, n)?].ty,
+            ExprKind::Paren(inner) => self.peek_ty(inner, cx)?,
+            ExprKind::Int(_) => Ty::Int(IntTy::I64),
+            ExprKind::Byte(_) => Ty::Int(IntTy::U8),
+            ExprKind::Bool(_) => Ty::Bool,
+            ExprKind::Str(_) => Ty::Str,
+            ExprKind::Unary { op: UnOp::Neg, expr, .. } => self.peek_ty(expr, cx)?,
+            ExprKind::Borrow(inner) => Ty::Ref(ref_of(self.peek_ty(inner, cx)?)),
+            ExprKind::Field { base, name } => {
+                let mut t = self.peek_ty(base, cx)?;
+                loop {
+                    t = match t {
+                        Ty::Ref(r) => ref_inner(r),
+                        Ty::RefMut(r) => ref_mut_inner(r),
+                        Ty::Box(b) => box_inner(b),
+                        _ => break,
+                    };
+                }
+                match t {
+                    Ty::Tuple(id) => *tuple_elems(id).get(name.parse::<usize>().ok()?)?,
+                    _ => self.struct_field(t, name)?.1,
+                }
+            }
+            ExprKind::Index { base, .. } => match self.peek_ty(base, cx)? {
+                Ty::Ref(r) => seq_elem(ref_inner(r))?,
+                t => seq_elem(t)?,
+            },
+            ExprKind::VecLit(items) => Ty::Vec(vec_of(self.peek_ty(items.first()?, cx)?)),
+            ExprKind::Tuple(items) => {
+                let elems: Option<Vec<Ty>> = items.iter().map(|i| self.peek_ty(i, cx)).collect();
+                Ty::Tuple(tuple_of(elems?))
+            }
+            ExprKind::StructLit { name, targs, .. } if targs.is_empty() => {
+                if let Some(&t) = self.subst.get(name) {
+                    t
+                } else {
+                    self.structs[*self.struct_index.get(name)?].ty
+                }
+            }
+            ExprKind::Call { callee, .. } => match &callee.kind {
+                ExprKind::Ident(n) if self.lookup(cx, n).is_none() && !self.gen_fns.contains_key(n) => match n.as_str() {
+                    "Box" => return None,
+                    _ => self.sig(*self.index.get(n)?).ret,
+                },
+                ExprKind::Field { base, name } => match (name.as_str(), self.peek_ty(base, cx)) {
+                    ("toString" | "toLower" | "toUpper", _) => Ty::String,
+                    ("len", _) => Ty::Int(IntTy::I64),
+                    ("clone", Some(t)) => match t {
+                        Ty::Ref(r) => ref_inner(r),
+                        t => t,
+                    },
+                    ("trim", _) => Ty::Str,
+                    _ => return None,
+                },
+                _ => return None,
+            },
+            _ => return None,
+        })
+    }
+
+    fn resolve_ty_inner(&mut self, t: &TypeExpr) -> Ty {
+        // A type parameter (or, in a generic struct's method, the struct's own name).
+        if t.args.is_empty() {
+            if let Some(&ty) = self.subst.get(&t.name) {
+                return ty;
+            }
+        }
+        if let Some(&di) = self.gen_structs.get(&t.name) {
+            if t.args.is_empty() {
+                let n = self.prog.structs[di].type_params.len();
+                self.diags
+                    .error("E0001", t.span, format!("`{}` is generic: write its type arguments, e.g. `{}[{}]`", t.name, t.name, vec!["int"; n].join(", ")));
+                return Ty::Error;
+            }
+            let args: Vec<Ty> = t.args.iter().map(|a| self.resolve_ty(a)).collect();
+            return self.instantiate_struct(di, args, t.span);
+        }
         if t.name == "()" {
             return Ty::Unit;
         }
@@ -1987,9 +2492,9 @@ impl Checker<'_> {
     }
 
     fn function(&mut self, f: &FnDecl, idx: usize) -> HFn {
-        let ret = self.sigs[idx].ret;
-        let param_tys = self.sigs[idx].params.clone();
-        let sinks = self.sigs[idx].sinks.clone();
+        let ret = self.sig(idx).ret;
+        let param_tys = self.sig(idx).params.clone();
+        let sinks = self.sig(idx).sinks.clone();
         let mut cx = FnCx::new(ret, Pre::build(&f.body));
         cx.ret_of = f.ret_of.as_ref().map(|v| v.iter().map(|(n, _)| n.clone()).collect());
         cx.in_drop = f.owner.as_ref().is_some_and(|o| {
@@ -2128,6 +2633,10 @@ impl Checker<'_> {
         let n = ids.len();
         let idx = self.n_fns + self.lifted.len();
         let name = format!("closure.{}", self.lifted.len());
+        // Keeps signature numbers equal to function indexes (generic instances are numbered
+        // among the lifted functions too).
+        let cparams: Vec<Ty> = ids.iter().map(|&i| ccx.locals[i].ty).collect();
+        self.sigs.push(Sig { params: cparams, sinks: vec![false; n], inouts: vec![false; n], ret, ret_of: None, has_self: false });
         self.lifted.push(HFn { name, params: ids, sinks: vec![false; n], ret, locals: hlocals(ccx.locals), body: stmts });
         Some((idx, cap_exprs))
     }
@@ -2644,7 +3153,7 @@ impl Checker<'_> {
             // A tuple element that carries a borrow points where the tuple points.
             HExprKind::Field { base, .. } if h.ty.carries_borrow() => self.loans_of(base, cx),
             HExprKind::Call { func: s, args } | HExprKind::DynCall { sig: s, args, .. } if h.ty.carries_borrow() => {
-                let picked: Vec<usize> = match &self.sigs[*s].ret_of {
+                let picked: Vec<usize> = match &self.sig(*s).ret_of {
                     Some(p) => p.clone(),
                     None => (0..args.len()).collect(),
                 };
@@ -3947,7 +4456,13 @@ impl Checker<'_> {
                 );
                 err_expr(span)
             }
-            ExprKind::StructLit { name, name_span, fields } => self.struct_lit(name, *name_span, fields, span, cx),
+            ExprKind::StructLit { name, name_span, targs, fields } => self.struct_lit(name, *name_span, targs, fields, span, cx),
+            ExprKind::Generic { name, .. } => {
+                self.diags
+                    .error("E0001", span, format!("`{name}[...]` with type arguments must be called, e.g. `{name}[int](x)`"))
+                    .note("functions cannot be used as values");
+                err_expr(span)
+            }
             ExprKind::VecLit(items) => self.vec_lit(items, expected, span, cx),
             ExprKind::Tuple(items) => {
                 let exp = match expected {
@@ -4580,8 +5095,22 @@ impl Checker<'_> {
                     }
                     return err_expr(span);
                 };
+                if let Some(&di) = self.gen_fns.get(name) {
+                    return self.generic_call(di, None, args, span, callee.span, cx);
+                }
                 self.call_fn(fi, name, None, args, span, callee.span, cx)
             }
+            ExprKind::Generic { name, targs } => match self.gen_fns.get(name) {
+                Some(&di) if self.lookup(cx, name).is_none() => self.generic_call(di, Some(targs), args, span, callee.span, cx),
+                _ => {
+                    let what = if self.index.contains_key(name) { "is not generic" } else { "is not a generic function" };
+                    self.diags.error("E0001", callee.span, format!("`{name}` {what}, so it takes no type arguments"));
+                    for a in args {
+                        self.expr(a, None, cx);
+                    }
+                    err_expr(span)
+                }
+            },
             ExprKind::Field { base, name } => self.method_call(base, name, args, span, callee.span, cx),
             _ => {
                 self.diags.error("U0001", callee.span, "only calls to named functions are supported in P0");
@@ -4595,8 +5124,8 @@ impl Checker<'_> {
     fn call_fn(&mut self, fi: usize, name: &str, recv: Option<HExpr>, args: &[Expr], span: Span, at: Span, cx: &mut FnCx) -> HExpr {
         {
             let skip = usize::from(recv.is_some());
-                let params = self.sigs[fi].params.clone();
-                let ret = self.sigs[fi].ret;
+                let params = self.sig(fi).params.clone();
+                let ret = self.sig(fi).ret;
                 if args.len() + skip != params.len() {
                     let what = if skip == 1 { "method" } else { "function" };
                     self.diags.error(
@@ -4612,9 +5141,9 @@ impl Checker<'_> {
                 }
                 // Arguments are processed left to right; each is borrowed or (for a `sink`
                 // parameter) moved before the next one is evaluated.
-                let sinks = self.sigs[fi].sinks.clone();
+                let sinks = self.sig(fi).sinks.clone();
                 let mut borrowed: Vec<LocalId> = Vec::new();
-                let inouts = self.sigs[fi].inouts.clone();
+                let inouts = self.sig(fi).inouts.clone();
                 let mut mut_borrowed: Vec<LocalId> = Vec::new();
                 let mut hargs = Vec::new();
                 if let Some(r) = recv {
@@ -4719,7 +5248,7 @@ impl Checker<'_> {
             if self.lookup(cx, tn).is_none() {
                 let full = format!("{tn}.{name}");
                 if let Some(&fi) = self.index.get(&full) {
-                    if self.sigs[fi].has_self {
+                    if self.sig(fi).has_self {
                         self.diags
                             .error("E0001", at, format!("`{full}` is a method: call it on a value, e.g. `x.{name}(...)`"));
                         return err_expr(span);
@@ -4789,13 +5318,13 @@ impl Checker<'_> {
             if fi == NO_FN {
                 return err_expr(span);
             }
-            if self.sigs[fi].inouts[0] {
+            if self.sig(fi).inouts[0] {
                 self.diags
                     .error("E0014", base.span, format!("`{full}` takes `inout self`, so it must be called on a variable or a field of one"))
                     .note("store the value in a `var` first");
                 return err_expr(span);
             }
-            let recv = if self.sigs[fi].sinks[0] { self.consume(recv, cx) } else { recv };
+            let recv = if self.sig(fi).sinks[0] { self.consume(recv, cx) } else { recv };
             return self.call_fn(fi, &full, Some(recv), args, span, at, cx);
         }
         let recv = match self.method2(recv, name, args, span, at, cx) {
@@ -4870,6 +5399,19 @@ impl Checker<'_> {
             let (_, s, _) = d.methods.iter().find(|(n, _, _)| n == name)?;
             return Some((*s, format!("{}.{name}", d.name)));
         }
+        // A method of a generic struct's instance: instantiated on first use.
+        if let Some((sdi, targs)) = self.inst_of.get(&t).cloned() {
+            let owner = self.prog.structs[sdi].name.clone();
+            let full = format!("{owner}.{name}");
+            let di = self.prog.fns.iter().position(|f| f.name == full)?;
+            let shown = format!("{t}.{name}");
+            if self.prog.fns[di].params.first().is_none_or(|p| p.name != "self") {
+                self.diags.error("E0001", at, format!("`{shown}` has no `self` parameter: call it on the type"));
+                return Some((NO_FN, shown));
+            }
+            let fi = self.instantiate_fn(di, targs, Some((owner, t)), at);
+            return Some((fi, shown));
+        }
         if !matches!(t, Ty::Struct(_) | Ty::Enum(_)) {
             return None;
         }
@@ -4882,7 +5424,7 @@ impl Checker<'_> {
                 .note("to drop a value early, write `let _ = value`");
             return Some((NO_FN, full));
         }
-        if !self.sigs[fi].has_self {
+        if !self.sig(fi).has_self {
             self.diags
                 .error("E0001", at, format!("`{full}` has no `self` parameter: call it on the type, as `{full}(...)`"));
             return Some((NO_FN, full));
@@ -4899,7 +5441,7 @@ impl Checker<'_> {
             }
             return err_expr(span);
         }
-        let recv = if self.sigs[fi].inouts[0] {
+        let recv = if self.sig(fi).inouts[0] {
             let Some(place) = self.mutable_place(base, full, cx) else {
                 for a in args {
                     self.expr(a, None, cx);
@@ -4912,7 +5454,7 @@ impl Checker<'_> {
             let h = self.expr(base, None, cx);
             let h = self.deref(h);
             let h = self.unbox(h);
-            if self.sigs[fi].sinks[0] {
+            if self.sig(fi).sinks[0] {
                 self.consume(h, cx)
             } else {
                 h

@@ -520,6 +520,40 @@ plus `yv_vtd_K`/`yv_vtc_K` (drop and free the block, clone into a new block) and
 `static const yv_vt_I yv_vt_K`. Tests: `tests/p0/run_interfaces.yv`,
 `tests/p0/errors_interfaces.yv` (9 errors, 1 warning).
 
+## Generics (functions and structs)
+
+Supported (cheat sheet §2; semantic table O1, E2, K1; plan item 10):
+
+- Generic functions `fn largest[T: Ord + Copy](xs: []T) -> ?T of xs`, called with explicit
+  type arguments (`largest[int](v)`) or with them inferred from the arguments (`largest(v)`;
+  inference reads variables, fields, literals, element accesses, tuples and simple calls, and
+  sees through `Vec → []T`, `T → ?T` and `&T`).
+- Generic structs `struct Stack[T] { items: Vec[T] ... }` with methods (`self`, `inout self`,
+  `sink self`, `Self`), used as `Stack[String]` in types and `Stack[int]{items: []}` in
+  literals; recursive ones work through `?Box` (`next: ?Box[Node[T]]`).
+- Bounds `Copy`, `Eq`, `Ord` and interfaces, checked at each instantiation: a failing
+  `Eq`/`Ord` bound is `E0501` (K1), any other `E0001`; an unknown bound is `E0010`.
+- Monomorphized: each instantiation (`largest[int]`, `Stack[String]`) is checked and generated
+  on its own, so `-> ?T of xs` only borrows `xs` when the instance's `T` carries a borrow
+  (T-O6 vs T-O7, rule O1).
+- A view as a generic struct's type argument (`Wrapper[str]`) is `E0301` (E2, T-E1).
+- Errors: a type argument that cannot be inferred, conflicting inferences, the wrong number of
+  type arguments, type arguments on a non-generic function, and a generic struct named without
+  its arguments are all `E0001` with a note on what to write.
+- Not yet: generic enums and interfaces, methods with their own type parameters, `struct S[T]: I`,
+  `Stack[int].make()` (static calls on an instance), struct literal argument inference
+  (`Stack{...}` without `[T]` outside the struct's own methods), capability bounds (`Send`,
+  `Sync`). A generic function's body is only checked when it is instantiated, so a generic
+  function that is never called is never checked (like C++ templates).
+
+Implementation: the checker keeps a substitution (`Checker::subst`) consulted by `resolve_ty`;
+an instance gets a function index among the lifted functions (closures now also record a
+signature, so signature numbers and function indexes stay equal; interface slot signatures
+moved to `DYN_BASE` and up). Function bodies are checked from a work list after the user
+functions; struct instances made after `collect_structs` are finished at once and emitted after
+the ordered structs. C names of instances are made C-safe (`Stack[String]` → `yv_s_Stack_String_`).
+Tests: `tests/p0/run_generics.yv`, `tests/p0/errors_generics.yv` (9 errors).
+
 ## Spec conformance
 
 ```sh
@@ -536,8 +570,9 @@ runs all 129 cases in `yavo-tests/MANIFEST.json`, after checking each fixture ag
 | unsupported | the compiler reported `U0001` |
 | not_run | needs `yavo fix`, `yavo verify`, fixtures, sanitizers or other platforms |
 
-At this commit: pass 71, wrong 0, unsupported 45, not_run 13 (P1: 58 / 0 / 18 / 7;
-P2: 13 / 0 / 6 / 2; P3: 0 / 0 / 21 / 4). `Box` added T-A3, T-A3f, T-E2, T-E2p, T-G28 and
+At this commit: pass 75, wrong 0, unsupported 41, not_run 13 (P1: 62 / 0 / 14 / 7;
+P2: 13 / 0 / 6 / 2; P3: 0 / 0 / 21 / 4). Generics added T-O6, T-O7, T-E1 and T-E1p. `Box`
+added T-A3, T-A3f, T-E2, T-E2p, T-G28 and
 T-G29. Comparison protocols added T-G25 and T-G26; closures added T-C7 and tuples T-O5p. User destructors added T-D1, T-GR1, T-GR2 and
 T-G10–T-G13. The standard library step added T-G08, T-V4, T-V4p and
 T-S2 (the runner now writes `fixture_hex` fixtures into a directory of their own and runs the case

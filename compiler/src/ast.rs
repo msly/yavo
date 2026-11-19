@@ -25,11 +25,20 @@ pub struct Use {
 pub struct StructDecl {
     pub name: String,
     pub name_span: Span,
+    /// `struct Wrapper[T] { ... }`: a generic struct; each `Wrapper[X]` is a struct of its own.
+    pub type_params: Vec<TypeParam>,
     pub fields: Vec<FieldDecl>,
     /// `struct X: Drop + Named`: the interfaces it declares to implement.
     pub impls: Vec<(String, Span)>,
     /// Methods written in the body; moved into `Program::fns` by the parser.
     pub methods: Vec<FnDecl>,
+}
+
+/// `T` or `T: Ord + Copy` in `fn f[T: Ord + Copy]` / `struct S[T]`.
+pub struct TypeParam {
+    pub name: String,
+    pub span: Span,
+    pub bounds: Vec<(String, Span)>,
 }
 
 /// `enum Name { Case, Case(field: T, ...) }`
@@ -66,6 +75,8 @@ pub struct FnDecl {
     /// For a method: the struct or enum it belongs to. Its receiver, if any, is the first
     /// parameter, named `self`.
     pub owner: Option<String>,
+    /// `fn largest[T: Ord + Copy](...)`: a generic function, checked once per instantiation.
+    pub type_params: Vec<TypeParam>,
     pub params: Vec<Param>,
     pub ret: Option<TypeExpr>,
     /// `-> T of a` / `of (a, b)` / `of static`: where a returned borrow may come from.
@@ -83,6 +94,7 @@ pub struct Param {
     pub ty: TypeExpr,
 }
 
+#[derive(Clone)]
 pub struct TypeExpr {
     pub name: String,
     pub span: Span,
@@ -175,7 +187,10 @@ pub enum ExprKind {
     /// `base.name`; a tuple element is `base.0` (`name` is the digits).
     Field { base: Box<Expr>, name: String },
     /// `Name{field: value, ...}`; fields are evaluated in the order written.
-    StructLit { name: String, name_span: Span, fields: Vec<FieldInit> },
+    /// `Name{...}`, or `Name[A, B]{...}` for a generic struct (`targs`).
+    StructLit { name: String, name_span: Span, targs: Vec<TypeExpr>, fields: Vec<FieldInit> },
+    /// `name[A, B]` before a call: a generic function with explicit type arguments.
+    Generic { name: String, targs: Vec<TypeExpr> },
     /// `[a, b, c]`
     VecLit(Vec<Expr>),
     /// `[:]` or `[k: v, ...]`

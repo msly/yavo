@@ -274,10 +274,7 @@ impl Parser<'_, '_> {
     fn struct_decl(&mut self) -> PResult<StructDecl> {
         self.bump();
         let (name, name_span) = self.ident("a struct name")?;
-        if matches!(self.peek(), Tok::LBracket) {
-            let sp = self.span();
-            self.unsupported(sp, "generic structs are not supported in P0")?;
-        }
+        let type_params = self.type_params()?;
         let impls = self.impl_list()?;
         self.expect(Tok::LBrace, "`{` to start the struct body")?;
         let mut fields = Vec::new();
@@ -307,7 +304,58 @@ impl Parser<'_, '_> {
                 return Err(());
             }
         }
-        Ok(StructDecl { name, name_span, fields, impls, methods })
+        Ok(StructDecl { name, name_span, type_params, fields, impls, methods })
+    }
+
+    /// `[T, U: Ord + Copy]` after a function or struct name (none when absent).
+    fn type_params(&mut self) -> PResult<Vec<TypeParam>> {
+        let mut out = Vec::new();
+        if !self.eat(&Tok::LBracket) {
+            return Ok(out);
+        }
+        loop {
+            let (name, span) = self.ident("a type parameter name")?;
+            let mut bounds = Vec::new();
+            if self.eat(&Tok::Colon) {
+                loop {
+                    bounds.push(self.ident("a bound such as `Ord` or `Copy`")?);
+                    if !self.eat(&Tok::Plus) {
+                        break;
+                    }
+                }
+            }
+            out.push(TypeParam { name, span, bounds });
+            if !self.eat(&Tok::Comma) {
+                break;
+            }
+        }
+        self.expect(Tok::RBracket, "`,` or `]` after the type parameters")?;
+        Ok(out)
+    }
+
+    /// Whether `[` at the current position opens type arguments: the matching `]` is followed
+    /// by `(` (a generic call) or, without a space, by `{` (a generic struct literal).
+    fn type_args_ahead(&self) -> bool {
+        let mut depth = 0usize;
+        let mut i = 0;
+        loop {
+            match self.peek_at(i) {
+                Tok::LBracket => depth += 1,
+                Tok::RBracket => {
+                    depth -= 1;
+                    if depth == 0 {
+                        return match self.peek_at(i + 1) {
+                            Tok::LParen => true,
+                            Tok::LBrace => self.toks.get(self.pos + i + 1).is_some_and(|t| t.span.start == self.toks[self.pos + i].span.end),
+                            _ => false,
+                        };
+                    }
+                }
+                Tok::Eof | Tok::Newline | Tok::LBrace | Tok::RBrace | Tok::Assign => return false,
+                _ => {}
+            }
+            i += 1;
+        }
     }
 
     /// `enum Name { Case, Case(field: Type, ...) }`, one case per line (commas are also accepted).
@@ -415,10 +463,7 @@ impl Parser<'_, '_> {
     fn function(&mut self, owner: Option<&str>, has_body: bool) -> PResult<FnDecl> {
         self.bump();
         let (name, name_span) = self.ident("a function name")?;
-        if matches!(self.peek(), Tok::LBracket) {
-            let sp = self.span();
-            self.unsupported(sp, "generic functions are not supported in P0")?;
-        }
+        let type_params = self.type_params()?;
         self.expect(Tok::LParen, "`(`")?;
         let mut params = Vec::new();
         while !matches!(self.peek(), Tok::RParen) {
@@ -503,7 +548,7 @@ impl Parser<'_, '_> {
             Some(o) => format!("{o}.{name}"),
             None => name,
         };
-        Ok(FnDecl { name, name_span, owner: owner.map(str::to_string), params, ret, ret_of, body })
+        Ok(FnDecl { name, name_span, owner: owner.map(str::to_string), type_params, params, ret, ret_of, body })
     }
 
     /// A type, including `T ! E` (which binds loosest: `?String ! io.Error` is a result whose
@@ -1283,6 +1328,24 @@ impl Parser<'_, '_> {
                     e = Expr { span: e.span.to(name_span), kind: ExprKind::Field { base: Box::new(e), name } };
                 }
                 Tok::LBracket => {
+                    // `name[T](...)` / `Name[T]{...}`: type arguments, not an index.
+                    if let ExprKind::Ident(name) = &e.kind {
+                        if self.type_args_ahead() {
+                            let name = name.clone();
+                            self.bump();
+                            let mut targs = vec![self.ty()?];
+                            while self.eat(&Tok::Comma) {
+                                targs.push(self.ty()?);
+                            }
+                            let close = self.expect(Tok::RBracket, "`,` or `]` after the type arguments")?;
+                            if matches!(self.peek(), Tok::LBrace) {
+                                e = self.struct_lit_body(name, e.span, targs)?;
+                            } else {
+                                e = Expr { span: e.span.to(close), kind: ExprKind::Generic { name, targs } };
+                            }
+                            continue;
+                        }
+                    }
                     let open = self.bump().span;
                     if matches!(self.peek(), Tok::DotDot) {
                         self.unsupported(open, "slices (`x[a..b]`) are not supported in P0")?;
@@ -1297,14 +1360,6 @@ impl Parser<'_, '_> {
                     let close = self.expect(Tok::RBracket, "`]`")?;
                     e = Expr { span: e.span.to(close), kind: ExprKind::Index { base: Box::new(e), index: Box::new(index) } };
                 }
-                // `Wrapper[str]{...}`: a generic struct literal.
-                Tok::LBrace
-                    if matches!(&e.kind, ExprKind::Index { base, .. }
-                        if matches!(&base.kind, ExprKind::Ident(n) if n.starts_with(|c: char| c.is_ascii_uppercase())))
-                        && self.span().start == e.span.end =>
-                {
-                    self.unsupported(e.span, "generic struct literals are not supported in P0")?;
-                }
                 Tok::Question => {
                     let sp = self.span();
                     self.unsupported(sp, "optional chaining (`?`) is not supported in P0")?;
@@ -1317,31 +1372,36 @@ impl Parser<'_, '_> {
                 {
                     let ExprKind::Ident(name) = &e.kind else { unreachable!() };
                     let (name, name_span) = (name.clone(), e.span);
-                    self.bump();
-                    let mut fields = Vec::new();
-                    loop {
-                        while matches!(self.peek(), Tok::Newline | Tok::Comma) {
-                            self.bump();
-                        }
-                        if matches!(self.peek(), Tok::RBrace) {
-                            break;
-                        }
-                        let (fname, fspan) = self.ident("a field name")?;
-                        self.expect(Tok::Colon, "`:` followed by the field value")?;
-                        let value = self.expr()?;
-                        fields.push(FieldInit { name: fname, span: fspan, value });
-                        if !matches!(self.peek(), Tok::Newline | Tok::Comma | Tok::RBrace) {
-                            let found = describe(self.peek());
-                            self.err_here(format!("expected `,` or `}}` after the field value, found {found}"));
-                            return Err(());
-                        }
-                    }
-                    let close = self.bump().span;
-                    e = Expr { span: name_span.to(close), kind: ExprKind::StructLit { name, name_span, fields } };
+                    e = self.struct_lit_body(name, name_span, Vec::new())?;
                 }
                 _ => return Ok(e),
             }
         }
+    }
+
+    /// `{field: value, ...}` after a struct name (and its type arguments).
+    fn struct_lit_body(&mut self, name: String, name_span: Span, targs: Vec<TypeExpr>) -> PResult<Expr> {
+        self.bump();
+        let mut fields = Vec::new();
+        loop {
+            while matches!(self.peek(), Tok::Newline | Tok::Comma) {
+                self.bump();
+            }
+            if matches!(self.peek(), Tok::RBrace) {
+                break;
+            }
+            let (fname, fspan) = self.ident("a field name")?;
+            self.expect(Tok::Colon, "`:` followed by the field value")?;
+            let value = self.expr()?;
+            fields.push(FieldInit { name: fname, span: fspan, value });
+            if !matches!(self.peek(), Tok::Newline | Tok::Comma | Tok::RBrace) {
+                let found = describe(self.peek());
+                self.err_here(format!("expected `,` or `}}` after the field value, found {found}"));
+                return Err(());
+            }
+        }
+        let close = self.bump().span;
+        Ok(Expr { span: name_span.to(close), kind: ExprKind::StructLit { name, name_span, targs, fields } })
     }
 
     fn primary(&mut self) -> PResult<Expr> {

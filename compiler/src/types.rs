@@ -127,7 +127,7 @@ struct Agg {
 }
 
 fn register_agg(name: &str, prefix: &str) -> u32 {
-    let c_name: &'static str = Box::leak(format!("{prefix}{name}").into_boxed_str());
+    let c_name: &'static str = Box::leak(format!("{prefix}{}", c_safe(name)).into_boxed_str());
     let name: &'static str = Box::leak(name.to_string().into_boxed_str());
     AGGS.with(|s| {
         let mut s = s.borrow_mut();
@@ -139,6 +139,12 @@ fn register_agg(name: &str, prefix: &str) -> u32 {
 /// Registers a struct name and returns its id.
 pub fn register_struct(name: &str) -> u32 {
     register_agg(name, "yv_s_")
+}
+
+/// A type name usable in C identifiers: an instance name such as `Pair[int, String]` becomes
+/// `Pair_int_String_`.
+fn c_safe(name: &str) -> String {
+    name.chars().filter(|c| *c != ' ').map(|c| if c.is_ascii_alphanumeric() || c == '_' { c } else { '_' }).collect()
 }
 
 /// Registers an enum name and returns its id. A dot in a library type name (`fs.Error`) becomes
@@ -567,7 +573,7 @@ impl Ty {
                 let (k, v) = map_parts(id);
                 format!("Map_{}_{}", k.key(), v.key())
             }
-            Ty::Struct(id) => format!("S_{}", agg_names(id).0),
+            Ty::Struct(id) => format!("S_{}", c_safe(agg_names(id).0)),
             Ty::Enum(id) => format!("E_{}", agg_names(id).0.replace('.', "_")),
             Ty::Res(id) => {
                 let (o, e) = res_parts(id);
