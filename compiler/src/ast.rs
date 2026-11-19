@@ -199,6 +199,8 @@ pub enum ExprKind {
     MapLit(Vec<(Expr, Expr)>),
     /// `base[index]`
     Index { base: Box<Expr>, index: Box<Expr> },
+    /// `base[start..end]`: a view of a vector, slice or text.
+    SliceRange { base: Box<Expr>, start: Box<Expr>, end: Box<Expr> },
     /// `&x`, for an `inout` argument.
     Borrow(Box<Expr>),
     Unary { op: UnOp, op_span: Span, expr: Box<Expr> },

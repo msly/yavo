@@ -1,0 +1,19 @@
+// expect-error: E0001 8:13
+// expect-warning: W0001 10:9
+// expect-error: E0001 10:15
+// expect-error: E0001 12:13
+// expect-error: E0305 16:16
+fn main() {
+    let n = 5
+    let a = n[0..1]
+    let v: Vec[int] = [1, 2]
+    let b = v[true..1]
+    let names: Vec[String] = ["a".toString()]
+    let c = names[0..1].toVec()
+    var view: []int = v[0..1]
+    {
+        let w: Vec[int] = [3, 4]
+        view = w[0..1]
+    }
+    println(view[0])
+}

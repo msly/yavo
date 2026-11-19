@@ -1958,6 +1958,20 @@ impl Gen {
                 let b = self.borrowed(inner, f);
                 format!("(*{b})")
             }
+            HExprKind::SliceRange { base, start, end } => {
+                let at = pos(e.at);
+                if e.ty == Ty::Str {
+                    let s = self.text_view(base, f);
+                    let s = self.bind(Ty::Str, &s);
+                    let (a, b) = (self.expr(start, f), self.expr(end, f));
+                    return self.bind(e.ty, &format!("yv_str_slice({s}, {a}, {b}, {at})"));
+                }
+                let v = self.borrowed(base, f);
+                let v = self.bind(base.ty, &v);
+                let (a, b) = (self.expr(start, f), self.expr(end, f));
+                let elem = seq_elem(base.ty).expect("checked: a sequence");
+                self.bind(e.ty, &format!("yv_vec_slice({v}, {a}, {b}, (int64_t)sizeof({}), {at})", elem.c_name()))
+            }
             HExprKind::ToDyn { value, imp } => {
                 let v = self.owned(value, f);
                 let c = e.ty.c_name();
@@ -2121,6 +2135,10 @@ impl Gen {
                         let s = self.borrowed(recv, f);
                         self.bind_mut(e.ty, &format!("{}(&{s}, {at})", clone_fn(recv.ty)))
                     }
+                    Builtin::SliceToVec => {
+                        let s = self.borrowed(recv, f);
+                        self.bind_mut(e.ty, &format!("{}(&{s}, {at})", clone_fn(e.ty)))
+                    }
                     Builtin::IsSome | Builtin::IsNone => {
                         let s = self.borrowed(recv, f);
                         let not = if *method == Builtin::IsNone { "!" } else { "" };
@@ -2159,6 +2177,13 @@ impl Gen {
             HExprKind::InoutPlace(p) => {
                 let (place, _) = self.recv_place(p, f);
                 format!("&{place}")
+            }
+            HExprKind::Reserve { place, n } => {
+                let (name, rty) = self.recv_place(place, f);
+                let v = self.expr(n, f);
+                let et = seq_elem(rty).expect("checked: a vector").c_name();
+                self.line(&format!("yv_vec_reserve(&{name}, (int64_t)sizeof({et}), {v}, {});", pos(e.at)));
+                String::new()
             }
             HExprKind::Push { place, value } => {
                 let (name, rty) = self.recv_place(place, f);
@@ -2284,6 +2309,7 @@ impl Gen {
                     method: Builtin::StrToString
                         | Builtin::StringClone
                         | Builtin::VecClone
+                        | Builtin::SliceToVec
                         | Builtin::MapClone
                         | Builtin::Fields
                         | Builtin::Lines,

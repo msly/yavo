@@ -1,0 +1,61 @@
+// expect-stdout:
+// | 9
+// | 3
+// | 2
+// | 3
+// | 0
+// | 3
+// | hello
+// | wide
+// | h
+// | é
+// | hello+wide
+// | hello;wide;
+// | 1
+fn sum(xs: []int) -> int {
+    var t = 0
+    for x in xs {
+        t += x
+    }
+    return t
+}
+
+fn firstWord(s: str) -> str of s {
+    let i = s.find(" ") ?? s.len()
+    return s[0..i]
+}
+
+fn main() {
+    var v: Vec[int] = [1, 2, 3, 4, 5]
+    let mid = v[1..4]
+    println(sum(mid))
+    println(mid.len())
+    println(mid[0])
+    let inner = mid[1..2]
+    println(inner[0])
+    println(sum(v[0..0]))
+    let copy = mid.toVec()
+    v.push(6)
+    println(copy.len())
+    let text = "hello wide world".toString()
+    println(firstWord(text))
+    println(text[6..10])
+    let s = "héllo"
+    println(s[0..1])
+    println(s[1..3])
+    let words = text.fields()
+    let two = words[0..2]
+    println(two.join("+"))
+    for w in two {
+        print("${w};")
+    }
+    println("")
+    reserveDemo()
+}
+
+fn reserveDemo() {
+    var v: Vec[int] = []
+    v.reserve(100)
+    v.push(1)
+    println(v.len())
+}

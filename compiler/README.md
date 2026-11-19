@@ -584,6 +584,28 @@ fast-math). The runtime gains `yv_out_f64`/`yv_out_f32` (snprintf/strtod), `yv_f
 Tests: `tests/p0/run_floats.yv`, `tests/p0/errors_floats.yv` (10 errors, 1 warning),
 `tests/p0/panic_float_convert.yv`.
 
+## Slices `x[a..b]`, `toVec`, `reserve`
+
+Supported (semantic table S3, A2, A3, C3, O6; stdlib contract §2):
+
+- `v[a..b]` on a `Vec[T]` or `[]T` is a `[]T` view; `s[a..b]` on `str`/`String` is a `str`
+  view of bytes `a` up to `b`. Bounds are `int`s; `a < 0`, `b < a` or `b > len` panics with
+  `P-INDEX`, and a text bound inside a multi-byte character panics with `P-STR-BOUNDARY` (S3,
+  T-S1).
+- A slice of owned data borrows its storage (T-G09: `v.push` while `v[0..1]` is still used is
+  `E0102`); a slice of a view points where the view points; a slice of a temporary cannot be
+  kept (`E0305`). A `var` slice still cannot be iterated with `for x in &part` (`E0101`, T-G19).
+- `[]T.toVec()` copies copyable elements into a new `Vec[T]` that keeps the elements' borrows
+  (T-C4); non-copyable elements are `E0001`.
+- `v.reserve(n)`: capacity at least `n`; negative or impossible sizes panic with `P-CAPACITY`
+  (T-GR7).
+- Not yet: open-ended ranges `x[a..]`, `x[..b]` (`U0001`), mutable slices (none in v1).
+
+Code generation: runtime `yv_vec_slice` / `yv_str_slice` build descriptors without copying;
+`toVec` reuses the vector clone helper; `yv_vec_reserve` goes through `yv_grow`. Tests:
+`tests/p0/run_slices.yv`, `tests/p0/errors_slices.yv` (4 errors, 1 warning),
+`tests/p0/panic_slice_bounds.yv`, `tests/p0/panic_str_boundary.yv`.
+
 ## Spec conformance
 
 ```sh
@@ -600,8 +622,10 @@ runs all 129 cases in `yavo-tests/MANIFEST.json`, after checking each fixture ag
 | unsupported | the compiler reported `U0001` |
 | not_run | needs `yavo fix`, `yavo verify`, fixtures, sanitizers or other platforms |
 
-At this commit: pass 79, wrong 0, unsupported 37, not_run 13 (P1: 65 / 0 / 11 / 7;
-P2: 14 / 0 / 5 / 2; P3: 0 / 0 / 21 / 4). Floats added T-G27, T-K1, T-K1p and T-N1d.
+At this commit: pass 84, wrong 0, unsupported 31, not_run 14 (P1: 68 / 0 / 8 / 7;
+P2: 16 / 0 / 2 / 3; P3: 0 / 0 / 21 / 4). Slices added T-C4, T-G09, T-G19 and T-S1, and
+`reserve` added T-GR7 (T-GR8 now reaches its allocation-fault injection, which the runner does
+not support, so it counts as not run). Floats added T-G27, T-K1, T-K1p and T-N1d.
 Generics added T-O6, T-O7, T-E1 and T-E1p. `Box`
 added T-A3, T-A3f, T-E2, T-E2p, T-G28 and
 T-G29. Comparison protocols added T-G25 and T-G26; closures added T-C7 and tuples T-O5p. User destructors added T-D1, T-GR1, T-GR2 and

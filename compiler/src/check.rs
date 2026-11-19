@@ -219,9 +219,13 @@ pub enum HExprKind {
     TupleLit(Vec<HExpr>),
     /// `base[index]` for a copyable element, or a byte of a string.
     Index { base: Box<HExpr>, index: Box<HExpr> },
+    /// `base[start..end]`: a `[]T` view of a vector or slice, or a `str` view of text (S3).
+    SliceRange { base: Box<HExpr>, start: Box<HExpr>, end: Box<HExpr> },
     Method { method: Builtin, recv: Box<HExpr> },
     /// `local.push(value)`; `value` is moved into a vector or appended to a `String`.
     Push { place: HPlace, value: Box<HExpr> },
+    /// `place.reserve(n)` on a vector.
+    Reserve { place: HPlace, n: Box<HExpr> },
     /// A `String` borrowed as a `str` (passing it to a `str` parameter).
     StrView(Box<HExpr>),
     /// Reading through a `&T`.
@@ -381,6 +385,8 @@ pub enum Builtin {
     IsNone,
     MapLen,
     MapClone,
+    /// `s.toVec()` on a `[]T` with copyable elements: a new vector with the same elements.
+    SliceToVec,
 }
 
 /// Stands for a function that was already reported as unusable here.
@@ -666,6 +672,11 @@ impl Pre {
                 self.expr(base, idx, stack);
                 self.expr(index, idx, stack);
             }
+            ExprKind::SliceRange { base, start, end } => {
+                self.expr(base, idx, stack);
+                self.expr(start, idx, stack);
+                self.expr(end, idx, stack);
+            }
             ExprKind::Unary { expr, .. } | ExprKind::Paren(expr) => self.expr(expr, idx, stack),
             ExprKind::Borrow(inner) => self.expr(inner, idx, stack),
             ExprKind::Binary { lhs, rhs, .. } | ExprKind::Coalesce { lhs, rhs, .. } => {
@@ -884,6 +895,7 @@ fn mentions(e: &Expr, name: &str) -> bool {
         }
         ExprKind::MapLit(entries) => entries.iter().any(|(k, v)| mentions(k, name) || mentions(v, name)),
         ExprKind::Index { base, index } => mentions(base, name) || mentions(index, name),
+        ExprKind::SliceRange { base, start, end } => mentions(base, name) || mentions(start, name) || mentions(end, name),
         ExprKind::Unary { expr, .. } | ExprKind::Paren(expr) | ExprKind::Borrow(expr) => mentions(expr, name),
         ExprKind::Binary { lhs, rhs, .. } | ExprKind::Coalesce { lhs, rhs, .. } => {
             mentions(lhs, name) || mentions(rhs, name)
@@ -934,6 +946,11 @@ fn idents_expr(e: &Expr, out: &mut Vec<(String, u32)>) {
         ExprKind::Index { base, index } => {
             sub(base, out);
             sub(index, out);
+        }
+        ExprKind::SliceRange { base, start, end } => {
+            sub(base, out);
+            sub(start, out);
+            sub(end, out);
         }
         ExprKind::Unary { expr, .. } | ExprKind::Paren(expr) | ExprKind::Borrow(expr) => sub(expr, out),
         ExprKind::Binary { lhs, rhs, .. } | ExprKind::Coalesce { lhs, rhs, .. } => {
@@ -3150,10 +3167,24 @@ impl Checker<'_> {
             }
             // `&v[i]` points into `v`'s storage (and into whatever `v`'s elements point into).
             HExprKind::Index { base, .. } if matches!(h.ty, Ty::Ref(_)) => self.storage_loans(base, cx),
+            // A view of a view points where it points; a view of owned data borrows its storage.
+            HExprKind::SliceRange { base, .. } => match (base.ty, &base.kind) {
+                (Ty::Str | Ty::Slice(_), _) => self.loans_of(base, cx),
+                (_, HExprKind::Local(_) | HExprKind::Field { .. } | HExprKind::Deref(_) | HExprKind::Unbox(_) | HExprKind::Index { .. }) => {
+                    self.storage_loans(base, cx)
+                }
+                _ => {
+                    let mut out = vec![Loan::Temp];
+                    out.extend(self.loans_of(base, cx));
+                    out
+                }
+            },
             HExprKind::StrView(inner) => recv_loans(inner),
             HExprKind::Method { method: Builtin::Trim | Builtin::Fields | Builtin::Lines, recv } => recv_loans(recv),
             // A cloned `Vec[str]` owns new storage, but its elements still point into the same text.
-            HExprKind::Method { method: Builtin::VecClone, recv } if h.ty.carries_borrow() => self.loans_of(recv, cx),
+            HExprKind::Method { method: Builtin::VecClone | Builtin::SliceToVec, recv } if h.ty.carries_borrow() => {
+                self.loans_of(recv, cx)
+            }
             HExprKind::Index { base, .. } if h.ty.carries_borrow() => self.loans_of(base, cx),
             HExprKind::VecLit(items) | HExprKind::TupleLit(items) => {
                 let mut out = Vec::new();
@@ -4552,6 +4583,7 @@ impl Checker<'_> {
             }
             ExprKind::MapLit(entries) => self.map_lit(entries, expected, span, cx),
             ExprKind::Index { base, index } => self.index(base, index, span, cx),
+            ExprKind::SliceRange { base, start, end } => self.slice_range(base, start, end, span, cx),
             // `&x` where a `&T` is expected (e.g. `a.cmp(&b)`): a read-only reference to the place.
             ExprKind::Borrow(inner) if matches!(expected, Some(Ty::Ref(_))) => {
                 let Some(Ty::Ref(r)) = expected else { unreachable!() };
@@ -5360,6 +5392,19 @@ impl Checker<'_> {
         if name == "pop" {
             return self.pop_call(base, args, span, at, cx);
         }
+        if name == "reserve" {
+            if let Some(Ty::Vec(_)) = self.peek_place_ty(base, cx) {
+                let Some(place) = self.mutable_place(base, "reserve", cx) else { return err_expr(span) };
+                let [arg] = args else {
+                    self.diags.error("E0012", span, "`reserve` takes exactly one argument (the capacity)");
+                    return err_expr(span);
+                };
+                let int = Ty::Int(IntTy::I64);
+                let n = self.expr(arg, Some(int), cx);
+                let n = self.fit(n, int, cx);
+                return HExpr { kind: HExprKind::Reserve { place, n: Box::new(n) }, ty: Ty::Unit, span, at };
+            }
+        }
         if name == "sort" {
             return self.sort_call(base, args, span, at, cx);
         }
@@ -5409,6 +5454,16 @@ impl Checker<'_> {
             (Ty::Vec(_), "len") => (Builtin::VecLen, Ty::Int(IntTy::I64)),
             (Ty::Slice(_), "len") => (Builtin::VecLen, Ty::Int(IntTy::I64)),
             (Ty::Vec(_), "clone") => (Builtin::VecClone, recv.ty),
+            (Ty::Slice(s), "toVec") => {
+                let e = slice_elem(s);
+                if !e.is_copy() {
+                    self.diags
+                        .error("E0001", at, format!("`toVec` copies the elements, and `{e}` is not copyable"))
+                        .note("build the vector yourself, calling `.clone()` on each element");
+                    return err_expr(span);
+                }
+                (Builtin::SliceToVec, Ty::Vec(vec_of(e)))
+            }
             (Ty::Str | Ty::String, "trim") => (Builtin::Trim, Ty::Str),
             (Ty::Str | Ty::String, "fields") => (Builtin::Fields, Ty::Vec(vec_of(Ty::Str))),
             (Ty::Str | Ty::String, "lines") => (Builtin::Lines, Ty::Vec(vec_of(Ty::Str))),
@@ -5940,6 +5995,42 @@ impl Checker<'_> {
 
     fn conversion(&mut self, to: IntTy, checked: bool, args: &[Expr], at: Span, span: Span, cx: &mut FnCx) -> HExpr {
         self.conversion_inner(to, checked, args, at, span, cx)
+    }
+
+    /// `v[a..b]` / `s[a..b]`: a read-only view; out-of-range bounds panic (P-INDEX), and text
+    /// bounds must fall on character boundaries (P-STR-BOUNDARY, S3).
+    fn slice_range(&mut self, base: &Expr, start: &Expr, end: &Expr, span: Span, cx: &mut FnCx) -> HExpr {
+        let b = self.expr(base, None, cx);
+        let b = self.deref(b);
+        let b = self.unbox(b);
+        let int = Ty::Int(IntTy::I64);
+        let mut bound = |this: &mut Self, e: &Expr| -> HExpr {
+            let h = this.expr(e, Some(int), cx);
+            let h = this.deref(h);
+            match h.ty {
+                Ty::Int(IntTy::I64) | Ty::Error => {}
+                other => {
+                    this.diags.error("E0001", h.span, format!("a slice bound must be an `int`, found `{other}`"));
+                }
+            }
+            h
+        };
+        let s = bound(self, start);
+        let e = bound(self, end);
+        let ty = match b.ty {
+            Ty::Error => return err_expr(span),
+            Ty::Vec(v) => Ty::Slice(slice_of(vec_elem(v))),
+            Ty::Slice(_) => b.ty,
+            Ty::Str | Ty::String => Ty::Str,
+            other => {
+                self.diags.error("E0001", b.span, format!("a value of type `{other}` cannot be sliced"));
+                return err_expr(span);
+            }
+        };
+        if s.ty == Ty::Error || e.ty == Ty::Error {
+            return err_expr(span);
+        }
+        HExpr { kind: HExprKind::SliceRange { base: Box::new(b), start: Box::new(s), end: Box::new(e) }, ty, span, at: span }
     }
 
     /// The enum a type path names: `Shape`, or `fs.Error` (a module's enum). Not a variable.

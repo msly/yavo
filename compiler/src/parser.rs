@@ -1348,11 +1348,22 @@ impl Parser<'_, '_> {
                     }
                     let open = self.bump().span;
                     if matches!(self.peek(), Tok::DotDot) {
-                        self.unsupported(open, "slices (`x[a..b]`) are not supported in P0")?;
+                        self.unsupported(open, "open-ended slices (`x[..b]`) are not supported yet; write `x[0..b]`")?;
                     }
                     let index = self.expr()?;
                     if matches!(self.peek(), Tok::DotDot) {
-                        self.unsupported(open, "slices (`x[a..b]`) are not supported in P0")?;
+                        // `x[a..b]`: a view of elements (or bytes of text) `a` up to `b`.
+                        self.bump();
+                        if matches!(self.peek(), Tok::RBracket) {
+                            self.unsupported(open, "open-ended slices (`x[a..]`) are not supported yet; write `x[a..x.len()]`")?;
+                        }
+                        let end = self.expr()?;
+                        let close = self.expect(Tok::RBracket, "`]` to close the slice")?;
+                        e = Expr {
+                            span: e.span.to(close),
+                            kind: ExprKind::SliceRange { base: Box::new(e), start: Box::new(index), end: Box::new(end) },
+                        };
+                        continue;
                     }
                     if matches!(self.peek(), Tok::Comma) {
                         self.unsupported(open, "type arguments in expressions (`Name[A, B]`) are not supported in P0")?;

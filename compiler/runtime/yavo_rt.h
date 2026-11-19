@@ -425,6 +425,30 @@ static void *yv_vec_at(const yv_vec *v, int64_t elem, int64_t i, uint32_t line, 
     return (char *)v->ptr + i * elem;
 }
 
+/* `v.reserve(n)`: total capacity at least `n`; a negative `n` or an impossible size panics. */
+static void yv_vec_reserve(yv_vec *v, int64_t elem, int64_t n, uint32_t line, uint32_t col) {
+    if (n < 0) yv_capacity_overflow(line, col);
+    yv_grow(&v->ptr, &v->cap, elem, n, line, col);
+}
+
+/* `v[a..b]`: a view of elements `a` up to (not including) `b`; it owns nothing. */
+static yv_vec yv_vec_slice(yv_vec v, int64_t a, int64_t b, int64_t elem, uint32_t line, uint32_t col) {
+    if (a < 0 || b < a || b > v.len) yv_panic("P-INDEX", "slice bounds out of range", line, col);
+    yv_vec s = {v.ptr ? (char *)v.ptr + a * elem : NULL, b - a, b - a};
+    return s;
+}
+
+/* `s[a..b]` on text: bytes `a` up to `b`; both ends must fall on character boundaries (S3). */
+static yv_str yv_str_slice(yv_str s, int64_t a, int64_t b, uint32_t line, uint32_t col) {
+    if (a < 0 || b < a || (uint64_t)b > (uint64_t)s.len) yv_panic("P-INDEX", "slice bounds out of range", line, col);
+    if ((a < (int64_t)s.len && ((unsigned char)s.ptr[a] & 0xC0) == 0x80) ||
+        (b < (int64_t)s.len && ((unsigned char)s.ptr[b] & 0xC0) == 0x80)) {
+        yv_panic("P-STR-BOUNDARY", "a text slice must start and end on character boundaries", line, col);
+    }
+    yv_str r = {s.ptr + a, (size_t)(b - a)};
+    return r;
+}
+
 /* An empty vector with room for exactly `n` elements (vector literals, clones). */
 static yv_vec yv_vec_with_cap(int64_t elem, int64_t n, uint32_t line, uint32_t col) {
     yv_vec v = {0};
