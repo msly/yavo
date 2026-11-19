@@ -342,6 +342,27 @@ values that own nothing. Tests: `tests/p0/run_stdlib.yv`, `tests/p0/errors_stdli
 (11 errors, 1 warning), and `tests/stdlib_io.rs`, which builds programs with the heap-block
 check and runs them with stdin, arguments (including a non-UTF-8 one) and a scratch directory.
 
+## Methods
+
+Supported (cheat sheet §2; semantic table O1, O2, V1):
+
+- Methods are written inside a struct or enum body. The receiver is the first parameter:
+  `self` (a read-only borrow), `inout self` (needs a writable variable or a field chain rooted
+  at one, like `push`; the receiver is exclusively borrowed for the call) or `sink self`
+  (moves the receiver). `Self` names the enclosing type.
+- A function in the body without `self` is called on the type: `Counter.new("x")`.
+- `-> str of self` returns a view of the receiver; the caller treats it like any other `of`
+  source, so writing to the receiver while the view is alive is `E0102`. `return self.name`
+  in a function returning `str` views the stored `String` (a temporary `String` cannot be
+  viewed this way).
+- Errors: an unknown method on a struct or enum is `E0010`; calling a method on the type or a
+  `self`-less function on a value is `E0001`; `inout self` on a temporary or a `let` is
+  `E0014`; moving a field out of `sink self` is still `E0401` (no partial moves, rule 8).
+
+Code generation: a method is an ordinary C function `yv_fn_Type__name` whose first parameter
+is the receiver (by value for `self`/`sink self`, a pointer for `inout self`). Tests:
+`tests/p0/run_methods.yv`, `tests/p0/errors_methods.yv` (11 errors).
+
 ## Spec conformance
 
 ```sh

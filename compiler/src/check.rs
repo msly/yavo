@@ -171,6 +171,8 @@ pub enum HExprKind {
     AddrOf(Box<HExpr>),
     /// `&local` passed to an `inout` parameter.
     InoutArg(LocalId),
+    /// `&place` passed to an `inout` parameter (an `inout self` receiver).
+    InoutPlace(HPlace),
     /// `none`, of the optional type in `ty`.
     None,
     /// `some(value)`, written or implied (a `T` used where a `?T` is expected).
@@ -298,6 +300,8 @@ pub enum Builtin {
     MapClone,
 }
 
+/// Stands for a function that was already reported as unusable here.
+const NO_FN: usize = usize::MAX;
 const OUTPUT_FNS: [&str; 3] = ["println", "print", "eprintln"];
 const UNSUPPORTED_TYPES: &[&str] = &[
     "f32", "f64", "Set", "Box", "Rc", "Arc", "Arena", "Id", "Mutex", "Atomic", "Channel", "Guard", "SendError", "Join",
@@ -326,6 +330,8 @@ struct Sig {
     /// Parameters a returned borrow may come from (`of a, b`); `Some(vec![])` for `of static`,
     /// `None` when no `of` was written.
     ret_of: Option<Vec<usize>>,
+    /// A method with a receiver: parameter 0 is `self`.
+    has_self: bool,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -781,6 +787,11 @@ pub fn check(prog: &Program, diags: &mut Diags) -> Option<HProgram> {
         imports: HashMap::new(),
     };
     ck.collect_uses(prog);
+    for (owner, impls) in prog.structs.iter().map(|s| (&s.name, &s.impls)).chain(prog.enums.iter().map(|e| (&e.name, &e.impls))) {
+        for (i, sp) in impls {
+            ck.diags.error("U0001", *sp, format!("implementing interfaces (`{owner}: {i}`) is not supported yet"));
+        }
+    }
     let order = ck.collect_structs(prog);
     ck.collect(prog);
     let fns = prog.fns.iter().enumerate().map(|(i, f)| ck.function(f, i)).collect();
@@ -1214,17 +1225,19 @@ impl Checker<'_> {
             let ret_of = f.ret_of.as_ref().map(|names| {
                 names.iter().filter_map(|(n, _)| f.params.iter().position(|p| p.name == *n)).collect()
             });
-            if OUTPUT_FNS.contains(&f.name.as_str()) || is_type_name(&f.name) {
+            let has_self = f.owner.is_some() && f.params.first().is_some_and(|p| p.name == "self");
+            if f.owner.is_none() && (OUTPUT_FNS.contains(&f.name.as_str()) || is_type_name(&f.name)) {
                 self.diags.error("E0011", f.name_span, format!("`{}` is a built-in name and cannot be redefined", f.name));
             } else if let Some(&prev) = self.index.get(&f.name) {
                 let line = prog.fns[prev].name_span.line;
+                let what = if f.owner.is_some() { "method" } else { "function" };
                 self.diags
-                    .error("E0011", f.name_span, format!("function `{}` is defined more than once", f.name))
+                    .error("E0011", f.name_span, format!("{what} `{}` is defined more than once", f.name))
                     .note(format!("first defined on line {line}"));
             } else {
                 self.index.insert(f.name.clone(), self.sigs.len());
             }
-            self.sigs.push(Sig { params, sinks, inouts, ret, ret_of });
+            self.sigs.push(Sig { params, sinks, inouts, ret, ret_of, has_self });
         }
         match self.index.get("main") {
             None => {
@@ -1709,10 +1722,6 @@ impl Checker<'_> {
             if n == "static" {
                 continue;
             }
-            if n == "self" {
-                self.diags.error("U0001", *sp, "`of self` needs methods, which are not supported in P0");
-                continue;
-            }
             match f.params.iter().find(|p| p.name == *n) {
                 None => {
                     self.diags.error("E0010", *sp, format!("`of {n}`: there is no parameter named `{n}`"));
@@ -1733,9 +1742,15 @@ impl Checker<'_> {
             match (&r.kind, r.ty) {
                 (HExprKind::Local(id), Ty::String) => vec![Loan::Local(*id)],
                 (HExprKind::InoutArg(id), _) => vec![Loan::Local(*id)],
+                (HExprKind::InoutPlace(p), _) => vec![Loan::Local(p.local)],
                 // A `String` stored in a field or an element, or read through a reference.
                 (HExprKind::Field { .. } | HExprKind::Deref(_), Ty::String) => self.storage_loans(r, cx),
                 (_, Ty::String) => vec![Loan::Temp],
+                // A struct or enum (e.g. a method receiver): a view points into its storage.
+                (HExprKind::Local(_) | HExprKind::Field { .. } | HExprKind::Deref(_), Ty::Struct(_) | Ty::Enum(_)) => {
+                    self.storage_loans(r, cx)
+                }
+                (_, Ty::Struct(_) | Ty::Enum(_)) => vec![Loan::Temp],
                 _ => self.loans_of(r, cx),
             }
         };
@@ -1997,7 +2012,7 @@ impl Checker<'_> {
                 }
                 Loan::Local(id) => {
                     let local = &cx.locals[id];
-                    let is_param = matches!(local.kind, LocalKind::Param | LocalKind::SinkParam);
+                    let is_param = matches!(local.kind, LocalKind::Param | LocalKind::SinkParam | LocalKind::InoutParam);
                     if is_param && names.contains(&local.name) {
                         continue;
                     }
@@ -2406,6 +2421,17 @@ impl Checker<'_> {
             }
             Some(e) => {
                 let h = self.expr(e, Some(ret), cx);
+                // `return self.name` in a function returning `str`: a view of the stored text
+                // (its `of` is checked below); a temporary `String` cannot be viewed.
+                let h = if ret == Ty::Str
+                    && h.ty == Ty::String
+                    && matches!(h.kind, HExprKind::Local(_) | HExprKind::Field { .. } | HExprKind::Deref(_))
+                {
+                    let (span, at) = (h.span, h.at);
+                    HExpr { kind: HExprKind::StrView(Box::new(h)), ty: Ty::Str, span, at }
+                } else {
+                    h
+                };
                 let h = self.fit(h, ret, cx);
                 let h = self.consume(h, cx);
                 if ret.carries_borrow() {
@@ -3520,15 +3546,31 @@ impl Checker<'_> {
                     }
                     return err_expr(span);
                 };
+                self.call_fn(fi, name, None, args, span, callee.span, cx)
+            }
+            ExprKind::Field { base, name } => self.method_call(base, name, args, span, callee.span, cx),
+            _ => {
+                self.diags.error("U0001", callee.span, "only calls to named functions are supported in P0");
+                err_expr(span)
+            }
+        }
+    }
+
+    /// A call of user function `fi`. For a method call, `recv` is the receiver, already
+    /// borrowed, moved or passed as `inout`; it is the first parameter and `args` the rest.
+    fn call_fn(&mut self, fi: usize, name: &str, recv: Option<HExpr>, args: &[Expr], span: Span, at: Span, cx: &mut FnCx) -> HExpr {
+        {
+            let skip = usize::from(recv.is_some());
                 let params = self.sigs[fi].params.clone();
                 let ret = self.sigs[fi].ret;
-                if args.len() != params.len() {
+                if args.len() + skip != params.len() {
+                    let what = if skip == 1 { "method" } else { "function" };
                     self.diags.error(
                         "E0012",
                         span,
                         format!(
-                            "function `{name}` takes {} but {} {} supplied",
-                            plural(params.len(), "argument"),
+                            "{what} `{name}` takes {} but {} {} supplied",
+                            plural(params.len() - skip, "argument"),
                             args.len(),
                             if args.len() == 1 { "was" } else { "were" }
                         ),
@@ -3541,7 +3583,21 @@ impl Checker<'_> {
                 let inouts = self.sigs[fi].inouts.clone();
                 let mut mut_borrowed: Vec<LocalId> = Vec::new();
                 let mut hargs = Vec::new();
+                if let Some(r) = recv {
+                    match &r.kind {
+                        HExprKind::InoutPlace(p) => mut_borrowed.push(p.local),
+                        _ => {
+                            if let Some(id) = place_root(&r) {
+                                if !r.ty.is_copy() {
+                                    borrowed.push(id);
+                                }
+                            }
+                        }
+                    }
+                    hargs.push(r);
+                }
                 for (i, a) in args.iter().enumerate() {
+                    let i = i + skip;
                     let exp = params.get(i).copied();
                     if inouts.get(i).copied().unwrap_or(false) {
                         let h = self.inout_arg(a, exp, &borrowed, &mut mut_borrowed, cx);
@@ -3615,17 +3671,35 @@ impl Checker<'_> {
                     };
                     hargs.push(h);
                 }
-                HExpr { kind: HExprKind::Call { func: fi, args: hargs }, ty: ret, span, at: callee.span }
-            }
-            ExprKind::Field { base, name } => self.method_call(base, name, args, span, callee.span, cx),
-            _ => {
-                self.diags.error("U0001", callee.span, "only calls to named functions are supported in P0");
-                err_expr(span)
-            }
+                HExpr { kind: HExprKind::Call { func: fi, args: hargs }, ty: ret, span, at }
         }
     }
 
     fn method_call(&mut self, base: &Expr, name: &str, args: &[Expr], span: Span, at: Span, cx: &mut FnCx) -> HExpr {
+        // `Type.f(args)`: a function written inside a struct or enum, without `self`.
+        if let ExprKind::Ident(tn) = &base.kind {
+            if self.lookup(cx, tn).is_none() {
+                let full = format!("{tn}.{name}");
+                if let Some(&fi) = self.index.get(&full) {
+                    if self.sigs[fi].has_self {
+                        self.diags
+                            .error("E0001", at, format!("`{full}` is a method: call it on a value, e.g. `x.{name}(...)`"));
+                        return err_expr(span);
+                    }
+                    return self.call_fn(fi, &full, None, args, span, at, cx);
+                }
+            }
+        }
+        // `x.method(args)` on a variable or a field of one.
+        if let Some(t) = self.peek_place_ty(base, cx) {
+            let t = match t {
+                Ty::Ref(r) => ref_inner(r),
+                t => t,
+            };
+            if let Some((fi, full)) = self.user_method(t, name, at) {
+                return self.method_on_place(fi, &full, base, args, span, at, cx);
+            }
+        }
         if let Some(ei) = self.enum_path(base, cx) {
             return self.enum_case(ei, name, Some(args), span, cx);
         }
@@ -3666,6 +3740,19 @@ impl Checker<'_> {
         }
         let recv = self.expr(base, None, cx);
         let recv = self.deref(recv);
+        if let Some((fi, full)) = self.user_method(recv.ty, name, at) {
+            if fi == NO_FN {
+                return err_expr(span);
+            }
+            if self.sigs[fi].inouts[0] {
+                self.diags
+                    .error("E0014", base.span, format!("`{full}` takes `inout self`, so it must be called on a variable or a field of one"))
+                    .note("store the value in a `var` first");
+                return err_expr(span);
+            }
+            let recv = if self.sigs[fi].sinks[0] { self.consume(recv, cx) } else { recv };
+            return self.call_fn(fi, &full, Some(recv), args, span, at, cx);
+        }
         let recv = match self.method2(recv, name, args, span, at, cx) {
             Ok(h) => return h,
             Err(r) => r,
@@ -3696,6 +3783,15 @@ impl Checker<'_> {
             (Ty::Map(_), "len") => (Builtin::MapLen, Ty::Int(IntTy::I64)),
             (Ty::Map(_), "clone") => (Builtin::MapClone, recv.ty),
             (Ty::Error, _) => return err_expr(span),
+            (t @ (Ty::Struct(_) | Ty::Enum(_)), m) => {
+                self.diags
+                    .error("E0010", at, format!("type `{t}` has no method `{m}`"))
+                    .note("methods are written inside the struct or enum body: `fn name(self) { ... }`");
+                for a in args {
+                    self.expr(a, None, cx);
+                }
+                return err_expr(span);
+            }
             (t, m) => {
                 self.diags.error("U0001", at, format!("method `{m}` on `{t}` is not supported in P0"));
                 for a in args {
@@ -3709,6 +3805,53 @@ impl Checker<'_> {
             return err_expr(span);
         }
         HExpr { kind: HExprKind::Method { method, recv: Box::new(recv) }, ty, span, at }
+    }
+
+    /// The method `name` of a struct or enum type, with its full name `Type.name`. A function
+    /// of the type without `self` is reported here and returned as `NO_FN`.
+    fn user_method(&mut self, t: Ty, name: &str, at: Span) -> Option<(usize, String)> {
+        if !matches!(t, Ty::Struct(_) | Ty::Enum(_)) {
+            return None;
+        }
+        let tn = &self.structs.iter().find(|s| s.ty == t)?.name;
+        let full = format!("{tn}.{name}");
+        let &fi = self.index.get(&full)?;
+        if !self.sigs[fi].has_self {
+            self.diags
+                .error("E0001", at, format!("`{full}` has no `self` parameter: call it on the type, as `{full}(...)`"));
+            return Some((NO_FN, full));
+        }
+        Some((fi, full))
+    }
+
+    /// `place.method(args)`: the receiver is borrowed (`self`), passed as `inout` (`inout self`,
+    /// which needs a writable place) or moved (`sink self`).
+    fn method_on_place(&mut self, fi: usize, full: &str, base: &Expr, args: &[Expr], span: Span, at: Span, cx: &mut FnCx) -> HExpr {
+        if fi == NO_FN {
+            for a in args {
+                self.expr(a, None, cx);
+            }
+            return err_expr(span);
+        }
+        let recv = if self.sigs[fi].inouts[0] {
+            let Some(place) = self.mutable_place(base, full, cx) else {
+                for a in args {
+                    self.expr(a, None, cx);
+                }
+                return err_expr(span);
+            };
+            let ty = place.ty;
+            HExpr { kind: HExprKind::InoutPlace(place), ty, span: base.span, at: base.span }
+        } else {
+            let h = self.expr(base, None, cx);
+            let h = self.deref(h);
+            if self.sigs[fi].sinks[0] {
+                self.consume(h, cx)
+            } else {
+                h
+            }
+        };
+        self.call_fn(fi, full, Some(recv), args, span, at, cx)
     }
 
     /// `os.exit(code)`.

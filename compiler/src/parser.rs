@@ -18,7 +18,7 @@ enum Item {
 }
 
 pub fn parse(toks: Vec<Token>, src: &str, diags: &mut Diags) -> Program {
-    let mut p = Parser { toks, pos: 0, src, diags };
+    let mut p = Parser { toks, pos: 0, src, diags, self_ty: None };
     p.program()
 }
 
@@ -27,6 +27,8 @@ struct Parser<'a, 'd> {
     pos: usize,
     src: &'a str,
     diags: &'d mut Diags,
+    /// The struct or enum whose body is being parsed: what `Self` and `self` stand for.
+    self_ty: Option<String>,
 }
 
 impl Parser<'_, '_> {
@@ -118,8 +120,14 @@ impl Parser<'_, '_> {
             }
             match self.item() {
                 Ok(Some(Item::Fn(f))) => fns.push(f),
-                Ok(Some(Item::Struct(s))) => structs.push(s),
-                Ok(Some(Item::Enum(e))) => enums.push(e),
+                Ok(Some(Item::Struct(mut s))) => {
+                    fns.append(&mut s.methods);
+                    structs.push(s)
+                }
+                Ok(Some(Item::Enum(mut e))) => {
+                    fns.append(&mut e.methods);
+                    enums.push(e)
+                }
                 Ok(Some(Item::Use(u))) => uses.extend(u),
                 Ok(None) => {}
                 Err(()) => self.sync_item(),
@@ -159,7 +167,7 @@ impl Parser<'_, '_> {
             self.bump();
         }
         if self.is_kw("fn") {
-            return self.function().map(|f| Some(Item::Fn(f)));
+            return self.function(None).map(|f| Some(Item::Fn(f)));
         }
         if self.is_kw("struct") {
             return self.struct_decl().map(|s| Some(Item::Struct(s)));
@@ -177,7 +185,38 @@ impl Parser<'_, '_> {
         Err(())
     }
 
-    /// `struct Name { field: Type ... }`, one field per line (commas are also accepted).
+    /// `: Drop + Named` after a struct or enum name.
+    fn impl_list(&mut self) -> PResult<Vec<(String, Span)>> {
+        let mut out = Vec::new();
+        if self.eat(&Tok::Colon) {
+            loop {
+                out.push(self.ident("an interface name")?);
+                if !self.eat(&Tok::Plus) {
+                    break;
+                }
+            }
+        }
+        Ok(out)
+    }
+
+    /// A method inside a struct or enum body (`pub` is accepted and has no effect yet).
+    fn method(&mut self, owner: &str) -> PResult<FnDecl> {
+        if self.is_kw("pub") {
+            self.bump();
+        }
+        if !self.is_kw("fn") {
+            let found = describe(self.peek());
+            self.err_here(format!("expected `fn` after `pub`, found {found}"));
+            return Err(());
+        }
+        let saved = self.self_ty.replace(owner.to_string());
+        let f = self.function(Some(owner));
+        self.self_ty = saved;
+        f
+    }
+
+    /// `struct Name { field: Type ... fn method(self) { } }`, one member per line (commas are
+    /// also accepted between fields).
     fn struct_decl(&mut self) -> PResult<StructDecl> {
         self.bump();
         let (name, name_span) = self.ident("a struct name")?;
@@ -185,12 +224,10 @@ impl Parser<'_, '_> {
             let sp = self.span();
             self.unsupported(sp, "generic structs are not supported in P0")?;
         }
-        if matches!(self.peek(), Tok::Colon) {
-            let sp = self.span();
-            self.unsupported(sp, "implementing interfaces (`struct X: Named`) is not supported in P0")?;
-        }
+        let impls = self.impl_list()?;
         self.expect(Tok::LBrace, "`{` to start the struct body")?;
         let mut fields = Vec::new();
+        let mut methods = Vec::new();
         loop {
             while matches!(self.peek(), Tok::Newline | Tok::Comma) {
                 self.bump();
@@ -199,8 +236,8 @@ impl Parser<'_, '_> {
                 break;
             }
             if self.is_kw("fn") || self.is_kw("pub") {
-                let sp = self.span();
-                self.unsupported(sp, "methods are not supported in P0")?;
+                methods.push(self.method(&name)?);
+                continue;
             }
             let (fname, fspan) = self.ident("a field name")?;
             self.expect(Tok::Colon, "`:` followed by the field type")?;
@@ -216,7 +253,7 @@ impl Parser<'_, '_> {
                 return Err(());
             }
         }
-        Ok(StructDecl { name, name_span, fields })
+        Ok(StructDecl { name, name_span, fields, impls, methods })
     }
 
     /// `enum Name { Case, Case(field: Type, ...) }`, one case per line (commas are also accepted).
@@ -227,12 +264,10 @@ impl Parser<'_, '_> {
             let sp = self.span();
             self.unsupported(sp, "generic enums are not supported yet")?;
         }
-        if matches!(self.peek(), Tok::Colon) {
-            let sp = self.span();
-            self.unsupported(sp, "implementing interfaces (`enum X: Eq`) is not supported yet")?;
-        }
+        let impls = self.impl_list()?;
         self.expect(Tok::LBrace, "`{` to start the enum body")?;
         let mut variants = Vec::new();
+        let mut methods = Vec::new();
         loop {
             while matches!(self.peek(), Tok::Newline | Tok::Comma) {
                 self.bump();
@@ -241,8 +276,8 @@ impl Parser<'_, '_> {
                 break;
             }
             if self.is_kw("fn") || self.is_kw("pub") {
-                let sp = self.span();
-                self.unsupported(sp, "methods are not supported yet")?;
+                methods.push(self.method(&name)?);
+                continue;
             }
             let (vname, vspan) = self.ident("a case name")?;
             let mut fields = Vec::new();
@@ -265,7 +300,7 @@ impl Parser<'_, '_> {
                 return Err(());
             }
         }
-        Ok(EnumDecl { name, name_span, variants })
+        Ok(EnumDecl { name, name_span, variants, impls, methods })
     }
 
     /// `use std/m` or `use std/{a, b}`.
@@ -320,7 +355,9 @@ impl Parser<'_, '_> {
         Ok(out)
     }
 
-    fn function(&mut self) -> PResult<FnDecl> {
+    /// `fn name(params) -> T of a { }`; for a method (`owner`), the first parameter may be the
+    /// receiver `self`, `inout self` or `sink self`.
+    fn function(&mut self, owner: Option<&str>) -> PResult<FnDecl> {
         self.bump();
         let (name, name_span) = self.ident("a function name")?;
         if matches!(self.peek(), Tok::LBracket) {
@@ -330,15 +367,34 @@ impl Parser<'_, '_> {
         self.expect(Tok::LParen, "`(`")?;
         let mut params = Vec::new();
         while !matches!(self.peek(), Tok::RParen) {
+            let recv_inout = self.is_kw("inout") && matches!(self.peek_at(1), Tok::Ident(s) if s == "self");
+            let recv_sink = self.is_kw("sink") && matches!(self.peek_at(1), Tok::Ident(s) if s == "self");
+            if recv_inout || recv_sink || self.is_kw("self") {
+                let start = self.span();
+                if recv_inout || recv_sink {
+                    self.bump();
+                }
+                let sp = self.bump().span;
+                let Some(owner) = owner.filter(|_| params.is_empty()) else {
+                    self.diags.error(
+                        "E0020",
+                        start,
+                        "`self` can only be the first parameter of a method written inside a struct or enum",
+                    );
+                    return Err(());
+                };
+                let ty = TypeExpr { name: owner.to_string(), span: sp, args: Vec::new() };
+                params.push(Param { name: "self".into(), span: sp, sink: recv_sink, inout: recv_inout, ty });
+                if !self.eat(&Tok::Comma) {
+                    break;
+                }
+                continue;
+            }
             for m in ["inout", "sink"] {
                 if self.is_kw(m) {
                     let sp = self.span();
                     self.unsupported(sp, format!("`{m}` parameters are not supported in P0"))?;
                 }
-            }
-            if self.is_kw("self") {
-                let sp = self.span();
-                self.unsupported(sp, "methods are not supported in P0")?;
             }
             let (pname, pspan) = self.ident("a parameter name")?;
             self.expect(Tok::Colon, "`:` followed by the parameter type")?;
@@ -388,7 +444,11 @@ impl Parser<'_, '_> {
             None
         };
         let body = self.block()?;
-        Ok(FnDecl { name, name_span, params, ret, ret_of, body })
+        let name = match owner {
+            Some(o) => format!("{o}.{name}"),
+            None => name,
+        };
+        Ok(FnDecl { name, name_span, owner: owner.map(str::to_string), params, ret, ret_of, body })
     }
 
     /// A type, including `T ! E` (which binds loosest: `?String ! io.Error` is a result whose
@@ -449,6 +509,16 @@ impl Parser<'_, '_> {
         if matches!(self.peek(), Tok::LBracket | Tok::LParen) {
             let sp = self.span();
             self.unsupported(sp, "slice and tuple types are not supported yet")?;
+        }
+        if self.is_kw("Self") {
+            let span = self.bump().span;
+            return match self.self_ty.clone() {
+                Some(name) => Ok(TypeExpr { name, span, args: Vec::new() }),
+                None => {
+                    self.diags.error("E0020", span, "`Self` can only be used inside a struct, enum or interface");
+                    Err(())
+                }
+            };
         }
         let (name, span) = self.ident("a type")?;
         // `fs.Error`: a type from a standard library module.
@@ -1199,7 +1269,8 @@ impl Parser<'_, '_> {
                     return self.match_expr();
                 }
                 if s == "self" {
-                    self.unsupported(span, format!("`{s}` is not supported in P0"))?;
+                    self.bump();
+                    return Ok(Expr { span, kind: ExprKind::Ident(s) });
                 }
                 self.err_here(format!("expected an expression, found `{s}`"));
                 Err(())
@@ -1305,7 +1376,7 @@ impl Parser<'_, '_> {
                         self.diags.error("E0020", ispan, "empty `${}` in string literal");
                         continue;
                     }
-                    let mut sub = Parser { toks, pos: 0, src: self.src, diags: &mut *self.diags };
+                    let mut sub = Parser { toks, pos: 0, src: self.src, diags: &mut *self.diags, self_ty: self.self_ty.clone() };
                     let Ok(expr) = sub.expr() else { continue };
                     if !matches!(sub.peek(), Tok::Eof) {
                         sub.err_here("only a single expression is allowed inside `${...}`");

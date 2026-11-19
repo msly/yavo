@@ -1,0 +1,73 @@
+// expect-error: E0401 26:16
+// expect-error: E0302 28:22
+// expect-error: E0303 33:16
+// expect-error: E0014 39:5
+// expect-error: E0014 43:5
+// expect-error: E0102 49:5
+// expect-error: E0402 56:13
+// expect-error: E0012 62:5
+// expect-error: E0001 67:13
+// expect-error: E0001 68:13
+// expect-error: E0010 69:13
+struct Counter {
+    name: String
+    total: int
+
+    fn new(name: str) -> Counter {
+        return Counter{name: name.toString(), total: 0}
+    }
+    fn label(self) -> str of self {
+        return self.name
+    }
+    fn add(inout self, n: int) {
+        self.total += n
+    }
+    fn finish(sink self) -> String {
+        return self.name
+    }
+    fn leak(self) -> str {
+        return self.name
+    }
+    fn local() -> str of static {
+        let s = "x".toString()
+        return s
+    }
+}
+
+fn readOnly() {
+    let c = Counter.new("a")
+    c.add(1)
+}
+
+fn temporary() {
+    Counter.new("a").add(1)
+}
+
+fn viewThenWrite() {
+    var c = Counter.new("a")
+    let l = c.label()
+    c.add(1)
+    println(l)
+}
+
+fn consumed() {
+    let c = Counter.new("a")
+    let s = c.finish()
+    println(c.label())
+    println(s)
+}
+
+fn arity() {
+    var c = Counter.new("a")
+    c.add(1, 2)
+}
+
+fn kinds() {
+    let c = Counter.new("a")
+    let x = c.new("b")
+    let y = Counter.label()
+    let z = c.missing()
+}
+
+fn main() {
+}

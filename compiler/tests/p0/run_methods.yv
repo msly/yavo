@@ -1,0 +1,68 @@
+// expect-stdout:
+// | clicks 2 2007
+// | 0 1 b
+// | clicks=2007
+// | 9
+// | 10
+// | 16
+struct Counter {
+    name: String
+    hits: Vec[int]
+    total: int
+
+    fn new(name: str) -> Counter {
+        return Counter{name: name.toString(), hits: [], total: 0}
+    }
+    fn label(self) -> str of self {
+        return self.name
+    }
+    fn count(self) -> int {
+        return self.hits.len()
+    }
+    fn add(inout self, n: int) {
+        self.hits.push(n)
+        self.total += n
+        self.bump()
+    }
+    fn bump(inout self) {
+        self.total += 1000
+    }
+    fn finish(sink self) -> String {
+        return format("${self.name}=${self.total}")
+    }
+}
+
+enum Shape {
+    Square(side: int)
+    Rect(w: int, h: int)
+
+    fn area(self) -> int {
+        match self {
+            .Square(s) => return s * s
+            .Rect(w, h) => return w * h
+        }
+    }
+}
+
+struct Pair {
+    a: Counter
+    b: Counter
+}
+
+fn main() {
+    var c = Counter.new("clicks")
+    c.add(3)
+    c.add(4)
+    let l = c.label()
+    println("${l} ${c.count()} ${c.total}")
+    var p = Pair{a: Counter.new("a"), b: Counter.new("b")}
+    p.b.add(7)
+    println("${p.a.count()} ${p.b.count()} ${p.b.label()}")
+    let s = c.finish()
+    println(s)
+    let shapes = [Shape.Square(side: 3), Shape.Rect(w: 2, h: 5)]
+    for sh in shapes {
+        println(sh.area())
+    }
+    println(Shape.Rect(w: 4, h: 4).area())
+}

@@ -17,6 +17,10 @@ pub struct StructDecl {
     pub name: String,
     pub name_span: Span,
     pub fields: Vec<FieldDecl>,
+    /// `struct X: Drop + Named`: the interfaces it declares to implement.
+    pub impls: Vec<(String, Span)>,
+    /// Methods written in the body; moved into `Program::fns` by the parser.
+    pub methods: Vec<FnDecl>,
 }
 
 /// `enum Name { Case, Case(field: T, ...) }`
@@ -24,6 +28,8 @@ pub struct EnumDecl {
     pub name: String,
     pub name_span: Span,
     pub variants: Vec<VariantDecl>,
+    pub impls: Vec<(String, Span)>,
+    pub methods: Vec<FnDecl>,
 }
 
 pub struct VariantDecl {
@@ -45,8 +51,12 @@ pub struct FieldInit {
 }
 
 pub struct FnDecl {
+    /// A method's name is `Type.method`.
     pub name: String,
     pub name_span: Span,
+    /// For a method: the struct or enum it belongs to. Its receiver, if any, is the first
+    /// parameter, named `self`.
+    pub owner: Option<String>,
     pub params: Vec<Param>,
     pub ret: Option<TypeExpr>,
     /// `-> T of a` / `of (a, b)` / `of static`: where a returned borrow may come from.
