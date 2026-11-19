@@ -1,0 +1,62 @@
+use std/os
+
+struct Node {
+    key: int
+    left: ?Box[Node]
+    right: ?Box[Node]
+}
+
+fn insert(t: inout ?Box[Node], k: int) {
+    if let n = t {
+        if k < n.key {
+            insert(&n.left, k)
+        } else if k > n.key {
+            insert(&n.right, k)
+        }
+        return
+    }
+    t = Box(Node{key: k})
+}
+
+fn inorder(t: ?Box[Node], out: inout Vec[int]) {
+    if let n = t {
+        inorder(n.left, &out)
+        out.push(n.key)
+        inorder(n.right, &out)
+    }
+}
+
+fn height(t: ?Box[Node]) -> int {
+    if let n = t {
+        return 1 + max(height(n.left), height(n.right))
+    }
+    return 0
+}
+
+fn size(t: ?Box[Node]) -> int {
+    if let n = t {
+        return 1 + size(n.left) + size(n.right)
+    }
+    return 0
+}
+
+fn main() {
+    let args = os.args()
+    var root: ?Box[Node] = none
+    for i in 1..args.len() {
+        let k = args[i].parseInt() ?? 0
+        insert(&root, k)
+    }
+    var keys: Vec[int] = []
+    inorder(root, &keys)
+    var line = String{}
+    for i, k in keys {
+        if i > 0 {
+            line.push(" ")
+        }
+        line.push(format("${k}"))
+    }
+    println(line)
+    println("height: ${height(root)}")
+    println("size: ${size(root)}")
+}

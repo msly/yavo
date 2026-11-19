@@ -1,0 +1,68 @@
+use std/{io, os}
+
+enum EvalError {
+    BadToken(text: String)
+    Underflow
+    DivZero
+    Leftover
+}
+
+fn eval(line: str) -> int ! EvalError {
+    var st: Vec[int] = []
+    for tok in line.fields() {
+        if tok == "+" || tok == "-" || tok == "*" || tok == "/" {
+            let b = st.pop() ?? return err(.Underflow)
+            let a = st.pop() ?? return err(.Underflow)
+            var r = 0
+            if tok == "+" {
+                r = a + b
+            } else if tok == "-" {
+                r = a - b
+            } else if tok == "*" {
+                r = a * b
+            } else {
+                if b == 0 {
+                    return err(.DivZero)
+                }
+                r = a / b
+            }
+            st.push(r)
+        } else {
+            let n = tok.parseInt() ?? return err(.BadToken(text: tok.toString()))
+            st.push(n)
+        }
+    }
+    if st.len() == 0 {
+        return err(.Underflow)
+    }
+    if st.len() > 1 {
+        return err(.Leftover)
+    }
+    return st[0]
+}
+
+fn describe(e: EvalError) -> String {
+    match e {
+        .BadToken(text) => return format("bad token '${text}'")
+        .Underflow => return "stack underflow".toString()
+        .DivZero => return "division by zero".toString()
+        .Leftover => return "leftover values".toString()
+    }
+}
+
+fn run() -> int ! io.Error {
+    while let line = try io.readLine() {
+        match eval(line) {
+            ok(v) => println(v)
+            err(e) => println("error: ${describe(e)}")
+        }
+    }
+    return 0
+}
+
+fn main() {
+    let _rc = run() catch e {
+        eprintln("read error: ${e}")
+        os.exit(1)
+    }
+}

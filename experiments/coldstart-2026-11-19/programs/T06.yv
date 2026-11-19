@@ -1,0 +1,47 @@
+use std/{io, os}
+
+fn run() -> int ! io.Error {
+    var inv: Map[String, int] = [:]
+    while let line = try io.readLine() {
+        let f = line.fields()
+        if f.len() == 0 {
+            continue
+        }
+        let cmd = f[0]
+        if cmd == "add" && f.len() == 3 {
+            let q = f[2].parseInt() ?? 0
+            let cur = inv.getCopy(f[1]) ?? 0
+            inv.set(f[1].toString(), cur + q)
+        } else if cmd == "remove" && f.len() == 3 {
+            let q = f[2].parseInt() ?? 0
+            let cur = inv.getCopy(f[1]) ?? 0
+            if q > cur {
+                println("error: not enough ${f[1]}")
+            } else if q == cur {
+                let _old = inv.remove(f[1])
+            } else {
+                inv.set(f[1].toString(), cur - q)
+            }
+        } else if cmd == "report" {
+            var names: Vec[String] = []
+            for k, _v in inv {
+                names.push(k.clone())
+            }
+            names.sort()
+            for nm in names {
+                let q = inv.getCopy(nm) ?? 0
+                println("${nm} ${q}")
+            }
+        } else {
+            println("error: unknown command '${cmd}'")
+        }
+    }
+    return 0
+}
+
+fn main() {
+    let _rc = run() catch e {
+        eprintln("read error: ${e}")
+        os.exit(1)
+    }
+}

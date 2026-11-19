@@ -1,0 +1,26 @@
+use std/{fs, os}
+
+fn main() {
+    let args = os.args()
+    if args.len() < 3 {
+        eprintln("usage: T03 PATTERN FILE")
+        os.exit(2)
+    }
+    let pat = args[1]
+    let path = args[2]
+    let text = fs.readText(path) catch _e {
+        eprintln("cannot read ${path}")
+        os.exit(2)
+    }
+    var found = 0
+    for i, line in text.lines() {
+        if line.contains(pat) {
+            println("${i + 1}: ${line}")
+            found += 1
+        }
+    }
+    if found == 0 {
+        eprintln("no match")
+        os.exit(1)
+    }
+}

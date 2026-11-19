@@ -1,0 +1,66 @@
+use std/{io, os}
+
+struct Stack[T] {
+    items: Vec[T]
+
+    fn push(inout self, x: sink T) {
+        self.items.push(x)
+    }
+    fn pop(inout self) -> ?T {
+        return self.items.pop()
+    }
+    fn isEmpty(self) -> bool {
+        return self.items.len() == 0
+    }
+}
+
+fn closer(c: byte) -> str of static {
+    if c == '(' {
+        return ")"
+    } else if c == '[' {
+        return "]"
+    }
+    return "}"
+}
+
+fn check(line: str) {
+    var st = Stack[int]{items: []}
+    let n = line.len()
+    for i in 0..n {
+        let c = line[i]
+        if c == '(' || c == '[' || c == '{' {
+            st.push(i)
+        } else if c == ')' || c == ']' || c == '}' {
+            let got = line[i..i + 1]
+            if st.isEmpty() {
+                println("error at column ${i + 1}: unexpected '${got}'")
+                return
+            }
+            let j = st.pop() ?? 0
+            let want = closer(line[j])
+            if want != got {
+                println("error at column ${i + 1}: expected '${want}' found '${got}'")
+                return
+            }
+        }
+    }
+    if let j = st.pop() {
+        println("unclosed '${line[j..j + 1]}' at column ${j + 1}")
+        return
+    }
+    println("ok")
+}
+
+fn run() -> int ! io.Error {
+    while let line = try io.readLine() {
+        check(line)
+    }
+    return 0
+}
+
+fn main() {
+    let _rc = run() catch e {
+        eprintln("read error: ${e}")
+        os.exit(1)
+    }
+}

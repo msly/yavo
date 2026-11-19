@@ -1,0 +1,82 @@
+use std/{io, os}
+
+fn countAlive(g: Vec[Vec[int]], r: int, c: int) -> int {
+    let h = g.len()
+    let w = g[0].len()
+    var n = 0
+    for dr in 0..3 {
+        for dc in 0..3 {
+            if dr == 1 && dc == 1 {
+                continue
+            }
+            let rr = r + dr - 1
+            let cc = c + dc - 1
+            if rr >= 0 && rr < h && cc >= 0 && cc < w {
+                n += g[rr][cc]
+            }
+        }
+    }
+    return n
+}
+
+fn main() {
+    let text = io.readAll() catch e {
+        eprintln("read error: ${e}")
+        os.exit(1)
+    }
+    let lines = text.lines()
+    if lines.len() == 0 {
+        eprintln("empty input")
+        os.exit(1)
+    }
+    let gens = lines[0].trim().parseInt() ?? 0
+    var grid: Vec[Vec[int]] = []
+    for i in 1..lines.len() {
+        let ln = lines[i].trim()
+        if ln.len() == 0 {
+            continue
+        }
+        var row: Vec[int] = []
+        for j in 0..ln.len() {
+            if ln[j] == '#' {
+                row.push(1)
+            } else {
+                row.push(0)
+            }
+        }
+        grid.push(row)
+    }
+    let h = grid.len()
+    for _g in 0..gens {
+        var next: Vec[Vec[int]] = []
+        for r in 0..h {
+            var row: Vec[int] = []
+            let w = grid[r].len()
+            for c in 0..w {
+                let n = countAlive(grid, r, c)
+                let alive = grid[r][c] == 1
+                if (alive && (n == 2 || n == 3)) || (!alive && n == 3) {
+                    row.push(1)
+                } else {
+                    row.push(0)
+                }
+            }
+            next.push(row)
+        }
+        grid = next
+    }
+    var total = 0
+    for row in grid {
+        var out = String{}
+        for v in row {
+            if v == 1 {
+                out.push("#")
+                total += 1
+            } else {
+                out.push(".")
+            }
+        }
+        println(out)
+    }
+    println("alive: ${total}")
+}

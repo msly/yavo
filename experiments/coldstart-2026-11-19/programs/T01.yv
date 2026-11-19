@@ -1,0 +1,36 @@
+use std/io
+
+fn isAlpha(c: byte) -> bool {
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
+}
+
+fn main() {
+    let text = io.readAll() catch e {
+        eprintln("read error: ${e}")
+        return
+    }
+    var counts: Map[String, int] = [:]
+    let n = text.len()
+    var i = 0
+    while i < n {
+        if isAlpha(text[i]) {
+            var j = i
+            while j < n && isAlpha(text[j]) {
+                j += 1
+            }
+            let key = text[i..j].toLower()
+            counts.update(key, 0, (c) => c + 1)
+            i = j
+        } else {
+            i += 1
+        }
+    }
+    var items: Vec[(String, int)] = []
+    for k, c in counts {
+        items.push((k.clone(), c))
+    }
+    items.sortBy((a, b) => a.1 > b.1 || (a.1 == b.1 && a.0 < b.0))
+    for it in items[0..min(5, items.len())] {
+        println("${it.0} ${it.1}")
+    }
+}

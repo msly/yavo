@@ -1,0 +1,48 @@
+use std/{io, os}
+
+fn run() -> int ! io.Error {
+    var lineNo = 0
+    var count = 0
+    var total = 0
+    var best = String{}
+    var bestScore = 0
+    while let line = try io.readLine() {
+        lineNo += 1
+        if line.len() == 0 {
+            continue
+        }
+        let parts = line.split(",")
+        if parts.len() != 2 {
+            eprintln("bad line ${lineNo}: ${line}")
+            continue
+        }
+        let parsed = parts[1].parseInt()
+        if !parsed.isSome() {
+            eprintln("bad line ${lineNo}: ${line}")
+            continue
+        }
+        let score = parsed ?? 0
+        if count == 0 || score > bestScore {
+            bestScore = score
+            best = parts[0].toString()
+        }
+        count += 1
+        total += score
+    }
+    println("count: ${count}")
+    println("total: ${total}")
+    var mean = 0
+    if count > 0 {
+        mean = int(f64(total) / f64(count) * 100.0)
+    }
+    println("mean_x100: ${mean}")
+    println("best: ${best}")
+    return 0
+}
+
+fn main() {
+    let _rc = run() catch e {
+        eprintln("read error: ${e}")
+        os.exit(1)
+    }
+}

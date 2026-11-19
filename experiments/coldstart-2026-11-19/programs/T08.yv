@@ -1,0 +1,73 @@
+use std/{io, os, math}
+
+interface Shape {
+    fn area(self) -> f64
+    fn name(self) -> String
+}
+
+struct Circle: Shape {
+    r: f64
+    fn area(self) -> f64 {
+        return math.pi * self.r * self.r
+    }
+    fn name(self) -> String {
+        return "circle".toString()
+    }
+}
+
+struct Rect: Shape {
+    w: f64
+    h: f64
+    fn area(self) -> f64 {
+        return self.w * self.h
+    }
+    fn name(self) -> String {
+        return "rect".toString()
+    }
+}
+
+struct Square: Shape {
+    s: f64
+    fn area(self) -> f64 {
+        return self.s * self.s
+    }
+    fn name(self) -> String {
+        return "square".toString()
+    }
+}
+
+fn run() -> int ! io.Error {
+    var all: Vec[Box[Shape]] = []
+    while let line = try io.readLine() {
+        let f = line.fields()
+        if f.len() == 0 {
+            continue
+        }
+        if f[0] == "circle" && f.len() == 2 {
+            let r = f[1].parseFloat() ?? 0.0
+            all.push(Box(Circle{r: r}))
+        } else if f[0] == "rect" && f.len() == 3 {
+            let w = f[1].parseFloat() ?? 0.0
+            let h = f[2].parseFloat() ?? 0.0
+            all.push(Box(Rect{w: w, h: h}))
+        } else if f[0] == "square" && f.len() == 2 {
+            let s = f[1].parseFloat() ?? 0.0
+            all.push(Box(Square{s: s}))
+        } else {
+            eprintln("bad line: ${line}")
+        }
+    }
+    all.sortBy((a, b) => a.area().totalCmp(b.area()) == .Less)
+    for sh in all {
+        let a = int(sh.area() * 100.0)
+        println("${sh.name()} ${a}")
+    }
+    return 0
+}
+
+fn main() {
+    let _rc = run() catch e {
+        eprintln("read error: ${e}")
+        os.exit(1)
+    }
+}
