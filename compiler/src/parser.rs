@@ -506,9 +506,26 @@ impl Parser<'_, '_> {
             let inner = self.ty_atom()?;
             return Ok(TypeExpr { name: "[]".into(), span: open.to(inner.span), args: vec![inner] });
         }
-        if matches!(self.peek(), Tok::LBracket | Tok::LParen) {
+        // `(A, B)`: a tuple type.
+        if matches!(self.peek(), Tok::LParen) {
+            let open = self.bump().span;
+            let mut args = vec![self.ty()?];
+            while self.eat(&Tok::Comma) {
+                if matches!(self.peek(), Tok::RParen) {
+                    break;
+                }
+                args.push(self.ty()?);
+            }
+            let close = self.expect(Tok::RParen, "`,` or `)` in the tuple type")?;
+            if args.len() < 2 {
+                self.diags.error("E0020", open.to(close), "a tuple type needs at least two elements, e.g. `(int, String)`");
+                return Err(());
+            }
+            return Ok(TypeExpr { name: "(,)".into(), span: open.to(close), args });
+        }
+        if matches!(self.peek(), Tok::LBracket) {
             let sp = self.span();
-            self.unsupported(sp, "slice and tuple types are not supported yet")?;
+            self.unsupported(sp, "array types are not supported yet")?;
         }
         if self.is_kw("Self") {
             let span = self.bump().span;
@@ -599,8 +616,23 @@ impl Parser<'_, '_> {
             let mutable = self.is_kw("var");
             self.bump();
             if matches!(self.peek(), Tok::LParen) {
-                let sp = self.span();
-                self.unsupported(sp, "tuple destructuring is not supported in P0")?;
+                self.bump();
+                let mut names = Vec::new();
+                while !matches!(self.peek(), Tok::RParen) {
+                    names.push(self.ident("a variable name (or `_`)")?);
+                    if !self.eat(&Tok::Comma) {
+                        break;
+                    }
+                }
+                self.expect(Tok::RParen, "`,` or `)`")?;
+                if names.len() < 2 {
+                    self.err_here("a tuple pattern needs at least two names, e.g. `let (a, b) = t`");
+                    return Err(());
+                }
+                self.expect(Tok::Assign, "`=` followed by a tuple value")?;
+                let init = self.expr()?;
+                let span = start.to(init.span);
+                return Ok(Stmt { span, kind: StmtKind::LetTuple { mutable, names, init } });
             }
             let (name, name_span) = self.ident("a variable name")?;
             let ty = if self.eat(&Tok::Colon) { Some(self.ty()?) } else { None };
@@ -1005,6 +1037,30 @@ impl Parser<'_, '_> {
     }
 
     /// True when the `(` at the current position closes into `) =>`, i.e. a closure `(a, b) => expr`.
+    /// `(a, b) => value` or `(a: int) => { block }`.
+    fn closure(&mut self) -> PResult<Expr> {
+        let open = self.bump().span;
+        let mut params = Vec::new();
+        while !matches!(self.peek(), Tok::RParen) {
+            let (name, sp) = self.ident("a closure parameter name")?;
+            let ty = if self.eat(&Tok::Colon) { Some(self.ty()?) } else { None };
+            params.push((name, sp, ty));
+            if !self.eat(&Tok::Comma) {
+                break;
+            }
+        }
+        self.expect(Tok::RParen, "`,` or `)`")?;
+        self.expect(Tok::FatArrow, "`=>`")?;
+        let body = if matches!(self.peek(), Tok::LBrace) {
+            let b = self.block()?;
+            Expr { span: b.close, kind: ExprKind::Block(b) }
+        } else {
+            self.expr()?
+        };
+        let span = open.to(body.span);
+        Ok(Expr { span, kind: ExprKind::Closure { params, body: Box::new(body) } })
+    }
+
     fn at_closure(&self) -> bool {
         let mut depth = 0usize;
         let mut n = 0usize;
@@ -1160,10 +1216,9 @@ impl Parser<'_, '_> {
                             let sp = self.bump().span;
                             (s, sp)
                         }
-                        Tok::Int(_) => {
-                            let sp = self.span();
-                            self.unsupported(sp, "tuple fields (`t.0`) are not supported in P0")?;
-                            unreachable!()
+                        Tok::Int(v) => {
+                            let sp = self.bump().span;
+                            (v.to_string(), sp)
                         }
                         other => {
                             self.err_here(format!("expected a field or method name, found {}", describe(&other)));
@@ -1281,7 +1336,7 @@ impl Parser<'_, '_> {
             }
             Tok::LParen => {
                 if self.at_closure() {
-                    self.unsupported(span, "closures (`(a, b) => expr`) are not supported in P0")?;
+                    return self.closure();
                 }
                 self.bump();
                 if matches!(self.peek(), Tok::RParen) {
@@ -1290,7 +1345,15 @@ impl Parser<'_, '_> {
                 }
                 let e = self.expr()?;
                 if matches!(self.peek(), Tok::Comma) {
-                    self.unsupported(span, "tuple literals are not supported in P0")?;
+                    let mut items = vec![e];
+                    while self.eat(&Tok::Comma) {
+                        if matches!(self.peek(), Tok::RParen) {
+                            break;
+                        }
+                        items.push(self.expr()?);
+                    }
+                    let close = self.expect(Tok::RParen, "`,` or `)` in the tuple")?;
+                    return Ok(Expr { span: span.to(close), kind: ExprKind::Tuple(items) });
                 }
                 let close = self.expect(Tok::RParen, "`)`")?;
                 Ok(Expr { span: span.to(close), kind: ExprKind::Paren(Box::new(e)) })

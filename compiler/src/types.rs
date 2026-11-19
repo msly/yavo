@@ -22,6 +22,31 @@ thread_local! {
     static MAPS: RefCell<Vec<(Ty, Ty)>> = const { RefCell::new(Vec::new()) };
     /// Element type of each `[]T`, indexed by slice id.
     static SLICES: RefCell<Vec<Ty>> = const { RefCell::new(Vec::new()) };
+    /// Element types and C struct name of each tuple type, indexed by tuple id. Elements are
+    /// registered before the tuples that contain them.
+    static TUPLES: RefCell<Vec<(Vec<Ty>, &'static str)>> = const { RefCell::new(Vec::new()) };
+}
+
+/// Interns the tuple type `(elems...)` and returns its id.
+pub fn tuple_of(elems: Vec<Ty>) -> u32 {
+    if let Some(i) = TUPLES.with(|t| t.borrow().iter().position(|(e, _)| *e == elems)) {
+        return i as u32;
+    }
+    let key: Vec<String> = elems.iter().map(|t| t.key()).collect();
+    let c: &'static str = Box::leak(format!("yv_t_{}", key.join("__")).into_boxed_str());
+    TUPLES.with(|t| {
+        let mut t = t.borrow_mut();
+        t.push((elems, c));
+        (t.len() - 1) as u32
+    })
+}
+
+pub fn tuple_elems(id: u32) -> Vec<Ty> {
+    TUPLES.with(|t| t.borrow()[id as usize].0.clone())
+}
+
+pub fn all_tuples() -> Vec<u32> {
+    TUPLES.with(|t| (0..t.borrow().len() as u32).collect())
 }
 
 /// Interns `[]elem` and returns its id.
@@ -378,6 +403,8 @@ pub enum Ty {
     /// T val; E err; }` struct (no `val` when `T` is `()`); all-zero is an error holding a
     /// zero value, which is safe to drop.
     Res(u32),
+    /// `(A, B, ...)`, by tuple id (see `tuple_of`). In C a struct with members `f0`, `f1`, ...
+    Tuple(u32),
     /// Produced after an error has been reported; suppresses cascading diagnostics.
     Error,
 }
@@ -389,6 +416,7 @@ impl Ty {
         match self {
             Ty::String | Ty::Vec(_) | Ty::Map(_) | Ty::RefMut(_) => false,
             Ty::Opt(id) => opt_inner(id).is_copy(),
+            Ty::Tuple(id) => tuple_elems(id).iter().all(|t| t.is_copy()),
             Ty::Struct(id) | Ty::Enum(id) => agg_flags(id).0,
             Ty::Res(id) => {
                 let (o, e) = res_parts(id);
@@ -404,6 +432,7 @@ impl Ty {
         match self {
             Ty::String | Ty::Vec(_) | Ty::Map(_) => true,
             Ty::Opt(id) => opt_inner(id).needs_drop(),
+            Ty::Tuple(id) => tuple_elems(id).iter().any(|t| t.needs_drop()),
             Ty::Struct(id) | Ty::Enum(id) => agg_flags(id).1,
             Ty::Res(id) => {
                 let (o, e) = res_parts(id);
@@ -418,6 +447,7 @@ impl Ty {
         match self {
             Ty::RefMut(_) => true,
             Ty::Opt(id) => opt_inner(id).contains_ref_mut(),
+            Ty::Tuple(id) => tuple_elems(id).iter().any(|t| t.contains_ref_mut()),
             Ty::Vec(id) => vec_elem(id).contains_ref_mut(),
             Ty::Slice(id) => slice_elem(id).contains_ref_mut(),
             Ty::Res(id) => {
@@ -443,6 +473,7 @@ impl Ty {
             Ty::Str | Ty::Ref(_) | Ty::RefMut(_) | Ty::Slice(_) => true,
             Ty::Vec(id) => vec_elem(id).carries_borrow(),
             Ty::Opt(id) => opt_inner(id).carries_borrow(),
+            Ty::Tuple(id) => tuple_elems(id).iter().any(|t| t.carries_borrow()),
             Ty::Res(id) => {
                 let (o, e) = res_parts(id);
                 o.carries_borrow() || e.carries_borrow()
@@ -482,6 +513,10 @@ impl Ty {
                 let (o, e) = res_parts(id);
                 format!("Res_{}__{}", o.key(), e.key())
             }
+            Ty::Tuple(id) => {
+                let parts: Vec<String> = tuple_elems(id).iter().map(|t| t.key()).collect();
+                format!("Tup_{}_End", parts.join("_"))
+            }
             Ty::Unit | Ty::Error => "void".into(),
         }
     }
@@ -500,6 +535,7 @@ impl Ty {
             Ty::Unit => "void",
             Ty::Struct(id) | Ty::Enum(id) => agg_names(id).1,
             Ty::Res(id) => RESS.with(|r| r.borrow()[id as usize].2),
+            Ty::Tuple(id) => TUPLES.with(|t| t.borrow()[id as usize].1),
             Ty::Error => "void",
         }
     }
@@ -526,6 +562,10 @@ impl fmt::Display for Ty {
             Ty::Res(id) => {
                 let (o, e) = res_parts(*id);
                 write!(f, "{o} ! {e}")
+            }
+            Ty::Tuple(id) => {
+                let parts: Vec<String> = tuple_elems(*id).iter().map(|t| t.to_string()).collect();
+                write!(f, "({})", parts.join(", "))
             }
             Ty::Error => f.write_str("{error}"),
         }

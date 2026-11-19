@@ -343,7 +343,9 @@ impl Lexer<'_, '_> {
                 None => bad = true,
             }
         }
-        if radix == 10 && self.peek() == Some('.') && matches!(self.peek2(), Some(c) if c.is_ascii_digit()) {
+        // After `.` (a tuple element such as `t.0.1`) a number is never a float.
+        let after_dot = matches!(self.toks.last(), Some(Token { tok: Tok::Dot, .. }));
+        if radix == 10 && !after_dot && self.peek() == Some('.') && matches!(self.peek2(), Some(c) if c.is_ascii_digit()) {
             self.bump();
             while matches!(self.peek(), Some(c) if c.is_ascii_alphanumeric() || c == '_') {
                 self.bump();

@@ -6,7 +6,8 @@ use crate::ast::*;
 use crate::diag::{Diags, Span};
 use crate::types::{
     finish_agg, map_of, map_parts, opt_inner, opt_of, ref_inner, ref_mut_inner, ref_mut_of, ref_of, register_enum,
-    register_struct, res_of, res_parts, set_user_drop, has_user_drop, slice_elem, slice_of, vec_elem, vec_of, IntTy, Ty,
+    register_struct, res_of, res_parts, set_user_drop, has_user_drop, slice_elem, slice_of, tuple_elems, tuple_of, vec_elem,
+    vec_of, IntTy, Ty,
 };
 
 pub type LocalId = usize;
@@ -54,6 +55,9 @@ pub struct HStmt {
 
 pub enum HStmtKind {
     Let { local: LocalId, init: HExpr },
+    /// `let (a, b) = init`: each element moves (or is copied) into its local; an element named
+    /// `_` (`None`) is dropped at once.
+    LetTuple { locals: Vec<Option<LocalId>>, init: HExpr },
     /// Evaluate and immediately discard without introducing a name or local slot.
     Discard(HExpr),
     /// `local.path[0].path[1]... = value`; `path` holds field indexes and is empty for a plain variable.
@@ -158,6 +162,8 @@ pub enum HExprKind {
     /// Moves a non-copyable local out; the slot is left empty.
     Move(LocalId),
     VecLit(Vec<HExpr>),
+    /// `(a, b, ...)`: element values in order.
+    TupleLit(Vec<HExpr>),
     /// `base[index]` for a copyable element, or a byte of a string.
     Index { base: Box<HExpr>, index: Box<HExpr> },
     Method { method: Builtin, recv: Box<HExpr> },
@@ -426,6 +432,7 @@ impl Pre {
         let idx = self.next;
         match &s.kind {
             StmtKind::Let { init, .. } => self.expr(init, idx, stack),
+            StmtKind::LetTuple { init, .. } => self.expr(init, idx, stack),
             StmtKind::Assign { target, value, .. } => {
                 self.expr(target, idx, stack);
                 self.expr(value, idx, stack);
@@ -553,6 +560,20 @@ impl Pre {
             ExprKind::VecLit(items) => {
                 for i in items {
                     self.expr(i, idx, stack);
+                }
+            }
+            ExprKind::Tuple(items) => {
+                for i in items {
+                    self.expr(i, idx, stack);
+                }
+            }
+            // A closure body is checked as a function of its own (with its own numbering); here
+            // only its uses of outer variables count, at the enclosing statement.
+            ExprKind::Closure { body, .. } => {
+                let mut names = Vec::new();
+                idents_expr(body, &mut names);
+                for (name, line) in names {
+                    self.occ.push(Occ { idx, line, name, loops: stack.to_vec() });
                 }
             }
             ExprKind::MapLit(entries) => {
@@ -740,11 +761,119 @@ fn mentions(e: &Expr, name: &str) -> bool {
         ExprKind::Field { base, .. } => mentions(base, name),
         ExprKind::StructLit { fields, .. } => fields.iter().any(|f| mentions(&f.value, name)),
         ExprKind::VecLit(items) => items.iter().any(|i| mentions(i, name)),
+        ExprKind::Tuple(items) => items.iter().any(|i| mentions(i, name)),
+        ExprKind::Closure { body, .. } => {
+            let mut names = Vec::new();
+            idents_expr(body, &mut names);
+            names.iter().any(|(n, _)| n == name)
+        }
         ExprKind::MapLit(entries) => entries.iter().any(|(k, v)| mentions(k, name) || mentions(v, name)),
         ExprKind::Index { base, index } => mentions(base, name) || mentions(index, name),
         ExprKind::Unary { expr, .. } | ExprKind::Paren(expr) | ExprKind::Borrow(expr) => mentions(expr, name),
         ExprKind::Binary { lhs, rhs, .. } | ExprKind::Coalesce { lhs, rhs, .. } => {
             mentions(lhs, name) || mentions(rhs, name)
+        }
+    }
+}
+
+/// Every name used in `e` (statements of nested blocks included), with its line.
+fn idents_expr(e: &Expr, out: &mut Vec<(String, u32)>) {
+    let sub = |x: &Expr, out: &mut Vec<(String, u32)>| idents_expr(x, out);
+    match &e.kind {
+        ExprKind::Ident(n) => out.push((n.clone(), e.span.line)),
+        ExprKind::Int(_) | ExprKind::Byte(_) | ExprKind::Bool(_) | ExprKind::None | ExprKind::Break | ExprKind::Continue | ExprKind::Unit => {}
+        ExprKind::Return(v) => {
+            if let Some(v) = v {
+                sub(v, out);
+            }
+        }
+        ExprKind::Case { args, .. } => args.iter().flatten().for_each(|a| sub(a, out)),
+        ExprKind::Named { value, .. } | ExprKind::Err(value) | ExprKind::Try(value) => sub(value, out),
+        ExprKind::Catch { value, handler, .. } => {
+            sub(value, out);
+            sub(handler, out);
+        }
+        ExprKind::Match { value, arms } => {
+            sub(value, out);
+            arms.iter().for_each(|a| sub(&a.body, out));
+        }
+        ExprKind::Block(b) => idents_block(&b.stmts, out),
+        ExprKind::Str(segs) => {
+            for s in segs {
+                if let StrSeg::Expr { expr, .. } = s {
+                    sub(expr, out);
+                }
+            }
+        }
+        ExprKind::Call { callee, args } => {
+            sub(callee, out);
+            args.iter().for_each(|a| sub(a, out));
+        }
+        ExprKind::Field { base, .. } => sub(base, out),
+        ExprKind::StructLit { fields, .. } => fields.iter().for_each(|f| sub(&f.value, out)),
+        ExprKind::VecLit(items) | ExprKind::Tuple(items) => items.iter().for_each(|i| sub(i, out)),
+        ExprKind::MapLit(entries) => entries.iter().for_each(|(k, v)| {
+            sub(k, out);
+            sub(v, out);
+        }),
+        ExprKind::Index { base, index } => {
+            sub(base, out);
+            sub(index, out);
+        }
+        ExprKind::Unary { expr, .. } | ExprKind::Paren(expr) | ExprKind::Borrow(expr) => sub(expr, out),
+        ExprKind::Binary { lhs, rhs, .. } | ExprKind::Coalesce { lhs, rhs, .. } => {
+            sub(lhs, out);
+            sub(rhs, out);
+        }
+        ExprKind::Closure { body, .. } => sub(body, out),
+    }
+}
+
+fn idents_block(stmts: &[Stmt], out: &mut Vec<(String, u32)>) {
+    for s in stmts {
+        match &s.kind {
+            StmtKind::Let { init, .. } | StmtKind::LetTuple { init, .. } => idents_expr(init, out),
+            StmtKind::Assign { target, value, .. } => {
+                idents_expr(target, out);
+                idents_expr(value, out);
+            }
+            StmtKind::Expr(e) | StmtKind::Return(Some(e)) => idents_expr(e, out),
+            StmtKind::If { cond: e, then, els } | StmtKind::IfLet { value: e, then, els, .. } => {
+                idents_expr(e, out);
+                idents_block(&then.stmts, out);
+                let mut els = els.as_ref();
+                while let Some(x) = els {
+                    match x {
+                        Else::Block(b) => {
+                            idents_block(&b.stmts, out);
+                            els = None;
+                        }
+                        Else::If(s2) => {
+                            idents_block(std::slice::from_ref(s2.as_ref()), out);
+                            els = None;
+                        }
+                    }
+                }
+            }
+            StmtKind::Match { value, arms } => {
+                idents_expr(value, out);
+                arms.iter().for_each(|a| idents_block(&a.body.stmts, out));
+            }
+            StmtKind::While { cond, body } => {
+                idents_expr(cond, out);
+                idents_block(&body.stmts, out);
+            }
+            StmtKind::Loop { body } | StmtKind::Block(body) => idents_block(&body.stmts, out),
+            StmtKind::For { start, end, body, .. } => {
+                idents_expr(start, out);
+                idents_expr(end, out);
+                idents_block(&body.stmts, out);
+            }
+            StmtKind::ForIn { iter, body, .. } => {
+                idents_expr(iter, out);
+                idents_block(&body.stmts, out);
+            }
+            StmtKind::Break | StmtKind::Continue | StmtKind::Return(None) => {}
         }
     }
 }
@@ -1120,6 +1249,11 @@ impl Checker<'_> {
             match t {
                 Ty::Struct(id) | Ty::Enum(id) => out.push(id as usize),
                 Ty::Opt(o) => by_value(opt_inner(o), out),
+                Ty::Tuple(t) => {
+                    for e in tuple_elems(t) {
+                        by_value(e, out);
+                    }
+                }
                 Ty::Res(r) => {
                     let (a, b) = res_parts(r);
                     by_value(a, out);
@@ -1310,6 +1444,17 @@ impl Checker<'_> {
     fn resolve_ty(&mut self, t: &TypeExpr) -> Ty {
         if t.name == "()" {
             return Ty::Unit;
+        }
+        if t.name == "(,)" {
+            let elems: Vec<Ty> = t.args.iter().map(|a| self.resolve_ty(a)).collect();
+            if elems.contains(&Ty::Error) {
+                return Ty::Error;
+            }
+            if let Some(i) = elems.iter().position(|e| *e == Ty::Unit) {
+                self.diags.error("E0001", t.args[i].span, "a tuple element cannot be `()`");
+                return Ty::Error;
+            }
+            return Ty::Tuple(tuple_of(elems));
         }
         if t.name == "[]" {
             return match self.resolve_ty(&t.args[0]) {
@@ -1871,7 +2016,7 @@ impl Checker<'_> {
             // A cloned `Vec[str]` owns new storage, but its elements still point into the same text.
             HExprKind::Method { method: Builtin::VecClone, recv } if h.ty.carries_borrow() => self.loans_of(recv, cx),
             HExprKind::Index { base, .. } if h.ty.carries_borrow() => self.loans_of(base, cx),
-            HExprKind::VecLit(items) => {
+            HExprKind::VecLit(items) | HExprKind::TupleLit(items) => {
                 let mut out = Vec::new();
                 for i in items {
                     for l in self.loans_of(i, cx) {
@@ -1882,6 +2027,8 @@ impl Checker<'_> {
                 }
                 out
             }
+            // A tuple element that carries a borrow points where the tuple points.
+            HExprKind::Field { base, .. } if h.ty.carries_borrow() => self.loans_of(base, cx),
             HExprKind::Call { func, args } if h.ty.carries_borrow() => {
                 let picked: Vec<usize> = match &self.sigs[*func].ret_of {
                     Some(p) => p.clone(),
@@ -2172,6 +2319,41 @@ impl Checker<'_> {
                     }
                     HStmtKind::Let { local, init }
                 }
+            }
+            StmtKind::LetTuple { mutable, names, init } => {
+                let init = self.expr(init, None, cx);
+                let elems = match init.ty {
+                    Ty::Tuple(t) => tuple_elems(t),
+                    Ty::Error => return None,
+                    other => {
+                        self.diags.error("E0001", init.span, format!("`let (...)` needs a tuple, found `{other}`"));
+                        return None;
+                    }
+                };
+                if elems.len() != names.len() {
+                    self.diags.error(
+                        "E0001",
+                        init.span,
+                        format!("this tuple has {} but the pattern names {}", plural(elems.len(), "element"), names.len()),
+                    );
+                    return None;
+                }
+                let init = self.consume(init, cx);
+                let loans = if init.ty.carries_borrow() { self.loans_of(&init, cx) } else { Vec::new() };
+                let kind = if *mutable { LocalKind::Var } else { LocalKind::Let };
+                let mut locals = Vec::new();
+                for ((name, sp), ty) in names.iter().zip(elems) {
+                    if name == "_" {
+                        locals.push(None);
+                        continue;
+                    }
+                    let local = self.declare(cx, name, *sp, ty, kind);
+                    if ty.carries_borrow() {
+                        self.store_loans(cx, local, loans.clone(), init.span, true);
+                    }
+                    locals.push(Some(local));
+                }
+                HStmtKind::LetTuple { locals, init }
             }
             StmtKind::Assign { target, op, op_span, value } => {
                 // The target is a variable, or a chain of struct fields rooted at a variable.
@@ -3106,6 +3288,23 @@ impl Checker<'_> {
                                 }
                             };
                         }
+                        Ty::Tuple(t) => {
+                            let elems = tuple_elems(t);
+                            return match name.parse::<usize>().ok().filter(|i| *i < elems.len()) {
+                                Some(field) => {
+                                    let ty = elems[field];
+                                    HExpr { kind: HExprKind::Field { base: Box::new(b), field }, ty, span, at: span }
+                                }
+                                None => {
+                                    self.diags.error(
+                                        "E0010",
+                                        span,
+                                        format!("`{}` has no element `{name}` (elements are `.0` to `.{}`)", b.ty, elems.len() - 1),
+                                    );
+                                    err_expr(span)
+                                }
+                            };
+                        }
                         Ty::Error => return err_expr(span),
                         _ => {}
                     }
@@ -3119,6 +3318,39 @@ impl Checker<'_> {
             }
             ExprKind::StructLit { name, name_span, fields } => self.struct_lit(name, *name_span, fields, span, cx),
             ExprKind::VecLit(items) => self.vec_lit(items, expected, span, cx),
+            ExprKind::Tuple(items) => {
+                let exp = match expected {
+                    Some(Ty::Tuple(t)) => Some(tuple_elems(t)).filter(|e| e.len() == items.len()),
+                    _ => None,
+                };
+                let mut hs = Vec::new();
+                let mut failed = false;
+                for (i, it) in items.iter().enumerate() {
+                    let et = exp.as_ref().map(|e| e[i]);
+                    let h = self.expr(it, et, cx);
+                    let h = match et {
+                        Some(t) => self.fit(h, t, cx),
+                        None => h,
+                    };
+                    // A mismatch was reported for the element; do not report the whole tuple too.
+                    failed |= et.is_some_and(|t| h.ty != t);
+                    if h.ty == Ty::Unit {
+                        self.diags.error("E0001", h.span, "a tuple element cannot be `()`");
+                    }
+                    hs.push(self.consume(h, cx));
+                }
+                if failed || hs.iter().any(|h| matches!(h.ty, Ty::Error | Ty::Unit)) {
+                    return err_expr(span);
+                }
+                let ty = Ty::Tuple(tuple_of(hs.iter().map(|h| h.ty).collect()));
+                HExpr { kind: HExprKind::TupleLit(hs), ty, span, at: span }
+            }
+            ExprKind::Closure { .. } => {
+                self.diags
+                    .error("U0001", span, "closures can only be passed directly to `sortBy` or `update` for now")
+                    .note("closures that are stored or passed to your own functions are not supported yet");
+                err_expr(span)
+            }
             ExprKind::MapLit(entries) => self.map_lit(entries, expected, span, cx),
             ExprKind::Index { base, index } => self.index(base, index, span, cx),
             ExprKind::Borrow(_) => {

@@ -386,6 +386,27 @@ fields. Tests: `tests/p0/run_drop.yv` (scope order, sink, `let _`, vectors, opti
 with `Drop`, a field taken inside `drop`), `tests/p0/errors_drop.yv` (8 errors, 2 warnings);
 spec cases T-D1, T-GR1, T-GR2 and T-G10–T-G13 pass.
 
+## Tuples
+
+Supported (cheat sheet §2; semantic table E2, V10, rule 8):
+
+- Tuple types `(A, B, ...)` in signatures, fields, collections and optionals; literals
+  `(a, b)`; elements `t.0`, `t.1` (also nested: `t.0.1`); `let (a, b) = t` and
+  `var (a, b) = t`, with `_` dropping that element at once.
+- A tuple is copyable when all elements are, and needs dropping when any element does
+  (elements are dropped in reverse order). Moving a non-copyable element out of a tuple
+  variable is `E0401` (no partial moves); destructure with `let (a, b) = t` instead, which
+  consumes the whole tuple.
+- A tuple holding a view (`(str, int)`) carries a borrow: it may be a local, a parameter or
+  a return value with `of`, and its elements keep the tuple's sources.
+- Not yet: assigning to an element (`t.0 = x`), tuples as `Map` keys, comparing tuples with
+  `==`/`<`, printing a whole tuple, tuple patterns in `match`/`for`.
+
+Code generation: each tuple type is a C struct with members `f0`, `f1`, ... defined before
+its first use, with drop and clone helpers when needed. The lexer never reads a number after
+`.` as a float, so `t.0.1` is two element accesses. Tests: `tests/p0/run_tuples.yv`,
+`tests/p0/errors_tuples.yv` (7 errors).
+
 ## Spec conformance
 
 ```sh

@@ -1,0 +1,47 @@
+// expect-error: E0401 15:16
+// expect-error: E0402 22:13
+// expect-error: E0001 28:21
+// expect-error: E0001 29:18
+// expect-error: E0010 30:13
+// expect-error: E0305 37:16
+// expect-error: E0001 43:17
+fn pair() -> (String, int) {
+    return ("a".toString(), 1)
+}
+
+fn partial() {
+    let t = pair()
+    let s = t.1
+    let name = t.0
+    println("${s} ${name}")
+}
+
+fn moved() {
+    let t = pair()
+    let u = t
+    println(t.1)
+    println(u.1)
+}
+
+fn shape() {
+    let t = pair()
+    let (a, b, c) = t
+    let (x, y) = 5
+    println(t.2)
+}
+
+fn view() {
+    var keep: (str, int) = ("x", 0)
+    if true {
+        let owner = "y".toString()
+        keep = (owner.trim(), 1)
+    }
+    println(keep.0)
+}
+
+fn unit() {
+    let t = (1, ())
+}
+
+fn main() {
+}

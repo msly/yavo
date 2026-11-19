@@ -79,7 +79,7 @@ pub struct TypeExpr {
     pub span: Span,
     /// Type arguments, e.g. `[int]` in `Vec[int]`. `?T` is `name: "?"` and `&T` is `name: "&"`,
     /// with `T` as the only argument; `T ! E` is `name: "!"` with arguments `T` and `E`; the
-    /// unit type `()` is `name: "()"`.
+    /// unit type `()` is `name: "()"`; a tuple type `(A, B)` is `name: "(,)"` with its elements.
     pub args: Vec<TypeExpr>,
 }
 
@@ -95,6 +95,8 @@ pub struct Stmt {
 
 pub enum StmtKind {
     Let { mutable: bool, name: String, name_span: Span, ty: Option<TypeExpr>, init: Expr },
+    /// `let (a, b) = value`: takes a tuple apart (`_` skips an element).
+    LetTuple { mutable: bool, names: Vec<(String, Span)>, init: Expr },
     Assign { target: Expr, op: Option<BinOp>, op_span: Span, value: Expr },
     Expr(Expr),
     If { cond: Expr, then: Block, els: Option<Else> },
@@ -161,6 +163,7 @@ pub enum ExprKind {
     Str(Vec<StrSeg>),
     Ident(String),
     Call { callee: Box<Expr>, args: Vec<Expr> },
+    /// `base.name`; a tuple element is `base.0` (`name` is the digits).
     Field { base: Box<Expr>, name: String },
     /// `Name{field: value, ...}`; fields are evaluated in the order written.
     StructLit { name: String, name_span: Span, fields: Vec<FieldInit> },
@@ -185,6 +188,10 @@ pub enum ExprKind {
     Continue,
     /// `()`
     Unit,
+    /// `(a, b, ...)`, at least two elements.
+    Tuple(Vec<Expr>),
+    /// `(a, b) => value` or `(a, b) => { block }`; parameters may have types (`a: int`).
+    Closure { params: Vec<(String, Span, Option<TypeExpr>)>, body: Box<Expr> },
     /// `.Case` or `.Case(args)`: an enum case whose type comes from the context.
     Case { name: String, args: Option<Vec<Expr>> },
     /// `name: value`, a named argument of an enum case.

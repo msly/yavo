@@ -1,0 +1,54 @@
+// expect-stdout:
+// | 1 9
+// | 5 5
+// | key -> value
+// | b:2
+// | a:1
+// | x 5
+// | dropme
+// | 2 n
+// | 4 four
+fn minmax(v: Vec[int]) -> (int, int) {
+    var lo = v[0]
+    var hi = v[0]
+    for x in v {
+        lo = min(lo, x)
+        hi = max(hi, x)
+    }
+    return (lo, hi)
+}
+
+fn split2(s: str) -> (str, str) of s {
+    let parts = s.split("=")
+    return (parts[0], parts[1])
+}
+
+struct Entry {
+    pair: (String, int)
+}
+
+fn main() {
+    let (lo, hi) = minmax([3, 9, 1, 7])
+    println("${lo} ${hi}")
+    let t = minmax([5])
+    println("${t.0} ${t.1}")
+    let (k, v) = split2("key=value")
+    println("${k} -> ${v}")
+    var items: Vec[(String, int)] = []
+    items.push(("b".toString(), 2))
+    items.push(("a".toString(), 1))
+    for it in items {
+        println("${it.0}:${it.1}")
+    }
+    let e = Entry{pair: ("x".toString(), 5)}
+    println("${e.pair.0} ${e.pair.1}")
+    let (name, _) = ("dropme".toString(), "also".toString())
+    println(name)
+    let nested = ((1, 2), "n".toString())
+    println("${nested.0.1} ${nested.1}")
+    var maybe: ?(int, String) = none
+    maybe = (4, "four".toString())
+    if let p = maybe {
+        println("${p.0} ${p.1}")
+    }
+}

@@ -8,7 +8,7 @@ use crate::ast::BinOp;
 use crate::check::*;
 use crate::diag::Span;
 use crate::types::{
-    all_maps, all_opts, all_ress, all_vecs, has_user_drop, opt_inner, opt_of, ref_inner, ref_mut_inner, res_parts, vec_elem, IntTy, Ty,
+    all_maps, all_opts, all_ress, all_tuples, all_vecs, has_user_drop, opt_inner, tuple_elems, opt_of, ref_inner, ref_mut_inner, res_parts, vec_elem, IntTy, Ty,
 };
 
 pub const RUNTIME_HEADER: &str = include_str!("../runtime/yavo_rt.h");
@@ -31,6 +31,7 @@ pub fn generate(prog: &HProgram, file: &str) -> String {
         outer: Vec::new(),
         defined_opts: Default::default(),
         defined_ress: Default::default(),
+        defined_tuples: Default::default(),
         cur_ret: Ty::Unit,
     };
     g.fn_names = prog.fns.iter().map(|f| format!("yv_fn_{}", f.name.replace('.', "__"))).collect();
@@ -86,6 +87,9 @@ pub fn generate(prog: &HProgram, file: &str) -> String {
     for (id, _, _) in all_ress() {
         g.define_dep(Ty::Res(id));
     }
+    for id in all_tuples() {
+        g.define_dep(Ty::Tuple(id));
+    }
     for (id, k, v) in all_maps() {
         let e = entry_name(Ty::Map(id));
         let _ = writeln!(g.out, "typedef struct {e} {{\n    bool live;\n    {} key;\n    {} val;\n}} {e};\n", k.c_name(), v.c_name());
@@ -105,6 +109,8 @@ pub fn generate(prog: &HProgram, file: &str) -> String {
     helpers.extend(owned_aggs.iter().map(|s| s.ty));
     let owned_ress: Vec<Ty> = all_ress().into_iter().map(|(id, _, _)| Ty::Res(id)).filter(|t| t.needs_drop()).collect();
     helpers.extend(owned_ress.iter().copied());
+    let owned_tuples: Vec<Ty> = all_tuples().into_iter().map(Ty::Tuple).filter(|t| t.needs_drop()).collect();
+    helpers.extend(owned_tuples.iter().copied());
     for t in &helpers {
         let (key, c) = (t.key(), t.c_name());
         let _ = writeln!(g.out, "static inline void yv_drop_{key}({c} *p);");
@@ -135,6 +141,25 @@ pub fn generate(prog: &HProgram, file: &str) -> String {
     }
     for e in &enums {
         enum_printer(&mut g.out, e);
+    }
+    for t in &owned_tuples {
+        // Elements are dropped in reverse order (V10).
+        let Ty::Tuple(id) = *t else { unreachable!() };
+        let elems = tuple_elems(id);
+        let (key, c) = (t.key(), t.c_name());
+        let mut drops = String::new();
+        let mut clones = String::new();
+        for (i, et) in elems.iter().enumerate().rev().filter(|(_, et)| et.needs_drop()) {
+            let _ = write!(drops, "\n    {}(&p->f{i});", drop_fn(*et));
+        }
+        for (i, et) in elems.iter().enumerate().filter(|(_, et)| et.needs_drop()) {
+            let _ = write!(clones, "\n    o.f{i} = {};", clone_value(*et, &format!("p->f{i}")));
+        }
+        let _ = writeln!(g.out, "static inline void yv_drop_{key}({c} *p) {{{drops}\n}}");
+        let _ = writeln!(
+            g.out,
+            "static inline {c} yv_clone_{key}(const {c} *p, uint32_t line, uint32_t col) {{\n    {c} o = *p;{clones}\n    (void)line; (void)col;\n    return o;\n}}\n"
+        );
     }
     for (id, k, v) in all_maps() {
         map_helpers(&mut g.out, Ty::Map(id), k, v);
@@ -212,6 +237,8 @@ struct Gen {
     defined_opts: std::collections::HashSet<u32>,
     /// Result types whose C struct has been emitted.
     defined_ress: std::collections::HashSet<u32>,
+    /// Tuple types whose C struct has been emitted.
+    defined_tuples: std::collections::HashSet<u32>,
     /// Return type of the function being generated.
     cur_ret: Ty,
 }
@@ -594,6 +621,19 @@ impl Gen {
                 let val = if ok == Ty::Unit { String::new() } else { format!("\n    {} val;", ok.c_name()) };
                 let _ = writeln!(self.out, "typedef struct {c} {{\n    bool ok;{val}\n    {} err;\n}} {c};\n", err.c_name());
             }
+            Ty::Tuple(id) => {
+                if self.defined_tuples.contains(&id) {
+                    return;
+                }
+                let elems = tuple_elems(id);
+                for e in &elems {
+                    self.define_dep(*e);
+                }
+                self.defined_tuples.insert(id);
+                let c = ty.c_name();
+                let members: Vec<String> = elems.iter().enumerate().map(|(i, e)| format!("    {} f{i};", e.c_name())).collect();
+                let _ = writeln!(self.out, "typedef struct {c} {{\n{}\n}} {c};\n", members.join("\n"));
+            }
             _ => {}
         }
     }
@@ -828,6 +868,25 @@ impl Gen {
                 self.line(&format!("{} {name} = {v};", ty.c_name()));
                 if f.locals[*local].owned {
                     self.scopes.last_mut().expect("an open scope").owned.push((name, ty));
+                }
+            }
+            HStmtKind::LetTuple { locals, init } => {
+                let v = self.owned(init, f);
+                let t = self.fresh();
+                self.line(&format!("{} {t} = {v};", init.ty.c_name()));
+                let Ty::Tuple(id) = init.ty else { unreachable!() };
+                for (i, (l, et)) in locals.iter().zip(tuple_elems(id)).enumerate() {
+                    match l {
+                        Some(local) => {
+                            let name = local_name(&f.locals, *local);
+                            self.line(&format!("{} {name} = {t}.f{i};", et.c_name()));
+                            if f.locals[*local].owned {
+                                self.scopes.last_mut().expect("an open scope").owned.push((name, et));
+                            }
+                        }
+                        None if et.needs_drop() => self.line(&format!("{}(&{t}.f{i});", drop_fn(et))),
+                        None => {}
+                    }
                 }
             }
             HStmtKind::Assign { local, path, value } => {
@@ -1471,6 +1530,25 @@ impl Gen {
                     self.bind_mut(e.ty, &lit)
                 }
             }
+            HExprKind::TupleLit(items) => {
+                // Elements are evaluated in order into temporaries, like struct fields (V6).
+                let mut inits = Vec::new();
+                let mut held = Vec::new();
+                for (i, it) in items.iter().enumerate() {
+                    let v = self.expr(it, f);
+                    let v = if it.ty.is_copy() { self.bind(it.ty, &v) } else { self.bind_mut(it.ty, &v) };
+                    self.hold(&v, it.ty);
+                    held.push(v.clone());
+                    inits.push(format!(".f{i} = {v}"));
+                }
+                self.release(&held);
+                let lit = format!("(({}){{{}}})", e.ty.c_name(), inits.join(", "));
+                if e.ty.is_copy() {
+                    self.bind(e.ty, &lit)
+                } else {
+                    self.bind_mut(e.ty, &lit)
+                }
+            }
             HExprKind::EnumLit { variant, fields } => {
                 let Ty::Enum(id) = e.ty else { unreachable!() };
                 let decl = self.variants[&id][*variant].1.clone();
@@ -1662,6 +1740,10 @@ impl Gen {
                 format!("(&{p})")
             }
             HExprKind::Field { base, field } => {
+                if let Ty::Tuple(_) = base.ty {
+                    let b = self.borrowed(base, f);
+                    return format!("({b}).f{field}");
+                }
                 let Ty::Struct(id) = base.ty else { unreachable!() };
                 // A field of a temporary struct (`make().name`) is read, then the struct is dropped.
                 let b = self.borrowed(base, f);

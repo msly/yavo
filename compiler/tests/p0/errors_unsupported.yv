@@ -18,7 +18,7 @@ fn deref(p: int) {
     *p = 2
 }
 fn closure() {
-    let f = (a, b) => a + b
+    let f = *a + b
 }
 fn tried() {
     if *y() {
@@ -29,13 +29,13 @@ fn slices() {
     }
 }
 fn shorthand() {
-    let c = (a) => a
+    let c = *a
 }
 fn handled() {
     let n = parse(a,*b)
 }
 fn tuple() {
-    let t = (1, 2)
+    let t = *q
 }
 fn results(r: int) {
     match r {
@@ -45,9 +45,9 @@ fn results(r: int) {
         }
     }
     let after = r
-    let t = (after, 2)
+    let t = *after
 }
-fn modules(e: (int, int)) {
+fn modules(e: &inout int) {
 }
 fn main() {
 }
