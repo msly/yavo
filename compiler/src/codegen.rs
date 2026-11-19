@@ -10,7 +10,7 @@ use crate::diag::Span;
 use crate::types::{
     all_boxes, all_maps, all_opts, all_ress, all_tuples, all_vecs, box_inner, has_user_drop, iface_name, opt_inner, tuple_elems, opt_of,
     ref_inner,
-    ref_mut_inner, map_parts, res_parts, vec_elem, IntTy, Ty,
+    ref_mut_inner, map_parts, res_parts, vec_elem, FloatTy, IntTy, Ty,
 };
 
 pub const RUNTIME_HEADER: &str = include_str!("../runtime/yavo_rt.h");
@@ -432,6 +432,7 @@ fn value_writer(o: &str, t: Ty, v: &str) -> Option<String> {
     Some(match t {
         Ty::Int(i) if i.signed() => format!("yv_out_i64({o}, (int64_t){v});"),
         Ty::Int(_) => format!("yv_out_u64({o}, (uint64_t){v});"),
+        Ty::Float(f) => format!("yv_out_{}({o}, {v});", f.name()),
         Ty::Bool => format!("yv_out_bool({o}, {v});"),
         Ty::Str => format!("yv_out_str({o}, {v});"),
         Ty::String => format!("yv_out_str({o}, yv_string_view(&{v}));"),
@@ -1355,6 +1356,12 @@ impl Gen {
             }
             return t;
         }
+        if method == Method2::TotalCmp {
+            let Ty::Float(ft) = recv.ty else { unreachable!() };
+            let (a, b) = (self.expr(recv, f), self.expr(&args[0], f));
+            let c = e.ty.c_name();
+            return self.bind(e.ty, &format!("(({c}){{.tag = yv_{}_total_cmp({a}, {b})}})", ft.name()));
+        }
         let s = self.text_view(recv, f);
         let s = self.bind(Ty::Str, &s);
         let arg = match args.first() {
@@ -1380,6 +1387,14 @@ impl Gen {
                 }
                 r
             }
+            Method2::ParseFloat => {
+                let (r, n) = (self.fresh(), self.fresh());
+                self.line(&format!("{} {r} = {{0}};", e.ty.c_name()));
+                self.line(&format!("double {n} = 0;"));
+                self.line(&format!("if (yv_str_parse_float({s}, &{n})) {{ {r}.has = true; {r}.val = {n}; }}"));
+                r
+            }
+            Method2::TotalCmp => unreachable!("handled above"),
             Method2::SeqContains | Method2::Join => unreachable!("handled above"),
         }
     }
@@ -1501,6 +1516,10 @@ impl Gen {
             HExprKind::Int(v) => match e.ty {
                 Ty::Int(t) => int_literal(*v, t),
                 _ => unreachable!(),
+            },
+            HExprKind::Float(v) => match e.ty {
+                Ty::Float(FloatTy::F32) => format!("{:e}f", *v as f32),
+                _ => format!("{:e}", v),
             },
             HExprKind::Bool(b) => b.to_string(),
             HExprKind::Str(s) => format!("((yv_str){{{}, {}}})", c_string(s.as_bytes()), s.len()),
@@ -2161,6 +2180,9 @@ impl Gen {
             }
             HExprKind::Neg(inner) => {
                 let v = self.expr(inner, f);
+                if let Ty::Float(_) = e.ty {
+                    return self.bind(e.ty, &format!("(-{v})"));
+                }
                 let Ty::Int(t) = e.ty else { unreachable!() };
                 self.bind(e.ty, &format!("yv_neg_{}({v}, {})", t.suffix(), pos(e.at)))
             }
@@ -2177,6 +2199,20 @@ impl Gen {
                     format!("(({})(uint64_t)({v}))", to.c_name())
                 };
                 self.bind(e.ty, &text)
+            }
+            HExprKind::ToFloat(inner) => {
+                let v = self.expr(inner, f);
+                self.bind(e.ty, &format!("(({}){v})", e.ty.c_name()))
+            }
+            HExprKind::FloatToInt { to, expr } => {
+                let v = self.expr(expr, f);
+                self.bind(e.ty, &format!("yv_f2i_{}((double){v}, {})", to.suffix(), pos(e.at)))
+            }
+            HExprKind::Math { func, args } => {
+                let vals: Vec<String> = args.iter().map(|a| self.expr(a, f)).collect();
+                // `f32` arguments (only `abs` takes them) use the `float` variant.
+                let name = if e.ty == Ty::Float(FloatTy::F32) { format!("{func}f") } else { func.to_string() };
+                self.bind(e.ty, &format!("{name}({})", vals.join(", ")))
             }
             HExprKind::Binary { op: op @ (BinOp::And | BinOp::Or), lhs, rhs } => {
                 let t = self.fresh();
@@ -2333,6 +2369,16 @@ impl Gen {
                     _ => format!("(yv_str_cmp({lv}, {rv}) {c} 0)"),
                 };
             }
+            return format!("({l} {c} {r})");
+        }
+        if let Ty::Float(_) = e.ty {
+            let c = match op {
+                BinOp::Add => "+",
+                BinOp::Sub => "-",
+                BinOp::Mul => "*",
+                BinOp::Div => "/",
+                _ => unreachable!("checked: float arithmetic"),
+            };
             return format!("({l} {c} {r})");
         }
         let Ty::Int(t) = e.ty else { unreachable!() };

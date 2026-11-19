@@ -8,7 +8,7 @@ use crate::types::{
     box_inner, box_of, finish_agg, map_of, map_parts, opt_inner, opt_of, ref_inner, ref_mut_inner, ref_mut_of, ref_of, register_enum,
     register_iface,
     register_struct, res_of, res_parts, set_user_drop, has_user_drop, slice_elem, slice_of, tuple_elems, tuple_of, vec_elem,
-    vec_of, IntTy, Ty,
+    vec_of, FloatTy, IntTy, Ty,
 };
 
 pub type LocalId = usize;
@@ -192,6 +192,8 @@ pub struct HExpr {
 
 pub enum HExprKind {
     Int(i128),
+    /// A float literal of the float type in `ty`.
+    Float(f64),
     Bool(bool),
     Str(String),
     Local(LocalId),
@@ -200,6 +202,13 @@ pub enum HExprKind {
     Not(Box<HExpr>),
     Binary { op: BinOp, lhs: Box<HExpr>, rhs: Box<HExpr> },
     Convert { to: IntTy, checked: bool, expr: Box<HExpr> },
+    /// `f64(x)` / `f32(x)` from an integer or the other float type (`to` is in `ty`).
+    ToFloat(Box<HExpr>),
+    /// `int(x)` and friends from a float: truncates; NaN, infinities and out-of-range values
+    /// panic (P-FLOAT-CONVERT).
+    FloatToInt { to: IntTy, expr: Box<HExpr> },
+    /// `math.sqrt(x)`, `math.pow(x, y)`, `math.floor(x)`, `math.ceil(x)`: the C function.
+    Math { func: &'static str, args: Vec<HExpr> },
     /// Field values in the order they were written (`usize` is the field index).
     StructLit { fields: Vec<(usize, HExpr)> },
     Field { base: Box<HExpr>, field: usize },
@@ -315,6 +324,10 @@ pub enum Method2 {
     ToLower,
     ToUpper,
     ParseInt,
+    /// `s.parseFloat()`: `?f64`.
+    ParseFloat,
+    /// `x.totalCmp(y)` on floats: an `Ordering` from the total order of bit patterns.
+    TotalCmp,
     /// `v.contains(x)` on a vector or slice.
     SeqContains,
     /// `v.join(sep)` on a vector or slice of `str` / `String`.
@@ -377,7 +390,7 @@ const NO_FN: usize = usize::MAX;
 const DYN_BASE: usize = 1 << 40;
 const OUTPUT_FNS: [&str; 3] = ["println", "print", "eprintln"];
 const UNSUPPORTED_TYPES: &[&str] = &[
-    "f32", "f64", "Set", "Rc", "Arc", "Arena", "Id", "Mutex", "Atomic", "Channel", "Guard", "SendError", "Join",
+    "Set", "Rc", "Arc", "Arena", "Id", "Mutex", "Atomic", "Channel", "Guard", "SendError", "Join",
     "Heap", "Deque",
 ];
 /// Standard library modules and the public types each one brings in (stdlib contract §1).
@@ -577,7 +590,7 @@ impl Pre {
             ExprKind::Ident(n) => {
                 self.occ.push(Occ { idx, line: e.span.line, name: n.clone(), loops: stack.to_vec() })
             }
-            ExprKind::Int(_) | ExprKind::Byte(_) | ExprKind::Bool(_) | ExprKind::None | ExprKind::Break | ExprKind::Continue | ExprKind::Unit | ExprKind::Generic { .. } => {}
+            ExprKind::Int(_) | ExprKind::Byte(_) | ExprKind::Bool(_) | ExprKind::None | ExprKind::Break | ExprKind::Continue | ExprKind::Unit | ExprKind::Generic { .. } | ExprKind::Float(_) => {}
             ExprKind::Return(v) => {
                 if let Some(v) = v {
                     self.expr(v, idx, stack);
@@ -850,7 +863,7 @@ fn place_root(h: &HExpr) -> Option<LocalId> {
 fn mentions(e: &Expr, name: &str) -> bool {
     match &e.kind {
         ExprKind::Ident(n) => n == name,
-        ExprKind::Int(_) | ExprKind::Byte(_) | ExprKind::Bool(_) | ExprKind::None | ExprKind::Break | ExprKind::Continue | ExprKind::Unit | ExprKind::Generic { .. } => false,
+        ExprKind::Int(_) | ExprKind::Byte(_) | ExprKind::Bool(_) | ExprKind::None | ExprKind::Break | ExprKind::Continue | ExprKind::Unit | ExprKind::Generic { .. } | ExprKind::Float(_) => false,
         ExprKind::Return(v) => v.as_ref().is_some_and(|v| mentions(v, name)),
         ExprKind::Case { args, .. } => args.iter().flatten().any(|a| mentions(a, name)),
         ExprKind::Named { value, .. } | ExprKind::Err(value) | ExprKind::Try(value) => mentions(value, name),
@@ -883,7 +896,7 @@ fn idents_expr(e: &Expr, out: &mut Vec<(String, u32)>) {
     let sub = |x: &Expr, out: &mut Vec<(String, u32)>| idents_expr(x, out);
     match &e.kind {
         ExprKind::Ident(n) => out.push((n.clone(), e.span.line)),
-        ExprKind::Int(_) | ExprKind::Byte(_) | ExprKind::Bool(_) | ExprKind::None | ExprKind::Break | ExprKind::Continue | ExprKind::Unit | ExprKind::Generic { .. } => {}
+        ExprKind::Int(_) | ExprKind::Byte(_) | ExprKind::Bool(_) | ExprKind::None | ExprKind::Break | ExprKind::Continue | ExprKind::Unit | ExprKind::Generic { .. } | ExprKind::Float(_) => {}
         ExprKind::Return(v) => {
             if let Some(v) = v {
                 sub(v, out);
@@ -1180,7 +1193,7 @@ fn literal_magnitude(e: &Expr) -> Option<u128> {
 /// Expressions built only from integer literals take their type from context.
 fn is_untyped_literal(e: &Expr) -> bool {
     match &e.kind {
-        ExprKind::Int(_) => true,
+        ExprKind::Int(_) | ExprKind::Float(_) => true,
         ExprKind::Paren(inner) => is_untyped_literal(inner),
         ExprKind::Unary { op: UnOp::Neg, expr, .. } => is_untyped_literal(expr),
         ExprKind::Binary { op, lhs, rhs, .. } => {
@@ -1195,7 +1208,7 @@ fn is_untyped_literal(e: &Expr) -> bool {
 }
 
 fn is_type_name(name: &str) -> bool {
-    IntTy::from_name(name).is_some() || matches!(name, "bool" | "str" | "String" | "Vec" | "Box")
+    IntTy::from_name(name).is_some() || FloatTy::from_name(name).is_some() || matches!(name, "bool" | "str" | "String" | "Vec" | "Box")
 }
 
 fn plural(n: usize, noun: &str) -> String {
@@ -2461,6 +2474,9 @@ impl Checker<'_> {
         }
         if let Some(it) = IntTy::from_name(&t.name) {
             return Ty::Int(it);
+        }
+        if let Some(ft) = FloatTy::from_name(&t.name) {
+            return Ty::Float(ft);
         }
         if let Some(&i) = self.struct_index.get(&t.name) {
             return self.structs[i].ty;
@@ -4245,6 +4261,12 @@ impl Checker<'_> {
     }
 
     fn int_lit(&mut self, mag: u128, negative: bool, expected: Option<Ty>, span: Span) -> HExpr {
+        // An integer literal where a float is expected is that float (N2: the context decides
+        // a literal's type).
+        if let Some(Ty::Float(f)) = expected {
+            let v = mag as f64;
+            return HExpr { kind: HExprKind::Float(if negative { -v } else { v }), ty: Ty::Float(f), span, at: span };
+        }
         let it = match expected {
             Some(Ty::Int(t)) => t,
             _ => IntTy::I64,
@@ -4271,7 +4293,7 @@ impl Checker<'_> {
 
     /// Types two operands so that an untyped literal adopts the other side's type.
     fn pair(&mut self, a: &Expr, b: &Expr, expected: Option<Ty>, cx: &mut FnCx) -> (HExpr, HExpr) {
-        let hint = |t: Ty, fallback: Option<Ty>| if matches!(t, Ty::Int(_) | Ty::Enum(_)) { Some(t) } else { fallback };
+        let hint = |t: Ty, fallback: Option<Ty>| if matches!(t, Ty::Int(_) | Ty::Float(_) | Ty::Enum(_)) { Some(t) } else { fallback };
         if is_untyped_literal(a) && !is_untyped_literal(b) {
             let hb = self.expr(b, expected, cx);
             let hb = self.deref(hb);
@@ -4289,6 +4311,24 @@ impl Checker<'_> {
         let ty = match (l.ty, r.ty) {
             (Ty::Error, _) | (_, Ty::Error) => Ty::Error,
             (Ty::Int(a), Ty::Int(b)) if a == b => l.ty,
+            // IEEE 754 arithmetic: no panics; `%` and the wrapping and bit operators are for integers.
+            (Ty::Float(a), Ty::Float(b)) if a == b && matches!(op, BinOp::Add | BinOp::Sub | BinOp::Mul | BinOp::Div) => l.ty,
+            (Ty::Float(a), Ty::Float(b)) if a == b => {
+                self.diags.error("E0001", span, format!("operator `{}` is not defined for `{a}`", op.symbol()));
+                Ty::Error
+            }
+            (Ty::Float(a), Ty::Float(b)) => {
+                self.diags
+                    .error("E0001", span, format!("mismatched operand types for `{}`: `{a}` and `{b}`", op.symbol()))
+                    .note(format!("convert one side explicitly, e.g. `{a}(...)`"));
+                Ty::Error
+            }
+            (Ty::Int(a), Ty::Float(b)) | (Ty::Float(b), Ty::Int(a)) => {
+                self.diags
+                    .error("E0001", span, format!("mismatched operand types for `{}`: `{a}` and `{b}`", op.symbol()))
+                    .note(format!("Yavo has no implicit conversions; convert explicitly, e.g. `{b}(n)` or `{a}(x)`"));
+                Ty::Error
+            }
             (Ty::Int(a), Ty::Int(b)) => {
                 self.diags
                     .error("E0001", span, format!("mismatched operand types for `{}`: `{a}` and `{b}`", op.symbol()))
@@ -4311,6 +4351,14 @@ impl Checker<'_> {
         let span = e.span;
         match &e.kind {
             ExprKind::Int(v) => self.int_lit(*v, false, expected, span),
+            ExprKind::Float(v) => {
+                let ft = match expected {
+                    Some(Ty::Float(f)) => f,
+                    _ => FloatTy::F64,
+                };
+                let v = if ft == FloatTy::F32 { *v as f32 as f64 } else { *v };
+                HExpr { kind: HExprKind::Float(v), ty: Ty::Float(ft), span, at: span }
+            }
             ExprKind::Byte(b) => HExpr { kind: HExprKind::Int(*b as i128), ty: Ty::Int(IntTy::U8), span, at: span },
             ExprKind::Bool(b) => HExpr { kind: HExprKind::Bool(*b), ty: Ty::Bool, span, at: span },
             ExprKind::Paren(inner) => {
@@ -4339,6 +4387,7 @@ impl Checker<'_> {
                     Ty::Int(t) if t.signed() => {
                         HExpr { kind: HExprKind::Neg(Box::new(h)), ty: Ty::Int(t), span, at: *op_span }
                     }
+                    Ty::Float(t) => HExpr { kind: HExprKind::Neg(Box::new(h)), ty: Ty::Float(t), span, at: *op_span },
                     Ty::Int(t) => {
                         self.diags
                             .error("E0001", span, format!("cannot negate a value of unsigned type `{t}`"))
@@ -4404,6 +4453,10 @@ impl Checker<'_> {
                             }
                         }
                         if self.module_ref(tn, base.span) {
+                            if tn == "math" && matches!(name.as_str(), "pi" | "e") {
+                                let v = if name == "pi" { std::f64::consts::PI } else { std::f64::consts::E };
+                                return HExpr { kind: HExprKind::Float(v), ty: Ty::Float(FloatTy::F64), span, at: span };
+                            }
                             self.diags.error("U0001", span, format!("`{tn}.{name}` is not supported yet"));
                             return err_expr(span);
                         }
@@ -5010,8 +5063,8 @@ impl Checker<'_> {
                         self.diags
                             .error("U0001", span, format!("comparing optional values (`{}`) is not supported yet", l.ty))
                             .note("use `if let`, `isSome()` or `??` instead");
-                    } else if (ordering && !matches!(l.ty, Ty::Int(_) | Ty::Str | Ty::String))
-                        || !matches!(l.ty, Ty::Int(_) | Ty::Bool | Ty::Str | Ty::String)
+                    } else if (ordering && !matches!(l.ty, Ty::Int(_) | Ty::Float(_) | Ty::Str | Ty::String))
+                        || !matches!(l.ty, Ty::Int(_) | Ty::Float(_) | Ty::Bool | Ty::Str | Ty::String)
                     {
                         let what = if ordering { "ordered with `<`, `<=`, `>`, `>=`" } else { "compared" };
                         self.diags.error("E0501", span, format!("values of type `{}` cannot be {what}", l.ty));
@@ -5035,6 +5088,9 @@ impl Checker<'_> {
                 }
                 if let Some(to) = IntTy::from_name(name) {
                     return self.conversion(to, true, args, callee.span, span, cx);
+                }
+                if let Some(to) = FloatTy::from_name(name) {
+                    return self.float_conversion(to, args, callee.span, span, cx);
                 }
                 if OUTPUT_FNS.contains(&name.as_str()) {
                     self.diags.error("E0001", span, format!("`{name}` does not produce a value; call it as a statement"));
@@ -5072,6 +5128,10 @@ impl Checker<'_> {
                             let h = self.deref(h);
                             return match h.ty {
                                 Ty::Int(t) if t.signed() => HExpr { kind: HExprKind::Abs(Box::new(h)), ty: Ty::Int(t), span, at: callee.span },
+                                Ty::Float(_) => {
+                                    let ty = h.ty;
+                                    HExpr { kind: HExprKind::Math { func: "fabs", args: vec![h] }, ty, span, at: callee.span }
+                                }
                                 Ty::Int(_) => h,
                                 Ty::Error => err_expr(span),
                                 other => {
@@ -6543,9 +6603,12 @@ impl Checker<'_> {
             (Ty::Int(x), Ty::Int(y)) if x == y => {
                 HExpr { kind: HExprKind::MinMax { max, a: Box::new(ha), b: Box::new(hb) }, ty: Ty::Int(x), span, at }
             }
+            (Ty::Float(x), Ty::Float(y)) if x == y => {
+                HExpr { kind: HExprKind::MinMax { max, a: Box::new(ha), b: Box::new(hb) }, ty: Ty::Float(x), span, at }
+            }
             (x, y) => {
                 self.diags
-                    .error("E0001", span, format!("`{name}` needs two integers of the same type, found `{x}` and `{y}`"))
+                    .error("E0001", span, format!("`{name}` needs two numbers of the same type, found `{x}` and `{y}`"))
                     .note("convert one side explicitly, e.g. `int(...)`");
                 err_expr(span)
             }
@@ -6555,6 +6618,28 @@ impl Checker<'_> {
     /// `io.readAll()`, `io.readLine()`, `fs.readText(path)`, `fs.writeText(path, text)`,
     /// `os.args()` (stdlib contract §5). `None` for other module members.
     fn module_call(&mut self, m: &str, name: &str, args: &[Expr], span: Span, at: Span, cx: &mut FnCx) -> Option<HExpr> {
+        if m == "math" {
+            let (func, n) = match name {
+                "sqrt" => ("sqrt", 1),
+                "floor" => ("floor", 1),
+                "ceil" => ("ceil", 1),
+                "round" => ("round", 1),
+                "pow" => ("pow", 2),
+                _ => return None,
+            };
+            if args.len() != n {
+                self.diags.error("E0012", span, format!("`math.{name}` takes {}", plural(n, "argument")));
+                return Some(err_expr(span));
+            }
+            let f64t = Ty::Float(FloatTy::F64);
+            let mut hargs = Vec::new();
+            for a in args {
+                let h = self.expr(a, Some(f64t), cx);
+                let h = self.fit(h, f64t, cx);
+                hargs.push(h);
+            }
+            return Some(HExpr { kind: HExprKind::Math { func, args: hargs }, ty: f64t, span, at });
+        }
         let lib = |this: &Self, e: &str| -> Ty { this.structs[this.struct_index[e]].ty };
         let (op, nargs, ty) = match (m, name) {
             ("os", "args") => {
@@ -6641,6 +6726,11 @@ impl Checker<'_> {
             ("toLower", _) if text => (Method2::ToLower, Ty::String, None),
             ("toUpper", _) if text => (Method2::ToUpper, Ty::String, None),
             ("parseInt", _) if text => (Method2::ParseInt, Ty::Opt(opt_of(int)), None),
+            ("parseFloat", _) if text => (Method2::ParseFloat, Ty::Opt(opt_of(Ty::Float(FloatTy::F64))), None),
+            ("totalCmp", Ty::Float(_)) => {
+                let ord = self.structs[self.struct_index["Ordering"]].ty;
+                (Method2::TotalCmp, ord, Some(recv.ty))
+            }
             ("contains", Ty::Vec(_) | Ty::Slice(_)) => {
                 let e = seq_elem(recv.ty).expect("a sequence");
                 if !matches!(e, Ty::Int(_) | Ty::Bool | Ty::Str | Ty::String) {
@@ -6692,12 +6782,35 @@ impl Checker<'_> {
         match h.ty {
             Ty::Int(from) if checked && from == to => h,
             Ty::Int(_) => HExpr { kind: HExprKind::Convert { to, checked, expr: Box::new(h) }, ty: Ty::Int(to), span, at },
+            Ty::Float(_) if checked => HExpr { kind: HExprKind::FloatToInt { to, expr: Box::new(h) }, ty: Ty::Int(to), span, at },
             Ty::Error => err_expr(span),
             other => {
                 let d = self.diags.error("E0001", arg.span, format!("cannot convert `{other}` to `{to}`"));
                 if other == Ty::Bool {
                     d.note("use `if b { 1 } else { 0 }` logic to turn a bool into a number");
+                } else if matches!(other, Ty::Float(_)) {
+                    d.note(format!("`{to}.wrap` only takes integers; `{to}(x)` truncates a float (and panics when it does not fit)"));
                 }
+                err_expr(span)
+            }
+        }
+    }
+
+    /// `f64(x)` / `f32(x)`: from an integer (rounding to the nearest float) or the other float
+    /// type.
+    fn float_conversion(&mut self, to: FloatTy, args: &[Expr], at: Span, span: Span, cx: &mut FnCx) -> HExpr {
+        let [arg] = args else {
+            self.diags.error("E0012", span, format!("`{to}(x)` takes exactly one argument", to = to.name()));
+            return err_expr(span);
+        };
+        let h = self.expr(arg, Some(Ty::Float(to)), cx);
+        let h = self.deref(h);
+        match h.ty {
+            Ty::Float(from) if from == to => h,
+            Ty::Int(_) | Ty::Float(_) => HExpr { kind: HExprKind::ToFloat(Box::new(h)), ty: Ty::Float(to), span, at },
+            Ty::Error => err_expr(span),
+            other => {
+                self.diags.error("E0001", arg.span, format!("cannot convert `{other}` to `{}`", to.name()));
                 err_expr(span)
             }
         }

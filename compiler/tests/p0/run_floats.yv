@@ -1,0 +1,140 @@
+// expect-stdout:
+// | 5.0
+// | 4.5
+// | 3.141592653589793
+// | 1.0
+// | 3.25
+// | -0.5 1.0 2.5 10.0
+// | 0.30000000000000004
+// | 0.3333333333333333
+// | 100000000000000000000.0
+// | -0.0
+// | inf
+// | -inf
+// | NaN
+// | false
+// | 3
+// | -3
+// | 127
+// | 3.5
+// | 0.5
+// | 0.33333334
+// | 1.0
+// | 1.5
+// | 2.5
+// | 2.25
+// | 2.0
+// | 3.0
+// | 1024.0
+// | 3.0
+// | 6.5
+// | -1.0
+// | true
+// | 2.0
+// | 1.25|100.0|0.0000001
+// | 4.5 0.0
+// | true
+// | 1e21
+// | 100000000000000000000.0
+// | 123456.789
+// | 0.000001
+// | 1.5e-8
+// | -2.5e30
+// | 1e301
+// | 0.1
+// | 16777216.0
+// | 5e-324
+use std/math
+
+struct Point {
+    x: f64
+    y: f64
+
+    fn norm(self) -> f64 {
+        return math.sqrt(self.x * self.x + self.y * self.y)
+    }
+    fn shift(inout self, dx: f64) {
+        self.x += dx
+    }
+}
+
+enum Shape {
+    Circle(r: f64)
+    Rect(w: f64, h: f64)
+}
+
+fn area(s: Shape) -> f64 {
+    match s {
+        .Circle(r) => return math.pi * r * r
+        .Rect(w, h) => return w * h
+    }
+}
+
+fn mean(xs: []f64) -> f64 {
+    var sum = 0.0
+    for x in xs {
+        sum += x
+    }
+    return sum / f64(xs.len())
+}
+
+fn main() {
+    var p = Point{x: 3.0, y: 4.0}
+    println(p.norm())
+    p.shift(1.5)
+    println(p.x)
+    println(area(Shape.Circle(r: 1.0)))
+    println(area(.Rect(w: 2.0, h: 0.5)))
+    var xs: Vec[f64] = [2.5, 1.0, -0.5, 10.0]
+    println(mean(xs))
+    xs.sortBy((a, b) => a.totalCmp(b) == .Less)
+    println("${xs[0]} ${xs[1]} ${xs[2]} ${xs[3]}")
+    println(0.1 + 0.2)
+    println(1.0 / 3.0)
+    println(1e10 * 1e10)
+    println(-0.0)
+    let z = 0.0
+    println(1.0 / z)
+    println(-1.0 / z)
+    println(z / z)
+    println(z / z == z / z)
+    println(int(3.99))
+    println(int(-3.99))
+    println(i8(127.9))
+    println(f64(7) / 2.0)
+    let half: f32 = 0.5
+    println(half)
+    println(f32(1.0 / 3.0))
+    println(f64(half) * 2.0)
+    println(min(1.5, 2.5))
+    println(max(1.5, 2.5))
+    println(abs(-2.25))
+    println(math.floor(2.7))
+    println(math.ceil(2.2))
+    println(math.pow(2.0, 10.0))
+    println(math.round(2.5))
+    let s = "3.25".parseFloat() ?? 0.0
+    println(s * 2.0)
+    println("x1".parseFloat() ?? -1.0)
+    println(1.5 < 2.5)
+    let x: f64 = 2
+    println(x)
+    println(format("${1.25}|${100.0}|${1e-7}"))
+    var t = 4.5
+    let u = take(&t)
+    println("${u} ${t}")
+    println((1.0).totalCmp(2.0) == .Less)
+    more()
+}
+fn more() {
+    println(1e21)
+    println(1e20)
+    println(123456.789)
+    println(0.000001)
+    println(1.5e-8)
+    println(-2.5e30)
+    println(1e300 * 10.0)
+    println(f32(0.1))
+    println(f32(16777217.0))
+    println(5e-324)
+}

@@ -178,6 +178,8 @@ pub struct Expr {
 
 pub enum ExprKind {
     Int(u128),
+    /// `1.5`: an `f64` unless the context asks for `f32`.
+    Float(f64),
     /// `'a'`: a `byte`.
     Byte(u8),
     Bool(bool),

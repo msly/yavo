@@ -554,6 +554,36 @@ functions; struct instances made after `collect_structs` are finished at once an
 the ordered structs. C names of instances are made C-safe (`Stack[String]` → `yv_s_Stack_String_`).
 Tests: `tests/p0/run_generics.yv`, `tests/p0/errors_generics.yv` (9 errors).
 
+## Floating point (`f64`, `f32`)
+
+Supported (cheat sheet §2, §6; semantic table §7, N2, K1; stdlib contract §4):
+
+- Literals `1.5`, `2.0e-3`, `1e10` (an `f64` unless the context asks for `f32`); an integer
+  literal where a float is expected is that float (`let x: f64 = 2`, `2 * x`).
+- `+ - * /`, unary `-`, `+=` and friends, and `== != < <= > >=` with IEEE 754 semantics: no
+  panics, `NaN != NaN`, `1.0 / 0.0` is `inf`. `%`, bit operators and wrapping operators are
+  `E0001` on floats; mixing `int` and `f64` (or `f32` and `f64`) is `E0001`.
+- Conversions: `f64(n)`, `f32(x)`, `f64(x32)`; `int(x)` and every integer type truncate toward
+  zero and panic with `P-FLOAT-CONVERT` on NaN, infinities or out-of-range values;
+  `i32.wrap(1.5)` is `E0001` (T-G27).
+- Floats are not `Eq`/`Ord` (K1): `v.sort()`, `contains`, `T: Ord` bounds and `Map` keys reject
+  them (`E0501`); sort with `v.sortBy((a, b) => a.totalCmp(b) == .Less)`. `x.totalCmp(y)`
+  gives an `Ordering` from the bit-pattern total order (stdlib contract §4).
+- `min`, `max`, `abs` on floats; `s.parseFloat()` (`?f64`, decimal notation only);
+  `use std/math`: `math.sqrt`, `math.pow`, `math.floor`, `math.ceil`, `math.round`, `math.pi`,
+  `math.e`; `take(&x)` leaves `0.0`.
+- Printing (and `${}` in `format`) uses the shortest decimal that reads back exactly, always
+  with a `.` or an exponent: `1.0`, `0.30000000000000004`, `100.0`, `0.0000001`, `1e21`,
+  `1.5e-8`, `-0.0`, `inf`, `-inf`, `NaN`. Fixed notation is used for decimal exponents -7
+  to 20.
+
+Code generation: `double`/`float`; arithmetic is plain C (the runtime never enables
+fast-math). The runtime gains `yv_out_f64`/`yv_out_f32` (snprintf/strtod), `yv_f64_total_cmp`,
+`yv_str_parse_float` and the `yv_f2i_*` checked conversions, and now includes `<math.h>` and
+`<stdio.h>`. Windows and macOS builds link but their float printing is unverified (no device).
+Tests: `tests/p0/run_floats.yv`, `tests/p0/errors_floats.yv` (10 errors, 1 warning),
+`tests/p0/panic_float_convert.yv`.
+
 ## Spec conformance
 
 ```sh
@@ -570,8 +600,9 @@ runs all 129 cases in `yavo-tests/MANIFEST.json`, after checking each fixture ag
 | unsupported | the compiler reported `U0001` |
 | not_run | needs `yavo fix`, `yavo verify`, fixtures, sanitizers or other platforms |
 
-At this commit: pass 75, wrong 0, unsupported 41, not_run 13 (P1: 62 / 0 / 14 / 7;
-P2: 13 / 0 / 6 / 2; P3: 0 / 0 / 21 / 4). Generics added T-O6, T-O7, T-E1 and T-E1p. `Box`
+At this commit: pass 79, wrong 0, unsupported 37, not_run 13 (P1: 65 / 0 / 11 / 7;
+P2: 14 / 0 / 5 / 2; P3: 0 / 0 / 21 / 4). Floats added T-G27, T-K1, T-K1p and T-N1d.
+Generics added T-O6, T-O7, T-E1 and T-E1p. `Box`
 added T-A3, T-A3f, T-E2, T-E2p, T-G28 and
 T-G29. Comparison protocols added T-G25 and T-G26; closures added T-C7 and tuples T-O5p. User destructors added T-D1, T-GR1, T-GR2 and
 T-G10–T-G13. The standard library step added T-G08, T-V4, T-V4p and

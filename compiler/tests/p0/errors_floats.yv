@@ -1,0 +1,30 @@
+// expect-error: E0001 17:13
+// expect-error: E0001 18:13
+// expect-error: E0001 20:13
+// expect-error: E0501 21:16
+// expect-error: E0501 23:5
+// expect-error: E0001 24:22
+// expect-error: E0501 25:13
+// expect-warning: W0001 27:9
+// expect-error: E0001 27:18
+// expect-error: E0001 28:13
+// expect-error: E0501 29:13
+fn largest[T: Ord + Copy](xs: []T) -> ?T of xs {
+    return none
+}
+
+fn main() {
+    let a = 1.5 % 2.0
+    let b = 1 + 1.5
+    let n = 3
+    let c = n * 2.0
+    let m: Map[f64, int] = [:]
+    var xs: Vec[f64] = [2.5, 1.0]
+    xs.sort()
+    println(i32.wrap(1.5))
+    let d = largest(xs)
+    let e: f32 = 1.0
+    let g: f64 = e
+    let h = 1.5 & 2.0
+    println(xs.contains(1.0))
+}

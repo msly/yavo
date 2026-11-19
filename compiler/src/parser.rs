@@ -1411,6 +1411,10 @@ impl Parser<'_, '_> {
                 self.bump();
                 Ok(Expr { span, kind: ExprKind::Int(v) })
             }
+            Tok::Float(v) => {
+                self.bump();
+                Ok(Expr { span, kind: ExprKind::Float(v) })
+            }
             Tok::Byte(v) => {
                 self.bump();
                 Ok(Expr { span, kind: ExprKind::Byte(v) })

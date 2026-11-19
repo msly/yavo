@@ -8,6 +8,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
+#include <stdio.h>
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -634,6 +636,84 @@ static void yv_out_bool(const yv_out *o, bool b) {
 
 static void yv_out_str(const yv_out *o, yv_str s) { yv_out_bytes(o, s.ptr, s.len); }
 
+/* Floats print as the shortest decimal that reads back as the same value, always with a `.`
+ * or an exponent so they cannot be mistaken for integers. Exponents from -7 to 20 print in
+ * fixed notation (10.0, 0.001, 1e-7 is 0.0000001), others as `1e21`, `1.5e-8`; also -0.0,
+ * inf, -inf, NaN. */
+static void yv_out_float(const yv_out *o, double v, bool single) {
+    if (v != v) {
+        yv_out_bytes(o, "NaN", 3);
+        return;
+    }
+    if (isinf(v)) {
+        if (v < 0) yv_out_bytes(o, "-inf", 4);
+        else yv_out_bytes(o, "inf", 3);
+        return;
+    }
+    char sci[48], buf[400];
+    int p = 1;
+    for (; p <= 17; p++) {
+        snprintf(sci, sizeof sci, "%.*e", p - 1, v);
+        if (single ? strtof(sci, NULL) == (float)v : strtod(sci, NULL) == v) break;
+    }
+    char *e = strchr(sci, 'e');
+    int exp = e ? atoi(e + 1) : 0;
+    int n;
+    if (exp >= -7 && exp < 21) {
+        int decimals = p - 1 - exp;
+        n = snprintf(buf, sizeof buf, "%.*f", decimals > 0 ? decimals : 0, v);
+        if (n < 0) n = 0;
+        yv_out_bytes(o, buf, (size_t)n);
+        if (strchr(buf, '.') == NULL) yv_out_bytes(o, ".0", 2);
+        return;
+    }
+    /* `1.5e-08` becomes `1.5e-8`. */
+    n = e ? (int)(e - sci) : (int)strlen(sci);
+    yv_out_bytes(o, sci, (size_t)n);
+    n = snprintf(buf, sizeof buf, "e%d", exp);
+    yv_out_bytes(o, buf, (size_t)(n > 0 ? n : 0));
+}
+
+static void yv_out_f64(const yv_out *o, double v) { yv_out_float(o, v, false); }
+static void yv_out_f32(const yv_out *o, float v) { yv_out_float(o, (double)v, true); }
+
+/* `totalCmp` (stdlib contract §4): a total order over all bit patterns, from flipped-sign
+ * unsigned keys. The result is an `Ordering` tag: Less 0, Equal 1, Greater 2. */
+static inline uint32_t yv_f64_total_cmp(double a, double b) {
+    uint64_t x, y;
+    memcpy(&x, &a, sizeof x);
+    memcpy(&y, &b, sizeof y);
+    x = (x >> 63) ? ~x : (x | 0x8000000000000000ull);
+    y = (y >> 63) ? ~y : (y | 0x8000000000000000ull);
+    return x < y ? 0u : (x == y ? 1u : 2u);
+}
+
+static inline uint32_t yv_f32_total_cmp(float a, float b) {
+    uint32_t x, y;
+    memcpy(&x, &a, sizeof x);
+    memcpy(&y, &b, sizeof y);
+    x = (x >> 31) ? ~x : (x | 0x80000000u);
+    y = (y >> 31) ? ~y : (y | 0x80000000u);
+    return x < y ? 0u : (x == y ? 1u : 2u);
+}
+
+/* Float to integer: truncates toward zero; NaN, infinities and values outside the target's
+ * range panic (semantic table §7). The bounds are exclusive and exactly representable. */
+#define YV_F2I(S, T, LOW_OK, HIGH)                                                             \
+    static inline T yv_f2i_##S(double x, uint32_t line, uint32_t col) {                        \
+        if (!((LOW_OK) && x < (HIGH)))                                                         \
+            yv_panic("P-FLOAT-CONVERT", "float value is NaN, infinite or out of range for " #S, line, col); \
+        return (T)x;                                                                           \
+    }
+YV_F2I(i8, int8_t, x > -129.0, 128.0)
+YV_F2I(i16, int16_t, x > -32769.0, 32768.0)
+YV_F2I(i32, int32_t, x > -2147483649.0, 2147483648.0)
+YV_F2I(i64, int64_t, x >= -9223372036854775808.0, 9223372036854775808.0)
+YV_F2I(u8, uint8_t, x > -1.0, 256.0)
+YV_F2I(u16, uint16_t, x > -1.0, 65536.0)
+YV_F2I(u32, uint32_t, x > -1.0, 4294967296.0)
+YV_F2I(u64, uint64_t, x > -1.0, 18446744073709551616.0)
+
 /* ---- Text queries and conversions (stdlib contract §2). ---- */
 
 /* Byte offset of the first occurrence of `t` in `s`, or -1. */
@@ -702,6 +782,23 @@ static bool yv_str_parse_int(yv_str s, int64_t *out) {
         v = v * 10 + d;
     }
     *out = neg ? (int64_t)((uint64_t)0 - v) : (int64_t)v;
+    return true;
+}
+
+/* `s.parseFloat()`: decimal notation only (digits, `.`, sign, exponent), the whole text. */
+static bool yv_str_parse_float(yv_str s, double *out) {
+    char buf[400];
+    if (s.len == 0 || s.len >= sizeof buf) return false;
+    for (size_t i = 0; i < s.len; i++) {
+        char c = s.ptr[i];
+        if (!((c >= '0' && c <= '9') || c == '.' || c == '-' || c == '+' || c == 'e' || c == 'E')) return false;
+        buf[i] = c;
+    }
+    buf[s.len] = 0;
+    char *end = NULL;
+    double v = strtod(buf, &end);
+    if (end != buf + s.len) return false;
+    *out = v;
     return true;
 }
 

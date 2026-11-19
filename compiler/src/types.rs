@@ -428,6 +428,8 @@ impl fmt::Display for IntTy {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Ty {
+    /// `f32` or `f64` (IEEE 754). Copyable; not `Eq`/`Ord` (K1).
+    Float(FloatTy),
     Int(IntTy),
     Bool,
     Str,
@@ -552,13 +554,14 @@ impl Ty {
 
     /// `take(&x)` leaves this value behind (stdlib contract §1). In C it is all-zero bytes.
     pub fn has_default(self) -> bool {
-        matches!(self, Ty::Int(_) | Ty::Bool | Ty::String | Ty::Vec(_) | Ty::Opt(_) | Ty::Map(_))
+        matches!(self, Ty::Int(_) | Ty::Float(_) | Ty::Bool | Ty::String | Ty::Vec(_) | Ty::Opt(_) | Ty::Map(_))
     }
 
     /// A name usable inside C identifiers, e.g. `Vec_Vec_String` for `Vec[Vec[String]]`.
     pub fn key(self) -> String {
         match self {
             Ty::Int(t) => t.suffix().to_string(),
+            Ty::Float(f) => f.name().to_string(),
             Ty::Bool => "bool".into(),
             Ty::Str => "str".into(),
             Ty::String => "String".into(),
@@ -590,6 +593,7 @@ impl Ty {
     pub fn c_name(self) -> &'static str {
         match self {
             Ty::Int(t) => t.c_name(),
+            Ty::Float(f) => f.c_name(),
             Ty::Bool => "bool",
             Ty::Str => "yv_str",
             Ty::String => "yv_string",
@@ -613,6 +617,7 @@ impl fmt::Display for Ty {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Ty::Int(t) => write!(f, "{t}"),
+            Ty::Float(t) => f.write_str(t.name()),
             Ty::Bool => f.write_str("bool"),
             Ty::Str => f.write_str("str"),
             Ty::String => f.write_str("String"),
@@ -639,5 +644,41 @@ impl fmt::Display for Ty {
             }
             Ty::Error => f.write_str("{error}"),
         }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum FloatTy {
+    F32,
+    F64,
+}
+
+impl FloatTy {
+    pub fn from_name(name: &str) -> Option<FloatTy> {
+        match name {
+            "f32" => Some(FloatTy::F32),
+            "f64" => Some(FloatTy::F64),
+            _ => None,
+        }
+    }
+
+    pub fn name(self) -> &'static str {
+        match self {
+            FloatTy::F32 => "f32",
+            FloatTy::F64 => "f64",
+        }
+    }
+
+    pub fn c_name(self) -> &'static str {
+        match self {
+            FloatTy::F32 => "float",
+            FloatTy::F64 => "double",
+        }
+    }
+}
+
+impl fmt::Display for FloatTy {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.name())
     }
 }

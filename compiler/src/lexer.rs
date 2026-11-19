@@ -4,6 +4,8 @@ use crate::diag::{Diags, Span};
 pub enum Tok {
     Ident(String),
     Int(u128),
+    /// `1.5`, `2.0e-3`: a floating-point literal (always with a fraction part).
+    Float(f64),
     /// `'a'`, `'\n'`: a byte literal.
     Byte(u8),
     Str(Vec<StrPiece>),
@@ -72,6 +74,7 @@ pub fn describe(tok: &Tok) -> String {
     match tok {
         Tok::Ident(s) => format!("`{s}`"),
         Tok::Int(_) => "an integer literal".into(),
+        Tok::Float(_) => "a floating-point literal".into(),
         Tok::Byte(_) => "a byte literal".into(),
         Tok::Str(_) => "a string literal".into(),
         Tok::Newline => "a newline".into(),
@@ -183,6 +186,16 @@ impl Lexer<'_, '_> {
         it.next()
     }
 
+    /// At `e`/`E`: whether an exponent follows (`e5`, `e-5`, `E+5`).
+    fn exponent_ahead(&self) -> bool {
+        let mut it = self.src[self.pos..self.end].chars().skip(1);
+        match it.next() {
+            Some(c) if c.is_ascii_digit() => true,
+            Some('+' | '-') => matches!(it.next(), Some(c) if c.is_ascii_digit()),
+            _ => false,
+        }
+    }
+
     fn bump(&mut self) -> Option<char> {
         let c = self.peek()?;
         self.pos += c.len_utf8();
@@ -204,7 +217,7 @@ impl Lexer<'_, '_> {
         // token that can end one, and never inside parentheses or brackets.
         self.last_ends_stmt = matches!(
             tok,
-            Tok::Ident(_) | Tok::Int(_) | Tok::Byte(_) | Tok::Str(_) | Tok::RParen | Tok::RBracket | Tok::RBrace
+            Tok::Ident(_) | Tok::Int(_) | Tok::Float(_) | Tok::Byte(_) | Tok::Str(_) | Tok::RParen | Tok::RBracket | Tok::RBrace
         );
         match tok {
             Tok::LParen | Tok::LBracket => self.delims.push('('),
@@ -337,6 +350,10 @@ impl Lexer<'_, '_> {
             if !c.is_ascii_alphanumeric() {
                 break;
             }
+            // `1e10`, `2E-3`: a decimal number with an exponent is a float.
+            if radix == 10 && (c == 'e' || c == 'E') && self.exponent_ahead() {
+                break;
+            }
             self.bump();
             match c.to_digit(radix) {
                 Some(d) => {
@@ -350,14 +367,44 @@ impl Lexer<'_, '_> {
         }
         // After `.` (a tuple element such as `t.0.1`) a number is never a float.
         let after_dot = matches!(self.toks.last(), Some(Token { tok: Tok::Dot, .. }));
-        if radix == 10 && !after_dot && self.peek() == Some('.') && matches!(self.peek2(), Some(c) if c.is_ascii_digit()) {
-            self.bump();
-            while matches!(self.peek(), Some(c) if c.is_ascii_alphanumeric() || c == '_') {
+        let fraction = self.peek() == Some('.') && matches!(self.peek2(), Some(c) if c.is_ascii_digit());
+        let exponent = matches!(self.peek(), Some('e' | 'E'));
+        if radix == 10 && !after_dot && (fraction || exponent) {
+            if fraction {
                 self.bump();
             }
+            let mut bad_float = bad;
+            while let Some(c) = self.peek() {
+                if c.is_ascii_digit() || c == '_' {
+                    self.bump();
+                } else if c == 'e' || c == 'E' {
+                    self.bump();
+                    if matches!(self.peek(), Some('+' | '-')) {
+                        self.bump();
+                    }
+                    if !matches!(self.peek(), Some(c) if c.is_ascii_digit()) {
+                        bad_float = true;
+                    }
+                } else if c.is_ascii_alphanumeric() {
+                    self.bump();
+                    bad_float = true;
+                } else {
+                    break;
+                }
+            }
             let span = self.span_from(start, line, col);
-            self.diags.error("U0001", span, "floating-point numbers are not supported in P0 yet");
-            self.push(Tok::Int(0), span);
+            let text: String = self.src[start..self.pos].chars().filter(|c| *c != '_').collect();
+            match text.parse::<f64>() {
+                Ok(v) if !bad_float && v.is_finite() => self.push(Tok::Float(v), span),
+                Ok(_) if !bad_float => {
+                    self.diags.error("E0003", span, format!("floating-point literal `{text}` is too large for `f64`"));
+                    self.push(Tok::Float(0.0), span);
+                }
+                _ => {
+                    self.diags.error("E0020", span, format!("invalid floating-point literal `{text}`"));
+                    self.push(Tok::Float(0.0), span);
+                }
+            }
             return;
         }
         let span = self.span_from(start, line, col);
