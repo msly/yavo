@@ -6,6 +6,7 @@ use crate::ast::*;
 use crate::diag::{Diags, Span};
 use crate::types::{
     box_inner, box_of, finish_agg, map_of, map_parts, opt_inner, opt_of, ref_inner, ref_mut_inner, ref_mut_of, ref_of, register_enum,
+    register_iface,
     register_struct, res_of, res_parts, set_user_drop, has_user_drop, slice_elem, slice_of, tuple_elems, tuple_of, vec_elem,
     vec_of, IntTy, Ty,
 };
@@ -23,6 +24,32 @@ pub struct HProgram {
     pub structs: Vec<HStruct>,
     /// Comparison adapters for `sortBy`, one per call site.
     pub tramps: Vec<Tramp>,
+    /// Interfaces, by interface id (`Ty::Dyn(id)`).
+    pub ifaces: Vec<HIface>,
+    /// One vtable per (type, interface) pair declared with `struct T: I`.
+    pub impls: Vec<HImpl>,
+}
+
+/// An interface: the vtable layout of `Box[I]`.
+pub struct HIface {
+    pub ty: Ty,
+    pub methods: Vec<HIfaceMethod>,
+}
+
+/// One method slot. Index 0 of `params`/`inouts`/`sinks` is the receiver (`self`,
+/// `inout self` or `sink self`); its type is the interface value itself.
+pub struct HIfaceMethod {
+    pub params: Vec<Ty>,
+    pub inouts: Vec<bool>,
+    pub sinks: Vec<bool>,
+    pub ret: Ty,
+}
+
+/// `struct T: I`: the functions that fill `I`'s slots for `T`, in slot order.
+pub struct HImpl {
+    pub ty: Ty,
+    pub iface: usize,
+    pub fns: Vec<usize>,
 }
 
 /// A C comparison function for the runtime's sort that calls closure function `func` with
@@ -266,6 +293,11 @@ pub enum HExprKind {
     EmptyString,
     /// `Box(value)`: a new heap block holding `value`.
     BoxNew(Box<HExpr>),
+    /// A `Box[T]` used where a `Box[I]` is expected: the box with the vtable of `impls[imp]`.
+    ToDyn { value: Box<HExpr>, imp: usize },
+    /// `x.m(args)` on a `Box[I]`: slot `method` of interface `iface` (`sig` is its checker
+    /// signature). `args[0]` is the receiver: the value, an `InoutPlace`, or a moved value.
+    DynCall { iface: usize, method: usize, sig: usize, args: Vec<HExpr> },
     /// The content of a `Box`, read in place (fields, methods and indexing project through a
     /// box, A7). Like a field, it cannot be moved out of.
     Unbox(Box<HExpr>),
@@ -961,6 +993,23 @@ struct Checker<'d> {
     /// Functions made from closures (O5), in order.
     lifted: Vec<HFn>,
     tramps: Vec<Tramp>,
+    /// Interfaces by id, and by name.
+    ifaces: Vec<IfaceDef>,
+    iface_index: HashMap<String, usize>,
+    /// Signatures (indexes into `sigs`, after the user functions) that stand for interface
+    /// method slots: (interface, slot).
+    dyn_slots: HashMap<usize, (usize, usize)>,
+    /// Declared implementations, and their index by (type, interface).
+    impls: Vec<HImpl>,
+    impl_index: HashMap<(Ty, usize), usize>,
+    /// (type, interface) pairs declared with `struct T: I`, valid or not.
+    declared_impls: std::collections::HashSet<(Ty, usize)>,
+}
+
+struct IfaceDef {
+    name: String,
+    /// Method name, signature index, and the span of its name.
+    methods: Vec<(String, usize, Span)>,
 }
 
 struct StructDef {
@@ -997,18 +1046,19 @@ pub fn check(prog: &Program, diags: &mut Diags) -> Option<HProgram> {
         n_fns: prog.fns.len(),
         lifted: Vec::new(),
         tramps: Vec::new(),
+        ifaces: Vec::new(),
+        iface_index: HashMap::new(),
+        dyn_slots: HashMap::new(),
+        impls: Vec::new(),
+        impl_index: HashMap::new(),
+        declared_impls: Default::default(),
     };
     ck.collect_uses(prog);
-    for (owner, impls) in prog.structs.iter().map(|s| (&s.name, &s.impls)).chain(prog.enums.iter().map(|e| (&e.name, &e.impls))) {
-        for (i, sp) in impls {
-            if matches!(i.as_str(), "Drop" | "Eq" | "Ord") {
-                continue;
-            }
-            ck.diags.error("U0001", *sp, format!("implementing interfaces (`{owner}: {i}`) is not supported yet"));
-        }
-    }
+    ck.collect_iface_names(prog);
     let order = ck.collect_structs(prog);
     ck.collect(prog);
+    ck.collect_iface_sigs(prog);
+    ck.check_impls(prog);
     ck.check_drops(prog);
     ck.check_protocols(prog);
     let mut fns: Vec<HFn> = prog.fns.iter().enumerate().map(|(i, f)| ck.function(f, i)).collect();
@@ -1037,7 +1087,23 @@ pub fn check(prog: &Program, diags: &mut Diags) -> Option<HProgram> {
                 }
             })
             .collect();
-        Some(HProgram { fns, structs, tramps: std::mem::take(&mut ck.tramps) })
+        let ifaces = ck
+            .ifaces
+            .iter()
+            .enumerate()
+            .map(|(i, d)| HIface {
+                ty: Ty::Dyn(i as u32),
+                methods: d
+                    .methods
+                    .iter()
+                    .map(|(_, s, _)| {
+                        let sig = &ck.sigs[*s];
+                        HIfaceMethod { params: sig.params.clone(), inouts: sig.inouts.clone(), sinks: sig.sinks.clone(), ret: sig.ret }
+                    })
+                    .collect(),
+            })
+            .collect();
+        Some(HProgram { fns, structs, tramps: std::mem::take(&mut ck.tramps), ifaces, impls: std::mem::take(&mut ck.impls) })
     }
 }
 
@@ -1530,6 +1596,149 @@ impl Checker<'_> {
         }
     }
 
+    /// Registers interface names, so that `Box[Named]` resolves in struct fields.
+    fn collect_iface_names(&mut self, prog: &Program) {
+        for d in &prog.interfaces {
+            let name = d.name.as_str();
+            if is_type_name(name) || UNSUPPORTED_TYPES.contains(&name) || matches!(name, "Ordering" | "Drop" | "Eq" | "Ord" | "Copy" | "Send" | "Sync") {
+                self.diags.error("E0011", d.name_span, format!("`{name}` is a built-in name and cannot be redefined"));
+            } else if self.iface_index.contains_key(name) || prog.structs.iter().any(|s| s.name == name) || prog.enums.iter().any(|e| e.name == name) {
+                self.diags.error("E0011", d.name_span, format!("type `{name}` is defined more than once"));
+            } else {
+                self.iface_index.insert(name.to_string(), self.ifaces.len());
+            }
+            // Every declaration gets an id, even a duplicate, so ids and indexes stay equal.
+            register_iface(name);
+            self.ifaces.push(IfaceDef { name: name.to_string(), methods: Vec::new() });
+        }
+    }
+
+    /// Resolves interface method signatures. Each becomes a signature after the user
+    /// functions; its receiver (parameter 0) has the interface value's type.
+    fn collect_iface_sigs(&mut self, prog: &Program) {
+        for (ii, d) in prog.interfaces.iter().enumerate() {
+            for m in &d.methods {
+                let short = m.name.rsplit('.').next().unwrap_or(&m.name).to_string();
+                if self.ifaces[ii].methods.iter().any(|(n, _, _)| *n == short) {
+                    self.diags.error("E0011", m.name_span, format!("method `{short}` is declared more than once in `{}`", d.name));
+                    continue;
+                }
+                if m.params.first().is_none_or(|p| p.name != "self") {
+                    self.diags
+                        .error("E0001", m.name_span, format!("interface method `{}` must take `self` (or `inout self`) first", m.name))
+                        .note("an interface describes what a value can do; functions without `self` belong to a type");
+                    continue;
+                }
+                let mut params = vec![Ty::Dyn(ii as u32)];
+                params.extend(m.params.iter().skip(1).map(|p| self.resolve_ty(&p.ty)));
+                let ret = m.ret.as_ref().map(|t| self.resolve_ty(t)).unwrap_or(Ty::Unit);
+                self.check_ret_of(m, ret);
+                let ret_of = m.ret_of.as_ref().map(|names| {
+                    names.iter().filter_map(|(n, _)| m.params.iter().position(|p| p.name == *n)).collect()
+                });
+                let sig = Sig {
+                    params,
+                    sinks: m.params.iter().map(|p| p.sink).collect(),
+                    inouts: m.params.iter().map(|p| p.inout).collect(),
+                    ret,
+                    ret_of,
+                    has_self: true,
+                };
+                self.dyn_slots.insert(self.sigs.len(), (ii, self.ifaces[ii].methods.len()));
+                self.ifaces[ii].methods.push((short, self.sigs.len(), m.name_span));
+                self.sigs.push(sig);
+            }
+        }
+    }
+
+    /// `fn name(self, int, inout Vec[int]) -> String`, for diagnostics.
+    fn sig_text(&self, name: &str, s: usize) -> String {
+        let sig = &self.sigs[s];
+        let mut parts = Vec::new();
+        for (i, t) in sig.params.iter().enumerate() {
+            let mode = if sig.inouts[i] {
+                "inout "
+            } else if sig.sinks[i] {
+                "sink "
+            } else {
+                ""
+            };
+            if i == 0 && sig.has_self {
+                parts.push(format!("{mode}self"));
+            } else {
+                parts.push(format!("{mode}{t}"));
+            }
+        }
+        let ret = if sig.ret == Ty::Unit { String::new() } else { format!(" -> {}", sig.ret) };
+        format!("fn {name}({}){ret}", parts.join(", "))
+    }
+
+    /// `struct T: I`: `T` must have every method of `I`, with the same signature (receiver
+    /// mode, parameter types and modes, return type).
+    fn check_impls(&mut self, prog: &Program) {
+        let decls = prog.structs.iter().map(|s| (&s.name, &s.impls)).chain(prog.enums.iter().map(|e| (&e.name, &e.impls)));
+        for (owner, impls) in decls {
+            let Some(&si) = self.struct_index.get(owner.as_str()) else { continue };
+            let ty = self.structs[si].ty;
+            for (iname, sp) in impls {
+                match iname.as_str() {
+                    "Drop" | "Eq" | "Ord" => continue,
+                    "Copy" | "Send" | "Sync" => {
+                        self.diags.error("U0001", *sp, format!("declaring `{owner}: {iname}` is not supported yet"));
+                        continue;
+                    }
+                    _ => {}
+                }
+                let Some(&ii) = self.iface_index.get(iname.as_str()) else {
+                    self.diags.error("E0010", *sp, format!("cannot find interface `{iname}`"));
+                    continue;
+                };
+                self.declared_impls.insert((ty, ii));
+                let mut fns = Vec::new();
+                let methods = self.ifaces[ii].methods.clone();
+                for (mname, s, _) in &methods {
+                    let full = format!("{owner}.{mname}");
+                    let want = self.sig_text(mname, *s);
+                    let Some(&fi) = self.index.get(&full) else {
+                        self.diags
+                            .error("E0019", *sp, format!("`{owner}` declares `{iname}` but has no method `{mname}`"))
+                            .note(format!("add `{want}` to `{owner}`'s body"));
+                        continue;
+                    };
+                    let (a, b) = (&self.sigs[fi], &self.sigs[*s]);
+                    let same = a.has_self
+                        && a.params.len() == b.params.len()
+                        && a.params[1..] == b.params[1..]
+                        && a.inouts == b.inouts
+                        && a.sinks == b.sinks
+                        && a.ret == b.ret;
+                    if !same {
+                        let span = prog.fns[fi].name_span;
+                        self.diags
+                            .error("E0019", span, format!("`{full}` does not match `{iname}.{mname}`"))
+                            .note(format!("`{iname}` requires `{want}`"));
+                        continue;
+                    }
+                    fns.push(fi);
+                }
+                if fns.len() == methods.len() {
+                    self.impl_index.insert((ty, ii), self.impls.len());
+                    self.impls.push(HImpl { ty, iface: ii, fns });
+                }
+            }
+        }
+    }
+
+    /// A `Box[T]` used where a `Box[I]` is expected becomes an interface value when `T`
+    /// implements `I` (section 8 whitelist); anything else is left for the type check.
+    fn to_dyn(&mut self, h: HExpr, iface: u32, cx: &mut FnCx) -> HExpr {
+        let Ty::Box(b) = h.ty else { return h };
+        let Some(&imp) = self.impl_index.get(&(box_inner(b), iface as usize)) else { return h };
+        let (span, at) = (h.span, h.at);
+        let h = self.consume(h, cx);
+        HExpr { kind: HExprKind::ToDyn { value: Box::new(h), imp }, ty: Ty::Dyn(iface), span, at }
+    }
+
     /// Whether values of `t` are compared through a user protocol: `(cmp, eq)` functions.
     fn protocol(&self, t: Ty) -> Option<(Option<usize>, Option<usize>)> {
         match t {
@@ -1714,6 +1923,12 @@ impl Checker<'_> {
                 self.diags.error("E0001", t.span, "`Box` takes exactly one type argument, e.g. `Box[Node]`");
                 return Ty::Error;
             };
+            // `Box[Named]`: a boxed value of any type that implements the interface.
+            if inner.args.is_empty() {
+                if let Some(&ii) = self.iface_index.get(&inner.name) {
+                    return Ty::Dyn(ii as u32);
+                }
+            }
             return match self.resolve_ty(inner) {
                 Ty::Error => Ty::Error,
                 Ty::Unit => {
@@ -1744,6 +1959,12 @@ impl Checker<'_> {
         }
         if let Some(&i) = self.struct_index.get(&t.name) {
             return self.structs[i].ty;
+        }
+        if self.iface_index.contains_key(&t.name) {
+            self.diags
+                .error("E0001", t.span, format!("`{}` is an interface, not a type of its own", t.name))
+                .note(format!("a value of some type that implements it is written `Box[{}]`", t.name));
+            return Ty::Error;
         }
         match t.name.as_str() {
             "bool" => Ty::Bool,
@@ -2100,6 +2321,14 @@ impl Checker<'_> {
         if let (Ty::Int(_), Ty::Int(_)) = (e.ty, expected) {
             d.note(format!("Yavo has no implicit conversions; convert explicitly with `{expected}(...)`"));
         }
+        if let (Ty::Box(b), Ty::Dyn(i)) = (e.ty, expected) {
+            let (inner, iname) = (box_inner(b), &self.ifaces[i as usize].name);
+            if self.declared_impls.contains(&(inner, i as usize)) {
+                d.note(format!("`{inner}` declares `{iname}`, but its methods do not match the interface (reported above)"));
+            } else {
+                d.note(format!("`{inner}` does not implement `{iname}`; declare it as `struct {inner}: {iname}` and write its methods"));
+            }
+        }
     }
 
     /// A `T` used where a `?T` is expected is wrapped as `some(...)` (section 8 whitelist), which
@@ -2111,6 +2340,10 @@ impl Checker<'_> {
             Ty::RefMut(r) if ref_mut_inner(r) == expected && expected.is_copy() => self.deref(h),
             _ => h,
         };
+        // A boxed value used where an interface value is expected (section 8 whitelist).
+        if let Ty::Dyn(i) = expected {
+            return self.to_dyn(h, i, cx);
+        }
         // In a function returning `T ! E`, a `T` is a success value (section 8 whitelist).
         if let Ty::Res(r) = expected {
             let ok = res_parts(r).0;
@@ -2134,6 +2367,7 @@ impl Checker<'_> {
         }
         let Ty::Opt(o) = expected else { return h };
         let inner = opt_inner(o);
+        let h = if let Ty::Dyn(i) = inner { self.to_dyn(h, i, cx) } else { h };
         let h = match h.ty {
             Ty::Ref(r) if ref_inner(r) == inner && inner.is_copy() => self.deref(h),
             _ => h,
@@ -2409,8 +2643,8 @@ impl Checker<'_> {
             }
             // A tuple element that carries a borrow points where the tuple points.
             HExprKind::Field { base, .. } if h.ty.carries_borrow() => self.loans_of(base, cx),
-            HExprKind::Call { func, args } if h.ty.carries_borrow() => {
-                let picked: Vec<usize> = match &self.sigs[*func].ret_of {
+            HExprKind::Call { func: s, args } | HExprKind::DynCall { sig: s, args, .. } if h.ty.carries_borrow() => {
+                let picked: Vec<usize> = match &self.sigs[*s].ret_of {
                     Some(p) => p.clone(),
                     None => (0..args.len()).collect(),
                 };
@@ -4471,7 +4705,11 @@ impl Checker<'_> {
                     };
                     hargs.push(h);
                 }
-                HExpr { kind: HExprKind::Call { func: fi, args: hargs }, ty: ret, span, at }
+                let kind = match self.dyn_slots.get(&fi) {
+                    Some(&(iface, method)) => HExprKind::DynCall { iface, method, sig: fi, args: hargs },
+                    None => HExprKind::Call { func: fi, args: hargs },
+                };
+                HExpr { kind, ty: ret, span, at }
         }
     }
 
@@ -4590,6 +4828,16 @@ impl Checker<'_> {
             (Ty::Map(_), "len") => (Builtin::MapLen, Ty::Int(IntTy::I64)),
             (Ty::Map(_), "clone") => (Builtin::MapClone, recv.ty),
             (Ty::Error, _) => return err_expr(span),
+            (Ty::Dyn(i), m) => {
+                let iname = self.ifaces[i as usize].name.clone();
+                self.diags
+                    .error("E0010", at, format!("interface `{iname}` has no method `{m}`"))
+                    .note("a value behind an interface can only use the interface's methods");
+                for a in args {
+                    self.expr(a, None, cx);
+                }
+                return err_expr(span);
+            }
             (t @ (Ty::Struct(_) | Ty::Enum(_)), m) => {
                 self.diags
                     .error("E0010", at, format!("type `{t}` has no method `{m}`"))
@@ -4617,6 +4865,11 @@ impl Checker<'_> {
     /// The method `name` of a struct or enum type, with its full name `Type.name`. A function
     /// of the type without `self` is reported here and returned as `NO_FN`.
     fn user_method(&mut self, t: Ty, name: &str, at: Span) -> Option<(usize, String)> {
+        if let Ty::Dyn(i) = t {
+            let d = &self.ifaces[i as usize];
+            let (_, s, _) = d.methods.iter().find(|(n, _, _)| n == name)?;
+            return Some((*s, format!("{}.{name}", d.name)));
+        }
         if !matches!(t, Ty::Struct(_) | Ty::Enum(_)) {
             return None;
         }

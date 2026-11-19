@@ -27,6 +27,23 @@ thread_local! {
     static TUPLES: RefCell<Vec<(Vec<Ty>, &'static str)>> = const { RefCell::new(Vec::new()) };
     /// Content type and C pointer type of each `Box[T]`, indexed by box id.
     static BOXES: RefCell<Vec<(Ty, &'static str)>> = const { RefCell::new(Vec::new()) };
+    /// Name and C struct name of each interface, indexed by interface id.
+    static IFACES: RefCell<Vec<(&'static str, &'static str)>> = const { RefCell::new(Vec::new()) };
+}
+
+/// Registers an interface name and returns its id (`Ty::Dyn(id)` is `Box[Name]`).
+pub fn register_iface(name: &str) -> u32 {
+    let c: &'static str = Box::leak(format!("yv_dyn_{name}").into_boxed_str());
+    let name: &'static str = Box::leak(name.to_string().into_boxed_str());
+    IFACES.with(|i| {
+        let mut i = i.borrow_mut();
+        i.push((name, c));
+        (i.len() - 1) as u32
+    })
+}
+
+pub fn iface_name(id: u32) -> &'static str {
+    IFACES.with(|i| i.borrow()[id as usize].0)
 }
 
 /// Interns `Box[inner]` and returns its id. In C a box is a pointer to one heap block; a
@@ -403,7 +420,7 @@ impl fmt::Display for IntTy {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Ty {
     Int(IntTy),
     Bool,
@@ -440,6 +457,10 @@ pub enum Ty {
     /// `Box[T]`: one owned heap block holding a `T`, by box id (see `box_of`). In C a `T *`;
     /// NULL (all-zero) is a moved-out box, which drops nothing.
     Box(u32),
+    /// `Box[I]` for an interface `I`, by interface id (see `register_iface`): a boxed value of
+    /// some type that implements `I`. In C a `{ void *data; const void *vt; }` pair; a NULL
+    /// `data` is a moved-out value.
+    Dyn(u32),
     /// Produced after an error has been reported; suppresses cascading diagnostics.
     Error,
 }
@@ -449,7 +470,7 @@ impl Ty {
     /// holding them) are moved.
     pub fn is_copy(self) -> bool {
         match self {
-            Ty::String | Ty::Vec(_) | Ty::Map(_) | Ty::RefMut(_) | Ty::Box(_) => false,
+            Ty::String | Ty::Vec(_) | Ty::Map(_) | Ty::RefMut(_) | Ty::Box(_) | Ty::Dyn(_) => false,
             Ty::Opt(id) => opt_inner(id).is_copy(),
             Ty::Tuple(id) => tuple_elems(id).iter().all(|t| t.is_copy()),
             Ty::Struct(id) | Ty::Enum(id) => agg_flags(id).0,
@@ -465,7 +486,7 @@ impl Ty {
     /// `&inout T` is not copyable but owns nothing.
     pub fn needs_drop(self) -> bool {
         match self {
-            Ty::String | Ty::Vec(_) | Ty::Map(_) | Ty::Box(_) => true,
+            Ty::String | Ty::Vec(_) | Ty::Map(_) | Ty::Box(_) | Ty::Dyn(_) => true,
             Ty::Opt(id) => opt_inner(id).needs_drop(),
             Ty::Tuple(id) => tuple_elems(id).iter().any(|t| t.needs_drop()),
             Ty::Struct(id) | Ty::Enum(id) => agg_flags(id).1,
@@ -541,6 +562,7 @@ impl Ty {
             Ty::Opt(id) => format!("Opt_{}", opt_inner(id).key()),
             Ty::RefMut(id) => format!("RefMut_{}", ref_mut_inner(id).key()),
             Ty::Box(id) => format!("Box_{}", box_inner(id).key()),
+            Ty::Dyn(id) => format!("Dyn_{}", iface_name(id)),
             Ty::Map(id) => {
                 let (k, v) = map_parts(id);
                 format!("Map_{}_{}", k.key(), v.key())
@@ -575,6 +597,7 @@ impl Ty {
             Ty::Res(id) => RESS.with(|r| r.borrow()[id as usize].2),
             Ty::Tuple(id) => TUPLES.with(|t| t.borrow()[id as usize].1),
             Ty::Box(id) => BOXES.with(|b| b.borrow()[id as usize].1),
+            Ty::Dyn(id) => IFACES.with(|i| i.borrow()[id as usize].1),
             Ty::Error => "void",
         }
     }
@@ -593,6 +616,7 @@ impl fmt::Display for Ty {
             Ty::Opt(id) => write!(f, "?{}", opt_inner(*id)),
             Ty::RefMut(id) => write!(f, "&inout {}", ref_mut_inner(*id)),
             Ty::Box(id) => write!(f, "Box[{}]", box_inner(*id)),
+            Ty::Dyn(id) => write!(f, "Box[{}]", iface_name(*id)),
             Ty::Map(id) => {
                 let (k, v) = map_parts(*id);
                 write!(f, "Map[{k}, {v}]")

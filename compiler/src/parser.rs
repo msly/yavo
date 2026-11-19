@@ -14,6 +14,7 @@ enum Item {
     Fn(FnDecl),
     Struct(StructDecl),
     Enum(EnumDecl),
+    Interface(InterfaceDecl),
     Use(Vec<Use>),
 }
 
@@ -112,6 +113,7 @@ impl Parser<'_, '_> {
         let mut fns = Vec::new();
         let mut structs = Vec::new();
         let mut enums = Vec::new();
+        let mut interfaces = Vec::new();
         let mut uses = Vec::new();
         loop {
             self.skip_newlines();
@@ -128,12 +130,13 @@ impl Parser<'_, '_> {
                     fns.append(&mut e.methods);
                     enums.push(e)
                 }
+                Ok(Some(Item::Interface(i))) => interfaces.push(i),
                 Ok(Some(Item::Use(u))) => uses.extend(u),
                 Ok(None) => {}
                 Err(()) => self.sync_item(),
             }
         }
-        Program { fns, structs, enums, uses }
+        Program { fns, structs, enums, interfaces, uses }
     }
 
     fn sync_item(&mut self) {
@@ -146,7 +149,13 @@ impl Parser<'_, '_> {
                 Tok::Newline if depth == 0 => {
                     self.bump();
                     self.skip_newlines();
-                    if self.is_kw("fn") || self.is_kw("pub") || self.is_kw("struct") || self.is_kw("enum") || self.is_kw("use") {
+                    if self.is_kw("fn")
+                        || self.is_kw("pub")
+                        || self.is_kw("struct")
+                        || self.is_kw("enum")
+                        || self.is_kw("interface")
+                        || self.is_kw("use")
+                    {
                         return;
                     }
                     continue;
@@ -167,7 +176,7 @@ impl Parser<'_, '_> {
             self.bump();
         }
         if self.is_kw("fn") {
-            return self.function(None).map(|f| Some(Item::Fn(f)));
+            return self.function(None, true).map(|f| Some(Item::Fn(f)));
         }
         if self.is_kw("struct") {
             return self.struct_decl().map(|s| Some(Item::Struct(s)));
@@ -175,7 +184,10 @@ impl Parser<'_, '_> {
         if self.is_kw("enum") {
             return self.enum_decl().map(|e| Some(Item::Enum(e)));
         }
-        for kw in ["interface", "impl", "const", "type"] {
+        if self.is_kw("interface") {
+            return self.interface_decl().map(|i| Some(Item::Interface(i)));
+        }
+        for kw in ["impl", "const", "type"] {
             if self.is_kw(kw) {
                 self.unsupported(start, format!("`{kw}` declarations are not supported in P0"))?;
             }
@@ -210,9 +222,51 @@ impl Parser<'_, '_> {
             return Err(());
         }
         let saved = self.self_ty.replace(owner.to_string());
-        let f = self.function(Some(owner));
+        let f = self.function(Some(owner), true);
         self.self_ty = saved;
         f
+    }
+
+    /// `interface Name { fn method(self, ...) -> T ... }`: one signature per line.
+    fn interface_decl(&mut self) -> PResult<InterfaceDecl> {
+        self.bump();
+        let (name, name_span) = self.ident("an interface name")?;
+        if matches!(self.peek(), Tok::LBracket) {
+            let sp = self.span();
+            self.unsupported(sp, "generic interfaces are not supported yet")?;
+        }
+        if matches!(self.peek(), Tok::Colon) {
+            let sp = self.span();
+            self.unsupported(sp, "interfaces that extend other interfaces are not supported yet")?;
+        }
+        self.expect(Tok::LBrace, "`{` to start the interface body")?;
+        let mut methods = Vec::new();
+        loop {
+            while matches!(self.peek(), Tok::Newline | Tok::Comma) {
+                self.bump();
+            }
+            if self.eat(&Tok::RBrace) {
+                break;
+            }
+            if self.is_kw("pub") {
+                self.bump();
+            }
+            if !self.is_kw("fn") {
+                let found = describe(self.peek());
+                self.err_here(format!("expected a method signature (`fn name(self) -> T`) in the interface, found {found}"));
+                return Err(());
+            }
+            let saved = self.self_ty.replace(name.clone());
+            let m = self.function(Some(&name), false);
+            self.self_ty = saved;
+            methods.push(m?);
+            if !matches!(self.peek(), Tok::Newline | Tok::RBrace) {
+                let found = describe(self.peek());
+                self.err_here(format!("an interface method has no body; expected a newline after the signature, found {found}"));
+                return Err(());
+            }
+        }
+        Ok(InterfaceDecl { name, name_span, methods })
     }
 
     /// `struct Name { field: Type ... fn method(self) { } }`, one member per line (commas are
@@ -357,7 +411,8 @@ impl Parser<'_, '_> {
 
     /// `fn name(params) -> T of a { }`; for a method (`owner`), the first parameter may be the
     /// receiver `self`, `inout self` or `sink self`.
-    fn function(&mut self, owner: Option<&str>) -> PResult<FnDecl> {
+    /// A function or method; `has_body` is false for an interface method's signature.
+    fn function(&mut self, owner: Option<&str>, has_body: bool) -> PResult<FnDecl> {
         self.bump();
         let (name, name_span) = self.ident("a function name")?;
         if matches!(self.peek(), Tok::LBracket) {
@@ -443,7 +498,7 @@ impl Parser<'_, '_> {
         } else {
             None
         };
-        let body = self.block()?;
+        let body = if has_body { self.block()? } else { Block { stmts: Vec::new(), close: self.span() } };
         let name = match owner {
             Some(o) => format!("{o}.{name}"),
             None => name,

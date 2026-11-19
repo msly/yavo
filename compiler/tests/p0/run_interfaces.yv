@@ -1,0 +1,130 @@
+// expect-stdout:
+// | 8
+// | rect=6 (first)
+// | dot=1 (a dot)
+// | rect=1 (unit)
+// | dot=75 (a dot)
+// | 64
+// | 9
+// | 8
+// | 2
+// | drop job 1
+// | job 1: one
+// | after run
+// | drop job 2
+interface Shape {
+    fn name(self) -> String
+    fn area(self) -> int
+    fn scale(inout self, k: int)
+    fn label(self) -> str of self
+}
+
+struct Rect: Shape {
+    w: int
+    h: int
+    tag: String
+
+    fn name(self) -> String {
+        return "rect".toString()
+    }
+    fn area(self) -> int {
+        return self.w * self.h
+    }
+    fn scale(inout self, k: int) {
+        self.w *= k
+        self.h *= k
+    }
+    fn label(self) -> str of self {
+        return self.tag
+    }
+}
+
+enum Dot: Shape {
+    Small
+    Big(r: int)
+
+    fn name(self) -> String {
+        return "dot".toString()
+    }
+    fn area(self) -> int {
+        match self {
+            .Small => return 1
+            .Big(r) => return 3 * r * r
+        }
+    }
+    fn scale(inout self, k: int) {
+        self = Dot.Big(r: k)
+    }
+    fn label(self) -> str of self {
+        return "a dot"
+    }
+}
+
+struct Holder {
+    item: Box[Shape]
+    spare: ?Box[Shape]
+}
+
+fn total(all: Vec[Box[Shape]]) -> int {
+    var sum = 0
+    for s in all {
+        sum += s.area()
+    }
+    return sum
+}
+
+fn describe(s: Box[Shape]) -> String {
+    return format("${s.name()}=${s.area()} (${s.label()})")
+}
+
+interface Task {
+    fn run(sink self) -> String
+    fn id(self) -> int
+}
+
+struct Job: Task + Drop {
+    n: int
+    text: String
+    fn run(sink self) -> String {
+        return format("job ${self.n}: ${self.text}")
+    }
+    fn id(self) -> int {
+        return self.n
+    }
+    fn drop(inout self) {
+        println("drop job ${self.n}")
+    }
+}
+
+fn main2() {
+    let a: Box[Task] = Box(Job{n: 1, text: "one".toString()})
+    let b: Box[Task] = Box(Job{n: 2, text: "two".toString()})
+    println(b.id())
+    println(a.run())
+    println("after run")
+}
+
+fn main() {
+    var all: Vec[Box[Shape]] = []
+    all.push(Box(Rect{w: 2, h: 3, tag: "first".toString()}))
+    all.push(Box(Dot.Small))
+    let r: Box[Shape] = Box(Rect{w: 1, h: 1, tag: "unit".toString()})
+    all.push(r)
+    println(total(all))
+    for i in 0..all.len() {
+        println(describe(all[i]))
+    }
+    var h = Holder{item: Box(Dot.Big(r: 2)), spare: none}
+    h.item.scale(5)
+    println(describe(h.item))
+    h.spare = Box(Rect{w: 4, h: 4, tag: "sp".toString()})
+    if let s = h.spare {
+        s.scale(2)
+        println(s.area())
+    }
+    var copy = all.clone()
+    copy.push(Box(Dot.Small))
+    println(total(copy))
+    println(total(all))
+    main2()
+}

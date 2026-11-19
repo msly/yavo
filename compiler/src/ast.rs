@@ -4,7 +4,16 @@ pub struct Program {
     pub fns: Vec<FnDecl>,
     pub structs: Vec<StructDecl>,
     pub enums: Vec<EnumDecl>,
+    pub interfaces: Vec<InterfaceDecl>,
     pub uses: Vec<Use>,
+}
+
+/// `interface Name { fn method(self, ...) -> T }`: method signatures without bodies. Each
+/// method's `name` is `Name.method` and its body is empty.
+pub struct InterfaceDecl {
+    pub name: String,
+    pub name_span: Span,
+    pub methods: Vec<FnDecl>,
 }
 
 /// One module named by `use std/m` or `use std/{a, b}`.

@@ -1,0 +1,49 @@
+// expect-error: E0011 14:8
+// expect-error: E0001 18:8
+// expect-error: E0019 21:13
+// expect-error: E0019 31:8
+// expect-error: E0010 36:14
+// expect-error: E0001 42:12
+// expect-warning: W0001 46:9
+// expect-error: E0001 46:25
+// expect-error: E0001 47:25
+// expect-error: E0010 48:13
+interface Named {
+    fn name(self) -> String
+    fn rank(self, k: int) -> int
+    fn name(self) -> String
+}
+
+interface Bad {
+    fn make() -> int
+}
+
+struct Dog: Named {
+    fn name(self) -> String {
+        return "dog".toString()
+    }
+}
+
+struct Cat: Named {
+    fn name(self) -> String {
+        return "cat".toString()
+    }
+    fn rank(inout self, k: int) -> int {
+        return k
+    }
+}
+
+struct Fish: Swims {
+}
+
+struct Rock {
+}
+
+fn show(n: Named) {
+}
+
+fn main() {
+    let r: Box[Named] = Box(Rock{})
+    let c: Box[Named] = Box(Cat{})
+    println(c.legs())
+}

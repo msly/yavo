@@ -490,6 +490,36 @@ in the runtime count blocks for the heap check. Place paths use `BOX_STEP` for "
 box" (`(*p)` in C). `&Box[T]` is `T * const *`. Tests: `tests/p0/run_box.yv`,
 `tests/p0/errors_box.yv` (7 errors, 1 warning).
 
+## Interfaces (`interface`, `struct T: I`, `Box[I]`)
+
+Supported (cheat sheet §2; semantic table O1, P2; section 8 whitelist):
+
+- `interface Named { fn name(self) -> String ... }`: method signatures with `self`,
+  `inout self` or `sink self`, any parameters (`inout`/`sink` included) and return types; a
+  returned view needs `of` as usual (`-> str of self`).
+- `struct T: I` / `enum T: I` (combinable with `Drop`, `Eq`, `Ord` using `+`): `T` must have
+  every method of `I` with the same receiver mode, parameter types and modes, and return type.
+- `Box[I]` is an interface value: in variables, parameters, fields, `Vec[Box[I]]`, `?Box[I]`.
+  A `Box[T]` is converted where a `Box[I]` is expected (`let s: Box[Shape] = Box(Rect{...})`,
+  `all.push(Box(Dot.Small))`, field initializers, returns), which moves the box.
+- `x.m(args)` on a `Box[I]` calls `T`'s method through the vtable; `inout self` works on
+  any writable place (`h.item.scale(5)`, a writable `if let` binding), `sink self` consumes the
+  interface value. Interface values can be cloned inside collections (`all.clone()`), dropped,
+  moved and stored like other owned values.
+- Errors: a missing or mismatched method is `E0019` (new, registered in `ERRORS.md`); an
+  unknown interface name after `:` is `E0010`; an interface used as a type by itself (`n: Named`)
+  or an interface method without `self` is `E0001`; a `Box[T]` whose `T` does not implement `I`
+  is `E0001` with a note; a method the interface does not have is `E0010`.
+- Not yet: capability bounds (`Box[Named + Send]`, P3), interfaces as generic constraints,
+  interfaces extending interfaces, `Self` in interface signatures, default methods.
+
+Code generation: `Box[I]` is `yv_dyn_I { void *data; const void *vt; }`. Each interface has a
+vtable type `yv_vt_I` (drop, clone, then one slot per method taking the receiver as `void *`);
+each `struct T: I` gets slot adapters `yv_vtm_K_J` that call `yv_fn_T__m` on the boxed value,
+plus `yv_vtd_K`/`yv_vtc_K` (drop and free the block, clone into a new block) and one
+`static const yv_vt_I yv_vt_K`. Tests: `tests/p0/run_interfaces.yv`,
+`tests/p0/errors_interfaces.yv` (9 errors, 1 warning).
+
 ## Spec conformance
 
 ```sh
