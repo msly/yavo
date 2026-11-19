@@ -1,16 +1,19 @@
-# Yavo 交接文档（2026-11-19）
+# Yavo 交接文档（2026-11-19，第二批进行中）
 
 给下一个会话：先读完本文件，再按“第一步”开工。所有数字都是 2026-11-19 在本仓库实测的。
 
 ## 1. 一句话状态
 
-规范 v0.5 已冻结（`docs/`、`yavo-tests/`）；Rust 写的编译器（约 11,300 行，含 C 运行时）已实现 P0 和 P1 的大部分单线程写法：
+规范 v0.5 已冻结（`docs/`、`yavo-tests/`）；Rust 写的编译器（约 12,500 行，含 C 运行时）已实现 P0 和 P1 的大部分单线程写法：
 结构体（字段可以是 `String`/`Vec`/`Map`/枚举等拥有值）、`enum`、`T ! E` 与 `try`/`catch`、带嵌套模式的 `match`（语句和表达式）、
 `String`/`Vec[T]`/`Map[K, V]`、`[]T` 切片类型、移动与析构、字符串视图与 `of` 来源、`&T`、`&inout T` 值、`for`、`inout` 参数、可选值 `?T`、
 `panic`/`assert`/`format`/`min`/`max`/`abs`、字符串与序列方法、`io.readAll`/`io.readLine`、`fs.readText`/`fs.writeText`、`os.args`、六个目标的交叉编译。
-规范一致性：**129 项中通过 54、判错 0、不支持 62、未运行 13**。全部提交只在本地，**按用户决定暂不推远端**。
+第二批新增：结构体/枚举方法（`self`/`inout self`/`sink self`、`Self`、`Type.f()`）、用户析构 `struct X: Drop`、元组、
+不逃逸闭包（`sortBy`、`update`）、比较协议 `Eq`/`Ord` 与 `Ordering`、无载荷枚举的 `==`、`&x` 作为 `&T` 实参。
+规范一致性：**129 项中通过 65、判错 0、不支持 51、未运行 13**。全部提交只在本地，**按用户决定暂不推远端**。
 
-用户与我约定的“可用”标准：能用 Yavo 写出常见命令行小程序并在 Linux 上跑通，分三批完成（见第 9 节）。**第一批已完成**。
+用户与我约定的“可用”标准：能用 Yavo 写出常见命令行小程序并在 Linux 上跑通，分三批完成（见第 9 节）。**第一批已完成；第二批完成了大半**，
+剩 `Box`、`interface`（动态分发）和泛型，见第 10 节。
 
 ## 2. 仓库与环境
 
@@ -54,6 +57,11 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 
 | 提交 | 内容 | 一致性通过数 |
 | --- | --- | --- |
+| `9ecb2d5` | 比较协议：`struct T: Ord`（`fn cmp(self, other: &T) -> Ordering`）、`T: Eq`（`fn eq`）、签名不对 `E0502`；`Ordering` 进 prelude；无载荷枚举 `==`/`!=`；用户 `Ord` 类型可 `v.sort()`；`&x` 可传给 `&T` 形参 | 65 |
+| `31cc140` | 不逃逸闭包：`v.sortBy((a, b) => ...)`、`m.update(k, init, (v) => ...)`；闭包提升为独立函数（捕获变量作前置只读参数）；`sortBy` 走生成的 `yv_tramp_N` 和运行时 `yv_sort_ctx`；词法分析器在 `{` 内恢复换行（块体闭包可写在括号里）；`total += n`（`n: &inout int`）自动读取 | 63 |
+| `f0b8126` | 元组：类型 `(A, B)`、字面量、`t.0`（含 `t.0.1`）、`let (a, b) = t`（`_` 立即丢弃）；闭包语法开始解析，但在 `sortBy`/`update` 之外报 `U0001` | 61 |
+| `65741d7` | 用户析构 `struct X: Drop`（V10、V11、`E0801`–`E0803`）：隐藏 `yv_live` 标志，被移走的值不调用用户 `drop` | 61 |
+| `7ebf94b` | 方法：写在结构体/枚举体内，`self`/`inout self`/`sink self`，`Self`，无 `self` 的函数用 `Type.f()` 调用；`-> str of self`；`return self.name` 在返回 `str` 时视为视图 | 54 |
 | `e3112f8` | `format`/`min`/`max`/`abs`/`String{}`、字符串方法（`contains`/`startsWith`/`endsWith`/`find`/`split`/`toLower`/`toUpper`/`parseInt`）、`v.contains`/`join`/`sort`、`[]T` 切片类型、`io.readAll`/`readLine`、`fs.readText`/`writeText`、`os.args`（启动时 UTF-8 检查）；一致性运行器支持夹具 | 54 |
 | `899195a` | 第 4 项和第 7 项：`enum`、`T ! E`、`try`/`catch`、嵌套模式的 `match`（语句和表达式）、拥有值字段；`panic`/`assert`、字节字面量 | 50 |
 | `feat(p1): maps, &inout values and std imports` | `Map[K, V]`、`[:]`、`get`/`getCopy`/`getMut`/`set`/`remove`/`has`、`for k, v in m`/`in &m`、`for i, x in v`、`for x in &v`、`&inout T` 值与独占访问检查；`use std/...`、`os.exit` | 44 |
@@ -77,6 +85,11 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - 运行时 `runtime/yavo_rt.h`：输出缓冲、panic、整数检查、`yv_string`/`yv_vec`、视图函数、`YV_ALLOC_CHECK` 计数。 新增 `yv_out`（打印和 `format` 共用的输出目标）、文本查询、稳定归并排序、标准输入缓冲、文件读写（含 Windows 的 UTF-16 路径）、启动时的参数转换。
 - 枚举是 `{ tag; union { v0, v1, ... } u; }`，结果是 `{ ok; val; err; }`；全零都是合法值，所以“移走后清零”的做法照旧成立。`match` 统一走 `HPat` 模式树：检查器做可用性（usefulness）分析判断穷尽和不可达分支，代码生成成 `if`/`else if` 链；匹配拥有的临时值时，绑定拿走对应部分，其余部分在分支开头析构。只含 `some(x)`/`none`/`_` 的 `match` 仍走原来的 `match_opt`。
 - 表达式里的语句块（`catch` 块、`match` 分支块）用 `Gen::outer` 保存外层语句的临时值，跳转时一并释放；`try` 提前返回时，正在构造的结构体字段、向量元素、`sink` 实参通过 `hold`/`release` 记在临时值里，一并释放（V3、V6）。
+- 方法：解析器把方法改名为 `Type.m` 放进 `Program::fns`（`FnDecl::owner`），接收者是名为 `self` 的第一个参数；检查器 `method_call` 先查用户方法（`user_method`、`method_on_place`），统一走 `call_fn`。`inout self` 的接收者是 `HExprKind::InoutPlace(HPlace)`（可带字段路径）。C 函数名把 `.` 换成 `__`。
+- `Drop`：`types.rs` 的聚合表有 `user_drop`；带 `Drop` 的类型 C 结构里多一个 `uint8_t yv_live`，字面量置 1，析构帮助函数先看标志、清零、调用 `yv_fn_T__drop`，再析构字段。`FnCx::in_drop` 用于 `E0803`。
+- 元组：`Ty::Tuple(id)`（`tuple_of`/`tuple_elems`），C 里是成员 `f0`、`f1`…的结构；元素访问复用 `HExprKind::Field`（基类型是元组时下标就是元素号），所以移动、借用来源等规则和字段一致。
+- 闭包：`lift_closure` 用新的 `FnCx` 把闭包体检查成独立 `HFn`（名字 `closure.N`，追加在用户函数之后，下标 `n_fns + k`）；捕获变量由 `idents_expr` 找出，作为前置 `Param`（`FnCx::captures` 记录，用于错误信息）。`HProgram::tramps` 记录每个 `sortBy`/`Ord` 排序的适配函数。外层 `Pre` 只记录闭包里的名字使用，不给闭包体的语句编号。
+- 比较协议：`Checker::protocols`（按聚合 id 记 `cmp`/`eq` 函数），`protocol_compare` 生成 `Call` 加 `HExprKind::TagTest`；无载荷枚举用 `HExprKind::SameTag`。
 
 ## 6. 约定
 
@@ -92,10 +105,15 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - 借用检查按语句粒度和语句顺序：`if` 里修改、只在 `else` 里用视图也会报错；`E0305` 不看存储目标之后是否还被使用。只会多报，不会漏报。
 - 可选值：对已有位置的 `if let`/`match` 绑定一律只读；规范允许通过可写位置的绑定写入（如 T-A3 的 `n.size += 1`），这里报 `U0001`。可复制的载荷虽然按值复制，仍算作借用原位置（保守）。`a ?? b` 把 `a` 整体消费（移动）。`?? return/break/continue` 只允许作为整个 `let` 初值或赋值右侧。
 - `&inout T`：只能由 `getMut` 和 `for … in &c` 产生；还不能写出这个类型、不能 `&x` 构造（A7）、不能 `*p = v`，不能放进集合，也不能通过它存入借用值（都报 `U0001`）。独占访问检查：`&inout` 之后还会被用到时，原变量的任何使用都报 `E0102`（按“最后一次使用”判断，同样只会多报）。
-- `Map`：键只支持整数、`bool`、`str`、`String`（`Id`、元组键未做）；`update` 需要闭包，报 `U0001`。修改方法（`set`/`remove`/`getMut`/`push`/`pop`/`sort`）的接收者可以是变量或其字段链。
+- `Map`：键只支持整数、`bool`、`str`、`String`（`Id`、元组键未做）；`update` 已实现，值类型限可复制且不带借用（规范 v1 限制）。修改方法（`set`/`remove`/`getMut`/`push`/`pop`/`sort`）的接收者可以是变量或其字段链。
 - 导入：已实现的模块成员只有 `os.exit`、`os.args`、`io.readAll`/`readLine`、`fs.readText`/`writeText` 和类型 `io.Error`/`fs.Error`，其余报 `U0001`。`os.exit` 不运行析构，所以放在 `run_*` 测试末尾会让堆块检查失效（它只在 `yv_rt_exit` 里检查）。
 - 枚举和结果：不支持字面量模式（`.Num(0)`、`1 =>`）、模式里的命名字段、`if let` 带模式、比较枚举、泛型枚举、结构体里的结果字段。`catch e => return` 只能作为整个 `let` 初值、赋值右侧或语句。表达式形式的 `match` 分支和 `catch e => 值` 里的绑定，按“同一语句内的后续使用都算”处理，只会多报。
-- 标准库：`toLower`/`toUpper` 只改 ASCII 字母；`split("")` 返回整个字符串；`sort` 只支持整数、`str`、`String` 元素；`sortBy`、`update`、`Heap` 等等闭包。插值 `${...}` 里仍不能写字符串字面量（原有限制，我自己写测试时就踩了好几次，冷启动实验时值得关注）。
+- 比较：无载荷枚举已能 `==`；带载荷的枚举、元组、可选值仍不能比较。
+- 标准库：`toLower`/`toUpper` 只改 ASCII 字母；`split("")` 返回整个字符串；`sort` 支持整数、`str`、`String` 和用户 `Ord` 类型；`Heap.by` 等会保存闭包的接口还没做。插值 `${...}` 里仍不能写字符串字面量（原有限制，我自己写测试时就踩了好几次，冷启动实验时值得关注）。
+- 方法：`return self.name`（`String` 字段）在返回类型是 `str` 时自动视为视图，这是我为方法加的便利，规范第 8 节白名单没写，冷启动实验时看 agent 是否自然这么写；结构体没有自动 `clone`（要自己写方法）。
+- 闭包：只能直接作为 `sortBy`/`update` 的实参；存进变量、字段、传给用户函数、`Heap.by` 都报 `U0001`（规则 O5 的“会被保存的闭包”还没做）。闭包不能给捕获变量赋值、不能移出捕获变量、不能捕获 `&inout` 值。
+- 元组：不能给元素赋值（`t.0 = x`）、不能比较、不能整体打印、不能做 `Map` 键、`match`/`for` 里没有元组模式。
+- `&x` 只在期望 `&T` 的位置（如 `a.cmp(&b)`）可用；`let p: &T = &x`、`&inout` 构造仍未做（第 6 项）。
 - 堆块检查发现不了释放后使用。机器上没有 ASan。
 - Windows、macOS、aarch64 的产物只验证了文件格式，没有实际运行（没有真机和 CI）。
 - 共享的 Claude 文档仍是 v0.4；以仓库 `docs/` 为准。
@@ -106,7 +124,6 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 
 | 卡点 | 测试数 |
 | --- | --- |
-| `struct X: Interface`（含 `Drop`） | 9 |
 | `scope`（线程） | 7 |
 | 解引用 `*p` | 5 |
 | `Box` | 5 |
@@ -118,8 +135,9 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 | 写出 `&inout T` 类型 | 2 |
 | `Mutex` | 2 |
 | 泛型函数 | 2 |
+| 泛型结构体 | 2 |
 
-另外 T-A3/T-A3f 卡在 `Box`，T-C7、T-GR9 卡在闭包（`update`、`sortBy`），T-D1、T-GR1、T-G12 卡在 `struct X: Drop`（第 5 项）。原来卡在导入的 14 项里，12 项是 `std/sync` 的并发用例，现在卡在 `Mutex`、`Channel`、`with` 等第 12 项的内容上。
+另外 T-A3/T-A3f 卡在 `Box`（T-A3 还需要通过 `if let` 的可写绑定写入、以及 `&n.left` 这种带字段路径的 `inout` 实参），T-E2、T-G28、T-G29 也卡在 `Box`。原来卡在导入的 14 项里，12 项是 `std/sync` 的并发用例，现在卡在 `Mutex`、`Channel`、`with` 等第 12 项的内容上。T-GR9（错误比较器）现在能编译运行，但运行器还不支持 `run-allowed`，仍算未运行。
 
 未运行 13 项：`yavo fix` 7 项、`yavo verify` 报告 4 项、运行器还不支持的 `run-allowed`（T-GR9）和 `run-exit`（T-S3）各 1 项。`run-exit` 需要用平台原生方式传入非法参数，`tests/stdlib_io.rs` 已在 Unix 上验证同样的行为。
 
@@ -131,7 +149,7 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 | ~~2~~ | ~~`Map[K, V]`、`[:]`、`get`/`getMut`/`getCopy`/`set`/`remove`/`update`、`str` 键查询、`for k, v in m`~~ **已完成**，`update` 等闭包（新增通过 T-A1、T-A1p、T-A4、T-A4p、T-C1、T-C1p、T-C7f、T-C8、T-C8f、T-GR10） | 1 | A1、A4、A5、C7、C8 等 | C6、A2、A5；`docs/stdlib_contract.md` |
 | ~~3~~ | ~~`use std/...` 导入~~ **已完成**（模块内容只有 `os.exit`；导入用例转到各自的下一个卡点） | 无 | 14 项的第一卡点 | 速查卡第 5 节 |
 | ~~4~~ | ~~`enum` 与 `match`；`T ! E`、`try`、`catch`、`ok`/`err`~~ **已完成**（`899195a`） | 1 | V4、N 类、错误处理用例 | 速查卡第 3 节，语义表 V8 |
-| 5 | 结构体方法（`self`/`inout self`）、`interface`、`struct X: I`、`Box[I]`、`Eq`/`Ord` 协议 | 4 | 10 项左右 | 语义表 K1、K2、P2 |
+| 5 | ~~结构体方法、`Drop`、`Eq`/`Ord`~~ **已完成**；剩 `interface`、`struct X: I`、`Box[T]`/`Box[I]` | 4 | 剩 8 项左右 | 语义表 K1、K2、P2 |
 | 6 | `*p` 写入、写出 `&inout T` 类型并用 `&x` 构造（A7、`E0004`）；（`&inout` 值、`for x in &v`、`getMut` 已随第 2 项完成） | 2 | 5 项左右 | 语义表 A1–A4、A7 |
 | ~~7~~ | ~~`String`/`Vec` 结构体字段（字段析构、移出字段规则）~~ **已完成**（`899195a`，未依赖第 6 项） | 1、6 | C4p、E 类 | C5、规则 8 |
 | 8 | 浮点 `f64`、`totalCmp` | 无 | K1 | 语义表第 7、8 节 |
@@ -148,7 +166,7 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 | 批次 | 内容 | 状态 |
 | --- | --- | --- |
 | 第一批 | 第 4、7 项，标准库 I/O 与 `os.args`，`format`/`panic`/`assert`/`min`/`max`，字符串方法 | **已完成**，一致性 44 → 54 |
-| 第二批 | 第 5 项（方法、`interface`、`Box`、`Drop`、`Eq`/`Ord`），闭包（`sortBy`、`update`，规则 O5），第 10 项泛型，元组 | 未开始 |
+| 第二批 | 第 5 项（方法、`interface`、`Box`、`Drop`、`Eq`/`Ord`），闭包（`sortBy`、`update`，规则 O5），第 10 项泛型，元组 | **大半完成**，一致性 54 → 65；剩 `Box`、`interface`、泛型 |
 | 第三批 | 第 8 项浮点，第 9 项切片 `x[a..b]`，冷启动实验（只给速查卡，写一组典型任务） | 未开始 |
 
 判断“可用”看能否写出真实程序和冷启动实验结果，不看一致性数字：剩下的大头是 21 项并发和 11 项 `fix`/`verify`，不在可用范围内。
@@ -156,6 +174,9 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 ## 10. 下一个会话的第一步
 
 1. 设置第 2 节的环境变量，`cargo build --locked --offline --release`。
-2. 跑 `cargo test --locked --offline`，确认全部通过；跑 conformance，确认是 54 / 0 / 62 / 13。
-3. 开始第二批，先做第 5 项：结构体方法（`self`/`inout self`、`of self`）、`struct X: Drop`（V10、V11，`E0801`–`E0803`；T-D1、T-GR1、T-G12 等着它），再做 `interface`、`struct X: I`、`Box[I]`、`Eq`/`Ord`。方法调用的接收者可以复用 `mutable_place`（修改方法）和 `storage_loans`（借用来源）。
-4. 然后做闭包：先只支持库已知不逃逸的回调（`sortBy`、`update`），再按规则 O5 处理会被保存的闭包；最后第 10 项泛型和元组。
+2. 跑 `cargo test --locked --offline`，确认全部通过；跑 conformance，确认是 65 / 0 / 51 / 13。
+3. 完成第二批剩下的三项，建议顺序：
+   - `Box[T]`：`Ty::Box`，C 里是指针（全零即空，析构时判空），`Box(v)` 消费 `v`；字段、方法通过 `Box` 自动投影（白名单第 8 节）。`HPlace` 的路径要能穿过 `Box`（例如在 `path` 里加一个“解引用”步骤），这样 `n.size += 1`、`insert(&n.left, k)` 才能写；`inout_arg` 目前只接受变量，要放宽到带字段路径的位置（可复用 `InoutPlace`）。T-A3 还需要可写的 `if let` 绑定（第 7 节“可选值”那条限制）。`Box[str]`、`Box[Vec[str]]` 要报 `E0301`（T-E2、T-G28），`take(&box)` 报 `E0405`（T-G29）。
+   - `interface` 与 `struct X: I`：接口方法签名检查，`Box[I]` 用虚表（每个“实现类型 × 接口”生成一个函数指针表，`Box[I]` 是 `{ void *data; const vtable *vt; }`，虚表里含析构函数）；`Box(Dog{})` 在需要 `Box[Named]` 的地方自动转换（白名单最后一条）；接口值默认不是 `Send`（P2）。
+   - 泛型（第 10 项）：建议单态化——检查器遇到 `largest[int]` 这类实例化时按具体类型重新检查函数体，生成独立的 `HFn`；约束 `T: Ord + Copy` 用现有的 `protocol`/`is_copy` 判断。`-> ?T of xs` 实例化后不带借用时约束自动消失（O1）。
+4. 然后进入第三批：第 8 项浮点（注意 `t.0.1` 的词法处理已经在 `lexer.rs` 里特殊处理过，加浮点时别破坏）、第 9 项切片 `x[a..b]`、冷启动实验。
