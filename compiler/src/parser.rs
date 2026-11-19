@@ -439,6 +439,13 @@ impl Parser<'_, '_> {
             let close = self.bump().span;
             return Ok(TypeExpr { name: "()".into(), span: open.to(close), args: Vec::new() });
         }
+        // `[]T`: a slice.
+        if matches!(self.peek(), Tok::LBracket) && matches!(self.peek_at(1), Tok::RBracket) {
+            let open = self.bump().span;
+            self.bump();
+            let inner = self.ty_atom()?;
+            return Ok(TypeExpr { name: "[]".into(), span: open.to(inner.span), args: vec![inner] });
+        }
         if matches!(self.peek(), Tok::LBracket | Tok::LParen) {
             let sp = self.span();
             self.unsupported(sp, "slice and tuple types are not supported yet")?;

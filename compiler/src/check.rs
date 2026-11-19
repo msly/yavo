@@ -6,7 +6,7 @@ use crate::ast::*;
 use crate::diag::{Diags, Span};
 use crate::types::{
     finish_agg, map_of, map_parts, opt_inner, opt_of, ref_inner, ref_mut_inner, ref_mut_of, ref_of, register_enum,
-    register_struct, res_of, res_parts, vec_elem, vec_of, IntTy, Ty,
+    register_struct, res_of, res_parts, slice_elem, slice_of, vec_elem, vec_of, IntTy, Ty,
 };
 
 pub type LocalId = usize;
@@ -211,7 +211,59 @@ pub enum HExprKind {
     Match { scrut: Box<HExpr>, owned: bool, arms: Vec<HArm> },
     /// `panic(message)` / `assert(cond, message)`: `cond` is absent for `panic`.
     Panic { cond: Option<Box<HExpr>>, parts: Vec<PrintPart> },
+    /// `format("...")`: a new `String` built from the parts.
+    Format(Vec<PrintPart>),
+    /// `min(a, b)` / `max(a, b)` on integers.
+    MinMax { max: bool, a: Box<HExpr>, b: Box<HExpr> },
+    /// `abs(x)` on a signed integer (overflow panics).
+    Abs(Box<HExpr>),
+    /// A method that takes arguments, or a text method without a borrowing result.
+    Call2 { method: Method2, recv: Box<HExpr>, args: Vec<HExpr> },
+    /// `place.sort()`.
+    Sort(HPlace),
+    /// `io.readAll()`, `io.readLine()`, `fs.readText(p)`, `fs.writeText(p, s)`.
+    Io { op: IoOp, args: Vec<HExpr> },
+    /// `os.args()`
+    OsArgs,
+    /// A `Vec[T]` (or anything holding its elements) viewed as a `[]T`.
+    SliceOf(Box<HExpr>),
+    /// `String{}`
+    EmptyString,
     Error,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum Method2 {
+    Contains,
+    StartsWith,
+    EndsWith,
+    Find,
+    /// `s.split(sep)`: views into the receiver.
+    Split,
+    ToLower,
+    ToUpper,
+    ParseInt,
+    /// `v.contains(x)` on a vector or slice.
+    SeqContains,
+    /// `v.join(sep)` on a vector or slice of `str` / `String`.
+    Join,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum IoOp {
+    ReadAll,
+    ReadLine,
+    ReadText,
+    WriteText,
+}
+
+/// The element type of a `Vec[T]` or `[]T`.
+pub fn seq_elem(t: Ty) -> Option<Ty> {
+    match t {
+        Ty::Vec(v) => Some(vec_elem(v)),
+        Ty::Slice(s) => Some(slice_elem(s)),
+        _ => None,
+    }
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -263,7 +315,7 @@ const MODULES: &[(&str, &[&str])] = &[
     ("sync", &["Mutex", "Guard", "Channel", "SendError", "Join"]),
 ];
 const UNSUPPORTED_FNS: &[&str] = &[
-    "panic", "assert", "format", "len", "min", "max", "abs", "Box", "Rc", "Arc", "Mutex",
+    "len", "Box", "Rc", "Arc", "Mutex",
 ];
 
 struct Sig {
@@ -1081,6 +1133,9 @@ impl Checker<'_> {
     }
 
     fn struct_lit(&mut self, name: &str, name_span: Span, inits: &[FieldInit], span: Span, cx: &mut FnCx) -> HExpr {
+        if name == "String" && inits.is_empty() {
+            return HExpr { kind: HExprKind::EmptyString, ty: Ty::String, span, at: span };
+        }
         let Some(&si) = self.struct_index.get(name) else {
             if UNSUPPORTED_TYPES.contains(&name) {
                 self.mark_type_used(name);
@@ -1194,6 +1249,12 @@ impl Checker<'_> {
     fn resolve_ty(&mut self, t: &TypeExpr) -> Ty {
         if t.name == "()" {
             return Ty::Unit;
+        }
+        if t.name == "[]" {
+            return match self.resolve_ty(&t.args[0]) {
+                Ty::Error => Ty::Error,
+                e => Ty::Slice(slice_of(e)),
+            };
         }
         if t.name == "!" {
             let ok = self.resolve_ty(&t.args[0]);
@@ -1512,6 +1573,13 @@ impl Checker<'_> {
             let h = self.consume(h, cx);
             return HExpr { kind: HExprKind::Ok(Some(Box::new(h))), ty: expected, span, at };
         }
+        // A vector is viewed as a slice where `[]T` is expected (section 8 whitelist).
+        if let (Ty::Slice(s), Ty::Vec(v)) = (expected, h.ty) {
+            if slice_elem(s) == vec_elem(v) {
+                let (span, at) = (h.span, h.at);
+                return HExpr { kind: HExprKind::SliceOf(Box::new(h)), ty: expected, span, at };
+            }
+        }
         let Ty::Opt(o) = expected else { return h };
         let inner = opt_inner(o);
         let h = match h.ty {
@@ -1675,6 +1743,15 @@ impl Checker<'_> {
             HExprKind::Local(id) | HExprKind::Move(id) => cx.locals[*id].loans.clone(),
             HExprKind::Deref(inner) => self.loans_of(inner, cx),
             HExprKind::AddrOf(inner) => self.storage_loans(inner, cx),
+            HExprKind::SliceOf(inner) => match inner.kind {
+                HExprKind::Local(_) | HExprKind::Field { .. } | HExprKind::Deref(_) => self.storage_loans(inner, cx),
+                _ => {
+                    let mut out = vec![Loan::Temp];
+                    out.extend(self.loans_of(inner, cx));
+                    out
+                }
+            },
+            HExprKind::Call2 { method: Method2::Split, recv, .. } => recv_loans(recv),
             HExprKind::Some(inner) => self.loans_of(inner, cx),
             HExprKind::Ok(Some(inner)) | HExprKind::ErrVal(inner) | HExprKind::Try(inner) => self.loans_of(inner, cx),
             HExprKind::Catch { value, handler, .. } => {
@@ -2351,7 +2428,7 @@ impl Checker<'_> {
         cx: &mut FnCx,
     ) -> Option<HStmtKind> {
         let stmt_idx = cx.cur;
-        let iterable = |t: Ty| matches!(t, Ty::Vec(_) | Ty::Map(_));
+        let iterable = |t: Ty| matches!(t, Ty::Vec(_) | Ty::Map(_) | Ty::Slice(_));
         let not_iterable = |this: &mut Self, t: Ty, sp: Span| {
             this.diags
                 .error("E0001", sp, format!("cannot iterate over a value of type `{t}`"))
@@ -2373,6 +2450,12 @@ impl Checker<'_> {
                     return None;
                 }
                 Ty::Error => return None,
+                Ty::Slice(_) => {
+                    self.diags
+                        .error("E0101", iter.span, "a slice (`[]T`) is read-only, so `for ... in &` cannot modify its elements")
+                        .note("iterate over the vector it views instead");
+                    return None;
+                }
                 t if !iterable(t) => {
                     not_iterable(self, t, iter.span);
                     return None;
@@ -2424,6 +2507,10 @@ impl Checker<'_> {
             Ty::Ref(r) => ref_inner(r),
             t => t,
         };
+        // A slice variable views another variable's elements: that one must not change either.
+        if let Ty::Slice(_) = coll_ty {
+            guarded.extend(cx.locals[coll].loans.iter().filter_map(|l| if let Loan::Local(v) = l { Some(*v) } else { None }));
+        }
         let mut ref_loans = vec![Loan::Local(coll)];
         ref_loans.extend(cx.locals[coll].loans.iter().copied());
         let elem_loans = cx.locals[coll].loans.clone();
@@ -2456,13 +2543,13 @@ impl Checker<'_> {
             Map { key: LocalId, key_ref: bool, val: LocalId, val_ref: bool },
         }
         let shape = match coll_ty {
-            Ty::Vec(vid) => {
+            Ty::Vec(_) | Ty::Slice(_) => {
                 let (index, x) = match second {
                     Some((n2, s2)) => (Some(first), (n2, *s2)),
                     None => (None, first),
                 };
                 let index = index.map(|(n, sp)| self.declare(cx, n, sp, Ty::Int(IntTy::I64), LocalKind::LoopVar));
-                let xty = access(vec_elem(vid));
+                let xty = access(seq_elem(coll_ty).expect("a vector or slice"));
                 let elem = bind(self, cx, x, xty);
                 Shape::Vec { index, elem, by_ref: matches!(xty, Ty::Ref(_) | Ty::RefMut(_)) }
             }
@@ -2738,7 +2825,7 @@ impl Checker<'_> {
                 .error("E0001", h.span, format!("a value that can fail (`{}`) cannot be printed directly", h.ty))
                 .note("handle the error first with `try`, `catch` or `match`");
         }
-        if let Ty::Struct(_) | Ty::Vec(_) | Ty::Map(_) = h.ty {
+        if let Ty::Struct(_) | Ty::Vec(_) | Ty::Map(_) | Ty::Slice(_) = h.ty {
             self.diags
                 .error("E0001", h.span, format!("a value of type `{}` cannot be printed directly", h.ty))
                 .note("print its parts instead, e.g. `println(\"${p.x} ${p.y}\")`");
@@ -3392,6 +3479,32 @@ impl Checker<'_> {
                             return self.result_value(true, arg, expected, span, cx);
                         }
                         "panic" | "assert" => return self.panic_call(name, args, span, callee.span, cx),
+                        "format" => {
+                            let [arg] = args else {
+                                self.diags.error("E0012", span, "`format` takes exactly one argument (an interpolated string)");
+                                return err_expr(span);
+                            };
+                            let parts = self.print_parts(arg, cx);
+                            return HExpr { kind: HExprKind::Format(parts), ty: Ty::String, span, at: callee.span };
+                        }
+                        "min" | "max" => return self.min_max(name == "max", args, expected, span, callee.span, cx),
+                        "abs" => {
+                            let [arg] = args else {
+                                self.diags.error("E0012", span, "`abs` takes exactly one argument");
+                                return err_expr(span);
+                            };
+                            let h = self.expr(arg, expected, cx);
+                            let h = self.deref(h);
+                            return match h.ty {
+                                Ty::Int(t) if t.signed() => HExpr { kind: HExprKind::Abs(Box::new(h)), ty: Ty::Int(t), span, at: callee.span },
+                                Ty::Int(_) => h,
+                                Ty::Error => err_expr(span),
+                                other => {
+                                    self.diags.error("E0001", h.span, format!("`abs` needs an integer, found `{other}`"));
+                                    err_expr(span)
+                                }
+                            };
+                        }
                         _ => {}
                     }
                 }
@@ -3449,14 +3562,22 @@ impl Checker<'_> {
                     } else {
                         h
                     };
-                    if let HExprKind::StrView(inner) = &h.kind {
+                    // Passing a `Vec[T]` to a `[]T` parameter borrows it for the call (whitelist).
+                    let h = match (exp, h.ty) {
+                        (Some(Ty::Slice(s)), Ty::Vec(v)) if slice_elem(s) == vec_elem(v) => {
+                            let (span, at) = (h.span, h.at);
+                            HExpr { kind: HExprKind::SliceOf(Box::new(h)), ty: Ty::Slice(s), span, at }
+                        }
+                        _ => h,
+                    };
+                    if let HExprKind::StrView(inner) | HExprKind::SliceOf(inner) = &h.kind {
                         if let HExprKind::Local(id) = inner.kind {
                             borrowed.push(id);
                         }
                     }
                     let used = match &h.kind {
                         HExprKind::Local(id) => Some(*id),
-                        HExprKind::StrView(x) | HExprKind::Deref(x) => match x.kind {
+                        HExprKind::StrView(x) | HExprKind::Deref(x) | HExprKind::SliceOf(x) => match x.kind {
                             HExprKind::Local(id) => Some(id),
                             _ => None,
                         },
@@ -3519,6 +3640,9 @@ impl Checker<'_> {
                     if tn == "os" && name == "exit" {
                         return self.exit_call(args, span, at, cx);
                     }
+                    if let Some(h) = self.module_call(tn, name, args, span, at, cx) {
+                        return h;
+                    }
                     self.diags.error("U0001", at, format!("`{tn}.{name}` is not supported yet"));
                     return err_expr(span);
                 }
@@ -3532,6 +3656,9 @@ impl Checker<'_> {
         if name == "pop" {
             return self.pop_call(base, args, span, at, cx);
         }
+        if name == "sort" {
+            return self.sort_call(base, args, span, at, cx);
+        }
         if matches!(name, "set" | "remove" | "getMut" | "update") {
             if let Some(Ty::Map(mid)) = self.peek_place_ty(base, cx) {
                 return self.map_write_call(base, mid, name, args, span, at, cx);
@@ -3539,6 +3666,10 @@ impl Checker<'_> {
         }
         let recv = self.expr(base, None, cx);
         let recv = self.deref(recv);
+        let recv = match self.method2(recv, name, args, span, at, cx) {
+            Ok(h) => return h,
+            Err(r) => r,
+        };
         if let Ty::Map(mid) = recv.ty {
             match name {
                 "get" | "getCopy" | "has" => return self.map_read(recv, mid, name, args, span, at, cx),
@@ -3555,6 +3686,7 @@ impl Checker<'_> {
             (Ty::String, "len") => (Builtin::StringLen, Ty::Int(IntTy::I64)),
             (Ty::String, "clone") => (Builtin::StringClone, Ty::String),
             (Ty::Vec(_), "len") => (Builtin::VecLen, Ty::Int(IntTy::I64)),
+            (Ty::Slice(_), "len") => (Builtin::VecLen, Ty::Int(IntTy::I64)),
             (Ty::Vec(_), "clone") => (Builtin::VecClone, recv.ty),
             (Ty::Str | Ty::String, "trim") => (Builtin::Trim, Ty::Str),
             (Ty::Str | Ty::String, "fields") => (Builtin::Fields, Ty::Vec(vec_of(Ty::Str))),
@@ -3982,9 +4114,9 @@ impl Checker<'_> {
         let i = self.expr(index, None, cx);
         let elem = match (b.ty, i.ty) {
             (Ty::Error, _) | (_, Ty::Error) => return err_expr(span),
-            (Ty::Vec(id), Ty::Int(_)) => vec_elem(id),
+            (Ty::Vec(_) | Ty::Slice(_), Ty::Int(_)) => seq_elem(b.ty).expect("a vector or slice"),
             (Ty::Str | Ty::String, Ty::Int(_)) => Ty::Int(IntTy::U8),
-            (Ty::Vec(_) | Ty::Str | Ty::String, other) => {
+            (Ty::Vec(_) | Ty::Slice(_) | Ty::Str | Ty::String, other) => {
                 self.diags.error("E0001", i.span, format!("an index must be an integer, found `{other}`"));
                 return err_expr(span);
             }
@@ -4646,6 +4778,157 @@ impl Checker<'_> {
     }
 
     fn conversion_inner(&mut self, to: IntTy, checked: bool, args: &[Expr], at: Span, span: Span, cx: &mut FnCx) -> HExpr {
+        self.conversion_body(to, checked, args, at, span, cx)
+    }
+
+    /// `min(a, b)` / `max(a, b)` on two integers of the same type.
+    #[allow(clippy::too_many_arguments)]
+    fn min_max(&mut self, max: bool, args: &[Expr], expected: Option<Ty>, span: Span, at: Span, cx: &mut FnCx) -> HExpr {
+        let name = if max { "max" } else { "min" };
+        let [a, b] = args else {
+            self.diags.error("E0012", span, format!("`{name}` takes exactly two arguments"));
+            return err_expr(span);
+        };
+        let (ha, hb) = self.pair(a, b, expected, cx);
+        match (ha.ty, hb.ty) {
+            (Ty::Error, _) | (_, Ty::Error) => err_expr(span),
+            (Ty::Int(x), Ty::Int(y)) if x == y => {
+                HExpr { kind: HExprKind::MinMax { max, a: Box::new(ha), b: Box::new(hb) }, ty: Ty::Int(x), span, at }
+            }
+            (x, y) => {
+                self.diags
+                    .error("E0001", span, format!("`{name}` needs two integers of the same type, found `{x}` and `{y}`"))
+                    .note("convert one side explicitly, e.g. `int(...)`");
+                err_expr(span)
+            }
+        }
+    }
+
+    /// `io.readAll()`, `io.readLine()`, `fs.readText(path)`, `fs.writeText(path, text)`,
+    /// `os.args()` (stdlib contract §5). `None` for other module members.
+    fn module_call(&mut self, m: &str, name: &str, args: &[Expr], span: Span, at: Span, cx: &mut FnCx) -> Option<HExpr> {
+        let lib = |this: &Self, e: &str| -> Ty { this.structs[this.struct_index[e]].ty };
+        let (op, nargs, ty) = match (m, name) {
+            ("os", "args") => {
+                if !args.is_empty() {
+                    self.diags.error("E0012", span, "`os.args` takes no arguments");
+                    return Some(err_expr(span));
+                }
+                return Some(HExpr { kind: HExprKind::OsArgs, ty: Ty::Slice(slice_of(Ty::Str)), span, at });
+            }
+            ("io", "readAll") => (IoOp::ReadAll, 0, Ty::Res(res_of(Ty::String, lib(self, "io.Error")))),
+            ("io", "readLine") => (IoOp::ReadLine, 0, Ty::Res(res_of(Ty::Opt(opt_of(Ty::String)), lib(self, "io.Error")))),
+            ("fs", "readText") => (IoOp::ReadText, 1, Ty::Res(res_of(Ty::String, lib(self, "fs.Error")))),
+            ("fs", "writeText") => (IoOp::WriteText, 2, Ty::Res(res_of(Ty::Unit, lib(self, "fs.Error")))),
+            _ => return None,
+        };
+        if args.len() != nargs {
+            let what = ["no arguments", "one argument (the path)", "two arguments (the path and the text)"][nargs];
+            self.diags.error("E0012", span, format!("`{m}.{name}` takes {what}"));
+            return Some(err_expr(span));
+        }
+        let mut hargs = Vec::new();
+        for a in args {
+            let h = self.expr(a, Some(Ty::Str), cx);
+            let h = self.deref(h);
+            let h = if h.ty == Ty::String {
+                let (span, at) = (h.span, h.at);
+                HExpr { kind: HExprKind::StrView(Box::new(h)), ty: Ty::Str, span, at }
+            } else {
+                h
+            };
+            self.expect_ty(&h, Ty::Str);
+            hargs.push(h);
+        }
+        Some(HExpr { kind: HExprKind::Io { op, args: hargs }, ty, span, at })
+    }
+
+    /// `v.sort()`: a stable sort of a writable vector whose elements are ordered (K1).
+    fn sort_call(&mut self, base: &Expr, args: &[Expr], span: Span, at: Span, cx: &mut FnCx) -> HExpr {
+        let Some(place) = self.mutable_place(base, "sort", cx) else { return err_expr(span) };
+        if !args.is_empty() {
+            self.diags
+                .error("E0012", span, "`sort` takes no arguments")
+                .note("to sort by a custom order use `sortBy((a, b) => ...)`");
+            return err_expr(span);
+        }
+        match place.ty {
+            Ty::Vec(v) => match vec_elem(v) {
+                Ty::Int(_) | Ty::Str | Ty::String => HExpr { kind: HExprKind::Sort(place), ty: Ty::Unit, span, at },
+                Ty::Error => err_expr(span),
+                e => {
+                    self.diags
+                        .error("E0501", span, format!("values of type `{e}` cannot be ordered, so `sort` cannot be used"))
+                        .note("sort by a key with `sortBy((a, b) => ...)` (closures are not supported yet)");
+                    err_expr(span)
+                }
+            },
+            Ty::Error => err_expr(span),
+            other => {
+                self.diags.error("U0001", at, format!("method `sort` on `{other}` is not supported yet"));
+                err_expr(span)
+            }
+        }
+    }
+
+    /// Text and sequence methods that take arguments or are new in the stdlib step:
+    /// `contains`, `startsWith`, `endsWith`, `find`, `split`, `toLower`, `toUpper`, `parseInt`,
+    /// and `contains`/`join` on vectors and slices. `None` when `name` is none of these.
+    #[allow(clippy::too_many_arguments)]
+    fn method2(&mut self, recv: HExpr, name: &str, args: &[Expr], span: Span, at: Span, cx: &mut FnCx) -> Result<HExpr, HExpr> {
+        let int = Ty::Int(IntTy::I64);
+        let text = matches!(recv.ty, Ty::Str | Ty::String);
+        let (method, ty, arg_ty) = match (name, recv.ty) {
+            ("contains", _) if text => (Method2::Contains, Ty::Bool, Some(Ty::Str)),
+            ("startsWith", _) if text => (Method2::StartsWith, Ty::Bool, Some(Ty::Str)),
+            ("endsWith", _) if text => (Method2::EndsWith, Ty::Bool, Some(Ty::Str)),
+            ("find", _) if text => (Method2::Find, Ty::Opt(opt_of(int)), Some(Ty::Str)),
+            ("split", _) if text => (Method2::Split, Ty::Vec(vec_of(Ty::Str)), Some(Ty::Str)),
+            ("toLower", _) if text => (Method2::ToLower, Ty::String, None),
+            ("toUpper", _) if text => (Method2::ToUpper, Ty::String, None),
+            ("parseInt", _) if text => (Method2::ParseInt, Ty::Opt(opt_of(int)), None),
+            ("contains", Ty::Vec(_) | Ty::Slice(_)) => {
+                let e = seq_elem(recv.ty).expect("a sequence");
+                if !matches!(e, Ty::Int(_) | Ty::Bool | Ty::Str | Ty::String) {
+                    self.diags.error("E0501", span, format!("values of type `{e}` cannot be compared, so `contains` cannot be used"));
+                    return Ok(err_expr(span));
+                }
+                // `String` elements are looked up with a `str` (like map keys, C6).
+                (Method2::SeqContains, Ty::Bool, Some(if e == Ty::String { Ty::Str } else { e }))
+            }
+            ("join", Ty::Vec(_) | Ty::Slice(_)) => {
+                let e = seq_elem(recv.ty).expect("a sequence");
+                if !matches!(e, Ty::Str | Ty::String) {
+                    self.diags.error("E0001", span, format!("`join` needs text elements (`str` or `String`), found `{e}`"));
+                    return Ok(err_expr(span));
+                }
+                (Method2::Join, Ty::String, Some(Ty::Str))
+            }
+            _ => return Err(recv),
+        };
+        let want = usize::from(arg_ty.is_some());
+        if args.len() != want {
+            let what = if want == 0 { "no arguments".to_string() } else { "exactly one argument".to_string() };
+            self.diags.error("E0012", span, format!("`{name}` takes {what}"));
+            return Ok(err_expr(span));
+        }
+        let mut hargs = Vec::new();
+        if let (Some(t), [a]) = (arg_ty, args) {
+            let h = self.expr(a, Some(t), cx);
+            let h = self.deref(h);
+            let h = if t == Ty::Str && h.ty == Ty::String {
+                let (span, at) = (h.span, h.at);
+                HExpr { kind: HExprKind::StrView(Box::new(h)), ty: Ty::Str, span, at }
+            } else {
+                h
+            };
+            self.expect_ty(&h, t);
+            hargs.push(h);
+        }
+        Ok(HExpr { kind: HExprKind::Call2 { method, recv: Box::new(recv), args: hargs }, ty, span, at })
+    }
+
+    fn conversion_body(&mut self, to: IntTy, checked: bool, args: &[Expr], at: Span, span: Span, cx: &mut FnCx) -> HExpr {
         let [arg] = args else {
             let form = if checked { format!("{to}(x)") } else { format!("{to}.wrap(x)") };
             self.diags.error("E0012", span, format!("`{form}` takes exactly one argument"));

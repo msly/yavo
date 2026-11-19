@@ -107,7 +107,7 @@ pub fn generate(prog: &HProgram, file: &str) -> String {
     }
     let enums: Vec<&HStruct> = prog.structs.iter().filter(|s| matches!(s.ty, Ty::Enum(_))).collect();
     for e in &enums {
-        let _ = writeln!(g.out, "static void yv_print_{}(int fd, const {} *p);", e.ty.key(), e.ty.c_name());
+        let _ = writeln!(g.out, "static void yv_print_{}(const yv_out *o, const {} *p);", e.ty.key(), e.ty.c_name());
     }
     g.out.push('\n');
     for s in &owned_aggs {
@@ -178,7 +178,7 @@ pub fn generate(prog: &HProgram, file: &str) -> String {
     let main = prog.fns.iter().position(|f| f.name == "main").expect("checked: main exists");
     let _ = writeln!(
         g.out,
-        "int main(void) {{\n    yv_rt_init(yv_source_file);\n    {}();\n    return yv_rt_exit();\n}}",
+        "int main(int argc, char **argv) {{\n    yv_rt_init(yv_source_file);\n    yv_rt_args(argc, argv);\n    {}();\n    return yv_rt_exit();\n}}",
         g.fn_names[main]
     );
     g.out
@@ -267,15 +267,16 @@ fn agg_helpers(out: &mut String, s: &HStruct) {
     );
 }
 
-/// Writes one value for `${...}` in an enum's printed form; `None` for types shown as `..`.
-fn value_writer(fd: &str, t: Ty, v: &str) -> Option<String> {
+/// Writes one value of `${...}` to the output target `o` (a `const yv_out *`); `None` for types
+/// that have no printed form (shown as `..` inside an enum's payload).
+fn value_writer(o: &str, t: Ty, v: &str) -> Option<String> {
     Some(match t {
-        Ty::Int(i) if i.signed() => format!("yv_write_i64({fd}, (int64_t){v});"),
-        Ty::Int(_) => format!("yv_write_u64({fd}, (uint64_t){v});"),
-        Ty::Bool => format!("yv_write_bool({fd}, {v});"),
-        Ty::Str => format!("yv_write_str({fd}, {v});"),
-        Ty::String => format!("yv_write_str({fd}, yv_string_view(&{v}));"),
-        Ty::Enum(_) => format!("yv_print_{}({fd}, &{v});", t.key()),
+        Ty::Int(i) if i.signed() => format!("yv_out_i64({o}, (int64_t){v});"),
+        Ty::Int(_) => format!("yv_out_u64({o}, (uint64_t){v});"),
+        Ty::Bool => format!("yv_out_bool({o}, {v});"),
+        Ty::Str => format!("yv_out_str({o}, {v});"),
+        Ty::String => format!("yv_out_str({o}, yv_string_view(&{v}));"),
+        Ty::Enum(_) => format!("yv_print_{}({o}, &{v});", t.key()),
         _ => return None,
     })
 }
@@ -283,18 +284,18 @@ fn value_writer(fd: &str, t: Ty, v: &str) -> Option<String> {
 /// `Name` for a case without payload, `Name(field: value, ...)` otherwise.
 fn enum_printer(out: &mut String, e: &HStruct) {
     let (key, c) = (e.ty.key(), e.ty.c_name());
-    let _ = writeln!(out, "static void yv_print_{key}(int fd, const {c} *p) {{\n    switch (p->tag) {{");
+    let _ = writeln!(out, "static void yv_print_{key}(const yv_out *o, const {c} *p) {{\n    switch (p->tag) {{");
     for (vi, (name, fields)) in e.variants.iter().enumerate() {
-        let _ = write!(out, "    case {vi}:\n        yv_write(fd, {}, {});", c_string(name.as_bytes()), name.len());
+        let _ = write!(out, "    case {vi}:\n        yv_out_bytes(o, {}, {});", c_string(name.as_bytes()), name.len());
         if !fields.is_empty() {
-            out.push_str("\n        yv_write(fd, \"(\", 1);");
+            out.push_str("\n        yv_out_bytes(o, \"(\", 1);");
             for (i, (fname, t)) in fields.iter().enumerate() {
                 let label = format!("{}{fname}: ", if i > 0 { ", " } else { "" });
-                let _ = write!(out, "\n        yv_write(fd, {}, {});", c_string(label.as_bytes()), label.len());
-                let w = value_writer("fd", *t, &format!("p->u.v{vi}.f_{fname}")).unwrap_or_else(|| "yv_write(fd, \"..\", 2);".into());
+                let _ = write!(out, "\n        yv_out_bytes(o, {}, {});", c_string(label.as_bytes()), label.len());
+                let w = value_writer("o", *t, &format!("p->u.v{vi}.f_{fname}")).unwrap_or_else(|| "yv_out_bytes(o, \"..\", 2);".into());
                 let _ = write!(out, "\n        {w}");
             }
-            out.push_str("\n        yv_write(fd, \")\", 1);");
+            out.push_str("\n        yv_out_bytes(o, \")\", 1);");
         }
         out.push_str("\n        break;\n");
     }
@@ -941,8 +942,7 @@ impl Gen {
             }
             HStmtKind::ForEach { vec, index, elem, by_ref, body } => {
                 let (v, vty) = self.collection(f, *vec);
-                let Ty::Vec(vid) = vty else { unreachable!() };
-                let ec = vec_elem(vid).c_name();
+                let ec = seq_elem(vty).expect("checked: a vector or slice").c_name();
                 let i = self.fresh();
                 let x = local_name(&f.locals, *elem);
                 // The checker forbids changing `v` during the loop, so `len` and `ptr` stay valid.
@@ -998,8 +998,10 @@ impl Gen {
                 // Evaluate all interpolation operands in source order before any
                 // outer output. Store values, not a heap-allocated formatted string.
                 // A failing operand must not leave an already-written outer prefix.
-                let writes = self.part_writes(*fd, parts, f);
+                let o = self.fresh();
+                let writes = self.part_writes(&format!("&{o}"), parts, f);
                 self.line(&format!("yv_output_at({});", pos(s.span)));
+                self.line(&format!("const yv_out {o} = {{{fd}, NULL, 0, 0}};"));
                 for write in writes {
                     self.line(&write);
                 }
@@ -1018,21 +1020,22 @@ impl Gen {
         }
     }
 
-    /// Evaluates the values of a message (in source order) and returns the calls that write it.
-    fn part_writes(&mut self, fd: u8, parts: &[PrintPart], f: &HFn) -> Vec<String> {
+    /// Evaluates the values of a message (in source order) and returns the calls that write it
+    /// to the output target `o` (a `const yv_out *` expression).
+    fn part_writes(&mut self, o: &str, parts: &[PrintPart], f: &HFn) -> Vec<String> {
         let mut writes = Vec::new();
         for part in parts {
             match part {
                 PrintPart::Text(t) => {
                     if !t.is_empty() {
                         let lit = c_string(t.as_bytes());
-                        writes.push(format!("yv_write({fd}, {lit}, {});", t.len()));
+                        writes.push(format!("yv_out_bytes({o}, {lit}, {});", t.len()));
                     }
                 }
                 PrintPart::Value(e) => {
                     let v = self.borrowed(e, f);
                     let v = self.bind(e.ty, &v);
-                    let call = value_writer(&fd.to_string(), e.ty, &v).expect("checked: a printable type");
+                    let call = value_writer(o, e.ty, &v).expect("checked: a printable type");
                     writes.push(call);
                 }
             }
@@ -1102,6 +1105,108 @@ impl Gen {
             self.indent -= 1;
         }
         self.line("} else {\n    YV_UNREACHABLE();\n}".replace('\n', &format!("\n{}", "    ".repeat(self.indent))).as_str());
+    }
+
+    /// A `str` view of a text value (borrowing a `String`).
+    fn text_view(&mut self, e: &HExpr, f: &HFn) -> String {
+        if e.ty == Ty::String {
+            let s = self.borrowed(e, f);
+            format!("yv_string_view(&{s})")
+        } else {
+            self.expr(e, f)
+        }
+    }
+
+    /// Text methods and `contains`/`join` on vectors and slices.
+    fn call2(&mut self, method: Method2, recv: &HExpr, args: &[HExpr], e: &HExpr, f: &HFn) -> String {
+        let at = pos(e.at);
+        if matches!(method, Method2::SeqContains | Method2::Join) {
+            let v = self.borrowed(recv, f);
+            let x = self.expr(&args[0], f);
+            let elem = seq_elem(recv.ty).expect("checked: a sequence");
+            let ec = elem.c_name();
+            let (t, i) = (self.fresh(), self.fresh());
+            let item = format!("((const {ec} *)({v}).ptr)[{i}]");
+            let view = |item: &str| if elem == Ty::String { format!("yv_string_view(&{item})") } else { item.to_string() };
+            if method == Method2::SeqContains {
+                let eq = match elem {
+                    Ty::Str | Ty::String => format!("yv_str_eq({}, {x})", view(&item)),
+                    _ => format!("{item} == {x}"),
+                };
+                self.line(&format!("bool {t} = false;"));
+                self.line(&format!("for (int64_t {i} = 0; {i} < ({v}).len; {i}++) if ({eq}) {{ {t} = true; break; }}"));
+            } else {
+                self.line(&format!("yv_string {t} = {{0}};"));
+                self.line(&format!("for (int64_t {i} = 0; {i} < ({v}).len; {i}++) {{"));
+                self.line(&format!("    if ({i} > 0) yv_string_push(&{t}, {x}, {at});"));
+                self.line(&format!("    yv_string_push(&{t}, {}, {at});", view(&item)));
+                self.line("}");
+            }
+            return t;
+        }
+        let s = self.text_view(recv, f);
+        let s = self.bind(Ty::Str, &s);
+        let arg = match args.first() {
+            Some(a) => self.expr(a, f),
+            None => String::new(),
+        };
+        match method {
+            Method2::Contains => self.bind(e.ty, &format!("(yv_str_find({s}, {arg}) >= 0)")),
+            Method2::StartsWith => self.bind(e.ty, &format!("yv_str_starts({s}, {arg})")),
+            Method2::EndsWith => self.bind(e.ty, &format!("yv_str_ends({s}, {arg})")),
+            Method2::Split => self.bind_mut(e.ty, &format!("yv_str_split({s}, {arg}, {at})")),
+            Method2::ToLower => self.bind_mut(e.ty, &format!("yv_str_case({s}, false, {at})")),
+            Method2::ToUpper => self.bind_mut(e.ty, &format!("yv_str_case({s}, true, {at})")),
+            Method2::Find | Method2::ParseInt => {
+                let (r, n) = (self.fresh(), self.fresh());
+                self.line(&format!("{} {r} = {{0}};", e.ty.c_name()));
+                if method == Method2::Find {
+                    self.line(&format!("int64_t {n} = yv_str_find({s}, {arg});"));
+                    self.line(&format!("if ({n} >= 0) {{ {r}.has = true; {r}.val = {n}; }}"));
+                } else {
+                    self.line(&format!("int64_t {n} = 0;"));
+                    self.line(&format!("if (yv_str_parse_int({s}, &{n})) {{ {r}.has = true; {r}.val = {n}; }}"));
+                }
+                r
+            }
+            Method2::SeqContains | Method2::Join => unreachable!("handled above"),
+        }
+    }
+
+    /// `io.readAll`, `io.readLine`, `fs.readText`, `fs.writeText`: the runtime returns a status
+    /// (0 ok, 1 invalid UTF-8, 2 system error, 3 invalid path) that becomes the error case with
+    /// the same number - 1.
+    fn io_call(&mut self, op: IoOp, args: &[HExpr], e: &HExpr, f: &HFn) -> String {
+        let at = pos(e.at);
+        let vals: Vec<String> = args.iter().map(|a| self.expr(a, f)).collect();
+        let (r, s, code, st, has) = (self.fresh(), self.fresh(), self.fresh(), self.fresh(), self.fresh());
+        self.line(&format!("{} {r} = {{0}};", e.ty.c_name()));
+        self.line(&format!("yv_string {s} = {{0}};"));
+        self.line(&format!("int64_t {code} = 0;"));
+        let call = match op {
+            IoOp::ReadAll => format!("yv_io_read_all(&{s}, &{code}, {at})"),
+            IoOp::ReadLine => {
+                self.line(&format!("bool {has} = false;"));
+                format!("yv_io_read_line(&{s}, &{has}, &{code}, {at})")
+            }
+            IoOp::ReadText => format!("yv_fs_read_text({}, &{s}, &{code}, {at})", vals[0]),
+            IoOp::WriteText => format!("yv_fs_write_text({}, {}, &{code}, {at})", vals[0], vals[1]),
+        };
+        self.line(&format!("int {st} = {call};"));
+        self.line(&format!("if ({st} == 0) {{"));
+        self.line(&format!("    {r}.ok = true;"));
+        match op {
+            IoOp::ReadAll | IoOp::ReadText => self.line(&format!("    {r}.val = {s};")),
+            IoOp::ReadLine => self.line(&format!("    if ({has}) {{ {r}.val.has = true; {r}.val.val = {s}; }}")),
+            IoOp::WriteText => {}
+        }
+        self.line("} else {");
+        self.line(&format!("    yv_string_drop(&{s});"));
+        self.line(&format!("    {r}.err.tag = (uint32_t)({st} - 1);"));
+        self.line(&format!("    if ({st} == 1) {r}.err.u.v0.f_offset = {code};"));
+        self.line(&format!("    else if ({st} == 2) {r}.err.u.v1.f_code = {code};"));
+        self.line("}");
+        r
     }
 
     /// The C conditions under which the value `v` (of type `ty`) matches `p`.
@@ -1477,7 +1582,9 @@ impl Gen {
                 }
                 // The message is only built when the panic happens.
                 let mark = self.temps.len();
-                let writes = self.part_writes(2, parts, f);
+                let o = self.fresh();
+                let writes = self.part_writes(&format!("&{o}"), parts, f);
+                self.line(&format!("const yv_out {o} = {{2, NULL, 0, 0}};"));
                 self.line(&format!("yv_panic_begin(\"{category}\", {at});"));
                 if parts.is_empty() {
                     self.line(&format!("yv_write(2, \"{fallback}\", {});", fallback.len()));
@@ -1494,6 +1601,46 @@ impl Gen {
                 }
                 String::new()
             }
+            HExprKind::Format(parts) => {
+                let (o, s) = (self.fresh(), self.fresh());
+                let writes = self.part_writes(&format!("&{o}"), parts, f);
+                self.line(&format!("yv_string {s} = {{0}};"));
+                self.line(&format!("const yv_out {o} = {{0, &{s}, {}}};", pos(e.at)));
+                for w in writes {
+                    self.line(&w);
+                }
+                s
+            }
+            HExprKind::MinMax { max, a, b } => {
+                let x = self.expr(a, f);
+                let y = self.expr(b, f);
+                let op = if *max { ">" } else { "<" };
+                self.bind(e.ty, &format!("({x} {op} {y} ? {x} : {y})"))
+            }
+            HExprKind::Abs(inner) => {
+                let v = self.expr(inner, f);
+                let v = self.bind(e.ty, &v);
+                let Ty::Int(t) = e.ty else { unreachable!() };
+                self.bind(e.ty, &format!("({v} < 0 ? yv_neg_{}({v}, {}) : {v})", t.suffix(), pos(e.at)))
+            }
+            HExprKind::Call2 { method, recv, args } => self.call2(*method, recv, args, e, f),
+            HExprKind::Sort(place) => {
+                let (v, vty) = self.recv_place(place, f);
+                let elem = seq_elem(vty).expect("checked: a vector");
+                let cmp = match elem {
+                    Ty::Int(t) => t.suffix().to_string(),
+                    other => other.key(),
+                };
+                self.line(&format!("yv_sort(&{v}, sizeof({}), yv_cmp_{cmp}, {});", elem.c_name(), pos(e.at)));
+                String::new()
+            }
+            HExprKind::Io { op, args } => self.io_call(*op, args, e, f),
+            HExprKind::OsArgs => "yv_args".to_string(),
+            HExprKind::SliceOf(inner) => {
+                let v = self.borrowed(inner, f);
+                self.bind(e.ty, &v)
+            }
+            HExprKind::EmptyString => self.bind_mut(e.ty, "((yv_string){0})"),
             HExprKind::AddrOf(inner) => {
                 let p = self.expr(inner, f);
                 format!("(&{p})")
@@ -1568,12 +1715,12 @@ impl Gen {
                 let at = pos(e.at);
                 let text = match base.ty {
                     // A non-copyable element is read in place: the value is a pointer into `v`.
-                    Ty::Vec(vid) if matches!(e.ty, Ty::Ref(_)) => {
-                        let et = vec_elem(vid).c_name();
+                    Ty::Vec(_) | Ty::Slice(_) if matches!(e.ty, Ty::Ref(_)) => {
+                        let et = seq_elem(base.ty).expect("a sequence").c_name();
                         format!("(({et} *)yv_vec_at(&{b}, (int64_t)sizeof({et}), (int64_t){i}, {at}))")
                     }
-                    Ty::Vec(vid) => {
-                        let et = vec_elem(vid).c_name();
+                    Ty::Vec(_) | Ty::Slice(_) => {
+                        let et = seq_elem(base.ty).expect("a sequence").c_name();
                         format!("(*({et} *)yv_vec_at(&{b}, (int64_t)sizeof({et}), (int64_t){i}, {at}))")
                     }
                     Ty::Str => format!("yv_str_at({b}, (int64_t){i}, {at})"),
@@ -1736,6 +1883,10 @@ impl Gen {
                 | HExprKind::Try(_)
                 | HExprKind::Catch { .. }
                 | HExprKind::Match { .. }
+                | HExprKind::Format(_)
+                | HExprKind::EmptyString
+                | HExprKind::Io { .. }
+                | HExprKind::Call2 { method: Method2::Split | Method2::ToLower | Method2::ToUpper | Method2::Join, .. }
                 | HExprKind::Method {
                     method: Builtin::StrToString
                         | Builtin::StringClone

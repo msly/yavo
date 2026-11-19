@@ -1,0 +1,52 @@
+// expect-error: E0302 20:27
+// expect-error: E0001 25:13
+// expect-error: E0501 29:5
+// expect-error: E0305 30:17
+// expect-error: E0001 31:17
+// expect-error: E0012 32:13
+// expect-error: E0001 34:13
+// expect-error: E0012 35:13
+// expect-warning: W0001 36:9
+// expect-error: E0001 36:26
+// expect-error: E0102 44:5
+// expect-error: E0014 46:15
+// Diagnostics for prelude functions, text and sequence methods, module functions and slices.
+use std/{io, fs}
+
+fn make() -> String {
+    return "a,b".toString()
+}
+
+fn noSource(xs: []int) -> []int {
+    return xs
+}
+
+fn calls() {
+    let a = min(1, true)
+    let b: i32 = 3
+    let c = max(b, 4)
+    var flags = [true, false]
+    flags.sort()
+    let parts = make().split(",")
+    let d = abs("x")
+    let e = format(1, 2)
+    let f = io.readAll()
+    println(f)
+    let g = fs.readText()
+    let h = "x".contains(1)
+    println(c)
+    println(parts.len())
+}
+
+fn slices() {
+    var v = [1, 2, 3]
+    let s: []int = v
+    v.push(4)
+    println(s.len())
+    for x in &s {
+        println(x)
+    }
+}
+
+fn main() {
+}

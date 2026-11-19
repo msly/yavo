@@ -212,11 +212,11 @@ once also built with UBSan, which was clean) and `tests/p0/errors_optionals.yv`
 twice `E0011`, and an import nothing uses is warning `W0003`. Using `m.f(...)` or `m.name`
 without importing `m` is `E0010`. Importing anything other than `std/...` is `U0001`.
 
-Of the modules' contents only `os.exit(code)` is implemented: it flushes output and ends the
+`os.exit(code)` flushes output and ends the
 process without running drops (V11), and counts as never returning, so a path that ends in it
-needs no `return` (V8). Every other module function, constant and type (`fs.readText`,
-`math.pi`, `Mutex`, `Heap`, ...) is `U0001`; using one still marks the import as used.
-The enum types `fs.Error` and `io.Error` are known (see the next sections). Tests: `tests/p0/run_imports.yv`; the import diagnostics are in
+needs no `return` (V8). Every other module function, constant and type (`fs.listDir`,
+`math.pi`, `Mutex`, `Heap`, ...) that is not listed under "Standard library" below is `U0001`;
+using one still marks the import as used. Tests: `tests/p0/run_imports.yv`; the import diagnostics are in
 `tests/p0/errors_maps.yv`.
 
 ## Maps and `&inout` references
@@ -307,6 +307,41 @@ listed, so a jump out of it drops them too. Tests: `tests/p0/run_enums.yv`,
 `tests/p0/run_results.yv` (both also under the heap-block check, which exercises the early
 exits) and `tests/p0/errors_enums.yv` (16 errors, 1 warning).
 
+## Standard library: text, sequences, I/O and arguments
+
+Supported (cheat sheet §5; stdlib contract §2, §4, §5; semantic table S5, M5):
+
+- Prelude: `format("...")` (a new `String`, same interpolation as `println`), `min`, `max` and
+  `abs` on integers (`abs(i64.min)` panics `P-OVERFLOW`), `String{}`.
+- Text (`str` and `String`): `contains`, `startsWith`, `endsWith`, `find` (`?int`, byte offset),
+  `split(sep)` (`Vec[str]` viewing the receiver; empty pieces kept; an empty separator gives the
+  whole text), `toLower`/`toUpper` (new `String`; ASCII letters only, other bytes unchanged),
+  `parseInt()` (`?int`: optional sign and decimal digits only, `none` on overflow).
+- Sequences: `[]T` slices as a type (parameters, `let`, returns with `of`): a `Vec[T]` is viewed
+  as a `[]T` where one is expected (section 8 whitelist); `len()`, indexing and `for x in s`
+  work on slices. `v.contains(x)` and `v.join(sep)` on vectors and slices (text elements are
+  compared/joined as `str`); `v.sort()` on vectors of integers, `str` or `String` (stable merge
+  sort; other element types are `E0501`).
+- `io.readAll()` (`String ! io.Error`) and `io.readLine()` (`?String ! io.Error`, without the
+  `\n` or `\r\n`); both share one stdin buffer and flush stdout before blocking. Invalid UTF-8
+  is `.Utf8(offset)` (offset into the input, or into the line for `readLine`), a system error
+  `.Io(code)` (errno / `GetLastError()`).
+- `fs.readText(path)` and `fs.writeText(path, text)` (`String ! fs.Error`, `() ! fs.Error`); a
+  path containing NUL is `.InvalidPath`; Windows paths go through UTF-16 (`CreateFileW`).
+- `os.args()` (`[]str of static`), converted once before `main`; an argument that is not valid
+  UTF-8 stops the program before `main` with `YAVO-STARTUP-UTF8` and status 2. On Windows the
+  arguments come from `CommandLineToArgvW`.
+
+Not yet: `sortBy`, `update`, `Heap`/`Deque`/`Set` (closures and generics first), `x[a..b]`
+slices, `s.lines()` on slices of lines, `math`/`time`/`rand`, `String.fromUtf8`, format
+specifiers (`${x:.2}`), Unicode case mapping, `Ordering`.
+
+Code generation: printing and `format` share one output abstraction (`yv_out`: a file
+descriptor or a `String` to append to), so enum printers serve both. Slices are `yv_vec`
+values that own nothing. Tests: `tests/p0/run_stdlib.yv`, `tests/p0/errors_stdlib.yv`
+(11 errors, 1 warning), and `tests/stdlib_io.rs`, which builds programs with the heap-block
+check and runs them with stdin, arguments (including a non-UTF-8 one) and a scratch directory.
+
 ## Spec conformance
 
 ```sh
@@ -323,9 +358,11 @@ runs all 129 cases in `yavo-tests/MANIFEST.json`, after checking each fixture ag
 | unsupported | the compiler reported `U0001` |
 | not_run | needs `yavo fix`, `yavo verify`, fixtures, sanitizers or other platforms |
 
-At this commit: pass 50, wrong 0, unsupported 66, not_run 13 (P1: 41 / 0 / 35 / 7;
-P2: 9 / 0 / 10 / 2; P3: 0 / 0 / 21 / 4). Enums, results and owning struct fields added T-C4p,
-T-C6, T-C6p, T-G14, T-G15 and T-G16. Optional values added T-C5, T-G05, T-G06, T-G07 and
+At this commit: pass 54, wrong 0, unsupported 62, not_run 13 (P1: 44 / 0 / 32 / 7;
+P2: 10 / 0 / 9 / 2; P3: 0 / 0 / 21 / 4). The standard library step added T-G08, T-V4, T-V4p and
+T-S2 (the runner now writes `fixture_hex` fixtures into a directory of their own and runs the case
+there). Enums, results and owning struct fields added T-C4p, T-C6, T-C6p, T-G14, T-G15 and
+T-G16. Optional values added T-C5, T-G05, T-G06, T-G07 and
 T-G24; maps added T-A1, T-A1p, T-A4, T-A4p, T-C1, T-C1p, T-C7f, T-C8, T-C8f and T-GR10 (T-C7
 waits for closures). T-A3/T-A3f wait for `Box`; the
 cases that import `std/sync`, `std/fs` or `std/collections` now stop at those modules' types

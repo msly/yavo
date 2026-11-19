@@ -59,8 +59,42 @@ fn yavo() -> Command {
 }
 
 /// Manifest fields that need runner or compiler features not available yet.
-const NEEDS_HARNESS: &[&str] =
-    &["platforms", "fixture", "fixture_hex", "cwd", "sanitize_mode", "sanitizer_profiles", "fault_scope"];
+const NEEDS_HARNESS: &[&str] = &["platforms", "sanitize_mode", "sanitizer_profiles", "fault_scope"];
+
+/// `fixture` + `fixture_hex` (+ `cwd: test-dir`): the fixture is written, after checking it against
+/// `fixture_sha256`, into a fresh directory of its own, which becomes the working directory.
+fn fixture_dir(entry: &Value) -> Result<Option<PathBuf>, Outcome> {
+    if entry["fixture"].is_null() && entry["cwd"].is_null() {
+        return Ok(None);
+    }
+    if let Some(cwd) = entry["cwd"].as_str() {
+        if cwd != "test-dir" {
+            return Err(outcome(Status::NotRun, format!("needs `cwd: {cwd}` support in the runner")));
+        }
+    }
+    let id = entry["id"].as_str().unwrap_or("case");
+    let dir = PathBuf::from(env!("CARGO_TARGET_TMPDIR")).join("conformance").join(id);
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).map_err(|e| outcome(Status::NotRun, format!("cannot create {}: {e}", dir.display())))?;
+    if let Some(name) = entry["fixture"].as_str() {
+        if name.contains("..") || name.starts_with('/') {
+            return Err(outcome(Status::Wrong, format!("fixture path must be a plain relative path: {name}")));
+        }
+        let hex = entry["fixture_hex"].as_str().unwrap_or("");
+        let bytes: Option<Vec<u8>> =
+            (0..hex.len()).step_by(2).map(|i| hex.get(i..i + 2).and_then(|h| u8::from_str_radix(h, 16).ok())).collect();
+        let Some(bytes) = bytes.filter(|_| hex.len() % 2 == 0) else {
+            return Err(outcome(Status::Wrong, "fixture_hex is not valid hex"));
+        };
+        if let Some(want) = entry["fixture_sha256"].as_str() {
+            if format!("{:x}", Sha256::digest(&bytes)) != want {
+                return Err(outcome(Status::Wrong, "fixture_hex does not match fixture_sha256 in MANIFEST.json"));
+            }
+        }
+        std::fs::write(dir.join(name), bytes).map_err(|e| outcome(Status::NotRun, format!("cannot write fixture: {e}")))?;
+    }
+    Ok(Some(dir))
+}
 
 type Errors = Vec<(String, u64, String)>;
 
@@ -162,8 +196,12 @@ fn classify(entry: &Value, root: &Path) -> Outcome {
                 .as_array()
                 .map(|m| m.iter().filter_map(|x| x.as_str().map(String::from)).collect())
                 .unwrap_or_else(|| vec!["debug".to_string()]);
+            let dir = match fixture_dir(entry) {
+                Ok(d) => d,
+                Err(o) => return o,
+            };
             for mode in &modes {
-                let o = run_once(entry, &path, kind, mode == "release");
+                let o = run_once(entry, &path, kind, mode == "release", dir.as_deref());
                 if o.status != Status::Pass {
                     return outcome(o.status, format!("[{mode}] {}", o.reason));
                 }
@@ -173,9 +211,12 @@ fn classify(entry: &Value, root: &Path) -> Outcome {
     }
 }
 
-fn run_once(entry: &Value, path: &Path, kind: &str, release: bool) -> Outcome {
+fn run_once(entry: &Value, path: &Path, kind: &str, release: bool, dir: Option<&Path>) -> Outcome {
     let mut cmd = yavo();
     cmd.arg("run").arg(path);
+    if let Some(d) = dir {
+        cmd.current_dir(d);
+    }
     if release {
         cmd.arg("--release");
     }

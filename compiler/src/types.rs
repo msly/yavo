@@ -20,6 +20,24 @@ thread_local! {
     static REFMUTS: RefCell<Vec<(Ty, &'static str)>> = const { RefCell::new(Vec::new()) };
     /// Key and value type of each `Map[K, V]`, indexed by map id; parts are registered first.
     static MAPS: RefCell<Vec<(Ty, Ty)>> = const { RefCell::new(Vec::new()) };
+    /// Element type of each `[]T`, indexed by slice id.
+    static SLICES: RefCell<Vec<Ty>> = const { RefCell::new(Vec::new()) };
+}
+
+/// Interns `[]elem` and returns its id.
+pub fn slice_of(elem: Ty) -> u32 {
+    SLICES.with(|v| {
+        let mut v = v.borrow_mut();
+        if let Some(i) = v.iter().position(|t| *t == elem) {
+            return i as u32;
+        }
+        v.push(elem);
+        (v.len() - 1) as u32
+    })
+}
+
+pub fn slice_elem(id: u32) -> Ty {
+    SLICES.with(|v| v.borrow()[id as usize])
 }
 
 /// A struct or an enum. The flags are filled in by `finish_agg` once the member types are
@@ -330,6 +348,9 @@ pub enum Ty {
     RefMut(u32),
     /// `Map[K, V]`, by map id (see `map_of`): an insertion-ordered hash map (`yv_map` in C).
     Map(u32),
+    /// `[]T`: a read-only view of consecutive elements, by slice id (see `slice_of`). Copyable;
+    /// it carries a borrow. In C a `yv_vec` whose storage belongs to someone else.
+    Slice(u32),
     Unit,
     /// A user-defined struct, by id (see `register_struct`).
     Struct(u32),
@@ -381,6 +402,7 @@ impl Ty {
             Ty::RefMut(_) => true,
             Ty::Opt(id) => opt_inner(id).contains_ref_mut(),
             Ty::Vec(id) => vec_elem(id).contains_ref_mut(),
+            Ty::Slice(id) => slice_elem(id).contains_ref_mut(),
             Ty::Res(id) => {
                 let (o, e) = res_parts(id);
                 o.contains_ref_mut() || e.contains_ref_mut()
@@ -401,7 +423,7 @@ impl Ty {
     /// Whether a value of this type points into data it does not own (`str`, `Vec[str]`, ...).
     pub fn carries_borrow(self) -> bool {
         match self {
-            Ty::Str | Ty::Ref(_) | Ty::RefMut(_) => true,
+            Ty::Str | Ty::Ref(_) | Ty::RefMut(_) | Ty::Slice(_) => true,
             Ty::Vec(id) => vec_elem(id).carries_borrow(),
             Ty::Opt(id) => opt_inner(id).carries_borrow(),
             Ty::Res(id) => {
@@ -429,6 +451,7 @@ impl Ty {
             Ty::Str => "str".into(),
             Ty::String => "String".into(),
             Ty::Vec(id) => format!("Vec_{}", vec_elem(id).key()),
+            Ty::Slice(id) => format!("Slice_{}", slice_elem(id).key()),
             Ty::Ref(id) => format!("Ref_{}", ref_inner(id).key()),
             Ty::Opt(id) => format!("Opt_{}", opt_inner(id).key()),
             Ty::RefMut(id) => format!("RefMut_{}", ref_mut_inner(id).key()),
@@ -452,7 +475,7 @@ impl Ty {
             Ty::Bool => "bool",
             Ty::Str => "yv_str",
             Ty::String => "yv_string",
-            Ty::Vec(_) => "yv_vec",
+            Ty::Vec(_) | Ty::Slice(_) => "yv_vec",
             Ty::Ref(id) => REFS.with(|r| r.borrow()[id as usize].1),
             Ty::Opt(id) => OPTS.with(|o| o.borrow()[id as usize].1),
             Ty::RefMut(id) => REFMUTS.with(|r| r.borrow()[id as usize].1),
@@ -473,6 +496,7 @@ impl fmt::Display for Ty {
             Ty::Str => f.write_str("str"),
             Ty::String => f.write_str("String"),
             Ty::Vec(id) => write!(f, "Vec[{}]", vec_elem(*id)),
+            Ty::Slice(id) => write!(f, "[]{}", slice_elem(*id)),
             Ty::Ref(id) => write!(f, "&{}", ref_inner(*id)),
             Ty::Opt(id) => write!(f, "?{}", opt_inner(*id)),
             Ty::RefMut(id) => write!(f, "&inout {}", ref_mut_inner(*id)),

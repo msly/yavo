@@ -1,0 +1,90 @@
+// expect-stdout:
+// | 3-true 6
+// | -4 3 9 9
+// | [key = Value] 4 true true true
+// | key = value | KEY = VALUE
+// | total -1, bad 2
+// | overflow -> -1
+// | apple, apple, fig, pear
+// | true apple
+// | a-bb-ccc longest 3
+// | 1 9 21 6 false
+// | 5 3
+// | appleapplefigpear 17
+// Prelude and text/sequence functions: format, min, max, abs, string queries and conversions,
+// split/join, sort, contains, String{}, and `[]T` slices viewing vectors.
+fn sum(xs: []int) -> int {
+    var s = 0
+    for x in xs {
+        s += x
+    }
+    return s
+}
+
+fn first(words: []str) -> str of words {
+    if words.len() == 0 {
+        return ""
+    }
+    return words[0]
+}
+
+fn longest(names: []String) -> int {
+    var best = 0
+    for i, n in names {
+        if n.len() > best {
+            best = n.len()
+        }
+        assert(i < names.len())
+    }
+    return best
+}
+
+fn main() {
+    let a = format("${1 + 2}-${true}")
+    println("${a} ${a.len()}")
+    println("${min(3, -4)} ${max(3, -4)} ${abs(-9)} ${abs(9)}")
+    let line = "  key = Value  "
+    let t = line.trim()
+    let eq = t.find("=") ?? -1
+    let has = t.contains("Val")
+    let starts = t.startsWith("key")
+    let ends = t.endsWith("e")
+    println("[${t}] ${eq} ${has} ${starts} ${ends}")
+    let lower = t.toLower()
+    let upper = t.toUpper()
+    println("${lower} | ${upper}")
+    let nums = "4,-12,x,,+7"
+    var total = 0
+    var bad = 0
+    for piece in nums.split(",") {
+        if let n = piece.parseInt() {
+            total += n
+        } else {
+            bad += 1
+        }
+    }
+    println("total ${total}, bad ${bad}")
+    let big = "9223372036854775808".parseInt() ?? -1
+    println("overflow -> ${big}")
+    var words = ["pear", "apple", "fig", "apple"]
+    words.sort()
+    let sep = ", "
+    let joined = words.join(sep)
+    println(joined)
+    let pear = "pear"
+    println("${words.contains(pear)} ${first(words)}")
+    var owned: Vec[String] = ["bb".toString(), "a".toString(), "ccc".toString()]
+    owned.sort()
+    let dash = "-"
+    println("${owned.join(dash)} longest ${longest(owned)}")
+    var xs = [5, 3, 9, 1, 3]
+    xs.sort()
+    println("${xs[0]} ${xs[4]} ${sum(xs)} ${sum([1, 2, 3])} ${xs.contains(4)}")
+    let view: []int = xs
+    println("${view.len()} ${view[1]}")
+    var built = String{}
+    for w in words {
+        built.push(w)
+    }
+    println("${built} ${built.len()}")
+}
