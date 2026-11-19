@@ -1,0 +1,9 @@
+// expect-panic: P-ASSERT 7:5
+// `assert` builds its message only when the condition fails; the earlier output is flushed.
+fn main() {
+    let n = 3
+    assert(n == 3, "never shown")
+    println("before")
+    assert(n > 5, "n is ${n}")
+    println("not reached")
+}

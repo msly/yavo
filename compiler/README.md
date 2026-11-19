@@ -56,11 +56,19 @@ that contains itself by value is `E0017`; missing literal fields are `E0018`; un
 duplicate fields are `E0010`/`E0011`; structs cannot be compared (`E0501`) or printed directly.
 `tests/p0/run_structs.yv` and `tests/p0/errors_structs.yv` cover these.
 
-Not yet: `String`/`Vec`/`Map` fields (and with them moves and `Drop`), methods, generic
-structs, `struct X: Interface`, field defaults. A struct literal must be written as an
-uppercase name immediately followed by `{` (no space), which keeps it apart from `if c {`.
-Fields of a copyable optional type (`?int`, `?Point`) are supported and default to `none` when
-the literal leaves them out; `?String` fields wait for owned fields.
+Owning fields (plan item 7): fields may be `String`, `Vec[T]`, `Map[K, V]`, `?String`, enums or
+structs that own data. Such a struct is not copyable: it moves like a `String`, and is dropped
+field by field in reverse declaration order (V10). Literal values are moved in. A field is read
+in place (`p.name.len()`, `p.tags[0].trim()`, `for t in p.tags` iterates through a hidden
+reference and keeps `p` unchanged for the loop); modifying methods work on field chains
+(`p.tags.push(x)`, `p.scores.set(k, v)`, `p.items.pop()`); assigning a field drops the old
+value; `take`/`replace`/`swap` move values out. Moving a non-copyable field out by value
+(`let s = p.name`, `return p.name`, `p.nick ?? x`) is `E0401` (rule 8).
+
+Not yet: methods, `Drop`, generic structs, `struct X: Interface`, field defaults, `.clone()` on
+a struct. A struct literal must be written as an uppercase name immediately followed by `{`
+(no space), which keeps it apart from `if c {`. Optional fields default to `none` when the
+literal leaves them out. Tests: `tests/p0/run_fields.yv`.
 
 Effect on the spec cases: none changed status. Every case that uses `struct` is also blocked
 by generic types, imports or `String`; those are the next features to implement.
@@ -182,8 +190,9 @@ optional through `replace` is `E0306` (T-G24); `?? break` outside a loop is `E00
 Assigning to a struct field now also checks for live borrows of the variable.
 
 Not yet (`U0001`): writing through a binding into a writable place (valid v0.5, e.g. T-A3's
-`n.size += 1`), `match` as an expression and on results or enums, `?? return` nested inside
-another expression, printing or comparing optionals, `?String` struct fields.
+`n.size += 1`), `?? return` nested inside another expression, printing or comparing
+optionals. (`match` with nested patterns, as an expression, and on enums and results is
+described under "Enums, results and `match`".)
 
 Code generation: `?T` is `struct { bool has; T val; }`; all-zero is `none`, so moved-from and
 `take`n optionals need no flag. Owned optionals get drop and clone helpers, declared before
@@ -206,8 +215,8 @@ without importing `m` is `E0010`. Importing anything other than `std/...` is `U0
 Of the modules' contents only `os.exit(code)` is implemented: it flushes output and ends the
 process without running drops (V11), and counts as never returning, so a path that ends in it
 needs no `return` (V8). Every other module function, constant and type (`fs.readText`,
-`math.pi`, `Mutex`, `Heap`, `fs.Error`, ...) is `U0001`; using one still marks the import as
-used. Tests: `tests/p0/run_imports.yv`; the import diagnostics are in
+`math.pi`, `Mutex`, `Heap`, ...) is `U0001`; using one still marks the import as used.
+The enum types `fs.Error` and `io.Error` are known (see the next sections). Tests: `tests/p0/run_imports.yv`; the import diagnostics are in
 `tests/p0/errors_maps.yv`.
 
 ## Maps and `&inout` references
@@ -247,6 +256,57 @@ a `T *` and owns nothing, so it is never dropped (types now distinguish "not cop
 that force rebuilds; heap-block check in debug and release, and UBSan once, all clean) and
 `tests/p0/errors_maps.yv` (22 errors, 1 warning, together with the import checks).
 
+## Enums, results and `match`
+
+Supported (plan item 4; cheat sheet §2–§3; semantic table V3, V8, V12, C7):
+
+- `enum Name { Case, Case(field: T, ...) }`, built as `Name.Case`, `Name.Case(field: value)` or
+  positionally `Name.Case(value)`; where the type is known, `.Case(...)` (also inside `?T`
+  and as the success type of `T ! E`). Payload values move in. Enums with owning payloads move
+  and drop only the current case's payload; enums of copyable payloads are copied.
+  `println("${e}")` prints `Case` or `Case(field: value, ...)`.
+- `T ! E` results: `return err(e)`; a `T` returned from such a function is wrapped as success
+  (section 8 whitelist); `ok(v)` where a result is expected. `() ! E` functions succeed by
+  falling off the end or with `return` / `return ()`.
+- `try f()` in a function with the same error type returns the error at once; values of the
+  statement built so far (struct fields, vector elements, sink arguments) and every scope are
+  dropped first (V3, V6).
+- `f() catch e => value` and `f() catch e { ... }`; the block form must not reach its closing
+  `}` (`E0601`, checked by control flow). `catch _` drops the error before the handler runs,
+  `catch _e` keeps it until the handler ends (V12). On a `() ! E` result the handler may be a
+  call (`check(xs) catch e => println("${e}")`). `catch e => return/break/continue` works as a
+  whole `let` initializer, assigned value or statement.
+- `match` with nested patterns: names, `_`, `some(p)`, `none`, `ok(p)`, `err(p)`, `.Case(p, ...)`
+  and `Type.Case(...)` (module enums too: `fs.Error.Utf8(n)`); as a statement or as an
+  expression (`let n = match r { ok(v) => v, err(_) => 0 }`); expression arms may also be
+  `return`/`break`/`continue` or a block that leaves. Matching an existing place binds `&T` to
+  non-copyable parts and borrows the place; matching an owned temporary moves the bound parts
+  into the bindings and drops the rest before the arm runs. Exhaustiveness and unreachable arms
+  use the usual usefulness check over these patterns (`E0602`, `W0002`).
+- `panic(msg)` and `assert(cond)` / `assert(cond, msg)`, with interpolation; categories
+  `P-PANIC` and `P-ASSERT` (recorded in `yavo-tests/ERRORS.md`); both count as never returning.
+- Byte literals `'a'`, `'\n'` (type `byte`).
+- `fs.Error` and `io.Error` are known enum types (`Utf8(offset)`, `Io(code)`, and
+  `InvalidPath` for `fs`), usable once the module is imported.
+
+Rules checked: a result used as its success type, or as a statement, without handling is
+`E0001`; `try` outside a `T ! E` function or with another error type is `E0001`; an unknown
+case is `E0010`; wrong payload counts are `E0012`/`E0018`; `.Case` or `err(...)` without a
+known type is `E0001`; `Enum{...}` is `E0001`; enum payloads and error types cannot hold views
+(`E0301`). Not yet: literal patterns (`.Num(0)`, `1 =>`), named fields in case patterns, `if
+let` with patterns, comparing enums, generic enums, methods and interfaces on enums, result
+fields in structs.
+
+Code generation: an enum is `struct { uint32_t tag; union { struct {...} v0; ... } u; }` and
+a result `struct { bool ok; T val; E err; }` (no `val` for `()`); all-zero is a valid value
+in both (first case, or an error holding zeros), so moved-out slots stay safe to drop. Struct,
+enum and result types needing drops get drop/clone helpers; every enum gets a printer. A
+`match` is an `if`/`else if` chain over tag tests on the scrutinee; a block inside an
+expression (a `catch` handler or `match` arm) keeps the enclosing statement's temporaries
+listed, so a jump out of it drops them too. Tests: `tests/p0/run_enums.yv`,
+`tests/p0/run_results.yv` (both also under the heap-block check, which exercises the early
+exits) and `tests/p0/errors_enums.yv` (16 errors, 1 warning).
+
 ## Spec conformance
 
 ```sh
@@ -263,10 +323,11 @@ runs all 129 cases in `yavo-tests/MANIFEST.json`, after checking each fixture ag
 | unsupported | the compiler reported `U0001` |
 | not_run | needs `yavo fix`, `yavo verify`, fixtures, sanitizers or other platforms |
 
-At this commit: pass 44, wrong 0, unsupported 72, not_run 13 (P1: 35 / 0 / 41 / 7;
-P2: 9 / 0 / 10 / 2; P3: 0 / 0 / 21 / 4). Optional values added T-C5, T-G05, T-G06, T-G07 and
+At this commit: pass 50, wrong 0, unsupported 66, not_run 13 (P1: 41 / 0 / 35 / 7;
+P2: 9 / 0 / 10 / 2; P3: 0 / 0 / 21 / 4). Enums, results and owning struct fields added T-C4p,
+T-C6, T-C6p, T-G14, T-G15 and T-G16. Optional values added T-C5, T-G05, T-G06, T-G07 and
 T-G24; maps added T-A1, T-A1p, T-A4, T-A4p, T-C1, T-C1p, T-C7f, T-C8, T-C8f and T-GR10 (T-C7
-waits for closures). T-C6/T-C6p wait for `?String` struct fields and T-A3/T-A3f for `Box`; the
+waits for closures). T-A3/T-A3f wait for `Box`; the
 cases that import `std/sync`, `std/fs` or `std/collections` now stop at those modules' types
 and functions. The per-case report is written to `target/tmp/conformance-report.json`.
 

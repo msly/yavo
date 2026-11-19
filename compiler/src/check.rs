@@ -5,21 +5,25 @@ use std::collections::HashMap;
 use crate::ast::*;
 use crate::diag::{Diags, Span};
 use crate::types::{
-    map_of, map_parts, opt_inner, opt_of, ref_inner, ref_mut_inner, ref_mut_of, ref_of, register_struct, vec_elem, vec_of,
-    IntTy, Ty,
+    finish_agg, map_of, map_parts, opt_inner, opt_of, ref_inner, ref_mut_inner, ref_mut_of, ref_of, register_enum,
+    register_struct, res_of, res_parts, vec_elem, vec_of, IntTy, Ty,
 };
 
 pub type LocalId = usize;
 
 pub struct HProgram {
     pub fns: Vec<HFn>,
-    /// Struct definitions, ordered so that every struct comes after the structs it contains.
+    /// Struct and enum definitions, ordered so that every type comes after the types it
+    /// contains by value.
     pub structs: Vec<HStruct>,
 }
 
 pub struct HStruct {
     pub ty: Ty,
+    /// Struct fields (empty for an enum).
     pub fields: Vec<(String, Ty)>,
+    /// Enum cases with their payload fields (empty for a struct).
+    pub variants: Vec<(String, Vec<(String, Ty)>)>,
 }
 
 pub struct HFn {
@@ -71,6 +75,36 @@ pub enum HStmtKind {
     Continue,
     Return(Option<HExpr>),
     Print { fd: u8, newline: bool, parts: Vec<PrintPart> },
+    Block(Vec<HStmt>),
+    /// `match` on enums, results, or nested patterns; `owned`: `scrut` is a temporary whose
+    /// parts are moved into the bindings (the rest is dropped when an arm starts).
+    Match { scrut: HExpr, owned: bool, arms: Vec<HArm> },
+}
+
+/// A checked pattern.
+pub enum HPat {
+    Wild,
+    /// Binds the value here; `by_ref`: the binding is a `&T` into an existing place.
+    Bind { local: LocalId, by_ref: bool },
+    /// `none`, or `some(p)`.
+    Opt(Option<Box<HPat>>),
+    /// `ok(p)` or `err(p)`.
+    Res { ok: bool, inner: Box<HPat> },
+    /// An enum case and one pattern per payload field.
+    Case { variant: usize, fields: Vec<HPat> },
+}
+
+pub struct HArm {
+    pub pat: HPat,
+    pub body: Vec<HStmt>,
+    /// The value of the arm of a `match` expression (absent when the arm leaves).
+    pub value: Option<HExpr>,
+}
+
+pub enum CatchHandler {
+    /// `catch e => value`; the value may be `return`/`break`/`continue`.
+    Value(Box<HExpr>),
+    /// `catch e { ... }`, which never falls through.
     Block(Vec<HStmt>),
 }
 
@@ -128,11 +162,13 @@ pub enum HExprKind {
     Index { base: Box<HExpr>, index: Box<HExpr> },
     Method { method: Builtin, recv: Box<HExpr> },
     /// `local.push(value)`; `value` is moved into a vector or appended to a `String`.
-    Push { local: LocalId, value: Box<HExpr> },
+    Push { place: HPlace, value: Box<HExpr> },
     /// A `String` borrowed as a `str` (passing it to a `str` parameter).
     StrView(Box<HExpr>),
     /// Reading through a `&T`.
     Deref(Box<HExpr>),
+    /// `&place` as a `&T` value (a hidden reference to a field being iterated).
+    AddrOf(Box<HExpr>),
     /// `&local` passed to an `inout` parameter.
     InoutArg(LocalId),
     /// `none`, of the optional type in `ty`.
@@ -152,15 +188,29 @@ pub enum HExprKind {
     /// `swap(&a, &b)`
     Swap(HPlace, HPlace),
     /// `local.pop()`: the last element of a vector, or `none`.
-    Pop(LocalId),
+    Pop(HPlace),
     /// `[:]`, `[k: v, ...]`: entries in the order written.
     MapLit(Vec<(HExpr, HExpr)>),
     /// `recv.get(key)`, `recv.getCopy(key)`, `recv.has(key)`.
     MapRead { op: MapRead, recv: Box<HExpr>, key: Box<HExpr> },
     /// `local.set(key, value)`, `local.remove(key)`, `local.getMut(key)`.
-    MapWrite { op: MapWrite, local: LocalId, args: Vec<HExpr> },
+    MapWrite { op: MapWrite, place: HPlace, args: Vec<HExpr> },
     /// `os.exit(code)`: flushes output and ends the process without running drops.
     Exit(Box<HExpr>),
+    /// `Enum.Case(...)`: field values in the order written (`usize` is the field index).
+    EnumLit { variant: usize, fields: Vec<(usize, HExpr)> },
+    /// A success value of the result type in `ty` (`None` when the success type is `()`).
+    Ok(Option<Box<HExpr>>),
+    /// `err(value)`, of the result type in `ty`.
+    ErrVal(Box<HExpr>),
+    /// `try value`: the success value, or return the error from the current function.
+    Try(Box<HExpr>),
+    /// `value catch e => ...` / `value catch e { ... }`; `bind` is absent for `catch _`.
+    Catch { value: Box<HExpr>, bind: Option<LocalId>, handler: CatchHandler },
+    /// A `match` that produces a value.
+    Match { scrut: Box<HExpr>, owned: bool, arms: Vec<HArm> },
+    /// `panic(message)` / `assert(cond, message)`: `cond` is absent for `panic`.
+    Panic { cond: Option<Box<HExpr>>, parts: Vec<PrintPart> },
     Error,
 }
 
@@ -281,6 +331,9 @@ struct Pre {
     /// Last statement number of the block a statement binds a name for: the body of `for x in`,
     /// the `then` block of `if let` and each `match` arm (keyed by statement number and arm).
     bind_end: HashMap<(usize, usize), usize>,
+    /// Last statement number inside each arm of a `match` expression and each `catch` handler,
+    /// keyed by the expression's start offset (and arm; 0 for `catch`).
+    expr_end: HashMap<(usize, usize), usize>,
 }
 
 struct Occ {
@@ -392,11 +445,33 @@ impl Pre {
             ExprKind::Ident(n) => {
                 self.occ.push(Occ { idx, line: e.span.line, name: n.clone(), loops: stack.to_vec() })
             }
-            ExprKind::Int(_) | ExprKind::Bool(_) | ExprKind::None | ExprKind::Break | ExprKind::Continue => {}
+            ExprKind::Int(_) | ExprKind::Byte(_) | ExprKind::Bool(_) | ExprKind::None | ExprKind::Break | ExprKind::Continue | ExprKind::Unit => {}
             ExprKind::Return(v) => {
                 if let Some(v) = v {
                     self.expr(v, idx, stack);
                 }
+            }
+            ExprKind::Case { args, .. } => {
+                for a in args.iter().flatten() {
+                    self.expr(a, idx, stack);
+                }
+            }
+            ExprKind::Named { value, .. } | ExprKind::Err(value) | ExprKind::Try(value) => self.expr(value, idx, stack),
+            ExprKind::Catch { value, handler, .. } => {
+                self.expr(value, idx, stack);
+                self.expr(handler, idx, stack);
+                self.expr_end.insert((e.span.start, 0), self.next);
+            }
+            ExprKind::Match { value, arms } => {
+                self.expr(value, idx, stack);
+                for (i, arm) in arms.iter().enumerate() {
+                    self.expr(&arm.body, idx, stack);
+                    self.expr_end.insert((e.span.start, i), self.next);
+                }
+            }
+            ExprKind::Block(b) => {
+                let mut st = stack.to_vec();
+                self.block(&b.stmts, &mut st);
             }
             ExprKind::Str(segs) => {
                 for s in segs {
@@ -527,6 +602,58 @@ enum Body<'a> {
     Empty,
 }
 
+/// One arm of a general `match`: a statement arm's block, or an expression arm's value.
+struct GArm<'a> {
+    pat: &'a Pattern,
+    span: Span,
+    body: GBody<'a>,
+}
+
+enum GBody<'a> {
+    Block(&'a Block),
+    Expr(&'a Expr),
+}
+
+/// How the bindings of one `match` arm are made.
+struct PatCx<'a> {
+    /// The scrutinee is an owned temporary: bindings take their parts.
+    owned: bool,
+    kind: LocalKind,
+    /// What a binding into the scrutinee points into.
+    loans: &'a [Loan],
+    /// Last statement of the arm, if it has statements.
+    scope_end: Option<usize>,
+    /// The arm belongs to a `match` expression.
+    in_expr: bool,
+    /// The arm's pattern, for diagnostics.
+    span: Span,
+}
+
+static WILD: HPat = HPat::Wild;
+
+/// The constructor a pattern tests for (see `Checker::ctors_of`) and its sub-patterns; `None`
+/// for a pattern that matches anything.
+fn pat_ctor(p: &HPat) -> Option<(usize, Vec<&HPat>)> {
+    match p {
+        HPat::Wild | HPat::Bind { .. } => None,
+        HPat::Opt(None) => Some((0, Vec::new())),
+        HPat::Opt(Some(q)) => Some((1, vec![&**q])),
+        HPat::Res { ok, inner } => Some((if *ok { 0 } else { 1 }, vec![&**inner])),
+        HPat::Case { variant, fields } => Some((*variant, fields.iter().collect())),
+    }
+}
+
+/// Whether the arms of a `match` are only `some(name)`, `none` and `_`: the optional-only form
+/// handled by `match_opt` (which also serves `if let`).
+fn simple_opt_arms<'a>(pats: impl Iterator<Item = &'a Pattern> + Clone) -> bool {
+    pats.clone().any(|p| !matches!(p, Pattern::Wild))
+        && pats.into_iter().all(|p| match p {
+            Pattern::Some(inner) => matches!(**inner, Pattern::Bind { .. } | Pattern::Wild),
+            Pattern::None | Pattern::Wild => true,
+            _ => false,
+        })
+}
+
 /// The variable an existing place belongs to: `x`, `x.a.b`, or a place read through a `&`.
 fn place_root(h: &HExpr) -> Option<LocalId> {
     match &h.kind {
@@ -540,8 +667,14 @@ fn place_root(h: &HExpr) -> Option<LocalId> {
 fn mentions(e: &Expr, name: &str) -> bool {
     match &e.kind {
         ExprKind::Ident(n) => n == name,
-        ExprKind::Int(_) | ExprKind::Bool(_) | ExprKind::None | ExprKind::Break | ExprKind::Continue => false,
+        ExprKind::Int(_) | ExprKind::Byte(_) | ExprKind::Bool(_) | ExprKind::None | ExprKind::Break | ExprKind::Continue | ExprKind::Unit => false,
         ExprKind::Return(v) => v.as_ref().is_some_and(|v| mentions(v, name)),
+        ExprKind::Case { args, .. } => args.iter().flatten().any(|a| mentions(a, name)),
+        ExprKind::Named { value, .. } | ExprKind::Err(value) | ExprKind::Try(value) => mentions(value, name),
+        ExprKind::Catch { value, handler, .. } => mentions(value, name) || mentions(handler, name),
+        ExprKind::Match { value, arms } => mentions(value, name) || arms.iter().any(|a| mentions(&a.body, name)),
+        // Statements inside a block are not searched: only the call's own arguments matter here.
+        ExprKind::Block(_) => false,
         ExprKind::Str(segs) => segs.iter().any(|s| matches!(s, StrSeg::Expr { expr, .. } if mentions(expr, name))),
         ExprKind::Call { callee, args } => mentions(callee, name) || args.iter().any(|a| mentions(a, name)),
         ExprKind::Field { base, .. } => mentions(base, name),
@@ -571,7 +704,20 @@ struct StructDef {
     span: Span,
     ty: Ty,
     fields: Vec<(String, Ty, Span)>,
+    /// For an enum: its cases and their payload fields.
+    variants: Vec<VariantDef>,
 }
+
+struct VariantDef {
+    name: String,
+    fields: Vec<(String, Ty, Span)>,
+}
+
+/// Enums that standard library modules provide (stdlib contract §5).
+const LIBRARY_ENUMS: &[(&str, &[(&str, &[&str])])] = &[
+    ("io.Error", &[("Utf8", &["offset"]), ("Io", &["code"])]),
+    ("fs.Error", &[("Utf8", &["offset"]), ("Io", &["code"]), ("InvalidPath", &[])]),
+];
 
 pub fn check(prog: &Program, diags: &mut Diags) -> Option<HProgram> {
     let mut ck = Checker {
@@ -599,7 +745,15 @@ pub fn check(prog: &Program, diags: &mut Diags) -> Option<HProgram> {
             .into_iter()
             .map(|i| {
                 let s = &ck.structs[i];
-                HStruct { ty: s.ty, fields: s.fields.iter().map(|(n, t, _)| (n.clone(), *t)).collect() }
+                HStruct {
+                    ty: s.ty,
+                    fields: s.fields.iter().map(|(n, t, _)| (n.clone(), *t)).collect(),
+                    variants: s
+                        .variants
+                        .iter()
+                        .map(|v| (v.name.clone(), v.fields.iter().map(|(n, t, _)| (n.clone(), *t)).collect()))
+                        .collect(),
+                }
             })
             .collect();
         Some(HProgram { fns, structs })
@@ -685,10 +839,11 @@ fn stmt_terminates(s: &Stmt) -> bool {
     }
 }
 
-/// Whether `e` is a call to `os.exit`.
+/// Whether `e` is a call that never returns: `os.exit(...)` or `panic(...)`.
 fn is_exit_call(e: &Expr) -> bool {
     let ExprKind::Call { callee, .. } = &e.kind else { return false };
     matches!(&callee.kind, ExprKind::Field { base, name } if name == "exit" && matches!(&base.kind, ExprKind::Ident(m) if m == "os"))
+        || matches!(&callee.kind, ExprKind::Ident(n) if n == "panic")
 }
 
 /// Whether `e` is `x ?? break` (possibly as the last link of a `??` chain).
@@ -767,54 +922,100 @@ impl Checker<'_> {
         true
     }
 
-    /// Registers every struct, resolves field types and returns the structs in dependency order.
+    /// Registers every struct and enum, resolves member types and returns them in dependency
+    /// order. Library enums (`fs.Error`, ...) are registered too.
     fn collect_structs(&mut self, prog: &Program) -> Vec<usize> {
-        for s in &prog.structs {
-            if is_type_name(&s.name) || UNSUPPORTED_TYPES.contains(&s.name.as_str()) {
-                self.diags.error("E0011", s.name_span, format!("`{}` is a built-in type name and cannot be redefined", s.name));
-            } else if let Some(&prev) = self.struct_index.get(&s.name) {
+        let names: Vec<(&str, Span, bool)> = prog
+            .structs
+            .iter()
+            .map(|s| (s.name.as_str(), s.name_span, false))
+            .chain(prog.enums.iter().map(|e| (e.name.as_str(), e.name_span, true)))
+            .collect();
+        for &(name, span, is_enum) in &names {
+            if is_type_name(name) || UNSUPPORTED_TYPES.contains(&name) || name == "Ordering" {
+                self.diags.error("E0011", span, format!("`{name}` is a built-in type name and cannot be redefined"));
+            } else if let Some(&prev) = self.struct_index.get(name) {
                 let line = self.structs[prev].span.line;
+                let what = if is_enum { "enum" } else { "struct" };
                 self.diags
-                    .error("E0011", s.name_span, format!("struct `{}` is defined more than once", s.name))
+                    .error("E0011", span, format!("type `{name}` is defined more than once ({what})"))
                     .note(format!("first defined on line {line}"));
             } else {
-                self.struct_index.insert(s.name.clone(), self.structs.len());
+                self.struct_index.insert(name.to_string(), self.structs.len());
             }
             // Every declaration gets an id, even a duplicate, so ids and indexes stay equal.
-            let ty = Ty::Struct(register_struct(&s.name));
-            self.structs.push(StructDef { name: s.name.clone(), span: s.name_span, ty, fields: Vec::new() });
+            let ty = if is_enum { Ty::Enum(register_enum(name)) } else { Ty::Struct(register_struct(name)) };
+            self.structs.push(StructDef { name: name.to_string(), span, ty, fields: Vec::new(), variants: Vec::new() });
+        }
+        for (lname, cases) in LIBRARY_ENUMS {
+            let ty = Ty::Enum(register_enum(lname));
+            self.struct_index.insert(lname.to_string(), self.structs.len());
+            let int = Ty::Int(IntTy::I64);
+            let span = Span { start: 0, end: 0, line: 1, col: 1 };
+            let variants = cases
+                .iter()
+                .map(|(n, fs)| VariantDef { name: n.to_string(), fields: fs.iter().map(|f| (f.to_string(), int, span)).collect() })
+                .collect();
+            self.structs.push(StructDef { name: lname.to_string(), span, ty, fields: Vec::new(), variants });
         }
         for (i, s) in prog.structs.iter().enumerate() {
-            let mut fields: Vec<(String, Ty, Span)> = Vec::new();
-            for f in &s.fields {
-                let ty = self.resolve_ty(&f.ty);
-                if ty.carries_borrow() {
+            self.structs[i].fields = self.member_fields(&s.fields, &s.name);
+        }
+        let base = prog.structs.len();
+        for (j, e) in prog.enums.iter().enumerate() {
+            let mut variants: Vec<VariantDef> = Vec::new();
+            for v in &e.variants {
+                if let Some(prev) = e.variants.iter().take_while(|w| !std::ptr::eq(*w, v)).find(|w| w.name == v.name) {
+                    let line = prev.span.line;
                     self.diags
-                        .error("E0301", f.ty.span, format!("field `{}` cannot hold a `{ty}`: a view cannot be stored in a struct field", f.name))
-                        .note("store the text elsewhere; `String` fields are not supported in P0 yet");
-                } else if !ty.is_copy() {
-                    self.diags.error(
-                        "U0001",
-                        f.ty.span,
-                        format!("struct fields of type `{ty}` (values that move) are not supported in P0 yet"),
-                    );
-                }
-                if let Some((_, _, first)) = fields.iter().find(|(n, _, _)| *n == f.name) {
-                    let line = first.line;
-                    self.diags
-                        .error("E0011", f.span, format!("field `{}` is declared more than once in `{}`", f.name, s.name))
+                        .error("E0011", v.span, format!("case `{}` is declared more than once in `{}`", v.name, e.name))
                         .note(format!("first declared on line {line}"));
                 }
-                fields.push((f.name.clone(), ty, f.span));
+                let fields = self.member_fields(&v.fields, &format!("{}.{}", e.name, v.name));
+                variants.push(VariantDef { name: v.name.clone(), fields });
             }
-            self.structs[i].fields = fields;
+            self.structs[base + j].variants = variants;
         }
         let mut state = vec![0u8; self.structs.len()];
         let mut order = Vec::new();
         for i in 0..self.structs.len() {
             self.visit_struct(i, &mut state, &mut order, &mut Vec::new());
         }
+        // Copyability and drop obligations follow the members, which come first in `order`.
+        for &i in &order {
+            let s = &self.structs[i];
+            let members: Vec<Vec<Ty>> = if matches!(s.ty, Ty::Enum(_)) {
+                s.variants.iter().map(|v| v.fields.iter().map(|f| f.1).collect()).collect()
+            } else {
+                vec![s.fields.iter().map(|f| f.1).collect()]
+            };
+            let (Ty::Struct(id) | Ty::Enum(id)) = s.ty else { unreachable!() };
+            finish_agg(id, members);
+        }
         order
+    }
+
+    /// Resolves the fields of a struct or of an enum case. A view cannot be stored (rule 4).
+    fn member_fields(&mut self, decls: &[FieldDecl], owner: &str) -> Vec<(String, Ty, Span)> {
+        let mut fields: Vec<(String, Ty, Span)> = Vec::new();
+        for f in decls {
+            let ty = self.resolve_ty(&f.ty);
+            if ty.carries_borrow() {
+                self.diags
+                    .error("E0301", f.ty.span, format!("field `{}` cannot hold a `{ty}`: a view cannot be stored in a field", f.name))
+                    .note("store an owned value instead, e.g. `String` (call `.toString()`)");
+            } else if matches!(ty, Ty::Res(_)) {
+                self.diags.error("U0001", f.ty.span, format!("fields of type `{ty}` are not supported yet"));
+            }
+            if let Some((_, _, first)) = fields.iter().find(|(n, _, _)| *n == f.name) {
+                let line = first.line;
+                self.diags
+                    .error("E0011", f.span, format!("field `{}` is declared more than once in `{owner}`", f.name))
+                    .note(format!("first declared on line {line}"));
+            }
+            fields.push((f.name.clone(), ty, f.span));
+        }
+        fields
     }
 
     /// Depth-first walk over by-value containment; a back edge means infinite size.
@@ -839,14 +1040,23 @@ impl Checker<'_> {
         state[i] = 1;
         stack.push(i);
         // `?S` holds an `S` by value, so it counts as containment too.
-        fn by_value(t: Ty) -> Option<usize> {
+        fn by_value(t: Ty, out: &mut Vec<usize>) {
             match t {
-                Ty::Struct(id) => Some(id as usize),
-                Ty::Opt(o) => by_value(opt_inner(o)),
-                _ => None,
+                Ty::Struct(id) | Ty::Enum(id) => out.push(id as usize),
+                Ty::Opt(o) => by_value(opt_inner(o), out),
+                Ty::Res(r) => {
+                    let (a, b) = res_parts(r);
+                    by_value(a, out);
+                    by_value(b, out);
+                }
+                _ => {}
             }
         }
-        let deps: Vec<usize> = self.structs[i].fields.iter().filter_map(|(_, t, _)| by_value(*t)).collect();
+        let mut deps: Vec<usize> = Vec::new();
+        let s = &self.structs[i];
+        for (_, t, _) in s.fields.iter().chain(s.variants.iter().flat_map(|v| v.fields.iter())) {
+            by_value(*t, &mut deps);
+        }
         for d in deps {
             self.visit_struct(d, state, order, stack);
         }
@@ -883,6 +1093,15 @@ impl Checker<'_> {
             }
             return err_expr(span);
         };
+        if matches!(self.structs[si].ty, Ty::Enum(_)) {
+            self.diags
+                .error("E0001", name_span, format!("`{name}` is an enum, not a struct"))
+                .note(format!("construct one of its cases, e.g. `{name}.Case(...)`"));
+            for init in inits {
+                self.expr(&init.value, None, cx);
+            }
+            return err_expr(span);
+        }
         let decl: Vec<(String, Ty)> = self.structs[si].fields.iter().map(|(n, t, _)| (n.clone(), *t)).collect();
         let sty = self.structs[si].ty;
         let mut seen = vec![false; decl.len()];
@@ -895,6 +1114,7 @@ impl Checker<'_> {
                     let fty = decl[fi].1;
                     let h = self.expr(&init.value, Some(fty), cx);
                     let h = self.fit(h, fty, cx);
+                    let h = self.consume(h, cx);
                     out.push((fi, h));
                 }
                 Some(_) => {
@@ -972,6 +1192,40 @@ impl Checker<'_> {
     }
 
     fn resolve_ty(&mut self, t: &TypeExpr) -> Ty {
+        if t.name == "()" {
+            return Ty::Unit;
+        }
+        if t.name == "!" {
+            let ok = self.resolve_ty(&t.args[0]);
+            let err = self.resolve_ty(&t.args[1]);
+            if ok == Ty::Error || err == Ty::Error {
+                return Ty::Error;
+            }
+            if matches!(ok, Ty::Res(_)) || matches!(err, Ty::Res(_) | Ty::Unit) {
+                self.diags.error("E0001", t.span, format!("`{ok} ! {err}` is not a valid result type"));
+                return Ty::Error;
+            }
+            if err.carries_borrow() {
+                self.diags
+                    .error("E0301", t.args[1].span, format!("an error value cannot hold a `{err}`: a view cannot be stored in it"))
+                    .note("store an owned value instead, e.g. `String`");
+                return Ty::Error;
+            }
+            return Ty::Res(res_of(ok, err));
+        }
+        if let Some((m, _)) = t.name.split_once('.') {
+            if !self.module_ref(m, t.span) {
+                self.diags.error("E0010", t.span, format!("unknown type `{}`", t.name));
+                return Ty::Error;
+            }
+            return match self.struct_index.get(&t.name) {
+                Some(&i) => self.structs[i].ty,
+                None => {
+                    self.diags.error("U0001", t.span, format!("type `{}` is not supported yet", t.name));
+                    Ty::Error
+                }
+            };
+        }
         if t.name == "&" {
             return match t.args.first().map(|a| self.resolve_ty(a)) {
                 Some(Ty::Error) | None => Ty::Error,
@@ -1088,7 +1342,9 @@ impl Checker<'_> {
             })
             .collect();
         let body = self.stmts(&f.body.stmts, &mut cx);
-        if ret != Ty::Unit && ret != Ty::Error && !terminates(&f.body.stmts) {
+        // `-> () ! E` succeeds when it reaches its end, like a function without a return type.
+        let unit_res = matches!(ret, Ty::Res(r) if res_parts(r).0 == Ty::Unit);
+        if ret != Ty::Unit && ret != Ty::Error && !unit_res && !terminates(&f.body.stmts) {
             self.diags
                 .error(
                     "E0013",
@@ -1195,6 +1451,22 @@ impl Checker<'_> {
                 return;
             }
         }
+        if let Ty::Res(r) = e.ty {
+            if res_parts(r).0 == expected {
+                self.diags
+                    .error("E0001", e.span, format!("this value can fail (`{}`), so it cannot be used as a `{expected}`", e.ty))
+                    .note("handle the error first: `try f()`, `f() catch e => value`, or `match f() { ok(v) => ... err(e) => ... }`");
+                return;
+            }
+        }
+        if let Ty::Opt(o) = e.ty {
+            if opt_inner(o) == expected {
+                self.diags
+                    .error("E0001", e.span, format!("this value may be absent (`{}`), so it cannot be used as a `{expected}`", e.ty))
+                    .note("handle `none` first: `if let`, `?? default`, or `match` with `some(x)` / `none`");
+                return;
+            }
+        }
         if let Ty::Ref(id) = e.ty {
             if ref_inner(id) == expected && !expected.is_copy() {
                 self.diags
@@ -1226,6 +1498,20 @@ impl Checker<'_> {
             Ty::RefMut(r) if ref_mut_inner(r) == expected && expected.is_copy() => self.deref(h),
             _ => h,
         };
+        // In a function returning `T ! E`, a `T` is a success value (section 8 whitelist).
+        if let Ty::Res(r) = expected {
+            let ok = res_parts(r).0;
+            if h.ty == expected || h.ty == Ty::Error || ok == Ty::Unit || ok == Ty::Error {
+                return h;
+            }
+            let h = self.coerce(h, ok, cx);
+            if h.ty != ok {
+                return h;
+            }
+            let (span, at) = (h.span, h.at);
+            let h = self.consume(h, cx);
+            return HExpr { kind: HExprKind::Ok(Some(Box::new(h))), ty: expected, span, at };
+        }
         let Ty::Opt(o) = expected else { return h };
         let inner = opt_inner(o);
         let h = match h.ty {
@@ -1379,6 +1665,8 @@ impl Checker<'_> {
             match (&r.kind, r.ty) {
                 (HExprKind::Local(id), Ty::String) => vec![Loan::Local(*id)],
                 (HExprKind::InoutArg(id), _) => vec![Loan::Local(*id)],
+                // A `String` stored in a field or an element, or read through a reference.
+                (HExprKind::Field { .. } | HExprKind::Deref(_), Ty::String) => self.storage_loans(r, cx),
                 (_, Ty::String) => vec![Loan::Temp],
                 _ => self.loans_of(r, cx),
             }
@@ -1386,7 +1674,20 @@ impl Checker<'_> {
         match &h.kind {
             HExprKind::Local(id) | HExprKind::Move(id) => cx.locals[*id].loans.clone(),
             HExprKind::Deref(inner) => self.loans_of(inner, cx),
+            HExprKind::AddrOf(inner) => self.storage_loans(inner, cx),
             HExprKind::Some(inner) => self.loans_of(inner, cx),
+            HExprKind::Ok(Some(inner)) | HExprKind::ErrVal(inner) | HExprKind::Try(inner) => self.loans_of(inner, cx),
+            HExprKind::Catch { value, handler, .. } => {
+                let mut out = self.loans_of(value, cx);
+                if let CatchHandler::Value(v) = handler {
+                    for l in self.loans_of(v, cx) {
+                        if !out.contains(&l) {
+                            out.push(l);
+                        }
+                    }
+                }
+                out
+            }
             HExprKind::Coalesce { lhs, rhs } => {
                 let mut out = self.loans_of(lhs, cx);
                 for l in self.loans_of(rhs, cx) {
@@ -1397,25 +1698,17 @@ impl Checker<'_> {
                 out
             }
             // Elements taken out of a vector keep pointing where the vector's elements point.
-            HExprKind::Pop(id) => cx.locals[*id].loans.clone(),
+            HExprKind::Pop(p) => cx.locals[p.local].loans.clone(),
             HExprKind::Take(p) | HExprKind::Replace(p, _) => cx.locals[p.local].loans.clone(),
             // `get` borrows the map's slot; `getCopy` copies a value that keeps the elements' loans.
-            HExprKind::MapRead { op: MapRead::Get, recv, .. } => match &recv.kind {
-                HExprKind::Local(id) => {
-                    let mut out = vec![Loan::Local(*id)];
-                    out.extend(cx.locals[*id].loans.iter().copied());
-                    out
-                }
-                HExprKind::Deref(inner) => self.loans_of(inner, cx),
-                _ => vec![Loan::Temp],
-            },
+            HExprKind::MapRead { op: MapRead::Get, recv, .. } => self.storage_loans(recv, cx),
             HExprKind::MapRead { recv, .. } => self.loans_of(recv, cx),
-            HExprKind::MapWrite { op: MapWrite::GetMut, local, .. } => {
-                let mut out = vec![Loan::Local(*local)];
-                out.extend(cx.locals[*local].loans.iter().copied());
+            HExprKind::MapWrite { op: MapWrite::GetMut, place, .. } => {
+                let mut out = vec![Loan::Local(place.local)];
+                out.extend(cx.locals[place.local].loans.iter().copied());
                 out
             }
-            HExprKind::MapWrite { local, .. } => cx.locals[*local].loans.clone(),
+            HExprKind::MapWrite { place, .. } => cx.locals[place.local].loans.clone(),
             HExprKind::Method { method: Builtin::MapClone, recv } if h.ty.carries_borrow() => self.loans_of(recv, cx),
             HExprKind::MapLit(entries) => {
                 let mut out = Vec::new();
@@ -1429,15 +1722,7 @@ impl Checker<'_> {
                 out
             }
             // `&v[i]` points into `v`'s storage (and into whatever `v`'s elements point into).
-            HExprKind::Index { base, .. } if matches!(h.ty, Ty::Ref(_)) => match &base.kind {
-                HExprKind::Local(id) => {
-                    let mut out = vec![Loan::Local(*id)];
-                    out.extend(cx.locals[*id].loans.iter().copied());
-                    out
-                }
-                HExprKind::Deref(inner) => self.loans_of(inner, cx),
-                _ => vec![Loan::Temp],
-            },
+            HExprKind::Index { base, .. } if matches!(h.ty, Ty::Ref(_)) => self.storage_loans(base, cx),
             HExprKind::StrView(inner) => recv_loans(inner),
             HExprKind::Method { method: Builtin::Trim | Builtin::Fields | Builtin::Lines, recv } => recv_loans(recv),
             // A cloned `Vec[str]` owns new storage, but its elements still point into the same text.
@@ -1472,6 +1757,23 @@ impl Checker<'_> {
                 out
             }
             _ => Vec::new(),
+        }
+    }
+
+    /// What a borrow of `h`'s own storage points into: the variable it lives in (a variable,
+    /// a field of one, an element of one), or what the reference it is read through points
+    /// into, or a temporary.
+    fn storage_loans(&self, h: &HExpr, cx: &FnCx) -> Vec<Loan> {
+        match &h.kind {
+            HExprKind::Local(id) => {
+                let mut out = vec![Loan::Local(*id)];
+                out.extend(cx.locals[*id].loans.iter().copied());
+                out
+            }
+            HExprKind::Deref(inner) => self.loans_of(inner, cx),
+            HExprKind::Field { base, .. } => self.storage_loans(base, cx),
+            HExprKind::Index { base, .. } => self.storage_loans(base, cx),
+            _ => vec![Loan::Temp],
         }
     }
 
@@ -1577,6 +1879,14 @@ impl Checker<'_> {
                 self.diags
                     .error("E0401", h.span, format!("cannot move a `{}` out of a reference", h.ty))
                     .note("make a copy with `.clone()`");
+            }
+            return h;
+        }
+        if let HExprKind::Field { .. } = h.kind {
+            if !h.ty.is_copy() && h.ty != Ty::Error {
+                self.diags
+                    .error("E0401", h.span, format!("cannot move a `{}` out of a field", h.ty))
+                    .note("take it and leave a default with `take(&x.field)`, copy it with `.clone()`, or only borrow it");
             }
             return h;
         }
@@ -1849,6 +2159,15 @@ impl Checker<'_> {
                 HStmtKind::Assign { local: id, path, value }
             }
             StmtKind::Expr(e) => {
+                if matches!(e.kind, ExprKind::Try(_) | ExprKind::Catch { .. } | ExprKind::Match { .. }) {
+                    cx.diverge_ok = Some(e.span);
+                    let h = self.expr(e, None, cx);
+                    cx.diverge_ok = None;
+                    if let Ty::Res(_) = h.ty {
+                        self.unhandled(&h);
+                    }
+                    return Some(HStmt { kind: HStmtKind::Expr(h), span: s.span });
+                }
                 let ExprKind::Call { callee, args } = &e.kind else {
                     self.diags.error(
                         "E0001",
@@ -1863,7 +2182,11 @@ impl Checker<'_> {
                         return self.print(n, args, e.span, cx).map(|kind| HStmt { kind, span: s.span });
                     }
                 }
-                HStmtKind::Expr(self.expr(e, None, cx))
+                let h = self.expr(e, None, cx);
+                if let Ty::Res(_) = h.ty {
+                    self.unhandled(&h);
+                }
+                HStmtKind::Expr(h)
             }
             StmtKind::If { cond, then, els } => {
                 let cond = self.cond(cond, cx);
@@ -1904,19 +2227,29 @@ impl Checker<'_> {
                 self.match_opt(value, &arms, "if let", s.span, cx)?
             }
             StmtKind::Match { value, arms } => {
-                let arms: Vec<OptArm> = arms
-                    .iter()
-                    .map(|a| OptArm {
-                        pat: match &a.pat {
-                            Pattern::Some { name, name_span } => ArmPat::Some(name, *name_span),
-                            Pattern::None => ArmPat::None,
-                            Pattern::Wild => ArmPat::Wild,
-                        },
-                        body: Body::Block(&a.body),
-                        span: a.span,
-                    })
-                    .collect();
-                self.match_opt(value, &arms, "match", s.span, cx)?
+                if simple_opt_arms(arms.iter().map(|a| &a.pat)) {
+                    let arms: Vec<OptArm> = arms
+                        .iter()
+                        .map(|a| OptArm {
+                            pat: match &a.pat {
+                                Pattern::Some(inner) => match &**inner {
+                                    Pattern::Bind { name, span } => ArmPat::Some(name, *span),
+                                    _ => ArmPat::Some("_", a.span),
+                                },
+                                Pattern::None => ArmPat::None,
+                                _ => ArmPat::Wild,
+                            },
+                            body: Body::Block(&a.body),
+                            span: a.span,
+                        })
+                        .collect();
+                    self.match_opt(value, &arms, "match", s.span, cx)?
+                } else {
+                    let garms: Vec<GArm> =
+                        arms.iter().map(|a| GArm { pat: &a.pat, span: a.span, body: GBody::Block(&a.body) }).collect();
+                    let (scrut, owned, arms, _) = self.match_general(value, &garms, s.span, None, None, cx)?;
+                    HStmtKind::Match { scrut, owned, arms }
+                }
             }
             StmtKind::While { cond, body } => {
                 let cond = self.cond(cond, cx);
@@ -1973,7 +2306,14 @@ impl Checker<'_> {
     /// The checked value of `return [value]`.
     fn return_value(&mut self, value: Option<&Expr>, span: Span, cx: &mut FnCx) -> Option<HExpr> {
         let ret = cx.ret;
+        // `return` or `return ()` in a function returning `() ! E` is a success.
+        if let Ty::Res(r) = ret {
+            if res_parts(r).0 == Ty::Unit && value.is_none_or(|e| matches!(e.kind, ExprKind::Unit)) {
+                return Some(HExpr { kind: HExprKind::Ok(None), ty: ret, span, at: span });
+            }
+        }
         match value {
+            Some(e) if matches!(e.kind, ExprKind::Unit) && ret == Ty::Unit => None,
             None => {
                 if ret != Ty::Unit && ret != Ty::Error {
                     self.diags.error("E0001", span, format!("this function must return a value of type `{ret}`"));
@@ -2022,6 +2362,8 @@ impl Checker<'_> {
             _ => (false, iter),
         };
         let mut prelude = None;
+        // Variables that must not change while the loop runs, besides the collection variable.
+        let mut guarded: Vec<LocalId> = Vec::new();
         let coll = if mutable {
             // `in &c` needs a writable variable; the loop then has exclusive access to it.
             let id = self.mutable_receiver(target, "for ... in &", cx)?;
@@ -2049,9 +2391,20 @@ impl Checker<'_> {
             }
             match it.kind {
                 HExprKind::Local(id) => id,
-                HExprKind::Deref(_) => {
-                    self.diags.error("U0001", iter.span, "iterating through a reference is not supported in P0");
-                    return None;
+                HExprKind::Deref(_) | HExprKind::Field { .. } => {
+                    // An existing place (a field, or a collection read through a `&`) is
+                    // iterated through a hidden `&` to it; what it lives in must not change.
+                    let loans = self.storage_loans(&it, cx);
+                    guarded = loans.iter().filter_map(|l| if let Loan::Local(v) = l { Some(*v) } else { None }).collect();
+                    let rty = Ty::Ref(ref_of(it.ty));
+                    let (isp, at) = (it.span, it.at);
+                    let init = HExpr { kind: HExprKind::AddrOf(Box::new(it)), ty: rty, span: isp, at };
+                    let hidden = format!("$iter{}", cx.locals.len());
+                    let id = self.declare(cx, &hidden, iter.span, rty, LocalKind::Let);
+                    cx.locals[id].used = true;
+                    self.store_loans(cx, id, loans, iter.span, true);
+                    prelude = Some(HStmt { kind: HStmtKind::Let { local: id, init }, span });
+                    id
                 }
                 _ => {
                     // A temporary is kept in a hidden variable until the loop ends.
@@ -2067,7 +2420,10 @@ impl Checker<'_> {
                 }
             }
         };
-        let coll_ty = cx.locals[coll].ty;
+        let coll_ty = match cx.locals[coll].ty {
+            Ty::Ref(r) => ref_inner(r),
+            t => t,
+        };
         let mut ref_loans = vec![Loan::Local(coll)];
         ref_loans.extend(cx.locals[coll].loans.iter().copied());
         let elem_loans = cx.locals[coll].loans.clone();
@@ -2130,6 +2486,8 @@ impl Checker<'_> {
             _ => unreachable!("checked: a Vec or a Map"),
         };
         cx.iterating.push(coll);
+        let n_guarded = guarded.len();
+        cx.iterating.extend(guarded);
         if mutable {
             cx.iterating_mut.push(coll);
         }
@@ -2137,7 +2495,9 @@ impl Checker<'_> {
         if mutable {
             cx.iterating_mut.pop();
         }
-        cx.iterating.pop();
+        for _ in 0..=n_guarded {
+            cx.iterating.pop();
+        }
         self.pop_scope(cx);
         let kind = match shape {
             Shape::Vec { index, elem, by_ref } => HStmtKind::ForEach { vec: coll, index, elem, by_ref, body },
@@ -2319,50 +2679,64 @@ impl Checker<'_> {
     fn print(&mut self, name: &str, args: &[Expr], span: Span, cx: &mut FnCx) -> Option<HStmtKind> {
         let fd = if name == "eprintln" { 2 } else { 1 };
         let newline = name != "print";
-        let mut parts = Vec::new();
-        match args {
-            [] if newline => {}
-            [arg] => match &arg.kind {
-                ExprKind::Str(segs) => {
-                    for seg in segs {
-                        match seg {
-                            StrSeg::Text(t) => parts.push(PrintPart::Text(t.clone())),
-                            StrSeg::Expr { expr, spec } => {
-                                if spec.is_some() {
-                                    self.diags.error(
-                                        "U0001",
-                                        expr.span,
-                                        "format specifiers such as `${x:.2}` are not supported in P0",
-                                    );
-                                }
-                                let h = self.expr(expr, None, cx);
-                                let h = self.deref(h);
-                                self.printable(&h);
-                                parts.push(PrintPart::Value(h));
-                            }
-                        }
-                    }
-                }
-                _ => {
-                    let h = self.expr(arg, None, cx);
-                    let h = self.deref(h);
-                    self.printable(&h);
-                    parts.push(PrintPart::Value(h));
-                }
-            },
+        let parts = match args {
+            [] if newline => Vec::new(),
+            [arg] => self.print_parts(arg, cx),
             _ => {
                 self.diags
                     .error("E0012", span, format!("`{name}` takes exactly one argument"))
                     .note("use interpolation to print several values: `println(\"${a} ${b}\")`");
                 return None;
             }
-        }
+        };
         Some(HStmtKind::Print { fd, newline, parts })
+    }
+
+    /// The pieces of a message: an interpolated string's text and values, or one value.
+    fn print_parts(&mut self, arg: &Expr, cx: &mut FnCx) -> Vec<PrintPart> {
+        let mut parts = Vec::new();
+        match &arg.kind {
+            ExprKind::Str(segs) => {
+                for seg in segs {
+                    match seg {
+                        StrSeg::Text(t) => parts.push(PrintPart::Text(t.clone())),
+                        StrSeg::Expr { expr, spec } => {
+                            if spec.is_some() {
+                                self.diags.error("U0001", expr.span, "format specifiers such as `${x:.2}` are not supported in P0");
+                            }
+                            let h = self.expr(expr, None, cx);
+                            let h = self.deref(h);
+                            self.printable(&h);
+                            parts.push(PrintPart::Value(h));
+                        }
+                    }
+                }
+            }
+            _ => {
+                let h = self.expr(arg, None, cx);
+                let h = self.deref(h);
+                self.printable(&h);
+                parts.push(PrintPart::Value(h));
+            }
+        }
+        parts
+    }
+
+    /// A call whose result can fail was used as a statement without handling it.
+    fn unhandled(&mut self, h: &HExpr) {
+        self.diags
+            .error("E0001", h.span, format!("the result of this call is not handled (`{}`)", h.ty))
+            .note("handle it with `try`, `catch` or `match`, or discard it explicitly with `let _ = ...`");
     }
 
     fn printable(&mut self, h: &HExpr) {
         if h.ty == Ty::Unit {
             self.diags.error("E0001", h.span, "this call returns nothing, so there is nothing to print");
+        }
+        if let Ty::Res(_) = h.ty {
+            self.diags
+                .error("E0001", h.span, format!("a value that can fail (`{}`) cannot be printed directly", h.ty))
+                .note("handle the error first with `try`, `catch` or `match`");
         }
         if let Ty::Struct(_) | Ty::Vec(_) | Ty::Map(_) = h.ty {
             self.diags
@@ -2443,6 +2817,7 @@ impl Checker<'_> {
         let span = e.span;
         match &e.kind {
             ExprKind::Int(v) => self.int_lit(*v, false, expected, span),
+            ExprKind::Byte(b) => HExpr { kind: HExprKind::Int(*b as i128), ty: Ty::Int(IntTy::U8), span, at: span },
             ExprKind::Bool(b) => HExpr { kind: HExprKind::Bool(*b), ty: Ty::Bool, span, at: span },
             ExprKind::Paren(inner) => {
                 let mut h = self.expr(inner, expected, cx);
@@ -2519,6 +2894,9 @@ impl Checker<'_> {
                 err_expr(span)
             }
             ExprKind::Field { base, name } => {
+                if let Some(ei) = self.enum_path(base, cx) {
+                    return self.enum_case(ei, name, None, span, cx);
+                }
                 if let ExprKind::Ident(tn) = &base.kind {
                     if self.lookup(cx, tn).is_none() {
                         if let Some(it) = IntTy::from_name(tn) {
@@ -2589,6 +2967,57 @@ impl Checker<'_> {
             ExprKind::Return(_) | ExprKind::Break | ExprKind::Continue => {
                 // The parser only produces these on the right side of `??`, which handles them.
                 self.diags.error("E0020", span, "`return`, `break` and `continue` are statements here");
+                err_expr(span)
+            }
+            ExprKind::Unit => {
+                self.diags
+                    .error("E0001", span, "`()` has no value to use here")
+                    .note("`()` is only written as `return ()` or `ok(())` in a function returning `() ! E`");
+                err_expr(span)
+            }
+            ExprKind::Case { name, args } => match self.case_target(expected) {
+                Some(ei) => self.enum_case(ei, name, args.as_deref(), span, cx),
+                None => {
+                    if expected != Some(Ty::Error) {
+                        self.diags
+                            .error("E0001", span, format!("cannot tell which enum `.{name}` belongs to"))
+                            .note(format!("write the enum name, e.g. `Kind.{name}`, or use it where the enum type is known"));
+                    }
+                    for a in args.iter().flatten() {
+                        let v = match &a.kind {
+                            ExprKind::Named { value, .. } => value,
+                            _ => a,
+                        };
+                        self.expr(v, Some(Ty::Error), cx);
+                    }
+                    err_expr(span)
+                }
+            },
+            ExprKind::Named { name_span, value, .. } => {
+                self.diags.error("E0001", *name_span, "named arguments (`name: value`) are only used for enum case payloads");
+                self.expr(value, None, cx);
+                err_expr(span)
+            }
+            ExprKind::Err(v) => self.result_value(false, v, expected, span, cx),
+            ExprKind::Try(v) => self.try_expr(v, span, cx),
+            ExprKind::Catch { value, name, name_span, handler, block } => {
+                self.catch_expr(value, name, *name_span, handler, *block, span, cx)
+            }
+            ExprKind::Match { value, arms } => {
+                let garms: Vec<GArm> = arms.iter().map(|a| GArm { pat: &a.pat, span: a.span, body: GBody::Expr(&a.body) }).collect();
+                match self.match_general(value, &garms, span, Some(span.start), expected, cx) {
+                    Some((scrut, owned, arms, ty)) => {
+                        if ty == Ty::Unit {
+                            self.diags.error("E0001", span, "every arm of this `match` leaves, so it has no value");
+                            return err_expr(span);
+                        }
+                        HExpr { kind: HExprKind::Match { scrut: Box::new(scrut), owned, arms }, ty, span, at: span }
+                    }
+                    None => err_expr(span),
+                }
+            }
+            ExprKind::Block(_) => {
+                self.diags.error("E0020", span, "a block cannot be used as a value here");
                 err_expr(span)
             }
         }
@@ -2955,6 +3384,14 @@ impl Checker<'_> {
                     match name.as_str() {
                         "some" => return self.some_call(args, expected, span, callee.span, cx),
                         "take" | "replace" | "swap" => return self.place_builtin(name, args, span, callee.span, cx),
+                        "ok" => {
+                            let [arg] = args else {
+                                self.diags.error("E0012", span, "`ok` takes exactly one argument");
+                                return err_expr(span);
+                            };
+                            return self.result_value(true, arg, expected, span, cx);
+                        }
+                        "panic" | "assert" => return self.panic_call(name, args, span, callee.span, cx),
                         _ => {}
                     }
                 }
@@ -3068,6 +3505,9 @@ impl Checker<'_> {
     }
 
     fn method_call(&mut self, base: &Expr, name: &str, args: &[Expr], span: Span, at: Span, cx: &mut FnCx) -> HExpr {
+        if let Some(ei) = self.enum_path(base, cx) {
+            return self.enum_case(ei, name, Some(args), span, cx);
+        }
         if let ExprKind::Ident(tn) = &base.kind {
             if self.lookup(cx, tn).is_none() {
                 if name == "wrap" {
@@ -3093,12 +3533,8 @@ impl Checker<'_> {
             return self.pop_call(base, args, span, at, cx);
         }
         if matches!(name, "set" | "remove" | "getMut" | "update") {
-            if let ExprKind::Ident(n) = &base.kind {
-                if let Some(id) = self.lookup(cx, n) {
-                    if let Ty::Map(mid) = Self::receiver_ty(cx, id) {
-                        return self.map_write_call(base, mid, name, args, span, at, cx);
-                    }
-                }
+            if let Some(Ty::Map(mid)) = self.peek_place_ty(base, cx) {
+                return self.map_write_call(base, mid, name, args, span, at, cx);
             }
         }
         let recv = self.expr(base, None, cx);
@@ -3203,7 +3639,8 @@ impl Checker<'_> {
             self.diags.error("U0001", at, "`update` takes a closure, and closures are not supported yet");
             return err_expr(span);
         }
-        let Some(id) = self.mutable_receiver(base, name, cx) else { return err_expr(span) };
+        let Some(place) = self.mutable_place(base, name, cx) else { return err_expr(span) };
+        let id = place.local;
         let local = cx.locals[id].name.clone();
         // v1 has no two-phase borrows: the map is borrowed before the arguments run (V2).
         if let Some(a) = args.iter().find(|a| mentions(a, &local)) {
@@ -3249,7 +3686,92 @@ impl Checker<'_> {
             "remove" => (MapWrite::Remove, vec![self.map_query(&args[0], k, cx)], Ty::Opt(opt_of(v))),
             _ => (MapWrite::GetMut, vec![self.map_query(&args[0], k, cx)], Ty::Opt(opt_of(Ty::RefMut(ref_mut_of(v))))),
         };
-        HExpr { kind: HExprKind::MapWrite { op, local: id, args: hargs }, ty, span, at }
+        HExpr { kind: HExprKind::MapWrite { op, place, args: hargs }, ty, span, at }
+    }
+
+    /// The type of a variable or a field chain rooted at one, without reporting anything (an
+    /// `&inout T` variable stands for its target).
+    fn peek_place_ty(&self, base: &Expr, cx: &FnCx) -> Option<Ty> {
+        match &base.kind {
+            ExprKind::Ident(n) => self.lookup(cx, n).map(|id| Self::receiver_ty(cx, id)),
+            ExprKind::Paren(e) => self.peek_place_ty(e, cx),
+            ExprKind::Field { base: b, name } => {
+                let t = match self.peek_place_ty(b, cx)? {
+                    Ty::Ref(r) => ref_inner(r),
+                    t => t,
+                };
+                self.struct_field(t, name).map(|(_, t)| t)
+            }
+            _ => None,
+        }
+    }
+
+    /// The receiver of a modifying method (`push`, `pop`, `set`, ...): a writable variable or a
+    /// field chain rooted at one. An `&inout T` variable stands for its target.
+    fn mutable_place(&mut self, base: &Expr, method: &str, cx: &mut FnCx) -> Option<HPlace> {
+        let mut fields_rev: Vec<(&str, Span)> = Vec::new();
+        let mut root = base;
+        loop {
+            match &root.kind {
+                ExprKind::Field { base, name } => {
+                    fields_rev.push((name.as_str(), root.span));
+                    root = base;
+                }
+                ExprKind::Paren(e) => root = e,
+                _ => break,
+            }
+        }
+        if fields_rev.is_empty() {
+            let id = self.mutable_receiver(base, method, cx)?;
+            return Some(HPlace { local: id, path: Vec::new(), ty: Self::receiver_ty(cx, id) });
+        }
+        let ExprKind::Ident(name) = &root.kind else {
+            self.diags.error("U0001", base.span, format!("`{method}` is only supported on a variable or a field of one for now"));
+            return None;
+        };
+        let Some(id) = self.lookup(cx, name) else {
+            self.diags.error("E0010", root.span, format!("cannot find variable `{name}` in this scope"));
+            return None;
+        };
+        cx.locals[id].used = true;
+        self.check_moved(cx, id, root.span);
+        let root_ty = cx.locals[id].ty;
+        match root_ty {
+            Ty::Ref(_) => {
+                self.diags
+                    .error("E0101", root.span, format!("cannot modify through `{name}`: it is a read-only reference (`{root_ty}`)"))
+                    .note("get a writable reference instead, e.g. with `getMut`");
+                return None;
+            }
+            Ty::RefMut(_) => self.check_exclusive(cx, id, root.span),
+            _ => {
+                if !self.writable(cx, id, root.span) {
+                    return None;
+                }
+            }
+        }
+        let mut ty = Self::receiver_ty(cx, id);
+        let mut path = Vec::new();
+        for (fname, fspan) in fields_rev.iter().rev() {
+            match self.struct_field(ty, fname) {
+                Some((fi, fty)) => {
+                    path.push(fi);
+                    ty = fty;
+                }
+                None => {
+                    match ty {
+                        Ty::Struct(_) => self.no_field(ty, fname, *fspan),
+                        Ty::Error => {}
+                        other => {
+                            self.diags.error("E0001", *fspan, format!("a value of type `{other}` has no fields"));
+                        }
+                    }
+                    return None;
+                }
+            }
+        }
+        self.check_not_borrowed(cx, id, base.span, "modify");
+        Some(HPlace { local: id, path, ty })
     }
 
     /// The variable a modifying method (`push`, `pop`, `set`, ...) is called on. An `&inout T`
@@ -3283,13 +3805,13 @@ impl Checker<'_> {
 
     /// `v.pop()`: the last element as an owned `?T`.
     fn pop_call(&mut self, base: &Expr, args: &[Expr], span: Span, at: Span, cx: &mut FnCx) -> HExpr {
-        let Some(id) = self.mutable_receiver(base, "pop", cx) else { return err_expr(span) };
+        let Some(place) = self.mutable_place(base, "pop", cx) else { return err_expr(span) };
         if !args.is_empty() {
             self.diags.error("E0012", span, "`pop` takes no arguments");
             return err_expr(span);
         }
-        match Self::receiver_ty(cx, id) {
-            Ty::Vec(vid) => HExpr { kind: HExprKind::Pop(id), ty: Ty::Opt(opt_of(vec_elem(vid))), span, at },
+        match place.ty {
+            Ty::Vec(vid) => HExpr { kind: HExprKind::Pop(place), ty: Ty::Opt(opt_of(vec_elem(vid))), span, at },
             Ty::Error => err_expr(span),
             other => {
                 self.diags.error("U0001", at, format!("method `pop` on `{other}` is not supported yet"));
@@ -3300,7 +3822,8 @@ impl Checker<'_> {
 
     /// `v.push(x)` moves `x` into the vector; `s.push(t)` appends text to a `String`.
     fn push_call(&mut self, base: &Expr, args: &[Expr], span: Span, at: Span, cx: &mut FnCx) -> HExpr {
-        let Some(id) = self.mutable_receiver(base, "push", cx) else { return err_expr(span) };
+        let Some(place) = self.mutable_place(base, "push", cx) else { return err_expr(span) };
+        let id = place.local;
         let name = cx.locals[id].name.clone();
         let name = &name;
         let [arg] = args else {
@@ -3314,7 +3837,7 @@ impl Checker<'_> {
                 .note(format!("compute the value first: `let x = ...` then `{name}.push(x)`"));
             return err_expr(span);
         }
-        let rty = Self::receiver_ty(cx, id);
+        let rty = place.ty;
         let value = match rty {
             Ty::Vec(vid) => {
                 let et = vec_elem(vid);
@@ -3353,7 +3876,7 @@ impl Checker<'_> {
                 return err_expr(span);
             }
         };
-        HExpr { kind: HExprKind::Push { local: id, value: Box::new(value) }, ty: Ty::Unit, span, at }
+        HExpr { kind: HExprKind::Push { place, value: Box::new(value) }, ty: Ty::Unit, span, at }
     }
 
     fn vec_lit(&mut self, items: &[Expr], expected: Option<Ty>, span: Span, cx: &mut FnCx) -> HExpr {
@@ -3476,6 +3999,653 @@ impl Checker<'_> {
     }
 
     fn conversion(&mut self, to: IntTy, checked: bool, args: &[Expr], at: Span, span: Span, cx: &mut FnCx) -> HExpr {
+        self.conversion_inner(to, checked, args, at, span, cx)
+    }
+
+    /// The enum a type path names: `Shape`, or `fs.Error` (a module's enum). Not a variable.
+    fn enum_path(&mut self, base: &Expr, cx: &FnCx) -> Option<usize> {
+        let name = match &base.kind {
+            ExprKind::Ident(n) if self.lookup(cx, n).is_none() => n.clone(),
+            ExprKind::Field { base: m, name } => match &m.kind {
+                ExprKind::Ident(mn) if self.lookup(cx, mn).is_none() && MODULES.iter().any(|(x, _)| x == mn) => {
+                    let full = format!("{mn}.{name}");
+                    if !self.struct_index.contains_key(&full) {
+                        return None;
+                    }
+                    self.module_ref(mn, m.span);
+                    full
+                }
+                _ => return None,
+            },
+            _ => return None,
+        };
+        let &i = self.struct_index.get(&name)?;
+        matches!(self.structs[i].ty, Ty::Enum(_)).then_some(i)
+    }
+
+    /// `Enum.Case`, `Enum.Case(field: value, ...)`, or the same with the enum taken from the
+    /// context (`.Case(...)`). Payload values are moved into the new value in the order written.
+    fn enum_case(&mut self, ei: usize, case: &str, args: Option<&[Expr]>, span: Span, cx: &mut FnCx) -> HExpr {
+        let ty = self.structs[ei].ty;
+        let ename = self.structs[ei].name.clone();
+        let Some(vi) = self.structs[ei].variants.iter().position(|v| v.name == case) else {
+            let names: Vec<String> = self.structs[ei].variants.iter().map(|v| v.name.clone()).collect();
+            self.diags
+                .error("E0010", span, format!("enum `{ename}` has no case `{case}`"))
+                .note(format!("its cases are: {}", names.join(", ")));
+            for a in args.unwrap_or(&[]) {
+                let v = match &a.kind {
+                    ExprKind::Named { value, .. } => value,
+                    _ => a,
+                };
+                self.expr(v, None, cx);
+            }
+            return err_expr(span);
+        };
+        let decl: Vec<(String, Ty)> = self.structs[ei].variants[vi].fields.iter().map(|(n, t, _)| (n.clone(), *t)).collect();
+        let list = |d: &[(String, Ty)]| d.iter().map(|(n, t)| format!("{n}: {t}")).collect::<Vec<_>>().join(", ");
+        let Some(args) = args else {
+            if !decl.is_empty() {
+                self.diags
+                    .error("E0012", span, format!("case `{ename}.{case}` carries a payload ({})", list(&decl)))
+                    .note(format!("write `{ename}.{case}({})`", decl.iter().map(|(n, _)| format!("{n}: ...")).collect::<Vec<_>>().join(", ")));
+                return err_expr(span);
+            }
+            return HExpr { kind: HExprKind::EnumLit { variant: vi, fields: Vec::new() }, ty, span, at: span };
+        };
+        let mut seen = vec![false; decl.len()];
+        let mut out = Vec::new();
+        let mut ok = true;
+        let mut next_pos = 0usize;
+        for a in args {
+            let (fi, value) = match &a.kind {
+                ExprKind::Named { name, name_span, value } => match decl.iter().position(|(n, _)| n == name) {
+                    Some(fi) => (Some(fi), &**value),
+                    None => {
+                        let d = self.diags.error("E0010", *name_span, format!("case `{ename}.{case}` has no field `{name}`"));
+                        if !decl.is_empty() {
+                            d.note(format!("its fields are: {}", list(&decl)));
+                        }
+                        (None, &**value)
+                    }
+                },
+                _ => {
+                    let fi = (next_pos < decl.len()).then_some(next_pos);
+                    next_pos += 1;
+                    if fi.is_none() {
+                        self.diags.error(
+                            "E0012",
+                            a.span,
+                            format!("case `{ename}.{case}` has {}", plural(decl.len(), "payload field")),
+                        );
+                    }
+                    (fi, a)
+                }
+            };
+            let Some(fi) = fi else {
+                self.expr(value, None, cx);
+                ok = false;
+                continue;
+            };
+            if seen[fi] {
+                self.diags.error("E0011", a.span, format!("field `{}` is given more than once", decl[fi].0));
+                self.expr(value, None, cx);
+                ok = false;
+                continue;
+            }
+            seen[fi] = true;
+            let fty = decl[fi].1;
+            let h = self.expr(value, Some(fty), cx);
+            let h = self.fit(h, fty, cx);
+            let h = self.consume(h, cx);
+            out.push((fi, h));
+        }
+        let missing: Vec<String> = decl.iter().zip(&seen).filter(|(_, s)| !**s).map(|((n, _), _)| format!("`{n}`")).collect();
+        if ok && !missing.is_empty() {
+            self.diags.error(
+                "E0018",
+                span,
+                format!("missing {} in `{ename}.{case}`: {}", plural(missing.len(), "field"), missing.join(", ")),
+            );
+            ok = false;
+        }
+        if !ok {
+            return err_expr(span);
+        }
+        HExpr { kind: HExprKind::EnumLit { variant: vi, fields: out }, ty, span, at: span }
+    }
+
+    /// The enum a `.Case` shorthand refers to, from the expected type.
+    fn case_target(&self, expected: Option<Ty>) -> Option<usize> {
+        let t = match expected? {
+            Ty::Opt(o) => opt_inner(o),
+            Ty::Res(r) => res_parts(r).0,
+            t => t,
+        };
+        match t {
+            Ty::Enum(id) => Some(id as usize),
+            _ => None,
+        }
+    }
+
+    /// `err(value)` and `ok(value)`: a result of the expected type.
+    fn result_value(&mut self, is_ok: bool, arg: &Expr, expected: Option<Ty>, span: Span, cx: &mut FnCx) -> HExpr {
+        let word = if is_ok { "ok" } else { "err" };
+        let Some(Ty::Res(r)) = expected else {
+            if expected != Some(Ty::Error) {
+                self.diags
+                    .error("E0001", span, format!("cannot tell which result type this `{word}(...)` has"))
+                    .note("use it where a `T ! E` is expected, e.g. `return err(...)` in a function returning `T ! E`");
+            }
+            self.expr(arg, Some(Ty::Error), cx);
+            return err_expr(span);
+        };
+        let ty = expected.unwrap();
+        let (okt, errt) = res_parts(r);
+        if is_ok && okt == Ty::Unit {
+            if !matches!(arg.kind, ExprKind::Unit) {
+                self.diags.error("E0001", arg.span, "this result has no success value: write `ok(())`");
+                return err_expr(span);
+            }
+            return HExpr { kind: HExprKind::Ok(None), ty, span, at: span };
+        }
+        let want = if is_ok { okt } else { errt };
+        let h = self.expr(arg, Some(want), cx);
+        let h = self.fit(h, want, cx);
+        if h.ty == Ty::Error {
+            return err_expr(span);
+        }
+        let h = self.consume(h, cx);
+        let kind = if is_ok { HExprKind::Ok(Some(Box::new(h))) } else { HExprKind::ErrVal(Box::new(h)) };
+        HExpr { kind, ty, span, at: span }
+    }
+
+    /// `try value` (semantic table V3, V12): the success value; an error is returned from the
+    /// current function, whose error type must be the same.
+    fn try_expr(&mut self, inner: &Expr, span: Span, cx: &mut FnCx) -> HExpr {
+        let h = self.expr(inner, None, cx);
+        let Ty::Res(r) = h.ty else {
+            if h.ty != Ty::Error {
+                self.diags
+                    .error("E0001", h.span, format!("`try` needs a value that can fail (`T ! E`), found `{}`", h.ty))
+                    .note("for an optional value (`?T`) use `??` or `if let`");
+            }
+            return err_expr(span);
+        };
+        let (okt, errt) = res_parts(r);
+        match cx.ret {
+            Ty::Res(fr) => {
+                let ferr = res_parts(fr).1;
+                if ferr != errt && ferr != Ty::Error && errt != Ty::Error {
+                    self.diags
+                        .error("E0001", span, format!("`try` would return a `{errt}` error, but this function returns `{ferr}` errors"))
+                        .note(format!("handle it here with `catch` or `match`, and return an error of type `{ferr}`"));
+                    return err_expr(span);
+                }
+            }
+            Ty::Error => return err_expr(span),
+            other => {
+                self.diags
+                    .error("E0001", span, "`try` can only be used in a function that returns `T ! E`")
+                    .note(format!("this function returns `{other}`; handle the error with `catch` or `match` instead"));
+                return err_expr(span);
+            }
+        }
+        let h = self.consume(h, cx);
+        HExpr { kind: HExprKind::Try(Box::new(h)), ty: okt, span, at: span }
+    }
+
+    /// `value catch e => handler` / `value catch e { ... }` (semantic table V8, V12).
+    #[allow(clippy::too_many_arguments)]
+    fn catch_expr(
+        &mut self,
+        value: &Expr,
+        name: &str,
+        name_span: Span,
+        handler: &Expr,
+        block: bool,
+        span: Span,
+        cx: &mut FnCx,
+    ) -> HExpr {
+        let allowed = cx.diverge_ok == Some(span);
+        cx.diverge_ok = None;
+        let v = self.expr(value, None, cx);
+        let (okt, errt) = match v.ty {
+            Ty::Res(r) => res_parts(r),
+            Ty::Error => (Ty::Error, Ty::Error),
+            other => {
+                self.diags
+                    .error("E0001", v.span, format!("`catch` needs a value that can fail (`T ! E`), found `{other}`"))
+                    .note("for an optional value (`?T`) use `??` or `if let`");
+                (Ty::Error, Ty::Error)
+            }
+        };
+        let v = self.consume(v, cx);
+        let before = cx.moved.clone();
+        cx.scopes.push(Vec::new());
+        let bind = if name == "_" {
+            None
+        } else {
+            let x = self.declare(cx, name, name_span, errt, LocalKind::BindOwned);
+            // Uses later in this same statement count as later uses (see `Pre`).
+            cx.locals[x].decl = cx.cur.saturating_sub(1);
+            cx.locals[x].scope_end = cx.pre.expr_end.get(&(span.start, 0)).copied().unwrap_or(cx.cur).max(cx.cur);
+            Some(x)
+        };
+        let (h, div) = if block {
+            let ExprKind::Block(b) = &handler.kind else { unreachable!("the parser builds a block") };
+            let out = self.stmts(&b.stmts, cx);
+            let div = diverges(&b.stmts);
+            if !div {
+                self.diags
+                    .error("E0601", name_span, "this `catch` block can reach its closing `}`")
+                    .note("leave the block with `return`, `break`, `continue` or `panic(...)`, or give a replacement value with `catch e => value`");
+            }
+            (CatchHandler::Block(out), true)
+        } else {
+            match &handler.kind {
+                ExprKind::Return(_) | ExprKind::Break | ExprKind::Continue => {
+                    if !allowed {
+                        self.diags.error(
+                            "U0001",
+                            handler.span,
+                            "`catch e => return` is only supported as a whole `let` initializer, assigned value or statement for now; use the block form `catch e { return }`",
+                        );
+                    }
+                    (CatchHandler::Value(Box::new(self.diverge(handler, cx))), true)
+                }
+                // `() ! E` has no success value: the handler is a call run for its effect.
+                ExprKind::Call { callee, args } if okt == Ty::Unit => {
+                    let print = match &callee.kind {
+                        ExprKind::Ident(n) if OUTPUT_FNS.contains(&n.as_str()) && self.lookup(cx, n).is_none() => Some(n.clone()),
+                        _ => None,
+                    };
+                    let kind = match print {
+                        Some(n) => self.print(&n, args, handler.span, cx),
+                        None => {
+                            let h = self.expr(handler, None, cx);
+                            if let Ty::Res(_) = h.ty {
+                                self.unhandled(&h);
+                            }
+                            Some(HStmtKind::Expr(h))
+                        }
+                    };
+                    let stmts = kind.map(|kind| HStmt { kind, span: handler.span }).into_iter().collect();
+                    (CatchHandler::Block(stmts), false)
+                }
+                _ => {
+                    let exp = (okt != Ty::Error).then_some(okt);
+                    let r = self.expr(handler, exp, cx);
+                    let r = match exp {
+                        Some(t) => self.fit(r, t, cx),
+                        None => r,
+                    };
+                    (CatchHandler::Value(Box::new(self.consume(r, cx))), false)
+                }
+            }
+        };
+        self.pop_scope(cx);
+        let after = std::mem::replace(&mut cx.moved, before.clone());
+        // The error path continues after the expression only when the handler gives a value.
+        cx.moved = if div { before } else { union(&before, &after) };
+        if okt == Ty::Error {
+            return err_expr(span);
+        }
+        HExpr { kind: HExprKind::Catch { value: Box::new(v), bind, handler: h }, ty: okt, span, at: span }
+    }
+
+    /// `match` on enums, results and nested patterns (semantic table C7), as a statement
+    /// (`expr_start` is `None`) or an expression. Returns the scrutinee, whether it is an owned
+    /// temporary, the arms and (for an expression) the value type.
+    #[allow(clippy::too_many_arguments)]
+    fn match_general(
+        &mut self,
+        value: &Expr,
+        arms: &[GArm],
+        span: Span,
+        expr_start: Option<usize>,
+        expected: Option<Ty>,
+        cx: &mut FnCx,
+    ) -> Option<(HExpr, bool, Vec<HArm>, Ty)> {
+        let stmt_idx = cx.cur;
+        let scrut = self.expr(value, None, cx);
+        let via_ref = matches!(scrut.ty, Ty::Ref(_));
+        let mty = match scrut.ty {
+            Ty::Ref(r) => ref_inner(r),
+            t => t,
+        };
+        let root = place_root(&scrut);
+        let owned = !via_ref && root.is_none();
+        let scrut = if owned { self.consume(scrut, cx) } else { scrut };
+        let (kind, loans) = if owned {
+            let l = if mty.carries_borrow() { self.loans_of(&scrut, cx) } else { Vec::new() };
+            (LocalKind::BindOwned, l)
+        } else if via_ref {
+            (LocalKind::Bind, self.loans_of(&scrut, cx))
+        } else {
+            let r = root.expect("a place");
+            let writable = matches!(cx.locals[r].kind, LocalKind::Var | LocalKind::InoutParam);
+            let mut l = vec![Loan::Local(r)];
+            l.extend(cx.locals[r].loans.iter().copied());
+            (if writable { LocalKind::BindMut } else { LocalKind::Bind }, l)
+        };
+        let before = cx.moved.clone();
+        let mut harms: Vec<HArm> = Vec::new();
+        let mut ends: Vec<(Moved, bool)> = Vec::new();
+        let mut all_ok = mty != Ty::Error;
+        let mut pats_ok: Vec<bool> = Vec::new();
+        let mut result_ty = expected.filter(|t| !matches!(t, Ty::Error | Ty::Unit));
+        for (i, arm) in arms.iter().enumerate() {
+            cx.moved = before.clone();
+            cx.scopes.push(Vec::new());
+            let scope_end = match expr_start {
+                None => cx.pre.bind_end.get(&(stmt_idx, i)).copied(),
+                Some(s) => cx.pre.expr_end.get(&(s, i)).copied().map(|e| e.max(cx.cur)),
+            };
+            let pc = PatCx { owned, kind, loans: &loans, scope_end, in_expr: expr_start.is_some(), span: arm.span };
+            let mut ok = true;
+            let pat = self.check_pat(arm.pat, mty, &pc, &mut ok, cx);
+            all_ok &= ok;
+            pats_ok.push(ok);
+            let (body, value, div) = match arm.body {
+                GBody::Block(b) => {
+                    let out = self.stmts(&b.stmts, cx);
+                    (out, None, diverges(&b.stmts))
+                }
+                GBody::Expr(e) => match &e.kind {
+                    ExprKind::Block(b) => {
+                        let out = self.stmts(&b.stmts, cx);
+                        if !diverges(&b.stmts) {
+                            self.diags
+                                .error("E0001", b.close, "a block arm of a `match` expression must leave (`return`, `break`, `continue`, `panic`)")
+                                .note("give the arm a value instead: `pattern => value`");
+                        }
+                        (out, None, true)
+                    }
+                    ExprKind::Return(_) | ExprKind::Break | ExprKind::Continue => (Vec::new(), Some(self.diverge(e, cx)), true),
+                    _ => {
+                        let h = self.expr(e, result_ty, cx);
+                        let h = match result_ty {
+                            Some(t) => self.fit(h, t, cx),
+                            None => {
+                                if h.ty == Ty::Unit {
+                                    self.diags.error("E0001", h.span, "this arm produces no value");
+                                } else if h.ty != Ty::Error {
+                                    result_ty = Some(h.ty);
+                                }
+                                h
+                            }
+                        };
+                        (Vec::new(), Some(self.consume(h, cx)), false)
+                    }
+                },
+            };
+            self.pop_scope(cx);
+            ends.push((std::mem::take(&mut cx.moved), div));
+            harms.push(HArm { pat, body, value });
+        }
+        // A branch that cannot fall through does not affect the code after the `match`.
+        let live: Vec<&Moved> = ends.iter().filter(|(_, d)| !d).map(|(m, _)| m).collect();
+        let merged: Vec<&Moved> = if live.is_empty() { ends.iter().map(|(m, _)| m).collect() } else { live };
+        cx.moved = match merged.split_first() {
+            Some((first, rest)) => rest.iter().fold((*first).clone(), |acc, m| union(&acc, m)),
+            None => before,
+        };
+        if !all_ok {
+            return None;
+        }
+        for i in 0..harms.len() {
+            let rows: Vec<Vec<&HPat>> = harms[..i].iter().map(|a| vec![&a.pat]).collect();
+            if pats_ok[i] && !self.useful(&rows, &[&harms[i].pat], &[mty]) {
+                self.diags
+                    .warn("W0002", arms[i].span, "this arm can never run: earlier arms already handle its cases")
+                    .note("remove it");
+            }
+        }
+        let rows: Vec<Vec<&HPat>> = harms.iter().map(|a| vec![&a.pat]).collect();
+        if self.useful(&rows, &[&WILD], &[mty]) {
+            let missing = self.missing_case(&rows, mty);
+            self.diags
+                .error("E0602", span, format!("this `match` does not handle `{missing}`"))
+                .note(format!("add a `{missing} => ...` arm, or `_ => ...` for every remaining case"));
+            return None;
+        }
+        Some((scrut, owned, harms, result_ty.unwrap_or(Ty::Unit)))
+    }
+
+    /// Checks a pattern against a value of type `ty` and declares its bindings.
+    fn check_pat(&mut self, p: &Pattern, ty: Ty, pc: &PatCx, ok: &mut bool, cx: &mut FnCx) -> HPat {
+        if ty == Ty::Error {
+            *ok = false;
+            self.error_binds(p, pc, cx);
+            return HPat::Wild;
+        }
+        let mut mismatch = |this: &mut Self, what: &str, span: Span, cx: &mut FnCx| {
+            this.diags.error("E0001", span, format!("the pattern `{what}` cannot match a value of type `{ty}`"));
+            *ok = false;
+            this.error_binds(p, pc, cx);
+            HPat::Wild
+        };
+        match p {
+            Pattern::Wild => HPat::Wild,
+            Pattern::Bind { name, span } => {
+                if ty == Ty::Unit {
+                    return mismatch(self, name, *span, cx);
+                }
+                let by_ref = !pc.owned && !ty.is_copy();
+                if by_ref && ty.contains_ref_mut() {
+                    self.diags.error("U0001", *span, format!("binding a stored `{ty}` is not supported yet"));
+                    *ok = false;
+                    return HPat::Wild;
+                }
+                let bty = if by_ref { Ty::Ref(ref_of(ty)) } else { ty };
+                let x = self.declare(cx, name, *span, bty, pc.kind);
+                if pc.in_expr {
+                    // Uses later in this same statement count as later uses (see `Pre`).
+                    cx.locals[x].decl = cx.cur.saturating_sub(1);
+                }
+                if let Some(end) = pc.scope_end {
+                    cx.locals[x].scope_end = end;
+                }
+                if !pc.loans.is_empty() || bty.carries_borrow() {
+                    self.store_loans(cx, x, pc.loans.to_vec(), *span, true);
+                }
+                HPat::Bind { local: x, by_ref }
+            }
+            Pattern::None | Pattern::Some(_) => {
+                let Ty::Opt(o) = ty else {
+                    let what = if matches!(p, Pattern::None) { "none" } else { "some(...)" };
+                    return mismatch(self, what, pc.span, cx);
+                };
+                match p {
+                    Pattern::Some(inner) => HPat::Opt(Some(Box::new(self.check_pat(inner, opt_inner(o), pc, ok, cx)))),
+                    _ => HPat::Opt(None),
+                }
+            }
+            Pattern::Ok(inner) | Pattern::Err(inner) => {
+                let is_ok = matches!(p, Pattern::Ok(_));
+                let Ty::Res(r) = ty else {
+                    let what = if is_ok { "ok(...)" } else { "err(...)" };
+                    return mismatch(self, what, pc.span, cx);
+                };
+                let (okt, errt) = res_parts(r);
+                let inner = self.check_pat(inner, if is_ok { okt } else { errt }, pc, ok, cx);
+                HPat::Res { ok: is_ok, inner: Box::new(inner) }
+            }
+            Pattern::Case { ty: tname, name, span, args } => {
+                let Ty::Enum(id) = ty else {
+                    return mismatch(self, &format!(".{name}"), *span, cx);
+                };
+                let ei = id as usize;
+                if let Some((tn, tsp)) = tname {
+                    if *tn != self.structs[ei].name {
+                        self.diags.error("E0001", *tsp, format!("expected a case of `{ty}`, found a case of `{tn}`"));
+                        *ok = false;
+                        self.error_binds(p, pc, cx);
+                        return HPat::Wild;
+                    }
+                }
+                let Some(vi) = self.structs[ei].variants.iter().position(|v| v.name == *name) else {
+                    let names: Vec<String> = self.structs[ei].variants.iter().map(|v| v.name.clone()).collect();
+                    self.diags
+                        .error("E0010", *span, format!("enum `{ty}` has no case `{name}`"))
+                        .note(format!("its cases are: {}", names.join(", ")));
+                    *ok = false;
+                    self.error_binds(p, pc, cx);
+                    return HPat::Wild;
+                };
+                let ftys: Vec<Ty> = self.structs[ei].variants[vi].fields.iter().map(|f| f.1).collect();
+                if args.len() != ftys.len() {
+                    let fields: Vec<String> = self.structs[ei].variants[vi].fields.iter().map(|f| f.0.clone()).collect();
+                    let d = self.diags.error(
+                        "E0012",
+                        *span,
+                        format!("case `{name}` has {}, but the pattern lists {}", plural(ftys.len(), "field"), args.len()),
+                    );
+                    if !fields.is_empty() {
+                        d.note(format!("write `.{name}({})`, using `_` for fields you do not need", fields.join(", ")));
+                    }
+                    *ok = false;
+                    self.error_binds(p, pc, cx);
+                    return HPat::Wild;
+                }
+                let fields = args.iter().zip(ftys).map(|(a, t)| self.check_pat(a, t, pc, ok, cx)).collect();
+                HPat::Case { variant: vi, fields }
+            }
+        }
+    }
+
+    /// After an error in a pattern, its names are still declared (with an error type) so the arm
+    /// does not report them as unknown.
+    fn error_binds(&mut self, p: &Pattern, pc: &PatCx, cx: &mut FnCx) {
+        match p {
+            Pattern::Bind { name, span } => {
+                let x = self.declare(cx, name, *span, Ty::Error, pc.kind);
+                cx.locals[x].used = true;
+            }
+            Pattern::Some(q) | Pattern::Ok(q) | Pattern::Err(q) => self.error_binds(q, pc, cx),
+            Pattern::Case { args, .. } => {
+                for a in args {
+                    self.error_binds(a, pc, cx);
+                }
+            }
+            Pattern::Wild | Pattern::None => {}
+        }
+    }
+
+    /// The constructors of a type that patterns can tell apart, with each one's field types:
+    /// `none`/`some`, `ok`/`err`, or the cases of an enum.
+    fn ctors_of(&self, t: Ty) -> Option<Vec<Vec<Ty>>> {
+        match t {
+            Ty::Opt(o) => Some(vec![Vec::new(), vec![opt_inner(o)]]),
+            Ty::Res(r) => {
+                let (a, b) = res_parts(r);
+                Some(vec![vec![a], vec![b]])
+            }
+            Ty::Enum(id) => Some(self.structs[id as usize].variants.iter().map(|v| v.fields.iter().map(|f| f.1).collect()).collect()),
+            _ => None,
+        }
+    }
+
+    /// Whether some value matching `q` is matched by none of `rows` (the usefulness check of
+    /// pattern-match compilation; one column per type in `tys`).
+    fn useful(&self, rows: &[Vec<&HPat>], q: &[&HPat], tys: &[Ty]) -> bool {
+        if q.is_empty() {
+            return rows.is_empty();
+        }
+        let (rest_q, rest_t) = (&q[1..], &tys[1..]);
+        let specialize = |c: usize, arity: usize| -> Vec<Vec<&HPat>> {
+            rows.iter()
+                .filter_map(|r| match pat_ctor(r[0]) {
+                    None => Some(std::iter::repeat_n(&WILD, arity).chain(r[1..].iter().copied()).collect()),
+                    Some((d, subs)) if d == c => Some(subs.into_iter().chain(r[1..].iter().copied()).collect()),
+                    _ => None,
+                })
+                .collect()
+        };
+        let ctors = self.ctors_of(tys[0]);
+        match pat_ctor(q[0]) {
+            Some((c, subs)) => {
+                let sub_t = ctors.as_ref().and_then(|cs| cs.get(c).cloned()).unwrap_or_default();
+                let arity = subs.len();
+                let q2: Vec<&HPat> = subs.into_iter().chain(rest_q.iter().copied()).collect();
+                let t2: Vec<Ty> = sub_t.into_iter().chain(rest_t.iter().copied()).collect();
+                self.useful(&specialize(c, arity), &q2, &t2)
+            }
+            None => {
+                let complete = ctors.as_ref().is_some_and(|cs| {
+                    !cs.is_empty() && (0..cs.len()).all(|c| rows.iter().any(|r| pat_ctor(r[0]).is_some_and(|(d, _)| d == c)))
+                });
+                if complete {
+                    let cs = ctors.unwrap();
+                    (0..cs.len()).any(|c| {
+                        let arity = cs[c].len();
+                        let q2: Vec<&HPat> = std::iter::repeat_n(&WILD, arity).chain(rest_q.iter().copied()).collect();
+                        let t2: Vec<Ty> = cs[c].iter().copied().chain(rest_t.iter().copied()).collect();
+                        self.useful(&specialize(c, arity), &q2, &t2)
+                    })
+                } else {
+                    let def: Vec<Vec<&HPat>> =
+                        rows.iter().filter(|r| pat_ctor(r[0]).is_none()).map(|r| r[1..].to_vec()).collect();
+                    self.useful(&def, rest_q, rest_t)
+                }
+            }
+        }
+    }
+
+    /// A case that `rows` do not cover, written as a pattern for the diagnostic.
+    fn missing_case(&self, rows: &[Vec<&HPat>], t: Ty) -> String {
+        let Some(cs) = self.ctors_of(t) else { return "_".into() };
+        for (c, fields) in cs.iter().enumerate() {
+            let wilds = || fields.iter().map(|_| HPat::Wild).collect::<Vec<_>>();
+            let p = match t {
+                Ty::Opt(_) if c == 0 => HPat::Opt(None),
+                Ty::Opt(_) => HPat::Opt(Some(Box::new(HPat::Wild))),
+                Ty::Res(_) => HPat::Res { ok: c == 0, inner: Box::new(HPat::Wild) },
+                _ => HPat::Case { variant: c, fields: wilds() },
+            };
+            if self.useful(rows, &[&p], &[t]) {
+                return match t {
+                    Ty::Opt(_) if c == 0 => "none".into(),
+                    Ty::Opt(_) => "some(_)".into(),
+                    Ty::Res(_) if c == 0 => "ok(_)".into(),
+                    Ty::Res(_) => "err(_)".into(),
+                    Ty::Enum(id) => {
+                        let v = &self.structs[id as usize].variants[c];
+                        if v.fields.is_empty() {
+                            format!(".{}", v.name)
+                        } else {
+                            format!(".{}({})", v.name, v.fields.iter().map(|_| "_").collect::<Vec<_>>().join(", "))
+                        }
+                    }
+                    _ => "_".into(),
+                };
+            }
+        }
+        "_".into()
+    }
+
+    /// `panic(message)` and `assert(cond)` / `assert(cond, message)`.
+    fn panic_call(&mut self, name: &str, args: &[Expr], span: Span, at: Span, cx: &mut FnCx) -> HExpr {
+        let (cond, msg) = match (name, args) {
+            ("panic", [m]) => (None, Some(m)),
+            ("assert", [c]) => (Some(c), None),
+            ("assert", [c, m]) => (Some(c), Some(m)),
+            _ => {
+                let want = if name == "panic" { "exactly one argument (the message)" } else { "a condition and an optional message" };
+                self.diags.error("E0012", span, format!("`{name}` takes {want}"));
+                return err_expr(span);
+            }
+        };
+        let cond = cond.map(|c| Box::new(self.cond(c, cx)));
+        let parts = match msg {
+            Some(m) => self.print_parts(m, cx),
+            None => Vec::new(),
+        };
+        HExpr { kind: HExprKind::Panic { cond, parts }, ty: Ty::Unit, span, at }
+    }
+
+    fn conversion_inner(&mut self, to: IntTy, checked: bool, args: &[Expr], at: Span, span: Span, cx: &mut FnCx) -> HExpr {
         let [arg] = args else {
             let form = if checked { format!("{to}(x)") } else { format!("{to}.wrap(x)") };
             self.diags.error("E0012", span, format!("`{form}` takes exactly one argument"));

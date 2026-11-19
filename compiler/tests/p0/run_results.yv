@@ -1,0 +1,123 @@
+// expect-stdout:
+// | 42 -> 42
+// |  -> empty
+// | 4x -> bad ?
+// | 12 99
+// | 8
+// | -1
+// | code 2
+// | check failed: Bad(text: negative)
+// | pair failed: Empty
+// | pair lr
+// | 1 fallback
+// | sum 4
+// Results: `T ! E`, `return err(...)`, automatic success wrapping, `try`, both `catch` forms,
+// `catch _`, `match` on ok/err with nested patterns, `() ! E`, and clean-up on early exits
+// (values built before a failing `try` are dropped).
+enum ParseError {
+    Empty
+    Bad(text: String)
+}
+
+fn digit(c: byte) -> int ! ParseError {
+    if c < '0' || c > '9' {
+        let one = "?".toString()
+        return err(.Bad(text: one))
+    }
+    return int(c - '0')
+}
+
+fn parseNum(s: str) -> int ! ParseError {
+    if s.len() == 0 {
+        return err(.Empty)
+    }
+    var n = 0
+    for i in 0..s.len() {
+        n = n * 10 + try digit(s[i])
+    }
+    return n
+}
+
+fn check(xs: Vec[int]) -> () ! ParseError {
+    for x in xs {
+        if x < 0 {
+            return err(.Bad(text: "negative".toString()))
+        }
+    }
+}
+
+struct Pair {
+    left: String
+    right: String
+}
+
+fn word(s: str, fail: bool) -> String ! ParseError {
+    if fail {
+        return err(.Empty)
+    }
+    return s.toString()
+}
+
+fn pair(fail: bool) -> Pair ! ParseError {
+    return Pair{left: try word("l", false), right: try word("r", fail)}
+}
+
+fn words(fail: bool) -> Vec[String] ! ParseError {
+    let a = "a".toString()
+    return [a, try word("b", false), try word("c", fail)]
+}
+
+fn report(s: str) {
+    match parseNum(s) {
+        ok(n) => println("${s} -> ${n}")
+        err(.Empty) => println("${s} -> empty")
+        err(.Bad(t)) => println("${s} -> bad ${t}")
+    }
+}
+
+fn firstOk(a: str, b: str) -> int {
+    let x = parseNum(a) catch _ {
+        return parseNum(b) catch _ => -1
+    }
+    return x
+}
+
+fn main() {
+    report("42")
+    report("")
+    report("4x")
+    let a = parseNum("12") catch _ => 0
+    let b = parseNum("x") catch _e => 99
+    println("${a} ${b}")
+    println(firstOk("x", "8"))
+    println(firstOk("x", "y"))
+    let code = match parseNum("1z") {
+        ok(_) => 0
+        err(.Empty) => 1
+        err(.Bad(_)) => 2
+    }
+    println("code ${code}")
+    check([1, 2]) catch _ {
+        println("unexpected")
+        return
+    }
+    check([1, -2]) catch failure => println("check failed: ${failure}")
+    match pair(true) {
+        ok(p) => println("pair ${p.left}${p.right}")
+        err(why) => println("pair failed: ${why}")
+    }
+    let p = pair(false) catch _ {
+        return
+    }
+    println("pair ${p.left}${p.right}")
+    let ws = words(true) catch _ => ["fallback".toString()]
+    println("${ws.len()} ${ws[0]}")
+    var n = 0
+    for s in ["1", "x", "3"] {
+        let v = parseNum(s) catch _ {
+            continue
+        }
+        n += v
+    }
+    println("sum ${n}")
+}

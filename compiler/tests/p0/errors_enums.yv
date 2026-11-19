@@ -1,0 +1,115 @@
+// expect-error: E0301 35:11
+// expect-error: E0602 43:5
+// expect-warning: W0002 52:9
+// expect-error: E0010 57:13
+// expect-error: E0018 58:13
+// expect-error: E0001 59:13
+// expect-error: E0012 61:9
+// expect-error: E0001 74:13
+// expect-error: E0001 79:13
+// expect-error: E0601 84:28
+// expect-error: E0001 87:5
+// expect-error: E0001 88:18
+// expect-error: E0001 89:13
+// expect-error: E0401 94:12
+// expect-error: E0102 102:13
+// expect-error: E0102 108:9
+// expect-error: E0001 111:15
+// Diagnostics for enums, results, general `match` and owning struct fields.
+enum Shape {
+    Circle(r: int)
+    Rect(w: int, h: int)
+    Empty
+}
+
+enum Fail {
+    Bad
+}
+
+enum Other {
+    Nope
+}
+
+struct Holder {
+    name: String
+    view: str
+}
+
+struct Named {
+    name: String
+}
+
+fn missing(s: Shape) -> int {
+    match s {
+        .Circle(r) => return r
+        .Rect(w, _) => return w
+    }
+}
+
+fn unreachableArm(s: Shape) -> int {
+    match s {
+        _ => return 0
+        .Empty => return 1
+    }
+}
+
+fn badCases(s: Shape) {
+    let a = Shape.Square(r: 1)
+    let b = Shape.Rect(w: 1)
+    let c = .Circle(r: 2)
+    match s {
+        .Rect(w) => println(w)
+        _ => println(0)
+    }
+}
+
+fn parse(n: int) -> int ! Fail {
+    if n < 0 {
+        return err(.Bad)
+    }
+    return n
+}
+
+fn other() -> int ! Other {
+    let x = try parse(1)
+    return x
+}
+
+fn notResult() -> int {
+    let x = try parse(1)
+    return x
+}
+
+fn handlers() {
+    let a = parse(1) catch _e {
+        println("no exit")
+    }
+    parse(2)
+    let b: int = parse(3)
+    let c = err(.Bad)
+    println(a + b)
+}
+
+fn fields(h: Named) -> String {
+    return h.name
+}
+
+fn borrowed() {
+    var n = Named{name: "x".toString()}
+    var s: ?String = "y".toString()
+    match s {
+        some(t) => {
+            s = none
+            println(t)
+        }
+        none => println("")
+    }
+    for c in n.name.fields() {
+        n.name = "z".toString()
+        println(c)
+    }
+    let bad = Shape{r: 1}
+}
+
+fn main() {
+}

@@ -3,6 +3,7 @@ use crate::diag::Span;
 pub struct Program {
     pub fns: Vec<FnDecl>,
     pub structs: Vec<StructDecl>,
+    pub enums: Vec<EnumDecl>,
     pub uses: Vec<Use>,
 }
 
@@ -15,6 +16,19 @@ pub struct Use {
 pub struct StructDecl {
     pub name: String,
     pub name_span: Span,
+    pub fields: Vec<FieldDecl>,
+}
+
+/// `enum Name { Case, Case(field: T, ...) }`
+pub struct EnumDecl {
+    pub name: String,
+    pub name_span: Span,
+    pub variants: Vec<VariantDecl>,
+}
+
+pub struct VariantDecl {
+    pub name: String,
+    pub span: Span,
     pub fields: Vec<FieldDecl>,
 }
 
@@ -54,7 +68,8 @@ pub struct TypeExpr {
     pub name: String,
     pub span: Span,
     /// Type arguments, e.g. `[int]` in `Vec[int]`. `?T` is `name: "?"` and `&T` is `name: "&"`,
-    /// with `T` as the only argument.
+    /// with `T` as the only argument; `T ! E` is `name: "!"` with arguments `T` and `E`; the
+    /// unit type `()` is `name: "()"`.
     pub args: Vec<TypeExpr>,
 }
 
@@ -100,12 +115,27 @@ pub struct Arm {
     pub body: Block,
 }
 
+/// One arm of a `match` used as an expression: `pattern => value`.
+pub struct ExprArm {
+    pub pat: Pattern,
+    pub span: Span,
+    /// A value; or `return`/`break`/`continue`; or a block that must not fall through.
+    pub body: Expr,
+}
+
 pub enum Pattern {
-    /// `some(name)`; `name` may be `_`.
-    Some { name: String, name_span: Span },
+    /// A name that binds the matched value.
+    Bind { name: String, span: Span },
+    /// `some(p)`
+    Some(Box<Pattern>),
     None,
     /// `_`
     Wild,
+    /// `ok(p)`, `err(p)`
+    Ok(Box<Pattern>),
+    Err(Box<Pattern>),
+    /// `.Case`, `.Case(p, ...)` or `Type.Case(...)`, with one pattern per payload field.
+    Case { ty: Option<(String, Span)>, name: String, span: Span, args: Vec<Pattern> },
 }
 
 pub struct Expr {
@@ -115,6 +145,8 @@ pub struct Expr {
 
 pub enum ExprKind {
     Int(u128),
+    /// `'a'`: a `byte`.
+    Byte(u8),
     Bool(bool),
     Str(Vec<StrSeg>),
     Ident(String),
@@ -141,6 +173,24 @@ pub enum ExprKind {
     Return(Option<Box<Expr>>),
     Break,
     Continue,
+    /// `()`
+    Unit,
+    /// `.Case` or `.Case(args)`: an enum case whose type comes from the context.
+    Case { name: String, args: Option<Vec<Expr>> },
+    /// `name: value`, a named argument of an enum case.
+    Named { name: String, name_span: Span, value: Box<Expr> },
+    /// `err(value)`
+    Err(Box<Expr>),
+    /// `try value`
+    Try(Box<Expr>),
+    /// `value catch name => handler` or `value catch name { block }` (`block`: the handler is an
+    /// `ExprKind::Block` that must not fall through).
+    Catch { value: Box<Expr>, name: String, name_span: Span, handler: Box<Expr>, block: bool },
+    /// `match value { pattern => value ... }` used as an expression.
+    Match { value: Box<Expr>, arms: Vec<ExprArm> },
+    /// A block in an expression position (a `catch` handler or a `match` arm); it must leave
+    /// with `return`, `break`, `continue`, `panic` or `os.exit`.
+    Block(Block),
 }
 
 pub enum StrSeg {

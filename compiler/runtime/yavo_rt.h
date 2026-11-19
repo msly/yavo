@@ -197,7 +197,7 @@ static int yv_rt_exit(void) {
 }
 
 /* Format fixed by ERRORS.md: `yavo panic [<category>] at <file>:<line>:<col>: <message>` */
-YV_NORETURN static void yv_panic(const char *category, const char *message, uint32_t line, uint32_t col) {
+static void yv_panic_begin(const char *category, uint32_t line, uint32_t col) {
     yv_flush();
     yv_write(2, "yavo panic [", 12);
     yv_write(2, category, strlen(category));
@@ -208,10 +208,18 @@ YV_NORETURN static void yv_panic(const char *category, const char *message, uint
     yv_write(2, ":", 1);
     yv_write_u64(2, col);
     yv_write(2, ": ", 2);
-    yv_write(2, message, strlen(message));
+}
+
+YV_NORETURN static void yv_panic_end(void) {
     yv_write(2, "\n", 1);
     yv_exit_process(YV_PANIC_EXIT_CODE);
     YV_UNREACHABLE();
+}
+
+YV_NORETURN static void yv_panic(const char *category, const char *message, uint32_t line, uint32_t col) {
+    yv_panic_begin(category, line, col);
+    yv_write(2, message, strlen(message));
+    yv_panic_end();
 }
 
 /* ---- Integer operations, instantiated for every P0 integer type. ---- */

@@ -4,6 +4,8 @@ use crate::diag::{Diags, Span};
 pub enum Tok {
     Ident(String),
     Int(u128),
+    /// `'a'`, `'\n'`: a byte literal.
+    Byte(u8),
     Str(Vec<StrPiece>),
     Plus,
     Minus,
@@ -70,6 +72,7 @@ pub fn describe(tok: &Tok) -> String {
     match tok {
         Tok::Ident(s) => format!("`{s}`"),
         Tok::Int(_) => "an integer literal".into(),
+        Tok::Byte(_) => "a byte literal".into(),
         Tok::Str(_) => "a string literal".into(),
         Tok::Newline => "a newline".into(),
         Tok::Eof => "the end of the file".into(),
@@ -199,7 +202,7 @@ impl Lexer<'_, '_> {
         // token that can end one, and never inside parentheses or brackets.
         self.last_ends_stmt = matches!(
             tok,
-            Tok::Ident(_) | Tok::Int(_) | Tok::Str(_) | Tok::RParen | Tok::RBracket | Tok::RBrace
+            Tok::Ident(_) | Tok::Int(_) | Tok::Byte(_) | Tok::Str(_) | Tok::RParen | Tok::RBracket | Tok::RBrace
         );
         match tok {
             Tok::LParen | Tok::LBracket => self.depth += 1,
@@ -266,7 +269,40 @@ impl Lexer<'_, '_> {
                 }
                 c if c.is_ascii_digit() => self.number(start, line, col),
                 '"' => self.string(start, line, col),
+                '\'' => self.byte(start, line, col),
                 _ => self.punct(c, start, line, col),
+            }
+        }
+    }
+
+    /// `'a'` or an escape (`'\n'`, `'\t'`, `'\r'`, `'\0'`, `'\\'`, `'\''`, `'"'`): one ASCII byte.
+    fn byte(&mut self, start: usize, line: u32, col: u32) {
+        self.bump();
+        let value = match self.bump() {
+            Some('\\') => match self.bump() {
+                Some('n') => Some(b'\n'),
+                Some('t') => Some(b'\t'),
+                Some('r') => Some(b'\r'),
+                Some('0') => Some(0),
+                Some('\\') => Some(b'\\'),
+                Some('\'') => Some(b'\''),
+                Some('"') => Some(b'"'),
+                _ => None,
+            },
+            Some(c) if c.is_ascii() && c != '\'' && c != '\n' => Some(c as u8),
+            _ => None,
+        };
+        let closed = self.peek() == Some('\'');
+        if closed {
+            self.bump();
+        }
+        let span = self.span_from(start, line, col);
+        match value {
+            Some(v) if closed => self.push(Tok::Byte(v), span),
+            _ => {
+                self.diags
+                    .error("E0020", span, "invalid byte literal: write one ASCII character or an escape between single quotes, e.g. 'a' or '\\n'");
+                self.push(Tok::Byte(0), span);
             }
         }
     }

@@ -1,0 +1,92 @@
+// expect-stdout:
+// | Ann (annie) in Paris: 2 tags, 1 scores
+// | [admin][dev]
+// | first tag admin, 3 letters
+// | score 3
+// | Anna (annie) in Paris!: 2 tags, 1 scores
+// | Paris! -> Rome; nick annie, now true
+// | 0 2
+// | dev
+// | longest 4
+// | Anna
+// Struct fields that own heap data (`String`, `Vec`, `Map`, `?String`, nested structs, enums):
+// construction moves values in, fields are read and modified in place, `take`/`replace`/`swap`
+// move values out, whole structs move and are dropped field by field.
+struct Address {
+    city: String
+    zip: int
+}
+
+struct Person {
+    name: String
+    nick: ?String
+    tags: Vec[String]
+    scores: Map[String, int]
+    home: Address
+}
+
+fn newPerson(name: str) -> Person {
+    return Person{
+        name: name.toString(),
+        tags: [],
+        scores: [:],
+        home: Address{city: "Paris".toString(), zip: 75},
+    }
+}
+
+fn describe(p: Person) {
+    var n = "-"
+    if let k = p.nick {
+        n = k.trim()
+    }
+    println("${p.name} (${n}) in ${p.home.city}: ${p.tags.len()} tags, ${p.scores.len()} scores")
+}
+
+fn rename(p: inout Person, to: str) {
+    p.name = to.toString()
+    p.home.city.push("!")
+}
+
+fn longest(people: Vec[Person]) -> int {
+    var best = 0
+    for p in people {
+        if p.name.len() > best {
+            best = p.name.len()
+        }
+    }
+    return best
+}
+
+fn main() {
+    var ann = newPerson("Ann")
+    ann.tags.push("admin".toString())
+    ann.tags.push("dev".toString())
+    ann.scores.set("go".toString(), 3)
+    ann.nick = "annie".toString()
+    describe(ann)
+    for t in ann.tags {
+        print("[${t}]")
+    }
+    println("")
+    let first = ann.tags[0].trim()
+    println("first tag ${first}, ${ann.tags[1].len()} letters")
+    if let s = ann.scores.getMut("go") {
+        println("score ${s}")
+    }
+    rename(&ann, "Anna")
+    describe(ann)
+    let old = replace(&ann.home.city, "Rome".toString())
+    let nick = take(&ann.nick) ?? "none".toString()
+    println("${old} -> ${ann.home.city}; nick ${nick}, now ${ann.nick.isNone()}")
+    var bo = newPerson("Bo")
+    swap(&ann.tags, &bo.tags)
+    println("${ann.tags.len()} ${bo.tags.len()}")
+    let last = bo.tags.pop() ?? "".toString()
+    println(last)
+    var team: Vec[Person] = []
+    team.push(ann)
+    team.push(bo)
+    println("longest ${longest(team)}")
+    let copy = team[0].name.clone()
+    println(copy)
+}

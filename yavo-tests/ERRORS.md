@@ -90,6 +90,8 @@ P0 编译器已经在用、但此前没有登记的通用错误码。
 | P-SYSTEM | 内建系统操作出现不可恢复错误 |
 | P-THREAD-SPAWN | 无法创建 OS 线程 |
 | P-CHANNEL-CAP | channel 容量不为正数 |
+| P-PANIC | 程序调用 `panic(...)`（2026-11-19 补记：速查卡把 `panic` 列为 prelude 函数，原表没有对应类别） |
+| P-ASSERT | `assert(cond)` 或 `assert(cond, msg)` 的条件为假（2026-11-19 补记，理由同上） |
 
 ## 启动错误
 

@@ -1,0 +1,13 @@
+// expect-panic: P-PANIC 7:5
+// `panic` ends the process (no drops run) and counts as never returning.
+fn pick(n: int) -> int {
+    if n > 0 {
+        return n
+    }
+    panic("bad n: ${n}")
+}
+
+fn main() {
+    println(pick(2))
+    println(pick(-1))
+}

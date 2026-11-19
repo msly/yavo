@@ -2,9 +2,12 @@ use std::cell::RefCell;
 use std::fmt;
 
 thread_local! {
-    /// Struct names and their C names, indexed by struct id. The compiler checks one file per
-    /// process, so a per-thread table keeps `Ty` small and `Copy`.
-    static STRUCTS: RefCell<Vec<(&'static str, &'static str)>> = const { RefCell::new(Vec::new()) };
+    /// User-defined structs and enums, indexed by id (`Ty::Struct(id)`, `Ty::Enum(id)` share one
+    /// id space). The compiler checks one file per process, so a per-thread table keeps `Ty`
+    /// small and `Copy`.
+    static AGGS: RefCell<Vec<Agg>> = const { RefCell::new(Vec::new()) };
+    /// Success and error type and C struct name of each `T ! E`, indexed by result id.
+    static RESS: RefCell<Vec<(Ty, Ty, &'static str)>> = const { RefCell::new(Vec::new()) };
     /// Element type of each `Vec[T]`, indexed by vec id. An element is always registered
     /// before the vectors that contain it, so ids are in dependency order.
     static VECS: RefCell<Vec<Ty>> = const { RefCell::new(Vec::new()) };
@@ -19,19 +22,96 @@ thread_local! {
     static MAPS: RefCell<Vec<(Ty, Ty)>> = const { RefCell::new(Vec::new()) };
 }
 
-/// Registers a struct name and returns its id.
-pub fn register_struct(name: &str) -> u32 {
+/// A struct or an enum. The flags are filled in by `finish_agg` once the member types are
+/// known; until then the aggregate counts as a plain copyable value.
+struct Agg {
+    name: &'static str,
+    c_name: &'static str,
+    /// Struct fields, or the payload fields of every enum case (one list per case).
+    members: Vec<Vec<Ty>>,
+    copy: bool,
+    drop: bool,
+}
+
+fn register_agg(name: &str, prefix: &str) -> u32 {
+    let c_name: &'static str = Box::leak(format!("{prefix}{name}").into_boxed_str());
     let name: &'static str = Box::leak(name.to_string().into_boxed_str());
-    let c_name: &'static str = Box::leak(format!("yv_s_{name}").into_boxed_str());
-    STRUCTS.with(|s| {
+    AGGS.with(|s| {
         let mut s = s.borrow_mut();
-        s.push((name, c_name));
+        s.push(Agg { name, c_name, members: Vec::new(), copy: true, drop: false });
         (s.len() - 1) as u32
     })
 }
 
-fn struct_names(id: u32) -> (&'static str, &'static str) {
-    STRUCTS.with(|s| s.borrow()[id as usize])
+/// Registers a struct name and returns its id.
+pub fn register_struct(name: &str) -> u32 {
+    register_agg(name, "yv_s_")
+}
+
+/// Registers an enum name and returns its id. A dot in a library type name (`fs.Error`) becomes
+/// `_` in C.
+pub fn register_enum(name: &str) -> u32 {
+    let id = register_agg(name, "yv_e_");
+    if name.contains('.') {
+        let c: &'static str = Box::leak(format!("yv_e_{}", name.replace('.', "_")).into_boxed_str());
+        AGGS.with(|s| s.borrow_mut()[id as usize].c_name = c);
+    }
+    id
+}
+
+/// Records the member types of an aggregate (struct fields as one list, or one list per enum
+/// case) and derives whether it is copyable and whether it must be dropped. Members are
+/// finished first (the checker walks aggregates in dependency order).
+pub fn finish_agg(id: u32, members: Vec<Vec<Ty>>) {
+    let copy = members.iter().flatten().all(|t| t.is_copy());
+    let drop = members.iter().flatten().any(|t| t.needs_drop());
+    AGGS.with(|s| {
+        let mut s = s.borrow_mut();
+        let a = &mut s[id as usize];
+        a.members = members;
+        a.copy = copy;
+        a.drop = drop;
+    })
+}
+
+fn agg_names(id: u32) -> (&'static str, &'static str) {
+    AGGS.with(|s| {
+        let a = &s.borrow()[id as usize];
+        (a.name, a.c_name)
+    })
+}
+
+fn agg_flags(id: u32) -> (bool, bool) {
+    AGGS.with(|s| {
+        let a = &s.borrow()[id as usize];
+        (a.copy, a.drop)
+    })
+}
+
+/// Interns `ok ! err` and returns its id.
+pub fn res_of(ok: Ty, err: Ty) -> u32 {
+    let key = format!("{}__{}", ok.key(), err.key());
+    RESS.with(|r| {
+        let mut r = r.borrow_mut();
+        if let Some(i) = r.iter().position(|(o, e, _)| *o == ok && *e == err) {
+            return i as u32;
+        }
+        let c: &'static str = Box::leak(format!("yv_res_{key}").into_boxed_str());
+        r.push((ok, err, c));
+        (r.len() - 1) as u32
+    })
+}
+
+pub fn res_parts(id: u32) -> (Ty, Ty) {
+    RESS.with(|r| {
+        let (o, e, _) = r.borrow()[id as usize];
+        (o, e)
+    })
+}
+
+/// Every `T ! E` type created so far, in dependency order (parts first).
+pub fn all_ress() -> Vec<(u32, Ty, Ty)> {
+    RESS.with(|r| r.borrow().iter().enumerate().map(|(i, (o, e, _))| (i as u32, *o, *e)).collect())
 }
 
 /// Interns `Vec[elem]` and returns its id.
@@ -253,16 +333,29 @@ pub enum Ty {
     Unit,
     /// A user-defined struct, by id (see `register_struct`).
     Struct(u32),
+    /// A user-defined or library enum, by id (see `register_enum`). In C a `{ uint32_t tag;
+    /// union { ... } u; }` struct; tag 0 with a zero payload is the first case.
+    Enum(u32),
+    /// `T ! E`: a success value or an error, by result id (see `res_of`). In C a `{ bool ok;
+    /// T val; E err; }` struct (no `val` when `T` is `()`); all-zero is an error holding a
+    /// zero value, which is safe to drop.
+    Res(u32),
     /// Produced after an error has been reported; suppresses cascading diagnostics.
     Error,
 }
 
 impl Ty {
-    /// Copyable values are duplicated by assignment; the others (`String`, `Vec`) are moved.
+    /// Copyable values are duplicated by assignment; the others (`String`, `Vec`, aggregates
+    /// holding them) are moved.
     pub fn is_copy(self) -> bool {
         match self {
             Ty::String | Ty::Vec(_) | Ty::Map(_) | Ty::RefMut(_) => false,
             Ty::Opt(id) => opt_inner(id).is_copy(),
+            Ty::Struct(id) | Ty::Enum(id) => agg_flags(id).0,
+            Ty::Res(id) => {
+                let (o, e) = res_parts(id);
+                o.is_copy() && e.is_copy()
+            }
             _ => true,
         }
     }
@@ -273,6 +366,11 @@ impl Ty {
         match self {
             Ty::String | Ty::Vec(_) | Ty::Map(_) => true,
             Ty::Opt(id) => opt_inner(id).needs_drop(),
+            Ty::Struct(id) | Ty::Enum(id) => agg_flags(id).1,
+            Ty::Res(id) => {
+                let (o, e) = res_parts(id);
+                o.needs_drop() || e.needs_drop()
+            }
             _ => false,
         }
     }
@@ -283,6 +381,10 @@ impl Ty {
             Ty::RefMut(_) => true,
             Ty::Opt(id) => opt_inner(id).contains_ref_mut(),
             Ty::Vec(id) => vec_elem(id).contains_ref_mut(),
+            Ty::Res(id) => {
+                let (o, e) = res_parts(id);
+                o.contains_ref_mut() || e.contains_ref_mut()
+            }
             Ty::Map(id) => {
                 let (k, v) = map_parts(id);
                 k.contains_ref_mut() || v.contains_ref_mut()
@@ -302,6 +404,10 @@ impl Ty {
             Ty::Str | Ty::Ref(_) | Ty::RefMut(_) => true,
             Ty::Vec(id) => vec_elem(id).carries_borrow(),
             Ty::Opt(id) => opt_inner(id).carries_borrow(),
+            Ty::Res(id) => {
+                let (o, e) = res_parts(id);
+                o.carries_borrow() || e.carries_borrow()
+            }
             Ty::Map(id) => {
                 let (k, v) = map_parts(id);
                 k.carries_borrow() || v.carries_borrow()
@@ -330,7 +436,12 @@ impl Ty {
                 let (k, v) = map_parts(id);
                 format!("Map_{}_{}", k.key(), v.key())
             }
-            Ty::Struct(id) => format!("S_{}", struct_names(id).0),
+            Ty::Struct(id) => format!("S_{}", agg_names(id).0),
+            Ty::Enum(id) => format!("E_{}", agg_names(id).0.replace('.', "_")),
+            Ty::Res(id) => {
+                let (o, e) = res_parts(id);
+                format!("Res_{}__{}", o.key(), e.key())
+            }
             Ty::Unit | Ty::Error => "void".into(),
         }
     }
@@ -347,7 +458,8 @@ impl Ty {
             Ty::RefMut(id) => REFMUTS.with(|r| r.borrow()[id as usize].1),
             Ty::Map(_) => "yv_map",
             Ty::Unit => "void",
-            Ty::Struct(id) => struct_names(id).1,
+            Ty::Struct(id) | Ty::Enum(id) => agg_names(id).1,
+            Ty::Res(id) => RESS.with(|r| r.borrow()[id as usize].2),
             Ty::Error => "void",
         }
     }
@@ -369,7 +481,11 @@ impl fmt::Display for Ty {
                 write!(f, "Map[{k}, {v}]")
             }
             Ty::Unit => f.write_str("()"),
-            Ty::Struct(id) => f.write_str(struct_names(*id).0),
+            Ty::Struct(id) | Ty::Enum(id) => f.write_str(agg_names(*id).0),
+            Ty::Res(id) => {
+                let (o, e) = res_parts(*id);
+                write!(f, "{o} ! {e}")
+            }
             Ty::Error => f.write_str("{error}"),
         }
     }

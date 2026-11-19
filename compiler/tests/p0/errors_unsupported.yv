@@ -21,7 +21,7 @@ fn closure() {
     let f = (a, b) => a + b
 }
 fn tried() {
-    if try y() {
+    if *y() {
     }
 }
 fn slices() {
@@ -29,17 +29,17 @@ fn slices() {
     }
 }
 fn shorthand() {
-    let c = .Less
+    let c = (a) => a
 }
 fn handled() {
-    let n = parse() catch _ => 0
+    let n = parse(a,*b)
 }
 fn tuple() {
     let t = (1, 2)
 }
 fn results(r: int) {
     match r {
-        ok(v) => println(v)
+        1 => println(v)
         err(e) => {
             println(e)
         }
@@ -47,7 +47,7 @@ fn results(r: int) {
     let after = r
     let t = (after, 2)
 }
-fn modules(e: fs.Error) {
+fn modules(e: (int, int)) {
 }
 fn main() {
 }
