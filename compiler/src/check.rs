@@ -5,12 +5,16 @@ use std::collections::HashMap;
 use crate::ast::*;
 use crate::diag::{Diags, Span};
 use crate::types::{
-    finish_agg, map_of, map_parts, opt_inner, opt_of, ref_inner, ref_mut_inner, ref_mut_of, ref_of, register_enum,
+    box_inner, box_of, finish_agg, map_of, map_parts, opt_inner, opt_of, ref_inner, ref_mut_inner, ref_mut_of, ref_of, register_enum,
     register_struct, res_of, res_parts, set_user_drop, has_user_drop, slice_elem, slice_of, tuple_elems, tuple_of, vec_elem,
     vec_of, IntTy, Ty,
 };
 
 pub type LocalId = usize;
+
+/// A step of `HPlace::path` (and of `HStmtKind::Assign`'s path) that goes into the content of
+/// a `Box` instead of a field (semantic table A7: fields project through `Box`).
+pub const BOX_STEP: usize = usize::MAX;
 
 pub struct HProgram {
     pub fns: Vec<HFn>,
@@ -260,6 +264,11 @@ pub enum HExprKind {
     SliceOf(Box<HExpr>),
     /// `String{}`
     EmptyString,
+    /// `Box(value)`: a new heap block holding `value`.
+    BoxNew(Box<HExpr>),
+    /// The content of a `Box`, read in place (fields, methods and indexing project through a
+    /// box, A7). Like a field, it cannot be moved out of.
+    Unbox(Box<HExpr>),
     Error,
 }
 
@@ -333,7 +342,7 @@ pub enum Builtin {
 const NO_FN: usize = usize::MAX;
 const OUTPUT_FNS: [&str; 3] = ["println", "print", "eprintln"];
 const UNSUPPORTED_TYPES: &[&str] = &[
-    "f32", "f64", "Set", "Box", "Rc", "Arc", "Arena", "Id", "Mutex", "Atomic", "Channel", "Guard", "SendError", "Join",
+    "f32", "f64", "Set", "Rc", "Arc", "Arena", "Id", "Mutex", "Atomic", "Channel", "Guard", "SendError", "Join",
     "Heap", "Deque",
 ];
 /// Standard library modules and the public types each one brings in (stdlib contract §1).
@@ -348,7 +357,7 @@ const MODULES: &[(&str, &[&str])] = &[
     ("sync", &["Mutex", "Guard", "Channel", "SendError", "Join"]),
 ];
 const UNSUPPORTED_FNS: &[&str] = &[
-    "len", "Box", "Rc", "Arc", "Mutex",
+    "len", "Rc", "Arc", "Mutex",
 ];
 
 struct Sig {
@@ -797,7 +806,7 @@ fn simple_opt_arms<'a>(pats: impl Iterator<Item = &'a Pattern> + Clone) -> bool 
 fn place_root(h: &HExpr) -> Option<LocalId> {
     match &h.kind {
         HExprKind::Local(id) => Some(*id),
-        HExprKind::Field { base, .. } | HExprKind::Deref(base) => place_root(base),
+        HExprKind::Field { base, .. } | HExprKind::Deref(base) | HExprKind::Unbox(base) => place_root(base),
         _ => None,
     }
 }
@@ -1062,7 +1071,7 @@ fn is_untyped_literal(e: &Expr) -> bool {
 }
 
 fn is_type_name(name: &str) -> bool {
-    IntTy::from_name(name).is_some() || matches!(name, "bool" | "str" | "String" | "Vec")
+    IntTy::from_name(name).is_some() || matches!(name, "bool" | "str" | "String" | "Vec" | "Box")
 }
 
 fn plural(n: usize, noun: &str) -> String {
@@ -1700,6 +1709,25 @@ impl Checker<'_> {
                 e => Ty::Vec(vec_of(e)),
             };
         }
+        if t.name == "Box" {
+            let [inner] = t.args.as_slice() else {
+                self.diags.error("E0001", t.span, "`Box` takes exactly one type argument, e.g. `Box[Node]`");
+                return Ty::Error;
+            };
+            return match self.resolve_ty(inner) {
+                Ty::Error => Ty::Error,
+                Ty::Unit => {
+                    self.diags.error("E0001", inner.span, "a `Box` cannot hold `()`");
+                    Ty::Error
+                }
+                // A box keeps its content for as long as it likes, so a view cannot go in (E1, E2).
+                e if e.carries_borrow() => {
+                    self.box_borrow_error(e, inner.span);
+                    Ty::Error
+                }
+                e => Ty::Box(box_of(e)),
+            };
+        }
         if !t.args.is_empty() {
             if UNSUPPORTED_TYPES.contains(&t.name.as_str()) {
                 self.mark_type_used(&t.name);
@@ -2151,8 +2179,25 @@ impl Checker<'_> {
             return err_expr(span);
         };
         let ExprKind::Ident(name) = &inner.kind else {
-            self.diags.error("U0001", span, "only variables can be passed as `inout` in P0");
-            return err_expr(span);
+            // `&x.f.g`: a field of a writable variable, possibly through `&inout` and `Box`.
+            if !matches!(&inner.kind, ExprKind::Field { .. } | ExprKind::Paren(_)) {
+                self.diags.error("U0001", span, "only variables and their fields can be passed as `inout` for now");
+                return err_expr(span);
+            }
+            let Some(place) = self.place_expr(inner, "pass as `inout`", cx) else { return err_expr(span) };
+            if borrowed.contains(&place.local) || mut_borrowed.contains(&place.local) {
+                let name = cx.locals[place.local].name.clone();
+                self.diags
+                    .error("E0102", span, format!("`{name}` is already borrowed by an earlier argument of this call"))
+                    .note("a variable passed as `inout` cannot be used by any other argument of the same call");
+            }
+            mut_borrowed.push(place.local);
+            let ty = place.ty;
+            let h = HExpr { kind: HExprKind::InoutPlace(place), ty, span, at: span };
+            if let Some(t) = exp {
+                self.expect_ty(&h, t);
+            }
+            return h;
         };
         let Some(id) = self.lookup(cx, name) else {
             self.diags.error("E0010", inner.span, format!("cannot find variable `{name}` in this scope"));
@@ -2160,6 +2205,21 @@ impl Checker<'_> {
         };
         cx.locals[id].used = true;
         self.check_moved(cx, id, inner.span);
+        // An `&inout T` (a writable binding, `getMut`'s result) passes its target on: `&n`.
+        if let Ty::RefMut(r) = cx.locals[id].ty {
+            let target = ref_mut_inner(r);
+            if exp.is_none_or(|t| t == target) {
+                if borrowed.contains(&id) || mut_borrowed.contains(&id) {
+                    self.diags
+                        .error("E0102", span, format!("`{name}` is already borrowed by an earlier argument of this call"))
+                        .note("a variable passed as `inout` cannot be used by any other argument of the same call");
+                }
+                self.check_exclusive(cx, id, inner.span);
+                mut_borrowed.push(id);
+                let place = HPlace { local: id, path: Vec::new(), ty: target };
+                return HExpr { kind: HExprKind::InoutPlace(place), ty: target, span, at: span };
+            }
+        }
         match cx.locals[id].kind {
             LocalKind::Var | LocalKind::InoutParam => {}
             LocalKind::Let => {
@@ -2255,10 +2315,13 @@ impl Checker<'_> {
                 (HExprKind::InoutArg(id), _) => vec![Loan::Local(*id)],
                 (HExprKind::InoutPlace(p), _) => vec![Loan::Local(p.local)],
                 // A `String` stored in a field or an element, or read through a reference.
-                (HExprKind::Field { .. } | HExprKind::Deref(_), Ty::String) => self.storage_loans(r, cx),
+                (HExprKind::Field { .. } | HExprKind::Deref(_) | HExprKind::Unbox(_), Ty::String) => self.storage_loans(r, cx),
                 (_, Ty::String) => vec![Loan::Temp],
                 // A struct or enum (e.g. a method receiver): a view points into its storage.
-                (HExprKind::Local(_) | HExprKind::Field { .. } | HExprKind::Deref(_), Ty::Struct(_) | Ty::Enum(_)) => {
+                (
+                    HExprKind::Local(_) | HExprKind::Field { .. } | HExprKind::Deref(_) | HExprKind::Unbox(_),
+                    Ty::Struct(_) | Ty::Enum(_),
+                ) => {
                     self.storage_loans(r, cx)
                 }
                 (_, Ty::Struct(_) | Ty::Enum(_)) => vec![Loan::Temp],
@@ -2270,7 +2333,9 @@ impl Checker<'_> {
             HExprKind::Deref(inner) => self.loans_of(inner, cx),
             HExprKind::AddrOf(inner) => self.storage_loans(inner, cx),
             HExprKind::SliceOf(inner) => match inner.kind {
-                HExprKind::Local(_) | HExprKind::Field { .. } | HExprKind::Deref(_) => self.storage_loans(inner, cx),
+                HExprKind::Local(_) | HExprKind::Field { .. } | HExprKind::Deref(_) | HExprKind::Unbox(_) => {
+                    self.storage_loans(inner, cx)
+                }
                 _ => {
                     let mut out = vec![Loan::Temp];
                     out.extend(self.loans_of(inner, cx));
@@ -2377,6 +2442,7 @@ impl Checker<'_> {
             }
             HExprKind::Deref(inner) => self.loans_of(inner, cx),
             HExprKind::Field { base, .. } => self.storage_loans(base, cx),
+            HExprKind::Unbox(base) => self.storage_loans(base, cx),
             HExprKind::Index { base, .. } => self.storage_loans(base, cx),
             _ => vec![Loan::Temp],
         }
@@ -2492,6 +2558,14 @@ impl Checker<'_> {
                 self.diags
                     .error("E0401", h.span, format!("cannot move a `{}` out of a field", h.ty))
                     .note("take it and leave a default with `take(&x.field)`, copy it with `.clone()`, or only borrow it");
+            }
+            return h;
+        }
+        if let HExprKind::Unbox(_) = h.kind {
+            if !h.ty.is_copy() && h.ty != Ty::Error {
+                self.diags
+                    .error("E0401", h.span, format!("cannot move a `{}` out of a `Box`", h.ty))
+                    .note("move the whole box, `take` a field that has a default, or copy it with `.clone()`");
             }
             return h;
         }
@@ -2699,8 +2773,12 @@ impl Checker<'_> {
                     return None;
                 };
                 let root_ty = cx.locals[id].ty;
-                // Writing through a reference, or attempting to write a key, uses the variable.
-                if matches!(root_ty, Ty::Ref(_) | Ty::RefMut(_)) && !fields_rev.is_empty() || cx.locals[id].map_key {
+                // Writing through a reference or into the caller's place (an `inout` parameter),
+                // or attempting to write a key, uses the variable.
+                if matches!(root_ty, Ty::Ref(_) | Ty::RefMut(_)) && !fields_rev.is_empty()
+                    || cx.locals[id].map_key
+                    || cx.locals[id].kind == LocalKind::InoutParam
+                {
                     cx.locals[id].used = true;
                 }
                 // `r.f = v` writes through a reference: a `&T` never allows it (A1), an `&inout T`
@@ -2746,30 +2824,14 @@ impl Checker<'_> {
                     LocalKind::Bind | LocalKind::BindMut | LocalKind::BindOwned => self.binding_write(cx, id, target.span),
                 }
                 }
-                let mut lty = match root_ty {
+                let lty = match root_ty {
                     Ty::RefMut(r) if through => ref_mut_inner(r),
                     t => t,
                 };
-                let mut path = Vec::new();
-                for (fname, fspan) in fields_rev.iter().rev() {
-                    match self.struct_field(lty, fname) {
-                        Some((fi, fty)) => {
-                            path.push(fi);
-                            lty = fty;
-                        }
-                        None => {
-                            match lty {
-                                Ty::Struct(_) => self.no_field(lty, fname, *fspan),
-                                Ty::Error => {}
-                                other => {
-                                    self.diags.error("E0001", *fspan, format!("a value of type `{other}` has no fields"));
-                                }
-                            }
-                            self.expr(value, None, cx);
-                            return None;
-                        }
-                    }
-                }
+                let Some((path, lty)) = self.field_path(lty, &fields_rev) else {
+                    self.expr(value, None, cx);
+                    return None;
+                };
                 let value = match op {
                     None => {
                         self.check_not_borrowed(cx, id, target.span, "assign to");
@@ -2802,6 +2864,11 @@ impl Checker<'_> {
                         }
                         let mut ty = lhs.ty;
                         for &fi in &path {
+                            if fi == BOX_STEP {
+                                lhs = self.unbox(lhs);
+                                ty = lhs.ty;
+                                continue;
+                            }
                             let Ty::Struct(sid) = ty else { unreachable!() };
                             ty = self.structs[sid as usize].fields[fi].1;
                             lhs = HExpr { kind: HExprKind::Field { base: Box::new(lhs), field: fi }, ty, span: target.span, at: target.span };
@@ -2989,7 +3056,7 @@ impl Checker<'_> {
                 // (its `of` is checked below); a temporary `String` cannot be viewed.
                 let h = if ret == Ty::Str
                     && h.ty == Ty::String
-                    && matches!(h.kind, HExprKind::Local(_) | HExprKind::Field { .. } | HExprKind::Deref(_))
+                    && matches!(h.kind, HExprKind::Local(_) | HExprKind::Field { .. } | HExprKind::Deref(_) | HExprKind::Unbox(_))
                 {
                     let (span, at) = (h.span, h.at);
                     HExpr { kind: HExprKind::StrView(Box::new(h)), ty: Ty::Str, span, at }
@@ -3055,6 +3122,7 @@ impl Checker<'_> {
         } else {
             let it = self.expr(target, None, cx);
             let it = self.deref(it);
+            let it = self.unbox(it);
             if it.ty == Ty::Error {
                 return None;
             }
@@ -3064,7 +3132,7 @@ impl Checker<'_> {
             }
             match it.kind {
                 HExprKind::Local(id) => id,
-                HExprKind::Deref(_) | HExprKind::Field { .. } => {
+                HExprKind::Deref(_) | HExprKind::Field { .. } | HExprKind::Unbox(_) => {
                     // An existing place (a field, or a collection read through a `&`) is
                     // iterated through a hidden `&` to it; what it lives in must not change.
                     let loans = self.storage_loans(&it, cx);
@@ -3226,7 +3294,13 @@ impl Checker<'_> {
             _ => {
                 let writable = !via_ref
                     && root.is_some_and(|r| matches!(cx.locals[r].kind, LocalKind::Var | LocalKind::InoutParam));
-                let ty = if mode == BindMode::Ref { Ty::Ref(ref_of(inner)) } else { inner };
+                // A binding into a writable place may be written through (rule 3, T-A3): it is an
+                // `&inout` with exclusive access while it is used.
+                let ty = match mode {
+                    BindMode::Ref if writable => Ty::RefMut(ref_mut_of(inner)),
+                    BindMode::Ref => Ty::Ref(ref_of(inner)),
+                    _ => inner,
+                };
                 (ty, if writable { LocalKind::BindMut } else { LocalKind::Bind })
             }
         };
@@ -3598,6 +3672,7 @@ impl Checker<'_> {
                 if !named_non_local {
                     let b = self.expr(base, None, cx);
                     let b = self.deref(b);
+                    let b = self.unbox(b);
                     match b.ty {
                         Ty::Struct(_) => {
                             return match self.struct_field(b.ty, name) {
@@ -3886,6 +3961,12 @@ impl Checker<'_> {
                 .note("it may `take` or `replace` a field that has a replacement value");
             return None;
         }
+        self.place_expr(inner, what, cx)
+    }
+
+    /// The writable place `inner` names (after the `&`): a variable or a field chain rooted at
+    /// one, looking through `&inout` and `Box` on the way.
+    fn place_expr(&mut self, inner: &Expr, what: &str, cx: &mut FnCx) -> Option<HPlace> {
         let mut fields_rev: Vec<(&str, Span)> = Vec::new();
         let mut root: &Expr = inner;
         loop {
@@ -3918,12 +3999,24 @@ impl Checker<'_> {
         } else if !self.writable(cx, id, root.span) {
             return None;
         }
-        let mut ty = match root_ty {
+        let ty = match root_ty {
             Ty::RefMut(r) if through => ref_mut_inner(r),
             t => t,
         };
+        let (path, ty) = self.field_path(ty, &fields_rev)?;
+        self.check_not_borrowed(cx, id, inner.span, "modify");
+        Some(HPlace { local: id, path, ty })
+    }
+
+    /// Walks a field chain (`fields_rev` lists the fields outermost first) from a value of
+    /// type `ty`; a `Box` on the way is looked through (`BOX_STEP`). Reports a missing field.
+    fn field_path(&mut self, mut ty: Ty, fields_rev: &[(&str, Span)]) -> Option<(Vec<usize>, Ty)> {
         let mut path = Vec::new();
         for (fname, fspan) in fields_rev.iter().rev() {
+            while let Ty::Box(b) = ty {
+                path.push(BOX_STEP);
+                ty = box_inner(b);
+            }
             match self.struct_field(ty, fname) {
                 Some((fi, fty)) => {
                     path.push(fi);
@@ -3941,8 +4034,68 @@ impl Checker<'_> {
                 }
             }
         }
-        self.check_not_borrowed(cx, id, inner.span, "modify");
-        Some(HPlace { local: id, path, ty })
+        Some((path, ty))
+    }
+
+    /// The content of a `Box` (of nested boxes) where a field, method or element is used (A7).
+    fn unbox(&self, mut h: HExpr) -> HExpr {
+        while let Ty::Box(b) = h.ty {
+            let (span, at) = (h.span, h.at);
+            h = HExpr { kind: HExprKind::Unbox(Box::new(h)), ty: box_inner(b), span, at };
+        }
+        h
+    }
+
+    fn box_borrow_error(&mut self, t: Ty, span: Span) {
+        self.diags
+            .error("E0301", span, format!("a `Box` cannot hold a `{t}`: a view cannot be stored in it"))
+            .note("store owned values instead, e.g. `String` (call `.toString()` on each view)");
+    }
+
+    /// `Box(value)`: moves `value` into a new heap block.
+    fn box_new(&mut self, args: &[Expr], expected: Option<Ty>, span: Span, at: Span, cx: &mut FnCx) -> HExpr {
+        let [arg] = args else {
+            self.diags.error("E0012", span, "`Box` takes exactly one argument, e.g. `Box(Node{key: 1})`");
+            for a in args {
+                self.expr(a, None, cx);
+            }
+            return err_expr(span);
+        };
+        let want = match expected {
+            Some(Ty::Box(b)) => Some(box_inner(b)),
+            Some(Ty::Opt(o)) => match opt_inner(o) {
+                Ty::Box(b) => Some(box_inner(b)),
+                _ => None,
+            },
+            _ => None,
+        };
+        let h = self.expr(arg, want, cx);
+        let h = match want {
+            Some(t) => self.coerce(h, t, cx),
+            None => match h.ty {
+                Ty::Ref(r) if ref_inner(r).is_copy() => self.deref(h),
+                Ty::RefMut(r) if ref_mut_inner(r).is_copy() => self.deref(h),
+                _ => h,
+            },
+        };
+        match h.ty {
+            Ty::Error => return err_expr(span),
+            Ty::Unit => {
+                self.diags.error("E0001", h.span, "`()` cannot be boxed");
+                return err_expr(span);
+            }
+            t if t.carries_borrow() => {
+                // Already reported when the expected type (`Box[str]`) was resolved.
+                if expected != Some(Ty::Error) {
+                    self.box_borrow_error(t, h.span);
+                }
+                return err_expr(span);
+            }
+            _ => {}
+        }
+        let h = self.consume(h, cx);
+        let ty = Ty::Box(box_of(h.ty));
+        HExpr { kind: HExprKind::BoxNew(Box::new(h)), ty, span, at }
     }
 
     /// Whether variable `id` may be modified; reports why not.
@@ -4142,6 +4295,7 @@ impl Checker<'_> {
                 if !self.index.contains_key(name) {
                     match name.as_str() {
                         "some" => return self.some_call(args, expected, span, callee.span, cx),
+                        "Box" => return self.box_new(args, expected, span, callee.span, cx),
                         "take" | "replace" | "swap" => return self.place_builtin(name, args, span, callee.span, cx),
                         "ok" => {
                             let [arg] = args else {
@@ -4338,10 +4492,13 @@ impl Checker<'_> {
         }
         // `x.method(args)` on a variable or a field of one.
         if let Some(t) = self.peek_place_ty(base, cx) {
-            let t = match t {
+            let mut t = match t {
                 Ty::Ref(r) => ref_inner(r),
                 t => t,
             };
+            while let Ty::Box(b) = t {
+                t = box_inner(b);
+            }
             if let Some((fi, full)) = self.user_method(t, name, at) {
                 return self.method_on_place(fi, &full, base, args, span, at, cx);
             }
@@ -4389,6 +4546,7 @@ impl Checker<'_> {
         }
         let recv = self.expr(base, None, cx);
         let recv = self.deref(recv);
+        let recv = self.unbox(recv);
         if let Some((fi, full)) = self.user_method(recv.ty, name, at) {
             if fi == NO_FN {
                 return err_expr(span);
@@ -4500,6 +4658,7 @@ impl Checker<'_> {
         } else {
             let h = self.expr(base, None, cx);
             let h = self.deref(h);
+            let h = self.unbox(h);
             if self.sigs[fi].sinks[0] {
                 self.consume(h, cx)
             } else {
@@ -4627,8 +4786,13 @@ impl Checker<'_> {
             ExprKind::Field { base: b, name } => {
                 let t = match self.peek_place_ty(b, cx)? {
                     Ty::Ref(r) => ref_inner(r),
+                    Ty::RefMut(r) => ref_mut_inner(r),
                     t => t,
                 };
+                let mut t = t;
+                while let Ty::Box(bx) = t {
+                    t = box_inner(bx);
+                }
                 self.struct_field(t, name).map(|(_, t)| t)
             }
             _ => None,
@@ -4652,7 +4816,13 @@ impl Checker<'_> {
         }
         if fields_rev.is_empty() {
             let id = self.mutable_receiver(base, method, cx)?;
-            return Some(HPlace { local: id, path: Vec::new(), ty: Self::receiver_ty(cx, id) });
+            let (mut path, mut ty) = (Vec::new(), Self::receiver_ty(cx, id));
+            // A method of the content of a box (`b.push(x)` on a `Box[Vec[int]]`) works in place.
+            while let Ty::Box(b) = ty {
+                path.push(BOX_STEP);
+                ty = box_inner(b);
+            }
+            return Some(HPlace { local: id, path, ty });
         }
         let ExprKind::Ident(name) = &root.kind else {
             self.diags.error("U0001", base.span, format!("`{method}` is only supported on a variable or a field of one for now"));
@@ -4679,25 +4849,10 @@ impl Checker<'_> {
                 }
             }
         }
-        let mut ty = Self::receiver_ty(cx, id);
-        let mut path = Vec::new();
-        for (fname, fspan) in fields_rev.iter().rev() {
-            match self.struct_field(ty, fname) {
-                Some((fi, fty)) => {
-                    path.push(fi);
-                    ty = fty;
-                }
-                None => {
-                    match ty {
-                        Ty::Struct(_) => self.no_field(ty, fname, *fspan),
-                        Ty::Error => {}
-                        other => {
-                            self.diags.error("E0001", *fspan, format!("a value of type `{other}` has no fields"));
-                        }
-                    }
-                    return None;
-                }
-            }
+        let (mut path, mut ty) = self.field_path(Self::receiver_ty(cx, id), &fields_rev)?;
+        while let Ty::Box(b) = ty {
+            path.push(BOX_STEP);
+            ty = box_inner(b);
         }
         self.check_not_borrowed(cx, id, base.span, "modify");
         Some(HPlace { local: id, path, ty })
@@ -4908,6 +5063,7 @@ impl Checker<'_> {
         }
         let b = self.expr(base, None, cx);
         let b = self.deref(b);
+        let b = self.unbox(b);
         let i = self.expr(index, None, cx);
         let elem = match (b.ty, i.ty) {
             (Ty::Error, _) | (_, Ty::Error) => return err_expr(span),

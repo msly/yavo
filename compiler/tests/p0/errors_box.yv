@@ -1,0 +1,43 @@
+// expect-error: E0102 22:23
+// expect-error: E0101 28:9
+// expect-error: E0301 34:20
+// expect-error: E0301 35:23
+// expect-error: E0405 37:22
+// expect-warning: W0001 38:9
+// expect-error: E0401 38:16
+// expect-error: E0012 39:15
+struct Node {
+    key: int
+    name: String
+    left: ?Box[Node]
+}
+
+fn link(a: inout ?Box[Node], b: inout Box[Node]) {
+    b.key += 1
+    a = none
+}
+
+fn shrink(t: inout ?Box[Node]) {
+    if let n = t {
+        link(&n.left, &n)
+    }
+}
+
+fn readOnly(t: ?Box[Node]) {
+    if let n = t {
+        n.key += 1
+    }
+}
+
+fn main() {
+    let text = "a b".toString()
+    let views: Box[str] = Box("x")
+    let trimmed = Box(text.trim())
+    var b = Box(Node{key: 1, name: "n".toString()})
+    let taken = take(&b)
+    let name = b.name
+    let two = Box(1, 2)
+    var root: ?Box[Node] = none
+    shrink(&root)
+    readOnly(root)
+}

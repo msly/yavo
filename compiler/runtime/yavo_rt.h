@@ -442,6 +442,21 @@ static void yv_vec_free(yv_vec *v) {
     v->len = v->cap = 0;
 }
 
+/* ---- Box[T]: one heap block; NULL is an empty (moved-out) box. ---- */
+static void *yv_box_alloc(size_t size, uint32_t line, uint32_t col) {
+    void *p = malloc(size ? size : 1);
+    if (p == NULL) yv_panic("P-OOM", "out of memory", line, col);
+    YV_COUNT_ALLOC();
+    return p;
+}
+
+static void yv_box_free(void *p) {
+    if (p) {
+        YV_COUNT_FREE();
+        free(p);
+    }
+}
+
 /* ---- Map[K, V]: insertion-ordered hash map. ----
  * Entries live in `ents` in insertion order; the generated per-type entry struct starts with a
  * `bool live` flag. A removed entry stays (not live) until the next rebuild and keeps its slot,

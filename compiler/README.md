@@ -457,6 +457,39 @@ Code generation: a comparison is `yv_fn_T__cmp(a, &b).tag` tested against the `O
 tag (Less 0, Equal 1, Greater 2). Tests: `tests/p0/run_protocols.yv`,
 `tests/p0/errors_protocols.yv` (7 errors, 2 warnings); spec cases T-G25 and T-G26 pass.
 
+## `Box[T]`
+
+Supported (cheat sheet §4 rule 9; semantic table A4, A7, C5, C8, E1, E2; stdlib contract §1):
+
+- `Box[T]` in signatures, fields, collections and optionals; `Box(value)` moves the value
+  into one heap block. Recursive types go through `?Box[T]` (`struct Node { left: ?Box[Node] }`)
+  or `Box[T]` in an enum case; a box does not count as by-value containment, so `E0017` no
+  longer fires for them.
+- Fields, methods (`self`, `inout self`, `sink self`) and indexing project through a box
+  (`b.size += 1`, `b.grow()`, `b.len()`, `w.push(4)`, `w[3]`, `for x in b`), at any depth. A
+  `T` where `?Box[T]` is expected is wrapped as before (`t = Box(Node{key: k})`).
+- `if let n = t` on a writable place (`var`, `inout` parameter) whose payload is not copyable
+  now binds `n` as an `&inout` to the payload (rule 3): `n.size += 1`, `insert(&n.left, k)` and
+  `take(&n.left)` write through it, and `t` cannot be used while `n` is still used (`E0102`).
+  A binding into a read-only place stays read-only (`E0101`).
+- `inout` arguments may now be field paths (`&n.left`, `&p.items`), through `&inout` and
+  `Box`; an `&inout` variable passes its target on (`&n`). Two arguments rooted at the same
+  variable are `E0102` (T-A3f).
+- Errors: a box holding a view, written (`Box[str]`, `Box[Vec[str]]`) or inferred
+  (`Box(text.trim())`), is `E0301` (E1, E2); `take(&box)` is `E0405` (a box has no default);
+  moving a non-copyable value out of a box's content is `E0401` (rule 8).
+- Not yet: `.clone()` on a box (write `Box(b.clone())` for copyable/cloneable content),
+  printing or comparing a box, `Box[I]` for interfaces.
+
+Also fixed: assigning to an `inout` parameter counts as using it, so `W0001` no longer
+fires for output-only parameters.
+
+Code generation: a box is a `T *` (named by struct tag for struct-like contents, so
+`?Box[Node]` can appear inside `Node`); NULL is a moved-out box. `yv_box_alloc`/`yv_box_free`
+in the runtime count blocks for the heap check. Place paths use `BOX_STEP` for "into the
+box" (`(*p)` in C). `&Box[T]` is `T * const *`. Tests: `tests/p0/run_box.yv`,
+`tests/p0/errors_box.yv` (7 errors, 1 warning).
+
 ## Spec conformance
 
 ```sh
@@ -473,14 +506,15 @@ runs all 129 cases in `yavo-tests/MANIFEST.json`, after checking each fixture ag
 | unsupported | the compiler reported `U0001` |
 | not_run | needs `yavo fix`, `yavo verify`, fixtures, sanitizers or other platforms |
 
-At this commit: pass 65, wrong 0, unsupported 51, not_run 13 (P1: 52 / 0 / 24 / 7;
-P2: 13 / 0 / 6 / 2; P3: 0 / 0 / 21 / 4). Comparison protocols added T-G25 and T-G26; closures added T-C7 and tuples T-O5p. User destructors added T-D1, T-GR1, T-GR2 and
+At this commit: pass 71, wrong 0, unsupported 45, not_run 13 (P1: 58 / 0 / 18 / 7;
+P2: 13 / 0 / 6 / 2; P3: 0 / 0 / 21 / 4). `Box` added T-A3, T-A3f, T-E2, T-E2p, T-G28 and
+T-G29. Comparison protocols added T-G25 and T-G26; closures added T-C7 and tuples T-O5p. User destructors added T-D1, T-GR1, T-GR2 and
 T-G10–T-G13. The standard library step added T-G08, T-V4, T-V4p and
 T-S2 (the runner now writes `fixture_hex` fixtures into a directory of their own and runs the case
 there). Enums, results and owning struct fields added T-C4p, T-C6, T-C6p, T-G14, T-G15 and
 T-G16. Optional values added T-C5, T-G05, T-G06, T-G07 and
 T-G24; maps added T-A1, T-A1p, T-A4, T-A4p, T-C1, T-C1p, T-C7f, T-C8, T-C8f and T-GR10 (T-C7
-waits for closures). T-A3/T-A3f wait for `Box`; the
+waits for closures). The
 cases that import `std/sync`, `std/fs` or `std/collections` now stop at those modules' types
 and functions. The per-case report is written to `target/tmp/conformance-report.json`.
 

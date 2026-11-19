@@ -8,7 +8,8 @@ use crate::ast::BinOp;
 use crate::check::*;
 use crate::diag::Span;
 use crate::types::{
-    all_maps, all_opts, all_ress, all_tuples, all_vecs, has_user_drop, opt_inner, tuple_elems, opt_of, ref_inner, ref_mut_inner, map_parts, res_parts, vec_elem, IntTy, Ty,
+    all_boxes, all_maps, all_opts, all_ress, all_tuples, all_vecs, box_inner, has_user_drop, opt_inner, tuple_elems, opt_of, ref_inner,
+    ref_mut_inner, map_parts, res_parts, vec_elem, IntTy, Ty,
 };
 
 pub const RUNTIME_HEADER: &str = include_str!("../runtime/yavo_rt.h");
@@ -116,6 +117,14 @@ pub fn generate(prog: &HProgram, file: &str) -> String {
         let _ = writeln!(g.out, "static inline void yv_drop_{key}({c} *p);");
         let _ = writeln!(g.out, "static inline {c} yv_clone_{key}(const {c} *p, uint32_t line, uint32_t col);");
     }
+    // A box is a pointer, so its clone takes a `T * const *` (a `const` on the pointee would
+    // not accept `&box`).
+    for (id, _) in all_boxes() {
+        let t = Ty::Box(id);
+        let (key, c) = (t.key(), t.c_name());
+        let _ = writeln!(g.out, "static inline void yv_drop_{key}({c} *p);");
+        let _ = writeln!(g.out, "static inline {c} yv_clone_{key}({c} const *p, uint32_t line, uint32_t col);");
+    }
     let enums: Vec<&HStruct> = prog.structs.iter().filter(|s| matches!(s.ty, Ty::Enum(_))).collect();
     for e in &enums {
         let _ = writeln!(g.out, "static void yv_print_{}(const yv_out *o, const {} *p);", e.ty.key(), e.ty.c_name());
@@ -163,6 +172,21 @@ pub fn generate(prog: &HProgram, file: &str) -> String {
     }
     for (id, k, v) in all_maps() {
         map_helpers(&mut g.out, Ty::Map(id), k, v);
+    }
+    for (id, inner) in all_boxes() {
+        let t = Ty::Box(id);
+        let (key, c) = (t.key(), t.c_name());
+        let drop_inner = if inner.needs_drop() { format!("\n        {}(*p);", drop_fn(inner)) } else { String::new() };
+        let _ = writeln!(
+            g.out,
+            "static inline void yv_drop_{key}({c} *p) {{\n    if (*p) {{{drop_inner}\n        yv_box_free(*p);\n        *p = NULL;\n    }}\n}}"
+        );
+        let _ = writeln!(
+            g.out,
+            "static inline {c} yv_clone_{key}({c} const *p, uint32_t line, uint32_t col) {{\n    \
+             if (!*p) return NULL;\n    {c} o = ({c})yv_box_alloc(sizeof(**p), line, col);\n    *o = {};\n    (void)line; (void)col;\n    return o;\n}}\n",
+            clone_value(inner, "(**p)")
+        );
     }
     for (id, inner) in &owned_opts {
         let t = Ty::Opt(*id);
@@ -668,14 +692,26 @@ impl Gen {
 
     /// The C lvalue of a place.
     fn place(&self, p: &HPlace, f: &HFn) -> String {
-        let (mut place, mut ty) = self.place_root(f, p.local, !p.path.is_empty());
-        for &fi in &p.path {
+        let (place, ty) = self.place_root(f, p.local, !p.path.is_empty());
+        self.walk(place, ty, &p.path).0
+    }
+
+    /// Follows a place path (field indexes and `BOX_STEP`s) from the C lvalue `place` of type
+    /// `ty`; returns the resulting lvalue and its type.
+    fn walk(&self, mut place: String, mut ty: Ty, path: &[usize]) -> (String, Ty) {
+        for &fi in path {
+            if fi == BOX_STEP {
+                let Ty::Box(b) = ty else { unreachable!("a box step on a box") };
+                place = format!("(*{place})");
+                ty = box_inner(b);
+                continue;
+            }
             let Ty::Struct(id) = ty else { unreachable!() };
             let (name, fty) = &self.fields[&id][fi];
             place = format!("{place}.f_{name}");
             ty = *fty;
         }
-        place
+        (place, ty)
     }
 
     /// The C lvalue a place starts from: the variable, or (`through`, for a path into an
@@ -691,14 +727,8 @@ impl Gen {
     /// The C lvalue a modifying method's receiver stands for (an `&inout T` variable stands for
     /// its target), with its type.
     fn recv_place(&self, p: &HPlace, f: &HFn) -> (String, Ty) {
-        let (mut place, mut ty) = self.place_root(f, p.local, true);
-        for &fi in &p.path {
-            let Ty::Struct(id) = ty else { unreachable!() };
-            let (name, fty) = &self.fields[&id][fi];
-            place = format!("{place}.f_{name}");
-            ty = *fty;
-        }
-        (place, ty)
+        let (place, ty) = self.place_root(f, p.local, true);
+        self.walk(place, ty, &p.path)
     }
 
     /// The collection a `for` loop walks: the variable, or what a hidden `&` to a field points to.
@@ -932,12 +962,8 @@ impl Gen {
             }
             HStmtKind::Assign { local, path, value } => {
                 let v = self.owned(value, f);
-                let (_, mut ty) = self.place_root(f, *local, !path.is_empty());
-                for &fi in path {
-                    let Ty::Struct(id) = ty else { unreachable!() };
-                    ty = self.fields[&id][fi].1;
-                }
-                let place = self.place(&HPlace { local: *local, path: path.clone(), ty }, f);
+                let (root, rty) = self.place_root(f, *local, !path.is_empty());
+                let (place, ty) = self.walk(root, rty, path);
                 if ty.needs_drop() {
                     // The new value is computed first; then the old one is dropped and replaced.
                     self.line(&format!("{}(&{place});", drop_fn(ty)));
@@ -1828,6 +1854,18 @@ impl Gen {
                 self.bind(e.ty, &v)
             }
             HExprKind::EmptyString => self.bind_mut(e.ty, "((yv_string){0})"),
+            HExprKind::BoxNew(inner) => {
+                let v = self.owned(inner, f);
+                let c = e.ty.c_name();
+                let t = self.fresh();
+                self.line(&format!("{c} {t} = ({c})yv_box_alloc(sizeof(*{t}), {});", pos(e.at)));
+                self.line(&format!("*{t} = {v};"));
+                t
+            }
+            HExprKind::Unbox(inner) => {
+                let b = self.borrowed(inner, f);
+                format!("(*{b})")
+            }
             HExprKind::AddrOf(inner) => {
                 let p = self.expr(inner, f);
                 format!("(&{p})")
@@ -2080,6 +2118,7 @@ impl Gen {
                 | HExprKind::Match { .. }
                 | HExprKind::Format(_)
                 | HExprKind::EmptyString
+                | HExprKind::BoxNew(_)
                 | HExprKind::Io { .. }
                 | HExprKind::Call2 { method: Method2::Split | Method2::ToLower | Method2::ToUpper | Method2::Join, .. }
                 | HExprKind::Method {
@@ -2108,8 +2147,12 @@ impl Gen {
     fn bind(&mut self, ty: Ty, value: &str) -> String {
         let t = self.fresh();
         // `&T` is already `const T *`; a second `const` would only trigger warnings.
-        let q = if matches!(ty, Ty::Ref(_)) { "" } else { "const " };
-        self.line(&format!("{q}{} {t} = {value};", ty.c_name()));
+        match ty {
+            Ty::Ref(_) => self.line(&format!("{} {t} = {value};", ty.c_name())),
+            // A box is a pointer: the pointer is constant, its content is not.
+            Ty::Box(_) => self.line(&format!("{} const {t} = {value};", ty.c_name())),
+            _ => self.line(&format!("const {} {t} = {value};", ty.c_name())),
+        }
         t
     }
 

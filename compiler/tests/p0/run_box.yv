@@ -1,0 +1,140 @@
+// expect-stdout:
+// | 1 3 4 5 7 8 9
+// | 8
+// | 42:answer
+// | 102
+// | 6
+// | 2
+// | 4
+// | 4
+// | 42
+// | 3
+// | 8
+// | 10
+// | drop 2
+// | true
+// | inner 1
+// | drop 1
+// | end
+struct Node {
+    key: int
+    size: int
+    name: String
+    left: ?Box[Node]
+    right: ?Box[Node]
+
+    fn describe(self) -> String {
+        return format("${self.key}:${self.name}")
+    }
+
+    fn grow(inout self) {
+        self.size += 100
+    }
+}
+
+fn insert(t: inout ?Box[Node], k: int) {
+    if let n = t {
+        if k < n.key {
+            insert(&n.left, k)
+        } else if k > n.key {
+            insert(&n.right, k)
+        } else {
+            return
+        }
+        n.size += 1
+        return
+    }
+    t = Box(Node{key: k, size: 1, name: format("n${k}")})
+}
+
+fn walk(t: ?Box[Node], out: inout Vec[int]) {
+    if let n = t {
+        walk(n.left, &out)
+        out.push(n.key)
+        walk(n.right, &out)
+    }
+}
+
+fn count(t: ?Box[Node]) -> int {
+    if let n = t {
+        return n.size
+    }
+    return 0
+}
+
+enum List {
+    Nil
+    Cons(head: int, tail: Box[List])
+
+    fn sum(self) -> int {
+        match self {
+            .Nil => return 0
+            .Cons(h, t) => return h + t.sum()
+        }
+    }
+}
+
+struct Noisy: Drop {
+    id: int
+    fn drop(inout self) {
+        println("drop ${self.id}")
+    }
+}
+
+fn build(n: int) -> List {
+    var l = List.Nil
+    for i in 1..n + 1 {
+        l = List.Cons(head: i, tail: Box(l))
+    }
+    return l
+}
+
+fn main() {
+    var root: ?Box[Node] = none
+    for k in [5, 3, 8, 1, 4, 7, 9, 3] {
+        insert(&root, k)
+    }
+    var keys: Vec[int] = []
+    walk(root, &keys)
+    for i, k in keys {
+        if i > 0 {
+            print(" ")
+        }
+        print("${k}")
+    }
+    println("")
+    println(count(root))
+    var b = Box(Node{key: 42, size: 1, name: "answer".toString()})
+    b.grow()
+    b.size += 1
+    println(b.describe())
+    println(b.size)
+    println(b.name.len())
+    let v: Box[Vec[String]] = Box(["a".toString(), "bc".toString()])
+    println(v.len())
+    var w = Box([1, 2, 3])
+    w.push(4)
+    println(w.len())
+    println(w[3])
+    let moved = b
+    println(moved.key)
+    var opt: ?Box[Node] = none
+    if let n = root {
+        opt = take(&n.left)
+    }
+    println(count(opt))
+    println(count(root))
+    let l = build(4)
+    println(l.sum())
+    {
+        let na = Box(Noisy{id: 1})
+        var nb: ?Box[Noisy] = Box(Noisy{id: 2})
+        nb = none
+        println(nb.isNone())
+        println("inner ${na.id}")
+    }
+    let c = Box(Box(7))
+    let _ = c
+
+    println("end")
+}

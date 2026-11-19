@@ -25,6 +25,36 @@ thread_local! {
     /// Element types and C struct name of each tuple type, indexed by tuple id. Elements are
     /// registered before the tuples that contain them.
     static TUPLES: RefCell<Vec<(Vec<Ty>, &'static str)>> = const { RefCell::new(Vec::new()) };
+    /// Content type and C pointer type of each `Box[T]`, indexed by box id.
+    static BOXES: RefCell<Vec<(Ty, &'static str)>> = const { RefCell::new(Vec::new()) };
+}
+
+/// Interns `Box[inner]` and returns its id. In C a box is a pointer to one heap block; a
+/// struct-like content is named by its struct tag, so the pointer type can be written before
+/// the content's definition (`struct Node { left: ?Box[Node] }`).
+pub fn box_of(inner: Ty) -> u32 {
+    let c_name = match inner {
+        Ty::Struct(_) | Ty::Enum(_) | Ty::Opt(_) | Ty::Res(_) | Ty::Tuple(_) => format!("struct {} *", inner.c_name()),
+        _ => format!("{} *", inner.c_name()),
+    };
+    BOXES.with(|b| {
+        let mut b = b.borrow_mut();
+        if let Some(i) = b.iter().position(|(t, _)| *t == inner) {
+            return i as u32;
+        }
+        let c: &'static str = Box::leak(c_name.into_boxed_str());
+        b.push((inner, c));
+        (b.len() - 1) as u32
+    })
+}
+
+pub fn box_inner(id: u32) -> Ty {
+    BOXES.with(|b| b.borrow()[id as usize].0)
+}
+
+/// Every `Box` type created so far.
+pub fn all_boxes() -> Vec<(u32, Ty)> {
+    BOXES.with(|b| b.borrow().iter().enumerate().map(|(i, (t, _))| (i as u32, *t)).collect())
 }
 
 /// Interns the tuple type `(elems...)` and returns its id.
@@ -199,7 +229,9 @@ pub fn ref_of(inner: Ty) -> u32 {
         if let Some(i) = r.iter().position(|(t, _)| *t == inner) {
             return i as u32;
         }
-        let c: &'static str = Box::leak(format!("const {c_name} *").into_boxed_str());
+        // A pointer type (`Box[T]`) takes the `const` after it, on the pointer itself.
+        let c = if c_name.ends_with('*') { format!("{c_name} const *") } else { format!("const {c_name} *") };
+        let c: &'static str = Box::leak(c.into_boxed_str());
         r.push((inner, c));
         (r.len() - 1) as u32
     })
@@ -405,6 +437,9 @@ pub enum Ty {
     Res(u32),
     /// `(A, B, ...)`, by tuple id (see `tuple_of`). In C a struct with members `f0`, `f1`, ...
     Tuple(u32),
+    /// `Box[T]`: one owned heap block holding a `T`, by box id (see `box_of`). In C a `T *`;
+    /// NULL (all-zero) is a moved-out box, which drops nothing.
+    Box(u32),
     /// Produced after an error has been reported; suppresses cascading diagnostics.
     Error,
 }
@@ -414,7 +449,7 @@ impl Ty {
     /// holding them) are moved.
     pub fn is_copy(self) -> bool {
         match self {
-            Ty::String | Ty::Vec(_) | Ty::Map(_) | Ty::RefMut(_) => false,
+            Ty::String | Ty::Vec(_) | Ty::Map(_) | Ty::RefMut(_) | Ty::Box(_) => false,
             Ty::Opt(id) => opt_inner(id).is_copy(),
             Ty::Tuple(id) => tuple_elems(id).iter().all(|t| t.is_copy()),
             Ty::Struct(id) | Ty::Enum(id) => agg_flags(id).0,
@@ -430,7 +465,7 @@ impl Ty {
     /// `&inout T` is not copyable but owns nothing.
     pub fn needs_drop(self) -> bool {
         match self {
-            Ty::String | Ty::Vec(_) | Ty::Map(_) => true,
+            Ty::String | Ty::Vec(_) | Ty::Map(_) | Ty::Box(_) => true,
             Ty::Opt(id) => opt_inner(id).needs_drop(),
             Ty::Tuple(id) => tuple_elems(id).iter().any(|t| t.needs_drop()),
             Ty::Struct(id) | Ty::Enum(id) => agg_flags(id).1,
@@ -447,6 +482,7 @@ impl Ty {
         match self {
             Ty::RefMut(_) => true,
             Ty::Opt(id) => opt_inner(id).contains_ref_mut(),
+            Ty::Box(id) => box_inner(id).contains_ref_mut(),
             Ty::Tuple(id) => tuple_elems(id).iter().any(|t| t.contains_ref_mut()),
             Ty::Vec(id) => vec_elem(id).contains_ref_mut(),
             Ty::Slice(id) => slice_elem(id).contains_ref_mut(),
@@ -472,6 +508,7 @@ impl Ty {
         match self {
             Ty::Str | Ty::Ref(_) | Ty::RefMut(_) | Ty::Slice(_) => true,
             Ty::Vec(id) => vec_elem(id).carries_borrow(),
+            Ty::Box(id) => box_inner(id).carries_borrow(),
             Ty::Opt(id) => opt_inner(id).carries_borrow(),
             Ty::Tuple(id) => tuple_elems(id).iter().any(|t| t.carries_borrow()),
             Ty::Res(id) => {
@@ -503,6 +540,7 @@ impl Ty {
             Ty::Ref(id) => format!("Ref_{}", ref_inner(id).key()),
             Ty::Opt(id) => format!("Opt_{}", opt_inner(id).key()),
             Ty::RefMut(id) => format!("RefMut_{}", ref_mut_inner(id).key()),
+            Ty::Box(id) => format!("Box_{}", box_inner(id).key()),
             Ty::Map(id) => {
                 let (k, v) = map_parts(id);
                 format!("Map_{}_{}", k.key(), v.key())
@@ -536,6 +574,7 @@ impl Ty {
             Ty::Struct(id) | Ty::Enum(id) => agg_names(id).1,
             Ty::Res(id) => RESS.with(|r| r.borrow()[id as usize].2),
             Ty::Tuple(id) => TUPLES.with(|t| t.borrow()[id as usize].1),
+            Ty::Box(id) => BOXES.with(|b| b.borrow()[id as usize].1),
             Ty::Error => "void",
         }
     }
@@ -553,6 +592,7 @@ impl fmt::Display for Ty {
             Ty::Ref(id) => write!(f, "&{}", ref_inner(*id)),
             Ty::Opt(id) => write!(f, "?{}", opt_inner(*id)),
             Ty::RefMut(id) => write!(f, "&inout {}", ref_mut_inner(*id)),
+            Ty::Box(id) => write!(f, "Box[{}]", box_inner(*id)),
             Ty::Map(id) => {
                 let (k, v) = map_parts(*id);
                 write!(f, "Map[{k}, {v}]")
