@@ -1,0 +1,149 @@
+// expect-stdout:
+// | 3 true false
+// | apple 3
+// | banana 5
+// | cherry 7
+// | 0 3
+// | removed banana 5
+// | apple cherry banana
+// | sum 2500 50
+// | order 1 98 100
+// | a=3
+// | b=1
+// | a=13
+// | b=11
+// | total 3
+// | inner 3 true
+// | copy 1 orig 0
+// | vec 2 2
+// | taken 2 true
+// | one:1
+// | two:2
+// | empty 0 0
+struct Counter {
+    n: int
+}
+
+fn total(m: Map[String, int]) -> int {
+    var t = 0
+    for _k, v in m {
+        t += v
+    }
+    return t
+}
+
+fn bump(m: inout Map[String, Counter], key: str) {
+    if let c = m.getMut(key) {
+        c.n += 1
+        return
+    }
+    m.set(key.toString(), Counter{n: 1})
+}
+
+fn main() {
+    // Insertion order; setting an existing key keeps its position.
+    var m: Map[String, int] = [:]
+    m.set("apple".toString(), 3)
+    m.set("banana".toString(), 5)
+    m.set("cherry".toString(), 7)
+    m.set("apple".toString(), 3)
+    let a = "apple"
+    let z = "zzz"
+    println("${m.len()} ${m.has(a)} ${m.has(z)}")
+    for k, v in m {
+        println("${k} ${v}")
+    }
+    println("${m.getCopy(z) ?? 0} ${m.getCopy(a) ?? -1}")
+    // `remove` returns the owned value; inserting again puts the key at the end.
+    let b = "banana"
+    if let v = m.remove(b) {
+        println("removed ${b} ${v}")
+    }
+    m.set("banana".toString(), 6)
+    var first = true
+    for k, _v in m {
+        if !first {
+            print(" ")
+        }
+        print(k)
+        first = false
+    }
+    println("")
+
+    // Many keys: rebuilds and removals keep every key findable and the order intact.
+    var big: Map[int, int] = [:]
+    for i in 0..100 {
+        big.set(i, i)
+    }
+    for i in 0..50 {
+        let _ = big.remove(i * 2)
+    }
+    var sum = 0
+    for i in 0..100 {
+        sum += big.getCopy(i) ?? 0
+    }
+    println("sum ${sum} ${big.len()}")
+    for i in 0..50 {
+        big.set(i * 2, 0)
+    }
+    var firstKey = -1
+    var lastKey = -1
+    for k, _v in big {
+        if firstKey < 0 {
+            firstKey = k
+        }
+        lastKey = k
+    }
+    println("order ${firstKey} ${lastKey} ${big.len()}")
+
+    // `getMut` and `for k, v in &m` write through `&inout` references.
+    var counters: Map[String, Counter] = [:]
+    let words = "a b a a"
+    for w in words.fields() {
+        bump(&counters, w)
+    }
+    for k, c in counters {
+        println("${k}=${c.n}")
+    }
+    for _k, c in &counters {
+        c.n += 10
+    }
+    for k, c in counters {
+        println("${k}=${c.n}")
+    }
+    let scores: Map[String, int] = ["x".toString(): 1, "y".toString(): 2]
+    println("total ${total(scores)}")
+
+    // Values that own memory: nested maps, clones, an optional map, a vector of maps.
+    var nested: Map[String, Map[int, String]] = [:]
+    nested.set("in".toString(), [1: "one".toString(), 2: "two".toString()])
+    let key = "in"
+    if let inner = nested.getMut(key) {
+        inner.set(7, "seven".toString())
+    }
+    if let inner = nested.get(key) {
+        println("inner ${inner.len()} ${inner.has(7)}")
+    }
+    let copy = nested.clone()
+    let _ = nested.remove(key)
+    println("copy ${copy.len()} orig ${nested.len()}")
+    var maps: Vec[Map[String, int]] = [scores.clone()]
+    maps.push([:])
+    println("vec ${maps.len()} ${maps[0].len()}")
+    var maybe: ?Map[String, int] = scores.clone()
+    let taken = take(&maybe) ?? [:]
+    println("taken ${taken.len()} ${maybe.isNone()}")
+
+    // Keys that are views into a string.
+    let text = "one two two"
+    var seen: Map[str, int] = [:]
+    for w in text.fields() {
+        let n = seen.getCopy(w) ?? 0
+        seen.set(w, n + 1)
+    }
+    for k, v in seen {
+        println("${k}:${v}")
+    }
+    let empty: Map[String, int] = [:]
+    println("empty ${empty.len()} ${total(empty)}")
+}

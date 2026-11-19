@@ -13,6 +13,10 @@ thread_local! {
     /// Payload type and C struct name of each `?T`, indexed by opt id. A payload is always
     /// registered before the optionals that contain it.
     static OPTS: RefCell<Vec<(Ty, &'static str)>> = const { RefCell::new(Vec::new()) };
+    /// Referent type and C pointer type of each `&inout T`, indexed by id.
+    static REFMUTS: RefCell<Vec<(Ty, &'static str)>> = const { RefCell::new(Vec::new()) };
+    /// Key and value type of each `Map[K, V]`, indexed by map id; parts are registered first.
+    static MAPS: RefCell<Vec<(Ty, Ty)>> = const { RefCell::new(Vec::new()) };
 }
 
 /// Registers a struct name and returns its id.
@@ -87,6 +91,45 @@ pub fn opt_inner(id: u32) -> Ty {
 /// Every `?T` type created so far, in dependency order (payloads first).
 pub fn all_opts() -> Vec<(u32, Ty)> {
     OPTS.with(|o| o.borrow().iter().enumerate().map(|(i, (t, _))| (i as u32, *t)).collect())
+}
+
+/// Interns `&inout inner` and returns its id.
+pub fn ref_mut_of(inner: Ty) -> u32 {
+    let c_name = inner.c_name();
+    REFMUTS.with(|r| {
+        let mut r = r.borrow_mut();
+        if let Some(i) = r.iter().position(|(t, _)| *t == inner) {
+            return i as u32;
+        }
+        let c: &'static str = Box::leak(format!("{c_name} *").into_boxed_str());
+        r.push((inner, c));
+        (r.len() - 1) as u32
+    })
+}
+
+pub fn ref_mut_inner(id: u32) -> Ty {
+    REFMUTS.with(|r| r.borrow()[id as usize].0)
+}
+
+/// Interns `Map[key, value]` and returns its id.
+pub fn map_of(key: Ty, value: Ty) -> u32 {
+    MAPS.with(|m| {
+        let mut m = m.borrow_mut();
+        if let Some(i) = m.iter().position(|kv| *kv == (key, value)) {
+            return i as u32;
+        }
+        m.push((key, value));
+        (m.len() - 1) as u32
+    })
+}
+
+pub fn map_parts(id: u32) -> (Ty, Ty) {
+    MAPS.with(|m| m.borrow()[id as usize])
+}
+
+/// Every `Map` type created so far, in dependency order.
+pub fn all_maps() -> Vec<(u32, Ty, Ty)> {
+    MAPS.with(|m| m.borrow().iter().enumerate().map(|(i, (k, v))| (i as u32, *k, *v)).collect())
 }
 
 /// Every `Vec` type created so far, in dependency order.
@@ -202,6 +245,11 @@ pub enum Ty {
     /// `?T`: a value that may be absent, by opt id (see `opt_of`). In C a `{ bool has; T val; }`
     /// struct; all-zero is `none`, so a moved-out optional is `none`.
     Opt(u32),
+    /// `&inout T`: an exclusive, writable reference, by id (see `ref_mut_of`). Not copyable: it
+    /// moves. In C a `T *`. Produced by `getMut` and `for x in &v`.
+    RefMut(u32),
+    /// `Map[K, V]`, by map id (see `map_of`): an insertion-ordered hash map (`yv_map` in C).
+    Map(u32),
     Unit,
     /// A user-defined struct, by id (see `register_struct`).
     Struct(u32),
@@ -213,25 +261,58 @@ impl Ty {
     /// Copyable values are duplicated by assignment; the others (`String`, `Vec`) are moved.
     pub fn is_copy(self) -> bool {
         match self {
-            Ty::String | Ty::Vec(_) => false,
+            Ty::String | Ty::Vec(_) | Ty::Map(_) | Ty::RefMut(_) => false,
             Ty::Opt(id) => opt_inner(id).is_copy(),
             _ => true,
         }
     }
 
+    /// Whether a value of this type owns heap memory that must be released when it is dropped.
+    /// `&inout T` is not copyable but owns nothing.
+    pub fn needs_drop(self) -> bool {
+        match self {
+            Ty::String | Ty::Vec(_) | Ty::Map(_) => true,
+            Ty::Opt(id) => opt_inner(id).needs_drop(),
+            _ => false,
+        }
+    }
+
+    /// Whether this type contains an `&inout T` (such values keep exclusive access).
+    pub fn contains_ref_mut(self) -> bool {
+        match self {
+            Ty::RefMut(_) => true,
+            Ty::Opt(id) => opt_inner(id).contains_ref_mut(),
+            Ty::Vec(id) => vec_elem(id).contains_ref_mut(),
+            Ty::Map(id) => {
+                let (k, v) = map_parts(id);
+                k.contains_ref_mut() || v.contains_ref_mut()
+            }
+            _ => false,
+        }
+    }
+
+    /// Map keys v1 can hash (stdlib contract §3; `Id` and tuples are not implemented yet).
+    pub fn is_hashable(self) -> bool {
+        matches!(self, Ty::Int(_) | Ty::Bool | Ty::Str | Ty::String)
+    }
+
     /// Whether a value of this type points into data it does not own (`str`, `Vec[str]`, ...).
     pub fn carries_borrow(self) -> bool {
         match self {
-            Ty::Str | Ty::Ref(_) => true,
+            Ty::Str | Ty::Ref(_) | Ty::RefMut(_) => true,
             Ty::Vec(id) => vec_elem(id).carries_borrow(),
             Ty::Opt(id) => opt_inner(id).carries_borrow(),
+            Ty::Map(id) => {
+                let (k, v) = map_parts(id);
+                k.carries_borrow() || v.carries_borrow()
+            }
             _ => false,
         }
     }
 
     /// `take(&x)` leaves this value behind (stdlib contract §1). In C it is all-zero bytes.
     pub fn has_default(self) -> bool {
-        matches!(self, Ty::Int(_) | Ty::Bool | Ty::String | Ty::Vec(_) | Ty::Opt(_))
+        matches!(self, Ty::Int(_) | Ty::Bool | Ty::String | Ty::Vec(_) | Ty::Opt(_) | Ty::Map(_))
     }
 
     /// A name usable inside C identifiers, e.g. `Vec_Vec_String` for `Vec[Vec[String]]`.
@@ -244,6 +325,11 @@ impl Ty {
             Ty::Vec(id) => format!("Vec_{}", vec_elem(id).key()),
             Ty::Ref(id) => format!("Ref_{}", ref_inner(id).key()),
             Ty::Opt(id) => format!("Opt_{}", opt_inner(id).key()),
+            Ty::RefMut(id) => format!("RefMut_{}", ref_mut_inner(id).key()),
+            Ty::Map(id) => {
+                let (k, v) = map_parts(id);
+                format!("Map_{}_{}", k.key(), v.key())
+            }
             Ty::Struct(id) => format!("S_{}", struct_names(id).0),
             Ty::Unit | Ty::Error => "void".into(),
         }
@@ -258,6 +344,8 @@ impl Ty {
             Ty::Vec(_) => "yv_vec",
             Ty::Ref(id) => REFS.with(|r| r.borrow()[id as usize].1),
             Ty::Opt(id) => OPTS.with(|o| o.borrow()[id as usize].1),
+            Ty::RefMut(id) => REFMUTS.with(|r| r.borrow()[id as usize].1),
+            Ty::Map(_) => "yv_map",
             Ty::Unit => "void",
             Ty::Struct(id) => struct_names(id).1,
             Ty::Error => "void",
@@ -275,6 +363,11 @@ impl fmt::Display for Ty {
             Ty::Vec(id) => write!(f, "Vec[{}]", vec_elem(*id)),
             Ty::Ref(id) => write!(f, "&{}", ref_inner(*id)),
             Ty::Opt(id) => write!(f, "?{}", opt_inner(*id)),
+            Ty::RefMut(id) => write!(f, "&inout {}", ref_mut_inner(*id)),
+            Ty::Map(id) => {
+                let (k, v) = map_parts(*id);
+                write!(f, "Map[{k}, {v}]")
+            }
             Ty::Unit => f.write_str("()"),
             Ty::Struct(id) => f.write_str(struct_names(*id).0),
             Ty::Error => f.write_str("{error}"),

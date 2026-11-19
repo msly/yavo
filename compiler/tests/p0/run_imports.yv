@@ -1,0 +1,20 @@
+// expect-stdout:
+// | before exit
+// | 7
+use std/{os}
+
+fn pick(n: int) -> int {
+    if n > 0 {
+        return n
+    }
+    // `os.exit` never returns, so this path needs no `return` (V8).
+    os.exit(0)
+}
+
+fn main() {
+    println("before exit")
+    println(pick(7))
+    // Buffered output is flushed before the process ends; nothing after this runs.
+    os.exit(pick(-1))
+    println("not printed")
+}

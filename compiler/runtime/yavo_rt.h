@@ -433,6 +433,94 @@ static void yv_vec_free(yv_vec *v) {
     v->len = v->cap = 0;
 }
 
+/* ---- Map[K, V]: insertion-ordered hash map. ----
+ * Entries live in `ents` in insertion order; the generated per-type entry struct starts with a
+ * `bool live` flag. A removed entry stays (not live) until the next rebuild and keeps its slot,
+ * so lookups probe past it. `slots` is an open-addressing table of entry index + 1 (0 = empty)
+ * whose size is a power of two kept at least twice the entry count, so probing always ends.
+ * All-zero is an empty map. The generated code supplies hashing and key comparison. */
+
+typedef struct {
+    yv_vec ents;
+    int64_t live;
+    int64_t *slots;
+    int64_t nslots;
+} yv_map;
+
+/* splitmix64 finalizer */
+static inline uint64_t yv_hash_u64(uint64_t x) {
+    x ^= x >> 30;
+    x *= 0xbf58476d1ce4e5b9ULL;
+    x ^= x >> 27;
+    x *= 0x94d049bb133111ebULL;
+    x ^= x >> 31;
+    return x;
+}
+
+/* FNV-1a, finalized; `String` and `str` keys hash their UTF-8 bytes the same way. */
+static inline uint64_t yv_hash_bytes(const uint8_t *p, size_t n) {
+    uint64_t h = 0xcbf29ce484222325ULL;
+    for (size_t i = 0; i < n; i++) {
+        h ^= p[i];
+        h *= 0x100000001b3ULL;
+    }
+    return yv_hash_u64(h);
+}
+
+/* The slot table size for `entries` entries: a power of two, at least 4 * entries + 4. */
+static int64_t yv_map_slot_count(int64_t entries, uint32_t line, uint32_t col) {
+    int64_t want, n = 8;
+    if (__builtin_mul_overflow(entries, (int64_t)4, &want) || __builtin_add_overflow(want, (int64_t)4, &want)) {
+        yv_capacity_overflow(line, col);
+    }
+    while (n < want) {
+        if (__builtin_mul_overflow(n, (int64_t)2, &n)) yv_capacity_overflow(line, col);
+    }
+    return n;
+}
+
+/* Replaces the slot table with an empty one of `n` slots. */
+static void yv_map_slots_reset(yv_map *m, int64_t n, uint32_t line, uint32_t col) {
+    if (m->slots) {
+        YV_COUNT_FREE();
+        free(m->slots);
+        m->slots = NULL;
+        m->nslots = 0;
+    }
+    if ((uint64_t)n > (uint64_t)(PTRDIFF_MAX / (int64_t)sizeof(int64_t))) yv_capacity_overflow(line, col);
+    int64_t *s = (int64_t *)calloc((size_t)n, sizeof(int64_t));
+    if (s == NULL) yv_panic("P-OOM", "out of memory", line, col);
+    YV_COUNT_ALLOC();
+    m->slots = s;
+    m->nslots = n;
+}
+
+/* Records entry `idx` (whose key hashes to `h`) in the first free slot of its probe sequence. */
+static void yv_map_slot_put(yv_map *m, uint64_t h, int64_t idx) {
+    uint64_t mask = (uint64_t)m->nslots - 1, i = h & mask;
+    while (m->slots[i] != 0) i = (i + 1) & mask;
+    m->slots[i] = idx + 1;
+}
+
+/* Frees the storage; the entries' contents must already be dropped. */
+static void yv_map_free(yv_map *m) {
+    yv_vec_free(&m->ents);
+    if (m->slots) {
+        YV_COUNT_FREE();
+        free(m->slots);
+    }
+    m->slots = NULL;
+    m->nslots = 0;
+    m->live = 0;
+}
+
+/* `os.exit(code)`: output is flushed; nothing else is cleaned up (V11). */
+YV_NORETURN static void yv_os_exit(int64_t code) {
+    yv_flush();
+    yv_exit_process((int)code);
+    YV_UNREACHABLE();
+}
+
 /* ---- Views into text. The results point into the original bytes; nothing is copied. ---- */
 
 static inline bool yv_is_space(char c) { return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\v' || c == '\f'; }

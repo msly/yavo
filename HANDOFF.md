@@ -4,10 +4,11 @@
 
 ## 1. 一句话状态
 
-规范 v0.5 已冻结（`docs/`、`yavo-tests/`）；Rust 写的编译器（约 7,000 行，含 C 运行时）已实现 P0 和 P1 的一部分：
+规范 v0.5 已冻结（`docs/`、`yavo-tests/`）；Rust 写的编译器（约 8,100 行，含 C 运行时）已实现 P0 和 P1 的一部分：
 结构体、`String`/`Vec[T]`、移动与析构、字符串视图与 `of` 来源、`&T` 引用、`for x in v`、`inout` 参数、
-可选值 `?T`（`if let`/`while let`/`match`/`??`/`take`/`replace`/`swap`/`pop`）、六个目标的交叉编译。
-规范一致性：**129 项中通过 34、判错 0、不支持 82、未运行 13**。全部提交只在本地，**按用户决定暂不推远端**。
+可选值 `?T`（`if let`/`while let`/`match`/`??`/`take`/`replace`/`swap`/`pop`）、`Map[K, V]` 与 `&inout T` 值（来自 `getMut`、`for … in &c`）、
+`use std/...` 导入（模块内容只实现了 `os.exit`）、六个目标的交叉编译。
+规范一致性：**129 项中通过 44、判错 0、不支持 72、未运行 13**。全部提交只在本地，**按用户决定暂不推远端**。
 
 ## 2. 仓库与环境
 
@@ -50,6 +51,7 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 
 | 提交 | 内容 | 一致性通过数 |
 | --- | --- | --- |
+| `feat(p1): maps, &inout values and std imports` | `Map[K, V]`、`[:]`、`get`/`getCopy`/`getMut`/`set`/`remove`/`has`、`for k, v in m`/`in &m`、`for i, x in v`、`for x in &v`、`&inout T` 值与独占访问检查；`use std/...`、`os.exit` | 44 |
 | `feat(p1): optional values` | 可选值：`?T`、`some`/`none`、`if let`、`while let`、`match`、`??`、`take`/`replace`/`swap`、`pop`；`tools/expect_header.sh` | 34 |
 | `c0f0ad7` | `&T`、`for x in v`、`inout` 参数、`v[i]` 取不可复制元素 | 29 |
 | `8313043` | 字符串视图（`trim`/`fields`/`lines`）、`of` 来源、按最后一次使用的借用检查 | 24 |
@@ -82,6 +84,9 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 
 - 借用检查按语句粒度和语句顺序：`if` 里修改、只在 `else` 里用视图也会报错；`E0305` 不看存储目标之后是否还被使用。只会多报，不会漏报。
 - 可选值：对已有位置的 `if let`/`match` 绑定一律只读；规范允许通过可写位置的绑定写入（如 T-A3 的 `n.size += 1`），这里报 `U0001`。可复制的载荷虽然按值复制，仍算作借用原位置（保守）。`a ?? b` 把 `a` 整体消费（移动）。`?? return/break/continue` 只允许作为整个 `let` 初值或赋值右侧。`match` 只做语句、只支持可选值模式。
+- `&inout T`：只能由 `getMut` 和 `for … in &c` 产生；还不能写出这个类型、不能 `&x` 构造（A7）、不能 `*p = v`，不能放进集合，也不能通过它存入借用值（都报 `U0001`）。独占访问检查：`&inout` 之后还会被用到时，原变量的任何使用都报 `E0102`（按“最后一次使用”判断，同样只会多报）。
+- `Map`：键只支持整数、`bool`、`str`、`String`（`Id`、元组键未做）；`update` 需要闭包，报 `U0001`。只有变量能调用 `set`/`remove`/`getMut`。
+- 导入：模块函数、常量、类型除了 `os.exit` 都报 `U0001`。`os.exit` 不运行析构，所以放在 `run_*` 测试末尾会让堆块检查失效（它只在 `yv_rt_exit` 里检查）。
 - 堆块检查发现不了释放后使用。机器上没有 ASan。
 - Windows、macOS、aarch64 的产物只验证了文件格式，没有实际运行（没有真机和 CI）。
 - 共享的 Claude 文档仍是 v0.4；以仓库 `docs/` 为准。
@@ -92,18 +97,18 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 
 | 卡点 | 测试数 |
 | --- | --- |
-| `use` 导入 | 14 |
-| `Map` 字面量 `[:]` | 11 |
 | `struct X: Interface` | 7 |
 | 切片、元组类型 | 7 |
 | `enum` | 5 |
 | 解引用 `*p` | 5 |
 | `Box` | 5 |
+| `with`（锁守卫块） | 4 |
 | 浮点数 | 4 |
+| 泛型结构体字面量（如 `Channel[int]{cap: 2}`） | 4 |
 | 切片 `x[a..b]` | 4 |
 | `interface` 声明 | 3 |
 
-另外 T-C6/T-C6p 卡在 `?String` 结构体字段（计划表第 7 项），T-A3/T-A3f 卡在 `Box`。
+另外 T-C6/T-C6p 卡在 `?String` 结构体字段（计划表第 7 项），T-A3/T-A3f 卡在 `Box`，T-C7 卡在闭包（`update`）。原来卡在导入的 14 项里，12 项是 `std/sync` 的并发用例，现在卡在 `Mutex`、`Channel`、`with` 等第 12 项的内容上。
 
 未运行 13 项：`yavo fix` 7 项、`yavo verify` 报告 4 项、需要夹具或特定平台 2 项。
 
@@ -112,11 +117,11 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 | 序号 | 任务 | 依赖 | 预计解锁 | 规范位置 |
 | --- | --- | --- | --- | --- |
 | ~~1~~ | ~~`?T`、`some`/`none`、`if let`、`match`（先支持可选值）、`??`、`take`/`replace`/`swap`~~ **已完成**（新增通过 T-C5、T-G05、T-G06、T-G07、T-G24） | 无 | C5、C6，并为 `Map` 铺路 | 语义表 C5、V9；速查卡第 3 节 |
-| 2 | `Map[K, V]`、`[:]`、`get`/`getMut`/`getCopy`/`set`/`remove`/`update`、`str` 键查询、`for k, v in m` | 1 | A1、A4、A5、C7、C8 等 | C6、A2、A5；`docs/stdlib_contract.md` |
-| 3 | `use std/...` 导入（先把标准库模块名映射到内建函数） | 无 | 14 项的第一卡点 | 速查卡第 5 节 |
+| ~~2~~ | ~~`Map[K, V]`、`[:]`、`get`/`getMut`/`getCopy`/`set`/`remove`/`update`、`str` 键查询、`for k, v in m`~~ **已完成**，`update` 等闭包（新增通过 T-A1、T-A1p、T-A4、T-A4p、T-C1、T-C1p、T-C7f、T-C8、T-C8f、T-GR10） | 1 | A1、A4、A5、C7、C8 等 | C6、A2、A5；`docs/stdlib_contract.md` |
+| ~~3~~ | ~~`use std/...` 导入~~ **已完成**（模块内容只有 `os.exit`；导入用例转到各自的下一个卡点） | 无 | 14 项的第一卡点 | 速查卡第 5 节 |
 | 4 | `enum` 与 `match`；`T ! E`、`try`、`catch`、`ok`/`err` | 1 | V4、N 类、错误处理用例 | 速查卡第 3 节，语义表 V8 |
 | 5 | 结构体方法（`self`/`inout self`）、`interface`、`struct X: I`、`Box[I]`、`Eq`/`Ord` 协议 | 4 | 10 项左右 | 语义表 K1、K2、P2 |
-| 6 | `*p` 写入、`&inout T` 值、`for x in &v`、`getMut` | 2 | 5 项左右 | 语义表 A1–A4 |
+| 6 | `*p` 写入、写出 `&inout T` 类型并用 `&x` 构造（A7、`E0004`）；（`&inout` 值、`for x in &v`、`getMut` 已随第 2 项完成） | 2 | 5 项左右 | 语义表 A1–A4、A7 |
 | 7 | `String`/`Vec` 结构体字段（字段析构、移出字段规则） | 1、6 | C4p、E 类 | C5、规则 8 |
 | 8 | 浮点 `f64`、`totalCmp` | 无 | K1 | 语义表第 7、8 节 |
 | 9 | 切片 `x[a..b]`（字符边界检查 `P-STR-BOUNDARY`） | 无 | S3、若干视图用例 | 语义表 S3 |
@@ -130,5 +135,5 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 ## 10. 下一个会话的第一步
 
 1. 设置第 2 节的环境变量，`cargo build --locked --offline --release`。
-2. 跑 `cargo test --locked --offline`，确认全部通过；跑 conformance，确认是 34 / 0 / 82 / 13。
-3. 读 `docs/stdlib_contract.md` 的 Map 部分和语义表 A1–A5、C6，开始计划表第 2 项（`Map`）。第 3 项（`use` 导入）不依赖别的项、是最大的第一卡点，也可以先做。
+2. 跑 `cargo test --locked --offline`，确认全部通过；跑 conformance，确认是 44 / 0 / 72 / 13。
+3. 读速查卡第 3 节和语义表 V8、V12，开始计划表第 4 项（`enum`、`match` 枚举、`T ! E`、`try`/`catch`/`ok`/`err`）；它也会把 `match` 扩展成表达式。

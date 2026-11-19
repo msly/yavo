@@ -7,11 +7,15 @@ use std::fmt::Write;
 use crate::ast::BinOp;
 use crate::check::*;
 use crate::diag::Span;
-use crate::types::{all_opts, all_vecs, opt_inner, ref_inner, vec_elem, IntTy, Ty};
+use crate::types::{all_maps, all_opts, all_vecs, opt_inner, opt_of, ref_inner, ref_mut_inner, vec_elem, IntTy, Ty};
 
 pub const RUNTIME_HEADER: &str = include_str!("../runtime/yavo_rt.h");
 
 pub fn generate(prog: &HProgram, file: &str) -> String {
+    // `remove` returns `?V`: make sure that optional type exists before types are emitted.
+    for (_, _, v) in all_maps() {
+        opt_of(v);
+    }
     let mut g = Gen {
         out: String::new(),
         indent: 0,
@@ -48,6 +52,10 @@ pub fn generate(prog: &HProgram, file: &str) -> String {
     for (id, _) in all_opts() {
         g.define_opt(Ty::Opt(id));
     }
+    for (id, k, v) in all_maps() {
+        let e = entry_name(Ty::Map(id));
+        let _ = writeln!(g.out, "typedef struct {e} {{\n    bool live;\n    {} key;\n    {} val;\n}} {e};\n", k.c_name(), v.c_name());
+    }
     // Drop and clone helpers for owned types. They can call each other (`Vec[?String]`,
     // `?Vec[String]`), so all of them are declared before any is defined.
     g.out.push_str("static inline void yv_drop_String(yv_string *p) { yv_string_drop(p); }\n");
@@ -55,15 +63,19 @@ pub fn generate(prog: &HProgram, file: &str) -> String {
         "static inline yv_string yv_clone_String(const yv_string *p, uint32_t line, uint32_t col) {\n    \
          return yv_string_from(yv_string_view(p), line, col);\n}\n",
     );
-    let owned_opts: Vec<(u32, Ty)> = all_opts().into_iter().filter(|(_, t)| !t.is_copy()).collect();
+    let owned_opts: Vec<(u32, Ty)> = all_opts().into_iter().filter(|(_, t)| t.needs_drop()).collect();
     let mut helpers: Vec<Ty> = all_vecs().into_iter().map(|(id, _)| Ty::Vec(id)).collect();
     helpers.extend(owned_opts.iter().map(|(id, _)| Ty::Opt(*id)));
+    helpers.extend(all_maps().into_iter().map(|(id, _, _)| Ty::Map(id)));
     for t in &helpers {
         let (key, c) = (t.key(), t.c_name());
         let _ = writeln!(g.out, "static inline void yv_drop_{key}({c} *p);");
         let _ = writeln!(g.out, "static inline {c} yv_clone_{key}(const {c} *p, uint32_t line, uint32_t col);");
     }
     g.out.push('\n');
+    for (id, k, v) in all_maps() {
+        map_helpers(&mut g.out, Ty::Map(id), k, v);
+    }
     for (id, inner) in &owned_opts {
         let t = Ty::Opt(*id);
         let (key, c) = (t.key(), t.c_name());
@@ -79,7 +91,7 @@ pub fn generate(prog: &HProgram, file: &str) -> String {
         let key = Ty::Vec(id).key();
         let et = elem.c_name();
         let _ = writeln!(g.out, "static inline void yv_drop_{key}(yv_vec *p) {{");
-        if !elem.is_copy() {
+        if elem.needs_drop() {
             let _ = writeln!(g.out, "    for (int64_t i = 0; i < p->len; i++) {}(&(({et} *)p->ptr)[i]);", drop_fn(elem));
         }
         let _ = writeln!(g.out, "    yv_vec_free(p);\n}}");
@@ -139,6 +151,158 @@ struct Scope {
 
 fn drop_fn(ty: Ty) -> String {
     format!("yv_drop_{}", ty.key())
+}
+
+/// The C struct of one entry of a map type.
+fn entry_name(map: Ty) -> String {
+    format!("yv_ent_{}", map.key())
+}
+
+fn map_value(map: Ty) -> Ty {
+    match map {
+        Ty::Map(id) => crate::types::map_parts(id).1,
+        _ => unreachable!("checked: a map"),
+    }
+}
+
+/// How a map with key type `k` is searched: the C type of a lookup key (`str` for `String` and
+/// `str` keys, C6), the lookup key of a stored key, its hash, and key equality.
+struct KeyOps {
+    q: &'static str,
+    k: Ty,
+}
+
+impl KeyOps {
+    fn new(k: Ty) -> KeyOps {
+        KeyOps { q: if matches!(k, Ty::String | Ty::Str) { "yv_str" } else { k.c_name() }, k }
+    }
+    fn query(&self, key: &str) -> String {
+        if self.k == Ty::String {
+            format!("yv_string_view(&{key})")
+        } else {
+            key.to_string()
+        }
+    }
+    fn hash(&self, q: &str) -> String {
+        if self.q == "yv_str" {
+            format!("yv_hash_bytes((const uint8_t *){q}.ptr, {q}.len)")
+        } else {
+            format!("yv_hash_u64((uint64_t){q})")
+        }
+    }
+    fn eq(&self, key: &str, q: &str) -> String {
+        match self.k {
+            Ty::String | Ty::Str => format!("yv_str_eq({}, {q})", self.query(key)),
+            _ => format!("{key} == {q}"),
+        }
+    }
+}
+
+/// A copy of `v` (an lvalue of type `t`) for a clone: owned values are cloned, the rest copied.
+fn clone_value(t: Ty, v: &str) -> String {
+    if t.needs_drop() {
+        format!("{}(&{v}, line, col)", clone_fn(t))
+    } else {
+        v.to_string()
+    }
+}
+
+/// Lookup, insertion, removal, drop and clone for one map type.
+fn map_helpers(out: &mut String, map: Ty, k: Ty, v: Ty) {
+    let key = map.key();
+    let e = entry_name(map);
+    let ops = KeyOps::new(k);
+    let q = ops.q;
+    let (kc, vc) = (k.c_name(), v.c_name());
+    let opt = Ty::Opt(opt_of(v)).c_name();
+    let drop_key = if k.needs_drop() { format!("{}(&key);", drop_fn(k)) } else { String::new() };
+    let _ = writeln!(
+        out,
+        "static int64_t yv_map_find_{key}(const yv_map *m, {q} q) {{\n    \
+         if (m->nslots == 0) return -1;\n    \
+         uint64_t mask = (uint64_t)m->nslots - 1, i = {} & mask;\n    \
+         for (;;) {{\n        \
+         int64_t s = m->slots[i];\n        \
+         if (s == 0) return -1;\n        \
+         const {e} *e = &((const {e} *)m->ents.ptr)[s - 1];\n        \
+         if (e->live && {}) return s - 1;\n        \
+         i = (i + 1) & mask;\n    }}\n}}",
+        ops.hash("q"),
+        ops.eq("e->key", "q")
+    );
+    let _ = writeln!(
+        out,
+        "static {vc} *yv_map_at_{key}(const yv_map *m, {q} q) {{\n    \
+         int64_t i = yv_map_find_{key}(m, q);\n    \
+         return i < 0 ? NULL : &(({e} *)m->ents.ptr)[i].val;\n}}"
+    );
+    // Removed entries are dropped from `ents` here; their contents were already taken or dropped.
+    let _ = writeln!(
+        out,
+        "static void yv_map_rebuild_{key}(yv_map *m, uint32_t line, uint32_t col) {{\n    \
+         {e} *es = ({e} *)m->ents.ptr;\n    \
+         int64_t j = 0;\n    \
+         for (int64_t i = 0; i < m->ents.len; i++) {{\n        \
+         if (es[i].live) {{\n            if (i != j) es[j] = es[i];\n            j++;\n        }}\n    }}\n    \
+         m->ents.len = j;\n    \
+         yv_map_slots_reset(m, yv_map_slot_count(j, line, col), line, col);\n    \
+         for (int64_t i = 0; i < j; i++) yv_map_slot_put(m, {}, i);\n}}",
+        ops.hash(&ops.query("es[i].key"))
+    );
+    // An existing key keeps its entry and position: the new key is dropped, then the old value.
+    let drop_old = if v.needs_drop() { format!("{}(&e->val);\n        ", drop_fn(v)) } else { String::new() };
+    let _ = writeln!(
+        out,
+        "static void yv_map_set_{key}(yv_map *m, {kc} key, {vc} val, uint32_t line, uint32_t col) {{\n    \
+         int64_t i = yv_map_find_{key}(m, {});\n    \
+         if (i >= 0) {{\n        \
+         {e} *e = &(({e} *)m->ents.ptr)[i];\n        \
+         {drop_key}\n        \
+         {drop_old}e->val = val;\n        \
+         return;\n    }}\n    \
+         if ((m->ents.len + 1) * 2 > m->nslots) yv_map_rebuild_{key}(m, line, col);\n    \
+         {e} *e = ({e} *)yv_vec_push_slot(&m->ents, (int64_t)sizeof({e}), line, col);\n    \
+         e->live = true;\n    e->key = key;\n    e->val = val;\n    m->live++;\n    \
+         yv_map_slot_put(m, {}, m->ents.len - 1);\n}}",
+        ops.query("key"),
+        ops.hash(&ops.query("e->key"))
+    );
+    let drop_entry_key = if k.needs_drop() { format!("{}(&e->key);\n    ", drop_fn(k)) } else { String::new() };
+    let _ = writeln!(
+        out,
+        "static {opt} yv_map_remove_{key}(yv_map *m, {q} q) {{\n    \
+         {opt} r = {{0}};\n    \
+         int64_t i = yv_map_find_{key}(m, q);\n    \
+         if (i < 0) return r;\n    \
+         {e} *e = &(({e} *)m->ents.ptr)[i];\n    \
+         r.val = e->val;\n    r.has = true;\n    \
+         {drop_entry_key}e->live = false;\n    m->live--;\n    return r;\n}}"
+    );
+    let mut drops = String::new();
+    if k.needs_drop() {
+        let _ = write!(drops, " {}(&es[i].key);", drop_fn(k));
+    }
+    if v.needs_drop() {
+        let _ = write!(drops, " {}(&es[i].val);", drop_fn(v));
+    }
+    let _ = writeln!(
+        out,
+        "static inline void yv_drop_{key}(yv_map *p) {{\n    \
+         {e} *es = ({e} *)p->ents.ptr;\n    \
+         for (int64_t i = 0; i < p->ents.len; i++) {{\n        if (es[i].live) {{{drops} }}\n    }}\n    \
+         yv_map_free(p);\n}}"
+    );
+    let _ = writeln!(
+        out,
+        "static inline yv_map yv_clone_{key}(const yv_map *p, uint32_t line, uint32_t col) {{\n    \
+         yv_map m = {{0}};\n    \
+         const {e} *es = (const {e} *)p->ents.ptr;\n    \
+         for (int64_t i = 0; i < p->ents.len; i++) {{\n        \
+         if (es[i].live) yv_map_set_{key}(&m, {}, {}, line, col);\n    }}\n    \
+         return m;\n}}\n",
+        clone_value(k, "es[i].key"),
+        clone_value(v, "es[i].val")
+    );
 }
 
 /// The payload type of an optional, or of an optional read through a `&`.
@@ -250,8 +414,7 @@ impl Gen {
 
     /// The C lvalue of a place.
     fn place(&self, p: &HPlace, f: &HFn) -> String {
-        let mut place = local_name(&f.locals, p.local);
-        let mut ty = f.locals[p.local].ty;
+        let (mut place, mut ty) = self.place_root(f, p.local, !p.path.is_empty());
         for &fi in &p.path {
             let Ty::Struct(id) = ty else { unreachable!() };
             let (name, fty) = &self.fields[&id][fi];
@@ -259,6 +422,21 @@ impl Gen {
             ty = *fty;
         }
         place
+    }
+
+    /// The C lvalue a place starts from: the variable, or (`through`, for a path into an
+    /// `&inout T` variable) the target it points to; with its type.
+    fn place_root(&self, f: &HFn, local: LocalId, through: bool) -> (String, Ty) {
+        let name = local_name(&f.locals, local);
+        match f.locals[local].ty {
+            Ty::RefMut(r) if through => (format!("(*{name})"), ref_mut_inner(r)),
+            t => (name, t),
+        }
+    }
+
+    /// The C lvalue a modifying method's receiver variable stands for.
+    fn receiver(&self, f: &HFn, local: LocalId) -> (String, Ty) {
+        self.place_root(f, local, true)
     }
 
     /// Drops the current statement's temporaries before a jump, keeping them listed: the path
@@ -399,13 +577,13 @@ impl Gen {
             }
             HStmtKind::Assign { local, path, value } => {
                 let v = self.owned(value, f);
-                let mut ty = f.locals[*local].ty;
+                let (_, mut ty) = self.place_root(f, *local, !path.is_empty());
                 for &fi in path {
                     let Ty::Struct(id) = ty else { unreachable!() };
                     ty = self.fields[&id][fi].1;
                 }
                 let place = self.place(&HPlace { local: *local, path: path.clone(), ty }, f);
-                if !ty.is_copy() {
+                if ty.needs_drop() {
                     // The new value is computed first; then the old one is dropped and replaced.
                     self.line(&format!("{}(&{place});", drop_fn(ty)));
                 }
@@ -467,7 +645,7 @@ impl Gen {
                         }
                     }
                     // `some(_)` on a temporary drops the payload before the arm runs (C7).
-                    BindMode::Owned if !payload.is_copy() => self.line(&format!("{}(&({opt}).val);", drop_fn(payload))),
+                    BindMode::Owned if payload.needs_drop() => self.line(&format!("{}(&({opt}).val);", drop_fn(payload))),
                     _ => {}
                 }
                 self.stmts(then, f);
@@ -517,7 +695,7 @@ impl Gen {
                 self.drop_scopes(n);
                 self.line(if matches!(s.kind, HStmtKind::Break) { "break;" } else { "continue;" });
             }
-            HStmtKind::ForEach { vec, elem, by_ref, body } => {
+            HStmtKind::ForEach { vec, index, elem, by_ref, body } => {
                 let v = local_name(&f.locals, *vec);
                 let Ty::Vec(vid) = f.locals[*vec].ty else { unreachable!() };
                 let ec = vec_elem(vid).c_name();
@@ -526,10 +704,33 @@ impl Gen {
                 // The checker forbids changing `v` during the loop, so `len` and `ptr` stay valid.
                 self.line(&format!("for (int64_t {i} = 0; {i} < ({v}).len; {i}++) {{"));
                 self.indent += 1;
+                if let Some(ix) = index {
+                    self.line(&format!("const int64_t {} = {i};", local_name(&f.locals, *ix)));
+                }
                 if *by_ref {
-                    self.line(&format!("const {ec} *{x} = &(({ec} *)({v}).ptr)[{i}];"));
+                    // `const T *` for `&T`, `T *` for `&inout T`.
+                    self.line(&format!("{} {x} = &(({ec} *)({v}).ptr)[{i}];", f.locals[*elem].ty.c_name()));
                 } else {
                     self.line(&format!("{ec} {x} = (({ec} *)({v}).ptr)[{i}];"));
+                }
+                self.scoped(body, f, true);
+                self.indent -= 1;
+                self.line("}");
+            }
+            HStmtKind::ForMap { map, key, key_ref, val, val_ref, body } => {
+                let m = local_name(&f.locals, *map);
+                let e = entry_name(f.locals[*map].ty);
+                let (i, ent) = (self.fresh(), self.fresh());
+                // The checker forbids changing the map during the loop; removed entries are skipped.
+                self.line(&format!("for (int64_t {i} = 0; {i} < ({m}).ents.len; {i}++) {{"));
+                self.indent += 1;
+                self.line(&format!("{e} *{ent} = &(({e} *)({m}).ents.ptr)[{i}];"));
+                self.line(&format!("if (!{ent}->live) continue;"));
+                for (local, by_ref, field) in [(*key, *key_ref, "key"), (*val, *val_ref, "val")] {
+                    let ty = f.locals[local].ty;
+                    let name = local_name(&f.locals, local);
+                    let amp = if by_ref { "&" } else { "" };
+                    self.line(&format!("{} {name} = {amp}{ent}->{field};", ty.c_name()));
                 }
                 self.scoped(body, f, true);
                 self.indent -= 1;
@@ -570,7 +771,14 @@ impl Gen {
                                 Ty::Bool => format!("yv_write_bool({fd}, {v});"),
                                 Ty::Str => format!("yv_write_str({fd}, {v});"),
                                 Ty::String => format!("yv_write_str({fd}, yv_string_view(&{v}));"),
-                                Ty::Unit | Ty::Error | Ty::Struct(_) | Ty::Vec(_) | Ty::Ref(_) | Ty::Opt(_) => {
+                                Ty::Unit
+                                | Ty::Error
+                                | Ty::Struct(_)
+                                | Ty::Vec(_)
+                                | Ty::Ref(_)
+                                | Ty::Opt(_)
+                                | Ty::RefMut(_)
+                                | Ty::Map(_) => {
                                     unreachable!("rejected or dereferenced by the checker")
                                 }
                             };
@@ -665,8 +873,8 @@ impl Gen {
                 String::new()
             }
             HExprKind::Pop(local) => {
-                let v = local_name(&f.locals, *local);
-                let Ty::Vec(vid) = f.locals[*local].ty else { unreachable!() };
+                let (v, rty) = self.receiver(f, *local);
+                let Ty::Vec(vid) = rty else { unreachable!() };
                 let et = vec_elem(vid).c_name();
                 let t = self.fresh();
                 self.line(&format!("{} {t} = {{0}};", e.ty.c_name()));
@@ -676,6 +884,62 @@ impl Gen {
                 self.line(&format!("    {t}.has = true;"));
                 self.line("}");
                 t
+            }
+            HExprKind::MapLit(entries) => {
+                let key = e.ty.key();
+                let at = pos(e.at);
+                let t = self.fresh();
+                self.line(&format!("yv_map {t} = {{0}};"));
+                for (k, v) in entries {
+                    let kv = self.owned(k, f);
+                    let vv = self.owned(v, f);
+                    self.line(&format!("yv_map_set_{key}(&{t}, {kv}, {vv}, {at});"));
+                }
+                t
+            }
+            HExprKind::MapRead { op, recv, key } => {
+                let m = self.borrowed(recv, f);
+                let q = self.expr(key, f);
+                let found = format!("yv_map_at_{}(&{m}, {q})", recv.ty.key());
+                if *op == MapRead::Has {
+                    return self.bind(e.ty, &format!("({found} != NULL)"));
+                }
+                let (t, p) = (self.fresh(), self.fresh());
+                let deref = if *op == MapRead::GetCopy { "*" } else { "" };
+                self.line(&format!("{} {t} = {{0}};", e.ty.c_name()));
+                self.line(&format!("{} *{p} = {found};", map_value(recv.ty).c_name()));
+                self.line(&format!("if ({p}) {{ {t}.val = {deref}{p}; {t}.has = true; }}"));
+                t
+            }
+            HExprKind::MapWrite { op, local, args } => {
+                let (m, mty) = self.receiver(f, *local);
+                let mk = mty.key();
+                let at = pos(e.at);
+                match op {
+                    MapWrite::Set => {
+                        let k = self.owned(&args[0], f);
+                        let v = self.owned(&args[1], f);
+                        self.line(&format!("yv_map_set_{mk}(&{m}, {k}, {v}, {at});"));
+                        String::new()
+                    }
+                    MapWrite::Remove => {
+                        let q = self.expr(&args[0], f);
+                        self.bind_mut(e.ty, &format!("yv_map_remove_{mk}(&{m}, {q})"))
+                    }
+                    MapWrite::GetMut => {
+                        let q = self.expr(&args[0], f);
+                        let t = self.fresh();
+                        self.line(&format!("{} {t} = {{0}};", e.ty.c_name()));
+                        self.line(&format!("{t}.val = yv_map_at_{mk}(&{m}, {q});"));
+                        self.line(&format!("{t}.has = {t}.val != NULL;"));
+                        t
+                    }
+                }
+            }
+            HExprKind::Exit(code) => {
+                let c = self.expr(code, f);
+                self.line(&format!("yv_os_exit({c});"));
+                String::new()
             }
             HExprKind::StructLit { fields } => {
                 // Field values are bound to temporaries in the order written, so the C
@@ -773,7 +1037,11 @@ impl Gen {
                         let s = self.borrowed(recv, f);
                         self.bind(e.ty, &format!("({s}).len"))
                     }
-                    Builtin::StringClone | Builtin::VecClone => {
+                    Builtin::MapLen => {
+                        let s = self.borrowed(recv, f);
+                        self.bind(e.ty, &format!("({s}).live"))
+                    }
+                    Builtin::StringClone | Builtin::VecClone | Builtin::MapClone => {
                         let s = self.borrowed(recv, f);
                         self.bind_mut(e.ty, &format!("{}(&{s}, {at})", clone_fn(recv.ty)))
                     }
@@ -813,9 +1081,9 @@ impl Gen {
                 }
             }
             HExprKind::Push { local, value } => {
-                let name = local_name(&f.locals, *local);
+                let (name, rty) = self.receiver(f, *local);
                 let at = pos(e.at);
-                match f.locals[*local].ty {
+                match rty {
                     Ty::String => {
                         let v = self.borrowed(value, f);
                         let view = if value.ty == Ty::String { format!("yv_string_view(&{v})") } else { v };
@@ -899,12 +1167,19 @@ impl Gen {
                 | HExprKind::Take(_)
                 | HExprKind::Replace(..)
                 | HExprKind::Pop(_)
+                | HExprKind::MapLit(_)
+                | HExprKind::MapWrite { .. }
                 | HExprKind::Method {
-                    method: Builtin::StrToString | Builtin::StringClone | Builtin::VecClone | Builtin::Fields | Builtin::Lines,
+                    method: Builtin::StrToString
+                        | Builtin::StringClone
+                        | Builtin::VecClone
+                        | Builtin::MapClone
+                        | Builtin::Fields
+                        | Builtin::Lines,
                     ..
                 }
         );
-        if fresh && !e.ty.is_copy() {
+        if fresh && e.ty.needs_drop() {
             self.temps.push((v.clone(), e.ty));
         }
         v

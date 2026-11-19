@@ -1,0 +1,107 @@
+// expect-warning: W0003 26:9
+// expect-error: E0011 27:9
+// expect-error: E0010 28:9
+// expect-error: E0101 36:9
+// expect-error: E0103 42:9
+// expect-error: E0103 45:9
+// expect-error: E0402 53:9
+// expect-error: E0001 58:15
+// expect-error: E0404 59:14
+// expect-error: E0404 61:29
+// expect-error: E0102 68:17
+// expect-error: E0102 72:17
+// expect-error: E0102 76:9
+// expect-error: E0403 79:27
+// expect-error: E0001 82:14
+// expect-error: E0501 83:19
+// expect-error: E0014 85:5
+// expect-error: E0001 86:9
+// expect-error: E0306 91:5
+// expect-error: E0305 97:13
+// expect-error: U0001 102:14
+// expect-error: U0001 103:13
+// expect-error: E0010 104:5
+// Maps, `&inout` references from `getMut` and `for ... in &m`, and imports.
+use std/{fs, math}
+use std/sync
+use std/fs
+use std/nothing
+
+struct Counter {
+    n: int
+}
+fn readOnly(m: Map[String, Counter]) {
+    let r = m.get("a")
+    if let c = r {
+        c.n = 2
+    }
+}
+fn keys() {
+    var m: Map[String, int] = [:]
+    for k, _v in &m {
+        k.push("x")
+    }
+    for k, _v in m {
+        k = "y".toString()
+    }
+}
+fn movedRef() {
+    var m: Map[String, Vec[int]] = [:]
+    if let p = m.getMut("a") {
+        let q = p
+        q.push(1)
+        p.push(2)
+    }
+}
+fn copies() {
+    var names: Map[String, String] = [:]
+    names.set("a", "ann".toString())
+    let _c = names.getCopy("a")
+    if let p = names.get("a") {
+        let owned: String = p
+        println(owned)
+    }
+}
+fn exclusive() {
+    var m: Map[String, Counter] = [:]
+    if let c = m.getMut("a") {
+        println(m.len())
+        c.n = 1
+    }
+    for _k, c in &m {
+        println(m.len())
+        c.n = 2
+    }
+    if let r = m.get("a") {
+        m.set("b".toString(), Counter{n: 1})
+        println(r.n)
+    }
+    m.set("c".toString(), Counter{n: m.len()})
+}
+fn literals() {
+    let _m = [:]
+    let _bad: Map[Counter, int] = [:]
+    let fixed: Map[String, int] = [:]
+    fixed.set("a".toString(), 1)
+    for k in fixed {
+        println(k)
+    }
+}
+fn intoCaller(out: inout Map[str, int], s: str) {
+    out.set(s, 1)
+}
+fn makeMap() -> Map[String, String] {
+    return [:]
+}
+fn temporary() {
+    let r = makeMap().get("a")
+    if let _s = r {
+    }
+}
+fn modules() {
+    let _t = fs.readText("x")
+    println(math.pi)
+    os.exit(1)
+}
+fn main() {
+}

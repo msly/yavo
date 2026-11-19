@@ -34,11 +34,13 @@ It is superseded by `tests/conformance.rs` (below), which makes that distinction
 | `U0001` | Valid v0.5 syntax that this compiler does not implement yet. It says nothing about whether the program is correct. |
 | `W0001` | Warning: unused variable. |
 | `W0002` | Warning: a `match` arm that can never run (added to `ERRORS.md` on 2026-11-18). |
+| `W0003` | Warning: an unused import (added to `ERRORS.md` on 2026-11-19). |
 
 Valid v0.5 syntax must never be reported as a syntax error. `tests/p0/errors_unsupported.yv`
-locks this in for slice types, `*p`, closures, `try`, `for k, v in`, `.Case`, `catch`, tuple
-literals and `match` patterns other than `some(x)`/`none`/`_` (the parser resumes after the
-`match`), and the conformance test counts any `E0020` on a spec case as wrong (slices
+locks this in for non-`std` imports, slice types, `*p`, closures, `try`, slices, `.Case`,
+`catch`, tuple literals, `match` patterns other than `some(x)`/`none`/`_` (the parser resumes
+after the `match`) and module-qualified types (`fs.Error`), and the conformance test counts any
+`E0020` on a spec case as wrong (slices
 `x[a..b]`, tuple fields `t.0` and bounds `T + Send` are reported as `U0001`).
 
 ## Structs (first P1 feature)
@@ -142,7 +144,8 @@ an `inout` argument must be a `var` written as `&x` (`E0014`, `E0001`); storing 
 moving out of a reference is `E0401`; iterating views of a temporary is `E0305`. A `&T` into
 `v` is a borrow of `v`, so `v.push` while it is still used is `E0102`.
 
-Not yet: `for x in &v` (mutable iteration), `&inout T` values, `getMut`.
+Not yet: writing the type `&inout T` or building one with `&x` (A7), `*p`. `for x in &v`,
+`for i, x in v` and `getMut` are covered in the Map section below.
 Tests: `tests/p0/run_refs.yv`, `tests/p0/errors_refs.yv` (9 diagnostics).
 
 ## Optional values
@@ -193,6 +196,57 @@ Tests: `tests/p0/run_optionals.yv` (28 lines of output, also run under the heap-
 once also built with UBSan, which was clean) and `tests/p0/errors_optionals.yv`
 (18 errors, 1 warning).
 
+## Imports
+
+`use std/m` and `use std/{a, b}` import the modules `io`, `fs`, `os`, `math`, `time`, `rand`,
+`collections` and `sync` (stdlib contract §1). An unknown module is `E0010`, a module imported
+twice `E0011`, and an import nothing uses is warning `W0003`. Using `m.f(...)` or `m.name`
+without importing `m` is `E0010`. Importing anything other than `std/...` is `U0001`.
+
+Of the modules' contents only `os.exit(code)` is implemented: it flushes output and ends the
+process without running drops (V11), and counts as never returning, so a path that ends in it
+needs no `return` (V8). Every other module function, constant and type (`fs.readText`,
+`math.pi`, `Mutex`, `Heap`, `fs.Error`, ...) is `U0001`; using one still marks the import as
+used. Tests: `tests/p0/run_imports.yv`; the import diagnostics are in
+`tests/p0/errors_maps.yv`.
+
+## Maps and `&inout` references
+
+Supported (stdlib contract §3; semantic table A1, A2, A3, A5, C4, C6):
+
+- `Map[K, V]` with integer, `bool`, `str` or `String` keys (other keys are `E0501`) and any
+  value type; `[:]` and `[k: v, ...]` literals (`[:]` needs a type from context).
+- `m.get(k)` (`?&V`, borrowing the map), `m.getCopy(k)` (`?V`, `V` must be copyable, else
+  `E0404`), `m.has(k)`, `m.len()`, `m.clone()`; on a writable map `m.set(k, v)` (moves key and
+  value; an existing key keeps its entry and position, the new key and the old value are
+  dropped), `m.remove(k)` (`?V`, owned) and `m.getMut(k)` (`?&inout V`). `String` and `str`
+  keys are looked up with a `str`, so `m.get("a")` creates no `String` (C6); inserting needs an
+  owned key, `m.set("a", 1)` on a `Map[String, int]` is `E0001`.
+- `for k, v in m` in insertion order; `for k, v in &m` gives `v: &inout V`. Keys are read-only
+  in both (`E0103`). Removing a key and inserting it again puts it at the end.
+- `for i, x in v` and `for x in &v` on vectors.
+- `&inout T` values, as produced by `getMut` and `in &c`: not copyable (`let q = p` moves, using
+  `p` afterwards is `E0402`), writable through whatever the binding was declared with
+  (`c.n = 2`, `p.push(1)`), read automatically where a copyable `T` is expected (C4).
+
+Rules checked: writing through a `&T` (e.g. a binding from `get`) is `E0101`; while an
+`&inout` into a variable is used later, any use of that variable is `E0102` (exclusive
+access), and inside `for ... in &m` the body cannot use `m` at all; modifying a map while a
+`get` result is still used is `E0102`; `m.set(k, m.len())` is `E0403`; storing a borrowed key
+or value into an `inout` map is `E0306`; `get` on a temporary map whose result is kept is
+`E0305`. `update` needs closures and is `U0001`; so are spelling the type `&inout T`, storing
+`&inout` values in collections, and storing borrowed values through an `&inout`.
+
+Code generation: the runtime keeps entries in a vector in insertion order and an
+open-addressing table of entry indexes (kept at most half full, so probing ends); a removed
+entry stays, not live, until the next rebuild compacts the vector. Hashing is splitmix64 for
+integers and FNV-1a over the UTF-8 bytes for `str` and `String` keys, so both kinds of lookup
+key agree. Each map type gets generated find/insert/remove/drop/clone functions. `&inout T` is
+a `T *` and owns nothing, so it is never dropped (types now distinguish "not copyable" from
+"needs a drop"). Tests: `tests/p0/run_maps.yv` (21 lines, including 100 inserts and 50 removals
+that force rebuilds; heap-block check in debug and release, and UBSan once, all clean) and
+`tests/p0/errors_maps.yv` (22 errors, 1 warning, together with the import checks).
+
 ## Spec conformance
 
 ```sh
@@ -209,10 +263,12 @@ runs all 129 cases in `yavo-tests/MANIFEST.json`, after checking each fixture ag
 | unsupported | the compiler reported `U0001` |
 | not_run | needs `yavo fix`, `yavo verify`, fixtures, sanitizers or other platforms |
 
-At this commit: pass 34, wrong 0, unsupported 82, not_run 13 (P1: 26 / 0 / 50 / 7;
-P2: 8 / 0 / 11 / 2; P3: 0 / 0 / 21 / 4). Optional values added T-C5, T-G05, T-G06, T-G07 and
-T-G24; T-C6/T-C6p now wait for `?String` struct fields and T-A3/T-A3f for `Box`. The per-case
-report is written to `target/tmp/conformance-report.json`.
+At this commit: pass 44, wrong 0, unsupported 72, not_run 13 (P1: 35 / 0 / 41 / 7;
+P2: 9 / 0 / 10 / 2; P3: 0 / 0 / 21 / 4). Optional values added T-C5, T-G05, T-G06, T-G07 and
+T-G24; maps added T-A1, T-A1p, T-A4, T-A4p, T-C1, T-C1p, T-C7f, T-C8, T-C8f and T-GR10 (T-C7
+waits for closures). T-C6/T-C6p wait for `?String` struct fields and T-A3/T-A3f for `Box`; the
+cases that import `std/sync`, `std/fs` or `std/collections` now stop at those modules' types
+and functions. The per-case report is written to `target/tmp/conformance-report.json`.
 
 The test is a ratchet, not a gate: it fails only when a case listed in
 `tests/conformance_baseline.txt` stops passing. After real progress, refresh the baseline with

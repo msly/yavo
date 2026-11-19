@@ -3,6 +3,13 @@ use crate::diag::Span;
 pub struct Program {
     pub fns: Vec<FnDecl>,
     pub structs: Vec<StructDecl>,
+    pub uses: Vec<Use>,
+}
+
+/// One module named by `use std/m` or `use std/{a, b}`.
+pub struct Use {
+    pub module: String,
+    pub span: Span,
 }
 
 pub struct StructDecl {
@@ -73,8 +80,9 @@ pub enum StmtKind {
     While { cond: Expr, body: Block },
     Loop { body: Block },
     For { var: String, var_span: Span, start: Expr, end: Expr, body: Block },
-    /// `for x in v`: copyable elements by value, others as `&T`.
-    ForIn { var: String, var_span: Span, iter: Expr, body: Block },
+    /// `for x in v`: copyable elements by value, others as `&T`; `for i, x in v` adds the index,
+    /// `for k, v in m` walks a map; `in &v` iterates with `&inout` access.
+    ForIn { var: String, var_span: Span, var2: Option<(String, Span)>, iter: Expr, body: Block },
     Break,
     Continue,
     Return(Option<Expr>),
@@ -116,6 +124,8 @@ pub enum ExprKind {
     StructLit { name: String, name_span: Span, fields: Vec<FieldInit> },
     /// `[a, b, c]`
     VecLit(Vec<Expr>),
+    /// `[:]` or `[k: v, ...]`
+    MapLit(Vec<(Expr, Expr)>),
     /// `base[index]`
     Index { base: Box<Expr>, index: Box<Expr> },
     /// `&x`, for an `inout` argument.

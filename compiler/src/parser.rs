@@ -13,6 +13,7 @@ type PResult<T> = Result<T, ()>;
 enum Item {
     Fn(FnDecl),
     Struct(StructDecl),
+    Use(Vec<Use>),
 }
 
 pub fn parse(toks: Vec<Token>, src: &str, diags: &mut Diags) -> Program {
@@ -107,6 +108,7 @@ impl Parser<'_, '_> {
     fn program(&mut self) -> Program {
         let mut fns = Vec::new();
         let mut structs = Vec::new();
+        let mut uses = Vec::new();
         loop {
             self.skip_newlines();
             if matches!(self.peek(), Tok::Eof) {
@@ -115,11 +117,12 @@ impl Parser<'_, '_> {
             match self.item() {
                 Ok(Some(Item::Fn(f))) => fns.push(f),
                 Ok(Some(Item::Struct(s))) => structs.push(s),
+                Ok(Some(Item::Use(u))) => uses.extend(u),
                 Ok(None) => {}
                 Err(()) => self.sync_item(),
             }
         }
-        Program { fns, structs }
+        Program { fns, structs, uses }
     }
 
     fn sync_item(&mut self) {
@@ -132,7 +135,7 @@ impl Parser<'_, '_> {
                 Tok::Newline if depth == 0 => {
                     self.bump();
                     self.skip_newlines();
-                    if self.is_kw("fn") || self.is_kw("pub") || self.is_kw("struct") {
+                    if self.is_kw("fn") || self.is_kw("pub") || self.is_kw("struct") || self.is_kw("use") {
                         return;
                     }
                     continue;
@@ -146,11 +149,7 @@ impl Parser<'_, '_> {
     fn item(&mut self) -> PResult<Option<Item>> {
         let start = self.span();
         if self.is_kw("use") {
-            self.diags.error("U0001", start, "imports are not supported in P0; there is no standard library yet");
-            while !matches!(self.peek(), Tok::Newline | Tok::Eof) {
-                self.bump();
-            }
-            return Ok(None);
+            return self.use_decl().map(|u| Some(Item::Use(u)));
         }
         // P0 compiles a single file, so `pub` is accepted and has no effect yet.
         if self.is_kw("pub") {
@@ -212,6 +211,58 @@ impl Parser<'_, '_> {
             }
         }
         Ok(StructDecl { name, name_span, fields })
+    }
+
+    /// `use std/m` or `use std/{a, b}`.
+    fn use_decl(&mut self) -> PResult<Vec<Use>> {
+        let start = self.bump().span;
+        let (root, root_span) = match self.peek().clone() {
+            Tok::Ident(s) => (s, self.bump().span),
+            other => {
+                self.err_here(format!("expected a module path such as `std/io` after `use`, found {}", describe(&other)));
+                return Err(());
+            }
+        };
+        self.expect(Tok::Slash, "`/` in the module path, e.g. `std/io`")?;
+        if root != "std" {
+            self.unsupported(root_span, "only standard library modules (`use std/...`) can be imported for now")?;
+        }
+        let mut out = Vec::new();
+        let mut one = |p: &mut Self| -> PResult<()> {
+            match p.peek().clone() {
+                Tok::Ident(s) => {
+                    let span = p.bump().span;
+                    if matches!(p.peek(), Tok::Slash) {
+                        let sp = p.span();
+                        p.unsupported(sp, "nested module paths are not supported yet")?;
+                    }
+                    out.push(Use { module: s, span });
+                    Ok(())
+                }
+                other => {
+                    p.err_here(format!("expected a module name, found {}", describe(&other)));
+                    Err(())
+                }
+            }
+        };
+        if self.eat(&Tok::LBrace) {
+            loop {
+                one(self)?;
+                if !self.eat(&Tok::Comma) {
+                    break;
+                }
+            }
+            self.expect(Tok::RBrace, "`,` or `}` in the module list")?;
+        } else {
+            one(self)?;
+        }
+        if !matches!(self.peek(), Tok::Newline | Tok::Eof) {
+            let found = describe(self.peek());
+            self.err_here(format!("expected a newline after the import, found {found}"));
+            return Err(());
+        }
+        let _ = start;
+        Ok(out)
     }
 
     fn function(&mut self) -> PResult<FnDecl> {
@@ -324,6 +375,9 @@ impl Parser<'_, '_> {
             self.unsupported(sp, "slice and tuple types are not supported yet")?;
         }
         let (name, span) = self.ident("a type")?;
+        if matches!(self.peek(), Tok::Dot) {
+            self.unsupported(span, format!("module-qualified types (`{name}.Type`) are not supported yet"))?;
+        }
         let mut args = Vec::new();
         if self.eat(&Tok::LBracket) {
             loop {
@@ -431,10 +485,7 @@ impl Parser<'_, '_> {
         if self.is_kw("for") {
             self.bump();
             let (var, var_span) = self.ident("a loop variable")?;
-            if matches!(self.peek(), Tok::Comma) {
-                let sp = self.span();
-                self.unsupported(sp, "multiple loop variables (`for k, v in m`) are not supported in P0")?;
-            }
+            let var2 = if self.eat(&Tok::Comma) { Some(self.ident("a second loop variable")?) } else { None };
             if !self.is_kw("in") {
                 let found = describe(self.peek());
                 self.err_here(format!("expected `in`, found {found}"));
@@ -444,7 +495,11 @@ impl Parser<'_, '_> {
             let range_start = self.expr()?;
             if !self.eat(&Tok::DotDot) {
                 let body = self.block()?;
-                return Ok(Stmt { span: start, kind: StmtKind::ForIn { var, var_span, iter: range_start, body } });
+                return Ok(Stmt { span: start, kind: StmtKind::ForIn { var, var_span, var2, iter: range_start, body } });
+            }
+            if let Some((_, sp)) = var2 {
+                self.diags.error("E0020", sp, "a range loop has one variable: `for i in a..b`");
+                return Err(());
             }
             let range_end = self.expr()?;
             let body = self.block()?;
@@ -903,9 +958,12 @@ impl Parser<'_, '_> {
             Tok::LBracket => {
                 self.bump();
                 if matches!(self.peek(), Tok::Colon) {
-                    self.unsupported(span, "map literals (`[:]`) are not supported in P0")?;
+                    self.bump();
+                    let close = self.expect(Tok::RBracket, "`]` to close `[:]`")?;
+                    return Ok(Expr { span: span.to(close), kind: ExprKind::MapLit(Vec::new()) });
                 }
                 let mut items = Vec::new();
+                let mut entries = Vec::new();
                 loop {
                     while matches!(self.peek(), Tok::Newline | Tok::Comma) {
                         self.bump();
@@ -913,14 +971,25 @@ impl Parser<'_, '_> {
                     if matches!(self.peek(), Tok::RBracket) {
                         break;
                     }
-                    items.push(self.expr()?);
+                    let item = self.expr()?;
+                    // `[k: v, ...]`: the first element decides between a map and a vector.
+                    if items.is_empty() && (entries.is_empty() && matches!(self.peek(), Tok::Colon) || !entries.is_empty()) {
+                        self.expect(Tok::Colon, "`:` between the key and the value")?;
+                        let value = self.expr()?;
+                        entries.push((item, value));
+                    } else {
+                        items.push(item);
+                    }
                     if !matches!(self.peek(), Tok::Newline | Tok::Comma | Tok::RBracket) {
                         let found = describe(self.peek());
-                        self.err_here(format!("expected `,` or `]` in the vector literal, found {found}"));
+                        self.err_here(format!("expected `,` or `]` in the collection literal, found {found}"));
                         return Err(());
                     }
                 }
                 let close = self.bump().span;
+                if !entries.is_empty() {
+                    return Ok(Expr { span: span.to(close), kind: ExprKind::MapLit(entries) });
+                }
                 Ok(Expr { span: span.to(close), kind: ExprKind::VecLit(items) })
             }
             Tok::Dot => {

@@ -1,13 +1,16 @@
-// expect-error: U0001 12:14
-// expect-error: U0001 15:5
-// expect-error: U0001 18:13
-// expect-error: U0001 21:8
-// expect-error: U0001 25:10
-// expect-error: U0001 29:13
-// expect-error: U0001 32:21
-// expect-error: U0001 35:13
-// expect-error: U0001 39:9
-// expect-error: U0001 45:13
+// expect-error: U0001 13:5
+// expect-error: U0001 15:14
+// expect-error: U0001 18:5
+// expect-error: U0001 21:13
+// expect-error: U0001 24:8
+// expect-error: U0001 28:15
+// expect-error: U0001 32:13
+// expect-error: U0001 35:21
+// expect-error: U0001 38:13
+// expect-error: U0001 42:9
+// expect-error: U0001 48:13
+// expect-error: U0001 50:15
+use mine/thing
 // Valid v0.5 syntax that P0 does not implement must be reported as U0001, never as a syntax error (E0020).
 fn change(x: [int]) {
 }
@@ -21,8 +24,8 @@ fn tried() {
     if try y() {
     }
 }
-fn pairs() {
-    for k, v in m {
+fn slices() {
+    for x in v[0..2] {
     }
 }
 fn shorthand() {
@@ -43,6 +46,8 @@ fn results(r: int) {
     }
     let after = r
     let t = (after, 2)
+}
+fn modules(e: fs.Error) {
 }
 fn main() {
 }
