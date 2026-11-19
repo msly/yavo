@@ -407,6 +407,35 @@ its first use, with drop and clone helpers when needed. The lexer never reads a 
 `.` as a float, so `t.0.1` is two element accesses. Tests: `tests/p0/run_tuples.yv`,
 `tests/p0/errors_tuples.yv` (7 errors).
 
+## Closures for `sortBy` and `update`
+
+Supported (cheat sheet §5; semantic table O5, K3, V8; stdlib contract §3, §4):
+
+- `v.sortBy((a, b) => a.1 > b.1)`: a stable sort; the closure says whether `a` goes before
+  `b`. Any element type works. A comparison that breaks its contract (e.g. `a <= b`) gives some
+  order but never touches memory outside the vector (K3).
+- `m.update(key, initial, (v) => v + 1)`: the closure runs exactly once, on the stored value or
+  on `initial`; the key is consumed (a duplicate key is dropped). v1 limits the value type to a
+  copyable type without borrows (`E0001` otherwise).
+- Closure syntax: `(a, b) => expr` or `(a, b) => { ... return x }` (a block body must return on
+  every path, `E0013`); parameters may be typed (`(a: int, b: int) =>`). A block body inside the
+  call parentheses keeps its newlines (the lexer now treats newlines directly inside `{` as
+  statement ends even within `(...)`).
+- Captures: these callbacks never keep the closure (O5 noescape), so it may read any outer
+  variable, borrowed in place for the duration of the call. It cannot assign to them (`E0014`),
+  move them (`E0401`), capture an `&inout` value (`U0001`), or use the collection being
+  sorted/updated (`E0102`).
+- Not yet: closures anywhere else (stored in variables or fields, passed to your own
+  functions, `Heap.by`) are `U0001`.
+
+Code generation: the checker lifts each closure into a function of its own (`closure.N`,
+C `yv_fn_closure__N`) whose first parameters are the captured variables. `update` calls it
+inline. `sortBy` goes through a generated adapter `yv_tramp_N(ctx, a, b)` that receives the
+captured values as a `void *` array and is passed to the runtime's `yv_sort_ctx` (`yv_sort` is
+now a wrapper around it). `total += n` with `n: &inout int` now reads `n` (C4), which T-C7
+needed. Tests: `tests/p0/run_closures.yv`, `tests/p0/errors_closures.yv` (11 errors, 3
+warnings).
+
 ## Spec conformance
 
 ```sh
@@ -423,8 +452,8 @@ runs all 129 cases in `yavo-tests/MANIFEST.json`, after checking each fixture ag
 | unsupported | the compiler reported `U0001` |
 | not_run | needs `yavo fix`, `yavo verify`, fixtures, sanitizers or other platforms |
 
-At this commit: pass 61, wrong 0, unsupported 55, not_run 13 (P1: 48 / 0 / 28 / 7;
-P2: 13 / 0 / 6 / 2; P3: 0 / 0 / 21 / 4). User destructors added T-D1, T-GR1, T-GR2 and
+At this commit: pass 63, wrong 0, unsupported 53, not_run 13 (P1: 50 / 0 / 26 / 7;
+P2: 13 / 0 / 6 / 2; P3: 0 / 0 / 21 / 4). Closures added T-C7 and tuples T-O5p. User destructors added T-D1, T-GR1, T-GR2 and
 T-G10–T-G13. The standard library step added T-G08, T-V4, T-V4p and
 T-S2 (the runner now writes `fixture_hex` fixtures into a directory of their own and runs the case
 there). Enums, results and owning struct fields added T-C4p, T-C6, T-C6p, T-G14, T-G15 and

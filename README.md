@@ -11,6 +11,6 @@ Current specification revision: **v0.5**. A native P0 compiler prototype is now 
 - `compiler/`: Rust P0 frontend, C17 backend, small runtime, pinned C toolchain, and regression tests. See [compiler/README.md](compiler/README.md).
 - Git tags `v0.1` through `v0.5` identify revision boundaries.
 
-The P0 prototype has been tested on Linux x86-64. It cross-compiles to Linux (static musl), Windows and macOS on x86-64 and aarch64; the output formats are verified, but running them on Windows/macOS is not. `cargo test --test conformance` measures the compiler against the 129 spec cases in `yavo-tests/` (currently 61 pass, 0 wrong, 55 unsupported, 13 not run); full P0/P1 conformance is not claimed.
+The P0 prototype has been tested on Linux x86-64. It cross-compiles to Linux (static musl), Windows and macOS on x86-64 and aarch64; the output formats are verified, but running them on Windows/macOS is not. `cargo test --test conformance` measures the compiler against the 129 spec cases in `yavo-tests/` (currently 63 pass, 0 wrong, 53 unsupported, 13 not run); full P0/P1 conformance is not claimed.
 
 The Git history is local. Nothing is pushed to a remote repository.

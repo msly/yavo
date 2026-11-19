@@ -1,0 +1,62 @@
+// expect-error: U0001 16:13
+// expect-error: E0102 21:14
+// expect-warning: W0001 21:18
+// expect-error: E0012 26:14
+// expect-error: E0001 27:14
+// expect-error: E0001 32:24
+// expect-warning: W0001 38:13
+// expect-error: E0013 39:5
+// expect-error: E0014 47:9
+// expect-warning: W0001 48:13
+// expect-error: E0401 48:17
+// expect-error: E0001 55:5
+// expect-error: E0403 57:35
+// expect-error: E0012 58:38
+fn stored() {
+    let f = (a: int) => a + 1
+}
+
+fn selfSort() {
+    var v = [3, 1, 2]
+    v.sortBy((a, b) => a < v.len())
+}
+
+fn arity() {
+    var v = [3, 1, 2]
+    v.sortBy((a) => a < 2)
+    v.sortBy(5)
+}
+
+fn wrongType() {
+    var v = [3, 1, 2]
+    v.sortBy((a, b) => a + b)
+}
+
+fn noReturn() {
+    var v = [3, 1, 2]
+    v.sortBy((a, b) => {
+        let c = a < b
+    })
+}
+
+fn captures() {
+    var v = [3, 1, 2]
+    var limit = 2
+    let name = "x".toString()
+    v.sortBy((a, b) => {
+        limit = 3
+        let s = name
+        return a < b
+    })
+}
+
+fn updates() {
+    var groups: Map[String, Vec[int]] = [:]
+    groups.update("a".toString(), [], (g) => g)
+    var counts: Map[String, int] = [:]
+    counts.update("a".toString(), counts.len(), (n) => n + 1)
+    counts.update("b".toString(), 0, (n, m) => n)
+}
+
+fn main() {
+}

@@ -17,6 +17,16 @@ pub struct HProgram {
     /// Struct and enum definitions, ordered so that every type comes after the types it
     /// contains by value.
     pub structs: Vec<HStruct>,
+    /// Comparison adapters for `sortBy`, one per call site.
+    pub tramps: Vec<Tramp>,
+}
+
+/// A C comparison function for the runtime's sort that calls closure function `func` with
+/// the captured values (passed through a `void *` array) and two elements.
+pub struct Tramp {
+    pub func: usize,
+    pub caps: Vec<Ty>,
+    pub elem: Ty,
 }
 
 pub struct HStruct {
@@ -229,6 +239,12 @@ pub enum HExprKind {
     Call2 { method: Method2, recv: Box<HExpr>, args: Vec<HExpr> },
     /// `place.sort()`.
     Sort(HPlace),
+    /// `place.sortBy(closure)`: `tramp` adapts closure function to the runtime's sort; `caps`
+    /// are the captured variables, read in place.
+    SortBy { place: HPlace, tramp: usize, caps: Vec<HExpr> },
+    /// `place.update(key, initial, closure)`: the value for `key` (or `initial`) becomes
+    /// `func(caps..., value)`.
+    MapUpdate { place: HPlace, key: Box<HExpr>, init: Box<HExpr>, func: usize, caps: Vec<HExpr> },
     /// `io.readAll()`, `io.readLine()`, `fs.readText(p)`, `fs.writeText(p, s)`.
     Io { op: IoOp, args: Vec<HExpr> },
     /// `os.args()`
@@ -635,9 +651,44 @@ struct FnCx {
     diverge_ok: Option<Span>,
     /// Checking the body of a `drop` method of a `T: Drop` type (V11).
     in_drop: bool,
+    /// In a closure function: the parameters that stand for captured outer variables.
+    captures: Vec<LocalId>,
 }
 
 type Moved = Vec<Option<Span>>;
+
+impl FnCx {
+    fn new(ret: Ty, pre: Pre) -> FnCx {
+        FnCx {
+            locals: Vec::new(),
+            scopes: vec![Vec::new()],
+            ret,
+            loop_depth: 0,
+            moved: Vec::new(),
+            loops: Vec::new(),
+            pre,
+            cur: 0,
+            ret_of: None,
+            iterating: Vec::new(),
+            iterating_mut: Vec::new(),
+            diverge_ok: None,
+            in_drop: false,
+            captures: Vec::new(),
+        }
+    }
+}
+
+fn hlocals(locals: Vec<LocalState>) -> Vec<HLocal> {
+    locals
+        .into_iter()
+        .map(|l| HLocal {
+            owned: l.ty.needs_drop() && !matches!(l.kind, LocalKind::Param | LocalKind::InoutParam),
+            inout: l.kind == LocalKind::InoutParam,
+            name: l.name,
+            ty: l.ty,
+        })
+        .collect()
+}
 
 #[derive(Default)]
 struct LoopFlow {
@@ -886,6 +937,11 @@ struct Checker<'d> {
     struct_index: HashMap<String, usize>,
     /// Imported modules: where they were imported and whether anything used them.
     imports: HashMap<String, (Span, bool)>,
+    /// Number of user functions; closure functions are numbered after them.
+    n_fns: usize,
+    /// Functions made from closures (O5), in order.
+    lifted: Vec<HFn>,
+    tramps: Vec<Tramp>,
 }
 
 struct StructDef {
@@ -916,6 +972,9 @@ pub fn check(prog: &Program, diags: &mut Diags) -> Option<HProgram> {
         structs: Vec::new(),
         struct_index: HashMap::new(),
         imports: HashMap::new(),
+        n_fns: prog.fns.len(),
+        lifted: Vec::new(),
+        tramps: Vec::new(),
     };
     ck.collect_uses(prog);
     for (owner, impls) in prog.structs.iter().map(|s| (&s.name, &s.impls)).chain(prog.enums.iter().map(|e| (&e.name, &e.impls))) {
@@ -929,7 +988,8 @@ pub fn check(prog: &Program, diags: &mut Diags) -> Option<HProgram> {
     let order = ck.collect_structs(prog);
     ck.collect(prog);
     ck.check_drops(prog);
-    let fns = prog.fns.iter().enumerate().map(|(i, f)| ck.function(f, i)).collect();
+    let mut fns: Vec<HFn> = prog.fns.iter().enumerate().map(|(i, f)| ck.function(f, i)).collect();
+    fns.append(&mut ck.lifted);
     let mut unused: Vec<(Span, String)> =
         ck.imports.iter().filter(|(_, (_, used))| !used).map(|(m, (sp, _))| (*sp, m.clone())).collect();
     unused.sort_by_key(|(sp, _)| sp.start);
@@ -954,7 +1014,7 @@ pub fn check(prog: &Program, diags: &mut Diags) -> Option<HProgram> {
                 }
             })
             .collect();
-        Some(HProgram { fns, structs })
+        Some(HProgram { fns, structs, tramps: std::mem::take(&mut ck.tramps) })
     }
 }
 
@@ -1573,23 +1633,11 @@ impl Checker<'_> {
         let ret = self.sigs[idx].ret;
         let param_tys = self.sigs[idx].params.clone();
         let sinks = self.sigs[idx].sinks.clone();
-        let mut cx = FnCx {
-            locals: Vec::new(),
-            scopes: vec![Vec::new()],
-            ret,
-            loop_depth: 0,
-            moved: Vec::new(),
-            loops: Vec::new(),
-            pre: Pre::build(&f.body),
-            cur: 0,
-            ret_of: f.ret_of.as_ref().map(|v| v.iter().map(|(n, _)| n.clone()).collect()),
-            iterating: Vec::new(),
-            iterating_mut: Vec::new(),
-            diverge_ok: None,
-            in_drop: f.owner.as_ref().is_some_and(|o| {
-                f.name == format!("{o}.drop") && self.struct_index.get(o).is_some_and(|&i| has_user_drop(self.structs[i].ty))
-            }),
-        };
+        let mut cx = FnCx::new(ret, Pre::build(&f.body));
+        cx.ret_of = f.ret_of.as_ref().map(|v| v.iter().map(|(n, _)| n.clone()).collect());
+        cx.in_drop = f.owner.as_ref().is_some_and(|o| {
+            f.name == format!("{o}.drop") && self.struct_index.get(o).is_some_and(|&i| has_user_drop(self.structs[i].ty))
+        });
         self.check_ret_of(f, ret);
         let params = f
             .params
@@ -1629,18 +1677,177 @@ impl Checker<'_> {
             params,
             sinks,
             ret,
-            locals: cx
-                .locals
-                .into_iter()
-                .map(|l| HLocal {
-                    owned: l.ty.needs_drop() && !matches!(l.kind, LocalKind::Param | LocalKind::InoutParam),
-                    inout: l.kind == LocalKind::InoutParam,
-                    name: l.name,
-                    ty: l.ty,
-                })
-                .collect(),
+            locals: hlocals(cx.locals),
             body,
         }
+    }
+
+    /// Checks a closure passed to a library callback that cannot keep it (`sortBy`, `update`;
+    /// O5) as a function of its own. The captured outer variables become its first parameters,
+    /// read-only and passed in place for the duration of the call; the closure's own
+    /// parameters follow. Returns the function's index and the captured values.
+    fn lift_closure(&mut self, e: &Expr, param_tys: &[Ty], ret: Ty, what: &str, cx: &mut FnCx) -> Option<(usize, Vec<HExpr>)> {
+        let ExprKind::Closure { params, body } = &e.kind else {
+            self.diags.error("E0001", e.span, format!("`{what}` takes a closure here, e.g. `(a, b) => a < b`"));
+            self.expr(e, None, cx);
+            return None;
+        };
+        if params.len() != param_tys.len() {
+            self.diags.error(
+                "E0012",
+                e.span,
+                format!("the closure for `{what}` takes {} but this one has {}", plural(param_tys.len(), "parameter"), params.len()),
+            );
+            return None;
+        }
+        let mut names = Vec::new();
+        idents_expr(body, &mut names);
+        let mut caps: Vec<LocalId> = Vec::new();
+        for (n, _) in &names {
+            if params.iter().any(|(p, _, _)| p == n) {
+                continue;
+            }
+            if let Some(id) = self.lookup(cx, n) {
+                if !caps.contains(&id) {
+                    caps.push(id);
+                }
+            }
+        }
+        let pre = match &body.kind {
+            ExprKind::Block(b) => Pre::build(b),
+            _ => Pre::default(),
+        };
+        let mut ccx = FnCx::new(ret, pre);
+        let mut ids = Vec::new();
+        let mut cap_exprs = Vec::new();
+        for &id in &caps {
+            let (name, ty) = (cx.locals[id].name.clone(), cx.locals[id].ty);
+            if ty.contains_ref_mut() {
+                self.diags.error("U0001", e.span, format!("a closure cannot use the `&inout` value `{name}` yet"));
+                return None;
+            }
+            cx.locals[id].used = true;
+            self.check_moved(cx, id, e.span);
+            let pid = self.declare(&mut ccx, &name, e.span, ty, LocalKind::Param);
+            ccx.locals[pid].used = true;
+            ccx.captures.push(pid);
+            if ty.carries_borrow() || !ty.is_copy() {
+                ccx.locals[pid].loans = vec![Loan::Local(pid)];
+            }
+            ids.push(pid);
+            cap_exprs.push(HExpr { kind: HExprKind::Local(id), ty, span: e.span, at: e.span });
+        }
+        for ((n, sp, t), &pt) in params.iter().zip(param_tys) {
+            if let Some(t) = t {
+                let d = self.resolve_ty(t);
+                if d != pt && d != Ty::Error && pt != Ty::Error {
+                    self.diags.error("E0001", t.span, format!("this parameter of the `{what}` closure is `{pt}`, not `{d}`"));
+                }
+            }
+            let pid = self.declare(&mut ccx, n, *sp, pt, LocalKind::Param);
+            if pt.carries_borrow() || !pt.is_copy() {
+                ccx.locals[pid].loans = vec![Loan::Local(pid)];
+            }
+            ids.push(pid);
+        }
+        let stmts = match &body.kind {
+            ExprKind::Block(b) => {
+                let stmts = self.stmts(&b.stmts, &mut ccx);
+                if ret != Ty::Unit && !terminates(&b.stmts) {
+                    self.diags
+                        .error("E0013", b.close, format!("this closure can reach its end without returning a value of type `{ret}`"))
+                        .note("add a `return`, or write the closure as a single expression: `(a, b) => a < b`");
+                }
+                stmts
+            }
+            _ => {
+                let h = self.expr(body, Some(ret), &mut ccx);
+                let h = self.fit(h, ret, &mut ccx);
+                let h = self.consume(h, &mut ccx);
+                vec![HStmt { kind: HStmtKind::Return(Some(h)), span: body.span }]
+            }
+        };
+        self.pop_scope(&mut ccx);
+        let n = ids.len();
+        let idx = self.n_fns + self.lifted.len();
+        let name = format!("closure.{}", self.lifted.len());
+        self.lifted.push(HFn { name, params: ids, sinks: vec![false; n], ret, locals: hlocals(ccx.locals), body: stmts });
+        Some((idx, cap_exprs))
+    }
+
+    /// `v.sortBy((a, b) => ...)`: a stable sort where the closure says whether `a` goes before `b`.
+    fn sort_by_call(&mut self, base: &Expr, args: &[Expr], span: Span, at: Span, cx: &mut FnCx) -> HExpr {
+        let Some(place) = self.mutable_place(base, "sortBy", cx) else { return err_expr(span) };
+        let [arg] = args else {
+            self.diags.error("E0012", span, "`sortBy` takes one argument: a closure such as `(a, b) => a < b`");
+            return err_expr(span);
+        };
+        let elem = match place.ty {
+            Ty::Vec(v) => vec_elem(v),
+            Ty::Error => return err_expr(span),
+            other => {
+                self.diags.error("U0001", at, format!("method `sortBy` on `{other}` is not supported yet"));
+                return err_expr(span);
+            }
+        };
+        let Some((func, caps)) = self.lift_closure(arg, &[elem, elem], Ty::Bool, "sortBy", cx) else { return err_expr(span) };
+        if caps.iter().any(|c| matches!(c.kind, HExprKind::Local(id) if id == place.local)) {
+            let n = cx.locals[place.local].name.clone();
+            self.diags
+                .error("E0102", arg.span, format!("`{n}` is being sorted, so the closure cannot use it"))
+                .note("copy what the closure needs into a variable first");
+            return err_expr(span);
+        }
+        let tramp = self.tramps.len();
+        self.tramps.push(Tramp { func, caps: caps.iter().map(|c| c.ty).collect(), elem });
+        HExpr { kind: HExprKind::SortBy { place, tramp, caps }, ty: Ty::Unit, span, at }
+    }
+
+    /// `m.update(key, initial, (v) => ...)`: the closure runs exactly once, on the stored value
+    /// or on `initial` (stdlib contract §3; v1: a copyable value type without borrows).
+    #[allow(clippy::too_many_arguments)]
+    fn update_call(&mut self, base: &Expr, mid: u32, args: &[Expr], span: Span, at: Span, cx: &mut FnCx) -> HExpr {
+        let Some(place) = self.mutable_place(base, "update", cx) else { return err_expr(span) };
+        let [ka, ia, fa] = args else {
+            self.diags.error("E0012", span, "`update` takes a key, an initial value and a closure, e.g. `m.update(k, 0, (n) => n + 1)`");
+            return err_expr(span);
+        };
+        let id = place.local;
+        let local = cx.locals[id].name.clone();
+        if let Some(a) = [ka, ia].into_iter().find(|a| mentions(a, &local)) {
+            self.diags
+                .error("E0403", a.span, format!("`{local}` is already borrowed by `{local}.update(...)`, so the argument cannot use it"))
+                .note(format!("compute the value first: `let x = ...` then `{local}.update(x, ...)`"));
+            return err_expr(span);
+        }
+        let (k, v) = map_parts(mid);
+        if !v.is_copy() || v.carries_borrow() {
+            self.diags
+                .error("E0001", at, format!("`update` needs a copyable value type without borrows, and `{v}` is not"))
+                .note("use `getMut` and change the value in place");
+            return err_expr(span);
+        }
+        let kh = self.expr(ka, Some(k), cx);
+        let kh = self.fit(kh, k, cx);
+        let kh = self.consume(kh, cx);
+        if kh.ty.carries_borrow() {
+            let loans = self.loans_of(&kh, cx);
+            if !loans.is_empty() {
+                if matches!(cx.locals[id].ty, Ty::RefMut(_)) || cx.locals[id].kind == LocalKind::InoutParam {
+                    self.diags.error("E0306", span, format!("cannot store a borrow into the caller's `{local}`"));
+                } else {
+                    self.store_loans(cx, id, loans, span, false);
+                }
+            }
+        }
+        let ih = self.expr(ia, Some(v), cx);
+        let ih = self.fit(ih, v, cx);
+        let Some((func, caps)) = self.lift_closure(fa, &[v], v, "update", cx) else { return err_expr(span) };
+        if caps.iter().any(|c| matches!(c.kind, HExprKind::Local(c_id) if c_id == id)) {
+            self.diags.error("E0102", fa.span, format!("`{local}` is being updated, so the closure cannot use it"));
+            return err_expr(span);
+        }
+        HExpr { kind: HExprKind::MapUpdate { place, key: Box::new(kh), init: Box::new(ih), func, caps }, ty: Ty::Unit, span, at }
     }
 
     fn lookup(&self, cx: &FnCx, name: &str) -> Option<LocalId> {
@@ -2415,6 +2622,11 @@ impl Checker<'_> {
                             .error("E0014", target.span, format!("cannot assign to `{name}` because it was declared with `let`"))
                             .note(format!("declare it with `var {name}` to make it mutable"));
                     }
+                    LocalKind::Param if cx.captures.contains(&id) => {
+                        self.diags
+                            .error("E0014", target.span, format!("a closure cannot assign to `{name}`, which it borrows from the enclosing function"))
+                            .note("closures read the variables they use; compute the new value after the call instead");
+                    }
                     LocalKind::Param | LocalKind::SinkParam => {
                         self.diags
                             .error("E0014", target.span, format!("cannot assign to parameter `{name}`; parameters are read-only"))
@@ -2487,6 +2699,8 @@ impl Checker<'_> {
                             lhs = HExpr { kind: HExprKind::Field { base: Box::new(lhs), field: fi }, ty, span: target.span, at: target.span };
                         }
                         let rhs = self.expr(value, Some(lty), cx);
+                        // A copyable value read through `&T`/`&inout T` is copied (C4).
+                        let rhs = self.coerce(rhs, lty, cx);
                         self.arith(*op, lhs, rhs, *op_span, s.span)
                     }
                 };
@@ -4031,6 +4245,9 @@ impl Checker<'_> {
         if name == "sort" {
             return self.sort_call(base, args, span, at, cx);
         }
+        if name == "sortBy" {
+            return self.sort_by_call(base, args, span, at, cx);
+        }
         if matches!(name, "set" | "remove" | "getMut" | "update") {
             if let Some(Ty::Map(mid)) = self.peek_place_ty(base, cx) {
                 return self.map_write_call(base, mid, name, args, span, at, cx);
@@ -4215,8 +4432,7 @@ impl Checker<'_> {
     #[allow(clippy::too_many_arguments)]
     fn map_write_call(&mut self, base: &Expr, mid: u32, name: &str, args: &[Expr], span: Span, at: Span, cx: &mut FnCx) -> HExpr {
         if name == "update" {
-            self.diags.error("U0001", at, "`update` takes a closure, and closures are not supported yet");
-            return err_expr(span);
+            return self.update_call(base, mid, args, span, at, cx);
         }
         let Some(place) = self.mutable_place(base, name, cx) else { return err_expr(span) };
         let id = place.local;

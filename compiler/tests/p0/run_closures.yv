@@ -1,0 +1,76 @@
+// expect-stdout:
+// | b=3
+// | a=2
+// | c=1
+// | al 9
+// | bo 3
+// | cy 3
+// | zyx
+// | 20
+// | bdac
+struct Player {
+    name: String
+    score: int
+}
+
+struct Board {
+    players: Vec[Player]
+    bonus: Vec[int]
+
+    fn rank(inout self) {
+        self.players.sortBy((a, b) => a.score > b.score || (a.score == b.score && a.name < b.name))
+    }
+}
+
+fn wordCounts(text: str) -> Map[str, int] of text {
+    var counts: Map[str, int] = [:]
+    for w in text.fields() {
+        counts.update(w, 0, (n) => n + 1)
+    }
+    return counts
+}
+
+fn main() {
+    let counts = wordCounts("b a c b a b")
+    var pairs: Vec[(str, int)] = []
+    for w, n in counts {
+        pairs.push((w, n))
+    }
+    pairs.sortBy((x, y) => x.1 > y.1)
+    for p in pairs {
+        println("${p.0}=${p.1}")
+    }
+
+    var b = Board{players: [], bonus: [5, 0, 7]}
+    b.players.push(Player{name: "cy".toString(), score: 3})
+    b.players.push(Player{name: "al".toString(), score: 9})
+    b.players.push(Player{name: "bo".toString(), score: 3})
+    b.rank()
+    for p in b.players {
+        println("${p.name} ${p.score}")
+    }
+
+    let order = "zyx".toString()
+    var letters = ["x".toString(), "z".toString(), "y".toString()]
+    letters.sortBy((a, b) => {
+        let ia = order.find(a) ?? 99
+        let ib = order.find(b) ?? 99
+        return ia < ib
+    })
+    println(letters.join(""))
+
+    var scores: Map[String, int] = [:]
+    let step = 10
+    scores.update("x".toString(), 1, (v) => v * step)
+    scores.update("x".toString(), 1, (v) => v + step)
+    println(scores.getCopy("x") ?? 0)
+
+    var empty: Vec[int] = []
+    empty.sortBy((a, b) => a < b)
+    var stable = [(1, "a"), (0, "b"), (1, "c"), (0, "d")]
+    stable.sortBy((a, b) => a.0 < b.0)
+    for s in stable {
+        print(s.1)
+    }
+    println("")
+}

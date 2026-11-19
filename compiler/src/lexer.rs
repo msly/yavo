@@ -148,7 +148,7 @@ pub fn lex_range(
         line,
         col,
         newlines,
-        depth: 0,
+        delims: Vec::new(),
         last_ends_stmt: false,
         toks: Vec::new(),
         diags,
@@ -164,7 +164,9 @@ struct Lexer<'a, 'd> {
     line: u32,
     col: u32,
     newlines: bool,
-    depth: u32,
+    /// Open `(`, `[` and `{`, innermost last: newlines count directly inside `{` (or outside
+    /// everything), so a block-bodied closure inside a call keeps its statements apart.
+    delims: Vec<char>,
     last_ends_stmt: bool,
     toks: Vec<Token>,
     diags: &'d mut Diags,
@@ -205,8 +207,11 @@ impl Lexer<'_, '_> {
             Tok::Ident(_) | Tok::Int(_) | Tok::Byte(_) | Tok::Str(_) | Tok::RParen | Tok::RBracket | Tok::RBrace
         );
         match tok {
-            Tok::LParen | Tok::LBracket => self.depth += 1,
-            Tok::RParen | Tok::RBracket => self.depth = self.depth.saturating_sub(1),
+            Tok::LParen | Tok::LBracket => self.delims.push('('),
+            Tok::LBrace => self.delims.push('{'),
+            Tok::RParen | Tok::RBracket | Tok::RBrace => {
+                self.delims.pop();
+            }
             _ => {}
         }
         self.toks.push(Token { tok, span });
@@ -229,7 +234,7 @@ impl Lexer<'_, '_> {
             match c {
                 '\n' => {
                     self.bump();
-                    if self.newlines && self.depth == 0 && self.last_ends_stmt {
+                    if self.newlines && self.delims.last().is_none_or(|d| *d == '{') && self.last_ends_stmt {
                         self.last_ends_stmt = false;
                         let span = Span { start, end: start + 1, line, col };
                         self.toks.push(Token { tok: Tok::Newline, span });

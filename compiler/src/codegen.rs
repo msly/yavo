@@ -8,7 +8,7 @@ use crate::ast::BinOp;
 use crate::check::*;
 use crate::diag::Span;
 use crate::types::{
-    all_maps, all_opts, all_ress, all_tuples, all_vecs, has_user_drop, opt_inner, tuple_elems, opt_of, ref_inner, ref_mut_inner, res_parts, vec_elem, IntTy, Ty,
+    all_maps, all_opts, all_ress, all_tuples, all_vecs, has_user_drop, opt_inner, tuple_elems, opt_of, ref_inner, ref_mut_inner, map_parts, res_parts, vec_elem, IntTy, Ty,
 };
 
 pub const RUNTIME_HEADER: &str = include_str!("../runtime/yavo_rt.h");
@@ -202,6 +202,19 @@ pub fn generate(prog: &HProgram, file: &str) -> String {
         let _ = writeln!(g.out, "static {sig};");
     }
     g.out.push('\n');
+    // `sortBy` adapters: the runtime sort asks whether element `a` goes before `b`.
+    for (i, t) in prog.tramps.iter().enumerate() {
+        let mut args: Vec<String> = t.caps.iter().enumerate().map(|(j, c)| format!("*({} *)c[{j}]", c.c_name())).collect();
+        let ec = t.elem.c_name();
+        args.push(format!("*(const {ec} *)a"));
+        args.push(format!("*(const {ec} *)b"));
+        let _ = writeln!(
+            g.out,
+            "static int yv_tramp_{i}(void *ctx, const void *a, const void *b) {{\n    void **c = (void **)ctx;\n    (void)c;\n    return {}({}) ? -1 : 0;\n}}\n",
+            g.fn_names[t.func],
+            args.join(", ")
+        );
+    }
     for f in &prog.fns {
         g.function(f);
     }
@@ -750,6 +763,24 @@ impl Gen {
     fn fresh(&mut self) -> String {
         self.tmp += 1;
         format!("t{}", self.tmp)
+    }
+
+    /// The values a closure captured, as a `void *` array for a runtime callback (or `NULL`).
+    /// Each value is read in place: the copy made here is never dropped.
+    fn capture_array(&mut self, caps: &[HExpr], f: &HFn) -> String {
+        if caps.is_empty() {
+            return "NULL".to_string();
+        }
+        let mut addrs = Vec::new();
+        for c in caps {
+            let x = self.expr(c, f);
+            let t = self.fresh();
+            self.line(&format!("{} {t} = {x};", c.ty.c_name()));
+            addrs.push(format!("(void *)&{t}"));
+        }
+        let a = self.fresh();
+        self.line(&format!("void *{a}[] = {{{}}};", addrs.join(", ")));
+        a
     }
 
     fn signature(&self, f: &HFn) -> String {
@@ -1726,6 +1757,46 @@ impl Gen {
                     other => other.key(),
                 };
                 self.line(&format!("yv_sort(&{v}, sizeof({}), yv_cmp_{cmp}, {});", elem.c_name(), pos(e.at)));
+                String::new()
+            }
+            HExprKind::SortBy { place, tramp, caps } => {
+                let (v, vty) = self.recv_place(place, f);
+                let elem = seq_elem(vty).expect("checked: a vector");
+                let ctx = self.capture_array(caps, f);
+                self.line(&format!("yv_sort_ctx(&{v}, sizeof({}), yv_tramp_{tramp}, {ctx}, {});", elem.c_name(), pos(e.at)));
+                String::new()
+            }
+            HExprKind::MapUpdate { place, key, init, func, caps } => {
+                let (m, mty) = self.recv_place(place, f);
+                let Ty::Map(mid) = mty else { unreachable!("checked: a map") };
+                let (k, v) = map_parts(mid);
+                let mk = mty.key();
+                let kv = self.owned(key, f);
+                let kt = self.fresh();
+                self.line(&format!("{} {kt} = {kv};", k.c_name()));
+                self.hold(&kt, k);
+                let iv = self.expr(init, f);
+                let it = self.bind(v, &iv);
+                let mut args: Vec<String> = Vec::new();
+                for c in caps {
+                    args.push(self.expr(c, f));
+                }
+                self.release(&[kt.clone()]);
+                let fname = self.fn_names[*func].clone();
+                let call = |x: &str| {
+                    let mut a = args.clone();
+                    a.push(x.to_string());
+                    format!("{fname}({})", a.join(", "))
+                };
+                let slot = self.fresh();
+                let q = KeyOps::new(k).query(&kt);
+                self.line(&format!("{} *{slot} = yv_map_at_{mk}(&{m}, {q});", v.c_name()));
+                let drop_key = if k.needs_drop() { format!(" {}(&{kt});", drop_fn(k)) } else { String::new() };
+                let (on_slot, on_init) = (call(&format!("*{slot}")), call(&it));
+                self.line(&format!(
+                    "if ({slot}) {{ *{slot} = {on_slot};{drop_key} }} else {{ yv_map_set_{mk}(&{m}, {kt}, {on_init}, {}); }}",
+                    pos(e.at)
+                ));
                 String::new()
             }
             HExprKind::Io { op, args } => self.io_call(*op, args, e, f),

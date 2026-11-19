@@ -724,8 +724,12 @@ static int64_t yv_utf8_check(const char *p, size_t n) {
 /* ---- Stable sorting (stdlib contract §4): merge sort with a temporary buffer. ---- */
 
 typedef int (*yv_cmp_fn)(const void *, const void *);
+/* A comparison with a context (the captured values of a `sortBy` closure). */
+typedef int (*yv_cmp_ctx_fn)(void *, const void *, const void *);
 
-static void yv_sort(yv_vec *v, size_t elem, yv_cmp_fn cmp, uint32_t line, uint32_t col) {
+/* Only `cmp(x, y) < 0` ("x goes strictly before y") is asked, so a comparison that breaks its
+   contract gives a wrong order but never touches memory outside the vector (K3). */
+static void yv_sort_ctx(yv_vec *v, size_t elem, yv_cmp_ctx_fn cmp, void *ctx, uint32_t line, uint32_t col) {
     int64_t n = v->len;
     if (n < 2) return;
     size_t bytes;
@@ -740,7 +744,7 @@ static void yv_sort(yv_vec *v, size_t elem, yv_cmp_fn cmp, uint32_t line, uint32
             int64_t i = lo, j = mid, k = lo;
             while (i < mid && j < hi) {
                 /* Ties keep the left element first: the sort is stable. */
-                if (cmp(src + (size_t)j * elem, src + (size_t)i * elem) < 0) memcpy(dst + (size_t)k++ * elem, src + (size_t)j++ * elem, elem);
+                if (cmp(ctx, src + (size_t)j * elem, src + (size_t)i * elem) < 0) memcpy(dst + (size_t)k++ * elem, src + (size_t)j++ * elem, elem);
                 else memcpy(dst + (size_t)k++ * elem, src + (size_t)i++ * elem, elem);
             }
             while (i < mid) memcpy(dst + (size_t)k++ * elem, src + (size_t)i++ * elem, elem);
@@ -753,6 +757,17 @@ static void yv_sort(yv_vec *v, size_t elem, yv_cmp_fn cmp, uint32_t line, uint32
     if (src != a) memcpy(a, src, bytes);
     YV_COUNT_FREE();
     free(tmp);
+}
+
+typedef struct { yv_cmp_fn cmp; } yv_cmp_box;
+
+static int yv_cmp_unboxed(void *ctx, const void *a, const void *b) {
+    return ((yv_cmp_box *)ctx)->cmp(a, b);
+}
+
+static void yv_sort(yv_vec *v, size_t elem, yv_cmp_fn cmp, uint32_t line, uint32_t col) {
+    yv_cmp_box box = {cmp};
+    yv_sort_ctx(v, elem, yv_cmp_unboxed, &box, line, col);
 }
 
 #define YV_CMP_INT(S, T)                                          \
