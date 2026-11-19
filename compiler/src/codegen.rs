@@ -204,6 +204,16 @@ pub fn generate(prog: &HProgram, file: &str) -> String {
     g.out.push('\n');
     // `sortBy` adapters: the runtime sort asks whether element `a` goes before `b`.
     for (i, t) in prog.tramps.iter().enumerate() {
+        if t.by_cmp {
+            // `cmp(a, &b)` is `Ordering.Less` (tag 0) when `a` goes before `b`.
+            let ec = t.elem.c_name();
+            let _ = writeln!(
+                g.out,
+                "static int yv_tramp_{i}(void *ctx, const void *a, const void *b) {{\n    (void)ctx;\n    return {}(*(const {ec} *)a, b).tag == 0 ? -1 : 0;\n}}\n",
+                g.fn_names[t.func]
+            );
+            continue;
+        }
         let mut args: Vec<String> = t.caps.iter().enumerate().map(|(j, c)| format!("*({} *)c[{j}]", c.c_name())).collect();
         let ec = t.elem.c_name();
         args.push(format!("*(const {ec} *)a"));
@@ -1765,6 +1775,18 @@ impl Gen {
                 let ctx = self.capture_array(caps, f);
                 self.line(&format!("yv_sort_ctx(&{v}, sizeof({}), yv_tramp_{tramp}, {ctx}, {});", elem.c_name(), pos(e.at)));
                 String::new()
+            }
+            HExprKind::TagTest { value, tag, eq } => {
+                let v = self.borrowed(value, f);
+                let op = if *eq { "==" } else { "!=" };
+                format!("(({v}).tag {op} {tag})")
+            }
+            HExprKind::SameTag { lhs, rhs, eq } => {
+                let l = self.borrowed(lhs, f);
+                let l = self.bind(Ty::Int(IntTy::U32), &format!("({l}).tag"));
+                let r = self.borrowed(rhs, f);
+                let op = if *eq { "==" } else { "!=" };
+                format!("({l} {op} ({r}).tag)")
             }
             HExprKind::MapUpdate { place, key, init, func, caps } => {
                 let (m, mty) = self.recv_place(place, f);

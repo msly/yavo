@@ -27,6 +27,9 @@ pub struct Tramp {
     pub func: usize,
     pub caps: Vec<Ty>,
     pub elem: Ty,
+    /// `func` is a user `cmp(self, other: &T) -> Ordering` (for `sort()` on a `T: Ord`), not a
+    /// closure returning "goes before".
+    pub by_cmp: bool,
 }
 
 pub struct HStruct {
@@ -239,6 +242,10 @@ pub enum HExprKind {
     Call2 { method: Method2, recv: Box<HExpr>, args: Vec<HExpr> },
     /// `place.sort()`.
     Sort(HPlace),
+    /// `value.tag == tag` (or `!=` when `eq` is false): a test of an enum's case.
+    TagTest { value: Box<HExpr>, tag: u32, eq: bool },
+    /// `lhs == rhs` / `lhs != rhs` on an enum whose cases carry no payload.
+    SameTag { lhs: Box<HExpr>, rhs: Box<HExpr>, eq: bool },
     /// `place.sortBy(closure)`: `tramp` adapts closure function to the runtime's sort; `caps`
     /// are the captured variables, read in place.
     SortBy { place: HPlace, tramp: usize, caps: Vec<HExpr> },
@@ -937,6 +944,9 @@ struct Checker<'d> {
     struct_index: HashMap<String, usize>,
     /// Imported modules: where they were imported and whether anything used them.
     imports: HashMap<String, (Span, bool)>,
+    /// User comparison protocols by struct/enum id (K2): the `cmp` function of a `T: Ord`, the
+    /// `eq` function of a `T: Eq`.
+    protocols: HashMap<u32, (Option<usize>, Option<usize>)>,
     /// Number of user functions; closure functions are numbered after them.
     n_fns: usize,
     /// Functions made from closures (O5), in order.
@@ -962,6 +972,8 @@ struct VariantDef {
 const LIBRARY_ENUMS: &[(&str, &[(&str, &[&str])])] = &[
     ("io.Error", &[("Utf8", &["offset"]), ("Io", &["code"])]),
     ("fs.Error", &[("Utf8", &["offset"]), ("Io", &["code"]), ("InvalidPath", &[])]),
+    // Prelude (K2): the result of `cmp`. Tags: Less 0, Equal 1, Greater 2.
+    ("Ordering", &[("Less", &[]), ("Equal", &[]), ("Greater", &[])]),
 ];
 
 pub fn check(prog: &Program, diags: &mut Diags) -> Option<HProgram> {
@@ -972,6 +984,7 @@ pub fn check(prog: &Program, diags: &mut Diags) -> Option<HProgram> {
         structs: Vec::new(),
         struct_index: HashMap::new(),
         imports: HashMap::new(),
+        protocols: HashMap::new(),
         n_fns: prog.fns.len(),
         lifted: Vec::new(),
         tramps: Vec::new(),
@@ -979,7 +992,7 @@ pub fn check(prog: &Program, diags: &mut Diags) -> Option<HProgram> {
     ck.collect_uses(prog);
     for (owner, impls) in prog.structs.iter().map(|s| (&s.name, &s.impls)).chain(prog.enums.iter().map(|e| (&e.name, &e.impls))) {
         for (i, sp) in impls {
-            if i == "Drop" {
+            if matches!(i.as_str(), "Drop" | "Eq" | "Ord") {
                 continue;
             }
             ck.diags.error("U0001", *sp, format!("implementing interfaces (`{owner}: {i}`) is not supported yet"));
@@ -988,6 +1001,7 @@ pub fn check(prog: &Program, diags: &mut Diags) -> Option<HProgram> {
     let order = ck.collect_structs(prog);
     ck.collect(prog);
     ck.check_drops(prog);
+    ck.check_protocols(prog);
     let mut fns: Vec<HFn> = prog.fns.iter().enumerate().map(|(i, f)| ck.function(f, i)).collect();
     fns.append(&mut ck.lifted);
     let mut unused: Vec<(Span, String)> =
@@ -1458,6 +1472,100 @@ impl Checker<'_> {
         }
     }
 
+    /// `T: Ord` needs `fn cmp(self, other: &T) -> Ordering`; `T: Eq` needs
+    /// `fn eq(self, other: &T) -> bool` (K2, E0502).
+    fn check_protocols(&mut self, prog: &Program) {
+        let decls = prog.structs.iter().map(|s| (&s.name, &s.impls)).chain(prog.enums.iter().map(|e| (&e.name, &e.impls)));
+        for (name, impls) in decls {
+            let Some(&si) = self.struct_index.get(name.as_str()) else { continue };
+            let (Ty::Struct(id) | Ty::Enum(id)) = self.structs[si].ty else { continue };
+            let mut found = (None, None);
+            for (proto, sp) in impls {
+                let (method, ret, shape) = match proto.as_str() {
+                    "Ord" => ("cmp", "Ordering", "fn cmp(self, other: &T) -> Ordering"),
+                    "Eq" => ("eq", "bool", "fn eq(self, other: &T) -> bool"),
+                    _ => continue,
+                };
+                let full = format!("{name}.{method}");
+                let Some(f) = prog.fns.iter().find(|f| f.name == full) else {
+                    self.diags
+                        .error("E0502", *sp, format!("`{name}: {proto}` needs a method `{}`", shape.replace('T', name)))
+                        .note("write it inside the type's body");
+                    continue;
+                };
+                let ok = f.params.len() == 2
+                    && f.params[0].name == "self"
+                    && !f.params[0].inout
+                    && !f.params[0].sink
+                    && !f.params[1].inout
+                    && !f.params[1].sink
+                    && f.params[1].ty.name == "&"
+                    && f.params[1].ty.args.first().is_some_and(|a| a.name == *name && a.args.is_empty())
+                    && f.ret.as_ref().is_some_and(|t| t.name == ret && t.args.is_empty());
+                if !ok {
+                    self.diags
+                        .error("E0502", f.name_span, format!("`{name}: {proto}` needs exactly `{}`", shape.replace('T', name)))
+                        .note("the comparison protocols have fixed signatures (semantic table K2)");
+                    continue;
+                }
+                let fi = self.index.get(&full).copied();
+                if proto == "Ord" {
+                    found.0 = fi;
+                } else {
+                    found.1 = fi;
+                }
+            }
+            if found != (None, None) {
+                self.protocols.insert(id, found);
+            }
+        }
+    }
+
+    /// Whether values of `t` are compared through a user protocol: `(cmp, eq)` functions.
+    fn protocol(&self, t: Ty) -> Option<(Option<usize>, Option<usize>)> {
+        match t {
+            Ty::Struct(id) | Ty::Enum(id) => self.protocols.get(&id).copied(),
+            _ => None,
+        }
+    }
+
+    /// `a op b` through a user `cmp` (`Ord`) or `eq` (`Eq`): `cmp(a, &b)` tested against an
+    /// `Ordering` tag, or `eq(a, &b)` (negated for `!=`).
+    fn protocol_compare(&mut self, op: BinOp, l: HExpr, r: HExpr, span: Span, at: Span) -> Option<HExpr> {
+        let (cmp, eq) = self.protocol(l.ty)?;
+        let addr = |r: HExpr| {
+            let (s, a) = (r.span, r.at);
+            let ty = Ty::Ref(ref_of(r.ty));
+            HExpr { kind: HExprKind::AddrOf(Box::new(r)), ty, span: s, at: a }
+        };
+        if let Some(fi) = cmp {
+            let ord = self.structs[self.struct_index["Ordering"]].ty;
+            let call = HExpr { kind: HExprKind::Call { func: fi, args: vec![l, addr(r)] }, ty: ord, span, at };
+            // Less 0, Equal 1, Greater 2.
+            let (tag, eq) = match op {
+                BinOp::Lt => (0, true),
+                BinOp::Ge => (0, false),
+                BinOp::Gt => (2, true),
+                BinOp::Le => (2, false),
+                BinOp::Eq => (1, true),
+                _ => (1, false),
+            };
+            return Some(HExpr { kind: HExprKind::TagTest { value: Box::new(call), tag, eq }, ty: Ty::Bool, span, at });
+        }
+        let fi = eq?;
+        if !matches!(op, BinOp::Eq | BinOp::Ne) {
+            self.diags
+                .error("E0501", span, format!("values of type `{}` cannot be ordered: it implements `Eq` but not `Ord`", l.ty))
+                .note("declare `Ord` and write `fn cmp(self, other: &T) -> Ordering`");
+            return Some(err_expr(span));
+        }
+        let call = HExpr { kind: HExprKind::Call { func: fi, args: vec![l, addr(r)] }, ty: Ty::Bool, span, at };
+        if op == BinOp::Ne {
+            return Some(HExpr { kind: HExprKind::Not(Box::new(call)), ty: Ty::Bool, span, at });
+        }
+        Some(call)
+    }
+
     fn collect(&mut self, prog: &Program) {
         for f in &prog.fns {
             let params = f.params.iter().map(|p| self.resolve_ty(&p.ty)).collect();
@@ -1799,7 +1907,7 @@ impl Checker<'_> {
             return err_expr(span);
         }
         let tramp = self.tramps.len();
-        self.tramps.push(Tramp { func, caps: caps.iter().map(|c| c.ty).collect(), elem });
+        self.tramps.push(Tramp { func, caps: caps.iter().map(|c| c.ty).collect(), elem, by_cmp: false });
         HExpr { kind: HExprKind::SortBy { place, tramp, caps }, ty: Ty::Unit, span, at }
     }
 
@@ -3346,7 +3454,7 @@ impl Checker<'_> {
 
     /// Types two operands so that an untyped literal adopts the other side's type.
     fn pair(&mut self, a: &Expr, b: &Expr, expected: Option<Ty>, cx: &mut FnCx) -> (HExpr, HExpr) {
-        let hint = |t: Ty, fallback: Option<Ty>| if matches!(t, Ty::Int(_)) { Some(t) } else { fallback };
+        let hint = |t: Ty, fallback: Option<Ty>| if matches!(t, Ty::Int(_) | Ty::Enum(_)) { Some(t) } else { fallback };
         if is_untyped_literal(a) && !is_untyped_literal(b) {
             let hb = self.expr(b, expected, cx);
             let hb = self.deref(hb);
@@ -3567,6 +3675,21 @@ impl Checker<'_> {
             }
             ExprKind::MapLit(entries) => self.map_lit(entries, expected, span, cx),
             ExprKind::Index { base, index } => self.index(base, index, span, cx),
+            // `&x` where a `&T` is expected (e.g. `a.cmp(&b)`): a read-only reference to the place.
+            ExprKind::Borrow(inner) if matches!(expected, Some(Ty::Ref(_))) => {
+                let Some(Ty::Ref(r)) = expected else { unreachable!() };
+                let want = ref_inner(r);
+                let h = self.expr(inner, Some(want), cx);
+                let h = self.deref(h);
+                if h.ty == Ty::Error {
+                    return err_expr(span);
+                }
+                if h.ty != want {
+                    self.diags.error("E0001", span, format!("mismatched types: expected `&{want}`, found `&{}`", h.ty));
+                    return err_expr(span);
+                }
+                HExpr { kind: HExprKind::AddrOf(Box::new(h)), ty: Ty::Ref(r), span, at: span }
+            }
             ExprKind::Borrow(_) => {
                 self.diags.error("U0001", span, "borrow expressions (`&x`) are only supported as `inout` arguments in P0");
                 err_expr(span)
@@ -3963,6 +4086,17 @@ impl Checker<'_> {
             }
             BinOp::Eq | BinOp::Ne | BinOp::Lt | BinOp::Le | BinOp::Gt | BinOp::Ge => {
                 let (l, r) = self.pair(lhs, rhs, None, cx);
+                if l.ty == r.ty && self.protocol(l.ty).is_some() {
+                    return self.protocol_compare(op, l, r, span, at).expect("checked: the type has a protocol");
+                }
+                // Enums whose cases carry no payload (such as `Ordering`) compare by case.
+                if let (Ty::Enum(id), true) = (l.ty, l.ty == r.ty && matches!(op, BinOp::Eq | BinOp::Ne)) {
+                    let si = self.structs.iter().position(|s| s.ty == Ty::Enum(id)).expect("registered enum");
+                    if self.structs[si].variants.iter().all(|v| v.fields.is_empty()) {
+                        let eq = op == BinOp::Eq;
+                        return HExpr { kind: HExprKind::SameTag { lhs: Box::new(l), rhs: Box::new(r), eq }, ty: Ty::Bool, span, at };
+                    }
+                }
                 if l.ty != Ty::Error && r.ty != Ty::Error {
                     let ordering = !matches!(op, BinOp::Eq | BinOp::Ne);
                     if l.ty != r.ty {
@@ -5519,10 +5653,16 @@ impl Checker<'_> {
             Ty::Vec(v) => match vec_elem(v) {
                 Ty::Int(_) | Ty::Str | Ty::String => HExpr { kind: HExprKind::Sort(place), ty: Ty::Unit, span, at },
                 Ty::Error => err_expr(span),
+                e if self.protocol(e).is_some_and(|(cmp, _)| cmp.is_some()) => {
+                    let func = self.protocol(e).and_then(|(cmp, _)| cmp).expect("checked above");
+                    let tramp = self.tramps.len();
+                    self.tramps.push(Tramp { func, caps: Vec::new(), elem: e, by_cmp: true });
+                    HExpr { kind: HExprKind::SortBy { place, tramp, caps: Vec::new() }, ty: Ty::Unit, span, at }
+                }
                 e => {
                     self.diags
                         .error("E0501", span, format!("values of type `{e}` cannot be ordered, so `sort` cannot be used"))
-                        .note("sort by a key with `sortBy((a, b) => ...)` (closures are not supported yet)");
+                        .note("sort by a key with `sortBy((a, b) => ...)`, or declare `Ord` with a `cmp` method");
                     err_expr(span)
                 }
             },

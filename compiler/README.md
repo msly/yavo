@@ -436,6 +436,27 @@ now a wrapper around it). `total += n` with `n: &inout int` now reads `n` (C4), 
 needed. Tests: `tests/p0/run_closures.yv`, `tests/p0/errors_closures.yv` (11 errors, 3
 warnings).
 
+## Comparison protocols (`Eq`, `Ord`, `Ordering`)
+
+Supported (cheat sheet §2; semantic table K1, K2):
+
+- `Ordering` (`.Less`, `.Equal`, `.Greater`) is in the prelude. Enums whose cases carry no
+  payload, `Ordering` included, can be compared with `==`/`!=`; a case shorthand on the right
+  (`o == .Less`) takes the left side's type.
+- `struct T: Ord` with exactly `fn cmp(self, other: &T) -> Ordering`: `<`, `<=`, `>`, `>=`,
+  `==`, `!=` call `cmp` (equality is `cmp == .Equal`), and `v.sort()` works on `Vec[T]`
+  (stable, through the same adapter mechanism as `sortBy`).
+- `struct T: Eq` with exactly `fn eq(self, other: &T) -> bool`: `==` and `!=` only.
+- `&x` is accepted where a `&T` is expected, e.g. `a.cmp(&b)`: a read-only reference whose
+  borrow follows `x`'s storage.
+- Errors: a missing protocol method or a different signature is `E0502` (at the declaration
+  or the method); ordering an `Eq`-only type, or comparing a struct/enum without a protocol,
+  is `E0501`. User `Ord` does not make a type usable as a `Map` key (K2).
+
+Code generation: a comparison is `yv_fn_T__cmp(a, &b).tag` tested against the `Ordering`
+tag (Less 0, Equal 1, Greater 2). Tests: `tests/p0/run_protocols.yv`,
+`tests/p0/errors_protocols.yv` (7 errors, 2 warnings); spec cases T-G25 and T-G26 pass.
+
 ## Spec conformance
 
 ```sh
@@ -452,8 +473,8 @@ runs all 129 cases in `yavo-tests/MANIFEST.json`, after checking each fixture ag
 | unsupported | the compiler reported `U0001` |
 | not_run | needs `yavo fix`, `yavo verify`, fixtures, sanitizers or other platforms |
 
-At this commit: pass 63, wrong 0, unsupported 53, not_run 13 (P1: 50 / 0 / 26 / 7;
-P2: 13 / 0 / 6 / 2; P3: 0 / 0 / 21 / 4). Closures added T-C7 and tuples T-O5p. User destructors added T-D1, T-GR1, T-GR2 and
+At this commit: pass 65, wrong 0, unsupported 51, not_run 13 (P1: 52 / 0 / 24 / 7;
+P2: 13 / 0 / 6 / 2; P3: 0 / 0 / 21 / 4). Comparison protocols added T-G25 and T-G26; closures added T-C7 and tuples T-O5p. User destructors added T-D1, T-GR1, T-GR2 and
 T-G10–T-G13. The standard library step added T-G08, T-V4, T-V4p and
 T-S2 (the runner now writes `fixture_hex` fixtures into a directory of their own and runs the case
 there). Enums, results and owning struct fields added T-C4p, T-C6, T-C6p, T-G14, T-G15 and

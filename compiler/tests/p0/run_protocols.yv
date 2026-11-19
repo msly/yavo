@@ -1,0 +1,68 @@
+// expect-stdout:
+// | acbd
+// | true false false true true true
+// | Greater
+// | true
+// | false
+// | true false
+// | true false
+struct Version: Ord {
+    major: int
+    minor: int
+    label: String
+
+    fn cmp(self, other: &Version) -> Ordering {
+        if self.major != other.major {
+            return if_less(self.major, other.major)
+        }
+        return if_less(self.minor, other.minor)
+    }
+}
+
+fn if_less(a: int, b: int) -> Ordering {
+    if a < b {
+        return .Less
+    }
+    if a > b {
+        return .Greater
+    }
+    return .Equal
+}
+
+struct Point: Eq {
+    x: int
+    y: int
+    fn eq(self, other: &Point) -> bool {
+        return self.x == other.x && self.y == other.y
+    }
+}
+
+enum Color {
+    Red
+    Green
+}
+
+fn v(major: int, minor: int, label: str) -> Version {
+    return Version{major: major, minor: minor, label: label.toString()}
+}
+
+fn main() {
+    var vs = [v(1, 2, "b"), v(0, 9, "a"), v(1, 0, "c"), v(1, 2, "d")]
+    vs.sort()
+    for x in vs {
+        print(x.label)
+    }
+    println("")
+    let a = v(2, 0, "x")
+    let b = v(1, 5, "y")
+    println("${a > b} ${a < b} ${a == b} ${a != b} ${a >= b} ${b <= a}")
+    let o = a.cmp(&b)
+    println(o)
+    println(o == .Greater)
+    println(if_less(1, 1) != Ordering.Equal)
+    let p = Point{x: 1, y: 2}
+    let q = Point{x: 1, y: 2}
+    println("${p == q} ${p != q}")
+    let c = Color.Green
+    println("${c == .Green} ${c == Color.Red}")
+}

@@ -1,0 +1,54 @@
+// expect-error: E0502 10:15
+// expect-error: E0502 16:8
+// expect-warning: W0001 16:18
+// expect-error: E0502 23:8
+// expect-warning: W0001 23:17
+// expect-error: E0501 47:13
+// expect-error: E0501 49:5
+// expect-error: E0501 51:13
+// expect-error: E0501 53:13
+struct NoCmp: Ord {
+    n: int
+}
+
+struct BadCmp: Ord {
+    n: int
+    fn cmp(self, other: BadCmp) -> Ordering {
+        return .Equal
+    }
+}
+
+struct BadEq: Eq {
+    n: int
+    fn eq(self, other: &BadEq) -> int {
+        return 0
+    }
+}
+
+struct OnlyEq: Eq {
+    n: int
+    fn eq(self, other: &OnlyEq) -> bool {
+        return self.n == other.n
+    }
+}
+
+struct Plain {
+    n: int
+}
+
+enum Shape {
+    Dot
+    Line(len: int)
+}
+
+fn main() {
+    let a = OnlyEq{n: 1}
+    let b = OnlyEq{n: 2}
+    println(a < b)
+    var v = [OnlyEq{n: 3}]
+    v.sort()
+    let p = Plain{n: 1}
+    println(p == p)
+    let s = Shape.Dot
+    println(s == Shape.Dot)
+}
