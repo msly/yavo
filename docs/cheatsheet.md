@@ -32,6 +32,7 @@ fn main() {
 - 返回：有返回值的函数每条路径都写 `return`，没有返回值的函数可以自然结束。块体闭包也要写 `return`；单表达式闭包 `(a, b) => a < b` 不用。
 - 插值字符串 `"${expr}"` 只能直接传给 `println`、`print`、`eprintln`、`panic`、`assert` 和 `format`。前五个直接写输出，不分配内存；要得到 `String` 用 `format("${x}")`，会分配。保留两位小数写 `"${x:.2}"`。
 - 注释只有 `//`。声明顺序无关，函数可以先用后定义；`pub` 标记从包导出的函数和类型。
+- 入口只能写成 `fn main()`：没有参数、没有返回值（否则 `E0016`）。所以 `main` 里不能用 `try`；可能失败的步骤放进返回 `T ! E` 的辅助函数，在 `main` 里用 `catch` 处理后 `os.exit(1)`，写法见第 5 节。
 - 整数溢出、除零、越界移位、超出范围的转换执行时 panic，包括常量可知的表达式。`let b: u8 = 256` 则是字面量类型错误。回绕写 `+%`、`-%`、`*%`；截断转换写 `i32.wrap(x)`，仅接受整数。整数边界写 `i64.min`、`i64.max`。
 - 集合字面量 `[1, 2, 3]`、`[:]` 会分配内存；除此之外，普通语法不分配。
 
@@ -104,6 +105,29 @@ fn largest[T: Ord + Copy](xs: []T) -> ?T of xs {   // 泛型和接口约束
 - 类型转换必须显式：`f64(n)`、`int(x)`。没有隐式转换，只有语义表第 8 节列出的几种自动操作。
 - 比较：`==` 需要类型实现 `Eq`，`<` 等需要实现 `Ord`；整数、`str`、`String`、可比较元素组成的元组自动实现。浮点数可以直接用 `==`、`<`（按 IEEE 754），但不满足 `Eq`、`Ord`：不能用 `v.sort()` 或 `largest[f64]`，排序写 `v.sortBy((a, b) => a.totalCmp(b) == .Less)`。自定义类型写 `struct Version: Ord` 并实现 `cmp` 方法。
 - 泛型函数的返回值可能携带借用时也写来源，例如上面的 `largest` 写 `-> ?T of xs`；用在 `int` 上时不会借住数组。
+- 泛型结构体同样用方括号；字面量要写出类型参数，方法里用 `T`、`Self`：
+
+```
+struct Stack[T] {
+    items: Vec[T]
+
+    fn push(inout self, x: sink T) {      // sink：把 x 移进栈
+        self.items.push(x)
+    }
+    fn pop(inout self) -> ?T {
+        return self.items.pop()
+    }
+}
+
+fn main() {
+    var s = Stack[int]{items: []}        // 写 Stack[int]{...}，不写 Stack{...}
+    s.push(1)
+    while let x = s.pop() {
+        println(x)
+    }
+}
+```
+
 - 接口值放进集合或字段时要显式装箱，不会在背后分配：`var all: Vec[Box[Named]] = []`，`all.push(Box(Dog{}))`。
 
 ## 3. 可选值和错误
@@ -149,6 +173,16 @@ fn main() {
 ```
 
 - `?T` 的模式是 `some(x)`、`none`；构造可以显式 `some(value)`，也保留有值自动包装。`if let` 是只处理有值分支的简写，`??` 只在缺失时计算右侧。
+- `?T` 的方法：`o.isSome()`、`o.isNone()`（都返回 `bool`）；取值用 `if let`、`while let`、`??`、`match`（标准库契约里没有 `unwrap`）。`if let` 可以带 `else`：
+
+```
+if let v = m.get("a") {
+    println(v)
+} else {
+    println("missing")
+}
+```
+
 
 ```text
 match take(&opt) {
@@ -263,15 +297,15 @@ fn main() {
 | 读写文件 | `try fs.readText(path)`、`try fs.writeText(path, s)`；编码错误为 `fs.Error.Utf8(offset)`，从 0 开始计字节 | 都可能，包括平台路径转换 |
 | 命令行参数、退出 | `os.args()` 返回 `[]str of static`（启动时已转换，参数不是合法 UTF-8 时程序启动即报错退出）、`os.exit(1)` | 否 |
 | 按行、按空白、按分隔符切分 | `s.lines()`、`s.fields()`、`s.split(",")`，结果是 `Vec[str]`，不复制字符串 | 只分配集合本身 |
-| 字符串长度、字节、子串 | `s.len()`、`s[i]`（`byte`）按字节；`s[a..b]` 是视图，两端必须落在字符边界上 | 否 |
+| 字符串长度、字节、子串 | `s.len()`、`s[i]`（`byte`）按字节；`s[a..b]` 是视图，两端必须落在字符边界上。`byte` 是整数，`"${s[i]}"` 打印数字（`'a'` 打印 `97`）；要打印一个字符写 `s[i..i+1]` | 否 |
 | 修剪、大小写、查找 | `s.trim()`（视图）、`s.toLower()`、`s.toUpper()`（新 `String`）、`s.contains(t)`、`s.startsWith(t)`、`s.find(t)`（`?int`） | 只有大小写转换 |
 | 解析数字 | `s.parseInt()`（`?int`）、`s.parseFloat()`（`?f64`） | 否 |
-| 拼接字符串 | `var out = String{}`，`out.push("text")`；或 `format("${a}-${b}")` | 是 |
+| 拼接字符串 | `var out = String{}`，`out.push("text")`；`push` 接受 `str` 或 `String`，只读取实参，不消费；或 `format("${a}-${b}")` | 是 |
 | 字节转字符串 | `String.fromUtf8(bytes)` 消费字节数组；成功得 `String`，失败得 `Utf8Error{offset: ...}`，输入被释放 | 契约为可能；允许复用原缓冲区 |
 | 字节字面量 | `'a'`、`'\n'`；判断：`c >= '0' && c <= '9'` | 否 |
-| `Vec` 基本操作 | `v.push(x)`、`v.pop()`（`?T`，拥有的值）、`v.len()`、`v[i]`、`v[a..b]`、`v.contains(x)`、`v.join(", ")` | `push` 扩容和 `join` 时会 |
+| `Vec` 基本操作 | `v.push(x)`、`v.pop()`（`?T`，拥有的值）、`v.len()`、`v[i]`、`v[a..b]`、`v.contains(x)`、`v.join(", ")`（元素必须是 `str` 或 `String`，数字先 `format` 成 `String`） | `push` 扩容和 `join` 时会 |
 | 排序 | `v.sort()`（要求 `Ord`）；`v.sortBy((a, b) => a.1 > b.1)`；浮点数用 `sortBy` 加 `totalCmp`；两者都是稳定排序 | 是（临时缓冲区） |
-| `Map` 读取 | `m.get(k)`（`?&V`）、`m.getMut(k)`（`?&inout V`）、`m.getCopy(k)`（`?V`，要求可复制）、`m.has(k)`、`m.len()`；`Map[String, V]` 的查询键直接写 `str`，如 `m.get("a")`；默认值写 `m.getCopy(k) ?? 0` | 否 |
+| `Map` 读取 | `m.get(k)`（`?&V`）、`m.getMut(k)`（`?&inout V`）、`m.getCopy(k)`（`?V`，要求可复制）、`m.has(k)`、`m.len()`；`Map[String, V]` 的 `get`、`getMut`、`getCopy`、`has`、`remove` 直接收 `str` 键，如 `m.get("a")`；`set`、`update` 要拥有的 `String` 键；默认值写 `m.getCopy(k) ?? 0` | 否 |
 | `Map` 写入和计数 | `set(k, v)` 消费键和值；`remove(k) -> ?V` 返回拥有值；`update(k, initial, f)` 消费拥有键，v1 限不携带借用的 Copy 值，f 恰好执行一次 | 插入可能；remove 本身不分配 |
 | 遍历 | `for x in v`、`for i, x in v`、`for k, v in m` 默认只读；`in &v`、`in &m` 显式可变；Map 键始终只读 | 否 |
 | 优先队列 | `use std/collections`；`var h = Heap[(int, int)].by((a, b) => a.0 < b.0)`，`h.push(x)`、`h.pop()`（`?T`）；比较闭包会被保存，不能捕获借用 | `push` 扩容时会 |
@@ -302,6 +336,25 @@ fn main() {
     for it in items[0..min(5, items.len())] {
         println("${it.0} ${it.1}")
     }
+}
+```
+
+`main` 不能用 `try`，所以把会失败的步骤放进辅助函数，`main` 只负责报告并退出：
+
+```
+use std/{io, os}
+
+fn countLines() -> int ! io.Error {
+    let text = try io.readAll()
+    return text.lines().len()
+}
+
+fn main() {
+    let n = countLines() catch e {
+        eprintln("error: ${e}")
+        os.exit(1)
+    }
+    println(n)
 }
 ```
 
