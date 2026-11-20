@@ -1,17 +1,19 @@
-# Yavo 交接文档（2026-11-19，第二、三批已完成）
+# Yavo 交接文档（2026-11-20，第四批已完成）
 
-给下一个会话：先读完本文件，再按第 10 节开工。所有数字都是 2026-11-19 在本仓库实测的。
+给下一个会话：先读完本文件，再按第 10 节开工。所有数字都是 2026-11-20 在本仓库实测的。
 
 ## 1. 一句话状态
 
-规范 v0.5 已冻结（`docs/`、`yavo-tests/`）；Rust 写的编译器（约 14,400 行，含 C 运行时）已实现 P0、P1 的单线程写法和 P2 的大部分：
+规范 v0.5 已冻结（`docs/`、`yavo-tests/`）；Rust 写的编译器（约 14,600 行，含 C 运行时）已实现 P0、P1 的单线程写法和 P2 的单线程部分：
 结构体、`enum`、`T ! E` 与 `try`/`catch`、`match`、`String`/`Vec`/`Map`、`[]T` 与 `x[a..b]`、移动与析构、视图与 `of`、`&T`、`inout`、`?T`、
-方法、`Drop`、元组、不逃逸闭包、`Eq`/`Ord`，以及本轮新增的 **`Box[T]`、`interface` 与 `Box[I]`、泛型函数和泛型结构体、`f64`/`f32`、切片、`reserve`**；
+方法、`Drop`、元组、不逃逸闭包、`Eq`/`Ord`、`Box[T]`、`interface` 与 `Box[I]`、泛型、`f64`/`f32`、切片、`reserve`，
+以及第四批新增的 **`*p`、`&inout T` 局部变量、`&x` 构造（A6、A7、`E0004`）和 `String.fromUtf8`**；
 标准库 I/O、`os.args`、`std/math`；六个目标的交叉编译。
-规范一致性：**129 项中通过 84、判错 0、不支持 31、未运行 14**（会话开始时 65 / 0 / 51 / 13）。全部提交只在本地，**按用户决定暂不推远端**。
+规范一致性：**129 项中通过 93、判错 0、不支持 22、未运行 14**（第四批开始时 84 / 0 / 31 / 14）。P1/P2 只剩 T-O5（`Heap`）不支持，其余 21 项都是 P3 并发。
+全部提交只在本地，**按用户决定暂不推远端**。
 
-“可用”三批（第 9 节）**全部完成**。冷启动实验：新开的 agent 只看速查卡写 10 道命令行小题，**10/10 一次编译通过且输出正确**
-（`experiments/coldstart-2026-11-19/README.md`，含局限说明）。剩下的不支持项几乎都是并发（P3）、`*p`/`&inout T`（第 6 项）和 `yavo fix`/`verify`。
+“可用”三批已完成；2026-11-20 用户让我自己定后续顺序并分批：**第四批**（速查卡缺口 + 第 6 项 + 小卡点）已完成，
+**第五批**是第二轮冷启动实验（含 Rust 对照），**第六批**是 P3 并发。见第 9、10 节。
 
 ## 2. 仓库与环境
 
@@ -55,7 +57,9 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 
 | 提交 | 内容 | 一致性通过数 |
 | --- | --- | --- |
-| 本文件所在提交 | 冷启动实验（`experiments/coldstart-2026-11-19/`）与本交接文档 | 84 |
+| `0ed6802` | 第 6 项：`*p` 读（可复制得副本，否则只读访问）、`*p = v`/`*p op= v` 经 `&inout T` 写；`let p: &inout T = &place`、`var p: &T = &place`、`let p = &x` 报 `E0004`；再借用 `&p`、`var` 引用重绑定；独占（`E0102`）与存活（`E0305`）沿用 `&inout` 规则；`for x in &v { *x += 1 }`、`getMut` 绑定可写可复制值。`String.fromUtf8`、prelude `Utf8Error`（成功复用缓冲区） | 93 |
+| `238a2cd` | 速查卡补 6 个缺口（泛型结构体、`fn main()` 与“辅助函数 + `catch` + `os.exit`”、`byte` 插值、`join`、`?T` 方法与 `if let ... else`、`Map` 的 `str` 键、`String.push`），示例都用编译器验证过 | 84 |
+| `96a8ff9` | 冷启动实验（`experiments/coldstart-2026-11-19/`）与上一版交接文档 | 84 |
 | `e7e106f` | 切片 `v[a..b]`（`[]T`）、`s[a..b]`（`str`，`P-INDEX`、`P-STR-BOUNDARY`）；`[]T.toVec()`；`v.reserve(n)`（`P-CAPACITY`） | 84 |
 | `16527cb` | `f64`/`f32`：字面量（`1.5`、`2e-3`、`1e10`；浮点上下文里的整数字面量即浮点）、IEEE 运算与比较、`f64(n)`、带检查的浮点转整数（`P-FLOAT-CONVERT`）、`totalCmp`、`parseFloat`、`min`/`max`/`abs`、`math.sqrt/pow/floor/ceil/round/pi/e`；最短往返打印 | 79 |
 | `bd8ab57` | 泛型函数和泛型结构体（单态化）：显式 `f[int](x)`、`S[String]{...}` 或按实参推断；约束 `Copy`/`Eq`/`Ord`/接口；泛型结构体的方法与 `Self`；`Wrapper[str]` 报 `E0301` | 75 |
@@ -110,6 +114,10 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - 浮点：`Ty::Float(FloatTy)`；`HExprKind::Float`、`ToFloat`、`FloatToInt`、`Math`；`Method2::TotalCmp`/`ParseFloat`。运行时新增 `yv_out_f64/f32`、
   `yv_f64_total_cmp`、`yv_str_parse_float`、`yv_f2i_*`，并引入 `<math.h>`、`<stdio.h>`。
 - 切片：`ExprKind::SliceRange` → `HExprKind::SliceRange`；借用来源规则见 `loans_of`；运行时 `yv_vec_slice`/`yv_str_slice`。
+- 解引用（第四批）：`*p` 是 `UnOp::Deref`，检查器读时降为 `HExprKind::Deref`；赋值目标 `*p`（可再接字段）在 `StmtKind::Assign` 里识别，
+  路径开头插入 `DEREF_STEP`（`usize::MAX - 1`），代码生成的 `walk` 跳过它、`place_root` 走 `(*p)`。
+  期望 `&inout T` 的 `&place` 由 `borrow_mut` 降为 `InoutPlace`（类型 `RefMut`），`loans_of` 对 `InoutPlace` 记根变量及其已有借用（再借用因此能挡住原引用）。
+  `&inout T` 类型只在局部变量注解里由 `local_ty` 解析，其他位置 `U0001`。`String.fromUtf8` 是 `HExprKind::FromUtf8`，`Utf8Error` 在 `LIBRARY_ENUMS` 之后登记为库结构体。
 
 ## 6. 约定
 
@@ -127,7 +135,8 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - 借用检查按语句粒度和语句顺序：`if` 里修改、只在 `else` 里用视图也会报错；`E0305` 不看存储目标之后是否还被使用。只会多报，不会漏报。
 - 可选值：对可写位置的 `if let`，**不可复制**载荷的绑定可写（`&inout`）；**可复制**载荷仍按值复制，给绑定赋值报 `U0001`。可写绑定还在使用时，原变量的任何使用都报 `E0102`（保守）。
   对 `&inout` 绑定的字段再做 `if let`（`if let l = n.left`）得到只读绑定。`a ?? b` 把 `a` 整体消费。`?? return/break/continue` 只允许作为整个 `let` 初值或赋值右侧。
-- `&inout T`：由 `getMut`、`for … in &c`、可写 `if let` 产生；`inout` 实参可以是字段路径或 `&inout` 变量。仍不能写出这个类型、不能 `&x` 构造（A7）、不能 `*p = v`、不能放进集合（第 6 项）。
+- `&inout T`：局部变量可以写出类型并用 `&place` 构造，`*p` 读写。仍不能作参数、字段、元素或返回类型（`U0001`，参数用 `inout`）；
+  经 `*p` 存入带借用的值 `U0001`。借用按语句粒度，所以 `println("${q.len()} ${s}")`（`q` 指向 `s`）会多报 `E0102`，要拆成两句。
 - `Map`：键只支持整数、`bool`、`str`、`String`；`update` 的值类型限可复制且不带借用。
 - 导入：已实现的模块成员有 `os.exit`、`os.args`、`io.readAll`/`readLine`、`fs.readText`/`writeText`、`math.sqrt/pow/floor/ceil/round/pi/e`，其余报 `U0001`。`os.exit` 不运行析构。
 - 枚举和结果：不支持字面量模式（`.Num(0)`、`1 =>`）、模式里的命名字段、`if let` 带模式、带载荷枚举的比较、泛型枚举、结构体里的结果字段。
@@ -145,13 +154,11 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 
 ## 8. 一致性测试里的卡点
 
-当前不支持 31 项、未运行 14 项（统计只算每个测试的第一个卡点）：
+当前不支持 22 项、未运行 14 项（统计只算每个测试的第一个卡点）：
 
 | 卡点 | 测试 |
 | --- | --- |
-| 第 6 项：`*p`、写出 `&inout T`、`let p: &T = &x` | T-G01、T-G02、T-G03、T-G04、T-G17、T-G18、T-G21、T-GR11（共 8 项，是 P1/P2 剩下的主体） |
-| 实例上的类型参数表达式（`Name[T]` 作为值） | T-O5 |
-| `String.fromUtf8` | T-GR4 |
+| `std/collections` 的 `Heap[T].by(闭包)`（保存比较闭包，O5） | T-O5（P1/P2 唯一剩下的） |
 | P3 并发：`scope`、`Channel`、`Mutex`、`with`、`Guard`、`+ Send` | 21 项 |
 | `yavo fix` | 7 项（未运行） |
 | `yavo verify` 报告 | 4 项（未运行） |
@@ -163,7 +170,7 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 | --- | --- | --- |
 | 1–4、7 | 可选值、`Map`、导入、枚举与结果、拥有值字段 | 已完成（上一轮） |
 | 5 | 方法、`Drop`、`Eq`/`Ord`、`interface`、`Box` | **已完成**（`Box` `6456fc8`、接口 `832b6db`） |
-| 6 | `*p` 写入、写出 `&inout T`、`&x` 构造（A7、`E0004`） | 未开始；8 项一致性测试 |
+| 6 | `*p` 写入、写出 `&inout T`、`&x` 构造（A7、`E0004`） | **已完成**（`0ed6802`，8 项一致性测试） |
 | 8 | 浮点 `f64`、`totalCmp` | **已完成**（`16527cb`） |
 | 9 | 切片 `x[a..b]`、`P-STR-BOUNDARY` | **已完成**（`e7e106f`，顺带 `toVec`、`reserve`） |
 | 10 | 泛型函数和泛型结构体 | **已完成**（`bd8ab57`） |
@@ -181,13 +188,16 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 | 第二批 | 第 5 项，闭包，第 10 项泛型，元组 | **已完成**，一致性 54 → 75 |
 | 第三批 | 第 8 项浮点，第 9 项切片，冷启动实验 | **已完成**，一致性 75 → 84；冷启动 10/10 |
 
+后续三批（2026-11-20 用户让我定顺序、能合并就合并）：
+
+| 批次 | 内容 | 状态 |
+| --- | --- | --- |
+| 第四批 | 速查卡 6 个缺口，第 6 项，`String.fromUtf8` | **已完成**，一致性 84 → 93 |
+| 第五批 | 第二轮冷启动实验：不点名特性的新题、换模型做受试者、Rust 对照并记 token | 进行中 |
+| 第六批 | 第 12 项 P3 并发（`scope`/`spawn`、`Channel`、`Mutex`/`Arc`/`with`、`Send`/`Sync`） | 未开始 |
+
 ## 10. 下一个会话的第一步
 
-1. 设置第 2 节的环境变量，`cargo build --locked --offline --release`；跑 `cargo test --locked --offline`（和 `--release`），确认全部通过，conformance 是 84 / 0 / 31 / 14。
-2. 三批“可用”都已完成，**接下来做什么需要用户定**。可选方向（我的建议顺序）：
-   - **补速查卡**（小、收益直接）：冷启动实验列出的 6 个缺口——泛型结构体例子、`main` 只能是 `fn main()` 及“辅助函数返回 `T ! E`、`main` 里 `catch` 后 `os.exit`”的标准写法、
-     `byte` 插值打印数字、`join` 只收文本、`?T` 方法列表与 `if let ... else`、哪些 `Map` 方法收 `str` 键。改的是规范文档，先问用户。
-   - **第 6 项**（`*p`、`&inout T` 值、`let p: &T = &x`）：P1/P2 剩下的 8 项一致性测试都卡在这里。
-   - **第二轮冷启动实验**：换一组不点名特性的题、换一个模型做受试者、同时用 Rust 做对照并记 token，结论才更可信。
-   - **第 12 项并发**：最大的一块（21 项），也是 `Send`/`Sync`、接口能力 `+ Send` 的前提。
-   - `yavo fix`（7 项）可以和上面任一项并行。
+1. 设置第 2 节的环境变量，`cargo build --locked --offline --release`；跑 `cargo test --locked --offline`（和 `--release`），确认全部通过，conformance 是 93 / 0 / 22 / 14。
+2. 按第 9 节的后续三批继续：先看第五批（冷启动实验）是否已有 `experiments/coldstart-2026-11-20/README.md`，没有就从那里开始；然后第六批并发。
+   `yavo fix`（7 项）和 T-O5（`Heap` 与保存的闭包）可以和任一批并行。
