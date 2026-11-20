@@ -69,6 +69,11 @@ pub fn find() -> Result<Toolchain, String> {
             description: format!("YAVO_CC={cc}"),
         });
     }
+    find_pinned()
+}
+
+/// Verification must never select a development compiler override.
+pub fn find_pinned() -> Result<Toolchain, String> {
     let lock = lock();
     let dir = zig_dir(&lock).ok_or("cannot determine the home directory; set YAVO_HOME")?;
     let exe = zig_exe(&dir);
@@ -84,6 +89,10 @@ pub fn find() -> Result<Toolchain, String> {
         lock.version,
         dir.display()
     ))
+}
+
+pub fn lock_contents() -> &'static str {
+    LOCK
 }
 
 pub fn install() -> Result<String, String> {

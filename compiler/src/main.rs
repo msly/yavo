@@ -1,3 +1,4 @@
+mod allocations;
 mod ast;
 mod check;
 mod codegen;
@@ -6,8 +7,10 @@ mod fix;
 mod fix_plan;
 mod lexer;
 mod parser;
+mod process;
 mod toolchain;
 mod types;
+mod verify;
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -24,10 +27,14 @@ const USAGE: &str = "\
 yavo - the Yavo compiler prototype
 
 USAGE:
-    yavo check <file.yv> [--json-diagnostics]
+    yavo check <file.yv> [--emit-c <file.c>] [--json-diagnostics]
     yavo fix   <file.yv> [--dry-run] [--json-diagnostics]
     yavo build <file.yv> [-o <output>] [--release] [--target <target>] [--emit-c <file.c>] [--json-diagnostics]
     yavo run   <file.yv> [--release] [--target <target>] [--json-diagnostics]
+    yavo allocations <function> --file <file.yv> [--json]
+    yavo verify <file.yv> [--target <target>] [--sanitize] [--reproducible] [--json]
+                [--output-dir <dir>] [--timeout-ms <ms>] [--build-timeout-ms <ms>]
+                [--stdin <file>] [--expect-stdout <file>] [--expect-stderr <file>] [--no-run]
     yavo toolchain [status | install]
     yavo --version
 
@@ -40,7 +47,8 @@ TARGETS (cross-compilation uses the pinned zig toolchain; `run` only accepts tar
     x86_64-linux-musl, aarch64-linux-musl, x86_64-windows-gnu, aarch64-windows-gnu, x86_64-macos, aarch64-macos
 
 EXIT CODES:
-    0 success, 1 compile errors, 2 usage error, 3 C toolchain unavailable, 4 internal error.
+    0 success, 1 compile/check failure, 2 usage error, 3 C toolchain unavailable, 4 internal error,
+    5 verification incomplete. The prototype records the required audit as not_run.
     `yavo run` exits with the program's own status (101 on panic).";
 
 struct Options {
@@ -179,6 +187,61 @@ fn build(opts: &Options, output: &Path) {
     }
 }
 
+fn run_allocations(args: &[String]) -> i32 {
+    let mut subject = None;
+    let mut input = None;
+    let mut json = false;
+    let mut it = args.iter();
+    while let Some(arg) = it.next() {
+        match arg.as_str() {
+            "--file" => {
+                if input.is_some() { usage_error("duplicate --file"); }
+                input = Some(PathBuf::from(it.next().unwrap_or_else(|| usage_error("--file needs a path"))));
+            }
+            "--json" | "--json-diagnostics" => json = true,
+            flag if flag.starts_with('-') => usage_error(&format!("unknown option {flag}")),
+            name if subject.is_none() => subject = Some(name.to_string()),
+            extra => usage_error(&format!("unexpected argument {extra}")),
+        }
+    }
+    let subject = subject.unwrap_or_else(|| usage_error("allocations needs a function name"));
+    let input = input.unwrap_or_else(|| usage_error("allocations needs --file <file.yv>"));
+    let source = match fs::read_to_string(&input) {
+        Ok(source) => source,
+        Err(e) => { eprintln!("error: cannot read {}: {e}", input.display()); return EXIT_USAGE; }
+    };
+    let path = input.to_string_lossy().replace('\\', "/");
+    let mut diags = Diags::default();
+    let tokens = lexer::lex_file(&source, &mut diags);
+    let program = parser::parse(tokens, &source, &mut diags);
+    let typed = if diags.has_errors() { None } else { check::check(&program, &mut diags) };
+    diags.sort();
+    if diags.has_errors() || typed.is_none() {
+        report(&path, &source, &mut diags, json);
+        return EXIT_COMPILE_ERROR;
+    }
+    match allocations::analyze(&program, &typed.unwrap(), &subject, &path, &source) {
+        Ok(mut result) => {
+            result["diagnostics"] = diag::render_json_value(&path, &source, &diags);
+            if json {
+                println!("{}", serde_json::to_string_pretty(&result).unwrap());
+            } else {
+                eprint!("{}", diag::render_human(&path, &source, &diags));
+                println!("{}: {}", subject, result["status"].as_str().unwrap_or("unknown"));
+                println!("{}", serde_json::to_string_pretty(&result["operations"]).unwrap());
+            }
+            0
+        }
+        Err(e) => {
+            if json {
+                println!("{}", serde_json::json!({"schema":"yavo-allocations/1", "subject":subject,
+                    "status":"unknown", "error":e, "source_sha256":diag::source_hash(&source)}));
+            } else { eprintln!("error: {e}"); }
+            EXIT_USAGE
+        }
+    }
+}
+
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
     let Some(cmd) = args.first() else {
@@ -191,13 +254,28 @@ fn main() {
         "--help" | "-h" | "help" => println!("{USAGE}"),
         "check" => {
             let opts = parse_options(rest, false);
-            if compile_to_c(&opts).is_none() {
-                exit(EXIT_COMPILE_ERROR);
+            let Some(code) = compile_to_c(&opts) else { exit(EXIT_COMPILE_ERROR) };
+            if let Some(path) = &opts.emit_c {
+                if let Err(e) = fs::write(path, code) {
+                    eprintln!("error: cannot write {}: {e}", path.display());
+                    exit(EXIT_INTERNAL);
+                }
             }
         }
         "fix" => {
             let opts = parse_options(rest, true);
             match fix::run(&opts.input, opts.dry_run, opts.json) {
+                Ok(code) => exit(code),
+                Err(e) => {
+                    eprintln!("error: {}", e.message);
+                    exit(e.exit_code);
+                }
+            }
+        }
+        "allocations" => exit(run_allocations(rest)),
+        "verify" => {
+            let options = verify::Options::parse(rest).unwrap_or_else(|e| usage_error(&e));
+            match verify::run(options) {
                 Ok(code) => exit(code),
                 Err(e) => {
                     eprintln!("error: {}", e.message);

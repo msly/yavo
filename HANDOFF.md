@@ -1,6 +1,6 @@
-# Yavo 交接文档（2026-11-21，第八批：保守源码修复）
+# Yavo 交接文档（2026-11-21，第九批：分配分析与验证报告）
 
-给下一个会话：先读完本文件，再按第 10 节开工。当前结果以第 13 节和对应验证记录为准；历史批次保留其测试日期与范围。
+给下一个会话：先读完本文件，再按第 10 节开工。当前结果以第 14 节和对应验证记录为准；历史批次保留其测试日期与范围。
 
 ## 1. 一句话状态
 
@@ -11,13 +11,14 @@
 第六批新增的 **并发：`Rc`/`Arc`、`Mutex`/`Guard`/`with`、`scope`/`spawn`/`join`、`Send`/`Sync`（含 `Box[Named + Send]`）、`Channel`**；
 标准库 I/O、`os.args`、`std/math`；六个目标的交叉编译。
 第八批新增 **`yavo fix`**：保守自动修复、独立重检的候选、`--dry-run` 和结构化补丁。
-规范一致性：**129 项中通过 119、判错 0、不支持 2、未运行 8**（第七批 113 / 0 / 1 / 15）。不支持的是 T-O5（`Heap` 与保存的比较闭包）和 T-V3（可变引用返回及复杂接收者）；
-未运行的是 `yavo verify` 报告（4）、运行器不支持的 3 项和要求 sanitizer 分开构建的 T-P3（独立验证记录见第 12 节）。
+第九批新增分配查询、绑定实际工件的验证报告、Sanitizer 能力探针与独立前端/空缓存可复现构建。
+规范一致性：**129 项中通过 122、判错 0、不支持 3、未运行 4**。不支持的是 T-O5（Heap 与保存的比较闭包）、T-V3（可变引用返回及复杂接收者）和 T-R2（锁定工具链缺少可链接的 ASan 运行时）；
+未运行的是运行器不支持的 3 项和要求 sanitizer 分开构建的 T-P3（独立验证记录见第 12 节）。
 全部提交只在本地，**按用户决定暂不推远端**。
 
 “可用”三批已完成；2026-11-20 用户让我自己定后续顺序并分批：**第四批**（速查卡缺口 + 第 6 项 + 小卡点）已完成，
 **第五批**（第二轮冷启动实验 + 按实验结果修速查卡和编译器）已完成：换模型（Sonnet）、不点名特性的新题，Yavo 10/10、Rust 对照 10/10
-（`experiments/coldstart-2026-11-20/README.md`）。**第六批**（P3 并发）已完成，分三次提交。**第七批**安全与验证收敛见第 12 节；**第八批**源码修复见第 13 节；第 10 节列出后续优先级。
+（`experiments/coldstart-2026-11-20/README.md`）。**第六批**（P3 并发）已完成，分三次提交。**第七批**安全与验证收敛见第 12 节；**第八批**源码修复见第 13 节；**第九批**分配分析与验证工具见第 14 节；第 10 节列出后续优先级。
 
 ## 2. 仓库与环境
 
@@ -31,8 +32,8 @@ cd /data1/workspace/github/workspace/yavo/compiler
 ```
 
 - C 工具链：固定版本 zig 0.17.1，在 `~/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig`（`toolchain.lock` 有各平台哈希）。
-- 这台机器**没有** python3、gcc、clang、valgrind；zig **没有** AddressSanitizer 运行时（UBSan 可用）。`tools/*.py` 跑不了。
-- mcp-3 单次调用大约 60 秒就会超时。长任务用 `nohup bash -c '...' > /tmp/x.log &`，再用 `sleep` 轮询日志。
+- 这台机器**没有** python3、gcc、clang、valgrind，`tools/*.py` 跑不了。固定 Zig 的 UBSan 与 TSan 已用故意出错的探针验证；ASan 插桩缺少可链接运行时，ASan+UBSan 组合仍不支持。
+- 长任务用 mcp-3 `exec_command(wait:false, timeout:...)` 并写入独立日志和 `.exit` 文件；再用短命令读取。当前 `read_output` 的参数接口有问题，不依赖它。
 - 提交身份沿用已有提交：`git -c user.name="Yavo Development" -c user.email="yavo-dev@localhost" commit ...`。
 - 用户用中文交流；用户请我“帮你定”的事项我直接决定并在回复里写明理由。
 
@@ -55,14 +56,17 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 | `tests/targets.rs` | 6 个交叉编译目标的文件头格式与架构、Linux 静态链接、本机可运行目标的输出、错误路径 |
 | `tests/stdlib_io.rs` | 需要标准输入、命令行参数或临时目录的程序（`io`、`fs`、`os.args`），带堆块检查构建 |
 | `tests/fix.rs` | 源码字节、名字捕获、析构次序、条件执行、泛型导入、候选影响、JSON 和幂等；冻结 fix 用例由 conformance 执行 |
+| `tests/verify.rs` | 分配三态、未知效应保留、隐式析构、工件与输入哈希、真实执行、超时、跨平台限制、工具链覆盖拒绝、输出截断、Sanitizer 负例能力门 |
 
-常用命令：`yavo check f.yv [--json]`、`yavo fix f.yv [--dry-run] [--json]`、`yavo run f.yv [--release] [--target T]`、`yavo build f.yv -o out [--release] [--target T] [--emit-c f.c]`。
+常用命令：`yavo check f.yv [--json] [--emit-c f.c]`、`yavo fix f.yv [--dry-run] [--json]`、`yavo run f.yv [--release] [--target T]`、`yavo build f.yv -o out [--release] [--target T] [--emit-c f.c]`。
+新增：`yavo allocations 函数名 --file f.yv --json`、`yavo verify f.yv [--target T] [--sanitize] [--reproducible] --json`；全部选项见 `compiler/README.md`。
 
 ## 4. 已完成（按提交，最新在上）
 
 | 提交 | 内容 | 一致性通过数 |
 | --- | --- | --- |
-| 本文件所在提交 | `yavo fix`、可审查补丁、原子写回及修复验收；6 项新增通过，T-V3 从未运行转为明确不支持 | 119 |
+| 本文件所在提交 | 分配查询、真实验证报告、负例 Sanitizer 能力门、两次独立前端与空缓存构建；3 项新增通过，T-R2 明确不支持 | 122 |
+| `96999de` | `yavo fix`、可审查补丁、原子写回及修复验收；6 项新增通过，T-V3 从未运行转为明确不支持 | 119 |
 | `faac6ac` | 安全与验证收敛：线程借用、Send/Sync、资源克隆、I/O 锁、测试时限、实验复核、独立 sanitizer 记录 | 113 |
 | `baa1bad` | 并发第 2、3 部分：`scope`（隐藏局部的析构等待线程）、`spawn`（每个调用点一个参数结构和线程入口）、`join`、结构推导的 `Send`/`Sync`、`Box[I + Send]`（接口别名）、`Channel[T]{cap}`/`send`/`recv`/`close`/`clone`、`SendError[T]`（按元素类型晚登记的库枚举）；`ok(_u)` 可忽略 `()` 载荷 | 113 |
 | `907896c` | 并发第 1 部分：`Ty::Sync`、`Rc`/`Arc`/`Mutex`/`Guard`/`with`（`E0703`）、运行时（pthread/Win32 锁、条件变量、线程、channel、scope；原子堆块计数；输出锁） | 99 |
@@ -165,7 +169,7 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - 元组：不能给元素赋值、不能比较、不能整体打印、不能做 `Map` 键、没有元组模式。
 - 格式说明只支持浮点的 `:.N`；`String == str` 混比报 `E0001`（规范 K1 没定义跨类型比较，速查卡已写明；要不要放开是语言决定，留给用户）。
 - `Set`：没有集合运算（并、交）、没有 `Set` 字面量里的元素（`[1, 2]` 不能直接当 `Set`）。
-- 堆块检查发现不了释放后使用；项目服务器没有 ASan/TSan，第七批已把同一生成 C 与运行时带到另一 Linux 环境分开运行 ASan/UBSan、TSan，详见第 12 节。Windows、macOS、aarch64 产物只验证了编译与文件格式。
+- 堆块检查发现不了释放后使用；第九批已证实项目服务器的 TSan，但仍缺少 ASan 运行时。第七批在另一 Linux 环境分开运行过 ASan/UBSan、TSan，详见第 12 节。Windows、macOS、aarch64 产物只验证了编译与文件格式。
 - 并发：`spawn` 只接受具名函数调用，可变借用（包括泛型元组中嵌套的 `&inout`）暂报 `U0001`；`Join` 不能写出类型名或移动（`U0001`）。规范已定义 inout 线程参数与公开 Join，属于实现缺口。
   容器递归克隆遇到不可克隆资源现已在检查期拒绝；用户 `Drop` 类型的自动逐字段克隆报 `U0001`，须显式构建资源或逐元素调用用户方法。
   当前接口集合的克隆检查遍历本编译单元所有具体实现；未来分离编译需要显式传递该保证。`&b` 不会把 `Rc[T]` 转成 `&T`（规范只对字段、方法、下标投影）。
@@ -173,15 +177,15 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 
 ## 8. 一致性测试里的卡点
 
-当前不支持 2 项、未运行 8 项（统计只算每个测试的第一个卡点）：
+当前不支持 3 项、未运行 4 项（统计只算每个测试的第一个卡点）：
 
 | 卡点 | 测试 |
 | --- | --- |
 | `std/collections` 的 `Heap[T].by(闭包)`（保存比较闭包，O5） | T-O5（不支持） |
 | 可变引用返回、复杂可变接收者 | T-V3（不支持；其余 6 项 fix 已通过） |
-| `yavo verify` 报告 | 4 项（未运行） |
+| 锁定 Zig 缺少 ASan 运行时；已确认 TSan，不能替代 ASan+UBSan 组合 | T-R2（不支持；另外 3 项报告通过） |
 | 运行器：`run-allowed`（T-GR9）、`run-exit`（T-S3）、分配失败注入（T-GR8） | 3 项（未运行） |
-| 运行器：`sanitize-mode: separate-artifacts`（ASan/UBSan 与 TSan 分开构建） | T-P3（未运行；本机没有 ASan/TSan 运行时） |
+| 运行器：`sanitize-mode: separate-artifacts`（ASan/UBSan 与 TSan 分开构建） | T-P3（未运行；尚未接入此运行器，且本机缺 ASan 运行时） |
 
 ## 9. 计划表
 
@@ -195,7 +199,7 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 | 10 | 泛型函数和泛型结构体 | **已完成**（`bd8ab57`） |
 | 11 | `yavo fix`（只自动应用不改变语义的修复） | **已实现**；6 项通过，T-V3 受既有前端缺口阻塞 |
 | 12 | P3：`scope`/`spawn`、channel、`Mutex`/`Arc`、`Send`/`Sync` | **已完成**（`907896c` 与本文件所在提交；20 项通过，T-P3 未运行） |
-| 13 | `yavo verify` 与验证报告 | 依赖 12；4 项 |
+| 13 | `yavo verify` 与验证报告 | **已实现**；GA1/GA2/R1 通过，R2 受本机 ASan 能力限制 |
 | 冷启动实验 | 只给速查卡写 T01–T10 | **已做一轮**：10/10 一次通过（局限见实验 README） |
 | 待定 | 三平台 CI | 需要远端仓库，用户暂不推 |
 
@@ -217,9 +221,8 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 
 ## 10. 下一个会话的第一步
 
-1. 设置第 2 节的环境变量，`cargo build --locked --offline --release`；跑 `cargo test --locked --offline`（和 `--release`），确认全部通过，conformance 是 119 / 0 / 2 / 8。
-2. 第八批源码修复已完成。后续建议按以下顺序推进：
-   - **`yavo verify` 与真实验证报告**（4 项），衔接 check/fix/build 的 agent 工作流；明确哪些检查实际执行、跳过或不支持。
+1. 设置第 2 节的环境变量，`cargo build --locked --offline --release`；跑 `cargo test --locked --offline`（和 `--release`），确认全部通过，conformance 是 122 / 0 / 3 / 4。
+2. 第九批分配分析与验证工具已完成。后续建议按以下顺序推进：
    - **T-O5：`std/collections` 的 `Heap`/`Deque`** 和能保存的闭包（O5）；**T-V3** 的可变引用返回与复杂接收者要按借用规则实现后再开放候选。
    - **第三轮冷启动实验，带并发题**：本轮实验没测并发；同时可以量速查卡的实际 token 数（28 KB，未量过）。
    - 运行器支持 sanitizer 分开构建（T-P3），接入第七批已有的独立验证路径。
@@ -284,3 +287,23 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - T-V3 的 `&inout` 返回、返回可变借用构造及复杂 `push` 接收者原本不支持，现在被实际执行并分类为 unsupported；一致性 **119 / 0 / 2 / 8**，旧 113 项通过全部保留。
 - Debug、Release 全量各 **50 个测试函数通过、0 失败、0 编译警告，1 个旧报告忽略**；含 13 个 fix 集成测试、4 个修复引擎单元测试，原 87 个 fixture 的两种 C 模式及交叉编译回归继续通过。
 - 详细测试结果、源码与日志哈希见 `compiler/validation/fix-2026-11-21.json`；原始执行日志在 `compiler/target/fix-review/`。本轮文件替换及端到端修复运行于 Linux，未增加 Windows/macOS 真机验收或性能结论。
+
+## 14. 第九批：分配分析与验证报告（2026-11-21）
+
+基线为已提交且干净的 `96999de`。新增 `allocations`、`verify` 与报告验收，未修改冻结语言规格、历史快照或测试输入。
+
+- 分配查询使用 `yavo-allocations/1`，参数求值和 callee 分开记录；已知分配优先于 unknown，同时保留 `has_unknown`。递归调用、回调、线程任务和潜在隐式析构按固定点传播，包含部分聚合构造后续 `try` 的清理路径。
+- 查询范围是已检查函数及具体实例；泛型模板与动态接口保留未知。启动初始化不计入函数，输出与同步原语依赖受信任运行时契约，尚未审计全部 libc/OS 内部分配。
+- `verify` 使用锁定 Zig，拒绝 `YAVO_CC`，实际核对版本并记录可执行文件/锁哈希；移除开发环境中的编译器、加载器和 Sanitizer 覆盖参数。工具链库与安装归档未重新做内容审计，报告明确该范围。
+- `yavo-verify/1` 分别记录前端、工具链、构建、执行、审计、两组 Sanitizer、可复现构建；每项绑定 target、实际 artifact/hash/path 和 ran_on。默认执行是一项退出状态 smoke；可指定 stdin、精确 stdout/stderr 断言和禁止运行。
+- 审计是必需检查但当前 `not_run`；app/dependencies/stdlib 为 `not_audited`，固定 C 运行时最多 `trusted_pinned`。任何必需失败/超时退出 1，缺少通过证据退出 5，不把部分验证写成整体通过。
+- 子进程同时排空两个输出流，每条保留上限 4 MiB，并单独记录全流字节数/哈希。未到 EOF 不给完整哈希；截断时不能把预期前缀写成完全匹配。Unix 超时清理普通进程组，再收尾最多 2 秒；Windows 仍为有界 taskkill 降级。
+- 发现并修复一个实际的假通过来源：固定 Zig 接受 `-fsanitize=address,undefined`，但逗号形式没有启用 ASan。现改成分开的参数，并在普通启动探针外要求每项能力检测到故意注入的缺陷；只接受参数或生成不同哈希均不能证明插桩。
+- ASan 单独或分开指定后会因缺 `__asan_*` 运行时符号而链接失败，因此 ASan+UBSan 组合为 `unsupported`。独立探针证实 UBSan 能报告整数溢出，TSan 能报告数据竞争；TSan 的实际应用检查通过。
+- 对 T-N2 完成原生 musl 输出断言、独立 GNU TSan 产物执行和 Windows PE 交叉编译；Windows 执行为 `not_run`。Linux musl 与 GNU Sanitizer 工件明确分开。
+- 可复现验证实际运行两次独立 Yavo 前端，再用各自新建的 local/global Zig 缓存编译。两份 C 哈希相同，两份二进制哈希均为 `3f3cf249933eb5c8df317d2ec72f65e6db295f0b10f5bdcb66e6a0081705f1f8`；范围是同一逻辑源路径下的独立构建。
+- Debug、Release 全量各 **71 个测试通过、0 失败、0 编译警告，1 个旧报告忽略**。新工具有 15 个 CLI 回归，过程捕获有 4 个行为测试及测试驱动；原有运行、堆块、修复和六目标交叉构建回归继续通过。
+- 一致性从 **119 / 0 / 2 / 8** 变为 **122 / 0 / 3 / 4**；新增 T-GA1/T-GA2/T-R1，T-R2 已实际执行并因 ASan 能力分类为不支持。旧 119 项全部保留。没有使用缺少负例门时出现的中间 123 结果更新基线。
+- 完整结果、源码/日志哈希、实际报告和负例证据见 `compiler/validation/verify-2026-11-21.json`。独立复核重新读取并校验了 21 处工件引用（12 个不同文件）及四个隔离缓存目录。原始日志和工件在 `compiler/target/verify-review/`。
+
+完整 P1/P3 验收仍受 Heap/保存闭包、可变借用返回、专用运行器、审计和平台执行限制；没有新增近 C 性能结论。

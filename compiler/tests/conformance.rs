@@ -3,9 +3,8 @@
 //! Every case is classified as one of:
 //!   pass         the compiler did what the spec test expects
 //!   wrong        the compiler accepted/rejected/ran it differently from the spec (a real bug or a spec gap)
-//!   unsupported  the compiler reported U0001 (a valid v0.5 feature this compiler does not implement yet)
-//!   not_run      the case needs something this runner or compiler does not have yet (`verify`,
-//!                fixtures, sanitizers, other platforms)
+//!   unsupported  the compiler reported U0001 or an explicitly probed tool capability is unavailable
+//!   not_run      the case needs an execution environment or harness feature this runner does not have
 //!
 //! This is not an acceptance gate. It fails only when a case listed in `tests/conformance_baseline.txt`
 //! stops passing (a regression). After real progress, refresh the baseline with
@@ -169,7 +168,7 @@ fn classify(entry: &Value, root: &Path) -> Outcome {
     match kind {
         "check-pass" | "check-fail" | "run-pass" | "run-panic" => {}
         "fix-auto" | "fix-candidate" => return classify_fix(entry, &path, &src),
-        "report" => return outcome(Status::NotRun, "`yavo verify` is not implemented"),
+        "report" => return classify_report(entry, &path, &src),
         other => return outcome(Status::NotRun, format!("runner does not handle kind `{other}` yet")),
     }
     let errors = match run_check(&path) {
@@ -233,6 +232,187 @@ fn classify(entry: &Value, root: &Path) -> Outcome {
             outcome(Status::Pass, "")
         }
     }
+}
+
+fn classify_report(entry: &Value, path: &Path, source: &[u8]) -> Outcome {
+    match check_report(entry, path, source) {
+        Ok(()) => outcome(Status::Pass, ""),
+        Err(o) => o,
+    }
+}
+
+fn report_check<'a>(report: &'a Value, name: &str, target: &str) -> Result<&'a Value, Outcome> {
+    report["checks"].as_array().into_iter().flatten()
+        .find(|c| c["name"] == name && c["target"] == target)
+        .ok_or_else(|| outcome(Status::Wrong, format!("report has no {name} check for {target}")))
+}
+
+fn report_artifact(check: &Value) -> Result<Vec<u8>, Outcome> {
+    let path = check["artifact_path"].as_str()
+        .ok_or_else(|| outcome(Status::Wrong, "reported source artifact has no path"))?;
+    let bytes = std::fs::read(path)
+        .map_err(|e| outcome(Status::Wrong, format!("cannot read reported artifact {path}: {e}")))?;
+    if bytes.is_empty() || check["artifact"] != format!("sha256:{:x}", Sha256::digest(&bytes)) {
+        return Err(outcome(Status::Wrong, "artifact hash does not describe the actual file"));
+    }
+    Ok(bytes)
+}
+
+fn report_sanitizer_capability(check: &Value) -> Result<(), Outcome> {
+    let bad = |s| outcome(Status::Wrong, s);
+    let tools: &[&str] = match check["id"].as_str() {
+        Some("address-undefined") => &["address", "undefined"],
+        Some("thread") => &["thread"],
+        _ => return Err(bad("unknown sanitizer profile".into())),
+    };
+    if check["tools"] != json!(tools) {
+        return Err(bad("sanitizer profile omits a requested tool".into()));
+    }
+    let probes = check["capability_probes"].as_array()
+        .ok_or_else(|| bad("sanitizer passed without negative capability probes".into()))?;
+    if probes.len() != tools.len() {
+        return Err(bad("sanitizer passed without a negative probe for each requested tool".into()));
+    }
+    for tool in tools {
+        let matching: Vec<_> = probes.iter().filter(|p| p["tool"] == *tool).collect();
+        if matching.len() != 1 { return Err(bad(format!("missing or duplicated {tool} capability probe"))); }
+        let probe = matching[0];
+        let run = &probe["run"];
+        let stderr = run["stderr"].as_str().unwrap_or("");
+        let detected = match *tool {
+            "address" => stderr.contains("AddressSanitizer") && stderr.contains("heap-use-after-free"),
+            "undefined" => stderr.contains("signed integer overflow") && (stderr.contains("runtime error:") || stderr.to_lowercase().contains("ubsan")),
+            "thread" => stderr.contains("ThreadSanitizer") && stderr.contains("data race"),
+            _ => false,
+        };
+        let nonzero = run["exit_code"].as_i64().is_some_and(|code| code != 0)
+            || run["signal"].as_i64().is_some_and(|signal| signal > 0);
+        if probe["status"] != "passed" || probe["build"]["status"] != "passed"
+            || run["expected_defect_detected"] != true || run["success"] != false
+            || run["timed_out"] != false || run["stderr_truncated"] != false
+            || run["ran_on"] != "x86_64-linux-gnu" || !nonzero || !detected
+            || run["artifact"] != probe["build"]["artifact"]
+        {
+            return Err(bad(format!("sanitizer passed without actual {tool} defect detection: {probe}")));
+        }
+        report_artifact(&probe["build"])?;
+        report_artifact(run)?;
+    }
+    Ok(())
+}
+
+fn check_report(entry: &Value, path: &Path, source: &[u8]) -> Result<(), Outcome> {
+    let bad = |s| outcome(Status::Wrong, s);
+    let fixture: Value = serde_json::from_slice(source).map_err(|e| bad(format!("invalid report fixture: {e}")))?;
+    if fixture["setup"] != entry["setup"] || fixture["expect"] != entry["expected_report"] {
+        return Err(bad("report fixture and manifest disagree".into()));
+    }
+    let program = fixture["setup"]["program"].as_str().ok_or_else(|| bad("report fixture has no program".into()))?;
+    let program = path.parent().unwrap().join(program);
+    let before = std::fs::read(&program).map_err(|e| bad(format!("cannot read report input: {e}")))?;
+    let id = entry["id"].as_str().unwrap_or("");
+    let is_allocation = matches!(id, "T-GA1" | "T-GA2");
+    if !is_allocation && !matches!(id, "T-R1" | "T-R2") {
+        return Err(outcome(Status::NotRun, format!("no harness for report scenario {id}")));
+    }
+    // The fixture describes a controlled Linux-only runner. Do not turn its metadata into
+    // an assertion of platform availability, or simulate a Windows run on another host.
+    if !is_allocation && !cfg!(all(target_os = "linux", target_arch = "x86_64")) {
+        return Err(outcome(Status::NotRun, "report scenario requires the x86_64 Linux runner"));
+    }
+    let scratch = common::Scratch::new("conformance-report").map_err(|e| bad(e.to_string()))?;
+    let mut cmd = yavo();
+    if is_allocation {
+        cmd.arg("allocations").arg("demo").arg("--file").arg(&program).arg("--json");
+    } else {
+        cmd.arg("verify").arg(&program).args(["--target", "x86_64-windows-gnu", "--json"])
+            .arg("--output-dir").arg(&scratch.0).env_remove("YAVO_CC");
+        if id == "T-R2" { cmd.arg("--sanitize"); }
+    }
+    let timeout = if id == "T-R2" { Duration::from_secs(360) } else { common::BUILD_TIMEOUT };
+    let captured = common::capture(cmd.stdin(Stdio::null()), timeout)
+        .map_err(|e| outcome(Status::NotRun, format!("could not run report command: {e}")))?;
+    if captured.timed_out { return Err(bad(format!("report command exceeded its {} second deadline", timeout.as_secs()))); }
+    let output = captured.output;
+    let report: Value = serde_json::from_slice(&output.stdout).map_err(|e| bad(format!(
+        "report command returned invalid JSON: {e}; stdout: {}; stderr: {}",
+        String::from_utf8_lossy(&output.stdout), String::from_utf8_lossy(&output.stderr))))?;
+    if std::fs::read(&program).map_err(|e| bad(e.to_string()))? != before {
+        return Err(bad("report command modified its source input".into()));
+    }
+    if is_allocation {
+        if output.status.code() != Some(0) || report["schema"] != "yavo-allocations/1"
+            || report["source_sha256"] != format!("{:x}", Sha256::digest(&before))
+            || report["subject"] != fixture["expect"]["subject"]
+            || report["status"] != fixture["expect"]["status"]
+            || !report["operations"].is_array()
+        {
+            return Err(bad(format!("allocation evidence does not match report fixture: {report}")));
+        }
+        return Ok(());
+    }
+    if report["schema"] != "yavo-verify/1"
+        || report["inputs"]["source"] != format!("sha256:{:x}", Sha256::digest(&before))
+    {
+        return Err(bad("verification receipt has the wrong schema or source identity".into()));
+    }
+    let saved_path = report["report_path"].as_str().ok_or_else(|| bad("report has no saved path".into()))?;
+    let saved: Value = serde_json::from_slice(&std::fs::read(saved_path).map_err(|e| bad(e.to_string()))?)
+        .map_err(|e| bad(e.to_string()))?;
+    if saved != report { return Err(bad("saved verification receipt differs from stdout".into())); }
+    let build = report_check(&report, "build", "x86_64-windows-gnu")?;
+    if matches!(build["status"].as_str(), Some("unsupported" | "not_run")) {
+        return Err(outcome(Status::NotRun, format!("Windows build unavailable: {}", build["reason"])));
+    }
+    if build["status"] != "passed" || build["ran_on"] != "x86_64-linux-gnu" {
+        return Err(bad(format!("expected an actual Windows cross-build: {build}")));
+    }
+    let windows = report_artifact(build)?;
+    if !windows.starts_with(b"MZ") { return Err(bad("Windows artifact is not a PE executable".into())); }
+    let tests = report_check(&report, "tests", "x86_64-windows-gnu")?;
+    if tests["status"] != "not_run" || !tests["ran_on"].is_null() || tests["artifact"] != build["artifact"] {
+        return Err(bad(format!("unavailable Windows execution was misreported: {tests}")));
+    }
+    if output.status.code() != Some(5) || report["overall"] != "not_verified" {
+        return Err(bad(format!("missing Windows execution must prevent verification: {report}")));
+    }
+    if id == "T-R2" {
+        let checks: Vec<_> = report["checks"].as_array().into_iter().flatten()
+            .filter(|c| c["name"] == "sanitizers").collect();
+        let profiles: BTreeSet<_> = checks.iter().filter_map(|c| c["id"].as_str()).collect();
+        if checks.len() != 2 || profiles != BTreeSet::from(["address-undefined", "thread"]) {
+            return Err(bad("sanitizer profiles are missing or merged".into()));
+        }
+        let mut unavailable = Vec::new();
+        for check in checks {
+            if check["target"] != "x86_64-linux-gnu" || check["required"] != true {
+                return Err(bad(format!("sanitizer did not target the actual Linux runner: {check}")));
+            }
+            match check["status"].as_str() {
+                Some("passed") => {
+                    report_sanitizer_capability(check)?;
+                    if check["ran_on"] != "x86_64-linux-gnu" || check["exit_code"] != 0
+                        || check["artifact"] == build["artifact"] || report_artifact(check)? == windows
+                    {
+                        return Err(bad("sanitizer evidence is not an independently executed Linux artifact".into()));
+                    }
+                }
+                Some("unsupported") => {
+                    if !check["artifact"].is_null() {
+                        return Err(bad("unsupported sanitizer fabricated an artifact".into()));
+                    }
+                    unavailable.push(format!("{}: {}", check["id"], check["reason"]));
+                }
+                Some("not_run") => return Err(outcome(Status::NotRun, format!("sanitizer was not run: {}", check["reason"]))),
+                _ => return Err(bad(format!("sanitizer failed for a valid report fixture: {check}"))),
+            }
+        }
+        if !unavailable.is_empty() {
+            // `null != windows_hash` is not evidence that a sanitizer artifact ran.
+            return Err(outcome(Status::Unsupported, unavailable.join("; ")));
+        }
+    }
+    Ok(())
 }
 
 // Use the production lexer, not regexes: "//" can occur inside a string.

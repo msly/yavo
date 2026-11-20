@@ -6,6 +6,72 @@ The implementation includes ownership, views, containers, generics, interfaces a
 scoped OS threads. Native validation is on Linux x86-64; complete phase acceptance
 still requires the remaining tools, features and real-platform execution.
 
+## Allocation queries and verification (2026-11-21)
+
+```sh
+yavo allocations demo --file program.yv --json
+yavo verify program.yv --json
+yavo verify program.yv --target x86_64-windows-gnu --sanitize --json
+yavo verify program.yv --reproducible --expect-stdout expected.txt --json
+yavo check program.yv --emit-c program.c
+```
+
+Allocation reports use `yavo-allocations/1`. Operations separate argument evaluation
+from the callee. Known allocation gives `may_alloc`; otherwise an opaque effect
+gives `unknown`; only the remaining case is `no_alloc`. `has_unknown` preserves
+opaque effects even when known allocation dominates the combined result.
+The call graph includes callbacks, spawned functions and potential implicit Drop,
+including cleanup of a partially constructed aggregate on early return.
+
+Queries analyze checked functions and concrete generic instances; a generic
+template name remains unknown. Startup initialization is outside a function query.
+Output and synchronization operations use trusted runtime contracts; libc/OS
+internals have not been allocation-audited. Branches and possible owned-value
+cleanup are joined conservatively without a reachability or moved-value proof.
+
+Verification reports use `yavo-verify/1` and persist in a fresh run directory under
+`target/yavo-verify/`, or under the parent supplied to `--output-dir`.
+They retain source/input snapshots, generated C, the runtime header, actual
+artifacts and `report.json`. Source, compiler, dependency and toolchain fingerprints
+bind the evidence; each check records its target, artifact hash/path and actual
+execution host. The toolchain fingerprint currently covers the embedded lock and
+installed Zig executable, with its scope recorded explicitly. Compiler libraries
+and the installed distribution archive are not independently content-audited.
+
+| Check | Prototype behavior |
+| --- | --- |
+| Front end | Lexing, parsing and implemented semantic checks; failure prevents compilation. |
+| Toolchain | Reject any `YAVO_CC` override, probe the installed pinned Zig version, hash its executable and lock, and remove development compiler/loader flags. |
+| Build | Build the requested release target using pinned Zig, `-O2 -s`; retain the actual artifact. |
+| Tests | One exit-status smoke run on a matching host. `--stdin`, `--expect-stdout` and `--expect-stderr` add byte-exact input/output assertions. Cross targets without a runner and `--no-run` remain `not_run`. |
+| Audit | Required and currently `not_run`. Application/dependencies/stdlib are `not_audited`; a validated pinned C runtime is `trusted_pinned`. |
+| Sanitizers | When requested, independently build/run host-target ASan+UBSan and TSan artifacts. A clean capability probe and defect-detecting negative probes must pass before application results can pass. Accepting compiler flags alone is insufficient. |
+| Reproducible build | When requested, execute two independent Yavo front ends against the same source snapshot, then two C builds with distinct empty local/global Zig caches; compare actual binary hashes. |
+
+Default required checks are front end, toolchain, build, tests and audit. Requested
+sanitizers and reproducibility become required too; `policy.required` lists their
+exact check IDs. A required failure/timeout gives `overall: failed` and exit 1;
+a required check lacking a pass gives `not_verified` and exit 5; all required
+checks passing gives `verified` and exit 0. Because audit is not implemented,
+the current prototype does not return complete verification even after its
+implemented checks pass. Invalid inputs/options use exit 2, internal I/O failures 4.
+
+Execution defaults to 5 seconds; each build defaults to 120 seconds. Override
+with `--timeout-ms` and `--build-timeout-ms` (positive, at most one hour).
+Both streams drain concurrently, retain at most 4 MiB each, and separately count
+and hash the complete stream. Truncation fails a check and makes an exact-match
+claim unavailable. Full-stream hashes are absent if EOF was not observed.
+Unix timeout cleanup kills the ordinary process group and allows at most two
+additional seconds; Windows uses a bounded taskkill fallback, without a Job
+Object guarantee for orphaned descendants.
+
+Validation: Debug and Release each pass 71 test functions, with zero failures or
+compiler warnings and one legacy report ignored. The current host demonstrates
+TSan and UBSan defect detection; the requested ASan+UBSan profile remains
+unsupported because ASan runtime symbols cannot link. Two independent source-to-
+binary builds produced identical C and binary hashes. Full evidence is in
+[validation/verify-2026-11-21.json](validation/verify-2026-11-21.json).
+
 ## Source repairs (2026-11-21)
 
 ```sh
@@ -830,11 +896,14 @@ runs all 129 cases in `yavo-tests/MANIFEST.json`, after checking each fixture ag
 | --- | --- |
 | pass | the compiler does what the spec case expects (exact error codes and lines for check-fail; exact stdout or panic category in every listed build mode for run cases) |
 | wrong | the compiler disagrees with the spec case: a bug, or a spec gap |
-| unsupported | the compiler reported `U0001` |
-| not_run | needs `yavo verify`, specialized runner support, sanitizers or other platforms |
+| unsupported | an explicitly unsupported compiler feature or a requested sanitizer capability unavailable on the actual host |
+| not_run | needs specialized runner support, sanitizers or other platforms |
 
-At this commit: pass 119, wrong 0, unsupported 2, not_run 8 (P1: 81 / 0 / 2 / 0;
-P2: 18 / 0 / 0 / 3; P3: 20 / 0 / 0 / 5). `scope`, `spawn`, `Send`/`Sync` and channels added T-GP1âT-GP4,
+At this commit: pass 122, wrong 0, unsupported 3, not_run 4 (P1: 81 / 0 / 2 / 0;
+P2: 18 / 0 / 0 / 3; P3: 23 / 0 / 1 / 1). Allocation queries add T-GA1/T-GA2, and
+the actual Windows build plus unavailable Windows execution adds T-R1. T-R2 remains
+unsupported because the pinned toolchain cannot link ASan; TSan capability is
+confirmed by its data-race negative probe. `scope`, `spawn`, `Send`/`Sync` and channels added T-GP1âT-GP4,
 T-GP6, T-GP7, T-P1, T-P1p, T-P2, T-P2p, T-P2s, T-P3f, T-P5p and T-P6 (T-P3 runs correctly but asks for
 sanitizer builds the runner does not make, so it counts as not run). `Rc`, `Arc`, `Mutex`, `Guard` and `with` added T-GP5, T-V5,
 T-P4, T-P4p, T-P5 and T-P6p. Dereference and `&inout T` variables added T-G01âT-G04,

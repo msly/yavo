@@ -1,0 +1,3201 @@
+{
+  "schema": "yavo-development-validation/1",
+  "stage": "allocation-analysis-and-evidence-bound-verification",
+  "review_date": "2026-11-21",
+  "timezone": "Asia/Shanghai",
+  "evidence_collected_at_utc": "2026-11-20T17:06:14Z",
+  "base_commit": "96999de8b399b3bb0b82bf4fdcd5bd5307018eb5",
+  "host": {
+    "system": "Linux 6.1.0-50-cloud-amd64 x86_64 GNU/Linux",
+    "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+    "cargo": "cargo 1.99.1 (5f94df478 2026-08-27)",
+    "zig": "0.17.1"
+  },
+  "scope": "Allocation effects, bounded process execution, pinned verification reports, artifact-bound testing and independent source-to-binary reproducibility. Frozen language specifications and historical fixtures are unchanged. Local Git only.",
+  "commands": {
+    "debug": "YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --no-fail-fast -- --nocapture",
+    "release": "cargo test --locked --offline --release --no-fail-fast -- --nocapture",
+    "native_verification": "target/release/yavo verify ../yavo-tests/run/T-N2.yv --sanitize --reproducible --expect-stdout target/verify-review/expected-stdout.txt --expect-stderr target/verify-review/expected-stderr.txt --json --output-dir target/verify-review/native-artifacts",
+    "windows_verification": "target/release/yavo verify ../yavo-tests/run/T-N2.yv --target x86_64-windows-gnu --json --output-dir target/verify-review/windows-artifacts"
+  },
+  "native_suites": {
+    "debug": {
+      "exit_code": 0,
+      "passed": 71,
+      "failed": 0,
+      "ignored": 1,
+      "compiler_warning_lines": 0,
+      "suites": [
+        {
+          "suite": "src/main.rs",
+          "tests": [
+            {
+              "name": "allocations::tests::known_allocation_keeps_unknown_evidence",
+              "status": "ok"
+            },
+            {
+              "name": "fix::tests::edits_use_original_utf8_offsets_and_reject_ambiguous_ranges",
+              "status": "ok"
+            },
+            {
+              "name": "fix::tests::candidate_checks_do_not_pollute_original_compilation_type_tables",
+              "status": "ok"
+            },
+            {
+              "name": "fix::tests::replacement_rejects_a_stale_snapshot_and_cleans_its_temporary_file",
+              "status": "ok"
+            },
+            {
+              "name": "process::tests::subprocess_fixture",
+              "status": "ok"
+            },
+            {
+              "name": "fix::tests::replacement_preserves_permissions_and_refuses_links_and_read_only_sources",
+              "status": "ok"
+            },
+            {
+              "name": "process::tests::drains_both_pipes_and_hashes_the_complete_streams",
+              "status": "ok"
+            },
+            {
+              "name": "process::tests::timeout_kills_a_running_process_and_returns_within_the_cleanup_bound",
+              "status": "ok"
+            },
+            {
+              "name": "process::tests::caps_retained_output_without_stopping_reads_or_hashing",
+              "status": "ok"
+            },
+            {
+              "name": "process::tests::timeout_kills_pipe_holding_descendants_after_the_parent_exits",
+              "status": "ok"
+            }
+          ],
+          "status": "ok",
+          "passed": 10,
+          "failed": 0,
+          "ignored": 0,
+          "seconds": 0.52
+        },
+        {
+          "suite": "tests/alloc_check.rs",
+          "tests": [
+            {
+              "name": "no_leaks_or_double_drops_debug",
+              "status": "ok"
+            },
+            {
+              "name": "no_leaks_or_double_drops_release",
+              "status": "ok"
+            }
+          ],
+          "status": "ok",
+          "passed": 2,
+          "failed": 0,
+          "ignored": 0,
+          "seconds": 12.53
+        },
+        {
+          "suite": "tests/conformance.rs",
+          "tests": [
+            {
+              "name": "fixed_source_comparison_uses_lexical_strings_and_interpolations",
+              "status": "ok"
+            },
+            {
+              "name": "timeout_metadata_accepts_numbers_and_strings_and_rejects_invalid_limits",
+              "status": "ok"
+            },
+            {
+              "name": "baseline_update_cannot_erase_a_regression",
+              "status": "ok"
+            },
+            {
+              "name": "runtime_deadline_is_enforced_separately_from_the_build",
+              "status": "ok"
+            },
+            {
+              "name": "conformance",
+              "status": "ok"
+            }
+          ],
+          "status": "ok",
+          "passed": 5,
+          "failed": 0,
+          "ignored": 0,
+          "seconds": 23.48
+        },
+        {
+          "suite": "tests/fix.rs",
+          "tests": [
+            {
+              "name": "check_json_exposes_actionable_fixes_without_writing_the_source",
+              "status": "ok"
+            },
+            {
+              "name": "a_shadowed_take_function_is_not_advertised_as_builtin_field_replacement",
+              "status": "ok"
+            },
+            {
+              "name": "an_unrelated_error_prevents_a_partial_automatic_write",
+              "status": "ok"
+            },
+            {
+              "name": "distinct_source_contract_candidates_have_stable_patch_addresses",
+              "status": "ok"
+            },
+            {
+              "name": "dry_run_and_apply_preserve_utf8_crlf_comments_and_are_idempotent",
+              "status": "ok"
+            },
+            {
+              "name": "renaming_a_parameter_named_static_preserves_the_static_return_contract",
+              "status": "ok"
+            },
+            {
+              "name": "side_effecting_conditional_and_unsupported_receivers_are_never_automatically_hoisted",
+              "status": "ok"
+            },
+            {
+              "name": "fresh_names_avoid_later_bindings_and_function_calls_without_cross_function_pollution",
+              "status": "ok"
+            },
+            {
+              "name": "import_repairs_preserve_used_modules_comments_and_reject_name_guessing",
+              "status": "ok"
+            },
+            {
+              "name": "imports_used_only_by_uninstantiated_generics_survive_fix_and_later_instantiation",
+              "status": "ok"
+            },
+            {
+              "name": "writes_and_interpolation_reads_are_not_renamed_as_unused",
+              "status": "ok"
+            },
+            {
+              "name": "splitting_keeps_a_call_inside_its_conditional_and_loop_blocks",
+              "status": "ok"
+            },
+            {
+              "name": "unused_owned_values_and_catch_errors_keep_their_destruction_times",
+              "status": "ok"
+            }
+          ],
+          "status": "ok",
+          "passed": 13,
+          "failed": 0,
+          "ignored": 0,
+          "seconds": 0.88
+        },
+        {
+          "suite": "tests/harness.rs",
+          "tests": [
+            {
+              "name": "subprocess_fixture",
+              "status": "ok"
+            },
+            {
+              "name": "capture_stdio_preserves_redirected_output_and_file_input",
+              "status": "ok"
+            },
+            {
+              "name": "capture_drains_both_pipes_while_the_program_runs",
+              "status": "ok"
+            },
+            {
+              "name": "capture_has_a_deadline_and_preserves_unsuccessful_exit_status",
+              "status": "ok"
+            },
+            {
+              "name": "timeout_kills_descendants_even_after_the_parent_has_exited",
+              "status": "ok"
+            },
+            {
+              "name": "verifier::verifier_rebuilds_checkout_sources_and_checks_success_for_both_arms",
+              "status": "ok"
+            },
+            {
+              "name": "verifier::verifier_timeout_is_a_failure_and_kills_the_program_tree",
+              "status": "ok"
+            },
+            {
+              "name": "verifier::verifier_rejects_wrong_exit_streams_and_build_failures",
+              "status": "ok"
+            }
+          ],
+          "status": "ok",
+          "passed": 8,
+          "failed": 0,
+          "ignored": 0,
+          "seconds": 2.22
+        },
+        {
+          "suite": "tests/p0.rs",
+          "tests": [
+            {
+              "name": "conformance_report",
+              "status": "ignored"
+            },
+            {
+              "name": "p0_programs_debug",
+              "status": "ok"
+            },
+            {
+              "name": "p0_programs_release",
+              "status": "ok"
+            }
+          ],
+          "status": "ok",
+          "passed": 2,
+          "failed": 0,
+          "ignored": 1,
+          "seconds": 14.61
+        },
+        {
+          "suite": "tests/p0_regressions.rs",
+          "tests": [
+            {
+              "name": "c_compiler_diagnostics_are_visible_on_success_and_failure",
+              "status": "ok"
+            },
+            {
+              "name": "buffered_stdout_failure_is_not_success",
+              "status": "ok"
+            },
+            {
+              "name": "full_device_failure_is_not_success",
+              "status": "ok"
+            },
+            {
+              "name": "direct_stdout_failure_is_not_success",
+              "status": "ok"
+            },
+            {
+              "name": "runtime_retries_eintr_and_partial_writes_but_rejects_zero_writes",
+              "status": "ok"
+            },
+            {
+              "name": "stdout_flush_before_stderr_detects_failure",
+              "status": "ok"
+            },
+            {
+              "name": "stderr_failure_terminates_without_recursive_reporting",
+              "status": "ok"
+            }
+          ],
+          "status": "ok",
+          "passed": 7,
+          "failed": 0,
+          "ignored": 0,
+          "seconds": 0.73
+        },
+        {
+          "suite": "tests/runtime_io_concurrency.rs",
+          "tests": [
+            {
+              "name": "flushes_and_fatal_paths_respect_output_lock_and_are_reentrant",
+              "status": "ok"
+            },
+            {
+              "name": "concurrent_stdin_consumers_and_writers_preserve_every_record",
+              "status": "ok"
+            }
+          ],
+          "status": "ok",
+          "passed": 2,
+          "failed": 0,
+          "ignored": 0,
+          "seconds": 1.01
+        },
+        {
+          "suite": "tests/stdlib_io.rs",
+          "tests": [
+            {
+              "name": "read_line_strips_newlines_and_reports_bad_lines",
+              "status": "ok"
+            },
+            {
+              "name": "args_are_utf8_or_the_program_does_not_start",
+              "status": "ok"
+            },
+            {
+              "name": "files_round_trip_and_errors",
+              "status": "ok"
+            },
+            {
+              "name": "read_all_and_utf8_errors",
+              "status": "ok"
+            }
+          ],
+          "status": "ok",
+          "passed": 4,
+          "failed": 0,
+          "ignored": 0,
+          "seconds": 0.2
+        },
+        {
+          "suite": "tests/targets.rs",
+          "tests": [
+            {
+              "name": "host_runnable_target_runs_correctly",
+              "status": "ok"
+            },
+            {
+              "name": "target_errors_and_default_output_name",
+              "status": "ok"
+            },
+            {
+              "name": "every_target_produces_the_right_binary_format",
+              "status": "ok"
+            }
+          ],
+          "status": "ok",
+          "passed": 3,
+          "failed": 0,
+          "ignored": 0,
+          "seconds": 2.01
+        },
+        {
+          "suite": "tests/verify.rs",
+          "tests": [
+            {
+              "name": "allocation_analysis_includes_cleanup_of_a_partially_constructed_aggregate",
+              "status": "ok"
+            },
+            {
+              "name": "allocation_analysis_follows_user_methods_and_implicit_destructors",
+              "status": "ok"
+            },
+            {
+              "name": "argument_allocations_are_separate_from_the_called_functions_effect",
+              "status": "ok"
+            },
+            {
+              "name": "allocation_queries_distinguish_scalars_known_allocation_and_dynamic_unknown",
+              "status": "ok"
+            },
+            {
+              "name": "known_allocation_dominates_unknown_without_erasing_the_unknown_operation",
+              "status": "ok"
+            },
+            {
+              "name": "compiler_errors_leave_build_and_execution_unperformed",
+              "status": "ok"
+            },
+            {
+              "name": "native_verification_runs_the_built_artifact_and_preserves_exact_evidence",
+              "status": "ok"
+            },
+            {
+              "name": "no_run_restricts_execution_without_claiming_a_test_pass",
+              "status": "ok"
+            },
+            {
+              "name": "cross_builds_do_not_claim_execution_on_an_unavailable_platform",
+              "status": "ok"
+            },
+            {
+              "name": "uninstantiated_generic_body_is_unknown_instead_of_empty_no_alloc",
+              "status": "ok"
+            },
+            {
+              "name": "verify_rejects_claimed_runners_and_unbounded_timeouts",
+              "status": "ok"
+            },
+            {
+              "name": "verify_rejects_the_development_compiler_override_without_running_it",
+              "status": "ok"
+            },
+            {
+              "name": "truncated_stdout_cannot_equal_an_expected_prefix",
+              "status": "ok"
+            },
+            {
+              "name": "sanitizer_profiles_are_separate_and_never_supply_windows_execution_evidence",
+              "status": "ok"
+            },
+            {
+              "name": "panic_timeout_and_output_mismatch_cannot_be_reported_as_passed_tests",
+              "status": "ok"
+            }
+          ],
+          "status": "ok",
+          "passed": 15,
+          "failed": 0,
+          "ignored": 0,
+          "seconds": 21.9
+        }
+      ]
+    },
+    "release": {
+      "exit_code": 0,
+      "passed": 71,
+      "failed": 0,
+      "ignored": 1,
+      "compiler_warning_lines": 0,
+      "suites": [
+        {
+          "suite": "src/main.rs",
+          "tests": [
+            {
+              "name": "allocations::tests::known_allocation_keeps_unknown_evidence",
+              "status": "ok"
+            },
+            {
+              "name": "fix::tests::edits_use_original_utf8_offsets_and_reject_ambiguous_ranges",
+              "status": "ok"
+            },
+            {
+              "name": "fix::tests::candidate_checks_do_not_pollute_original_compilation_type_tables",
+              "status": "ok"
+            },
+            {
+              "name": "fix::tests::replacement_rejects_a_stale_snapshot_and_cleans_its_temporary_file",
+              "status": "ok"
+            },
+            {
+              "name": "process::tests::subprocess_fixture",
+              "status": "ok"
+            },
+            {
+              "name": "fix::tests::replacement_preserves_permissions_and_refuses_links_and_read_only_sources",
+              "status": "ok"
+            },
+            {
+              "name": "process::tests::drains_both_pipes_and_hashes_the_complete_streams",
+              "status": "ok"
+            },
+            {
+              "name": "process::tests::caps_retained_output_without_stopping_reads_or_hashing",
+              "status": "ok"
+            },
+            {
+              "name": "process::tests::timeout_kills_a_running_process_and_returns_within_the_cleanup_bound",
+              "status": "ok"
+            },
+            {
+              "name": "process::tests::timeout_kills_pipe_holding_descendants_after_the_parent_exits",
+              "status": "ok"
+            }
+          ],
+          "status": "ok",
+          "passed": 10,
+          "failed": 0,
+          "ignored": 0,
+          "seconds": 0.51
+        },
+        {
+          "suite": "tests/alloc_check.rs",
+          "tests": [
+            {
+              "name": "no_leaks_or_double_drops_debug",
+              "status": "ok"
+            },
+            {
+              "name": "no_leaks_or_double_drops_release",
+              "status": "ok"
+            }
+          ],
+          "status": "ok",
+          "passed": 2,
+          "failed": 0,
+          "ignored": 0,
+          "seconds": 12.3
+        },
+        {
+          "suite": "tests/conformance.rs",
+          "tests": [
+            {
+              "name": "fixed_source_comparison_uses_lexical_strings_and_interpolations",
+              "status": "ok"
+            },
+            {
+              "name": "timeout_metadata_accepts_numbers_and_strings_and_rejects_invalid_limits",
+              "status": "ok"
+            },
+            {
+              "name": "baseline_update_cannot_erase_a_regression",
+              "status": "ok"
+            },
+            {
+              "name": "runtime_deadline_is_enforced_separately_from_the_build",
+              "status": "ok"
+            },
+            {
+              "name": "conformance",
+              "status": "ok"
+            }
+          ],
+          "status": "ok",
+          "passed": 5,
+          "failed": 0,
+          "ignored": 0,
+          "seconds": 8.56
+        },
+        {
+          "suite": "tests/fix.rs",
+          "tests": [
+            {
+              "name": "check_json_exposes_actionable_fixes_without_writing_the_source",
+              "status": "ok"
+            },
+            {
+              "name": "a_shadowed_take_function_is_not_advertised_as_builtin_field_replacement",
+              "status": "ok"
+            },
+            {
+              "name": "an_unrelated_error_prevents_a_partial_automatic_write",
+              "status": "ok"
+            },
+            {
+              "name": "distinct_source_contract_candidates_have_stable_patch_addresses",
+              "status": "ok"
+            },
+            {
+              "name": "dry_run_and_apply_preserve_utf8_crlf_comments_and_are_idempotent",
+              "status": "ok"
+            },
+            {
+              "name": "renaming_a_parameter_named_static_preserves_the_static_return_contract",
+              "status": "ok"
+            },
+            {
+              "name": "side_effecting_conditional_and_unsupported_receivers_are_never_automatically_hoisted",
+              "status": "ok"
+            },
+            {
+              "name": "fresh_names_avoid_later_bindings_and_function_calls_without_cross_function_pollution",
+              "status": "ok"
+            },
+            {
+              "name": "imports_used_only_by_uninstantiated_generics_survive_fix_and_later_instantiation",
+              "status": "ok"
+            },
+            {
+              "name": "import_repairs_preserve_used_modules_comments_and_reject_name_guessing",
+              "status": "ok"
+            },
+            {
+              "name": "writes_and_interpolation_reads_are_not_renamed_as_unused",
+              "status": "ok"
+            },
+            {
+              "name": "splitting_keeps_a_call_inside_its_conditional_and_loop_blocks",
+              "status": "ok"
+            },
+            {
+              "name": "unused_owned_values_and_catch_errors_keep_their_destruction_times",
+              "status": "ok"
+            }
+          ],
+          "status": "ok",
+          "passed": 13,
+          "failed": 0,
+          "ignored": 0,
+          "seconds": 0.86
+        },
+        {
+          "suite": "tests/harness.rs",
+          "tests": [
+            {
+              "name": "subprocess_fixture",
+              "status": "ok"
+            },
+            {
+              "name": "capture_stdio_preserves_redirected_output_and_file_input",
+              "status": "ok"
+            },
+            {
+              "name": "capture_drains_both_pipes_while_the_program_runs",
+              "status": "ok"
+            },
+            {
+              "name": "capture_has_a_deadline_and_preserves_unsuccessful_exit_status",
+              "status": "ok"
+            },
+            {
+              "name": "timeout_kills_descendants_even_after_the_parent_has_exited",
+              "status": "ok"
+            },
+            {
+              "name": "verifier::verifier_rebuilds_checkout_sources_and_checks_success_for_both_arms",
+              "status": "ok"
+            },
+            {
+              "name": "verifier::verifier_timeout_is_a_failure_and_kills_the_program_tree",
+              "status": "ok"
+            },
+            {
+              "name": "verifier::verifier_rejects_wrong_exit_streams_and_build_failures",
+              "status": "ok"
+            }
+          ],
+          "status": "ok",
+          "passed": 8,
+          "failed": 0,
+          "ignored": 0,
+          "seconds": 2.29
+        },
+        {
+          "suite": "tests/p0.rs",
+          "tests": [
+            {
+              "name": "conformance_report",
+              "status": "ignored"
+            },
+            {
+              "name": "p0_programs_debug",
+              "status": "ok"
+            },
+            {
+              "name": "p0_programs_release",
+              "status": "ok"
+            }
+          ],
+          "status": "ok",
+          "passed": 2,
+          "failed": 0,
+          "ignored": 1,
+          "seconds": 15.19
+        },
+        {
+          "suite": "tests/p0_regressions.rs",
+          "tests": [
+            {
+              "name": "c_compiler_diagnostics_are_visible_on_success_and_failure",
+              "status": "ok"
+            },
+            {
+              "name": "full_device_failure_is_not_success",
+              "status": "ok"
+            },
+            {
+              "name": "buffered_stdout_failure_is_not_success",
+              "status": "ok"
+            },
+            {
+              "name": "direct_stdout_failure_is_not_success",
+              "status": "ok"
+            },
+            {
+              "name": "runtime_retries_eintr_and_partial_writes_but_rejects_zero_writes",
+              "status": "ok"
+            },
+            {
+              "name": "stdout_flush_before_stderr_detects_failure",
+              "status": "ok"
+            },
+            {
+              "name": "stderr_failure_terminates_without_recursive_reporting",
+              "status": "ok"
+            }
+          ],
+          "status": "ok",
+          "passed": 7,
+          "failed": 0,
+          "ignored": 0,
+          "seconds": 0.82
+        },
+        {
+          "suite": "tests/runtime_io_concurrency.rs",
+          "tests": [
+            {
+              "name": "flushes_and_fatal_paths_respect_output_lock_and_are_reentrant",
+              "status": "ok"
+            },
+            {
+              "name": "concurrent_stdin_consumers_and_writers_preserve_every_record",
+              "status": "ok"
+            }
+          ],
+          "status": "ok",
+          "passed": 2,
+          "failed": 0,
+          "ignored": 0,
+          "seconds": 1.08
+        },
+        {
+          "suite": "tests/stdlib_io.rs",
+          "tests": [
+            {
+              "name": "args_are_utf8_or_the_program_does_not_start",
+              "status": "ok"
+            },
+            {
+              "name": "read_line_strips_newlines_and_reports_bad_lines",
+              "status": "ok"
+            },
+            {
+              "name": "files_round_trip_and_errors",
+              "status": "ok"
+            },
+            {
+              "name": "read_all_and_utf8_errors",
+              "status": "ok"
+            }
+          ],
+          "status": "ok",
+          "passed": 4,
+          "failed": 0,
+          "ignored": 0,
+          "seconds": 0.23
+        },
+        {
+          "suite": "tests/targets.rs",
+          "tests": [
+            {
+              "name": "host_runnable_target_runs_correctly",
+              "status": "ok"
+            },
+            {
+              "name": "target_errors_and_default_output_name",
+              "status": "ok"
+            },
+            {
+              "name": "every_target_produces_the_right_binary_format",
+              "status": "ok"
+            }
+          ],
+          "status": "ok",
+          "passed": 3,
+          "failed": 0,
+          "ignored": 0,
+          "seconds": 2.09
+        },
+        {
+          "suite": "tests/verify.rs",
+          "tests": [
+            {
+              "name": "allocation_analysis_includes_cleanup_of_a_partially_constructed_aggregate",
+              "status": "ok"
+            },
+            {
+              "name": "allocation_analysis_follows_user_methods_and_implicit_destructors",
+              "status": "ok"
+            },
+            {
+              "name": "argument_allocations_are_separate_from_the_called_functions_effect",
+              "status": "ok"
+            },
+            {
+              "name": "compiler_errors_leave_build_and_execution_unperformed",
+              "status": "ok"
+            },
+            {
+              "name": "known_allocation_dominates_unknown_without_erasing_the_unknown_operation",
+              "status": "ok"
+            },
+            {
+              "name": "allocation_queries_distinguish_scalars_known_allocation_and_dynamic_unknown",
+              "status": "ok"
+            },
+            {
+              "name": "no_run_restricts_execution_without_claiming_a_test_pass",
+              "status": "ok"
+            },
+            {
+              "name": "native_verification_runs_the_built_artifact_and_preserves_exact_evidence",
+              "status": "ok"
+            },
+            {
+              "name": "truncated_stdout_cannot_equal_an_expected_prefix",
+              "status": "ok"
+            },
+            {
+              "name": "uninstantiated_generic_body_is_unknown_instead_of_empty_no_alloc",
+              "status": "ok"
+            },
+            {
+              "name": "verify_rejects_claimed_runners_and_unbounded_timeouts",
+              "status": "ok"
+            },
+            {
+              "name": "verify_rejects_the_development_compiler_override_without_running_it",
+              "status": "ok"
+            },
+            {
+              "name": "cross_builds_do_not_claim_execution_on_an_unavailable_platform",
+              "status": "ok"
+            },
+            {
+              "name": "panic_timeout_and_output_mismatch_cannot_be_reported_as_passed_tests",
+              "status": "ok"
+            },
+            {
+              "name": "sanitizer_profiles_are_separate_and_never_supply_windows_execution_evidence",
+              "status": "ok"
+            }
+          ],
+          "status": "ok",
+          "passed": 15,
+          "failed": 0,
+          "ignored": 0,
+          "seconds": 1.98
+        }
+      ]
+    }
+  },
+  "conformance": {
+    "total": 129,
+    "pass": 122,
+    "wrong": 0,
+    "unsupported": 3,
+    "not_run": 4,
+    "previous_baseline": 119,
+    "newly_passing": [
+      "T-GA1",
+      "T-GA2",
+      "T-R1"
+    ],
+    "previous_passing_cases_retained": true,
+    "intermediate_result_not_accepted": "An earlier good-program-only sanitizer probe incorrectly reported T-R2 passed (123 total). Negative probes exposed missing ASan instrumentation. That result was discarded and never added to the baseline.",
+    "manifest_sha256": "82c4bf71c0f239d4f07bc13500c4f7d7e6e4416f7b9722a0974fabc33bfbb3a5",
+    "cases": [
+      {
+        "category": "check",
+        "id": "T-A1",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-A1p",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-A2",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-A2p",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-A3",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-A3f",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-A4",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-A4p",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-C1",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-C1p",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-C2",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-C2f",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-C3",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-C3f",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-C4",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-C4p",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-C5",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-C6",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-C6p",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-C7",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-C7f",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-C8",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-C8f",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-E1",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-E1p",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-E2",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-E2p",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-G01",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-G02",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-G03",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-G04",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-G05",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-G06",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-G07",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-G08",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-G09",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-G10",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-G11",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-G12",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-G13",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-G14",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-G15",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-G16",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-G17",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-G18",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-G19",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-G20",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-G21",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-G22",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-G23",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-G24",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-G25",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-G26",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-G27",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-G28",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-G29",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-K1",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-K1p",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-O1",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-O1p",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-O2",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-O2p",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-O3",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-O3p",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-O4",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-O4p",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-O5",
+        "phase": "P1",
+        "reason": "type arguments in expressions (`Name[T]`) are not supported in P0",
+        "status": "unsupported"
+      },
+      {
+        "category": "check",
+        "id": "T-O5p",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-O6",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-O7",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-O8",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-O8p",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-V2",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-V2p",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-V4",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "check",
+        "id": "T-V4p",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "fix",
+        "id": "T-F1",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "fix",
+        "id": "T-F2",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "fix",
+        "id": "T-GF1",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "fix",
+        "id": "T-GF2",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "fix",
+        "id": "T-GF3",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "fix",
+        "id": "T-V1",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "fix",
+        "id": "T-V3",
+        "phase": "P1",
+        "reason": "`&inout T` is only supported as the type of a local variable for now",
+        "status": "unsupported"
+      },
+      {
+        "category": "run",
+        "id": "T-D1",
+        "phase": "P2",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "run",
+        "id": "T-GR1",
+        "phase": "P2",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "run",
+        "id": "T-GR10",
+        "phase": "P2",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "run",
+        "id": "T-GR11",
+        "phase": "P2",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "run",
+        "id": "T-GR12",
+        "phase": "P2",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "run",
+        "id": "T-GR2",
+        "phase": "P2",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "run",
+        "id": "T-GR3",
+        "phase": "P2",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "run",
+        "id": "T-GR4",
+        "phase": "P2",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "run",
+        "id": "T-GR5",
+        "phase": "P2",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "run",
+        "id": "T-GR6",
+        "phase": "P2",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "run",
+        "id": "T-GR7",
+        "phase": "P2",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "run",
+        "id": "T-GR8",
+        "phase": "P2",
+        "reason": "needs `fault_scope` support in the runner",
+        "status": "not_run"
+      },
+      {
+        "category": "run",
+        "id": "T-GR9",
+        "phase": "P2",
+        "reason": "runner does not handle kind `run-allowed` yet",
+        "status": "not_run"
+      },
+      {
+        "category": "run",
+        "id": "T-N1a",
+        "phase": "P2",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "run",
+        "id": "T-N1b",
+        "phase": "P2",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "run",
+        "id": "T-N1c",
+        "phase": "P2",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "run",
+        "id": "T-N1d",
+        "phase": "P2",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "run",
+        "id": "T-N2",
+        "phase": "P2",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "run",
+        "id": "T-S1",
+        "phase": "P2",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "run",
+        "id": "T-S2",
+        "phase": "P2",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "run",
+        "id": "T-S3",
+        "phase": "P2",
+        "reason": "runner does not handle kind `run-exit` yet",
+        "status": "not_run"
+      },
+      {
+        "category": "concurrency",
+        "id": "T-GP1",
+        "phase": "P3",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "concurrency",
+        "id": "T-GP2",
+        "phase": "P3",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "concurrency",
+        "id": "T-GP3",
+        "phase": "P3",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "concurrency",
+        "id": "T-GP4",
+        "phase": "P3",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "concurrency",
+        "id": "T-GP5",
+        "phase": "P3",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "concurrency",
+        "id": "T-GP6",
+        "phase": "P3",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "concurrency",
+        "id": "T-GP7",
+        "phase": "P3",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "concurrency",
+        "id": "T-P1",
+        "phase": "P3",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "concurrency",
+        "id": "T-P1p",
+        "phase": "P3",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "concurrency",
+        "id": "T-P2",
+        "phase": "P3",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "concurrency",
+        "id": "T-P2p",
+        "phase": "P3",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "concurrency",
+        "id": "T-P2s",
+        "phase": "P3",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "concurrency",
+        "id": "T-P3",
+        "phase": "P3",
+        "reason": "needs `sanitize_mode` support in the runner",
+        "status": "not_run"
+      },
+      {
+        "category": "concurrency",
+        "id": "T-P3f",
+        "phase": "P3",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "concurrency",
+        "id": "T-P4",
+        "phase": "P3",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "concurrency",
+        "id": "T-P4p",
+        "phase": "P3",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "concurrency",
+        "id": "T-P5",
+        "phase": "P3",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "concurrency",
+        "id": "T-P5p",
+        "phase": "P3",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "concurrency",
+        "id": "T-P6",
+        "phase": "P3",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "concurrency",
+        "id": "T-P6p",
+        "phase": "P3",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "concurrency",
+        "id": "T-V5",
+        "phase": "P3",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "report",
+        "id": "T-GA1",
+        "phase": "P3",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "report",
+        "id": "T-GA2",
+        "phase": "P3",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "report",
+        "id": "T-R1",
+        "phase": "P3",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "report",
+        "id": "T-R2",
+        "phase": "P3",
+        "reason": "\"address-undefined\": \"host compiler cannot build the requested sanitizer capability probe\"",
+        "status": "unsupported"
+      }
+    ]
+  },
+  "existing_yv_fixture_count": 87,
+  "verification_reports": {
+    "native": {
+      "artifact_dir": "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0",
+      "checks": [
+        {
+          "artifact": "sha256:0f7c8367930a2923db979cd2602c54ec9a829d460074a6a46fc20b4819ddc115",
+          "artifact_path": "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/source.yv",
+          "id": "front_end",
+          "name": "front_end",
+          "ran_on": "x86_64-linux-gnu",
+          "reason": "lexing, parsing and implemented semantic checks passed",
+          "required": true,
+          "status": "passed",
+          "target": "x86_64-linux-musl"
+        },
+        {
+          "artifact": "sha256:58959f01285c05a74276f09327b551d42ed6006bf325a78dc661a024e314987b",
+          "artifact_path": "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+          "capture_limit_bytes": 4194304,
+          "command": {
+            "args": [
+              "version"
+            ],
+            "program": "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig"
+          },
+          "duration_ms": 10,
+          "exit_code": 0,
+          "id": "toolchain",
+          "name": "toolchain",
+          "ran_on": "x86_64-linux-gnu",
+          "reason": "pinned compiler path and actual version match; executable and lock were hashed",
+          "required": true,
+          "signal": null,
+          "status": "passed",
+          "stderr": "",
+          "stderr_bytes": 0,
+          "stderr_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr_truncated": false,
+          "stderr_valid_utf8": true,
+          "stdout": "0.17.1\n",
+          "stdout_bytes": 7,
+          "stdout_sha256": "sha256:cd81ec19767ffb807bada6d48578a18d77a29adb394e09e9cdfcd5ea9eebb6a2",
+          "stdout_truncated": false,
+          "stdout_valid_utf8": true,
+          "success": true,
+          "target": "x86_64-linux-gnu",
+          "text_encoding": "utf-8-lossy",
+          "timed_out": false
+        },
+        {
+          "allocation_check": false,
+          "artifact": "sha256:73d349220183c8ec41357c59b0bc192663a39070a08396e6fdf622daff28efbc",
+          "artifact_path": "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/program",
+          "cache": {
+            "bypassed": false,
+            "mode": "pinned_toolchain_default"
+          },
+          "capture_limit_bytes": 4194304,
+          "command": {
+            "args": [
+              "cc",
+              "-std=c17",
+              "-fno-strict-aliasing",
+              "-target",
+              "x86_64-linux-musl",
+              "-O2",
+              "-s",
+              "-I",
+              "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0",
+              "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/main.c",
+              "-o",
+              "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/program"
+            ],
+            "program": "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig"
+          },
+          "duration_ms": 174,
+          "exit_code": 0,
+          "id": "build",
+          "name": "build",
+          "ran_on": "x86_64-linux-gnu",
+          "reason": "pinned C compiler produced the requested artifact",
+          "required": true,
+          "signal": null,
+          "status": "passed",
+          "stderr": "",
+          "stderr_bytes": 0,
+          "stderr_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr_truncated": false,
+          "stderr_valid_utf8": true,
+          "stdout": "",
+          "stdout_bytes": 0,
+          "stdout_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdout_truncated": false,
+          "stdout_valid_utf8": true,
+          "success": true,
+          "target": "x86_64-linux-musl",
+          "text_encoding": "utf-8-lossy",
+          "timed_out": false
+        },
+        {
+          "artifact": "sha256:73d349220183c8ec41357c59b0bc192663a39070a08396e6fdf622daff28efbc",
+          "artifact_path": "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/program",
+          "artifact_unchanged": true,
+          "capture_limit_bytes": 4194304,
+          "command": {
+            "args": [],
+            "program": "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/program"
+          },
+          "duration_ms": 5,
+          "exit_code": 0,
+          "expected_exit_code": 0,
+          "id": "tests",
+          "name": "tests",
+          "ran_on": "x86_64-linux-gnu",
+          "reason": "artifact execution and requested assertions passed",
+          "required": true,
+          "signal": null,
+          "status": "passed",
+          "stderr": "",
+          "stderr_bytes": 0,
+          "stderr_matches": true,
+          "stderr_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr_truncated": false,
+          "stderr_valid_utf8": true,
+          "stdout": "-126\n255\n-4\n100\n2\n",
+          "stdout_bytes": 18,
+          "stdout_matches": true,
+          "stdout_sha256": "sha256:e7abc03001f552508d79458d5095ad937e8eebdb6698cbc643d2201a549cbae7",
+          "stdout_truncated": false,
+          "stdout_valid_utf8": true,
+          "success": true,
+          "target": "x86_64-linux-musl",
+          "test_kind": "output_assertion",
+          "tests_run": 1,
+          "text_encoding": "utf-8-lossy",
+          "timed_out": false
+        },
+        {
+          "artifact": "sha256:73d349220183c8ec41357c59b0bc192663a39070a08396e6fdf622daff28efbc",
+          "artifact_path": "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/program",
+          "id": "audit",
+          "name": "audit",
+          "ran_on": null,
+          "reason": "source and dependency audit is not implemented in this prototype",
+          "required": true,
+          "runtime_header_sha256": "sha256:cad9d391a41bde34c5c8e539e1c2439327ebfb24522e9c8aec92b7d5702eeb0c",
+          "scope": {
+            "app": "not_audited",
+            "c_runtime": "trusted_pinned",
+            "dependencies": "not_audited",
+            "stdlib": "not_audited"
+          },
+          "status": "not_run",
+          "target": "x86_64-linux-musl",
+          "trust_basis": "pinned toolchain path and version; archive and compiler libraries are not reverified"
+        },
+        {
+          "artifact": null,
+          "artifact_path": null,
+          "id": "address-undefined",
+          "name": "sanitizers",
+          "probe_build": {
+            "allocation_check": false,
+            "cache": {
+              "bypassed": false,
+              "mode": "pinned_toolchain_default"
+            },
+            "capture_limit_bytes": 4194304,
+            "command": {
+              "args": [
+                "cc",
+                "-std=c17",
+                "-fno-strict-aliasing",
+                "-target",
+                "x86_64-linux-gnu",
+                "-O1",
+                "-g",
+                "-fno-omit-frame-pointer",
+                "-fno-sanitize-recover=all",
+                "-fsanitize=address",
+                "-fsanitize=undefined",
+                "-I",
+                "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0",
+                "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/address-undefined/probe.c",
+                "-o",
+                "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/address-undefined/probe"
+              ],
+              "program": "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig"
+            },
+            "duration_ms": 46,
+            "exit_code": 1,
+            "ran_on": "x86_64-linux-gnu",
+            "reason": "C compiler rejected the generated translation unit",
+            "signal": null,
+            "status": "failed",
+            "stderr": "ld.lld: error: undefined symbol: __asan_init\n>>> referenced by probe.c\n>>>               /home/appops/.cache/zig/o/b15efb5ebbcb5dc46511ef595595d571/probe.o:(asan.module_ctor)\n\nld.lld: error: undefined symbol: __asan_version_mismatch_check_v8\n>>> referenced by probe.c\n>>>               /home/appops/.cache/zig/o/b15efb5ebbcb5dc46511ef595595d571/probe.o:(asan.module_ctor)\n\nld.lld: error: undefined symbol: __asan_register_elf_globals\n>>> referenced by probe.c\n>>>               /home/appops/.cache/zig/o/b15efb5ebbcb5dc46511ef595595d571/probe.o:(asan.module_ctor)\n",
+            "stderr_bytes": 564,
+            "stderr_sha256": "sha256:b81ebfce9a57b254207fefa964a03f483f9a745da99386e4336425de4a7ec4c8",
+            "stderr_truncated": false,
+            "stderr_valid_utf8": true,
+            "stdout": "",
+            "stdout_bytes": 0,
+            "stdout_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stdout_truncated": false,
+            "stdout_valid_utf8": true,
+            "success": false,
+            "text_encoding": "utf-8-lossy",
+            "timed_out": false
+          },
+          "ran_on": null,
+          "reason": "host compiler cannot build the requested sanitizer capability probe",
+          "required": true,
+          "status": "unsupported",
+          "target": "x86_64-linux-gnu",
+          "tools": [
+            "address",
+            "undefined"
+          ]
+        },
+        {
+          "artifact": "sha256:98331ad0903b1ce29062efc24af15e8839de150a7c239eefcb8b45e5f27f70db",
+          "artifact_path": "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/thread/program",
+          "artifact_unchanged": true,
+          "build": {
+            "allocation_check": false,
+            "artifact": "sha256:98331ad0903b1ce29062efc24af15e8839de150a7c239eefcb8b45e5f27f70db",
+            "artifact_path": "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/thread/program",
+            "cache": {
+              "bypassed": false,
+              "mode": "pinned_toolchain_default"
+            },
+            "capture_limit_bytes": 4194304,
+            "command": {
+              "args": [
+                "cc",
+                "-std=c17",
+                "-fno-strict-aliasing",
+                "-target",
+                "x86_64-linux-gnu",
+                "-O1",
+                "-g",
+                "-fno-omit-frame-pointer",
+                "-fno-sanitize-recover=all",
+                "-fsanitize=thread",
+                "-I",
+                "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0",
+                "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/main.c",
+                "-o",
+                "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/thread/program"
+              ],
+              "program": "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig"
+            },
+            "duration_ms": 265,
+            "exit_code": 0,
+            "ran_on": "x86_64-linux-gnu",
+            "reason": "pinned C compiler produced the requested artifact",
+            "signal": null,
+            "status": "passed",
+            "stderr": "",
+            "stderr_bytes": 0,
+            "stderr_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_truncated": false,
+            "stderr_valid_utf8": true,
+            "stdout": "",
+            "stdout_bytes": 0,
+            "stdout_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stdout_truncated": false,
+            "stdout_valid_utf8": true,
+            "success": true,
+            "target": "x86_64-linux-gnu",
+            "text_encoding": "utf-8-lossy",
+            "timed_out": false
+          },
+          "capability_probes": [
+            {
+              "build": {
+                "allocation_check": false,
+                "artifact": "sha256:f82b41c9e5a01ac874c6432cebc33cf23b508c2fc78e2d3819f52999f1911c96",
+                "artifact_path": "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/thread/capability-thread",
+                "cache": {
+                  "bypassed": false,
+                  "mode": "pinned_toolchain_default"
+                },
+                "capture_limit_bytes": 4194304,
+                "command": {
+                  "args": [
+                    "cc",
+                    "-std=c17",
+                    "-fno-strict-aliasing",
+                    "-target",
+                    "x86_64-linux-gnu",
+                    "-O1",
+                    "-g",
+                    "-fno-omit-frame-pointer",
+                    "-fno-sanitize-recover=all",
+                    "-fsanitize=thread",
+                    "-I",
+                    "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0",
+                    "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/thread/capability-thread.c",
+                    "-o",
+                    "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/thread/capability-thread"
+                  ],
+                  "program": "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig"
+                },
+                "duration_ms": 102,
+                "exit_code": 0,
+                "ran_on": "x86_64-linux-gnu",
+                "reason": "pinned C compiler produced the requested artifact",
+                "signal": null,
+                "status": "passed",
+                "stderr": "",
+                "stderr_bytes": 0,
+                "stderr_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "stderr_truncated": false,
+                "stderr_valid_utf8": true,
+                "stdout": "",
+                "stdout_bytes": 0,
+                "stdout_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "stdout_truncated": false,
+                "stdout_valid_utf8": true,
+                "success": true,
+                "target": "x86_64-linux-gnu",
+                "text_encoding": "utf-8-lossy",
+                "timed_out": false
+              },
+              "expected": "nonzero termination and a diagnostic identifying the injected defect",
+              "issue": "data race",
+              "reason": "the requested sanitizer detected its deliberately injected defect",
+              "run": {
+                "artifact": "sha256:f82b41c9e5a01ac874c6432cebc33cf23b508c2fc78e2d3819f52999f1911c96",
+                "artifact_path": "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/thread/capability-thread",
+                "capture_limit_bytes": 4194304,
+                "command": {
+                  "args": [],
+                  "program": "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/thread/capability-thread"
+                },
+                "duration_ms": 10,
+                "exit_code": 66,
+                "expected_defect_detected": true,
+                "ran_on": "x86_64-linux-gnu",
+                "signal": null,
+                "stderr": "==================\nWARNING: ThreadSanitizer: data race (pid=943192)\n  Write of size 4 at 0x56445a56ff00 by thread T2:\n    #0 <null> <null> (capability-thread+0x30302)\n    #1 <null> <null> (capability-thread+0x351c4)\n\n  Previous write of size 4 at 0x56445a56ff00 by thread T1:\n    #0 <null> <null> (capability-thread+0x30302)\n    #1 <null> <null> (capability-thread+0x351c4)\n\n  Thread T2 (tid=943197, running) created by main thread at:\n    #0 <null> <null> (capability-thread+0x3525c)\n    #1 <null> <null> (capability-thread+0x30262)\n    #2 <null> <null> (libc.so.6+0x27249) (BuildId: 93ac61ec5a8eb1396f9fbd350e3169a558528a40)\n\n  Thread T1 (tid=943196, finished) created by main thread at:\n    #0 <null> <null> (capability-thread+0x3525c)\n    #1 <null> <null> (capability-thread+0x30245)\n    #2 <null> <null> (libc.so.6+0x27249) (BuildId: 93ac61ec5a8eb1396f9fbd350e3169a558528a40)\n\nSUMMARY: ThreadSanitizer: data race (/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/thread/capability-thread+0x30302) \n==================\n",
+                "stderr_bytes": 1092,
+                "stderr_sha256": "sha256:d122a6869f9f20cb09f2cac26ff6563ea71a244afd80142c476655aeb9bda736",
+                "stderr_truncated": false,
+                "stderr_valid_utf8": true,
+                "stdout": "",
+                "stdout_bytes": 0,
+                "stdout_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "stdout_truncated": false,
+                "stdout_valid_utf8": true,
+                "success": false,
+                "target": "x86_64-linux-gnu",
+                "text_encoding": "utf-8-lossy",
+                "timed_out": false
+              },
+              "scope": "representative runtime instrumentation capability, not exhaustive sanitizer correctness",
+              "source_path": "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/thread/capability-thread.c",
+              "source_sha256": "sha256:faa205b8dceee331a227088f48ffc7b06153da502f5c7431ffee39446c4a01bc",
+              "status": "passed",
+              "tool": "thread"
+            }
+          ],
+          "capture_limit_bytes": 4194304,
+          "command": {
+            "args": [],
+            "program": "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/thread/program"
+          },
+          "demonstrated_tools": [
+            "thread"
+          ],
+          "duration_ms": 10,
+          "exit_code": 0,
+          "expected_exit_code": 0,
+          "id": "thread",
+          "name": "sanitizers",
+          "probe_build": {
+            "allocation_check": false,
+            "artifact": "sha256:f8553f41aedd1b024599029ba8a44346d5eb9f1129e489b1576d12fa664b394f",
+            "artifact_path": "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/thread/probe",
+            "cache": {
+              "bypassed": false,
+              "mode": "pinned_toolchain_default"
+            },
+            "capture_limit_bytes": 4194304,
+            "command": {
+              "args": [
+                "cc",
+                "-std=c17",
+                "-fno-strict-aliasing",
+                "-target",
+                "x86_64-linux-gnu",
+                "-O1",
+                "-g",
+                "-fno-omit-frame-pointer",
+                "-fno-sanitize-recover=all",
+                "-fsanitize=thread",
+                "-I",
+                "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0",
+                "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/thread/probe.c",
+                "-o",
+                "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/thread/probe"
+              ],
+              "program": "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig"
+            },
+            "duration_ms": 86,
+            "exit_code": 0,
+            "ran_on": "x86_64-linux-gnu",
+            "reason": "pinned C compiler produced the requested artifact",
+            "signal": null,
+            "status": "passed",
+            "stderr": "",
+            "stderr_bytes": 0,
+            "stderr_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_truncated": false,
+            "stderr_valid_utf8": true,
+            "stdout": "",
+            "stdout_bytes": 0,
+            "stdout_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stdout_truncated": false,
+            "stdout_valid_utf8": true,
+            "success": true,
+            "target": "x86_64-linux-gnu",
+            "text_encoding": "utf-8-lossy",
+            "timed_out": false
+          },
+          "probe_run": {
+            "artifact": "sha256:f8553f41aedd1b024599029ba8a44346d5eb9f1129e489b1576d12fa664b394f",
+            "artifact_path": "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/thread/probe",
+            "artifact_unchanged": true,
+            "capture_limit_bytes": 4194304,
+            "command": {
+              "args": [],
+              "program": "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/thread/probe"
+            },
+            "duration_ms": 10,
+            "exit_code": 0,
+            "expected_exit_code": 0,
+            "ran_on": "x86_64-linux-gnu",
+            "reason": "artifact execution and requested assertions passed",
+            "sanitizer_environment": {
+              "ASAN_OPTIONS": "halt_on_error=1:detect_leaks=1",
+              "TSAN_OPTIONS": "halt_on_error=1:exitcode=66",
+              "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+            },
+            "signal": null,
+            "status": "passed",
+            "stderr": "",
+            "stderr_bytes": 0,
+            "stderr_matches": null,
+            "stderr_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_truncated": false,
+            "stderr_valid_utf8": true,
+            "stdout": "",
+            "stdout_bytes": 0,
+            "stdout_matches": null,
+            "stdout_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stdout_truncated": false,
+            "stdout_valid_utf8": true,
+            "success": true,
+            "target": "x86_64-linux-gnu",
+            "test_kind": "exit_status",
+            "tests_run": 1,
+            "text_encoding": "utf-8-lossy",
+            "timed_out": false
+          },
+          "ran_on": "x86_64-linux-gnu",
+          "reason": "artifact execution and requested assertions passed",
+          "required": true,
+          "sanitizer_environment": {
+            "ASAN_OPTIONS": "halt_on_error=1:detect_leaks=1",
+            "TSAN_OPTIONS": "halt_on_error=1:exitcode=66",
+            "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+          },
+          "signal": null,
+          "status": "passed",
+          "stderr": "",
+          "stderr_bytes": 0,
+          "stderr_matches": true,
+          "stderr_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr_truncated": false,
+          "stderr_valid_utf8": true,
+          "stdout": "-126\n255\n-4\n100\n2\n",
+          "stdout_bytes": 18,
+          "stdout_matches": true,
+          "stdout_sha256": "sha256:e7abc03001f552508d79458d5095ad937e8eebdb6698cbc643d2201a549cbae7",
+          "stdout_truncated": false,
+          "stdout_valid_utf8": true,
+          "success": true,
+          "target": "x86_64-linux-gnu",
+          "test_kind": "output_assertion",
+          "tests_run": 1,
+          "text_encoding": "utf-8-lossy",
+          "timed_out": false,
+          "tools": [
+            "thread"
+          ]
+        },
+        {
+          "artifact": "sha256:3f3cf249933eb5c8df317d2ec72f65e6db295f0b10f5bdcb66e6a0081705f1f8",
+          "artifact_path": "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/repro-2/program",
+          "backend_builds_attempted": 2,
+          "builds": [
+            {
+              "backend": {
+                "allocation_check": false,
+                "artifact": "sha256:3f3cf249933eb5c8df317d2ec72f65e6db295f0b10f5bdcb66e6a0081705f1f8",
+                "artifact_path": "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/repro-1/program",
+                "cache": {
+                  "bypassed": true,
+                  "global": "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/repro-1/cache/global",
+                  "local": "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/repro-1/cache/local"
+                },
+                "capture_limit_bytes": 4194304,
+                "command": {
+                  "args": [
+                    "cc",
+                    "-std=c17",
+                    "-fno-strict-aliasing",
+                    "-target",
+                    "x86_64-linux-musl",
+                    "-O2",
+                    "-s",
+                    "-I",
+                    "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/repro-1",
+                    "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/repro-1/main.c",
+                    "-o",
+                    "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/repro-1/program"
+                  ],
+                  "program": "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig"
+                },
+                "duration_ms": 31261,
+                "exit_code": 0,
+                "ran_on": "x86_64-linux-gnu",
+                "reason": "pinned C compiler produced the requested artifact",
+                "signal": null,
+                "status": "passed",
+                "stderr": "",
+                "stderr_bytes": 0,
+                "stderr_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "stderr_truncated": false,
+                "stderr_valid_utf8": true,
+                "stdout": "",
+                "stdout_bytes": 0,
+                "stdout_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "stdout_truncated": false,
+                "stdout_valid_utf8": true,
+                "success": true,
+                "target": "x86_64-linux-musl",
+                "text_encoding": "utf-8-lossy",
+                "timed_out": false
+              },
+              "frontend": {
+                "artifact": "sha256:644b6fde8f301af88ea5d99c1c683353abffda3921991b96808dca65edc29444",
+                "artifact_path": "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/repro-1/main.c",
+                "capture_limit_bytes": 4194304,
+                "command": {
+                  "args": [
+                    "check",
+                    "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/source.yv",
+                    "--emit-c",
+                    "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/repro-1/main.c"
+                  ],
+                  "program": "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo"
+                },
+                "duration_ms": 5,
+                "exit_code": 0,
+                "ran_on": "x86_64-linux-gnu",
+                "signal": null,
+                "status": "passed",
+                "stderr": "",
+                "stderr_bytes": 0,
+                "stderr_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "stderr_truncated": false,
+                "stderr_valid_utf8": true,
+                "stdout": "",
+                "stdout_bytes": 0,
+                "stdout_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "stdout_truncated": false,
+                "stdout_valid_utf8": true,
+                "success": true,
+                "text_encoding": "utf-8-lossy",
+                "timed_out": false
+              },
+              "status": "passed"
+            },
+            {
+              "backend": {
+                "allocation_check": false,
+                "artifact": "sha256:3f3cf249933eb5c8df317d2ec72f65e6db295f0b10f5bdcb66e6a0081705f1f8",
+                "artifact_path": "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/repro-2/program",
+                "cache": {
+                  "bypassed": true,
+                  "global": "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/repro-2/cache/global",
+                  "local": "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/repro-2/cache/local"
+                },
+                "capture_limit_bytes": 4194304,
+                "command": {
+                  "args": [
+                    "cc",
+                    "-std=c17",
+                    "-fno-strict-aliasing",
+                    "-target",
+                    "x86_64-linux-musl",
+                    "-O2",
+                    "-s",
+                    "-I",
+                    "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/repro-2",
+                    "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/repro-2/main.c",
+                    "-o",
+                    "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/repro-2/program"
+                  ],
+                  "program": "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig"
+                },
+                "duration_ms": 30752,
+                "exit_code": 0,
+                "ran_on": "x86_64-linux-gnu",
+                "reason": "pinned C compiler produced the requested artifact",
+                "signal": null,
+                "status": "passed",
+                "stderr": "",
+                "stderr_bytes": 0,
+                "stderr_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "stderr_truncated": false,
+                "stderr_valid_utf8": true,
+                "stdout": "",
+                "stdout_bytes": 0,
+                "stdout_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "stdout_truncated": false,
+                "stdout_valid_utf8": true,
+                "success": true,
+                "target": "x86_64-linux-musl",
+                "text_encoding": "utf-8-lossy",
+                "timed_out": false
+              },
+              "frontend": {
+                "artifact": "sha256:644b6fde8f301af88ea5d99c1c683353abffda3921991b96808dca65edc29444",
+                "artifact_path": "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/repro-2/main.c",
+                "capture_limit_bytes": 4194304,
+                "command": {
+                  "args": [
+                    "check",
+                    "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/source.yv",
+                    "--emit-c",
+                    "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/repro-2/main.c"
+                  ],
+                  "program": "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo"
+                },
+                "duration_ms": 5,
+                "exit_code": 0,
+                "ran_on": "x86_64-linux-gnu",
+                "signal": null,
+                "status": "passed",
+                "stderr": "",
+                "stderr_bytes": 0,
+                "stderr_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "stderr_truncated": false,
+                "stderr_valid_utf8": true,
+                "stdout": "",
+                "stdout_bytes": 0,
+                "stdout_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "stdout_truncated": false,
+                "stdout_valid_utf8": true,
+                "success": true,
+                "text_encoding": "utf-8-lossy",
+                "timed_out": false
+              },
+              "status": "passed"
+            }
+          ],
+          "builds_attempted": 2,
+          "cache_bypassed": true,
+          "frontend_processes_attempted": 2,
+          "generated_c_hashes": [
+            "sha256:644b6fde8f301af88ea5d99c1c683353abffda3921991b96808dca65edc29444",
+            "sha256:644b6fde8f301af88ea5d99c1c683353abffda3921991b96808dca65edc29444"
+          ],
+          "generated_c_identical": true,
+          "hashes": [
+            "sha256:3f3cf249933eb5c8df317d2ec72f65e6db295f0b10f5bdcb66e6a0081705f1f8",
+            "sha256:3f3cf249933eb5c8df317d2ec72f65e6db295f0b10f5bdcb66e6a0081705f1f8"
+          ],
+          "id": "reproducibility",
+          "name": "reproducible_build",
+          "ran_on": "x86_64-linux-gnu",
+          "reason": "two independent Yavo frontend processes and separate empty Zig caches produced identical artifact bytes",
+          "required": true,
+          "scope": "source_to_binary",
+          "source_path": "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/source.yv",
+          "source_sha256": "sha256:0f7c8367930a2923db979cd2602c54ec9a829d460074a6a46fc20b4819ddc115",
+          "status": "passed",
+          "target": "x86_64-linux-musl"
+        }
+      ],
+      "compiler": {
+        "executable_sha256": "sha256:1b9ed195bf5b06f822fb5c633ac4bf647fbcbce51fcc2ff27213036f15fd2aa1",
+        "version": "0.0.1"
+      },
+      "dependencies": {
+        "generated_c_sha256": "sha256:40957c73688bdf948b63a83854e0a255360bf820fdb8b32c0334ce84b273ddd4",
+        "runtime_header_sha256": "sha256:cad9d391a41bde34c5c8e539e1c2439327ebfb24522e9c8aec92b7d5702eeb0c",
+        "scope": "generated translation unit and embedded Yavo runtime; C toolchain libraries are not content-audited"
+      },
+      "diagnostics": {
+        "diagnostics": [],
+        "error_count": 0,
+        "file": "../yavo-tests/run/T-N2.yv",
+        "schema": "yavo-diagnostics/p0",
+        "source_sha256": "0f7c8367930a2923db979cd2602c54ec9a829d460074a6a46fc20b4819ddc115",
+        "warning_count": 0
+      },
+      "exit_code": 5,
+      "inputs": {
+        "dependencies": "sha256:fa5d66b048cd380cc5255eed83e05da26e2afb80ceef858e239ce9d40ec5064d",
+        "expected_stderr": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "expected_stdout": "sha256:e7abc03001f552508d79458d5095ad937e8eebdb6698cbc643d2201a549cbae7",
+        "source": "sha256:0f7c8367930a2923db979cd2602c54ec9a829d460074a6a46fc20b4819ddc115",
+        "stdin": null,
+        "toolchain": "sha256:6bed74daeeb4392e88293562c34dcb07b78cba82089138629ee5236b97417274"
+      },
+      "overall": "not_verified",
+      "policy": {
+        "allocation_check": false,
+        "audit_implemented": false,
+        "build_timeout_ms": 120000,
+        "no_run": false,
+        "release": true,
+        "reproducible_requested": true,
+        "required": [
+          "front_end",
+          "toolchain",
+          "build",
+          "tests",
+          "audit",
+          "address-undefined",
+          "thread",
+          "reproducibility"
+        ],
+        "sanitize_requested": true,
+        "test_scope": "one program execution; no unrequested test suite is inferred",
+        "timeout_ms": 5000
+      },
+      "report_path": "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/report.json",
+      "schema": "yavo-verify/1",
+      "source_path": "/data1/workspace/github/workspace/yavo/yavo-tests/run/T-N2.yv",
+      "toolchain": {
+        "actual_version": "0.17.1",
+        "compiler_libraries_hashed": false,
+        "environment": "OS allowlist; compiler and loader overrides removed",
+        "executable": "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+        "executable_sha256": "sha256:58959f01285c05a74276f09327b551d42ed6006bf325a78dc661a024e314987b",
+        "expected_version": "0.17.1",
+        "hash_scope": [
+          "embedded_toolchain_lock",
+          "zig_executable"
+        ],
+        "installed_archive_reverified": false,
+        "library_dir": "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/lib",
+        "lock_sha256": "sha256:a9bbe83e644b0e1cee19c8dba8b5157eaed3e9ddc71b96d8aab2b2d2bb15f53c"
+      }
+    },
+    "windows": {
+      "artifact_dir": "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/windows-artifacts/run-945380-1795194104795910269-0",
+      "checks": [
+        {
+          "artifact": "sha256:0f7c8367930a2923db979cd2602c54ec9a829d460074a6a46fc20b4819ddc115",
+          "artifact_path": "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/windows-artifacts/run-945380-1795194104795910269-0/source.yv",
+          "id": "front_end",
+          "name": "front_end",
+          "ran_on": "x86_64-linux-gnu",
+          "reason": "lexing, parsing and implemented semantic checks passed",
+          "required": true,
+          "status": "passed",
+          "target": "x86_64-windows-gnu"
+        },
+        {
+          "artifact": "sha256:58959f01285c05a74276f09327b551d42ed6006bf325a78dc661a024e314987b",
+          "artifact_path": "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+          "capture_limit_bytes": 4194304,
+          "command": {
+            "args": [
+              "version"
+            ],
+            "program": "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig"
+          },
+          "duration_ms": 10,
+          "exit_code": 0,
+          "id": "toolchain",
+          "name": "toolchain",
+          "ran_on": "x86_64-linux-gnu",
+          "reason": "pinned compiler path and actual version match; executable and lock were hashed",
+          "required": true,
+          "signal": null,
+          "status": "passed",
+          "stderr": "",
+          "stderr_bytes": 0,
+          "stderr_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr_truncated": false,
+          "stderr_valid_utf8": true,
+          "stdout": "0.17.1\n",
+          "stdout_bytes": 7,
+          "stdout_sha256": "sha256:cd81ec19767ffb807bada6d48578a18d77a29adb394e09e9cdfcd5ea9eebb6a2",
+          "stdout_truncated": false,
+          "stdout_valid_utf8": true,
+          "success": true,
+          "target": "x86_64-linux-gnu",
+          "text_encoding": "utf-8-lossy",
+          "timed_out": false
+        },
+        {
+          "allocation_check": false,
+          "artifact": "sha256:9bd45594c2bee782192c415354051aac80cfdae0364f923a89b9e752ab95c547",
+          "artifact_path": "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/windows-artifacts/run-945380-1795194104795910269-0/program.exe",
+          "cache": {
+            "bypassed": false,
+            "mode": "pinned_toolchain_default"
+          },
+          "capture_limit_bytes": 4194304,
+          "command": {
+            "args": [
+              "cc",
+              "-std=c17",
+              "-fno-strict-aliasing",
+              "-target",
+              "x86_64-windows-gnu",
+              "-O2",
+              "-s",
+              "-I",
+              "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/windows-artifacts/run-945380-1795194104795910269-0",
+              "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/windows-artifacts/run-945380-1795194104795910269-0/main.c",
+              "-o",
+              "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/windows-artifacts/run-945380-1795194104795910269-0/program.exe"
+            ],
+            "program": "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig"
+          },
+          "duration_ms": 770,
+          "exit_code": 0,
+          "id": "build",
+          "name": "build",
+          "ran_on": "x86_64-linux-gnu",
+          "reason": "pinned C compiler produced the requested artifact",
+          "required": true,
+          "signal": null,
+          "status": "passed",
+          "stderr": "",
+          "stderr_bytes": 0,
+          "stderr_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr_truncated": false,
+          "stderr_valid_utf8": true,
+          "stdout": "",
+          "stdout_bytes": 0,
+          "stdout_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdout_truncated": false,
+          "stdout_valid_utf8": true,
+          "success": true,
+          "target": "x86_64-windows-gnu",
+          "text_encoding": "utf-8-lossy",
+          "timed_out": false
+        },
+        {
+          "artifact": "sha256:9bd45594c2bee782192c415354051aac80cfdae0364f923a89b9e752ab95c547",
+          "artifact_path": "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/windows-artifacts/run-945380-1795194104795910269-0/program.exe",
+          "id": "tests",
+          "name": "tests",
+          "ran_on": null,
+          "reason": "no runner for the requested target is available on this host",
+          "required": true,
+          "status": "not_run",
+          "target": "x86_64-windows-gnu"
+        },
+        {
+          "artifact": "sha256:9bd45594c2bee782192c415354051aac80cfdae0364f923a89b9e752ab95c547",
+          "artifact_path": "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/windows-artifacts/run-945380-1795194104795910269-0/program.exe",
+          "id": "audit",
+          "name": "audit",
+          "ran_on": null,
+          "reason": "source and dependency audit is not implemented in this prototype",
+          "required": true,
+          "runtime_header_sha256": "sha256:cad9d391a41bde34c5c8e539e1c2439327ebfb24522e9c8aec92b7d5702eeb0c",
+          "scope": {
+            "app": "not_audited",
+            "c_runtime": "trusted_pinned",
+            "dependencies": "not_audited",
+            "stdlib": "not_audited"
+          },
+          "status": "not_run",
+          "target": "x86_64-windows-gnu",
+          "trust_basis": "pinned toolchain path and version; archive and compiler libraries are not reverified"
+        },
+        {
+          "artifact": null,
+          "artifact_path": null,
+          "id": "address-undefined",
+          "name": "sanitizers",
+          "ran_on": null,
+          "reason": "not requested",
+          "required": false,
+          "status": "not_run",
+          "target": "x86_64-linux-gnu",
+          "tools": [
+            "address",
+            "undefined"
+          ]
+        },
+        {
+          "artifact": null,
+          "artifact_path": null,
+          "id": "thread",
+          "name": "sanitizers",
+          "ran_on": null,
+          "reason": "not requested",
+          "required": false,
+          "status": "not_run",
+          "target": "x86_64-linux-gnu",
+          "tools": [
+            "thread"
+          ]
+        },
+        {
+          "artifact": null,
+          "artifact_path": null,
+          "id": "reproducibility",
+          "name": "reproducible_build",
+          "ran_on": null,
+          "reason": "not requested",
+          "required": false,
+          "status": "not_run",
+          "target": "x86_64-windows-gnu"
+        }
+      ],
+      "compiler": {
+        "executable_sha256": "sha256:1b9ed195bf5b06f822fb5c633ac4bf647fbcbce51fcc2ff27213036f15fd2aa1",
+        "version": "0.0.1"
+      },
+      "dependencies": {
+        "generated_c_sha256": "sha256:40957c73688bdf948b63a83854e0a255360bf820fdb8b32c0334ce84b273ddd4",
+        "runtime_header_sha256": "sha256:cad9d391a41bde34c5c8e539e1c2439327ebfb24522e9c8aec92b7d5702eeb0c",
+        "scope": "generated translation unit and embedded Yavo runtime; C toolchain libraries are not content-audited"
+      },
+      "diagnostics": {
+        "diagnostics": [],
+        "error_count": 0,
+        "file": "../yavo-tests/run/T-N2.yv",
+        "schema": "yavo-diagnostics/p0",
+        "source_sha256": "0f7c8367930a2923db979cd2602c54ec9a829d460074a6a46fc20b4819ddc115",
+        "warning_count": 0
+      },
+      "exit_code": 5,
+      "inputs": {
+        "dependencies": "sha256:fa5d66b048cd380cc5255eed83e05da26e2afb80ceef858e239ce9d40ec5064d",
+        "expected_stderr": null,
+        "expected_stdout": null,
+        "source": "sha256:0f7c8367930a2923db979cd2602c54ec9a829d460074a6a46fc20b4819ddc115",
+        "stdin": null,
+        "toolchain": "sha256:6bed74daeeb4392e88293562c34dcb07b78cba82089138629ee5236b97417274"
+      },
+      "overall": "not_verified",
+      "policy": {
+        "allocation_check": false,
+        "audit_implemented": false,
+        "build_timeout_ms": 120000,
+        "no_run": false,
+        "release": true,
+        "reproducible_requested": false,
+        "required": [
+          "front_end",
+          "toolchain",
+          "build",
+          "tests",
+          "audit"
+        ],
+        "sanitize_requested": false,
+        "test_scope": "one program execution; no unrequested test suite is inferred",
+        "timeout_ms": 5000
+      },
+      "report_path": "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/windows-artifacts/run-945380-1795194104795910269-0/report.json",
+      "schema": "yavo-verify/1",
+      "source_path": "/data1/workspace/github/workspace/yavo/yavo-tests/run/T-N2.yv",
+      "toolchain": {
+        "actual_version": "0.17.1",
+        "compiler_libraries_hashed": false,
+        "environment": "OS allowlist; compiler and loader overrides removed",
+        "executable": "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+        "executable_sha256": "sha256:58959f01285c05a74276f09327b551d42ed6006bf325a78dc661a024e314987b",
+        "expected_version": "0.17.1",
+        "hash_scope": [
+          "embedded_toolchain_lock",
+          "zig_executable"
+        ],
+        "installed_archive_reverified": false,
+        "library_dir": "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/lib",
+        "lock_sha256": "sha256:a9bbe83e644b0e1cee19c8dba8b5157eaed3e9ddc71b96d8aab2b2d2bb15f53c"
+      }
+    }
+  },
+  "independent_evidence_validation": {
+    "actual_cli_exit_codes": [
+      5,
+      5
+    ],
+    "artifact_references_checked": 21,
+    "independent_cache_directories": [
+      {
+        "entries": 3,
+        "kind": "local",
+        "path": "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/repro-1/cache/local"
+      },
+      {
+        "entries": 5,
+        "kind": "global",
+        "path": "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/repro-1/cache/global"
+      },
+      {
+        "entries": 3,
+        "kind": "local",
+        "path": "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/repro-2/cache/local"
+      },
+      {
+        "entries": 5,
+        "kind": "global",
+        "path": "/data1/workspace/github/workspace/yavo/compiler/target/verify-review/native-artifacts/run-943134-1795194041873574665-0/repro-2/cache/global"
+      }
+    ],
+    "linux_musl_and_gnu_artifacts_distinct": true,
+    "native_stdout_exact": true,
+    "report_files": [
+      {
+        "path": "target/verify-review/native-verification.json",
+        "sha256": "sha256:69c7591c4aef2f76d534d3c9bd7f1e0ad64ca4b693b635a61c8602ea7156c486"
+      },
+      {
+        "path": "target/verify-review/windows-verification.json",
+        "sha256": "sha256:595e9e9f0804598733d5c013ed412860b6a1fb5f477d6b9f527c71acc2c6eaf2"
+      }
+    ],
+    "reproducible_binary_sha256": "sha256:3f3cf249933eb5c8df317d2ec72f65e6db295f0b10f5bdcb66e6a0081705f1f8",
+    "reproducible_c_sha256": "sha256:644b6fde8f301af88ea5d99c1c683353abffda3921991b96808dca65edc29444",
+    "status": "passed",
+    "unique_files_hashed": 12,
+    "windows_executed": false,
+    "windows_pe": true
+  },
+  "sanitizer_capability_findings": {
+    "cases": [
+      {
+        "name": "comma-separated address,undefined",
+        "flags": [
+          "-fsanitize=address,undefined"
+        ],
+        "defect": "heap-use-after-free",
+        "build_exit_code": 0,
+        "run_shell_exit_status": 0,
+        "detected": false,
+        "conclusion": "The driver accepted the option but did not enable ASan; stderr was empty."
+      },
+      {
+        "name": "undefined behavior under combined spelling",
+        "flags": [
+          "-fsanitize=address,undefined"
+        ],
+        "defect": "signed integer overflow",
+        "build_exit_code": 0,
+        "run_shell_exit_status": 134,
+        "detected": true,
+        "conclusion": "Zig ubsan_rt reported signed integer overflow and aborted."
+      },
+      {
+        "name": "thread production flags",
+        "flags": [
+          "-fsanitize=thread"
+        ],
+        "defect": "data race",
+        "build_exit_code": 0,
+        "run_shell_exit_status": 66,
+        "detected": true,
+        "conclusion": "ThreadSanitizer reported the deliberate pthread race."
+      },
+      {
+        "name": "address alone",
+        "flags": [
+          "-fsanitize=address"
+        ],
+        "defect": "heap-use-after-free",
+        "build_exit_code": 1,
+        "run_shell_exit_status": null,
+        "detected": null,
+        "conclusion": "Instrumented references could not link: required __asan_* runtime symbols are unavailable."
+      },
+      {
+        "name": "separate address and undefined options",
+        "flags": [
+          "-fsanitize=address",
+          "-fsanitize=undefined"
+        ],
+        "defect": "heap-use-after-free",
+        "build_exit_code": 1,
+        "run_shell_exit_status": null,
+        "detected": null,
+        "conclusion": "Separate options retain ASan instrumentation and expose the missing ASan runtime at link time."
+      }
+    ],
+    "production_correction": "Pass each requested sanitizer as a separate option, require clean startup and component-specific defect detection, and mark the application profile unsupported when capability is unproven.",
+    "raw_evidence": [
+      {
+        "bytes": 8563,
+        "path": "target/verify-review/capability/address-undefined.driver.stderr",
+        "prefix_truncated": true,
+        "sha256": "sha256:2d4aa8dd0b7bd6f5351cbb4f25b57141bd48197399b711f31473f405083fdf37",
+        "text_prefix": "clang version 22.1.8\nTarget: x86_64-unknown-linux5.10.0-gnu2.31.0\nThread model: posix\nInstalledDir: /home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1\n (in-process)\n \"/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig\" \"-cc1\" \"-triple\" \"x86_64-unknown-linux5.10.0-gnu2.31.0\" \"-O2\" \"-emit-obj\" \"-disable-free\" \"-clear-ast-before-backend\" \"-disable-llvm-verifier\" \"-discard-value-names\" \"-main-file-name\" \"null\" \"-mrelocation-model\" \"pic\" \"-pic-level\" \"2\" \"-fhalf-no-semantic-interposition\" \"-mframe-poin"
+      },
+      {
+        "bytes": 0,
+        "path": "target/verify-review/capability/address-undefined.driver.stdout",
+        "prefix_truncated": false,
+        "sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "text_prefix": ""
+      },
+      {
+        "bytes": 3831064,
+        "path": "target/verify-review/capability/asan",
+        "sha256": "sha256:da3008a9f2c11427e121aa4f7c50feeb7a101550cad3024ce0930e4f718b37ab"
+      },
+      {
+        "bytes": 2,
+        "path": "target/verify-review/capability/asan-only.build.exit",
+        "prefix_truncated": false,
+        "sha256": "sha256:4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+        "text_prefix": "1\n"
+      },
+      {
+        "bytes": 985,
+        "path": "target/verify-review/capability/asan-only.build.stderr",
+        "prefix_truncated": false,
+        "sha256": "sha256:10180c79c1e49abb07e12dd33a8b7301f2aa1e1c270255d3b22e047f1f975678",
+        "text_prefix": "ld.lld: error: undefined symbol: __asan_report_load4\n>>> referenced by asan.c:5 (compiler/target/verify-review/capability/asan.c:5)\n>>>               /home/appops/.cache/zig/o/d07e7ac33de0ab386a7c1a1fa67c3fee/asan.o:(read_after_free)\n\nld.lld: error: undefined symbol: __asan_init\n>>> referenced by asan.c\n>>>               /home/appops/.cache/zig/o/d07e7ac33de0ab386a7c1a1fa67c3fee/asan.o:(asan.module_ctor)\n\nld.lld: error: undefined symbol: __asan_version_mismatch_check_v8\n>>> referenced by asan.c\n>>>               /home/appops/.cache/zig/o/d07e7ac33de0ab386a7c1a1fa67c3fee/asan.o:(asan.module_ctor)\n\nld.lld: error: undefined symbol: __asan_register_elf_globals\n>>> referenced by asan.c\n>>>               /home/appops/.cache/zig/o/d07e7ac33de0ab386a7c1a1fa67c3fee/asan.o:(asan.module_ctor)\n\nld.lld: error: undefined symbol: __asan_unregister_elf_globals\n>>> referenced by asan.c\n>>>               /home/appops/.cache/zig/o/d07e7ac33de0ab386a7c1a1fa67c3fee/asan.o:(asan.module_dtor)\n"
+      },
+      {
+        "bytes": 0,
+        "path": "target/verify-review/capability/asan-only.build.stdout",
+        "prefix_truncated": false,
+        "sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "text_prefix": ""
+      },
+      {
+        "bytes": 2,
+        "path": "target/verify-review/capability/asan-split.build.exit",
+        "prefix_truncated": false,
+        "sha256": "sha256:4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+        "text_prefix": "1\n"
+      },
+      {
+        "bytes": 1649,
+        "path": "target/verify-review/capability/asan-split.build.stderr",
+        "prefix_truncated": false,
+        "sha256": "sha256:7998e5181180d51d27de633d75c067fe908462c6f07d25768907afdf8b5ff3ec",
+        "text_prefix": "ld.lld: error: undefined symbol: __asan_option_detect_stack_use_after_return\n>>> referenced by stdio2.h:136 (/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/lib/libc/include/generic-glibc/bits/stdio2.h:136)\n>>>               /home/appops/.cache/zig/o/12863713b86d4318eca1217bf2a901d5/asan.o:(printf(char const*, ... pass_object_size1))\n\nld.lld: error: undefined symbol: __asan_stack_malloc_1\n>>> referenced by stdio2.h:136 (/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/lib/libc/include/generic-glibc/bits/stdio2.h:136)\n>>>               /home/appops/.cache/zig/o/12863713b86d4318eca1217bf2a901d5/asan.o:(printf(char const*, ... pass_object_size1))\n\nld.lld: error: undefined symbol: __asan_report_load4\n>>> referenced by asan.c:5 (compiler/target/verify-review/capability/asan.c:5)\n>>>               /home/appops/.cache/zig/o/12863713b86d4318eca1217bf2a901d5/asan.o:(read_after_free)\n\nld.lld: error: undefined symbol: __asan_init\n>>> referenced by asan.c\n>>>               /home/appops/.cache/zig/o/12863713b86d4318eca1217bf2a901d5/asan.o:(asan.module_ctor)\n\nld.lld: error: undefined symbol: __asan_version_mismatch_check_v8\n>>> referenced by asan.c\n>>>               /home/appops/.cache/zig/o/12863713b86d4318eca1217bf2a901d5/asan.o:(asan.module_ctor)\n\nld.lld: error: undefined symbol: __asan_register_elf_globals\n>>> referenced by asan.c\n>>>               /home/appops/.cache/zig/o/12863713b86d4318eca1217bf2a901d5/asan.o:(asan.module_ctor)\n\nld.lld: error: undefined symbol: __asan_unregister_elf_globals\n>>> referenced by asan.c\n>>>               /home/appops/.cache/zig/o/12863713b86d4318eca1217bf2a901d5/asan.o:(asan.module_dtor)\n"
+      },
+      {
+        "bytes": 0,
+        "path": "target/verify-review/capability/asan-split.build.stdout",
+        "prefix_truncated": false,
+        "sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "text_prefix": ""
+      },
+      {
+        "bytes": 2,
+        "path": "target/verify-review/capability/asan.build.exit",
+        "prefix_truncated": false,
+        "sha256": "sha256:9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+        "text_prefix": "0\n"
+      },
+      {
+        "bytes": 0,
+        "path": "target/verify-review/capability/asan.build.stderr",
+        "prefix_truncated": false,
+        "sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "text_prefix": ""
+      },
+      {
+        "bytes": 0,
+        "path": "target/verify-review/capability/asan.build.stdout",
+        "prefix_truncated": false,
+        "sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "text_prefix": ""
+      },
+      {
+        "bytes": 332,
+        "path": "target/verify-review/capability/asan.c",
+        "prefix_truncated": false,
+        "sha256": "sha256:fa38a7723b04b31473406cba5e77670f3e3f13c0cde164b820273359638d6244",
+        "text_prefix": "#include <stdio.h>\n#include <stdlib.h>\n\n__attribute__((noinline)) static int read_after_free(volatile int *value) {\n    return *value;\n}\n\nint main(void) {\n    int *value = malloc(sizeof(*value));\n    if (!value) return 2;\n    *value = 73;\n    free(value);\n    printf(\"read-after-free=%d\\n\", read_after_free(value));\n    return 0;\n}\n"
+      },
+      {
+        "bytes": 2,
+        "path": "target/verify-review/capability/asan.run.exit",
+        "prefix_truncated": false,
+        "sha256": "sha256:9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+        "text_prefix": "0\n"
+      },
+      {
+        "bytes": 0,
+        "path": "target/verify-review/capability/asan.run.stderr",
+        "prefix_truncated": false,
+        "sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "text_prefix": ""
+      },
+      {
+        "bytes": 23,
+        "path": "target/verify-review/capability/asan.run.stdout",
+        "prefix_truncated": false,
+        "sha256": "sha256:2116e54a16d1709c3fdb580810b2ec0a525c970428e79a2076dc11b378a41bcc",
+        "text_prefix": "read-after-free=139330\n"
+      },
+      {
+        "bytes": 8997,
+        "path": "target/verify-review/capability/thread.driver.stderr",
+        "prefix_truncated": true,
+        "sha256": "sha256:50ff7cfe68581dc01efae33480a8bbdbca9e98d72002ee1ea091487a466c75e6",
+        "text_prefix": "clang version 22.1.8\nTarget: x86_64-unknown-linux5.10.0-gnu2.31.0\nThread model: posix\nInstalledDir: /home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1\n (in-process)\n \"/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig\" \"-cc1\" \"-triple\" \"x86_64-unknown-linux5.10.0-gnu2.31.0\" \"-O2\" \"-emit-obj\" \"-disable-free\" \"-clear-ast-before-backend\" \"-disable-llvm-verifier\" \"-discard-value-names\" \"-main-file-name\" \"null\" \"-mrelocation-model\" \"pic\" \"-pic-level\" \"2\" \"-fhalf-no-semantic-interposition\" \"-mframe-poin"
+      },
+      {
+        "bytes": 0,
+        "path": "target/verify-review/capability/thread.driver.stdout",
+        "prefix_truncated": false,
+        "sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "text_prefix": ""
+      },
+      {
+        "bytes": 6346680,
+        "path": "target/verify-review/capability/tsan",
+        "sha256": "sha256:22c2eeb91dfde5d4ca656fc9368eb969f44121b8fb08707576fa93425d50dfc9"
+      },
+      {
+        "bytes": 6346680,
+        "path": "target/verify-review/capability/tsan-production-flags",
+        "sha256": "sha256:22c2eeb91dfde5d4ca656fc9368eb969f44121b8fb08707576fa93425d50dfc9"
+      },
+      {
+        "bytes": 2,
+        "path": "target/verify-review/capability/tsan-production-flags.build.exit",
+        "prefix_truncated": false,
+        "sha256": "sha256:9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+        "text_prefix": "0\n"
+      },
+      {
+        "bytes": 0,
+        "path": "target/verify-review/capability/tsan-production-flags.build.stderr",
+        "prefix_truncated": false,
+        "sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "text_prefix": ""
+      },
+      {
+        "bytes": 0,
+        "path": "target/verify-review/capability/tsan-production-flags.build.stdout",
+        "prefix_truncated": false,
+        "sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "text_prefix": ""
+      },
+      {
+        "bytes": 3,
+        "path": "target/verify-review/capability/tsan-production-flags.run.exit",
+        "prefix_truncated": false,
+        "sha256": "sha256:8e37bed9dff3949ffd23ae638260dff869f5cc26e551f2a9e5e289a8888949fa",
+        "text_prefix": "66\n"
+      },
+      {
+        "bytes": 1082,
+        "path": "target/verify-review/capability/tsan-production-flags.run.stderr",
+        "prefix_truncated": false,
+        "sha256": "sha256:acb777bd3a7156c70d1e6b47d25201886b28e5a02bc01806b71f103cd1a71081",
+        "text_prefix": "==================\nWARNING: ThreadSanitizer: data race (pid=925125)\n  Write of size 4 at 0x563dc6f50f00 by thread T2:\n    #0 <null> <null> (tsan-production-flags+0x30302)\n    #1 <null> <null> (tsan-production-flags+0x351c4)\n\n  Previous write of size 4 at 0x563dc6f50f00 by thread T1:\n    #0 <null> <null> (tsan-production-flags+0x30350)\n    #1 <null> <null> (tsan-production-flags+0x351c4)\n\n  Thread T2 (tid=925128, running) created by main thread at:\n    #0 <null> <null> (tsan-production-flags+0x3525c)\n    #1 <null> <null> (tsan-production-flags+0x30262)\n    #2 <null> <null> (libc.so.6+0x27249) (BuildId: 93ac61ec5a8eb1396f9fbd350e3169a558528a40)\n\n  Thread T1 (tid=925127, finished) created by main thread at:\n    #0 <null> <null> (tsan-production-flags+0x3525c)\n    #1 <null> <null> (tsan-production-flags+0x30245)\n    #2 <null> <null> (libc.so.6+0x27249) (BuildId: 93ac61ec5a8eb1396f9fbd350e3169a558528a40)\n\nSUMMARY: ThreadSanitizer: data race (/data1/workspace/github/workspace/yavo/compiler/target/verify-review/capability/tsan-production-flags+0x30302) \n==================\n"
+      },
+      {
+        "bytes": 0,
+        "path": "target/verify-review/capability/tsan-production-flags.run.stdout",
+        "prefix_truncated": false,
+        "sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "text_prefix": ""
+      },
+      {
+        "bytes": 2,
+        "path": "target/verify-review/capability/tsan.build.exit",
+        "prefix_truncated": false,
+        "sha256": "sha256:9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+        "text_prefix": "0\n"
+      },
+      {
+        "bytes": 0,
+        "path": "target/verify-review/capability/tsan.build.stderr",
+        "prefix_truncated": false,
+        "sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "text_prefix": ""
+      },
+      {
+        "bytes": 0,
+        "path": "target/verify-review/capability/tsan.build.stdout",
+        "prefix_truncated": false,
+        "sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "text_prefix": ""
+      },
+      {
+        "bytes": 493,
+        "path": "target/verify-review/capability/tsan.c",
+        "prefix_truncated": false,
+        "sha256": "sha256:21a16d3c1119300edda0f23674eb80bb8c94e702bcea9aa515714d2e568309a2",
+        "text_prefix": "#include <pthread.h>\n#include <stdio.h>\n\nstatic volatile int shared;\nstatic void *racing_write(void *unused) {\n    (void)unused;\n    for (int i = 0; i < 100000; i++) shared++;\n    return NULL;\n}\n\nint main(void) {\n    pthread_t first, second;\n    if (pthread_create(&first, NULL, racing_write, NULL)) return 2;\n    if (pthread_create(&second, NULL, racing_write, NULL)) return 3;\n    pthread_join(first, NULL);\n    pthread_join(second, NULL);\n    printf(\"shared=%d\\n\", shared);\n    return 0;\n}\n"
+      },
+      {
+        "bytes": 3,
+        "path": "target/verify-review/capability/tsan.run.exit",
+        "prefix_truncated": false,
+        "sha256": "sha256:8e37bed9dff3949ffd23ae638260dff869f5cc26e551f2a9e5e289a8888949fa",
+        "text_prefix": "66\n"
+      },
+      {
+        "bytes": 928,
+        "path": "target/verify-review/capability/tsan.run.stderr",
+        "prefix_truncated": false,
+        "sha256": "sha256:757b5b4f263eb01d38bd3cf92568c4ad7eae08dd0c2d32820aeaad44934db784",
+        "text_prefix": "==================\nWARNING: ThreadSanitizer: data race (pid=925041)\n  Write of size 4 at 0x556a75f15f00 by thread T2:\n    #0 <null> <null> (tsan+0x30302)\n    #1 <null> <null> (tsan+0x351c4)\n\n  Previous write of size 4 at 0x556a75f15f00 by thread T1:\n    #0 <null> <null> (tsan+0x30302)\n    #1 <null> <null> (tsan+0x351c4)\n\n  Thread T2 (tid=925044, running) created by main thread at:\n    #0 <null> <null> (tsan+0x3525c)\n    #1 <null> <null> (tsan+0x30262)\n    #2 <null> <null> (libc.so.6+0x27249) (BuildId: 93ac61ec5a8eb1396f9fbd350e3169a558528a40)\n\n  Thread T1 (tid=925043, running) created by main thread at:\n    #0 <null> <null> (tsan+0x3525c)\n    #1 <null> <null> (tsan+0x30245)\n    #2 <null> <null> (libc.so.6+0x27249) (BuildId: 93ac61ec5a8eb1396f9fbd350e3169a558528a40)\n\nSUMMARY: ThreadSanitizer: data race (/data1/workspace/github/workspace/yavo/compiler/target/verify-review/capability/tsan+0x30302) \n==================\n"
+      },
+      {
+        "bytes": 0,
+        "path": "target/verify-review/capability/tsan.run.stdout",
+        "prefix_truncated": false,
+        "sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "text_prefix": ""
+      },
+      {
+        "bytes": 3845864,
+        "path": "target/verify-review/capability/ubsan",
+        "sha256": "sha256:5e28911065be9394d6b661a7a08cdbc024b00818093200229638ebcafe78c669"
+      },
+      {
+        "bytes": 2,
+        "path": "target/verify-review/capability/ubsan.build.exit",
+        "prefix_truncated": false,
+        "sha256": "sha256:9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+        "text_prefix": "0\n"
+      },
+      {
+        "bytes": 0,
+        "path": "target/verify-review/capability/ubsan.build.stderr",
+        "prefix_truncated": false,
+        "sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "text_prefix": ""
+      },
+      {
+        "bytes": 0,
+        "path": "target/verify-review/capability/ubsan.build.stdout",
+        "prefix_truncated": false,
+        "sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "text_prefix": ""
+      },
+      {
+        "bytes": 179,
+        "path": "target/verify-review/capability/ubsan.c",
+        "prefix_truncated": false,
+        "sha256": "sha256:4f71c40e2137184300735e8d49d911973ebfff0ade09175b47f1d6761e8161b7",
+        "text_prefix": "#include <limits.h>\n#include <stdio.h>\n\nint main(void) {\n    volatile int maximum = INT_MAX;\n    volatile int one = 1;\n    printf(\"overflow=%d\\n\", maximum + one);\n    return 0;\n}\n"
+      },
+      {
+        "bytes": 4,
+        "path": "target/verify-review/capability/ubsan.run.exit",
+        "prefix_truncated": false,
+        "sha256": "sha256:e726b440cc164001999e718b51780d80314709efe06e7857282377be9111127b",
+        "text_prefix": "134\n"
+      },
+      {
+        "bytes": 912,
+        "path": "target/verify-review/capability/ubsan.run.stderr",
+        "prefix_truncated": false,
+        "sha256": "sha256:eb802abb83691cd56ed9bb41c09306b2583ed6c8c4002d6d317d3a0682701aab",
+        "text_prefix": "thread 925063 panic: signed integer overflow: 2147483647 + 1 cannot be represented in type 'int'\n/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/lib/ubsan_rt.zig:156:20: 0x1064218 in abort (ubsan_rt)\n            handler(data, lhs_handle, rhs_handle);\n                   ^\ncompiler/target/verify-review/capability/ubsan.c:7:37: 0x101312e in main (/data1/workspace/github/workspace/yavo/compiler/target/verify-review/capability/ubsan.c)\n    printf(\"overflow=%d\\n\", maximum + one);\n                                    ^\n???:?:?: 0x7feeb9dbb249 in ??? (/lib/x86_64-linux-gnu/libc.so.6)\n???:?:?: 0x7feeb9dbb304 in ??? (/lib/x86_64-linux-gnu/libc.so.6)\n/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/lib/libc/glibc/sysdeps/x86_64/start-2.33.S:120: 0x10130e9 in ??? (/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/lib/libc/glibc/sysdeps/x86_64/start-2.33.S)\n\tcall *__libc_start_main@GOTPCREL(%rip)\n\n"
+      },
+      {
+        "bytes": 0,
+        "path": "target/verify-review/capability/ubsan.run.stdout",
+        "prefix_truncated": false,
+        "sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "text_prefix": ""
+      }
+    ]
+  },
+  "tested_source_sha256": {
+    "compiler/src/allocations.rs": "7eda3418bf9a356801e2d07b3ce35a78f4b6abf4369cc561836881c8a802b645",
+    "compiler/src/ast.rs": "bf07ec70263edb57ba34cd7fc078233273a865f240bc67ee2b7eaba0b87d123f",
+    "compiler/src/check.rs": "5d1bfb02e02dbf43d05dac02629583ef4f93ab871d15676413c1a423dda4d1da",
+    "compiler/src/codegen.rs": "1e6e733006d497b34d72db4da9cac1a1efc7324acdc6be689e1ebae2cdfa8d4c",
+    "compiler/src/diag.rs": "738f097f5f537ce20acf9ae4ad4eb3338b7811275428d231e69d453b3e5e85e6",
+    "compiler/src/fix_plan.rs": "71b9b5260628df915bb5066d5e1f29189706c88fa4a710e318cad0a76ef315ac",
+    "compiler/src/fix.rs": "1170ca66e4cbea997eb5ac3faa966fab0c07ebcf048998a796904afdef5dae78",
+    "compiler/src/lexer.rs": "cb1b7edd90be17ddbe439b23b139c5995164578f242d3df23a2f71e07b484622",
+    "compiler/src/main.rs": "f112df82abcbc338816bedb5d177955b76bc60390a10bfbac95c477e11431640",
+    "compiler/src/parser.rs": "ed78343386da9e7738519a97b94e6f56d81a45345edbe26348ffd61ffb0a5b04",
+    "compiler/src/process.rs": "b03f4c08f1fa763faeeb20379fbb21bfb06416f6baa6782aba673e727c729164",
+    "compiler/src/toolchain.rs": "f59e340873d0a3f69e10fb27afd9d6de22c6575ff4b250eef931ae6cd3c494c6",
+    "compiler/src/types.rs": "f1f39ecc427019ed0b9d6a84d318d0740e787ad0bb0619e4fe537a08ecbc0d72",
+    "compiler/src/verify.rs": "bb1d4dbfd39ffc3a501833cc7abfbbf4f7c90a22ee72ec2c7aa9eb7fbac9c6c0",
+    "compiler/runtime/yavo_rt.h": "cad9d391a41bde34c5c8e539e1c2439327ebfb24522e9c8aec92b7d5702eeb0c",
+    "compiler/Cargo.toml": "c3d8cd3d23c13ced4499ea298eefabeef20bf522ad7ec573ef6692b8b75b87a9",
+    "compiler/Cargo.lock": "1855e4b98bba9e064b54ffdb43935981e5dc2f22d8c5561688cac88bcf73ad41",
+    "compiler/toolchain.lock": "a9bbe83e644b0e1cee19c8dba8b5157eaed3e9ddc71b96d8aab2b2d2bb15f53c",
+    "compiler/tests/alloc_check.rs": "3501f19341772816ed722229ba49c96ad290706d7f7a8935fb417edd5e98fb2f",
+    "compiler/tests/conformance.rs": "95ea43ac942e80dcf57be7fc4f66a93bde29fea9f51ca0b7754beeed0b43926b",
+    "compiler/tests/fix.rs": "f206df83529858219bcb878d2d9e9612a83b5e11a2c3a1b9bb751d71cb5146d1",
+    "compiler/tests/harness.rs": "48ffa2d5f44d416b9a06d04a36e8dc303213d597f82f5e56de59c148a8a66bbf",
+    "compiler/tests/p0_regressions.rs": "e697e2aed91a329afbd3aa3b4a0e5014830edb648030af6a8bde403df66d59ca",
+    "compiler/tests/p0.rs": "8b10a54fc6d371b295363164c7a02b852e66649451d7ae1e53fbf08012b1af3a",
+    "compiler/tests/runtime_io_concurrency.rs": "6bbb15b7155310758c28f6e7f37e0ecb558de7d2ffc12abb67966881b8056722",
+    "compiler/tests/stdlib_io.rs": "f392a2552d588a56546feacb81b7a6f6f9b3675a855ca08bbe339e735e7974e8",
+    "compiler/tests/targets.rs": "8861f383ff18e625634274ff617d16063436da4a5b211abdf450a73672b0770b",
+    "compiler/tests/verify.rs": "3a481df002d2cebe4524edff2823892e4dae16af91d6af809bc393f2ca0a9936",
+    "compiler/tests/conformance_baseline.txt": "b913f835b4a3d7c540475c9c5a0eede620d9fac61ec417060e0dbd49172e09f8",
+    "compiler/tests/common/mod.rs": "366633b4c6dcee1e7bfb3ec38f9545c6ed0d7adbc4ad1ebc81f88aa5382b2af6",
+    "yavo-tests/MANIFEST.json": "82c4bf71c0f239d4f07bc13500c4f7d7e6e4416f7b9722a0974fabc33bfbb3a5"
+  },
+  "logs_and_artifacts_sha256": {
+    "compiler/target/verify-review/debug.log": "708cc278bbe6e5f9aca4b96295e5e6f8c6583e639a19b064b0bb8b2cabee23d7",
+    "compiler/target/verify-review/release.log": "07b12abcdfe5ff8194598c403a4c228f319eab8b07841e06d5168bb03a4a6c07",
+    "compiler/target/release/yavo": "1b9ed195bf5b06f822fb5c633ac4bf647fbcbce51fcc2ff27213036f15fd2aa1",
+    "compiler/target/verify-review/evidence-check.json": "e2cb2456e4a1dae7a69e5e89455e5418d1928cd03be31826b1c8ff20a61fe52c",
+    "compiler/target/verify-review/capability-evidence.json": "0b4ceeafbb6498f5a7c06c8bd1ba2ba096ef03432033fe1483e639132c94adb8"
+  },
+  "review_fixes": [
+    "Include implicit Drop effects when later aggregate construction exits through try.",
+    "Do not infer an exact stdout/stderr match from a truncated prefix.",
+    "Derive the required-check policy from the actual requested check IDs.",
+    "Run two independent frontend processes as well as two empty-cache backend builds.",
+    "Restore source, C, runtime and test-input evidence from retained snapshots.",
+    "Require negative sanitizer capability probes; accepted flags and different artifact hashes alone cannot pass."
+  ],
+  "limits": [
+    "Audit is required but not implemented; the actual complete reports therefore return not_verified with exit 5.",
+    "ASan+UBSan is unsupported on this pinned toolchain because ASan runtime symbols cannot link. TSan and a separate UBSan defect probe were demonstrated.",
+    "Toolchain fingerprints bind the installed executable and embedded lock; the full installed archive and compiler-library tree are not content-audited.",
+    "Allocation no_alloc uses checked Yavo effects and trusted runtime contracts; startup and uninspected libc/OS internals are outside the function query. Generic template names remain unknown.",
+    "Reproducibility was verified for two independent builds of T-N2 with one fixed logical source path, using separate newly created local/global caches; relocation invariance was not tested.",
+    "Actual application execution is Linux x86_64. Existing cross-compilation tests cover six targets; Windows/macOS/aarch64 native execution remains unverified.",
+    "Windows process cleanup is a bounded taskkill fallback, without a Job Object guarantee for already-orphaned descendants.",
+    "Remaining conformance gaps are recorded case by case; no near-C performance claim is established."
+  ]
+}
