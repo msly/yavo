@@ -138,6 +138,9 @@ pub enum StmtKind {
     /// `with g = m.lock() { }`: `g` (a lock guard) is bound for the block and released at its
     /// end; borrows taken through it cannot leave the block (P4).
     With { name: String, name_span: Span, init: Expr, body: Block },
+    /// `scope { }`: threads started with `spawn` inside are all joined before the block is left,
+    /// however it is left (P3).
+    Scope { body: Block },
 }
 
 pub enum Else {
@@ -231,6 +234,8 @@ pub enum ExprKind {
     Err(Box<Expr>),
     /// `try value`
     Try(Box<Expr>),
+    /// `spawn f(args)`: runs a call on a new thread of the enclosing `scope`; a `Join[T]`.
+    Spawn(Box<Expr>),
     /// `value catch name => handler` or `value catch name { block }` (`block`: the handler is an
     /// `ExprKind::Block` that must not fall through).
     Catch { value: Box<Expr>, name: String, name_span: Span, handler: Box<Expr>, block: bool },

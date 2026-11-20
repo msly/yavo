@@ -1,0 +1,65 @@
+// expect-error: E0001 32:13
+// expect-error: U0001 38:19
+// expect-error: E0701 45:23
+// expect-error: U0001 52:20
+// expect-error: E0701 57:33
+// expect-error: E0001 61:25
+interface Named {
+    fn name(self) -> String
+}
+
+struct Holder: Named {
+    shared: Rc[int]
+
+    fn name(self) -> String {
+        return "holder".toString()
+    }
+}
+
+fn work() -> int {
+    return 1
+}
+
+fn view(s: str) -> str of s {
+    return s
+}
+
+fn bump(n: inout int) {
+    n += 1
+}
+
+fn outside() {
+    let h = spawn work()
+}
+
+fn moveHandle() {
+    scope {
+        let h = spawn work()
+        let _h2 = h
+    }
+}
+
+fn borrowedResult() {
+    let text = "a".toString()
+    scope {
+        let h = spawn view(text)
+    }
+}
+
+fn inoutArg() {
+    var n = 0
+    scope {
+        spawn bump(&n)
+    }
+}
+
+fn boxNotSend() {
+    let _b: Box[Named + Send] = Box(Holder{shared: Rc(1)})
+}
+
+fn unknownCap() {
+    let _b: Box[Named + Fast] = Box(Holder{shared: Rc(1)})
+}
+
+fn main() {
+}

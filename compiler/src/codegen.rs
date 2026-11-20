@@ -22,6 +22,8 @@ pub fn generate(prog: &HProgram, file: &str) -> String {
     }
     let mut g = Gen {
         out: String::new(),
+        spawns: String::new(),
+        n_spawns: 0,
         indent: 0,
         tmp: 0,
         fn_names: Vec::new(),
@@ -247,6 +249,23 @@ pub fn generate(prog: &HProgram, file: &str) -> String {
         };
         let _ = writeln!(g.out, "static inline void yv_drop_{key}({c} *p) {{\n    {drop_body}\n}}");
         let _ = writeln!(g.out, "static inline {c} yv_clone_{key}({c} const *p, uint32_t line, uint32_t col) {{\n    {clone_body}\n}}\n");
+        // Values still queued when the last handle goes are dropped through this.
+        if *kind == SyncKind::Channel && inner.needs_drop() {
+            let _ = writeln!(g.out, "static void yv_chdrop_{}(void *p) {{ {}(({} *)p); }}\n", inner.key(), drop_fn(*inner), inner.c_name());
+        }
+    }
+    // One join record layout per thread result type; the scope drops results nobody took.
+    for (_, kind, ret) in all_syncs() {
+        if kind != SyncKind::Join {
+            continue;
+        }
+        let key = ret.key();
+        let rc = if ret == Ty::Unit { "uint8_t".to_string() } else { ret.c_name().to_string() };
+        let _ = writeln!(g.out, "typedef struct {{\n    yv_join_base b;\n    {rc} ret;\n}} yv_jrec_{key};");
+        if ret.needs_drop() {
+            let _ = writeln!(g.out, "static void yv_jdrop_{key}(void *p) {{ {}(({rc} *)p); }}", drop_fn(ret));
+        }
+        g.out.push('\n');
     }
     for i in &prog.ifaces {
         let Ty::Dyn(id) = i.ty else { unreachable!() };
@@ -356,9 +375,14 @@ pub fn generate(prog: &HProgram, file: &str) -> String {
             args.join(", ")
         );
     }
+    // Spawn sites add their argument structs and thread entry functions here, ahead of the
+    // function bodies that use them.
+    let spawn_mark = g.out.len();
     for f in &prog.fns {
         g.function(f);
     }
+    let spawns = std::mem::take(&mut g.spawns);
+    g.out.insert_str(spawn_mark, &spawns);
     let main = prog.fns.iter().position(|f| f.name == "main").expect("checked: main exists");
     let _ = writeln!(
         g.out,
@@ -370,6 +394,10 @@ pub fn generate(prog: &HProgram, file: &str) -> String {
 
 struct Gen {
     out: String,
+    /// Argument structs and thread entry functions of `spawn` sites, inserted before the
+    /// function bodies; `n_spawns` numbers the sites.
+    spawns: String,
+    n_spawns: usize,
     indent: usize,
     tmp: usize,
     fn_names: Vec<String>,
@@ -2068,6 +2096,106 @@ impl Gen {
                 }
                 t
             }
+            HExprKind::ScopeNew => "(yv_scope){0}".to_string(),
+            HExprKind::ChanNew(cap) => {
+                let n = self.expr(cap, f);
+                let Ty::Sync(id) = e.ty else { unreachable!("a channel") };
+                let elem = sync_parts(id).1;
+                let drop = if elem.needs_drop() { format!("yv_chdrop_{}", elem.key()) } else { "NULL".to_string() };
+                let t = self.fresh();
+                self.line(&format!("yv_chan *{t} = yv_chan_new({n}, sizeof({}), {drop}, {});", elem.c_name(), pos(e.at)));
+                t
+            }
+            HExprKind::ChanSend { chan, value } => {
+                let c = self.borrowed(chan, f);
+                let v = self.owned(value, f);
+                let (tmp, r) = (self.fresh(), self.fresh());
+                self.line(&format!("{} {tmp} = {v};", value.ty.c_name()));
+                self.line(&format!("{} {r} = {{0}};", e.ty.c_name()));
+                // Sent: the queue owns the value. Closed: it goes back in the error.
+                self.line(&format!("if (yv_chan_send({c}, &{tmp})) {r}.ok = true; else {{ {r}.err.tag = 0; {r}.err.u.v0.f_value = {tmp}; }}"));
+                r
+            }
+            HExprKind::ChanRecv(chan) => {
+                let c = self.borrowed(chan, f);
+                let Ty::Opt(o) = e.ty else { unreachable!("recv gives an optional") };
+                let (tmp, r) = (self.fresh(), self.fresh());
+                self.line(&format!("{} {r} = {{0}};", e.ty.c_name()));
+                self.line(&format!("{} {tmp};", opt_inner(o).c_name()));
+                self.line(&format!("if (yv_chan_recv({c}, &{tmp})) {{ {r}.has = true; {r}.val = {tmp}; }}"));
+                r
+            }
+            HExprKind::ChanClose(chan) => {
+                let c = self.borrowed(chan, f);
+                self.line(&format!("yv_chan_close({c});"));
+                String::new()
+            }
+            HExprKind::Spawn { scope, func, args } => {
+                let at = pos(e.at);
+                let Ty::Sync(jid) = e.ty else { unreachable!("spawn gives a join handle") };
+                let ret = sync_parts(jid).1;
+                let jc = e.ty.c_name();
+                // Arguments are evaluated in the caller as for a call; then they belong to the thread.
+                let sinks = self.fn_sinks[*func].clone();
+                let mut held = Vec::new();
+                let mut vals = Vec::new();
+                for (i, a) in args.iter().enumerate() {
+                    if sinks.get(i).copied().unwrap_or(false) || a.ty.is_copy() {
+                        let v = self.owned(a, f);
+                        if a.ty.needs_drop() {
+                            let v = self.bind_mut(a.ty, &v);
+                            self.hold(&v, a.ty);
+                            held.push(v.clone());
+                            vals.push(v);
+                        } else {
+                            vals.push(v);
+                        }
+                    } else {
+                        vals.push(self.borrowed(a, f));
+                    }
+                }
+                self.release(&held);
+                let n = self.n_spawns;
+                self.n_spawns += 1;
+                let (j, a) = (self.fresh(), self.fresh());
+                self.line(&format!("{jc} {j} = ({jc})yv_box_alloc(sizeof(*{j}), {at});"));
+                self.line(&format!("memset({j}, 0, sizeof(*{j}));"));
+                self.line(&format!("{j}->b.ret = &{j}->ret;"));
+                if ret.needs_drop() {
+                    self.line(&format!("{j}->b.drop_ret = yv_jdrop_{};", ret.key()));
+                }
+                self.line(&format!("yv_args_{n} *{a} = (yv_args_{n} *)yv_box_alloc(sizeof(*{a}), {at});"));
+                self.line(&format!("{a}->rec = {j};"));
+                for (i, v) in vals.iter().enumerate() {
+                    self.line(&format!("{a}->a{i} = {v};"));
+                }
+                let scope_name = local_name(&f.locals, *scope);
+                self.line(&format!("yv_spawn(&{scope_name}, &{j}->b, yv_run_{n}, {a}, {at});"));
+                // The argument struct and the thread's entry function.
+                let mut fields = format!("    {jc} rec;\n");
+                let mut cargs = Vec::new();
+                for (i, arg) in args.iter().enumerate() {
+                    let _ = writeln!(fields, "    {} a{i};", arg.ty.c_name());
+                    cargs.push(format!("a->a{i}"));
+                }
+                let call = format!("{}({})", self.fn_names[*func], cargs.join(", "));
+                let body = if ret == Ty::Unit { format!("{call};") } else { format!("a->rec->ret = {call};") };
+                let _ = writeln!(
+                    self.spawns,
+                    "typedef struct {{\n{fields}}} yv_args_{n};\nstatic void yv_run_{n}(void *p) {{\n    yv_args_{n} *a = (yv_args_{n} *)p;\n    {body}\n    yv_box_free(a);\n}}\n"
+                );
+                j
+            }
+            HExprKind::JoinCall(handle) => {
+                let h = self.borrowed(handle, f);
+                self.line(&format!("yv_join_wait(&{h}->b);"));
+                self.line(&format!("{h}->b.taken = true;"));
+                if e.ty == Ty::Unit {
+                    String::new()
+                } else {
+                    self.bind_mut(e.ty, &format!("{h}->ret"))
+                }
+            }
             HExprKind::SliceRange { base, start, end } => {
                 let at = pos(e.at);
                 if e.ty == Ty::Str {
@@ -2414,6 +2542,10 @@ impl Gen {
                 | HExprKind::SyncNew { .. }
                 | HExprKind::Lock { .. }
                 | HExprKind::SyncClone(_)
+                | HExprKind::JoinCall(_)
+                | HExprKind::ChanNew(_)
+                | HExprKind::ChanSend { .. }
+                | HExprKind::ChanRecv(_)
                 | HExprKind::ToDyn { .. }
                 | HExprKind::DynCall { .. }
                 | HExprKind::Io { .. }

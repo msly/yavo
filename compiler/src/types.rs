@@ -29,6 +29,9 @@ thread_local! {
     static BOXES: RefCell<Vec<(Ty, &'static str)>> = const { RefCell::new(Vec::new()) };
     /// Name and C struct name of each interface, indexed by interface id.
     static IFACES: RefCell<Vec<(&'static str, &'static str)>> = const { RefCell::new(Vec::new()) };
+    /// For each interface id: the declared interface it is a variant of and its capabilities
+    /// (`Box[Named + Send]` is the id of `Named` with `send`). Variants share the C type.
+    static DYN_CAPS: RefCell<Vec<(u32, bool, bool)>> = const { RefCell::new(Vec::new()) };
     /// Kind, content type and C type of each concurrency/sharing type (`Ty::Sync`), by id.
     static SYNCS: RefCell<Vec<(SyncKind, Ty, &'static str)>> = const { RefCell::new(Vec::new()) };
 }
@@ -122,10 +125,44 @@ pub fn ptr_read_only(ty: Ty) -> bool {
 pub fn register_iface(name: &str) -> u32 {
     let c: &'static str = Box::leak(format!("yv_dyn_{name}").into_boxed_str());
     let name: &'static str = Box::leak(name.to_string().into_boxed_str());
-    IFACES.with(|i| {
+    let id = IFACES.with(|i| {
         let mut i = i.borrow_mut();
         i.push((name, c));
         (i.len() - 1) as u32
+    });
+    DYN_CAPS.with(|d| d.borrow_mut().push((id, false, false)));
+    id
+}
+
+/// The interface type `base + Send` / `+ Sync` (P2); `base` itself without capabilities.
+pub fn dyn_with_caps(base: u32, send: bool, sync: bool) -> u32 {
+    let base = dyn_base(base);
+    if !send && !sync {
+        return base;
+    }
+    if let Some(i) = DYN_CAPS.with(|d| d.borrow().iter().position(|&(b, s, y)| b == base && s == send && y == sync)) {
+        return i as u32;
+    }
+    let entry = IFACES.with(|i| i.borrow()[base as usize]);
+    let id = IFACES.with(|i| {
+        let mut i = i.borrow_mut();
+        i.push(entry);
+        (i.len() - 1) as u32
+    });
+    DYN_CAPS.with(|d| d.borrow_mut().push((base, send, sync)));
+    id
+}
+
+/// The declared interface an interface type is a variant of.
+pub fn dyn_base(id: u32) -> u32 {
+    DYN_CAPS.with(|d| d.borrow()[id as usize].0)
+}
+
+/// The capabilities `(Send, Sync)` written on an interface type.
+pub fn dyn_caps(id: u32) -> (bool, bool) {
+    DYN_CAPS.with(|d| {
+        let (_, s, y) = d.borrow()[id as usize];
+        (s, y)
     })
 }
 
@@ -687,7 +724,7 @@ impl Ty {
                 format!("Map_{}_{}", k.key(), v.key())
             }
             Ty::Struct(id) => format!("S_{}", c_safe(agg_names(id).0)),
-            Ty::Enum(id) => format!("E_{}", agg_names(id).0.replace('.', "_")),
+            Ty::Enum(id) => format!("E_{}", c_safe(agg_names(id).0)),
             Ty::Res(id) => {
                 let (o, e) = res_parts(id);
                 format!("Res_{}__{}", o.key(), e.key())
@@ -738,7 +775,10 @@ impl fmt::Display for Ty {
             Ty::Opt(id) => write!(f, "?{}", opt_inner(*id)),
             Ty::RefMut(id) => write!(f, "&inout {}", ref_mut_inner(*id)),
             Ty::Box(id) => write!(f, "Box[{}]", box_inner(*id)),
-            Ty::Dyn(id) => write!(f, "Box[{}]", iface_name(*id)),
+            Ty::Dyn(id) => {
+                let (send, sync) = dyn_caps(*id);
+                write!(f, "Box[{}{}{}]", iface_name(*id), if send { " + Send" } else { "" }, if sync { " + Sync" } else { "" })
+            }
             Ty::Sync(id) => {
                 let (k, t) = sync_parts(*id);
                 match k {

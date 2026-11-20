@@ -30,7 +30,7 @@ It is superseded by `tests/conformance.rs` (below), which makes that distinction
 
 | Class | Meaning |
 | --- | --- |
-| `E0xxx` | An error about the program, as listed in `yavo-tests/ERRORS.md` (the front-end codes `E0010`–`E0018` and `E0020` were added there on 2026-11-16). |
+| `E0xxx` | An error about the program, as listed in `yavo-tests/ERRORS.md` (the front-end codes `E0010`â`E0018` and `E0020` were added there on 2026-11-16). |
 | `U0001` | Valid v0.5 syntax that this compiler does not implement yet. It says nothing about whether the program is correct. |
 | `W0001` | Warning: unused variable. |
 | `W0002` | Warning: a `match` arm that can never run (added to `ERRORS.md` on 2026-11-18). |
@@ -158,7 +158,7 @@ Tests: `tests/p0/run_refs.yv`, `tests/p0/errors_refs.yv` (9 diagnostics).
 
 ## Optional values
 
-Supported (semantic table C5, C7, V9; stdlib contract §1):
+Supported (semantic table C5, C7, V9; stdlib contract Â§1):
 
 - `?T` for any supported `T`, including `??T`, `?Vec[String]`, `Vec[?String]` and `?str`
   (which carries a borrow and needs `of` when returned); `none`; `some(x)`; a `T` used where a
@@ -208,7 +208,7 @@ once also built with UBSan, which was clean) and `tests/p0/errors_optionals.yv`
 ## Imports
 
 `use std/m` and `use std/{a, b}` import the modules `io`, `fs`, `os`, `math`, `time`, `rand`,
-`collections` and `sync` (stdlib contract §1). An unknown module is `E0010`, a module imported
+`collections` and `sync` (stdlib contract Â§1). An unknown module is `E0010`, a module imported
 twice `E0011`, and an import nothing uses is warning `W0003`. Using `m.f(...)` or `m.name`
 without importing `m` is `E0010`. Importing anything other than `std/...` is `U0001`.
 
@@ -221,7 +221,7 @@ using one still marks the import as used. Tests: `tests/p0/run_imports.yv`; the 
 
 ## Maps and `&inout` references
 
-Supported (stdlib contract §3; semantic table A1, A2, A3, A5, C4, C6):
+Supported (stdlib contract Â§3; semantic table A1, A2, A3, A5, C4, C6):
 
 - `Map[K, V]` with integer, `bool`, `str` or `String` keys (other keys are `E0501`) and any
   value type; `[:]` and `[k: v, ...]` literals (`[:]` needs a type from context).
@@ -258,7 +258,7 @@ that force rebuilds; heap-block check in debug and release, and UBSan once, all 
 
 ## Enums, results and `match`
 
-Supported (plan item 4; cheat sheet §2–§3; semantic table V3, V8, V12, C7):
+Supported (plan item 4; cheat sheet Â§2âÂ§3; semantic table V3, V8, V12, C7):
 
 - `enum Name { Case, Case(field: T, ...) }`, built as `Name.Case`, `Name.Case(field: value)` or
   positionally `Name.Case(value)`; where the type is known, `.Case(...)` (also inside `?T`
@@ -309,7 +309,7 @@ exits) and `tests/p0/errors_enums.yv` (16 errors, 1 warning).
 
 ## Standard library: text, sequences, I/O and arguments
 
-Supported (cheat sheet §5; stdlib contract §2, §4, §5; semantic table S5, M5):
+Supported (cheat sheet Â§5; stdlib contract Â§2, Â§4, Â§5; semantic table S5, M5):
 
 - Prelude: `format("...")` (a new `String`, same interpolation as `println`), `min`, `max` and
   `abs` on integers (`abs(i64.min)` panics `P-OVERFLOW`), `String{}`.
@@ -344,7 +344,7 @@ check and runs them with stdin, arguments (including a non-UTF-8 one) and a scra
 
 ## Methods
 
-Supported (cheat sheet §2; semantic table O1, O2, V1):
+Supported (cheat sheet Â§2; semantic table O1, O2, V1):
 
 - Methods are written inside a struct or enum body. The receiver is the first parameter:
   `self` (a read-only borrow), `inout self` (needs a writable variable or a field chain rooted
@@ -365,7 +365,7 @@ is the receiver (by value for `self`/`sink self`, a pointer for `inout self`). T
 
 ## User destructors (`Drop`)
 
-Supported (cheat sheet §5 "析构"; semantic table V4, V6, V10, V11):
+Supported (cheat sheet Â§5 "ææ"; semantic table V4, V6, V10, V11):
 
 - `struct T: Drop { fn drop(inout self) { ... } }` (also on enums). The compiler calls `drop`
   when a complete value is dropped: at the end of its scope, on overwrite (after the new value
@@ -384,11 +384,11 @@ Moves zero the source as before, so a moved-out value has `yv_live == 0`; its dr
 returns immediately, otherwise it clears the flag, calls `yv_fn_T__drop` and drops the
 fields. Tests: `tests/p0/run_drop.yv` (scope order, sink, `let _`, vectors, optionals, an enum
 with `Drop`, a field taken inside `drop`), `tests/p0/errors_drop.yv` (8 errors, 2 warnings);
-spec cases T-D1, T-GR1, T-GR2 and T-G10–T-G13 pass.
+spec cases T-D1, T-GR1, T-GR2 and T-G10âT-G13 pass.
 
 ## Tuples
 
-Supported (cheat sheet §2; semantic table E2, V10, rule 8):
+Supported (cheat sheet Â§2; semantic table E2, V10, rule 8):
 
 - Tuple types `(A, B, ...)` in signatures, fields, collections and optionals; literals
   `(a, b)`; elements `t.0`, `t.1` (also nested: `t.0.1`); `let (a, b) = t` and
@@ -409,7 +409,7 @@ its first use, with drop and clone helpers when needed. The lexer never reads a 
 
 ## Closures for `sortBy` and `update`
 
-Supported (cheat sheet §5; semantic table O5, K3, V8; stdlib contract §3, §4):
+Supported (cheat sheet Â§5; semantic table O5, K3, V8; stdlib contract Â§3, Â§4):
 
 - `v.sortBy((a, b) => a.1 > b.1)`: a stable sort; the closure says whether `a` goes before
   `b`. Any element type works. A comparison that breaks its contract (e.g. `a <= b`) gives some
@@ -438,7 +438,7 @@ warnings).
 
 ## Comparison protocols (`Eq`, `Ord`, `Ordering`)
 
-Supported (cheat sheet §2; semantic table K1, K2):
+Supported (cheat sheet Â§2; semantic table K1, K2):
 
 - `Ordering` (`.Less`, `.Equal`, `.Greater`) is in the prelude. Enums whose cases carry no
   payload, `Ordering` included, can be compared with `==`/`!=`; a case shorthand on the right
@@ -459,7 +459,7 @@ tag (Less 0, Equal 1, Greater 2). Tests: `tests/p0/run_protocols.yv`,
 
 ## `Box[T]`
 
-Supported (cheat sheet §4 rule 9; semantic table A4, A7, C5, C8, E1, E2; stdlib contract §1):
+Supported (cheat sheet Â§4 rule 9; semantic table A4, A7, C5, C8, E1, E2; stdlib contract Â§1):
 
 - `Box[T]` in signatures, fields, collections and optionals; `Box(value)` moves the value
   into one heap block. Recursive types go through `?Box[T]` (`struct Node { left: ?Box[Node] }`)
@@ -492,7 +492,7 @@ box" (`(*p)` in C). `&Box[T]` is `T * const *`. Tests: `tests/p0/run_box.yv`,
 
 ## Interfaces (`interface`, `struct T: I`, `Box[I]`)
 
-Supported (cheat sheet §2; semantic table O1, P2; section 8 whitelist):
+Supported (cheat sheet Â§2; semantic table O1, P2; section 8 whitelist):
 
 - `interface Named { fn name(self) -> String ... }`: method signatures with `self`,
   `inout self` or `sink self`, any parameters (`inout`/`sink` included) and return types; a
@@ -522,12 +522,12 @@ plus `yv_vtd_K`/`yv_vtc_K` (drop and free the block, clone into a new block) and
 
 ## Generics (functions and structs)
 
-Supported (cheat sheet §2; semantic table O1, E2, K1; plan item 10):
+Supported (cheat sheet Â§2; semantic table O1, E2, K1; plan item 10):
 
 - Generic functions `fn largest[T: Ord + Copy](xs: []T) -> ?T of xs`, called with explicit
   type arguments (`largest[int](v)`) or with them inferred from the arguments (`largest(v)`;
   inference reads variables, fields, literals, element accesses, tuples and simple calls, and
-  sees through `Vec → []T`, `T → ?T` and `&T`).
+  sees through `Vec â []T`, `T â ?T` and `&T`).
 - Generic structs `struct Stack[T] { items: Vec[T] ... }` with methods (`self`, `inout self`,
   `sink self`, `Self`), used as `Stack[String]` in types and `Stack[int]{items: []}` in
   literals; recursive ones work through `?Box` (`next: ?Box[Node[T]]`).
@@ -551,12 +551,12 @@ an instance gets a function index among the lifted functions (closures now also 
 signature, so signature numbers and function indexes stay equal; interface slot signatures
 moved to `DYN_BASE` and up). Function bodies are checked from a work list after the user
 functions; struct instances made after `collect_structs` are finished at once and emitted after
-the ordered structs. C names of instances are made C-safe (`Stack[String]` → `yv_s_Stack_String_`).
+the ordered structs. C names of instances are made C-safe (`Stack[String]` â `yv_s_Stack_String_`).
 Tests: `tests/p0/run_generics.yv`, `tests/p0/errors_generics.yv` (9 errors).
 
 ## Floating point (`f64`, `f32`)
 
-Supported (cheat sheet §2, §6; semantic table §7, N2, K1; stdlib contract §4):
+Supported (cheat sheet Â§2, Â§6; semantic table Â§7, N2, K1; stdlib contract Â§4):
 
 - Literals `1.5`, `2.0e-3`, `1e10` (an `f64` unless the context asks for `f32`); an integer
   literal where a float is expected is that float (`let x: f64 = 2`, `2 * x`).
@@ -568,7 +568,7 @@ Supported (cheat sheet §2, §6; semantic table §7, N2, K1; stdlib contract §4
   `i32.wrap(1.5)` is `E0001` (T-G27).
 - Floats are not `Eq`/`Ord` (K1): `v.sort()`, `contains`, `T: Ord` bounds and `Map` keys reject
   them (`E0501`); sort with `v.sortBy((a, b) => a.totalCmp(b) == .Less)`. `x.totalCmp(y)`
-  gives an `Ordering` from the bit-pattern total order (stdlib contract §4).
+  gives an `Ordering` from the bit-pattern total order (stdlib contract Â§4).
 - `min`, `max`, `abs` on floats; `s.parseFloat()` (`?f64`, decimal notation only);
   `use std/math`: `math.sqrt`, `math.pow`, `math.floor`, `math.ceil`, `math.round`, `math.pi`,
   `math.e`; `take(&x)` leaves `0.0`.
@@ -586,7 +586,7 @@ Tests: `tests/p0/run_floats.yv`, `tests/p0/errors_floats.yv` (10 errors, 1 warni
 
 ## Slices `x[a..b]`, `toVec`, `reserve`
 
-Supported (semantic table S3, A2, A3, C3, O6; stdlib contract §2):
+Supported (semantic table S3, A2, A3, C3, O6; stdlib contract Â§2):
 
 - `v[a..b]` on a `Vec[T]` or `[]T` is a `[]T` view; `s[a..b]` on `str`/`String` is a `str`
   view of bytes `a` up to `b`. Bounds are `int`s; `a < 0`, `b < a` or `b > len` panics with
@@ -642,7 +642,7 @@ same lines and columns.
 
 Added after the second cold-start experiment found that the cheat sheet teaches them:
 
-- `Set[T]` (stdlib contract §3, C6): elements are integers, `bool`, `str` or `String` (others
+- `Set[T]` (stdlib contract Â§3, C6): elements are integers, `bool`, `str` or `String` (others
   `E0501`); `var s: Set[String] = []`, `[:]` or `Set[int]{}`; `s.add(x)` consumes the element
   (already there: no change), `s.has(x)` and `s.remove(x)` (`bool`) take a `str` for `String`
   elements, `s.len()`, `s.clone()`, `take(&s)`; `for x in s` reads the elements in insertion
@@ -661,7 +661,7 @@ nested string: one error, no cascade).
 
 ## Concurrency, part 1: `Rc`, `Arc`, `Mutex`, `Guard`, `with`
 
-Supported (semantic table P4, P6, P8; stdlib contract §6):
+Supported (semantic table P4, P6, P8; stdlib contract Â§6):
 
 - `Rc(v)`, `Arc(v)` (prelude) and `Mutex(v)` (`use std/sync`, else `E0010`) move `v` into one heap
   block that starts with a header (lock, holding thread, count); the value is a `T *` to the content.
@@ -674,15 +674,47 @@ Supported (semantic table P4, P6, P8; stdlib contract §6):
   once, `let _g` at the end of the scope). Moving `m` while a guard is alive is `E0102`.
 - `with g = m.lock() { ... }` binds the guard for the block; a borrow taken through it that would
   outlive the block is `E0703` (T-P4). A `Channel[T]` type whose elements carry borrows is `E0704`.
-- Not yet in this step: `scope`, `spawn`, channels, `Send`/`Sync` (next commits).
+- `scope`, `spawn`, `Send`/`Sync` and channels: see part 2 below.
 
 Runtime: pthread or Win32 locks and condition variables, per-thread ids, atomic heap-block
 counting, and an output lock taken by print statements once a thread has started. Tests:
 `tests/p0/run_sync_local.yv` (heap-block check clean), `tests/p0/errors_sync_local.yv` (6 errors).
 
+## Concurrency, part 2: `scope`, `spawn`, `Send`/`Sync`, channels
+
+Supported (semantic table P1–P3, P5, P7, P8; stdlib contract §6):
+
+- `scope { ... }` declares a hidden value first (so it is dropped last) whose drop waits for every
+  thread the scope started, drops results nobody took and frees the join records; `return`,
+  `break`, `continue` and `try` out of the scope therefore wait before data is released (T-P3).
+- `spawn f(args)` (only inside a `scope`, else `E0001`; a named function) evaluates the arguments
+  in the caller as for a call, then runs `f` on a new thread and gives a `Join[T]`. Moved (`sink`)
+  arguments must be `Send` (`E0701`), borrowed ones `Sync` (`E0702`); borrowed data must be declared
+  before the scope and not be a temporary (`E0705`); the result must be `Send` and own its data.
+  The borrows are kept by the hidden scope value until the scope ends, even after `join()` (T-GP7).
+  `h.join()` consumes the handle (second join `E0402`); a handle cannot be moved (`U0001`), and
+  `inout` arguments are `U0001`.
+- `Send`/`Sync` are derived from the type's structure: `Rc`, `Guard` never; `Arc[T]` needs `T` both;
+  `Mutex[T]` and `Channel[T]` need `T: Send`; `&T`, `[]T` need `T: Sync`. `Box[Named + Send]`,
+  `+ Sync` are interface types with capabilities (aliases of the interface sharing its C type and
+  vtables); boxing checks the concrete type, and more capabilities convert to fewer.
+- `Channel[T]{cap: n}` (`E0704` for elements with borrows, `E0701` if not `Send`, `P-CHANNEL-CAP`
+  for `n <= 0`); `send` moves the value and returns `() ! SendError[T]` (`.Closed(value)` gives
+  it back after `close`); `recv` gives `?T`, draining the queue after `close`; `close` is
+  idempotent; `clone` shares the queue; values still queued are dropped with the last handle.
+  `SendError[T]` is a library enum made per element type on first use. `ok(_u)` may now ignore a
+  `()` payload.
+
+Code generation: each spawn site gets an argument struct and an entry function, inserted ahead
+of the function bodies; join records are `{ yv_join_base b; T ret; }`. Tests:
+`tests/p0/run_threads.yv` (8 threads × 10,000 locked increments, unjoined `String` results,
+nested scopes, early `return`), `tests/p0/run_channels.yv` (producer and consumer threads),
+both heap-block checked; `tests/p0/errors_threads.yv` (6), `tests/p0/errors_channels.yv` (5),
+`tests/p0/panic_channel_cap.yv`. Windows and macOS builds compile but were not run.
+
 ## `String.fromUtf8` and `Utf8Error`
 
-`String.fromUtf8(bytes)` (stdlib contract §5) consumes a `Vec[byte]` and returns
+`String.fromUtf8(bytes)` (stdlib contract Â§5) consumes a `Vec[byte]` and returns
 `String ! Utf8Error`; `Utf8Error { offset: int }` is in the prelude and cannot be redefined
 (`E0011`). Valid bytes keep their buffer as the `String` (no copy); invalid bytes are freed and
 `offset` is the start of the first invalid sequence, including a sequence cut off at the end.
@@ -705,16 +737,18 @@ runs all 129 cases in `yavo-tests/MANIFEST.json`, after checking each fixture ag
 | unsupported | the compiler reported `U0001` |
 | not_run | needs `yavo fix`, `yavo verify`, fixtures, sanitizers or other platforms |
 
-At this commit: pass 99, wrong 0, unsupported 16, not_run 14 (P1: 75 / 0 / 1 / 7;
-P2: 18 / 0 / 0 / 3; P3: 6 / 0 / 15 / 4). `Rc`, `Arc`, `Mutex`, `Guard` and `with` added T-GP5, T-V5,
-T-P4, T-P4p, T-P5 and T-P6p. Dereference and `&inout T` variables added T-G01–T-G04,
+At this commit: pass 113, wrong 0, unsupported 1, not_run 15 (P1: 75 / 0 / 1 / 7;
+P2: 18 / 0 / 0 / 3; P3: 20 / 0 / 0 / 5). `scope`, `spawn`, `Send`/`Sync` and channels added T-GP1âT-GP4,
+T-GP6, T-GP7, T-P1, T-P1p, T-P2, T-P2p, T-P2s, T-P3f, T-P5p and T-P6 (T-P3 runs correctly but asks for
+sanitizer builds the runner does not make, so it counts as not run). `Rc`, `Arc`, `Mutex`, `Guard` and `with` added T-GP5, T-V5,
+T-P4, T-P4p, T-P5 and T-P6p. Dereference and `&inout T` variables added T-G01âT-G04,
 T-G17, T-G18, T-G21 and T-GR11; `String.fromUtf8` added T-GR4. Slices added T-C4, T-G09, T-G19 and T-S1, and
 `reserve` added T-GR7 (T-GR8 now reaches its allocation-fault injection, which the runner does
 not support, so it counts as not run). Floats added T-G27, T-K1, T-K1p and T-N1d.
 Generics added T-O6, T-O7, T-E1 and T-E1p. `Box`
 added T-A3, T-A3f, T-E2, T-E2p, T-G28 and
 T-G29. Comparison protocols added T-G25 and T-G26; closures added T-C7 and tuples T-O5p. User destructors added T-D1, T-GR1, T-GR2 and
-T-G10–T-G13. The standard library step added T-G08, T-V4, T-V4p and
+T-G10âT-G13. The standard library step added T-G08, T-V4, T-V4p and
 T-S2 (the runner now writes `fixture_hex` fixtures into a directory of their own and runs the case
 there). Enums, results and owning struct fields added T-C4p, T-C6, T-C6p, T-G14, T-G15 and
 T-G16. Optional values added T-C5, T-G05, T-G06, T-G07 and

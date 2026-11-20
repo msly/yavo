@@ -1,0 +1,42 @@
+// expect-stdout:
+// | 590
+// | 2
+// | 7
+use std/sync
+
+fn produce(ch: sink Channel[String], n: int) {
+    for i in 0..n {
+        ch.send(format("job-${i}")) catch _e {
+            return
+        }
+    }
+    ch.close()
+}
+
+fn consume(ch: sink Channel[String]) -> int {
+    var count = 0
+    while let job = ch.recv() {
+        count += job.len()
+    }
+    return count
+}
+
+fn main() {
+    let ch = Channel[String]{cap: 4}
+    var total = 0
+    scope {
+        spawn produce(ch.clone(), 100)
+        let c = spawn consume(ch.clone())
+        total = c.join()
+    }
+    println(total)
+    let left = Channel[Vec[int]]{cap: 3}
+    left.send([1, 2]) catch _e { return }
+    left.send([3]) catch _e { return }
+    if let v = left.recv() {
+        println(v.len())
+    }
+    let shared = Arc(Channel[int]{cap: 2})
+    shared.send(7) catch _e { return }
+    println(shared.recv() ?? 0)
+}

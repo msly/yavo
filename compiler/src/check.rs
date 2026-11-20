@@ -8,7 +8,7 @@ use crate::types::{
     box_inner, box_of, finish_agg, map_of, map_parts, opt_inner, opt_of, ref_inner, ref_mut_inner, ref_mut_of, ref_of, register_enum,
     register_iface,
     register_struct, res_of, res_parts, set_user_drop, has_user_drop, slice_elem, slice_of, tuple_elems, tuple_of, vec_elem,
-    vec_of, FloatTy, IntTy, Ty, sync_of, sync_parts, ptr_inner, ptr_read_only, SyncKind,
+    vec_of, FloatTy, IntTy, Ty, sync_of, sync_parts, ptr_inner, ptr_read_only, SyncKind, dyn_base, dyn_caps, dyn_with_caps,
 };
 
 pub type LocalId = usize;
@@ -241,6 +241,21 @@ pub enum HExprKind {
     Lock { mutex: Box<HExpr>, try_: bool },
     /// `.clone()` of an `Rc`, `Arc` or `Channel`: one more handle to the same block.
     SyncClone(Box<HExpr>),
+    /// `Channel[T]{cap: n}`.
+    ChanNew(Box<HExpr>),
+    /// `ch.send(v)`: `() ! SendError[T]`; a closed channel gives `v` back.
+    ChanSend { chan: Box<HExpr>, value: Box<HExpr> },
+    /// `ch.recv()`: `?T`, none once closed and empty.
+    ChanRecv(Box<HExpr>),
+    /// `ch.close()`.
+    ChanClose(Box<HExpr>),
+    /// The empty value of a `scope` block (its hidden local's initializer).
+    ScopeNew,
+    /// `spawn f(args)` in the scope whose hidden value is `scope`: the arguments are evaluated
+    /// here, then the call runs on a new thread; the value is a `Join[T]`.
+    Spawn { scope: LocalId, func: usize, args: Vec<HExpr> },
+    /// `h.join()`: waits for the thread and takes its result (consumes the handle).
+    JoinCall(Box<HExpr>),
     /// `String.fromUtf8(bytes)`: consumes a `Vec[byte]`; the result is `String ! Utf8Error`
     /// (stdlib contract §5).
     FromUtf8(Box<HExpr>),
@@ -602,6 +617,11 @@ impl Pre {
                 self.block(&body.stmts, stack);
                 self.bind_end.insert((idx, 0), self.next);
             }
+            // The scope's hidden value lives until the end of the body.
+            StmtKind::Scope { body } => {
+                self.block(&body.stmts, stack);
+                self.bind_end.insert((idx, 0), self.next);
+            }
         }
     }
 
@@ -632,7 +652,7 @@ impl Pre {
                     self.expr(a, idx, stack);
                 }
             }
-            ExprKind::Named { value, .. } | ExprKind::Err(value) | ExprKind::Try(value) => self.expr(value, idx, stack),
+            ExprKind::Named { value, .. } | ExprKind::Err(value) | ExprKind::Try(value) | ExprKind::Spawn(value) => self.expr(value, idx, stack),
             ExprKind::Catch { value, handler, .. } => {
                 self.expr(value, idx, stack);
                 self.expr(handler, idx, stack);
@@ -746,6 +766,8 @@ struct FnCx {
     iterating: Vec<LocalId>,
     /// Collections iterated by enclosing `for ... in &c` loops: the loop has exclusive access.
     iterating_mut: Vec<LocalId>,
+    /// The hidden values of the enclosing `scope` blocks, innermost last (`spawn` adds to it).
+    thread_scopes: Vec<LocalId>,
     /// The expression (by span) that may be `x ?? return/break/continue`: the whole initializer
     /// of a `let` or right side of an assignment, or the right side of such a `??`.
     diverge_ok: Option<Span>,
@@ -771,6 +793,7 @@ impl FnCx {
             ret_of: None,
             iterating: Vec::new(),
             iterating_mut: Vec::new(),
+            thread_scopes: Vec::new(),
             diverge_ok: None,
             in_drop: false,
             captures: Vec::new(),
@@ -902,7 +925,7 @@ fn mentions(e: &Expr, name: &str) -> bool {
         ExprKind::Int(_) | ExprKind::Byte(_) | ExprKind::Bool(_) | ExprKind::None | ExprKind::Break | ExprKind::Continue | ExprKind::Unit | ExprKind::Generic { .. } | ExprKind::Float(_) => false,
         ExprKind::Return(v) => v.as_ref().is_some_and(|v| mentions(v, name)),
         ExprKind::Case { args, .. } => args.iter().flatten().any(|a| mentions(a, name)),
-        ExprKind::Named { value, .. } | ExprKind::Err(value) | ExprKind::Try(value) => mentions(value, name),
+        ExprKind::Named { value, .. } | ExprKind::Err(value) | ExprKind::Try(value) | ExprKind::Spawn(value) => mentions(value, name),
         ExprKind::Catch { value, handler, .. } => mentions(value, name) || mentions(handler, name),
         ExprKind::Match { value, arms } => mentions(value, name) || arms.iter().any(|a| mentions(&a.body, name)),
         // Statements inside a block are not searched: only the call's own arguments matter here.
@@ -940,7 +963,7 @@ fn idents_expr(e: &Expr, out: &mut Vec<(String, u32)>) {
             }
         }
         ExprKind::Case { args, .. } => args.iter().flatten().for_each(|a| sub(a, out)),
-        ExprKind::Named { value, .. } | ExprKind::Err(value) | ExprKind::Try(value) => sub(value, out),
+        ExprKind::Named { value, .. } | ExprKind::Err(value) | ExprKind::Try(value) | ExprKind::Spawn(value) => sub(value, out),
         ExprKind::Catch { value, handler, .. } => {
             sub(value, out);
             sub(handler, out);
@@ -1025,6 +1048,7 @@ fn idents_block(stmts: &[Stmt], out: &mut Vec<(String, u32)>) {
                 idents_expr(init, out);
                 idents_block(&body.stmts, out);
             }
+            StmtKind::Scope { body } => idents_block(&body.stmts, out),
             StmtKind::For { start, end, body, .. } => {
                 idents_expr(start, out);
                 idents_expr(end, out);
@@ -1300,6 +1324,7 @@ fn stmt_terminates(s: &Stmt) -> bool {
         StmtKind::Loop { body } => !contains_break(&body.stmts),
         StmtKind::Block(b) => terminates(&b.stmts),
         StmtKind::With { body, .. } => terminates(&body.stmts),
+        StmtKind::Scope { body } => terminates(&body.stmts),
         _ => false,
     }
 }
@@ -1336,6 +1361,7 @@ fn contains_break(stmts: &[Stmt]) -> bool {
         StmtKind::Match { arms, .. } => arms.iter().any(|a| contains_break(&a.body.stmts)),
         StmtKind::Block(b) => contains_break(&b.stmts),
         StmtKind::With { body, .. } => contains_break(&body.stmts),
+        StmtKind::Scope { body } => contains_break(&body.stmts),
         _ => false,
     })
 }
@@ -1598,6 +1624,12 @@ impl Checker<'_> {
             match self.resolve_ty(&te) {
                 t @ Ty::Struct(_) => self.structs.iter().position(|s| s.ty == t),
                 Ty::Sync(_) => {
+                    let te = TypeExpr { name: name.to_string(), span: name_span, args: targs.to_vec() };
+                    if let t @ Ty::Sync(id) = self.resolve_ty(&te) {
+                        if sync_parts(id).0 == SyncKind::Channel {
+                            return self.chan_new(t, inits, name_span, span, cx);
+                        }
+                    }
                     for init in inits {
                         self.expr(&init.value, None, cx);
                     }
@@ -1911,8 +1943,26 @@ impl Checker<'_> {
     /// A `Box[T]` used where a `Box[I]` is expected becomes an interface value when `T`
     /// implements `I` (section 8 whitelist); anything else is left for the type check.
     fn to_dyn(&mut self, h: HExpr, iface: u32, cx: &mut FnCx) -> HExpr {
+        // An interface value with more capabilities can be used as one with fewer (P2).
+        if let Ty::Dyn(j) = h.ty {
+            if j != iface && dyn_base(j) == dyn_base(iface) {
+                let ((s1, y1), (s2, y2)) = (dyn_caps(j), dyn_caps(iface));
+                if (s1 || !s2) && (y1 || !y2) {
+                    return HExpr { ty: Ty::Dyn(iface), ..h };
+                }
+            }
+            return h;
+        }
         let Ty::Box(b) = h.ty else { return h };
-        let Some(&imp) = self.impl_index.get(&(box_inner(b), iface as usize)) else { return h };
+        let inner = box_inner(b);
+        let Some(&imp) = self.impl_index.get(&(inner, dyn_base(iface) as usize)) else { return h };
+        // Boxing as `Box[Named + Send]` checks the concrete type (P2).
+        let (send, sync) = dyn_caps(iface);
+        if send && !self.cap_ok(inner, false, &mut Vec::new()) {
+            self.diags.error("E0701", h.span, format!("`{inner}` is not `Send`, so it cannot be boxed as `{}`", Ty::Dyn(iface)));
+        } else if sync && !self.cap_ok(inner, true, &mut Vec::new()) {
+            self.diags.error("E0702", h.span, format!("`{inner}` is not `Sync`, so it cannot be boxed as `{}`", Ty::Dyn(iface)));
+        }
         let (span, at) = (h.span, h.at);
         let h = self.consume(h, cx);
         HExpr { kind: HExprKind::ToDyn { value: Box::new(h), imp }, ty: Ty::Dyn(iface), span, at }
@@ -2579,6 +2629,27 @@ impl Checker<'_> {
                 return Ty::Error;
             };
             // `Box[Named]`: a boxed value of any type that implements the interface.
+            // `Box[Named + Send]`: one that may also be moved to (or shared with) other threads.
+            if inner.name == "+" {
+                let base = &inner.args[0];
+                let ii = if base.args.is_empty() { self.iface_index.get(&base.name).copied() } else { None };
+                let Some(ii) = ii else {
+                    self.diags.error("E0001", base.span, "capabilities such as `+ Send` can only follow an interface name");
+                    return Ty::Error;
+                };
+                let (mut send, mut sync) = (false, false);
+                for c in &inner.args[1..] {
+                    match c.name.as_str() {
+                        "Send" => send = true,
+                        "Sync" => sync = true,
+                        other => {
+                            self.diags.error("E0001", c.span, format!("unknown capability `{other}`; the capabilities are `Send` and `Sync`"));
+                            return Ty::Error;
+                        }
+                    }
+                }
+                return Ty::Dyn(dyn_with_caps(ii as u32, send, sync));
+            }
             if inner.args.is_empty() {
                 if let Some(&ii) = self.iface_index.get(&inner.name) {
                     return Ty::Dyn(ii as u32);
@@ -2986,8 +3057,8 @@ impl Checker<'_> {
             d.note(format!("Yavo has no implicit conversions; convert explicitly with `{expected}(...)`"));
         }
         if let (Ty::Box(b), Ty::Dyn(i)) = (e.ty, expected) {
-            let (inner, iname) = (box_inner(b), &self.ifaces[i as usize].name);
-            if self.declared_impls.contains(&(inner, i as usize)) {
+            let (inner, iname) = (box_inner(b), &self.ifaces[dyn_base(i) as usize].name);
+            if self.declared_impls.contains(&(inner, dyn_base(i) as usize)) {
                 d.note(format!("`{inner}` declares `{iname}`, but its methods do not match the interface (reported above)"));
             } else {
                 d.note(format!("`{inner}` does not implement `{iname}`; declare it as `struct {inner}: {iname}` and write its methods"));
@@ -3179,6 +3250,231 @@ impl Checker<'_> {
         self.pop_scope(cx);
         let stmts = vec![HStmt { kind: HStmtKind::Let { local, init: h }, span }, HStmt { kind: HStmtKind::Block(inner), span }];
         Some(HStmt { kind: HStmtKind::Block(stmts), span })
+    }
+
+    /// `scope { body }`: a hidden local whose drop waits for the scope's threads is declared
+    /// first, so it is dropped last; borrows taken by `spawn` are stored in it (P3).
+    fn scope_stmt(&mut self, body: &Block, span: Span, cx: &mut FnCx) -> Option<HStmt> {
+        self.scope_stmt_inner(body, span, cx)
+    }
+
+    /// `Channel[T]{cap: n}` (P5, stdlib contract §6): elements must be `Send` (`E0701`); a
+    /// capacity that is not positive panics with `P-CHANNEL-CAP`.
+    fn chan_new(&mut self, ty: Ty, inits: &[FieldInit], name_span: Span, span: Span, cx: &mut FnCx) -> HExpr {
+        let Ty::Sync(id) = ty else { unreachable!("a channel type") };
+        let elem = sync_parts(id).1;
+        let int = Ty::Int(IntTy::I64);
+        let mut cap = None;
+        for init in inits {
+            if init.name == "cap" && cap.is_none() {
+                let h = self.expr(&init.value, Some(int), cx);
+                cap = Some(self.fit(h, int, cx));
+            } else {
+                self.diags.error("E0001", init.value.span, format!("a channel has one field, `cap`; `{}` is not allowed here", init.name));
+                self.expr(&init.value, None, cx);
+            }
+        }
+        let Some(cap) = cap else {
+            self.diags.error("E0001", name_span, "a channel needs its capacity: `Channel[T]{cap: n}`");
+            return err_expr(span);
+        };
+        if !self.cap_ok(elem, false, &mut Vec::new()) {
+            let hint = self.send_hint(elem);
+            self.diags.error("E0701", name_span, format!("a channel cannot carry `{elem}`: it is not `Send`")).note(hint);
+            return err_expr(span);
+        }
+        HExpr { kind: HExprKind::ChanNew(Box::new(cap)), ty, span, at: name_span }
+    }
+
+    /// `SendError[T]` (stdlib contract §6): `enum { Closed(value: T) }`, made on first use.
+    fn send_error_ty(&mut self, t: Ty) -> Ty {
+        let name = format!("SendError[{t}]");
+        if let Some(&i) = self.struct_index.get(&name) {
+            return self.structs[i].ty;
+        }
+        let ty = Ty::Enum(register_enum(&name));
+        let span = Span { start: 0, end: 0, line: 1, col: 1 };
+        let si = self.structs.len();
+        self.struct_index.insert(name.clone(), si);
+        let variants = vec![VariantDef { name: "Closed".to_string(), fields: vec![("value".to_string(), t, span)] }];
+        self.structs.push(StructDef { name, span, ty, fields: Vec::new(), variants });
+        let Ty::Enum(id) = ty else { unreachable!() };
+        finish_agg(id, vec![vec![t]]);
+        self.late_structs.push(si);
+        ty
+    }
+
+    fn scope_stmt_inner(&mut self, body: &Block, span: Span, cx: &mut FnCx) -> Option<HStmt> {
+        let stmt_idx = cx.cur;
+        cx.scopes.push(Vec::new());
+        let ty = Ty::Sync(sync_of(SyncKind::Scope, Ty::Unit));
+        let local = self.declare(cx, "_", span, ty, LocalKind::Let);
+        if let Some(&end) = cx.pre.bind_end.get(&(stmt_idx, 0)) {
+            cx.locals[local].scope_end = end;
+        }
+        cx.locals[local].pinned = true;
+        cx.locals[local].used = true;
+        cx.thread_scopes.push(local);
+        let mut stmts = vec![HStmt { kind: HStmtKind::Let { local, init: HExpr { kind: HExprKind::ScopeNew, ty, span, at: span } }, span }];
+        stmts.extend(self.stmts(&body.stmts, cx));
+        cx.thread_scopes.pop();
+        self.pop_scope(cx);
+        Some(HStmt { kind: HStmtKind::Block(stmts), span })
+    }
+
+    /// `spawn f(args)` (P3, P7, stdlib contract §6): moved arguments must be `Send` (`E0701`),
+    /// borrowed ones `Sync` (`E0702`); borrowed data must exist before the scope (`E0705`); the
+    /// result must be `Send` and own its data.
+    fn spawn_expr(&mut self, call: &Expr, span: Span, cx: &mut FnCx) -> HExpr {
+        let Some(&scope) = cx.thread_scopes.last() else {
+            self.diags
+                .error("E0001", span, "`spawn` can only be used inside a `scope { ... }` block")
+                .note("the scope waits for the thread, so data the thread borrows stays alive");
+            self.expr(call, None, cx);
+            return err_expr(span);
+        };
+        let ExprKind::Call { callee, .. } = &call.kind else {
+            self.diags.error("U0001", call.span, "`spawn` needs a call of a named function, e.g. `spawn work(x)`");
+            self.expr(call, None, cx);
+            return err_expr(span);
+        };
+        if !matches!(callee.kind, ExprKind::Ident(_)) {
+            self.diags.error("U0001", call.span, "`spawn` of a method call is not supported yet; call a function");
+            self.expr(call, None, cx);
+            return err_expr(span);
+        }
+        let h = self.expr(call, None, cx);
+        let HExprKind::Call { func, args } = h.kind else {
+            if h.ty != Ty::Error {
+                self.diags.error("U0001", call.span, "`spawn` can only run a function defined in this program");
+            }
+            return err_expr(span);
+        };
+        let (params, sinks, inouts) = {
+            let s = self.sig(func);
+            (s.params.clone(), s.sinks.clone(), s.inouts.clone())
+        };
+        let mut loans = Vec::new();
+        let mut ok = true;
+        for (i, a) in args.iter().enumerate() {
+            let pty = params.get(i).copied().unwrap_or(a.ty);
+            if inouts.get(i).copied().unwrap_or(false) {
+                self.diags.error("U0001", a.span, "passing an `inout` argument to a thread is not supported yet");
+                ok = false;
+                continue;
+            }
+            if sinks.get(i).copied().unwrap_or(false) {
+                if !self.cap_ok(a.ty, false, &mut Vec::new()) {
+                    let hint = self.send_hint(a.ty);
+                    self.diags
+                        .error("E0701", a.span, format!("`{}` cannot be moved to another thread: it is not `Send`", a.ty))
+                        .note(hint);
+                    ok = false;
+                }
+                continue;
+            }
+            // A borrowed argument: the thread reads the caller's data, which must be `Sync`.
+            if !self.cap_ok(pty, true, &mut Vec::new()) {
+                self.diags
+                    .error("E0702", a.span, format!("`{pty}` cannot be shared with another thread: it is not `Sync`"))
+                    .note("move it to the thread with a `sink` parameter instead, or use a type that is `Sync` (e.g. `Box[Named + Send + Sync]`)");
+                ok = false;
+                continue;
+            }
+            let mut ls = if a.ty.is_copy() { self.loans_of(a, cx) } else { self.storage_loans(a, cx) };
+            if a.ty.is_copy() && !a.ty.carries_borrow() {
+                ls.clear();
+            }
+            for l in ls {
+                match l {
+                    Loan::Temp => {
+                        self.diags
+                            .error("E0705", a.span, "a thread cannot borrow a temporary: it is dropped at the end of this statement")
+                            .note("store the value in a variable declared before the `scope`, then pass it");
+                        ok = false;
+                    }
+                    Loan::Local(s) if cx.locals[s].decl > cx.locals[scope].decl => {
+                        let sn = cx.locals[s].name.clone();
+                        self.diags
+                            .error("E0705", a.span, format!("a thread cannot borrow `{sn}`: it is declared inside the `scope` and dropped before the scope waits for its threads"))
+                            .note(format!("declare `{sn}` before the `scope` block"));
+                        ok = false;
+                    }
+                    l => {
+                        if !loans.contains(&l) {
+                            loans.push(l);
+                        }
+                    }
+                }
+            }
+        }
+        let ret = h.ty;
+        if ret != Ty::Error && (!self.cap_ok(ret, false, &mut Vec::new()) || ret.carries_borrow()) {
+            self.diags
+                .error("E0701", call.span, format!("a thread cannot return `{ret}`: the result must be `Send` and own its data"))
+                .note("return owned values, e.g. `String` instead of `str`");
+            ok = false;
+        }
+        if !ok {
+            return err_expr(span);
+        }
+        self.store_loans(cx, scope, loans, span, false);
+        let ty = Ty::Sync(sync_of(SyncKind::Join, ret));
+        HExpr { kind: HExprKind::Spawn { scope, func, args }, ty, span, at: span }
+    }
+
+    /// A hint for a value that is not `Send`.
+    fn send_hint(&self, t: Ty) -> String {
+        match t {
+            Ty::Dyn(_) => "an interface value crosses threads only if declared so: `Box[Named + Send]`".to_string(),
+            Ty::Sync(id) if sync_parts(id).0 == SyncKind::Guard => {
+                "a lock guard must be released on the thread that took the lock; pass the `Mutex` (e.g. in an `Arc`) instead".to_string()
+            }
+            _ => "`Rc` never crosses threads (use `Arc`), and `Arc[Mutex[T]]` needs `T: Send`".to_string(),
+        }
+    }
+
+    /// Whether values of `ty` can be moved to another thread (`Send`, `sync == false`) or shared
+    /// between threads (`Sync`, `sync == true`), derived from the type's structure (P6).
+    fn cap_ok(&self, ty: Ty, sync: bool, seen: &mut Vec<Ty>) -> bool {
+        match ty {
+            Ty::Int(_) | Ty::Float(_) | Ty::Bool | Ty::Unit | Ty::Str | Ty::String | Ty::Error => true,
+            Ty::Vec(id) => self.cap_ok(vec_elem(id), sync, seen),
+            // Views and read-only references share what they point to.
+            Ty::Slice(id) => self.cap_ok(slice_elem(id), true, seen),
+            Ty::Ref(id) => self.cap_ok(ref_inner(id), true, seen),
+            Ty::RefMut(id) => self.cap_ok(ref_mut_inner(id), sync, seen),
+            Ty::Opt(id) => self.cap_ok(opt_inner(id), sync, seen),
+            Ty::Box(id) => self.cap_ok(box_inner(id), sync, seen),
+            Ty::Map(id) | Ty::Set(id) => {
+                let (k, v) = map_parts(id);
+                self.cap_ok(k, sync, seen) && self.cap_ok(v, sync, seen)
+            }
+            Ty::Res(id) => {
+                let (o, e) = res_parts(id);
+                self.cap_ok(o, sync, seen) && self.cap_ok(e, sync, seen)
+            }
+            Ty::Tuple(id) => tuple_elems(id).iter().all(|t| self.cap_ok(*t, sync, seen)),
+            Ty::Struct(_) | Ty::Enum(_) => {
+                if seen.contains(&ty) {
+                    return true;
+                }
+                seen.push(ty);
+                let Some(s) = self.structs.iter().find(|s| s.ty == ty) else { return true };
+                let mut tys: Vec<Ty> = s.fields.iter().map(|f| f.1).collect();
+                tys.extend(s.variants.iter().flat_map(|v| v.fields.iter().map(|f| f.1)));
+                tys.into_iter().all(|t| self.cap_ok(t, sync, seen))
+            }
+            Ty::Dyn(id) => {
+                let (send, syn) = dyn_caps(id);
+                if sync { syn } else { send }
+            }
+            Ty::Sync(id) => match sync_parts(id) {
+                (SyncKind::Rc | SyncKind::Guard | SyncKind::Join | SyncKind::Scope, _) => false,
+                (SyncKind::Arc, t) => self.cap_ok(t, false, seen) && self.cap_ok(t, true, seen),
+                (SyncKind::Mutex | SyncKind::Channel, t) => self.cap_ok(t, false, seen),
+            },
+        }
     }
 
     /// `Mutex`, `Guard` and `Channel` come from `std/sync` (stdlib contract §1).
@@ -3571,6 +3867,14 @@ impl Checker<'_> {
                     .note(format!("`{vn}` is used again on line {line}"));
                 return;
             }
+            // Threads of an enclosing `scope` keep their borrows until the scope ends (P3).
+            if lv.pinned {
+                let sn = cx.locals[s].name.clone();
+                self.diags
+                    .error("E0102", span, format!("cannot {what} `{sn}` while threads of the enclosing `scope` may still use it"))
+                    .note("a thread started with `spawn` keeps its borrows until the end of the `scope` block, even after `join()`");
+                return;
+            }
         }
     }
 
@@ -3606,6 +3910,13 @@ impl Checker<'_> {
     /// The value of `h` is moved: stored, returned, or passed to a `sink` parameter. A local of a
     /// non-copyable type is moved out and must not be used again.
     fn consume(&mut self, mut h: HExpr, cx: &mut FnCx) -> HExpr {
+        // A join handle stays in its scope (P3): bound by `let h = spawn ...`, used by `h.join()`.
+        if matches!(h.ty, Ty::Sync(s) if sync_parts(s).0 == SyncKind::Join) && !matches!(h.kind, HExprKind::Spawn { .. }) {
+            self.diags
+                .error("U0001", h.span, "a `Join` handle cannot be moved yet; bind it with `let h = spawn ...` and call `h.join()`")
+                .note("a handle must not leave its `scope`");
+            return err_expr(h.span);
+        }
         if let HExprKind::Some(inner) = h.kind {
             h.kind = HExprKind::Some(Box::new(self.consume(*inner, cx)));
             return h;
@@ -4006,7 +4317,7 @@ impl Checker<'_> {
                 HStmtKind::Assign { local: id, path, value }
             }
             StmtKind::Expr(e) => {
-                if matches!(e.kind, ExprKind::Try(_) | ExprKind::Catch { .. } | ExprKind::Match { .. }) {
+                if matches!(e.kind, ExprKind::Try(_) | ExprKind::Catch { .. } | ExprKind::Match { .. } | ExprKind::Spawn(_)) {
                     cx.diverge_ok = Some(e.span);
                     let h = self.expr(e, None, cx);
                     cx.diverge_ok = None;
@@ -4147,6 +4458,7 @@ impl Checker<'_> {
             }
             StmtKind::Block(b) => HStmtKind::Block(self.block(b, cx)),
             StmtKind::With { name, name_span, init, body } => return self.with_stmt(name, *name_span, init, body, s.span, cx),
+            StmtKind::Scope { body } => return self.scope_stmt(body, s.span, cx),
         };
         Some(HStmt { kind, span: s.span })
     }
@@ -5056,6 +5368,7 @@ impl Checker<'_> {
             }
             ExprKind::Err(v) => self.result_value(false, v, expected, span, cx),
             ExprKind::Try(v) => self.try_expr(v, span, cx),
+            ExprKind::Spawn(call) => self.spawn_expr(call, span, cx),
             ExprKind::Catch { value, name, name_span, handler, block } => {
                 self.catch_expr(value, name, *name_span, handler, *block, span, cx)
             }
@@ -5849,6 +6162,24 @@ impl Checker<'_> {
                 return self.set_write_call(base, mid, name, args, span, at, cx);
             }
         }
+        // `h.join()` consumes the handle (`Join.join(sink self)`): a second join is `E0402`.
+        if name == "join" && args.is_empty() {
+            if let ExprKind::Ident(n) = &base.kind {
+                if let Some(id) = self.lookup(cx, n) {
+                    if let Ty::Sync(sid) = cx.locals[id].ty {
+                        if let (SyncKind::Join, ret) = sync_parts(sid) {
+                            cx.locals[id].used = true;
+                            self.check_moved(cx, id, base.span);
+                            let recv = HExpr { kind: HExprKind::Local(id), ty: cx.locals[id].ty, span: base.span, at: base.span };
+                            if id < cx.moved.len() {
+                                cx.moved[id] = Some(base.span);
+                            }
+                            return HExpr { kind: HExprKind::JoinCall(Box::new(recv)), ty: ret, span, at };
+                        }
+                    }
+                }
+            }
+        }
         let recv = self.expr(base, None, cx);
         let recv = self.deref(recv);
         // `.clone()` of a shared handle shares the same block (it does not clone the content).
@@ -5863,6 +6194,26 @@ impl Checker<'_> {
         let recv = self.unbox(recv);
         if let Ty::Sync(id) = recv.ty {
             let (kind, inner) = sync_parts(id);
+            if kind == SyncKind::Channel && matches!(name, "send" | "recv" | "close") {
+                let want = usize::from(name == "send");
+                if args.len() != want {
+                    let what = if want == 1 { "exactly one argument (the value)" } else { "no arguments" };
+                    self.diags.error("E0012", span, format!("`{name}` takes {what}"));
+                    return err_expr(span);
+                }
+                let chan = Box::new(recv);
+                return match name {
+                    "send" => {
+                        let v = self.expr(&args[0], Some(inner), cx);
+                        let v = self.fit(v, inner, cx);
+                        let v = self.consume(v, cx);
+                        let err = self.send_error_ty(inner);
+                        HExpr { kind: HExprKind::ChanSend { chan, value: Box::new(v) }, ty: Ty::Res(res_of(Ty::Unit, err)), span, at }
+                    }
+                    "recv" => HExpr { kind: HExprKind::ChanRecv(chan), ty: Ty::Opt(opt_of(inner)), span, at },
+                    _ => HExpr { kind: HExprKind::ChanClose(chan), ty: Ty::Unit, span, at },
+                };
+            }
             if kind == SyncKind::Mutex && matches!(name, "lock" | "tryLock") {
                 if !args.is_empty() {
                     self.diags.error("E0012", span, format!("`{name}` takes no arguments"));
@@ -5940,7 +6291,7 @@ impl Checker<'_> {
             (Ty::Set(_), "clone") => (Builtin::MapClone, recv.ty),
             (Ty::Error, _) => return err_expr(span),
             (Ty::Dyn(i), m) => {
-                let iname = self.ifaces[i as usize].name.clone();
+                let iname = self.ifaces[dyn_base(i) as usize].name.clone();
                 self.diags
                     .error("E0010", at, format!("interface `{iname}` has no method `{m}`"))
                     .note("a value behind an interface can only use the interface's methods");
@@ -5977,7 +6328,7 @@ impl Checker<'_> {
     /// of the type without `self` is reported here and returned as `NO_FN`.
     fn user_method(&mut self, t: Ty, name: &str, at: Span) -> Option<(usize, String)> {
         if let Ty::Dyn(i) = t {
-            let d = &self.ifaces[i as usize];
+            let d = &self.ifaces[dyn_base(i) as usize];
             let (_, s, _) = d.methods.iter().find(|(n, _, _)| n == name)?;
             return Some((*s, format!("{}.{name}", d.name)));
         }
@@ -7003,6 +7354,10 @@ impl Checker<'_> {
             Pattern::Wild => HPat::Wild,
             Pattern::Bind { name, span } => {
                 if ty == Ty::Unit {
+                    // `ok(_u)` on a `() ! E`: nothing to bind; an ignored name is a wildcard.
+                    if name.starts_with('_') {
+                        return HPat::Wild;
+                    }
                     return mismatch(self, name, *span, cx);
                 }
                 let by_ref = !pc.owned && !ty.is_copy();

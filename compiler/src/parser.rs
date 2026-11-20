@@ -659,8 +659,16 @@ impl Parser<'_, '_> {
             self.expect(Tok::RBracket, "`]` to close the type arguments")?;
         }
         if matches!(self.peek(), Tok::Plus) {
-            let sp = self.span();
-            self.unsupported(sp, "capability bounds (`T + Send`) are not supported in P0")?;
+            // `Named + Send`: an interface type with capabilities (P2), as `name: "+"` with the
+            // base type followed by the capability names.
+            let mut all = vec![TypeExpr { name, span, args }];
+            let mut end = span;
+            while self.eat(&Tok::Plus) {
+                let (cap, csp) = self.ident("a capability after `+`, e.g. `Send`")?;
+                end = csp;
+                all.push(TypeExpr { name: cap, span: csp, args: Vec::new() });
+            }
+            return Ok(TypeExpr { name: "+".into(), span: span.to(end), args: all });
         }
         Ok(TypeExpr { name, span, args })
     }
@@ -820,7 +828,12 @@ impl Parser<'_, '_> {
             let body = self.block()?;
             return Ok(Stmt { span: start, kind: StmtKind::With { name, name_span, init, body } });
         }
-        for kw in ["scope", "defer", "unsafe"] {
+        if self.is_kw("scope") {
+            self.bump();
+            let body = self.block()?;
+            return Ok(Stmt { span: start, kind: StmtKind::Scope { body } });
+        }
+        for kw in ["defer", "unsafe"] {
             if self.is_kw(kw) {
                 self.unsupported(start, format!("`{kw}` is not supported in P0"))?;
             }
@@ -1270,6 +1283,11 @@ impl Parser<'_, '_> {
 
     fn unary(&mut self) -> PResult<Expr> {
         let start = self.span();
+        if self.is_kw("spawn") {
+            self.bump();
+            let inner = self.unary()?;
+            return Ok(Expr { span: start.to(inner.span), kind: ExprKind::Spawn(Box::new(inner)) });
+        }
         if self.is_kw("try") {
             self.bump();
             let inner = self.unary()?;

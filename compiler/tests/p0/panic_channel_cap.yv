@@ -1,0 +1,7 @@
+// expect-panic: P-CHANNEL-CAP 5:14
+use std/sync
+
+fn main() {
+    let ch = Channel[int]{cap: 0}
+    ch.close()
+}
