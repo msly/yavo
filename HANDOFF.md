@@ -1,22 +1,23 @@
-# Yavo 交接文档（2026-11-20，第七批：安全与验证收敛）
+# Yavo 交接文档（2026-11-21，第八批：保守源码修复）
 
-给下一个会话：先读完本文件，再按第 10 节开工。所有数字都是 2026-11-20 在本仓库实测的。
+给下一个会话：先读完本文件，再按第 10 节开工。当前结果以第 13 节和对应验证记录为准；历史批次保留其测试日期与范围。
 
 ## 1. 一句话状态
 
-规范 v0.5 已冻结（`docs/`、`yavo-tests/`）；Rust 写的编译器（约 16,000 行，含 C 运行时）已覆盖 P0 链路及 P1—P3 的主要语言功能，完整阶段验收仍未闭合：
+规范 v0.5 已冻结（`docs/`、`yavo-tests/`）；Rust 编译器与 C 运行时已覆盖 P0 链路及 P1—P3 的主要语言功能，完整阶段验收仍未闭合：
 结构体、`enum`、`T ! E` 与 `try`/`catch`、`match`、`String`/`Vec`/`Map`、`[]T` 与 `x[a..b]`、移动与析构、视图与 `of`、`&T`、`inout`、`?T`、
 方法、`Drop`、元组、不逃逸闭包、`Eq`/`Ord`、`Box[T]`、`interface` 与 `Box[I]`、泛型、`f64`/`f32`、切片、`reserve`，
 以及第四批新增的 **`*p`、`&inout T` 局部变量、`&x` 构造（A6、A7、`E0004`）和 `String.fromUtf8`**，第五批新增的 **`Set[T]`、`${x:.N}`、`${...}` 里的字符串字面量**，
 第六批新增的 **并发：`Rc`/`Arc`、`Mutex`/`Guard`/`with`、`scope`/`spawn`/`join`、`Send`/`Sync`（含 `Box[Named + Send]`）、`Channel`**；
 标准库 I/O、`os.args`、`std/math`；六个目标的交叉编译。
-规范一致性：**129 项中通过 113、判错 0、不支持 1、未运行 15**（第四批开始时 84 / 0 / 31 / 14）。唯一不支持的是 T-O5（`Heap` 与保存的比较闭包）；
-未运行的是 `yavo fix`（7）、`yavo verify` 报告（4）、运行器不支持的 3 项和要求 sanitizer 分开构建的 T-P3（手动运行结果正确）。
+第八批新增 **`yavo fix`**：保守自动修复、独立重检的候选、`--dry-run` 和结构化补丁。
+规范一致性：**129 项中通过 119、判错 0、不支持 2、未运行 8**（第七批 113 / 0 / 1 / 15）。不支持的是 T-O5（`Heap` 与保存的比较闭包）和 T-V3（可变引用返回及复杂接收者）；
+未运行的是 `yavo verify` 报告（4）、运行器不支持的 3 项和要求 sanitizer 分开构建的 T-P3（独立验证记录见第 12 节）。
 全部提交只在本地，**按用户决定暂不推远端**。
 
 “可用”三批已完成；2026-11-20 用户让我自己定后续顺序并分批：**第四批**（速查卡缺口 + 第 6 项 + 小卡点）已完成，
 **第五批**（第二轮冷启动实验 + 按实验结果修速查卡和编译器）已完成：换模型（Sonnet）、不点名特性的新题，Yavo 10/10、Rust 对照 10/10
-（`experiments/coldstart-2026-11-20/README.md`）。**第六批**（P3 并发）已完成，分三次提交。**第七批**按用户授权处理安全与验证收敛，结果见第 12 节；第 10 节列出后续优先级。
+（`experiments/coldstart-2026-11-20/README.md`）。**第六批**（P3 并发）已完成，分三次提交。**第七批**安全与验证收敛见第 12 节；**第八批**源码修复见第 13 节；第 10 节列出后续优先级。
 
 ## 2. 仓库与环境
 
@@ -53,14 +54,17 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 | `tests/alloc_check.rs` | 用 `YAVO_ALLOC_CHECK=1` 跑全部 `run_*.yv`：运行时统计堆块，泄漏或多释放就以 102 退出 |
 | `tests/targets.rs` | 6 个交叉编译目标的文件头格式与架构、Linux 静态链接、本机可运行目标的输出、错误路径 |
 | `tests/stdlib_io.rs` | 需要标准输入、命令行参数或临时目录的程序（`io`、`fs`、`os.args`），带堆块检查构建 |
+| `tests/fix.rs` | 源码字节、名字捕获、析构次序、条件执行、泛型导入、候选影响、JSON 和幂等；冻结 fix 用例由 conformance 执行 |
 
-常用命令：`yavo check f.yv [--json-diagnostics]`、`yavo run f.yv [--release] [--target T]`、`yavo build f.yv -o out [--release] [--target T] [--emit-c f.c]`。
+常用命令：`yavo check f.yv [--json]`、`yavo fix f.yv [--dry-run] [--json]`、`yavo run f.yv [--release] [--target T]`、`yavo build f.yv -o out [--release] [--target T] [--emit-c f.c]`。
 
 ## 4. 已完成（按提交，最新在上）
 
 | 提交 | 内容 | 一致性通过数 |
 | --- | --- | --- |
-| 本文件所在提交 | 并发第 2、3 部分：`scope`（隐藏局部的析构等待线程）、`spawn`（每个调用点一个参数结构和线程入口）、`join`、结构推导的 `Send`/`Sync`、`Box[I + Send]`（接口别名）、`Channel[T]{cap}`/`send`/`recv`/`close`/`clone`、`SendError[T]`（按元素类型晚登记的库枚举）；`ok(_u)` 可忽略 `()` 载荷 | 113 |
+| 本文件所在提交 | `yavo fix`、可审查补丁、原子写回及修复验收；6 项新增通过，T-V3 从未运行转为明确不支持 | 119 |
+| `faac6ac` | 安全与验证收敛：线程借用、Send/Sync、资源克隆、I/O 锁、测试时限、实验复核、独立 sanitizer 记录 | 113 |
+| `baa1bad` | 并发第 2、3 部分：`scope`（隐藏局部的析构等待线程）、`spawn`（每个调用点一个参数结构和线程入口）、`join`、结构推导的 `Send`/`Sync`、`Box[I + Send]`（接口别名）、`Channel[T]{cap}`/`send`/`recv`/`close`/`clone`、`SendError[T]`（按元素类型晚登记的库枚举）；`ok(_u)` 可忽略 `()` 载荷 | 113 |
 | `907896c` | 并发第 1 部分：`Ty::Sync`、`Rc`/`Arc`/`Mutex`/`Guard`/`with`（`E0703`）、运行时（pthread/Win32 锁、条件变量、线程、channel、scope；原子堆块计数；输出锁） | 99 |
 | 本文件所在提交 | 按第二轮实验修：`Set[T]`（存成 `Map[K, bool]`，`Ty::Set`）、`${x:.N}`（`PrintPart::Fixed`、运行时 `yv_out_fixed`）、`${...}` 里允许字符串字面量（原先误报 `E0020`）；速查卡补 `String`/`str` 不能混比、`os.args()[0]` 是程序名、`Set` 用法、`Vec` 没有 `remove`/`insert` | 93 |
 | `99dca58` `4f15824` | 第二轮冷启动实验（题目、Perl 参考、两组程序与日志、`verify.sh`、结果） | 93 |
@@ -169,12 +173,12 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 
 ## 8. 一致性测试里的卡点
 
-当前不支持 1 项、未运行 15 项（统计只算每个测试的第一个卡点）：
+当前不支持 2 项、未运行 8 项（统计只算每个测试的第一个卡点）：
 
 | 卡点 | 测试 |
 | --- | --- |
-| `std/collections` 的 `Heap[T].by(闭包)`（保存比较闭包，O5） | T-O5（P1/P2 唯一剩下的） |
-| `yavo fix` | 7 项（未运行） |
+| `std/collections` 的 `Heap[T].by(闭包)`（保存比较闭包，O5） | T-O5（不支持） |
+| 可变引用返回、复杂可变接收者 | T-V3（不支持；其余 6 项 fix 已通过） |
 | `yavo verify` 报告 | 4 项（未运行） |
 | 运行器：`run-allowed`（T-GR9）、`run-exit`（T-S3）、分配失败注入（T-GR8） | 3 项（未运行） |
 | 运行器：`sanitize-mode: separate-artifacts`（ASan/UBSan 与 TSan 分开构建） | T-P3（未运行；本机没有 ASan/TSan 运行时） |
@@ -189,7 +193,7 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 | 8 | 浮点 `f64`、`totalCmp` | **已完成**（`16527cb`） |
 | 9 | 切片 `x[a..b]`、`P-STR-BOUNDARY` | **已完成**（`e7e106f`，顺带 `toVec`、`reserve`） |
 | 10 | 泛型函数和泛型结构体 | **已完成**（`bd8ab57`） |
-| 11 | `yavo fix`（只自动应用不改变语义的修复） | 未开始；7 项 |
+| 11 | `yavo fix`（只自动应用不改变语义的修复） | **已实现**；6 项通过，T-V3 受既有前端缺口阻塞 |
 | 12 | P3：`scope`/`spawn`、channel、`Mutex`/`Arc`、`Send`/`Sync` | **已完成**（`907896c` 与本文件所在提交；20 项通过，T-P3 未运行） |
 | 13 | `yavo verify` 与验证报告 | 依赖 12；4 项 |
 | 冷启动实验 | 只给速查卡写 T01–T10 | **已做一轮**：10/10 一次通过（局限见实验 README） |
@@ -213,12 +217,12 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 
 ## 10. 下一个会话的第一步
 
-1. 设置第 2 节的环境变量，`cargo build --locked --offline --release`；跑 `cargo test --locked --offline`（和 `--release`），确认全部通过，conformance 是 113 / 0 / 1 / 15。
-2. 第七批安全与验证收敛已完成。后续建议按以下顺序推进：
-   - **`yavo fix`**（7 项未运行）：规范要求“只自动应用不改变语义的修复”，速查卡和错误表多处引用它，agent 最直接受益。
-   - **T-O5：`std/collections` 的 `Heap`/`Deque`** 和能保存的闭包（O5）：最后一个不支持项，也是速查卡里列了但没实现的库。
+1. 设置第 2 节的环境变量，`cargo build --locked --offline --release`；跑 `cargo test --locked --offline`（和 `--release`），确认全部通过，conformance 是 119 / 0 / 2 / 8。
+2. 第八批源码修复已完成。后续建议按以下顺序推进：
+   - **`yavo verify` 与真实验证报告**（4 项），衔接 check/fix/build 的 agent 工作流；明确哪些检查实际执行、跳过或不支持。
+   - **T-O5：`std/collections` 的 `Heap`/`Deque`** 和能保存的闭包（O5）；**T-V3** 的可变引用返回与复杂接收者要按借用规则实现后再开放候选。
    - **第三轮冷启动实验，带并发题**：本轮实验没测并发；同时可以量速查卡的实际 token 数（28 KB，未量过）。
-   - **`yavo verify` 与报告**（4 项）、运行器支持 sanitizer 分开构建（T-P3）。
+   - 运行器支持 sanitizer 分开构建（T-P3），接入第七批已有的独立验证路径。
    - 平台与性能证据：Windows/macOS 真机运行、少量与 C 同算法同数据布局的基准。当前尚无近 C 性能结论。
    - 语言决定：`String == str` 是否允许混比。`Join` 的公开类型与作用域限制、`spawn inout` 的 Send 条件已在标准库契约规定，按实现缺口处理。
 
@@ -265,3 +269,18 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
   自动 conformance 尚未接入这些独立 sanitizer 工件，T-P3 的自动统计仍为 not_run。
 
 服务器复核日志在 `compiler/target/safety-review/`（Git 忽略）；持久化结论以上述 JSON 与已提交测试为准。
+
+## 13. 第八批：保守源码修复（2026-11-21）
+
+基线为已提交且干净的 `faac6ac`；本批只扩展工具与验收，没有扩写冻结语言规格或改动历史快照。
+
+- `fix_plan.rs` 按 AST 绑定关系生成修改；`fix.rs` 重检、校验 UTF-8 byte edits 和原始文件快照、同目录原子写回。验证使用独立线程，避免类型驻留表污染原始程序的 C 生成。
+- 自动修复：未使用绑定改 `_name`（包括写引用）；局部内建 Vec 的独立 `v.push(v.len())` 按原块拆分；明确缺失的标准库导入；确实没有语法依赖的未用导入。名字按源码顺序避开当前函数已有及后续名字。
+- 自动修改以整组为单位重新 check；有未解决错误或编辑冲突则原文件不变。`--dry-run` 不写，退出码描述实际文件，不把预测修好当成当前已修好。
+- 候选 `take`/`clone`/`borrow` 与 `add-of` 均单独重检；每个包含完整 edits、影响与条件。`id` 是修复类别，`patch_id` 是具体补丁地址，`source_sha256` 绑定原文件。
+- 复核关闭三个反例：参数名 `static` 不可改变 `of static`；未实例化泛型依赖的导入不能被 W0003 误删；用户同名 `take` 不可冒充内建取值。未知或有歧义的情况保守保留诊断。
+- `check --json` 是 `--json-diagnostics` 的别名；保留旧 JSON 字段并增 `primary` 与 `fixes`。`fix` 使用 `yavo-fix/1`，报告原始/结果诊断、源码哈希、自动修改和候选。
+- 6 项冻结 fix 验收通过：T-F1、T-F2、T-GF1、T-GF2、T-GF3、T-V1。自动修改与固定文件按真实词法 token 比较，再验证 check 与幂等；候选在独立副本应用后 check。
+- T-V3 的 `&inout` 返回、返回可变借用构造及复杂 `push` 接收者原本不支持，现在被实际执行并分类为 unsupported；一致性 **119 / 0 / 2 / 8**，旧 113 项通过全部保留。
+- Debug、Release 全量各 **50 个测试函数通过、0 失败、0 编译警告，1 个旧报告忽略**；含 13 个 fix 集成测试、4 个修复引擎单元测试，原 87 个 fixture 的两种 C 模式及交叉编译回归继续通过。
+- 详细测试结果、源码与日志哈希见 `compiler/validation/fix-2026-11-21.json`；原始执行日志在 `compiler/target/fix-review/`。本轮文件替换及端到端修复运行于 Linux，未增加 Windows/macOS 真机验收或性能结论。

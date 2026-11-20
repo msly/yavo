@@ -1,0 +1,781 @@
+{
+  "schema": "yavo-development-validation/1",
+  "stage": "verified-source-repairs",
+  "review_date": "2026-11-21",
+  "timezone": "Asia/Shanghai",
+  "base_commit": "faac6ac42577184bd83360ac75f4ab8ca852e386",
+  "host": {
+    "system": "Linux 6.1.0-50-cloud-amd64 x86_64",
+    "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+    "cargo": "cargo 1.99.1 (5f94df478 2026-08-27)",
+    "zig": "0.17.1"
+  },
+  "scope": "Compiler CLI, repair planning, snapshot publication, and fix conformance. No language feature expansion, frozen fixture changes, remote push, or new platform-runtime/performance claims.",
+  "commands": {
+    "debug": "YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --no-fail-fast",
+    "release": "cargo test --locked --offline --release --no-fail-fast"
+  },
+  "native_suites": {
+    "debug": {
+      "exit_code": 0,
+      "passed": 50,
+      "failed": 0,
+      "ignored": 1,
+      "compiler_warning_lines": 0,
+      "suites": [
+        {
+          "suite": "src/main.rs",
+          "tests": [
+            {
+              "name": "fix::tests::edits_use_original_utf8_offsets_and_reject_ambiguous_ranges",
+              "status": "ok"
+            },
+            {
+              "name": "fix::tests::candidate_checks_do_not_pollute_original_compilation_type_tables",
+              "status": "ok"
+            },
+            {
+              "name": "fix::tests::replacement_rejects_a_stale_snapshot_and_cleans_its_temporary_file",
+              "status": "ok"
+            },
+            {
+              "name": "fix::tests::replacement_preserves_permissions_and_refuses_links_and_read_only_sources",
+              "status": "ok"
+            }
+          ],
+          "status": "ok",
+          "passed": 4,
+          "failed": 0,
+          "ignored": 0,
+          "seconds": 0.01
+        },
+        {
+          "suite": "tests/alloc_check.rs",
+          "tests": [
+            {
+              "name": "no_leaks_or_double_drops_debug",
+              "status": "ok"
+            },
+            {
+              "name": "no_leaks_or_double_drops_release",
+              "status": "ok"
+            }
+          ],
+          "status": "ok",
+          "passed": 2,
+          "failed": 0,
+          "ignored": 0,
+          "seconds": 11.58
+        },
+        {
+          "suite": "tests/conformance.rs",
+          "tests": [
+            {
+              "name": "fixed_source_comparison_uses_lexical_strings_and_interpolations",
+              "status": "ok"
+            },
+            {
+              "name": "baseline_update_cannot_erase_a_regression",
+              "status": "ok"
+            },
+            {
+              "name": "timeout_metadata_accepts_numbers_and_strings_and_rejects_invalid_limits",
+              "status": "ok"
+            },
+            {
+              "name": "runtime_deadline_is_enforced_separately_from_the_build",
+              "status": "ok"
+            },
+            {
+              "name": "conformance",
+              "status": "ok"
+            }
+          ],
+          "status": "ok",
+          "passed": 5,
+          "failed": 0,
+          "ignored": 0,
+          "seconds": 5.51
+        },
+        {
+          "suite": "tests/fix.rs",
+          "tests": [
+            {
+              "name": "check_json_exposes_actionable_fixes_without_writing_the_source",
+              "status": "ok"
+            },
+            {
+              "name": "a_shadowed_take_function_is_not_advertised_as_builtin_field_replacement",
+              "status": "ok"
+            },
+            {
+              "name": "an_unrelated_error_prevents_a_partial_automatic_write",
+              "status": "ok"
+            },
+            {
+              "name": "distinct_source_contract_candidates_have_stable_patch_addresses",
+              "status": "ok"
+            },
+            {
+              "name": "dry_run_and_apply_preserve_utf8_crlf_comments_and_are_idempotent",
+              "status": "ok"
+            },
+            {
+              "name": "renaming_a_parameter_named_static_preserves_the_static_return_contract",
+              "status": "ok"
+            },
+            {
+              "name": "fresh_names_avoid_later_bindings_and_function_calls_without_cross_function_pollution",
+              "status": "ok"
+            },
+            {
+              "name": "side_effecting_conditional_and_unsupported_receivers_are_never_automatically_hoisted",
+              "status": "ok"
+            },
+            {
+              "name": "import_repairs_preserve_used_modules_comments_and_reject_name_guessing",
+              "status": "ok"
+            },
+            {
+              "name": "imports_used_only_by_uninstantiated_generics_survive_fix_and_later_instantiation",
+              "status": "ok"
+            },
+            {
+              "name": "writes_and_interpolation_reads_are_not_renamed_as_unused",
+              "status": "ok"
+            },
+            {
+              "name": "splitting_keeps_a_call_inside_its_conditional_and_loop_blocks",
+              "status": "ok"
+            },
+            {
+              "name": "unused_owned_values_and_catch_errors_keep_their_destruction_times",
+              "status": "ok"
+            }
+          ],
+          "status": "ok",
+          "passed": 13,
+          "failed": 0,
+          "ignored": 0,
+          "seconds": 0.81
+        },
+        {
+          "suite": "tests/harness.rs",
+          "tests": [
+            {
+              "name": "subprocess_fixture",
+              "status": "ok"
+            },
+            {
+              "name": "capture_stdio_preserves_redirected_output_and_file_input",
+              "status": "ok"
+            },
+            {
+              "name": "capture_drains_both_pipes_while_the_program_runs",
+              "status": "ok"
+            },
+            {
+              "name": "capture_has_a_deadline_and_preserves_unsuccessful_exit_status",
+              "status": "ok"
+            },
+            {
+              "name": "timeout_kills_descendants_even_after_the_parent_has_exited",
+              "status": "ok"
+            },
+            {
+              "name": "verifier::verifier_rebuilds_checkout_sources_and_checks_success_for_both_arms",
+              "status": "ok"
+            },
+            {
+              "name": "verifier::verifier_timeout_is_a_failure_and_kills_the_program_tree",
+              "status": "ok"
+            },
+            {
+              "name": "verifier::verifier_rejects_wrong_exit_streams_and_build_failures",
+              "status": "ok"
+            }
+          ],
+          "status": "ok",
+          "passed": 8,
+          "failed": 0,
+          "ignored": 0,
+          "seconds": 2.03
+        },
+        {
+          "suite": "tests/p0.rs",
+          "tests": [
+            {
+              "name": "conformance_report",
+              "status": "ignored"
+            },
+            {
+              "name": "p0_programs_debug",
+              "status": "ok"
+            },
+            {
+              "name": "p0_programs_release",
+              "status": "ok"
+            }
+          ],
+          "status": "ok",
+          "passed": 2,
+          "failed": 0,
+          "ignored": 1,
+          "seconds": 14.12
+        },
+        {
+          "suite": "tests/p0_regressions.rs",
+          "tests": [
+            {
+              "name": "c_compiler_diagnostics_are_visible_on_success_and_failure",
+              "status": "ok"
+            },
+            {
+              "name": "direct_stdout_failure_is_not_success",
+              "status": "ok"
+            },
+            {
+              "name": "full_device_failure_is_not_success",
+              "status": "ok"
+            },
+            {
+              "name": "buffered_stdout_failure_is_not_success",
+              "status": "ok"
+            },
+            {
+              "name": "runtime_retries_eintr_and_partial_writes_but_rejects_zero_writes",
+              "status": "ok"
+            },
+            {
+              "name": "stdout_flush_before_stderr_detects_failure",
+              "status": "ok"
+            },
+            {
+              "name": "stderr_failure_terminates_without_recursive_reporting",
+              "status": "ok"
+            }
+          ],
+          "status": "ok",
+          "passed": 7,
+          "failed": 0,
+          "ignored": 0,
+          "seconds": 0.74
+        },
+        {
+          "suite": "tests/runtime_io_concurrency.rs",
+          "tests": [
+            {
+              "name": "flushes_and_fatal_paths_respect_output_lock_and_are_reentrant",
+              "status": "ok"
+            },
+            {
+              "name": "concurrent_stdin_consumers_and_writers_preserve_every_record",
+              "status": "ok"
+            }
+          ],
+          "status": "ok",
+          "passed": 2,
+          "failed": 0,
+          "ignored": 0,
+          "seconds": 0.98
+        },
+        {
+          "suite": "tests/stdlib_io.rs",
+          "tests": [
+            {
+              "name": "args_are_utf8_or_the_program_does_not_start",
+              "status": "ok"
+            },
+            {
+              "name": "files_round_trip_and_errors",
+              "status": "ok"
+            },
+            {
+              "name": "read_line_strips_newlines_and_reports_bad_lines",
+              "status": "ok"
+            },
+            {
+              "name": "read_all_and_utf8_errors",
+              "status": "ok"
+            }
+          ],
+          "status": "ok",
+          "passed": 4,
+          "failed": 0,
+          "ignored": 0,
+          "seconds": 0.19
+        },
+        {
+          "suite": "tests/targets.rs",
+          "tests": [
+            {
+              "name": "host_runnable_target_runs_correctly",
+              "status": "ok"
+            },
+            {
+              "name": "target_errors_and_default_output_name",
+              "status": "ok"
+            },
+            {
+              "name": "every_target_produces_the_right_binary_format",
+              "status": "ok"
+            }
+          ],
+          "status": "ok",
+          "passed": 3,
+          "failed": 0,
+          "ignored": 0,
+          "seconds": 1.84
+        }
+      ]
+    },
+    "release": {
+      "exit_code": 0,
+      "passed": 50,
+      "failed": 0,
+      "ignored": 1,
+      "compiler_warning_lines": 0,
+      "suites": [
+        {
+          "suite": "src/main.rs",
+          "tests": [
+            {
+              "name": "fix::tests::edits_use_original_utf8_offsets_and_reject_ambiguous_ranges",
+              "status": "ok"
+            },
+            {
+              "name": "fix::tests::candidate_checks_do_not_pollute_original_compilation_type_tables",
+              "status": "ok"
+            },
+            {
+              "name": "fix::tests::replacement_rejects_a_stale_snapshot_and_cleans_its_temporary_file",
+              "status": "ok"
+            },
+            {
+              "name": "fix::tests::replacement_preserves_permissions_and_refuses_links_and_read_only_sources",
+              "status": "ok"
+            }
+          ],
+          "status": "ok",
+          "passed": 4,
+          "failed": 0,
+          "ignored": 0,
+          "seconds": 0.01
+        },
+        {
+          "suite": "tests/alloc_check.rs",
+          "tests": [
+            {
+              "name": "no_leaks_or_double_drops_debug",
+              "status": "ok"
+            },
+            {
+              "name": "no_leaks_or_double_drops_release",
+              "status": "ok"
+            }
+          ],
+          "status": "ok",
+          "passed": 2,
+          "failed": 0,
+          "ignored": 0,
+          "seconds": 11.62
+        },
+        {
+          "suite": "tests/conformance.rs",
+          "tests": [
+            {
+              "name": "fixed_source_comparison_uses_lexical_strings_and_interpolations",
+              "status": "ok"
+            },
+            {
+              "name": "baseline_update_cannot_erase_a_regression",
+              "status": "ok"
+            },
+            {
+              "name": "timeout_metadata_accepts_numbers_and_strings_and_rejects_invalid_limits",
+              "status": "ok"
+            },
+            {
+              "name": "runtime_deadline_is_enforced_separately_from_the_build",
+              "status": "ok"
+            },
+            {
+              "name": "conformance",
+              "status": "ok"
+            }
+          ],
+          "status": "ok",
+          "passed": 5,
+          "failed": 0,
+          "ignored": 0,
+          "seconds": 5.59
+        },
+        {
+          "suite": "tests/fix.rs",
+          "tests": [
+            {
+              "name": "a_shadowed_take_function_is_not_advertised_as_builtin_field_replacement",
+              "status": "ok"
+            },
+            {
+              "name": "check_json_exposes_actionable_fixes_without_writing_the_source",
+              "status": "ok"
+            },
+            {
+              "name": "an_unrelated_error_prevents_a_partial_automatic_write",
+              "status": "ok"
+            },
+            {
+              "name": "distinct_source_contract_candidates_have_stable_patch_addresses",
+              "status": "ok"
+            },
+            {
+              "name": "dry_run_and_apply_preserve_utf8_crlf_comments_and_are_idempotent",
+              "status": "ok"
+            },
+            {
+              "name": "renaming_a_parameter_named_static_preserves_the_static_return_contract",
+              "status": "ok"
+            },
+            {
+              "name": "fresh_names_avoid_later_bindings_and_function_calls_without_cross_function_pollution",
+              "status": "ok"
+            },
+            {
+              "name": "side_effecting_conditional_and_unsupported_receivers_are_never_automatically_hoisted",
+              "status": "ok"
+            },
+            {
+              "name": "imports_used_only_by_uninstantiated_generics_survive_fix_and_later_instantiation",
+              "status": "ok"
+            },
+            {
+              "name": "import_repairs_preserve_used_modules_comments_and_reject_name_guessing",
+              "status": "ok"
+            },
+            {
+              "name": "writes_and_interpolation_reads_are_not_renamed_as_unused",
+              "status": "ok"
+            },
+            {
+              "name": "splitting_keeps_a_call_inside_its_conditional_and_loop_blocks",
+              "status": "ok"
+            },
+            {
+              "name": "unused_owned_values_and_catch_errors_keep_their_destruction_times",
+              "status": "ok"
+            }
+          ],
+          "status": "ok",
+          "passed": 13,
+          "failed": 0,
+          "ignored": 0,
+          "seconds": 0.8
+        },
+        {
+          "suite": "tests/harness.rs",
+          "tests": [
+            {
+              "name": "subprocess_fixture",
+              "status": "ok"
+            },
+            {
+              "name": "capture_stdio_preserves_redirected_output_and_file_input",
+              "status": "ok"
+            },
+            {
+              "name": "capture_drains_both_pipes_while_the_program_runs",
+              "status": "ok"
+            },
+            {
+              "name": "capture_has_a_deadline_and_preserves_unsuccessful_exit_status",
+              "status": "ok"
+            },
+            {
+              "name": "timeout_kills_descendants_even_after_the_parent_has_exited",
+              "status": "ok"
+            },
+            {
+              "name": "verifier::verifier_rebuilds_checkout_sources_and_checks_success_for_both_arms",
+              "status": "ok"
+            },
+            {
+              "name": "verifier::verifier_timeout_is_a_failure_and_kills_the_program_tree",
+              "status": "ok"
+            },
+            {
+              "name": "verifier::verifier_rejects_wrong_exit_streams_and_build_failures",
+              "status": "ok"
+            }
+          ],
+          "status": "ok",
+          "passed": 8,
+          "failed": 0,
+          "ignored": 0,
+          "seconds": 2.06
+        },
+        {
+          "suite": "tests/p0.rs",
+          "tests": [
+            {
+              "name": "conformance_report",
+              "status": "ignored"
+            },
+            {
+              "name": "p0_programs_debug",
+              "status": "ok"
+            },
+            {
+              "name": "p0_programs_release",
+              "status": "ok"
+            }
+          ],
+          "status": "ok",
+          "passed": 2,
+          "failed": 0,
+          "ignored": 1,
+          "seconds": 14.23
+        },
+        {
+          "suite": "tests/p0_regressions.rs",
+          "tests": [
+            {
+              "name": "c_compiler_diagnostics_are_visible_on_success_and_failure",
+              "status": "ok"
+            },
+            {
+              "name": "direct_stdout_failure_is_not_success",
+              "status": "ok"
+            },
+            {
+              "name": "full_device_failure_is_not_success",
+              "status": "ok"
+            },
+            {
+              "name": "buffered_stdout_failure_is_not_success",
+              "status": "ok"
+            },
+            {
+              "name": "runtime_retries_eintr_and_partial_writes_but_rejects_zero_writes",
+              "status": "ok"
+            },
+            {
+              "name": "stdout_flush_before_stderr_detects_failure",
+              "status": "ok"
+            },
+            {
+              "name": "stderr_failure_terminates_without_recursive_reporting",
+              "status": "ok"
+            }
+          ],
+          "status": "ok",
+          "passed": 7,
+          "failed": 0,
+          "ignored": 0,
+          "seconds": 0.7
+        },
+        {
+          "suite": "tests/runtime_io_concurrency.rs",
+          "tests": [
+            {
+              "name": "flushes_and_fatal_paths_respect_output_lock_and_are_reentrant",
+              "status": "ok"
+            },
+            {
+              "name": "concurrent_stdin_consumers_and_writers_preserve_every_record",
+              "status": "ok"
+            }
+          ],
+          "status": "ok",
+          "passed": 2,
+          "failed": 0,
+          "ignored": 0,
+          "seconds": 1.05
+        },
+        {
+          "suite": "tests/stdlib_io.rs",
+          "tests": [
+            {
+              "name": "args_are_utf8_or_the_program_does_not_start",
+              "status": "ok"
+            },
+            {
+              "name": "files_round_trip_and_errors",
+              "status": "ok"
+            },
+            {
+              "name": "read_line_strips_newlines_and_reports_bad_lines",
+              "status": "ok"
+            },
+            {
+              "name": "read_all_and_utf8_errors",
+              "status": "ok"
+            }
+          ],
+          "status": "ok",
+          "passed": 4,
+          "failed": 0,
+          "ignored": 0,
+          "seconds": 0.2
+        },
+        {
+          "suite": "tests/targets.rs",
+          "tests": [
+            {
+              "name": "host_runnable_target_runs_correctly",
+              "status": "ok"
+            },
+            {
+              "name": "target_errors_and_default_output_name",
+              "status": "ok"
+            },
+            {
+              "name": "every_target_produces_the_right_binary_format",
+              "status": "ok"
+            }
+          ],
+          "status": "ok",
+          "passed": 3,
+          "failed": 0,
+          "ignored": 0,
+          "seconds": 2.16
+        }
+      ]
+    }
+  },
+  "p0_fixtures": {
+    "count": 87,
+    "generated_c_modes": [
+      "O0",
+      "O2"
+    ]
+  },
+  "conformance": {
+    "total": 129,
+    "counts": {
+      "pass": 119,
+      "wrong": 0,
+      "unsupported": 2,
+      "not_run": 8
+    },
+    "fix_cases": [
+      {
+        "category": "fix",
+        "id": "T-F1",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "fix",
+        "id": "T-F2",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "fix",
+        "id": "T-GF1",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "fix",
+        "id": "T-GF2",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "fix",
+        "id": "T-GF3",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "fix",
+        "id": "T-V1",
+        "phase": "P1",
+        "reason": "",
+        "status": "pass"
+      },
+      {
+        "category": "fix",
+        "id": "T-V3",
+        "phase": "P1",
+        "reason": "`&inout T` is only supported as the type of a local variable for now",
+        "status": "unsupported"
+      }
+    ],
+    "baseline": {
+      "previous_count": 113,
+      "new_count": 119,
+      "added": [
+        "T-F1",
+        "T-F2",
+        "T-GF1",
+        "T-GF2",
+        "T-GF3",
+        "T-V1"
+      ],
+      "removed": [],
+      "monotonic": true
+    }
+  },
+  "repair_contract": {
+    "automatic": [
+      "rename-unused",
+      "split-receiver-read",
+      "remove-unused-import",
+      "add-import"
+    ],
+    "candidates": [
+      "take",
+      "clone",
+      "borrow",
+      "add-of"
+    ],
+    "application": "Automatic edits are checked together and published only when the entire resulting source has no compile errors. Other errors or overlap block all writes. Candidates are independently checked and never applied automatically.",
+    "edit_coordinates": "Half-open UTF-8 byte ranges in the source_sha256 snapshot. id is a repair category; patch_id identifies the exact edit set.",
+    "dry_run": "No write. Diagnostics and exit status describe the actual source; automatic and preview_sha256 describe the verified preview.",
+    "recheck_isolation": "A fresh thread-local type context for every validation; regression compares original generated C before/after a different-source trial.",
+    "publication": "Recheck source contents and file identity, same-directory atomic replacement, preserve permissions, reject symlinks/multiple hard links/read-only sources."
+  },
+  "review_regressions": [
+    "A parameter named static is renamed without changing the special of static return contract.",
+    "Imports referenced by uninstantiated generic bodies, type constructors or string interpolation are retained; later instantiation is checked.",
+    "A user-defined take function cannot be advertised as the builtin field-replacement repair.",
+    "Drop and catch cleanup order is unchanged before and after renaming, in both generated-C optimization modes.",
+    "Control flow, identifier capture, UTF-8/CRLF/comments, patch addresses, idempotence and atomic refusal on unrelated errors are covered."
+  ],
+  "boundaries": [
+    "T-V3 is now exercised and classified unsupported, not newly regressed: mutable-reference returns and complex mutable receivers remain unimplemented.",
+    "Candidate applicability is deliberately conservative; a candidate must independently check as a complete file.",
+    "Generic function bodies are still checked only when instantiated; the repair planner independently protects syntactic import dependencies.",
+    "Filesystem publication and fix end-to-end tests executed on Linux x86-64; no Windows/macOS runtime validation was added.",
+    "rustfmt and clippy are not installed on the project server; no formatting/lint pass is claimed.",
+    "No new sanitizer or near-C performance measurements in this stage; the previous safety receipt retains its own scope."
+  ],
+  "post_validation_formatting": [
+    {
+      "file": "compiler/tests/fix.rs",
+      "change": "Removed one trailing blank line to satisfy git diff --check; no test or compiler behavior changed.",
+      "tested_sha256": "5d6ea35b7e08dda31029c33cb365f67a3f4a5da8bb5045bd9b80836cd7bc24da",
+      "committed_sha256": "f206df83529858219bcb878d2d9e9612a83b5e11a2c3a1b9bb751d71cb5146d1"
+    }
+  ],
+  "hashes": {
+    "compiler/src/main.rs": "13ae9fe3016ad3837e3e56bdecfcfe8a3af3e2badd7c59b8f9ad2202e59b40ad",
+    "compiler/src/diag.rs": "738f097f5f537ce20acf9ae4ad4eb3338b7811275428d231e69d453b3e5e85e6",
+    "compiler/src/fix.rs": "1170ca66e4cbea997eb5ac3faa966fab0c07ebcf048998a796904afdef5dae78",
+    "compiler/src/fix_plan.rs": "71b9b5260628df915bb5066d5e1f29189706c88fa4a710e318cad0a76ef315ac",
+    "compiler/tests/fix.rs": "f206df83529858219bcb878d2d9e9612a83b5e11a2c3a1b9bb751d71cb5146d1",
+    "compiler/tests/conformance.rs": "57100cdb2c4215c3a4d272a1200f4c08e692e3271ed1e06de784b262cb9c38f1",
+    "compiler/tests/conformance_baseline.txt": "49f5fd9dbb24923ca38c27f907d98643ae4a83e39cec9ad7e25ac987c6b99205",
+    "compiler/target/fix-review/debug-full.log": "b6e44b806de6ab5cccba69b505e6f4f6039eadb63144a7ee16b3ecbdb7254970",
+    "compiler/target/fix-review/release-full.log": "72eea4b64a3b4e76ed20c7c6ee05a3ce93f17b9e3793f8e9fb3b178af006520a",
+    "compiler/target/tmp/conformance-report.json": "92ae21e4d8abf6f5d5215c78bbcb65b55657cb7172ae068a4083c9101bb0d600"
+  }
+}

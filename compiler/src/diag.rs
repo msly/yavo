@@ -1,4 +1,5 @@
 use serde_json::{json, Value};
+use sha2::{Digest, Sha256};
 use std::fmt::Write;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -33,6 +34,27 @@ pub struct Diagnostic {
     pub message: String,
     pub span: Span,
     pub notes: Vec<String>,
+    pub fixes: Vec<Fix>,
+}
+
+/// One replacement in the original UTF-8 source snapshot. Ranges are byte offsets.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Edit {
+    pub start: usize,
+    pub end: usize,
+    pub replacement: String,
+}
+
+/// A complete repair, exposed only after its edited source has passed checking.
+/// Automatic fixes are verified together; each candidate is verified separately.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Fix {
+    pub id: String,
+    pub title: String,
+    pub applicability: &'static str,
+    pub impact: String,
+    pub preconditions: Vec<String>,
+    pub edits: Vec<Edit>,
 }
 
 impl Diagnostic {
@@ -42,7 +64,7 @@ impl Diagnostic {
     }
 }
 
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub struct Diags {
     pub items: Vec<Diagnostic>,
 }
@@ -57,7 +79,7 @@ impl Diags {
     }
 
     fn push(&mut self, severity: Severity, code: &'static str, span: Span, message: String) -> &mut Diagnostic {
-        self.items.push(Diagnostic { severity, code, message, span, notes: Vec::new() });
+        self.items.push(Diagnostic { severity, code, message, span, notes: Vec::new(), fixes: Vec::new() });
         self.items.last_mut().unwrap()
     }
 
@@ -123,6 +145,13 @@ pub fn render_human(path: &str, src: &str, diags: &Diags) -> String {
         for n in &d.notes {
             let _ = writeln!(out, "{pad} = note: {n}");
         }
+        for fix in &d.fixes {
+            let _ = writeln!(out, "{pad} = {} fix [{}]: {}", fix.applicability, fix.id, fix.title);
+            let _ = writeln!(out, "{pad} = impact: {}", fix.impact);
+            for condition in &fix.preconditions {
+                let _ = writeln!(out, "{pad} = requires: {condition}");
+            }
+        }
         out.push('\n');
     }
     let errors = diags.count(Severity::Error);
@@ -135,7 +164,33 @@ pub fn render_human(path: &str, src: &str, diags: &Diags) -> String {
     out
 }
 
-pub fn render_json(path: &str, src: &str, diags: &Diags) -> String {
+pub fn source_hash(src: &str) -> String {
+    format!("{:x}", Sha256::digest(src.as_bytes()))
+}
+
+pub fn fix_json(fix: &Fix) -> Value {
+    let edits: Vec<Value> = fix.edits.iter().map(|edit| json!({
+        "start": edit.start,
+        "end": edit.end,
+        "replacement": edit.replacement,
+    })).collect();
+    // `id` is the repair category frozen by the spec fixtures. Several valid
+    // contracts can share it; `patch_id` addresses one exact edit set.
+    let patch_id = format!("{}:{:x}", fix.id, Sha256::digest(serde_json::to_vec(&edits).unwrap()));
+    json!({
+        "id": fix.id,
+        "patch_id": patch_id,
+        "title": fix.title,
+        "applicability": fix.applicability,
+        "impact": fix.impact,
+        "preconditions": fix.preconditions,
+        "edits": edits,
+        "recheck": "passed",
+        "recheck_scope": if fix.applicability == "automatic" { "automatic-set" } else { "single-candidate" },
+    })
+}
+
+pub fn render_json_value(path: &str, src: &str, diags: &Diags) -> Value {
     let items: Vec<Value> = diags
         .items
         .iter()
@@ -150,16 +205,30 @@ pub fn render_json(path: &str, src: &str, diags: &Diags) -> String {
                 "column": d.span.col,
                 "end_line": end_line,
                 "end_column": end_col,
+                "primary": {
+                    "file": path,
+                    "start": d.span.start,
+                    "end": d.span.end,
+                    "line": d.span.line,
+                    "column": d.span.col,
+                    "end_line": end_line,
+                    "end_column": end_col,
+                },
                 "notes": d.notes,
+                "fixes": d.fixes.iter().map(fix_json).collect::<Vec<_>>(),
             })
         })
         .collect();
     json!({
         "schema": "yavo-diagnostics/p0",
         "file": path,
+        "source_sha256": source_hash(src),
         "error_count": diags.count(Severity::Error),
         "warning_count": diags.count(Severity::Warning),
         "diagnostics": items,
     })
-    .to_string()
+}
+
+pub fn render_json(path: &str, src: &str, diags: &Diags) -> String {
+    render_json_value(path, src, diags).to_string()
 }

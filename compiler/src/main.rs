@@ -2,6 +2,8 @@ mod ast;
 mod check;
 mod codegen;
 mod diag;
+mod fix;
+mod fix_plan;
 mod lexer;
 mod parser;
 mod toolchain;
@@ -19,14 +21,20 @@ const EXIT_TOOLCHAIN: i32 = 3;
 const EXIT_INTERNAL: i32 = 4;
 
 const USAGE: &str = "\
-yavo - the Yavo compiler (P0 vertical slice)
+yavo - the Yavo compiler prototype
 
 USAGE:
     yavo check <file.yv> [--json-diagnostics]
+    yavo fix   <file.yv> [--dry-run] [--json-diagnostics]
     yavo build <file.yv> [-o <output>] [--release] [--target <target>] [--emit-c <file.c>] [--json-diagnostics]
     yavo run   <file.yv> [--release] [--target <target>] [--json-diagnostics]
     yavo toolchain [status | install]
     yavo --version
+
+FIXES:
+    `fix` applies verified automatic repairs to the source file. Candidates are
+    reported for a separate choice. `--dry-run` previews without writing.
+    `--json` is an alias for `--json-diagnostics`.
 
 TARGETS (cross-compilation uses the pinned zig toolchain; `run` only accepts targets this machine can execute):
     x86_64-linux-musl, aarch64-linux-musl, x86_64-windows-gnu, aarch64-windows-gnu, x86_64-macos, aarch64-macos
@@ -41,6 +49,7 @@ struct Options {
     emit_c: Option<PathBuf>,
     release: bool,
     json: bool,
+    dry_run: bool,
     target: Option<&'static toolchain::Target>,
 }
 
@@ -49,15 +58,16 @@ fn usage_error(msg: &str) -> ! {
     exit(EXIT_USAGE);
 }
 
-fn parse_options(args: &[String]) -> Options {
+fn parse_options(args: &[String], for_fix: bool) -> Options {
     let mut input = None;
     let mut opts =
-        Options { input: PathBuf::new(), output: None, emit_c: None, release: false, json: false, target: None };
+        Options { input: PathBuf::new(), output: None, emit_c: None, release: false, json: false, dry_run: false, target: None };
     let mut it = args.iter();
     while let Some(a) = it.next() {
         match a.as_str() {
             "--release" => opts.release = true,
-            "--json-diagnostics" => opts.json = true,
+            "--json-diagnostics" | "--json" => opts.json = true,
+            "--dry-run" if for_fix => opts.dry_run = true,
             "-o" => opts.output = Some(it.next().unwrap_or_else(|| usage_error("`-o` needs a path")).into()),
             "--emit-c" => opts.emit_c = Some(it.next().unwrap_or_else(|| usage_error("`--emit-c` needs a path")).into()),
             "--target" => {
@@ -72,6 +82,9 @@ fn parse_options(args: &[String]) -> Options {
         }
     }
     opts.input = input.unwrap_or_else(|| usage_error("missing input file"));
+    if for_fix && (opts.output.is_some() || opts.emit_c.is_some() || opts.release || opts.target.is_some()) {
+        usage_error("`fix` only accepts an input file, --dry-run and --json-diagnostics (or --json)");
+    }
     opts
 }
 
@@ -95,6 +108,10 @@ fn compile_to_c(opts: &Options) -> Option<String> {
     let toks = lexer::lex_file(&src, &mut diags);
     let program = parser::parse(toks, &src, &mut diags);
     let typed = if diags.has_errors() { None } else { check::check(&program, &mut diags) };
+    if let Err(e) = fix::prepare(&src, &program, &mut diags) {
+        eprintln!("error: {e}");
+        exit(EXIT_INTERNAL);
+    }
     report(&display, &src, &mut diags, opts.json);
     typed.map(|p| codegen::generate(&p, &display))
 }
@@ -170,21 +187,31 @@ fn main() {
     };
     let rest = &args[1..];
     match cmd.as_str() {
-        "--version" | "-V" => println!("yavo {} (P0, zig {})", env!("CARGO_PKG_VERSION"), toolchain::lock().version),
+        "--version" | "-V" => println!("yavo {} (prototype, zig {})", env!("CARGO_PKG_VERSION"), toolchain::lock().version),
         "--help" | "-h" | "help" => println!("{USAGE}"),
         "check" => {
-            let opts = parse_options(rest);
+            let opts = parse_options(rest, false);
             if compile_to_c(&opts).is_none() {
                 exit(EXIT_COMPILE_ERROR);
             }
         }
+        "fix" => {
+            let opts = parse_options(rest, true);
+            match fix::run(&opts.input, opts.dry_run, opts.json) {
+                Ok(code) => exit(code),
+                Err(e) => {
+                    eprintln!("error: {}", e.message);
+                    exit(e.exit_code);
+                }
+            }
+        }
         "build" => {
-            let opts = parse_options(rest);
+            let opts = parse_options(rest, false);
             let output = opts.output.clone().unwrap_or_else(|| default_output(&opts.input, opts.target));
             build(&opts, &output);
         }
         "run" => {
-            let opts = parse_options(rest);
+            let opts = parse_options(rest, false);
             if let Some(t) = opts.target {
                 if !t.runs_on_host() {
                     usage_error(&format!(

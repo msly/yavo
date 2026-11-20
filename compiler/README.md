@@ -6,6 +6,62 @@ The implementation includes ownership, views, containers, generics, interfaces a
 scoped OS threads. Native validation is on Linux x86-64; complete phase acceptance
 still requires the remaining tools, features and real-platform execution.
 
+## Source repairs (2026-11-21)
+
+```sh
+yavo check program.yv --json
+yavo fix program.yv --dry-run --json
+yavo fix program.yv --json
+```
+
+`fix` applies only automatic repairs whose complete edited file passes a fresh
+check. It is atomic as a group: unrelated errors or conflicting edits leave the
+file unchanged. `--dry-run` returns the proposed automatic edits without writing;
+its diagnostics and exit status still describe the actual, unchanged file.
+`--json` and `--json-diagnostics` are aliases. Exit 0 means the actual file has no
+compile errors, 1 means errors remain, 2 means an invalid invocation/input, and 4
+means validation or writing failed.
+
+| Repair | Behavior |
+| --- | --- |
+| Unused binding | Rename to `_name`, `_name2`, etc., including references to that binding; preserve destruction time. |
+| `v.push(v.len())` | Split a standalone call on a known local built-in Vec into `let vLen = v.len()` and `v.push(vLen)` in the same block; avoid existing and later names. |
+| Imports | Add an explicitly diagnosed standard module, or remove an unused import with no remaining syntactic references, including uninstantiated generic bodies. |
+| Move from a field | Offer individually checked `take`, `clone` and `borrow` alternatives with their effects; `take` includes required write permission, and `borrow` includes the signature and affected calls. |
+| Missing `of` | Offer independently checked source contracts; never change the signature automatically. |
+
+Unknown patterns remain diagnostics. A user function that shadows `take` prevents
+the built-in take candidate. An unused parameter named `static` can be renamed
+without changing the special `of static` contract. Literal string text, comments
+and field labels are preserved. The import rule follows W0003's deletion semantics;
+the older cheatsheet row that groups imports with `_name` renaming is not applied
+to imports.
+
+`check` keeps the existing `yavo-diagnostics/p0` fields and adds `primary`,
+`source_sha256` and structured `fixes`. The `yavo-fix/1` report contains original
+and resulting diagnostics, source/result hashes, `automatic`, `applied` and
+`candidates`. Every edit uses a half-open UTF-8 byte range (`start`, `end`) and a
+`replacement`, relative to the original source hash. `id` names the repair
+category; `patch_id` identifies its exact edit set. `recheck_scope` distinguishes
+the complete `automatic-set` from an independently checked `single-candidate`.
+Each candidate includes its title, impact and preconditions. Candidate edits are
+reported for an explicit choice; this command has no automatic candidate-selection
+mode. Clients must verify the source hash before applying returned edits.
+
+Rechecks run in isolated threads so their type intern tables cannot affect the
+original program's C generation. Writes preserve source permissions, check the
+input snapshot again, and atomically rename a temporary file from the same
+directory. Symbolic links, multiple hard links and read-only sources are not
+replaced. This file handling has been executed on Linux.
+
+The conformance runner checks original diagnostics, real lexical tokens against
+the fixed fixtures, candidate application, and second-run idempotence. Six frozen
+fix cases pass. Debug and Release suites each pass 50 test functions (zero failures
+or compiler warnings, one legacy report ignored), including 13 fix integration
+tests and four repair-engine unit tests. T-V3 still depends on unsupported mutable-reference returns and
+complex mutable receivers, and is recorded as unsupported. The implementation
+and validation receipt is [validation/fix-2026-11-21.json](validation/fix-2026-11-21.json).
+
 ## Safety review (2026-11-20)
 
 - `spawn` checks the borrowed sources inside moved containers as well as borrowed
@@ -775,9 +831,9 @@ runs all 129 cases in `yavo-tests/MANIFEST.json`, after checking each fixture ag
 | pass | the compiler does what the spec case expects (exact error codes and lines for check-fail; exact stdout or panic category in every listed build mode for run cases) |
 | wrong | the compiler disagrees with the spec case: a bug, or a spec gap |
 | unsupported | the compiler reported `U0001` |
-| not_run | needs `yavo fix`, `yavo verify`, fixtures, sanitizers or other platforms |
+| not_run | needs `yavo verify`, specialized runner support, sanitizers or other platforms |
 
-At this commit: pass 113, wrong 0, unsupported 1, not_run 15 (P1: 75 / 0 / 1 / 7;
+At this commit: pass 119, wrong 0, unsupported 2, not_run 8 (P1: 81 / 0 / 2 / 0;
 P2: 18 / 0 / 0 / 3; P3: 20 / 0 / 0 / 5). `scope`, `spawn`, `Send`/`Sync` and channels added T-GP1âT-GP4,
 T-GP6, T-GP7, T-P1, T-P1p, T-P2, T-P2p, T-P2s, T-P3f, T-P5p and T-P6 (T-P3 runs correctly but asks for
 sanitizer builds the runner does not make, so it counts as not run). `Rc`, `Arc`, `Mutex`, `Guard` and `with` added T-GP5, T-V5,

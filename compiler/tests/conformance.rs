@@ -4,7 +4,7 @@
 //!   pass         the compiler did what the spec test expects
 //!   wrong        the compiler accepted/rejected/ran it differently from the spec (a real bug or a spec gap)
 //!   unsupported  the compiler reported U0001 (a valid v0.5 feature this compiler does not implement yet)
-//!   not_run      the case needs something this runner or compiler does not have yet (`yavo fix`, `verify`,
+//!   not_run      the case needs something this runner or compiler does not have yet (`verify`,
 //!                fixtures, sanitizers, other platforms)
 //!
 //! This is not an acceptance gate. It fails only when a case listed in `tests/conformance_baseline.txt`
@@ -20,6 +20,13 @@ use std::process::{Command, Stdio};
 use std::time::Duration;
 
 mod common;
+
+#[allow(dead_code)]
+#[path = "../src/diag.rs"]
+mod diag;
+#[allow(dead_code)]
+#[path = "../src/lexer.rs"]
+mod lexer;
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug)]
 enum Status {
@@ -101,7 +108,7 @@ fn fixture_dir(entry: &Value) -> Result<Option<PathBuf>, Outcome> {
 
 type Errors = Vec<(String, u64, String)>;
 
-fn run_check(path: &Path) -> Result<Errors, Outcome> {
+fn run_check_json(path: &Path) -> Result<Value, Outcome> {
     let result = common::capture(yavo()
         .arg("check")
         .arg(path)
@@ -117,7 +124,17 @@ fn run_check(path: &Path) -> Result<Errors, Outcome> {
         .map_err(|e| outcome(Status::Wrong, format!("diagnostics are not valid JSON ({e}): {stdout}")))?;
     let diagnostics = v["diagnostics"].as_array()
         .ok_or_else(|| outcome(Status::Wrong, "diagnostics JSON has no diagnostics array"))?;
-    let errors: Errors = diagnostics
+    let errors = diagnostics.iter().filter(|d| d["severity"] == "ERROR").count();
+    let expected_exit = if errors == 0 { 0 } else { 1 };
+    if out.status.code() != Some(expected_exit) {
+        return Err(outcome(Status::Wrong, format!("yavo check exit {:?}; expected {expected_exit}", out.status.code())));
+    }
+    Ok(v)
+}
+
+fn run_check(path: &Path) -> Result<Errors, Outcome> {
+    let v = run_check_json(path)?;
+    Ok(v["diagnostics"].as_array().unwrap()
         .iter()
         .filter(|d| d["severity"] == "ERROR")
         .map(|d| {
@@ -127,12 +144,7 @@ fn run_check(path: &Path) -> Result<Errors, Outcome> {
                 d["message"].as_str().unwrap_or("").to_string(),
             )
         })
-        .collect();
-    let expected_exit = if errors.is_empty() { 0 } else { 1 };
-    if out.status.code() != Some(expected_exit) {
-        return Err(outcome(Status::Wrong, format!("yavo check exit {:?}; expected {expected_exit}", out.status.code())));
-    }
-    Ok(errors)
+        .collect())
 }
 
 fn describe(errors: &Errors) -> String {
@@ -156,7 +168,7 @@ fn classify(entry: &Value, root: &Path) -> Outcome {
     let kind = entry["kind"].as_str().unwrap_or("");
     match kind {
         "check-pass" | "check-fail" | "run-pass" | "run-panic" => {}
-        "fix-auto" | "fix-candidate" => return outcome(Status::NotRun, "`yavo fix` is not implemented"),
+        "fix-auto" | "fix-candidate" => return classify_fix(entry, &path, &src),
         "report" => return outcome(Status::NotRun, "`yavo verify` is not implemented"),
         other => return outcome(Status::NotRun, format!("runner does not handle kind `{other}` yet")),
     }
@@ -222,6 +234,168 @@ fn classify(entry: &Value, root: &Path) -> Outcome {
         }
     }
 }
+
+// Use the production lexer, not regexes: "//" can occur inside a string.
+// Interpolation offsets refer to each source separately, so compare expressions.
+fn token_signature(src: &str) -> Result<Vec<Value>, String> {
+    fn signature(src: &str, tokens: Vec<lexer::Token>, diags: &mut diag::Diags) -> Vec<Value> {
+        tokens.into_iter().map(|t| match t.tok {
+            lexer::Tok::Str(pieces) => json!({"string": pieces.into_iter().map(|p| match p {
+                lexer::StrPiece::Text(s) => json!({"text": s}),
+                lexer::StrPiece::Interp { start, end, line, col, spec } => {
+                    let tokens = lexer::lex_range(src, start, end, line, col, false, diags);
+                    json!({"interpolation": signature(src, tokens, diags), "format": spec})
+                }
+            }).collect::<Vec<_>>()}),
+            tok => json!(format!("{tok:?}")),
+        }).collect()
+    }
+    let mut diags = diag::Diags::default();
+    let tokens = lexer::lex_file(src, &mut diags);
+    let tokens = signature(src, tokens, &mut diags);
+    if diags.has_errors() { Err(diag::render_human("fix comparison", src, &diags)) }
+    else { Ok(tokens) }
+}
+
+fn apply_fix_edits(src: &str, fixes: &[Value]) -> Result<String, String> {
+    let mut edits = Vec::new();
+    for fix in fixes {
+        if fix["recheck"] != "passed" { return Err("fix was not rechecked".into()); }
+        let parts = fix["edits"].as_array().ok_or("fix has no edits array")?;
+        if parts.is_empty() { return Err("fix has no edits".into()); }
+        for edit in parts {
+            let start = edit["start"].as_u64().and_then(|n| usize::try_from(n).ok()).ok_or("invalid edit start")?;
+            let end = edit["end"].as_u64().and_then(|n| usize::try_from(n).ok()).ok_or("invalid edit end")?;
+            let replacement = edit["replacement"].as_str().ok_or("invalid edit replacement")?;
+            if start > end || end > src.len() || !src.is_char_boundary(start) || !src.is_char_boundary(end) {
+                return Err(format!("edit {start}..{end} is not a valid UTF-8 byte range"));
+            }
+            edits.push((start, end, replacement));
+        }
+    }
+    edits.sort_by_key(|e| (e.0, e.1));
+    for pair in edits.windows(2) {
+        if pair[1].0 < pair[0].1 || (pair[0].0 == pair[0].1 && pair[0].0 == pair[1].0) {
+            return Err("fix edits overlap".into());
+        }
+    }
+    let mut result = src.to_string();
+    for (start, end, replacement) in edits.into_iter().rev() {
+        result.replace_range(start..end, replacement);
+    }
+    Ok(result)
+}
+
+fn run_fix_json(path: &Path) -> Result<Value, Outcome> {
+    let captured = common::capture(yavo().arg("fix").arg(path).arg("--json-diagnostics")
+        .stdin(Stdio::null()), common::RUN_TIMEOUT)
+        .map_err(|e| outcome(Status::NotRun, format!("could not start yavo fix: {e}")))?;
+    if captured.timed_out { return Err(outcome(Status::Wrong, "yavo fix exceeded its 10 second deadline")); }
+    let out = captured.output;
+    let report: Value = serde_json::from_slice(&out.stdout).map_err(|e|
+        outcome(Status::Wrong, format!("fix output is not JSON: {e}; stdout: {}; stderr: {}",
+            String::from_utf8_lossy(&out.stdout), String::from_utf8_lossy(&out.stderr))))?;
+    if report["schema"] != "yavo-fix/1" {
+        return Err(outcome(Status::Wrong, format!("unexpected fix schema: {}", report["schema"])));
+    }
+    let diags = report["diagnostics"].as_array().ok_or_else(|| outcome(Status::Wrong, "fix report has no diagnostics"))?;
+    let errors = diags.iter().filter(|d| d["severity"] == "ERROR").count();
+    let expected_exit = if errors == 0 { 0 } else { 1 };
+    if out.status.code() != Some(expected_exit) || report["error_count"].as_u64() != Some(errors as u64) {
+        return Err(outcome(Status::Wrong, format!("fix exit/error count inconsistent with {errors} errors: {:?}", out.status.code())));
+    }
+    Ok(report)
+}
+
+fn diagnostic_keys(value: &Value) -> BTreeSet<(String, String, u64)> {
+    value.as_array().into_iter().flatten().map(|d| (
+        d["severity"].as_str().unwrap_or("").to_string(),
+        d["code"].as_str().unwrap_or("").to_string(),
+        d["line"].as_u64().unwrap_or(0),
+    )).collect()
+}
+
+fn classify_fix(entry: &Value, path: &Path, source: &[u8]) -> Outcome {
+    match check_fix(entry, path, source) {
+        Ok(()) => outcome(Status::Pass, ""),
+        Err(o) => o,
+    }
+}
+
+fn check_fix(entry: &Value, path: &Path, source: &[u8]) -> Result<(), Outcome> {
+    let bad = |s| outcome(Status::Wrong, s);
+    let original = run_check_json(path)?;
+    let diagnostics = original["diagnostics"].as_array().unwrap();
+    if let Some(d) = diagnostics.iter().find(|d| d["code"] == "E0020") {
+        return Err(bad(format!("syntax error on valid v0.5 fix fixture: {}", d["message"])));
+    }
+    // T-V3 needs unsupported mutable-reference returns and a complex mutable
+    // receiver. Its candidate requirement must not count as implemented.
+    if let Some(d) = diagnostics.iter().find(|d| d["code"].as_str().is_some_and(|c| c.starts_with('U'))) {
+        return Err(outcome(Status::Unsupported, d["message"].as_str().unwrap_or("unsupported fix input")));
+    }
+    if diagnostic_keys(&original["diagnostics"]) != diagnostic_keys(&entry["diagnostics"]) {
+        return Err(bad(format!("initial fix diagnostics differ: {}", original["diagnostics"])));
+    }
+    let source = std::str::from_utf8(source).map_err(|e| bad(e.to_string()))?;
+    let scratch = common::Scratch::new("conformance-fix").map_err(|e| bad(e.to_string()))?;
+    let input = scratch.0.join(path.file_name().unwrap());
+    std::fs::write(&input, source).map_err(|e| bad(e.to_string()))?;
+    let report = run_fix_json(&input)?;
+    let fixed = std::fs::read_to_string(&input).map_err(|e| bad(e.to_string()))?;
+    if report["source_sha256"] != format!("{:x}", Sha256::digest(source.as_bytes()))
+        || report["result_sha256"] != format!("{:x}", Sha256::digest(fixed.as_bytes()))
+        || report["dry_run"] != false
+        || report["changed"] != (fixed != source)
+        || diagnostic_keys(&report["original_diagnostics"]) != diagnostic_keys(&original["diagnostics"])
+    {
+        return Err(bad("fix receipt does not match its source or actual result".into()));
+    }
+    let applied = report["applied"].as_array().ok_or_else(|| bad("fix report has no applied array".into()))?;
+    let candidates = report["candidates"].as_array().ok_or_else(|| bad("fix report has no candidates array".into()))?;
+    if entry["kind"] == "fix-auto" {
+        if applied.is_empty() || report["automatic"] != report["applied"]
+            || applied.iter().any(|f| f["applicability"] != "automatic")
+        {
+            return Err(bad("automatic fixture was not automatically fixed".into()));
+        }
+        if apply_fix_edits(source, applied).map_err(bad)? != fixed {
+            return Err(bad("reported applied edits do not produce the actual file".into()));
+        }
+        let expected_path = path.parent().unwrap().join(entry["expect_fixed"].as_str().unwrap());
+        let expected = std::fs::read_to_string(expected_path).map_err(|e| bad(e.to_string()))?;
+        if token_signature(&fixed).map_err(bad)? != token_signature(&expected).map_err(bad)? {
+            return Err(bad(format!("fixed tokens differ from expect_fixed: {fixed}")));
+        }
+        let errors = run_check(&input)?;
+        if !errors.is_empty() { return Err(bad(format!("fixed file does not check: {}", describe(&errors)))); }
+        let second = run_fix_json(&input)?;
+        if second["changed"] != false || second["applied"] != json!([])
+            || std::fs::read_to_string(&input).map_err(|e| bad(e.to_string()))? != fixed
+        {
+            return Err(bad("automatic repair is not idempotent".into()));
+        }
+    } else {
+        if fixed != source || !applied.is_empty() {
+            return Err(bad("candidate-only fixture was changed automatically".into()));
+        }
+        let want: BTreeSet<&str> = entry["expect_candidates"].as_array().unwrap().iter().filter_map(Value::as_str).collect();
+        let got: BTreeSet<&str> = candidates.iter().filter_map(|f| f["id"].as_str()).collect();
+        if want != got { return Err(bad(format!("expected candidates {want:?}, got {got:?}"))); }
+        for (index, candidate) in candidates.iter().enumerate() {
+            if candidate["applicability"] != "candidate" { return Err(bad("candidate has incorrect applicability".into())); }
+            let text = apply_fix_edits(source, std::slice::from_ref(candidate)).map_err(bad)?;
+            let candidate_path = scratch.0.join(format!("candidate-{index}.yv"));
+            std::fs::write(&candidate_path, text).map_err(|e| bad(e.to_string()))?;
+            let errors = run_check(&candidate_path)?;
+            if !errors.is_empty() {
+                return Err(bad(format!("candidate {} does not independently check: {}", candidate["id"], describe(&errors))));
+            }
+        }
+    }
+    Ok(())
+}
+
 
 fn runtime_limit(entry: &Value) -> Result<Duration, String> {
     let Some(value) = entry.get("timeout_ms") else { return Ok(common::RUN_TIMEOUT); };
@@ -395,6 +569,17 @@ fn timeout_metadata_accepts_numbers_and_strings_and_rejects_invalid_limits() {
         assert!(runtime_limit(&json!({"timeout_ms": value})).is_err(), "{value:?}");
     }
 }
+
+#[test]
+fn fixed_source_comparison_uses_lexical_strings_and_interpolations() {
+    let a = "fn main() {\n    let n = 1\n    println(\"https://a/${n + 1}\")\n}\n";
+    let b = "// metadata\n\nfn main() { // retained\n    let n = 1 // value\n    println(\"https://a/${n + 1}\") // output\n}\n";
+    assert_eq!(token_signature(a).unwrap(), token_signature(b).unwrap());
+    assert_ne!(token_signature(a).unwrap(), token_signature(&a.replace("https://a/", "https://b/")).unwrap());
+    assert_ne!(token_signature(a).unwrap(), token_signature(&a.replace("n + 1", "n + 2")).unwrap());
+    assert_ne!(token_signature("return\n1").unwrap(), token_signature("return 1").unwrap());
+}
+
 
 #[test]
 fn baseline_update_cannot_erase_a_regression() {
