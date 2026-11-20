@@ -1,0 +1,65 @@
+use std/{io, os}
+
+fn isDigit(c: byte) -> bool {
+    return c >= '0' && c <= '9'
+}
+
+fn encode(s: str) -> String {
+    var out = String{}
+    var i = 0
+    let n = s.len()
+    while i < n {
+        let c = s[i]
+        var j = i
+        while j < n && s[j] == c {
+            j += 1
+        }
+        out.push(format("${j - i}"))
+        out.push(s[i..i + 1])
+        i = j
+    }
+    return out
+}
+
+fn decode(s: str) -> String ! int {
+    var out = String{}
+    var i = 0
+    let n = s.len()
+    while i < n {
+        if !isDigit(s[i]) {
+            return err(i)
+        }
+        let start = i
+        var count = 0
+        while i < n && isDigit(s[i]) {
+            count = count * 10 + int(s[i] - '0')
+            i += 1
+        }
+        if i >= n || count == 0 {
+            return err(start)
+        }
+        let ch = s[i..i + 1]
+        for _k in 0..count {
+            out.push(ch)
+        }
+        i += 1
+    }
+    return out
+}
+
+fn main() {
+    let args = os.args()
+    let text = io.readAll() catch e {
+        eprintln("read error: ${e}")
+        os.exit(1)
+    }
+    if args.len() > 1 && args[1] == "encode" {
+        print(encode(text))
+    } else {
+        let r = decode(text) catch pos {
+            eprintln("invalid input at byte ${pos}")
+            os.exit(1)
+        }
+        print(r)
+    }
+}

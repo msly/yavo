@@ -1,0 +1,86 @@
+use std/os
+
+fn toRoman(n: int) -> String {
+    let vals: Vec[int] = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1]
+    let syms: Vec[str] = ["M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I"]
+    var out = String{}
+    var rem = n
+    for i in 0..vals.len() {
+        while rem >= vals[i] {
+            out.push(syms[i])
+            rem -= vals[i]
+        }
+    }
+    return out
+}
+
+fn val(c: byte) -> int {
+    if c == 'I' {
+        return 1
+    }
+    if c == 'V' {
+        return 5
+    }
+    if c == 'X' {
+        return 10
+    }
+    if c == 'L' {
+        return 50
+    }
+    if c == 'C' {
+        return 100
+    }
+    if c == 'D' {
+        return 500
+    }
+    if c == 'M' {
+        return 1000
+    }
+    return 0
+}
+
+fn fromRoman(s: str) -> int {
+    if s.len() == 0 {
+        return 0
+    }
+    var total = 0
+    for i in 0..s.len() {
+        let v = val(s[i])
+        if v == 0 {
+            return 0
+        }
+        if i + 1 < s.len() && val(s[i + 1]) > v {
+            total -= v
+        } else {
+            total += v
+        }
+    }
+    return total
+}
+
+fn main() {
+    let args = os.args()
+    for i in 1..args.len() {
+        let a = args[i]
+        if let n = a.parseInt() {
+            if n >= 1 && n <= 3999 {
+                let r = toRoman(n)
+                println("${a} -> ${r}")
+            } else {
+                println("${a}: invalid")
+            }
+        } else {
+            let v = fromRoman(a)
+            if v >= 1 && v <= 3999 {
+                let back = toRoman(v)
+                if back == a.toString() {
+                    println("${a} -> ${v}")
+                } else {
+                    println("${a}: invalid")
+                }
+            } else {
+                println("${a}: invalid")
+            }
+        }
+    }
+}

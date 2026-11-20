@@ -1,0 +1,52 @@
+use std/{io, os}
+
+fn touch(order: inout Vec[String], key: str) {
+    let ks = key.toString()
+    var n: Vec[String] = []
+    n.push(ks.clone())
+    for k in order {
+        if k != ks {
+            n.push(k.clone())
+        }
+    }
+    order = n
+}
+
+fn main() {
+    let args = os.args()
+    let cap = args[1].parseInt() ?? 1
+    let text = io.readAll() catch e {
+        eprintln("read error: ${e}")
+        os.exit(1)
+    }
+    var vals: Map[String, String] = [:]
+    var order: Vec[String] = []
+    var hits = 0
+    var misses = 0
+    for line in text.lines() {
+        let f = line.fields()
+        if f.len() == 2 && f[0] == "get" {
+            if let v = vals.get(f[1]) {
+                println("${v}")
+                hits += 1
+                touch(&order, f[1])
+            } else {
+                println("miss")
+                misses += 1
+            }
+        } else if f.len() == 3 && f[0] == "put" {
+            let isNew = !vals.has(f[1])
+            vals.set(f[1].toString(), f[2].toString())
+            touch(&order, f[1])
+            if isNew && order.len() > cap {
+                if let old = order.pop() {
+                    println("evict ${old}")
+                    vals.remove(old)
+                }
+            }
+        }
+    }
+    println("hits: ${hits} misses: ${misses}")
+    let joined = order.join(" ")
+    println("order: ${joined}")
+}

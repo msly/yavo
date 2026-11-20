@@ -1,0 +1,68 @@
+use std/{io, os}
+
+fn lessPath(a: str, b: str) -> bool {
+    let x = a.split("/")
+    let y = b.split("/")
+    var i = 0
+    while i < x.len() && i < y.len() {
+        if x[i] != y[i] {
+            return x[i] < y[i]
+        }
+        i += 1
+    }
+    return x.len() < y.len()
+}
+
+fn main() {
+    let text = io.readAll() catch e {
+        eprintln("read error: ${e}")
+        os.exit(1)
+    }
+    var files: Map[String, int] = [:]
+    var dirs: Map[String, int] = [:]
+    var total = 0
+    for line in text.lines() {
+        let f = line.fields()
+        if f.len() < 2 {
+            continue
+        }
+        let size = f[1].parseInt() ?? 0
+        var comps: Vec[str] = []
+        for c in f[0].split("/") {
+            if c.len() > 0 {
+                comps.push(c)
+            }
+        }
+        if comps.len() == 0 {
+            continue
+        }
+        total += size
+        let full = comps.join("/")
+        files.update(full, 0, (n) => n + size)
+        for k in 1..comps.len() {
+            let pre = comps[0..k].join("/")
+            dirs.update(pre, 0, (n) => n + size)
+        }
+    }
+    var nodes: Vec[(String, int, bool)] = []
+    for k, v in files {
+        nodes.push((k.clone(), v, false))
+    }
+    for k, v in dirs {
+        nodes.push((k.clone(), v, true))
+    }
+    nodes.sortBy((a, b) => lessPath(a.0, b.0))
+    println("/ ${total}")
+    for nd in nodes {
+        let parts = nd.0.split("/")
+        var line = String{}
+        for _i in 0..parts.len() {
+            line.push("  ")
+        }
+        line.push(parts[parts.len() - 1])
+        if nd.2 {
+            line.push("/")
+        }
+        println("${line} ${nd.1}")
+    }
+}

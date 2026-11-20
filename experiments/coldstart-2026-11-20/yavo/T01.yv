@@ -1,0 +1,79 @@
+use std/{io, os}
+use std/math
+
+fn fmt2(x: f64) -> String {
+    var neg = false
+    var a = x
+    if a < 0.0 {
+        neg = true
+        a = 0.0 - a
+    }
+    let n = int(math.floor(a * 100.0 + 0.5))
+    let ip = n / 100
+    let fp = n % 100
+    var out = String{}
+    if neg {
+        out.push("-")
+    }
+    out.push(format("${ip}."))
+    if fp < 10 {
+        out.push("0")
+    }
+    out.push(format("${fp}"))
+    return out
+}
+
+fn main() {
+    let text = io.readAll() catch e {
+        eprintln("read error: ${e}")
+        os.exit(1)
+    }
+    let lines = text.lines()
+    if lines.len() == 0 {
+        return
+    }
+    let names = lines[0].split(",")
+    var rows: Vec[Vec[str]] = []
+    for i in 1..lines.len() {
+        rows.push(lines[i].split(","))
+    }
+    for c, name in names {
+        var numeric = true
+        var cnt = 0
+        var sum = 0.0
+        var mn = 0.0
+        var mx = 0.0
+        var seen: Map[String, int] = [:]
+        for r in rows {
+            let v = r[c]
+            if v.len() == 0 {
+                continue
+            }
+            if !seen.has(v) {
+                seen.set(v.toString(), 1)
+            }
+            if let f = v.parseFloat() {
+                if cnt == 0 {
+                    mn = f
+                    mx = f
+                }
+                if f < mn {
+                    mn = f
+                }
+                if f > mx {
+                    mx = f
+                }
+                sum += f
+                cnt += 1
+            } else {
+                numeric = false
+            }
+        }
+        if numeric {
+            let mean = sum / f64(cnt)
+            println("${name}: min=${fmt2(mn)} max=${fmt2(mx)} mean=${fmt2(mean)}")
+        } else {
+            println("${name}: text (${seen.len()} distinct)")
+        }
+    }
+}

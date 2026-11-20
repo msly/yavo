@@ -1,0 +1,92 @@
+use std/{io, os}
+use std/math
+
+fn fmt2(x: f64) -> String {
+    var neg = false
+    var a = x
+    if a < 0.0 {
+        neg = true
+        a = 0.0 - a
+    }
+    let n = int(math.floor(a * 100.0 + 0.5))
+    let ip = n / 100
+    let fp = n % 100
+    var out = String{}
+    if neg {
+        out.push("-")
+    }
+    out.push(format("${ip}."))
+    if fp < 10 {
+        out.push("0")
+    }
+    out.push(format("${fp}"))
+    return out
+}
+
+fn main() {
+    let text = io.readAll() catch e {
+        eprintln("read error: ${e}")
+        os.exit(1)
+    }
+    var total = 0.0
+    var best = -1.0
+    var bestName = "none".toString()
+    var ln = 0
+    for line in text.lines() {
+        ln += 1
+        let f = line.fields()
+        var ok = f.len() > 0
+        var nums: Vec[f64] = []
+        if ok {
+            for i in 1..f.len() {
+                if let x = f[i].parseFloat() {
+                    nums.push(x)
+                } else {
+                    ok = false
+                }
+            }
+        }
+        var want = 0
+        if ok {
+            if f[0] == "circle" {
+                want = 1
+            } else if f[0] == "rect" {
+                want = 2
+            } else if f[0] == "triangle" {
+                want = 3
+            }
+            if want == 0 || nums.len() != want {
+                ok = false
+            }
+        }
+        if !ok {
+            println("line ${ln}: cannot parse")
+            continue
+        }
+        var area = 0.0
+        if want == 1 {
+            area = math.pi * nums[0] * nums[0]
+        } else if want == 2 {
+            area = nums[0] * nums[1]
+        } else {
+            let a = nums[0]
+            let b = nums[1]
+            let c = nums[2]
+            if a + b <= c || a + c <= b || b + c <= a {
+                println("triangle: invalid")
+                continue
+            }
+            let s = (a + b + c) / 2.0
+            area = math.sqrt(s * (s - a) * (s - b) * (s - c))
+        }
+        let name = f[0]
+        println("${name}: ${fmt2(area)}")
+        total += area
+        if area > best {
+            best = area
+            bestName = name.toString()
+        }
+    }
+    println("total: ${fmt2(total)}")
+    println("largest: ${bestName}")
+}

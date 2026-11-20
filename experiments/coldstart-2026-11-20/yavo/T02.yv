@@ -1,0 +1,49 @@
+use std/{io, os}
+
+fn main() {
+    let text = io.readAll() catch e {
+        eprintln("read error: ${e}")
+        os.exit(1)
+    }
+    var levels: Map[String, int] = [:]
+    var hours: Map[String, int] = [:]
+    var firstErr = "none".toString()
+    var haveErr = false
+    var skipped = 0
+    for line in text.lines() {
+        let f = line.fields()
+        if f.len() < 2 {
+            skipped += 1
+            continue
+        }
+        levels.update(f[1].toString(), 0, (n) => n + 1)
+        var h = f[0]
+        if h.len() >= 2 {
+            h = h[0..2]
+        }
+        hours.update(h.toString(), 0, (n) => n + 1)
+        if f[1] == "ERROR" && !haveErr {
+            haveErr = true
+            firstErr = f[2..f.len()].join(" ")
+        }
+    }
+    var items: Vec[(String, int)] = []
+    for k, n in levels {
+        items.push((k.clone(), n))
+    }
+    items.sortBy((a, b) => a.1 > b.1 || (a.1 == b.1 && a.0 < b.0))
+    for it in items {
+        println("${it.0} ${it.1}")
+    }
+    println("first error: ${firstErr}")
+    var bestH = "".toString()
+    var bestN = 0
+    for k, n in hours {
+        if n > bestN || (n == bestN && k < bestH) {
+            bestN = n
+            bestH = k.clone()
+        }
+    }
+    println("busiest hour: ${bestH} (${bestN})")
+    println("skipped: ${skipped}")
+}

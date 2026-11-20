@@ -1,0 +1,71 @@
+use std/{io, os}
+
+fn ensure(deps: inout Map[String, Vec[String]], name: str) {
+    if !deps.has(name) {
+        deps.set(name.toString(), [])
+    }
+}
+
+fn ready(deps: Map[String, Vec[String]], placed: Map[String, int], n: str) -> bool {
+    if let ds = deps.get(n) {
+        for d in ds {
+            if !placed.has(d) {
+                return false
+            }
+        }
+    }
+    return true
+}
+
+fn main() {
+    let text = io.readAll() catch e {
+        eprintln("read error: ${e}")
+        os.exit(1)
+    }
+    var deps: Map[String, Vec[String]] = [:]
+    for line in text.lines() {
+        let ci = line.find(":") ?? line.len()
+        let name = line[0..ci].trim()
+        if name.len() == 0 {
+            continue
+        }
+        ensure(&deps, name)
+        if ci < line.len() {
+            for d in line[ci + 1..line.len()].fields() {
+                ensure(&deps, d)
+                if let ds = deps.getMut(name) {
+                    ds.push(d.toString())
+                }
+            }
+        }
+    }
+    var names: Vec[String] = []
+    for k, _v in deps {
+        names.push(k.clone())
+    }
+    names.sort()
+    var placed: Map[String, int] = [:]
+    var progress = true
+    while progress {
+        progress = false
+        for n in names {
+            if !placed.has(n) && ready(deps, placed, n) {
+                println("${n}")
+                placed.set(n.clone(), 1)
+                progress = true
+                break
+            }
+        }
+    }
+    var rest: Vec[String] = []
+    for n in names {
+        if !placed.has(n) {
+            rest.push(n.clone())
+        }
+    }
+    if rest.len() > 0 {
+        let joined = rest.join(" ")
+        println("cycle: ${joined}")
+        os.exit(1)
+    }
+}

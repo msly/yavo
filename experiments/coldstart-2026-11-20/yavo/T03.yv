@@ -1,0 +1,101 @@
+use std/{io, os}
+
+fn parseAmt(s: str) -> ?int {
+    let n = s.parseInt() ?? return none
+    if n <= 0 {
+        return none
+    }
+    return n
+}
+
+fn run(f: Vec[str], accts: inout Map[String, int]) {
+    let cmd = f[0]
+    if cmd == "open" && f.len() == 2 {
+        if accts.has(f[1]) {
+            println("error: ${f[1]} exists")
+        } else {
+            accts.set(f[1].toString(), 0)
+        }
+        return
+    }
+    var need = 0
+    if cmd == "deposit" || cmd == "withdraw" {
+        need = 3
+    } else if cmd == "transfer" {
+        need = 4
+    }
+    if need == 0 || f.len() != need {
+        println("error: bad command")
+        return
+    }
+    let amtS = f[need - 1]
+    let amt = parseAmt(amtS) ?? 0
+    if amt == 0 {
+        println("error: bad amount '${amtS}'")
+        return
+    }
+    if cmd == "transfer" {
+        if !accts.has(f[1]) {
+            println("error: no account ${f[1]}")
+            return
+        }
+        if !accts.has(f[2]) {
+            println("error: no account ${f[2]}")
+            return
+        }
+        if f[1] == f[2] {
+            println("error: same account")
+            return
+        }
+        let fb = accts.getCopy(f[1]) ?? 0
+        if fb < amt {
+            println("error: insufficient funds in ${f[1]}")
+            return
+        }
+        let tb = accts.getCopy(f[2]) ?? 0
+        accts.set(f[1].toString(), fb - amt)
+        accts.set(f[2].toString(), tb + amt)
+        return
+    }
+    if !accts.has(f[1]) {
+        println("error: no account ${f[1]}")
+        return
+    }
+    let b = accts.getCopy(f[1]) ?? 0
+    if cmd == "deposit" {
+        accts.set(f[1].toString(), b + amt)
+    } else {
+        if b < amt {
+            println("error: insufficient funds in ${f[1]}")
+            return
+        }
+        accts.set(f[1].toString(), b - amt)
+    }
+}
+
+fn main() {
+    let text = io.readAll() catch e {
+        eprintln("read error: ${e}")
+        os.exit(1)
+    }
+    var accts: Map[String, int] = [:]
+    for line in text.lines() {
+        let f = line.fields()
+        if f.len() == 0 {
+            continue
+        }
+        run(f, &accts)
+    }
+    var names: Vec[String] = []
+    for k, v in accts {
+        names.push(k.clone())
+    }
+    names.sort()
+    var total = 0
+    for n in names {
+        let b = accts.getCopy(n) ?? 0
+        total += b
+        println("${n} ${b}")
+    }
+    println("total: ${total}")
+}

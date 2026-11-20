@@ -1,0 +1,74 @@
+use std/{io, os}
+
+fn parseRow(line: str) -> Vec[int] {
+    var r: Vec[int] = []
+    for w in line.fields() {
+        r.push(w.parseInt() ?? 0)
+    }
+    return r
+}
+
+fn ragged(m: Vec[Vec[int]]) -> bool {
+    for i in 1..m.len() {
+        if m[i].len() != m[0].len() {
+            return true
+        }
+    }
+    return false
+}
+
+fn cols(m: Vec[Vec[int]]) -> int {
+    if m.len() == 0 {
+        return 0
+    }
+    return m[0].len()
+}
+
+fn compute() -> Vec[String] ! String {
+    let text = io.readAll() catch e {
+        return err(format("read error: ${e}"))
+    }
+    var a: Vec[Vec[int]] = []
+    var b: Vec[Vec[int]] = []
+    var second = false
+    for line in text.lines() {
+        if line.len() == 0 {
+            second = true
+            continue
+        }
+        if second {
+            b.push(parseRow(line))
+        } else {
+            a.push(parseRow(line))
+        }
+    }
+    if ragged(a) || ragged(b) {
+        return err("error: ragged matrix".toString())
+    }
+    if cols(a) != b.len() {
+        return err(format("error: cannot multiply ${a.len()}x${cols(a)} by ${b.len()}x${cols(b)}"))
+    }
+    var out: Vec[String] = []
+    for i in 0..a.len() {
+        var parts: Vec[String] = []
+        for j in 0..cols(b) {
+            var s = 0
+            for k in 0..b.len() {
+                s += a[i][k] * b[k][j]
+            }
+            parts.push(format("${s}"))
+        }
+        out.push(parts.join(" "))
+    }
+    return out
+}
+
+fn main() {
+    let lines = compute() catch e {
+        eprintln("${e}")
+        os.exit(1)
+    }
+    for l in lines {
+        println("${l}")
+    }
+}
