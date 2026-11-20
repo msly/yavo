@@ -16,6 +16,9 @@ pub type LocalId = usize;
 /// A step of `HPlace::path` (and of `HStmtKind::Assign`'s path) that goes into the content of
 /// a `Box` instead of a field (semantic table A7: fields project through `Box`).
 pub const BOX_STEP: usize = usize::MAX;
+/// The first step of an `HStmtKind::Assign` path that writes through the `&inout T` variable
+/// itself (`*p = v`, A6) instead of rebinding it. Only appears at the start of a path.
+pub const DEREF_STEP: usize = usize::MAX - 1;
 
 pub struct HProgram {
     pub fns: Vec<HFn>,
@@ -230,6 +233,9 @@ pub enum HExprKind {
     StrView(Box<HExpr>),
     /// Reading through a `&T`.
     Deref(Box<HExpr>),
+    /// `String.fromUtf8(bytes)`: consumes a `Vec[byte]`; the result is `String ! Utf8Error`
+    /// (stdlib contract §5).
+    FromUtf8(Box<HExpr>),
     /// `&place` as a `&T` value (a hidden reference to a field being iterated).
     AddrOf(Box<HExpr>),
     /// `&local` passed to an `inout` parameter.
@@ -1367,7 +1373,7 @@ impl Checker<'_> {
             .chain(prog.enums.iter().map(|e| (e.name.as_str(), e.name_span, true)))
             .collect();
         for &(name, span, is_enum) in &names {
-            if is_type_name(name) || UNSUPPORTED_TYPES.contains(&name) || name == "Ordering" {
+            if is_type_name(name) || UNSUPPORTED_TYPES.contains(&name) || matches!(name, "Ordering" | "Utf8Error") {
                 self.diags.error("E0011", span, format!("`{name}` is a built-in type name and cannot be redefined"));
             } else if let Some(&prev) = self.struct_index.get(name) {
                 let line = self.structs[prev].span.line;
@@ -1392,6 +1398,14 @@ impl Checker<'_> {
                 .map(|(n, fs)| VariantDef { name: n.to_string(), fields: fs.iter().map(|f| (f.to_string(), int, span)).collect() })
                 .collect();
             self.structs.push(StructDef { name: lname.to_string(), span, ty, fields: Vec::new(), variants });
+        }
+        // Prelude (stdlib contract §5): `struct Utf8Error { offset: int }`.
+        {
+            let ty = Ty::Struct(register_struct("Utf8Error"));
+            self.struct_index.insert("Utf8Error".to_string(), self.structs.len());
+            let span = Span { start: 0, end: 0, line: 1, col: 1 };
+            let fields = vec![("offset".to_string(), Ty::Int(IntTy::I64), span)];
+            self.structs.push(StructDef { name: "Utf8Error".to_string(), span, ty, fields, variants: Vec::new() });
         }
         for (i, s) in prog.structs.iter().enumerate() {
             // A generic struct's fields are resolved per instance.
@@ -1716,7 +1730,10 @@ impl Checker<'_> {
     fn collect_iface_names(&mut self, prog: &Program) {
         for d in &prog.interfaces {
             let name = d.name.as_str();
-            if is_type_name(name) || UNSUPPORTED_TYPES.contains(&name) || matches!(name, "Ordering" | "Drop" | "Eq" | "Ord" | "Copy" | "Send" | "Sync") {
+            if is_type_name(name)
+                || UNSUPPORTED_TYPES.contains(&name)
+                || matches!(name, "Ordering" | "Utf8Error" | "Drop" | "Eq" | "Ord" | "Copy" | "Send" | "Sync")
+            {
                 self.diags.error("E0011", d.name_span, format!("`{name}` is a built-in name and cannot be redefined"));
             } else if self.iface_index.contains_key(name) || prog.structs.iter().any(|s| s.name == name) || prog.enums.iter().any(|e| e.name == name) {
                 self.diags.error("E0011", d.name_span, format!("type `{name}` is defined more than once"));
@@ -2420,6 +2437,12 @@ impl Checker<'_> {
                 Some(inner) => Ty::Ref(ref_of(inner)),
             };
         }
+        if t.name == "&inout" {
+            self.diags
+                .error("U0001", t.span, "`&inout T` is only supported as the type of a local variable for now")
+                .note("use an `inout` parameter to modify the caller's value");
+            return Ty::Error;
+        }
         if t.name == "?" {
             return match t.args.first().map(|a| self.resolve_ty(a)) {
                 Some(Ty::Error) | None => Ty::Error,
@@ -3031,6 +3054,54 @@ impl Checker<'_> {
         out
     }
 
+    /// `&place` where an `&inout T` is expected (A7): the place must be writable, and nothing
+    /// else may use it while the new reference is alive (A3). `&p` for an `&inout T` variable
+    /// `p` reborrows its target (A4).
+    fn borrow_mut(&mut self, inner: &Expr, r: u32, span: Span, cx: &mut FnCx) -> HExpr {
+        let want = ref_mut_inner(r);
+        let mut root = inner;
+        while let ExprKind::Paren(e) = &root.kind {
+            root = e;
+        }
+        if let ExprKind::Ident(name) = &root.kind {
+            if let Some(id) = self.lookup(cx, name) {
+                if let Ty::RefMut(pr) = cx.locals[id].ty {
+                    if ref_mut_inner(pr) == want {
+                        cx.locals[id].used = true;
+                        self.check_moved(cx, id, root.span);
+                        self.check_exclusive(cx, id, root.span);
+                        let place = HPlace { local: id, path: Vec::new(), ty: want };
+                        return HExpr { kind: HExprKind::InoutPlace(place), ty: Ty::RefMut(r), span, at: span };
+                    }
+                }
+            }
+        }
+        let before = self.diags.count(crate::diag::Severity::Error);
+        let Some(place) = self.place_expr(inner, "`&inout`", cx) else { return err_expr(span) };
+        // One primary diagnostic per root cause: a conflict already reported by `place_expr`
+        // is not reported again as an exclusivity conflict.
+        if self.diags.count(crate::diag::Severity::Error) == before {
+            self.check_exclusive(cx, place.local, span);
+        }
+        if place.ty != want && place.ty != Ty::Error {
+            self.diags.error("E0001", span, format!("mismatched types: expected `&inout {want}`, found `&inout {}`", place.ty));
+            return err_expr(span);
+        }
+        HExpr { kind: HExprKind::InoutPlace(place), ty: Ty::RefMut(r), span, at: span }
+    }
+
+    /// The declared type of a local variable. Unlike other positions, a local may be an
+    /// `&inout T` (A1, A7).
+    fn local_ty(&mut self, t: &TypeExpr) -> Ty {
+        if t.name == "&inout" {
+            return match t.args.first().map(|a| self.resolve_ty(a)) {
+                Some(Ty::Error) | None => Ty::Error,
+                Some(inner) => Ty::RefMut(ref_mut_of(inner)),
+            };
+        }
+        self.resolve_ty(t)
+    }
+
     /// Writing through an `if let`/`match` binding. A binding into a read-only place is
     /// read-only (A2); writable bindings are valid v0.5 but not implemented yet.
     fn binding_write(&mut self, cx: &FnCx, id: LocalId, span: Span) {
@@ -3106,6 +3177,13 @@ impl Checker<'_> {
         };
         match &h.kind {
             HExprKind::Local(id) | HExprKind::Move(id) => cx.locals[*id].loans.clone(),
+            // `&x` / `&x.f` (and a reborrow `&p`): points into the root variable and whatever it
+            // already points into.
+            HExprKind::InoutPlace(p) => {
+                let mut out = vec![Loan::Local(p.local)];
+                out.extend(cx.locals[p.local].loans.iter().copied());
+                out
+            }
             HExprKind::Deref(inner) => self.loans_of(inner, cx),
             HExprKind::AddrOf(inner) => self.storage_loans(inner, cx),
             HExprKind::SliceOf(inner) => match inner.kind {
@@ -3471,7 +3549,7 @@ impl Checker<'_> {
         cx.cur += 1;
         let kind = match &s.kind {
             StmtKind::Let { mutable, name, name_span, ty, init } => {
-                let declared = ty.as_ref().map(|t| self.resolve_ty(t));
+                let declared = ty.as_ref().map(|t| self.local_ty(t));
                 cx.diverge_ok = Some(init.span);
                 let init = self.expr(init, declared, cx);
                 cx.diverge_ok = None;
@@ -3538,6 +3616,8 @@ impl Checker<'_> {
                 // The target is a variable, or a chain of struct fields rooted at a variable.
                 let mut fields_rev: Vec<(&str, Span)> = Vec::new();
                 let mut root = target;
+                // `*p = v` / `(*p).f = v`: write through the reference `p` (A6).
+                let mut star: Option<Span> = None;
                 loop {
                     match &root.kind {
                         ExprKind::Field { base, name } => {
@@ -3545,11 +3625,19 @@ impl Checker<'_> {
                             root = base;
                         }
                         ExprKind::Paren(inner) => root = inner,
+                        ExprKind::Unary { op: UnOp::Deref, expr, .. } if star.is_none() => {
+                            star = Some(root.span);
+                            root = expr;
+                        }
                         _ => break,
                     }
                 }
                 let ExprKind::Ident(name) = &root.kind else {
-                    self.diags.error("U0001", target.span, "only variables and their struct fields can be assigned in P0");
+                    if star.is_some() {
+                        self.diags.error("U0001", target.span, "only `*name` (a variable holding a reference) can be written through for now");
+                    } else {
+                        self.diags.error("U0001", target.span, "only variables and their struct fields can be assigned in P0");
+                    }
                     return None;
                 };
                 if cx.in_drop && name == "self" && fields_rev.is_empty() {
@@ -3563,6 +3651,39 @@ impl Checker<'_> {
                     return None;
                 };
                 let root_ty = cx.locals[id].ty;
+                if let Some(star_span) = star {
+                    cx.locals[id].used = true;
+                    match root_ty {
+                        Ty::RefMut(_) => {}
+                        Ty::Ref(_) => {
+                            self.diags
+                                .error("E0101", star_span, format!("cannot write through `{name}`: it is a read-only reference (`{root_ty}`)"))
+                                .note("a `var` binding does not make `&T` writable; borrow with `&inout T` instead");
+                            self.expr(value, None, cx);
+                            return None;
+                        }
+                        Ty::Error => {
+                            self.expr(value, None, cx);
+                            return None;
+                        }
+                        // `for x in xs` and `if let`/`match` bindings of a read-only place stand for
+                        // a read-only reference even when the element is copied (A2).
+                        _ if matches!(cx.locals[id].kind, LocalKind::LoopVar | LocalKind::Bind | LocalKind::Param) => {
+                            self.diags
+                                .error("E0101", star_span, format!("cannot write through `{name}`: it is read-only"))
+                                .note(format!("to modify the elements, loop with `for {name} in &...`"));
+                            self.expr(value, None, cx);
+                            return None;
+                        }
+                        _ => {
+                            self.diags
+                                .error("E0001", star_span, format!("`*{name}` needs a reference, but `{name}` has type `{root_ty}`"))
+                                .note(format!("assign to the variable directly: `{name} = ...`"));
+                            self.expr(value, None, cx);
+                            return None;
+                        }
+                    }
+                }
                 // Writing through a reference or into the caller's place (an `inout` parameter),
                 // or attempting to write a key, uses the variable.
                 if matches!(root_ty, Ty::Ref(_) | Ty::RefMut(_)) && !fields_rev.is_empty()
@@ -3573,7 +3694,7 @@ impl Checker<'_> {
                 }
                 // `r.f = v` writes through a reference: a `&T` never allows it (A1), an `&inout T`
                 // always does, whatever the binding itself was declared with (rule 3).
-                let through = !fields_rev.is_empty() && matches!(root_ty, Ty::Ref(_) | Ty::RefMut(_));
+                let through = star.is_some() || !fields_rev.is_empty() && matches!(root_ty, Ty::Ref(_) | Ty::RefMut(_));
                 if cx.locals[id].map_key {
                     self.diags
                         .error("E0103", target.span, format!("cannot modify the Map key `{name}`"))
@@ -3618,13 +3739,16 @@ impl Checker<'_> {
                     Ty::RefMut(r) if through => ref_mut_inner(r),
                     t => t,
                 };
-                let Some((path, lty)) = self.field_path(lty, &fields_rev) else {
+                let Some((mut path, lty)) = self.field_path(lty, &fields_rev) else {
                     self.expr(value, None, cx);
                     return None;
                 };
+                if star.is_some() {
+                    path.insert(0, DEREF_STEP);
+                }
                 let value = match op {
                     None => {
-                        self.check_not_borrowed(cx, id, target.span, "assign to");
+                        self.check_not_borrowed(cx, id, target.span, if star.is_some() { "write through" } else { "assign to" });
                         cx.diverge_ok = Some(value.span);
                         let v = self.expr(value, Some(lty), cx);
                         cx.diverge_ok = None;
@@ -3634,6 +3758,8 @@ impl Checker<'_> {
                             self.diags
                                 .error("E0306", v.span, format!("cannot store a borrow into the caller's `{name}`"))
                                 .note("return it instead, e.g. `-> Vec[str] of text`");
+                        } else if star.is_some() && lty.carries_borrow() && !self.loans_of(&v, cx).is_empty() {
+                            self.diags.error("U0001", v.span, "storing a borrowed value through an `&inout` reference is not supported yet");
                         } else if path.is_empty() && lty.carries_borrow() {
                             let loans = self.loans_of(&v, cx);
                             self.store_loans(cx, id, loans, v.span, true);
@@ -3646,7 +3772,7 @@ impl Checker<'_> {
                     }
                     Some(op) => {
                         cx.locals[id].used = true;
-                        self.check_not_borrowed(cx, id, target.span, "assign to");
+                        self.check_not_borrowed(cx, id, target.span, if star.is_some() { "write through" } else { "assign to" });
                         let mut lhs =
                             HExpr { kind: HExprKind::Local(id), ty: cx.locals[id].ty, span: root.span, at: root.span };
                         if through {
@@ -3654,6 +3780,9 @@ impl Checker<'_> {
                         }
                         let mut ty = lhs.ty;
                         for &fi in &path {
+                            if fi == DEREF_STEP {
+                                continue;
+                            }
                             if fi == BOX_STEP {
                                 lhs = self.unbox(lhs);
                                 ty = lhs.ty;
@@ -4440,6 +4569,22 @@ impl Checker<'_> {
                 self.expect_ty(&h, Ty::Bool);
                 HExpr { kind: HExprKind::Not(Box::new(h)), ty: Ty::Bool, span, at: span }
             }
+            // `*p` reads the place `p` points to: a copy for a `Copy` target, otherwise read-only
+            // access (A6). Never moves the target out.
+            ExprKind::Unary { op: UnOp::Deref, op_span, expr: inner } => {
+                let h = self.expr(inner, None, cx);
+                match h.ty {
+                    Ty::Ref(_) | Ty::RefMut(_) => self.deref(h),
+                    Ty::Error => err_expr(span),
+                    // `for x in xs` and read-only `if let` bindings stand for `&T` even when the
+                    // element is copied, so `*x` reads the same value (A2, A6).
+                    _ if matches!(&h.kind, HExprKind::Local(id) if matches!(cx.locals[*id].kind, LocalKind::LoopVar | LocalKind::Bind)) => h,
+                    other => {
+                        self.diags.error("E0001", *op_span, format!("`*` needs a reference (`&T` or `&inout T`), found `{other}`"));
+                        err_expr(span)
+                    }
+                }
+            }
             ExprKind::Binary { op, op_span, lhs, rhs } => self.binary(*op, *op_span, lhs, rhs, expected, span, cx),
             ExprKind::Ident(name) => {
                 if let Some(id) = self.lookup(cx, name) {
@@ -4598,6 +4743,19 @@ impl Checker<'_> {
                     return err_expr(span);
                 }
                 HExpr { kind: HExprKind::AddrOf(Box::new(h)), ty: Ty::Ref(r), span, at: span }
+            }
+            // `&place` where an `&inout T` is expected: an exclusive, writable reference (A7).
+            ExprKind::Borrow(inner) if matches!(expected, Some(Ty::RefMut(_))) => {
+                let Some(Ty::RefMut(r)) = expected else { unreachable!() };
+                self.borrow_mut(inner, r, span, cx)
+            }
+            // A standalone `&x` has no permission context (A7): `let p = &x`.
+            ExprKind::Borrow(inner) if expected.is_none() => {
+                self.diags
+                    .error("E0004", span, "a borrow needs a type that says whether it is read-only or writable")
+                    .note("write the type, e.g. `let p: &int = &x` or `let p: &inout int = &x`");
+                self.expr(inner, None, cx);
+                err_expr(span)
             }
             ExprKind::Borrow(_) => {
                 self.diags.error("U0001", span, "borrow expressions (`&x`) are only supported as `inout` arguments in P0");
@@ -5371,6 +5529,9 @@ impl Checker<'_> {
                     if let Some(to) = IntTy::from_name(tn) {
                         return self.conversion(to, false, args, at, span, cx);
                     }
+                }
+                if tn == "String" && name == "fromUtf8" {
+                    return self.from_utf8(args, span, at, cx);
                 }
                 if self.module_ref(tn, base.span) {
                     if tn == "os" && name == "exit" {
@@ -6704,6 +6865,25 @@ impl Checker<'_> {
                 err_expr(span)
             }
         }
+    }
+
+    /// `String.fromUtf8(bytes)` (stdlib contract §5): consumes the bytes; on success the buffer
+    /// becomes the `String`, on failure it is freed and the error carries the offset.
+    fn from_utf8(&mut self, args: &[Expr], span: Span, at: Span, cx: &mut FnCx) -> HExpr {
+        let [arg] = args else {
+            self.diags.error("E0012", span, "`String.fromUtf8` takes exactly one argument (a `Vec[byte]`)");
+            return err_expr(span);
+        };
+        let bytes = Ty::Vec(vec_of(Ty::Int(IntTy::U8)));
+        let h = self.expr(arg, Some(bytes), cx);
+        let h = self.fit(h, bytes, cx);
+        if h.ty == Ty::Error {
+            return err_expr(span);
+        }
+        let h = self.consume(h, cx);
+        let err = self.structs[self.struct_index["Utf8Error"]].ty;
+        let ty = Ty::Res(res_of(Ty::String, err));
+        HExpr { kind: HExprKind::FromUtf8(Box::new(h)), ty, span, at }
     }
 
     /// `io.readAll()`, `io.readLine()`, `fs.readText(path)`, `fs.writeText(path, text)`,

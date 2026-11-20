@@ -1,0 +1,41 @@
+// expect-stdout:
+// | [AB]
+// | []
+// | [中] 3
+// | bad at 1
+// | bad at 2
+// | kept 3
+fn decode(bytes: sink Vec[byte]) -> String ! Utf8Error {
+    let s = try String.fromUtf8(bytes)
+    return s
+}
+
+fn main() {
+    let ab: Vec[byte] = [65, 66]
+    let d = decode(ab) catch _ => "?".toString()
+    println("[${d}]")
+    let empty: Vec[byte] = []
+    match String.fromUtf8(empty) {
+        ok(s) => println("[${s}]")
+        err(e) => println("unexpected ${e.offset}")
+    }
+    // A valid three-byte character: the buffer becomes the `String`.
+    let zh: Vec[byte] = [228, 184, 173]
+    let s = String.fromUtf8(zh) catch _ => "?".toString()
+    println("[${s}] ${s.len()}")
+    // An invalid byte, and a sequence cut off at the end: the offset is where it starts.
+    let bad: Vec[byte] = [102, 255, 111]
+    match String.fromUtf8(bad) {
+        ok(_s) => println("unexpected success")
+        err(e) => println("bad at ${e.offset}")
+    }
+    let cut: Vec[byte] = [104, 105, 228, 184]
+    match String.fromUtf8(cut) {
+        ok(_s) => println("unexpected success")
+        err(e) => println("bad at ${e.offset}")
+    }
+    // Keeping the bytes needs an explicit clone.
+    let raw: Vec[byte] = [120, 121, 122]
+    let copy = String.fromUtf8(raw.clone()) catch _ => "".toString()
+    println("kept ${raw.len() + copy.len() - 3}")
+}

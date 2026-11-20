@@ -1,0 +1,114 @@
+// expect-error: E0101 18:5
+// expect-error: E0004 23:13
+// expect-error: E0101 30:9
+// expect-error: E0102 37:13
+// expect-error: E0102 44:26
+// expect-error: E0102 52:26
+// expect-error: E0102 61:5
+// expect-error: E0014 67:26
+// expect-error: E0402 75:6
+// expect-error: E0014 83:5
+// expect-error: E0001 89:5
+// expect-error: E0401 95:14
+// expect-error: E0305 105:13
+// expect-error: U0001 110:16
+fn readOnly() {
+    let value = 1
+    var p: &int = &value
+    *p = 2
+}
+
+fn noContext() {
+    var n = 1
+    let p = &n
+    println(p)
+}
+
+fn loopReadOnly() {
+    var values: Vec[int] = [1, 2]
+    for value in values {
+        *value = 3
+    }
+}
+
+fn useWhileLive() {
+    var x = 1
+    let p: &inout int = &x
+    println(x)
+    *p = 2
+}
+
+fn readerLive() {
+    var x = 1
+    let r: &int = &x
+    let p: &inout int = &x
+    *p = 2
+    println(*r)
+}
+
+fn twoMut() {
+    var x = 1
+    let p: &inout int = &x
+    let q: &inout int = &x
+    *q = 3
+    *p = 2
+}
+
+fn reborrowOrder() {
+    var x = 1
+    var p: &inout int = &x
+    let q: &inout int = &p
+    *p = 4
+    *q = 3
+}
+
+fn letTarget() {
+    let x = 1
+    let p: &inout int = &x
+    *p = 2
+}
+
+fn movedRef() {
+    var x = 1
+    let p: &inout int = &x
+    let q = p
+    *p = 2
+    *q = 3
+}
+
+fn rebindLet() {
+    var a = 1
+    var b = 2
+    let p: &inout int = &a
+    p = &b
+    *p = 3
+}
+
+fn derefInt() {
+    var n = 1
+    *n = 2
+}
+
+fn moveOut() {
+    var s = "a".toString()
+    let p: &inout String = &s
+    let t = *p
+    println(t)
+}
+
+fn tooShort() {
+    var a = 1
+    var p: &inout int = &a
+    *p = 0
+    if true {
+        var b = 2
+        p = &b
+    }
+    *p = 1
+}
+
+fn paramRef(p: &inout int) {
+}
+
+fn main() {
+}

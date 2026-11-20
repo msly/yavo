@@ -152,8 +152,8 @@ an `inout` argument must be a `var` written as `&x` (`E0014`, `E0001`); storing 
 moving out of a reference is `E0401`; iterating views of a temporary is `E0305`. A `&T` into
 `v` is a borrow of `v`, so `v.push` while it is still used is `E0102`.
 
-Not yet: writing the type `&inout T` or building one with `&x` (A7), `*p`. `for x in &v`,
-`for i, x in v` and `getMut` are covered in the Map section below.
+`*p`, the type `&inout T` and `&x` building one (A6, A7) are in "Dereference and `&inout T`
+variables" below. `for x in &v`, `for i, x in v` and `getMut` are covered in the Map section.
 Tests: `tests/p0/run_refs.yv`, `tests/p0/errors_refs.yv` (9 diagnostics).
 
 ## Optional values
@@ -243,8 +243,8 @@ Rules checked: writing through a `&T` (e.g. a binding from `get`) is `E0101`; wh
 access), and inside `for ... in &m` the body cannot use `m` at all; modifying a map while a
 `get` result is still used is `E0102`; `m.set(k, m.len())` is `E0403`; storing a borrowed key
 or value into an `inout` map is `E0306`; `get` on a temporary map whose result is kept is
-`E0305`. `update` needs closures and is `U0001`; so are spelling the type `&inout T`, storing
-`&inout` values in collections, and storing borrowed values through an `&inout`.
+`E0305`. Storing `&inout` values in collections, and storing borrowed values through an
+`&inout`, are `U0001`.
 
 Code generation: the runtime keeps entries in a vector in insertion order and an
 open-addressing table of entry indexes (kept at most half full, so probing ends); a removed
@@ -606,6 +606,47 @@ Code generation: runtime `yv_vec_slice` / `yv_str_slice` build descriptors witho
 `tests/p0/run_slices.yv`, `tests/p0/errors_slices.yv` (4 errors, 1 warning),
 `tests/p0/panic_slice_bounds.yv`, `tests/p0/panic_str_boundary.yv`.
 
+## Dereference and `&inout T` variables
+
+Supported (semantic table A1, A2, A3, A4, A6, A7):
+
+- `*p` reads the target of a `&T` or `&inout T`: a copy for a `Copy` target, otherwise read-only
+  access (`let t = *p` on a `String` is `E0401`). `*x` also works on `for x in xs` and read-only
+  `if let` bindings, which stand for `&T` even when the element is copied.
+- `*p = v` and `*p op= v` write through an `&inout T` whatever the binding was declared with
+  (`let p: &inout int` can write its target, A1); the old value of a non-copyable target is
+  dropped first. Through a `&T` (even in a `var`), a `for x in xs` binding or a read-only
+  binding it is `E0101`; `*n` on a plain value is `E0001`.
+- `let p: &inout T = &place` and `var p: &T = &place` (A7): `&place` builds a writable borrow
+  where `&inout T` is expected and a read-only one where `&T` is expected; `let p = &x` with no
+  type is `E0004`. The place is a variable or a field path, possibly through `&inout`/`Box`;
+  `&p` for an `&inout T` variable `p` reborrows it (A4). `p = &b` rebinds a `var` reference
+  (`let` is `E0014`).
+- Exclusivity (A3): building `&inout` to a place that a live view or `&inout` still uses is
+  `E0102`, and so is any use of the place while the new reference is still used later. A
+  reborrow `q` of `p` makes `p` unusable while `q` is live. A reference must not outlive its
+  target (`E0305`). Moving `p` (`let q = p`) is checked as before (`E0402`).
+- `for x in &v { *x += 1 }` and `if let c = m.getMut(k) { *c += 5 }` now write copyable
+  elements and values.
+- Not yet: `&inout T` as a parameter, field, element or return type (`U0001`; use an `inout`
+  parameter); storing borrowed values through `*p` (`U0001`).
+
+Code generation: `&inout T` and `&T` are C pointers; `&place` reuses the `inout`-argument
+place lowering, and `*p = v` is an assignment whose path starts with `DEREF_STEP`, so the
+target is written as `(*p)`. Tests: `tests/p0/run_deref.yv` (heap-block check clean) and
+`tests/p0/errors_deref.yv` (14 errors, one per case). Because `*p` now parses, the placeholders
+in `tests/p0/errors_unsupported.yv` were replaced with other parse-time `U0001` cases at the
+same lines and columns.
+
+## `String.fromUtf8` and `Utf8Error`
+
+`String.fromUtf8(bytes)` (stdlib contract §5) consumes a `Vec[byte]` and returns
+`String ! Utf8Error`; `Utf8Error { offset: int }` is in the prelude and cannot be redefined
+(`E0011`). Valid bytes keep their buffer as the `String` (no copy); invalid bytes are freed and
+`offset` is the start of the first invalid sequence, including a sequence cut off at the end.
+Keeping the bytes needs an explicit `.clone()`; using them after the call is `E0402`. Tests:
+`tests/p0/run_from_utf8.yv` (heap-block check clean), `tests/p0/errors_from_utf8.yv` (4 errors).
+
 ## Spec conformance
 
 ```sh
@@ -622,8 +663,9 @@ runs all 129 cases in `yavo-tests/MANIFEST.json`, after checking each fixture ag
 | unsupported | the compiler reported `U0001` |
 | not_run | needs `yavo fix`, `yavo verify`, fixtures, sanitizers or other platforms |
 
-At this commit: pass 84, wrong 0, unsupported 31, not_run 14 (P1: 68 / 0 / 8 / 7;
-P2: 16 / 0 / 2 / 3; P3: 0 / 0 / 21 / 4). Slices added T-C4, T-G09, T-G19 and T-S1, and
+At this commit: pass 93, wrong 0, unsupported 22, not_run 14 (P1: 75 / 0 / 1 / 7;
+P2: 18 / 0 / 0 / 3; P3: 0 / 0 / 21 / 4). Dereference and `&inout T` variables added T-G01–T-G04,
+T-G17, T-G18, T-G21 and T-GR11; `String.fromUtf8` added T-GR4. Slices added T-C4, T-G09, T-G19 and T-S1, and
 `reserve` added T-GR7 (T-GR8 now reaches its allocation-fault injection, which the runner does
 not support, so it counts as not run). Floats added T-G27, T-K1, T-K1p and T-N1d.
 Generics added T-O6, T-O7, T-E1 and T-E1p. `Box`

@@ -1,0 +1,28 @@
+// expect-error: E0011 5:8
+// expect-error: E0402 12:13
+// expect-error: E0001 17:29
+// expect-error: E0001 24:13
+struct Utf8Error {
+    offset: int
+}
+
+fn usedAfterMove() {
+    let b: Vec[byte] = [65]
+    let s = String.fromUtf8(b) catch _ => "".toString()
+    println(b.len())
+    println(s)
+}
+
+fn wrongArg() {
+    let s = String.fromUtf8("abc") catch _ => "".toString()
+    println(s)
+}
+
+fn notHandled() {
+    let b: Vec[byte] = [65]
+    let s = String.fromUtf8(b)
+    println(s)
+}
+
+fn main() {
+}

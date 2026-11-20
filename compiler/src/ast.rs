@@ -247,6 +247,8 @@ pub enum StrSeg {
 pub enum UnOp {
     Neg,
     Not,
+    /// `*p`: the place a reference points to (A6).
+    Deref,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

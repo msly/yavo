@@ -774,6 +774,10 @@ impl Gen {
     /// `ty`; returns the resulting lvalue and its type.
     fn walk(&self, mut place: String, mut ty: Ty, path: &[usize]) -> (String, Ty) {
         for &fi in path {
+            // `*p = v`: `place_root` already went through the reference.
+            if fi == DEREF_STEP {
+                continue;
+            }
             if fi == BOX_STEP {
                 let Ty::Box(b) = ty else { unreachable!("a box step on a box") };
                 place = format!("(*{place})");
@@ -1940,6 +1944,22 @@ impl Gen {
                 String::new()
             }
             HExprKind::Io { op, args } => self.io_call(*op, args, e, f),
+            HExprKind::FromUtf8(bytes) => {
+                // Valid bytes keep their buffer as the `String`; invalid ones are freed.
+                let v = self.owned(bytes, f);
+                let (r, b, bad) = (self.fresh(), self.fresh(), self.fresh());
+                self.line(&format!("{} {r} = {{0}};", e.ty.c_name()));
+                self.line(&format!("yv_vec {b} = {v};"));
+                self.line(&format!("int64_t {bad} = yv_utf8_check({b}.ptr ? (const char *){b}.ptr : \"\", (size_t){b}.len);"));
+                self.line(&format!("if ({bad} < 0) {{"));
+                self.line(&format!("    {r}.ok = true;"));
+                self.line(&format!("    {r}.val = (yv_string){{ (char *){b}.ptr, {b}.len, {b}.cap }};"));
+                self.line("} else {");
+                self.line(&format!("    {}(&{b});", drop_fn(bytes.ty)));
+                self.line(&format!("    {r}.err.f_offset = {bad};"));
+                self.line("}");
+                r
+            }
             HExprKind::OsArgs => "yv_args".to_string(),
             HExprKind::SliceOf(inner) => {
                 let v = self.borrowed(inner, f);
@@ -2304,6 +2324,7 @@ impl Gen {
                 | HExprKind::ToDyn { .. }
                 | HExprKind::DynCall { .. }
                 | HExprKind::Io { .. }
+                | HExprKind::FromUtf8(_)
                 | HExprKind::Call2 { method: Method2::Split | Method2::ToLower | Method2::ToUpper | Method2::Join, .. }
                 | HExprKind::Method {
                     method: Builtin::StrToString

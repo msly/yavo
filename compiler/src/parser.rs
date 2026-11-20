@@ -576,7 +576,9 @@ impl Parser<'_, '_> {
         if matches!(self.peek(), Tok::Amp) {
             let amp = self.bump().span;
             if self.is_kw("inout") {
-                self.unsupported(amp, "`&inout T` values are not supported in P0 (use an `inout` parameter)")?;
+                self.bump();
+                let inner = self.ty_atom()?;
+                return Ok(TypeExpr { name: "&inout".into(), span: amp.to(inner.span), args: vec![inner] });
             }
             let inner = self.ty_atom()?;
             return Ok(TypeExpr { name: "&".into(), span: amp.to(inner.span), args: vec![inner] });
@@ -1274,8 +1276,8 @@ impl Parser<'_, '_> {
                 return Ok(Expr { span: start.to(inner.span), kind: ExprKind::Borrow(Box::new(inner)) });
             }
             Tok::Star => {
-                self.unsupported(start, "dereference (`*p`) is not supported in P0")?;
-                unreachable!()
+                // `*p`: read or (as an assignment target) write the place `p` points to (A6).
+                UnOp::Deref
             }
             _ => return self.postfix(),
         };

@@ -1,0 +1,75 @@
+// expect-stdout:
+// | 20
+// | 3 bbc
+// | 5 2
+// | 8
+// | 2 3 4
+// | 6
+// | xy!
+struct Pt {
+    x: int
+    y: int
+}
+
+fn main() {
+    // `let` holds an `&inout`; writes go through `*p` (A1, A6).
+    var x = 1
+    let p: &inout int = &x
+    let y = *p + 1
+    *p = y * 10
+    println(x)
+
+    // A non-copyable target: the old value is dropped when overwritten.
+    var s = "a".toString()
+    let q: &inout String = &s
+    *q = "bb".toString()
+    q.push("c")
+    let qn = q.len()
+    println("${qn} ${s}")
+
+    // A field, and a read-only reference read with `*`.
+    var pt = Pt{x: 1, y: 2}
+    let f: &inout int = &pt.x
+    *f += 4
+    let r: &int = &pt.y
+    println("${pt.x} ${*r}")
+
+    // Rebinding a `var` reference and reborrowing through it (A4, A7).
+    var a = 1
+    var b = 0
+    var pa: &inout int = &b
+    pa = &a
+    let pb: &inout int = &pa
+    *pb = 7
+    *pa += 1
+    println(a)
+
+    // `for x in &v` writes elements; `for x in v` reads them, `*x` included (A2).
+    var v: Vec[int] = [1, 2, 3]
+    for e in &v {
+        *e += 1
+    }
+    var line = String{}
+    for e in v {
+        if line.len() > 0 {
+            line.push(" ")
+        }
+        line.push(format("${*e}"))
+    }
+    println(line)
+
+    // `getMut` gives an `&inout V`.
+    var m: Map[String, int] = [:]
+    m.set("k".toString(), 1)
+    if let c = m.getMut("k") {
+        *c += 5
+    }
+    println(m.getCopy("k") ?? 0)
+
+    // Reading a non-copyable target through `*` gives read-only access.
+    var t = "xy".toString()
+    let pt2: &inout String = &t
+    pt2.push("!")
+    let view: &String = &t
+    println(*view)
+}
