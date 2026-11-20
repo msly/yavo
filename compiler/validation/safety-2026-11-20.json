@@ -1,0 +1,437 @@
+{
+  "host": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "compiler": "gcc (Debian 14.2.0-19) 14.2.0",
+  "asan_options": "detect_leaks=0:halt_on_error=1",
+  "lsan": "unsupported under host ptrace",
+  "fatal_tsan_note": "Only cross-thread panic/exit probes set report_thread_leaks=0: V11 intentionally terminates without joining. All normal programs retain thread-leak reporting.",
+  "build_flags": "-std=c17 -D_POSIX_C_SOURCE=200809L -DYV_ALLOC_CHECK=1 -g -O1 -fno-omit-frame-pointer -fno-strict-aliasing -pthread -lm; separate -fsanitize=address,undefined and -fsanitize=thread artifacts",
+  "files": {
+    "T-P3.c": "c3877e5eb3f95ae668d9ca1abad486eaa06c59f458097261c427ed6ea997a55d",
+    "io-lines.c": "6a2dd326291c06ee47362cee1542ee6a12cf3a505277e7bac72b4859cd39f76b",
+    "io-mixed.c": "c3b16113586e52c9e66ed084a2fda89c558d79faabd263ef68d39e5f85b94cd3",
+    "run_channels.c": "96212effdc5024b619abd85a706df0d49b3dd62b43c15ae635c64a776032495a",
+    "run_deref.c": "93c2ff2b77471d9dfd14c6221af6f7b888dcd8fd720dde65175056911b29f403",
+    "run_drop.c": "a51c7a08652306be0f1930c619d2e2cfb97d9e64c45cb14f5f30170863e6fe7a",
+    "run_interfaces.c": "010b83d74082a0fe1326423b2b1940857ac689bf03fcab9d5fb251e7361209d9",
+    "run_ownership.c": "8aa32adcbe5a535fac8c70d5ed508dd545ce43c97e66f7f71b9e1acb56d5aa9f",
+    "run_safety_combinations.c": "9dc46924d2c49e923b06339f6bdd0c1da15be3b62709a59d439985147abfa194",
+    "run_sync_local.c": "aa1b94faf1111d734f397f48086c08f1f6427bd027b016f96843c6d928b09f72",
+    "run_threads.c": "7ce16dad74dee2d5d79e0858125a3d436d1f84c342e908a9f3132b64f1e1961b",
+    "run_views.c": "dc57c3974cac2d34c975553d483682cfc570d5a309cc3bc45b5182641b7a96f0",
+    "runtime_io_concurrency.c": "f8c37443d74e621f7f21543a22cb161c9db770d3ff49da3a9166b985b5963cf8",
+    "sanitizer-smoke.c": "fe47f17a1ad85b06a6ec65c56a405c7b2b276ffbf88456aa26523ad3e2ff25f5",
+    "yavo_rt.h": "cad9d391a41bde34c5c8e539e1c2439327ebfb24522e9c8aec92b7d5702eeb0c",
+    "input.txt": "5e7ac774fbf30825873a1b58cc644dc08def788a1baeb626029e2c0e422df678",
+    "expected.sorted.txt": "ac5030e31e3bb98749fc3c9dcf6b1d073c27fa1c887bf3c1d77393bbfcd8e9e4"
+  },
+  "results": [
+    {
+      "profile": "asan-ubsan",
+      "case": "run_safety_combinations",
+      "passed": true,
+      "exit": 0,
+      "stdout_match": true,
+      "stderr_match": true,
+      "stderr": ""
+    },
+    {
+      "profile": "asan-ubsan",
+      "case": "run_threads",
+      "passed": true,
+      "exit": 0,
+      "stdout_match": true,
+      "stderr_match": true,
+      "stderr": ""
+    },
+    {
+      "profile": "asan-ubsan",
+      "case": "run_channels",
+      "passed": true,
+      "exit": 0,
+      "stdout_match": true,
+      "stderr_match": true,
+      "stderr": ""
+    },
+    {
+      "profile": "asan-ubsan",
+      "case": "run_sync_local",
+      "passed": true,
+      "exit": 0,
+      "stdout_match": true,
+      "stderr_match": true,
+      "stderr": ""
+    },
+    {
+      "profile": "asan-ubsan",
+      "case": "run_deref",
+      "passed": true,
+      "exit": 0,
+      "stdout_match": true,
+      "stderr_match": true,
+      "stderr": ""
+    },
+    {
+      "profile": "asan-ubsan",
+      "case": "run_views",
+      "passed": true,
+      "exit": 0,
+      "stdout_match": true,
+      "stderr_match": true,
+      "stderr": ""
+    },
+    {
+      "profile": "asan-ubsan",
+      "case": "run_ownership",
+      "passed": true,
+      "exit": 0,
+      "stdout_match": true,
+      "stderr_match": true,
+      "stderr": ""
+    },
+    {
+      "profile": "asan-ubsan",
+      "case": "run_drop",
+      "passed": true,
+      "exit": 0,
+      "stdout_match": true,
+      "stderr_match": true,
+      "stderr": ""
+    },
+    {
+      "profile": "asan-ubsan",
+      "case": "run_interfaces",
+      "passed": true,
+      "exit": 0,
+      "stdout_match": true,
+      "stderr_match": true,
+      "stderr": ""
+    },
+    {
+      "profile": "asan-ubsan",
+      "case": "T-P3",
+      "passed": true,
+      "exit": 0,
+      "stdout_match": true,
+      "stderr_match": true,
+      "stderr": ""
+    },
+    {
+      "profile": "asan-ubsan",
+      "case": "io-lines",
+      "passed": true,
+      "exit": 0,
+      "stdout_match": true,
+      "stderr_match": true,
+      "stderr": ""
+    },
+    {
+      "profile": "asan-ubsan",
+      "case": "io-mixed",
+      "passed": true,
+      "exit": 0,
+      "stdout_match": true,
+      "stderr_match": true,
+      "stderr": ""
+    },
+    {
+      "profile": "asan-ubsan",
+      "case": "runtime_io_concurrency/panic",
+      "passed": true,
+      "exit": 101,
+      "stdout_match": true,
+      "stderr_match": true,
+      "stderr": "yavo panic [P-PANIC] at io-lock.yv:41:9: other thread\n"
+    },
+    {
+      "profile": "asan-ubsan",
+      "case": "runtime_io_concurrency/exit",
+      "passed": true,
+      "exit": 23,
+      "stdout_match": true,
+      "stderr_match": true,
+      "stderr": ""
+    },
+    {
+      "profile": "asan-ubsan",
+      "case": "runtime_io_concurrency/input",
+      "passed": true,
+      "exit": 0,
+      "stdout_match": true,
+      "stderr_match": true,
+      "stderr": ""
+    },
+    {
+      "profile": "asan-ubsan",
+      "case": "runtime_io_concurrency/nested-panic",
+      "passed": true,
+      "exit": 101,
+      "stdout_match": true,
+      "stderr_match": true,
+      "stderr": "yavo panic [P-PANIC] at io-lock.yv:31:7: nested panic\n"
+    },
+    {
+      "profile": "asan-ubsan",
+      "case": "runtime_io_concurrency/nested-exit",
+      "passed": true,
+      "exit": 23,
+      "stdout_match": true,
+      "stderr_match": true,
+      "stderr": ""
+    },
+    {
+      "profile": "asan-ubsan",
+      "case": "runtime_io_concurrency/nested-oom",
+      "passed": true,
+      "exit": 101,
+      "stdout_match": true,
+      "stderr_match": true,
+      "stderr": "yavo panic [P-OOM] at io-lock.yv:32:8: out of memory\n"
+    },
+    {
+      "profile": "asan-ubsan",
+      "case": "runtime_io_concurrency/input-oom",
+      "passed": true,
+      "exit": 101,
+      "stdout_match": true,
+      "stderr_match": true,
+      "stderr": "yavo panic [P-OOM] at io-lock.yv:33:9: out of memory\n"
+    },
+    {
+      "profile": "asan-ubsan",
+      "case": "runtime_io_concurrency/location",
+      "passed": true,
+      "exit": 101,
+      "stdout_match": true,
+      "stderr_match": true,
+      "stderr": "yavo panic [P-SYSTEM] at io-lock.yv:11:4: output write failed\n"
+    },
+    {
+      "profile": "tsan",
+      "case": "run_safety_combinations",
+      "passed": true,
+      "exit": 0,
+      "stdout_match": true,
+      "stderr_match": true,
+      "stderr": ""
+    },
+    {
+      "profile": "tsan",
+      "case": "run_threads",
+      "passed": true,
+      "exit": 0,
+      "stdout_match": true,
+      "stderr_match": true,
+      "stderr": ""
+    },
+    {
+      "profile": "tsan",
+      "case": "run_channels",
+      "passed": true,
+      "exit": 0,
+      "stdout_match": true,
+      "stderr_match": true,
+      "stderr": ""
+    },
+    {
+      "profile": "tsan",
+      "case": "run_sync_local",
+      "passed": true,
+      "exit": 0,
+      "stdout_match": true,
+      "stderr_match": true,
+      "stderr": ""
+    },
+    {
+      "profile": "tsan",
+      "case": "run_deref",
+      "passed": true,
+      "exit": 0,
+      "stdout_match": true,
+      "stderr_match": true,
+      "stderr": ""
+    },
+    {
+      "profile": "tsan",
+      "case": "run_views",
+      "passed": true,
+      "exit": 0,
+      "stdout_match": true,
+      "stderr_match": true,
+      "stderr": ""
+    },
+    {
+      "profile": "tsan",
+      "case": "run_ownership",
+      "passed": true,
+      "exit": 0,
+      "stdout_match": true,
+      "stderr_match": true,
+      "stderr": ""
+    },
+    {
+      "profile": "tsan",
+      "case": "run_drop",
+      "passed": true,
+      "exit": 0,
+      "stdout_match": true,
+      "stderr_match": true,
+      "stderr": ""
+    },
+    {
+      "profile": "tsan",
+      "case": "run_interfaces",
+      "passed": true,
+      "exit": 0,
+      "stdout_match": true,
+      "stderr_match": true,
+      "stderr": ""
+    },
+    {
+      "profile": "tsan",
+      "case": "T-P3",
+      "passed": true,
+      "exit": 0,
+      "stdout_match": true,
+      "stderr_match": true,
+      "stderr": ""
+    },
+    {
+      "profile": "tsan",
+      "case": "io-lines",
+      "passed": true,
+      "exit": 0,
+      "stdout_match": true,
+      "stderr_match": true,
+      "stderr": ""
+    },
+    {
+      "profile": "tsan",
+      "case": "io-mixed",
+      "passed": true,
+      "exit": 0,
+      "stdout_match": true,
+      "stderr_match": true,
+      "stderr": ""
+    },
+    {
+      "profile": "tsan",
+      "case": "runtime_io_concurrency/panic",
+      "passed": true,
+      "exit": 101,
+      "stdout_match": true,
+      "stderr_match": true,
+      "stderr": "yavo panic [P-PANIC] at io-lock.yv:41:9: other thread\n"
+    },
+    {
+      "profile": "tsan",
+      "case": "runtime_io_concurrency/exit",
+      "passed": true,
+      "exit": 23,
+      "stdout_match": true,
+      "stderr_match": true,
+      "stderr": ""
+    },
+    {
+      "profile": "tsan",
+      "case": "runtime_io_concurrency/input",
+      "passed": true,
+      "exit": 0,
+      "stdout_match": true,
+      "stderr_match": true,
+      "stderr": ""
+    },
+    {
+      "profile": "tsan",
+      "case": "runtime_io_concurrency/nested-panic",
+      "passed": true,
+      "exit": 101,
+      "stdout_match": true,
+      "stderr_match": true,
+      "stderr": "yavo panic [P-PANIC] at io-lock.yv:31:7: nested panic\n"
+    },
+    {
+      "profile": "tsan",
+      "case": "runtime_io_concurrency/nested-exit",
+      "passed": true,
+      "exit": 23,
+      "stdout_match": true,
+      "stderr_match": true,
+      "stderr": ""
+    },
+    {
+      "profile": "tsan",
+      "case": "runtime_io_concurrency/nested-oom",
+      "passed": true,
+      "exit": 101,
+      "stdout_match": true,
+      "stderr_match": true,
+      "stderr": "yavo panic [P-OOM] at io-lock.yv:32:8: out of memory\n"
+    },
+    {
+      "profile": "tsan",
+      "case": "runtime_io_concurrency/input-oom",
+      "passed": true,
+      "exit": 101,
+      "stdout_match": true,
+      "stderr_match": true,
+      "stderr": "yavo panic [P-OOM] at io-lock.yv:33:9: out of memory\n"
+    },
+    {
+      "profile": "tsan",
+      "case": "runtime_io_concurrency/location",
+      "passed": true,
+      "exit": 101,
+      "stdout_match": true,
+      "stderr_match": true,
+      "stderr": "yavo panic [P-SYSTEM] at io-lock.yv:11:4: output write failed\n"
+    }
+  ],
+  "base_commit": "baa1bad3e94961c51e77114cbdbefd92dd4aabe0",
+  "review_date": "2026-11-20",
+  "source_hashes": {
+    "compiler/src/check.rs": "5d1bfb02e02dbf43d05dac02629583ef4f93ab871d15676413c1a423dda4d1da",
+    "compiler/src/codegen.rs": "1e6e733006d497b34d72db4da9cac1a1efc7324acdc6be689e1ebae2cdfa8d4c",
+    "compiler/runtime/yavo_rt.h": "cad9d391a41bde34c5c8e539e1c2439327ebfb24522e9c8aec92b7d5702eeb0c"
+  },
+  "execution_scope": "GCC sanitizer runs executed on the separate Linux analysis host; native cargo suites and zig cross-builds executed on the project server. Windows/macOS/aarch64 binaries were compiled only.",
+  "native_suites": {
+    "debug": {
+      "passed": 32,
+      "failed": 0,
+      "ignored": 1
+    },
+    "release": {
+      "passed": 32,
+      "failed": 0,
+      "ignored": 1
+    },
+    "p0_fixtures": 87,
+    "new_rejection_checks": 23,
+    "conformance": {
+      "pass": 113,
+      "wrong": 0,
+      "unsupported": 1,
+      "not_run": 15
+    },
+    "experiment_rechecks": {
+      "yavo": 15,
+      "rust": 15
+    }
+  },
+  "cross_builds": {
+    "cases": [
+      "run_safety_combinations",
+      "io-mixed"
+    ],
+    "targets": [
+      "x86_64-linux-musl",
+      "aarch64-linux-musl",
+      "x86_64-windows-gnu",
+      "aarch64-windows-gnu",
+      "x86_64-macos",
+      "aarch64-macos"
+    ],
+    "passed": 12,
+    "failed": 0
+  }
+}

@@ -7,7 +7,9 @@
 //!   // expect-warning: CODE L:C   ...and exactly these warnings
 
 use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::process::{Command, Stdio};
+
+mod common;
 
 #[derive(Default)]
 struct Expect {
@@ -67,7 +69,8 @@ fn yavo() -> Command {
 }
 
 fn check_diagnostics(path: &Path, e: &Expect) -> Result<(), String> {
-    let out = yavo().arg("check").arg(path).arg("--json-diagnostics").output().unwrap();
+    let out = common::output(yavo().arg("check").arg(path).arg("--json-diagnostics")
+        .stdin(Stdio::null()), common::RUN_TIMEOUT)?;
     let json: serde_json::Value = serde_json::from_slice(&out.stdout).map_err(|err| format!("bad JSON: {err}"))?;
     let (mut errors, mut warnings) = (Vec::new(), Vec::new());
     for d in json["diagnostics"].as_array().unwrap() {
@@ -93,17 +96,20 @@ fn check_diagnostics(path: &Path, e: &Expect) -> Result<(), String> {
 }
 
 fn check_run(path: &Path, e: &Expect, release: bool) -> Result<(), String> {
+    let scratch = common::Scratch::new("p0-run").map_err(|e| e.to_string())?;
+    let exe = scratch.exe("fixture");
     let mut command = yavo();
-    command.arg("run").arg(path);
+    command.arg("build").arg(path).arg("-o").arg(&exe).stdin(Stdio::null());
     if release {
         command.arg("--release");
     }
-    let out = command.output().unwrap();
+    let built = common::output(&mut command, common::BUILD_TIMEOUT)?;
+    if !built.status.success() {
+        return Err(format!("build exited with {:?}\n{}", built.status.code(), String::from_utf8_lossy(&built.stderr)));
+    }
+    let out = common::output(Command::new(&exe).stdin(Stdio::null()), common::RUN_TIMEOUT)?;
     let stdout = String::from_utf8_lossy(&out.stdout);
     let stderr = String::from_utf8_lossy(&out.stderr);
-    if out.status.code() == Some(3) {
-        return Err(format!("C toolchain unavailable (run `yavo toolchain install`):\n{stderr}"));
-    }
     if let Some(want) = &e.stdout {
         if stdout != *want {
             return Err(format!("stdout differs\n--- expected\n{want}--- actual\n{stdout}--- stderr\n{stderr}"));
@@ -191,7 +197,8 @@ fn conformance_report() {
         if !matches!(e.kind.as_deref(), Some("run-pass" | "run-panic")) {
             continue;
         }
-        let checked = yavo().arg("check").arg(path).output().unwrap();
+        let checked = common::output(yavo().arg("check").arg(path).stdin(Stdio::null()),
+            common::RUN_TIMEOUT).expect("bounded conformance check");
         if !checked.status.success() {
             outside += 1;
             continue;

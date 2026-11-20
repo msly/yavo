@@ -1,0 +1,72 @@
+// expect-stdout:
+// | 2
+// | 2
+// | hello world!
+// | 5
+// | 2
+// | 3
+// | item
+// | 7
+// | one
+// | 11
+// | 3
+use std/sync
+
+interface Named { fn name(self) -> String }
+struct Item: Named {
+    fn name(self) -> String { return "item".toString() }
+}
+struct Shared { item: Box[Named + Send + Sync] }
+struct Plain { name: String }
+struct Counter { n: int }
+struct Node { value: int, next: ?Box[Node] }
+
+fn countParts(parts: sink Vec[str]) -> int { return parts.len() }
+fn countText(text: sink String) -> int { return text.len() }
+fn countValues(values: sink Vec[String]) -> int { return values.len() }
+fn countSlice(values: sink []int) -> int { return values.len() }
+fn readShared(value: Arc[Shared]) -> String { return value.item.name() }
+fn readNode(value: Arc[Node]) -> int { return value.value }
+
+fn main() {
+    var text = "hello world".toString()
+    scope {
+        let parts = text.fields()
+        let h = spawn countParts(parts)
+        println(h.join())
+        let h2 = spawn countParts(text.fields())
+        println(h2.join())
+    }
+    text.push("!")
+    println(text)
+    scope {
+        let owned = "owned".toString()
+        let h = spawn countText(owned)
+        println(h.join())
+        let h2 = spawn countValues(["a".toString(), "b".toString()])
+        println(h2.join())
+    }
+    let data: Vec[int] = [1, 2, 3]
+    scope {
+        let h = spawn countSlice(data[0..3])
+        println(h.join())
+    }
+    let item: Box[Named + Send + Sync] = Box(Item{})
+    let shared = Arc(Shared{item: item})
+    let node = Arc(Node{value: 7, next: Box(Node{value: 8})})
+    scope {
+        let h = spawn readShared(shared)
+        println(h.join())
+        let h2 = spawn readNode(node)
+        println(h2.join())
+    }
+    let values: Vec[Plain] = [Plain{name: "one".toString()}]
+    let copies = values.clone()
+    println(copies[0].name)
+    let locks: Vec[Arc[Mutex[Counter]]] = [Arc(Mutex(Counter{n: 11}))]
+    let handles = locks.clone()
+    with g = handles[0].lock() { println(g.n) }
+    let pairs: Vec[(String, int)] = [("ok".toString(), 3)]
+    let pairs2 = pairs.clone()
+    println(pairs2[0].1)
+}

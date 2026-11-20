@@ -3358,30 +3358,36 @@ impl Checker<'_> {
         let mut ok = true;
         for (i, a) in args.iter().enumerate() {
             let pty = params.get(i).copied().unwrap_or(a.ty);
-            if inouts.get(i).copied().unwrap_or(false) {
-                self.diags.error("U0001", a.span, "passing an `inout` argument to a thread is not supported yet");
+            if inouts.get(i).copied().unwrap_or(false) || a.ty.contains_ref_mut() {
+                // Generic arguments and tuples must not bypass the same restriction.
+                // Scope loans currently pin shared access; exclusive thread loans need
+                // their own access state before `inout` spawn can be implemented.
+                self.diags.error("U0001", a.span, "passing a mutable borrow to a thread is not supported yet");
                 ok = false;
                 continue;
             }
-            if sinks.get(i).copied().unwrap_or(false) {
+            let sink = sinks.get(i).copied().unwrap_or(false);
+            if sink {
                 if !self.cap_ok(a.ty, false, &mut Vec::new()) {
                     let hint = self.send_hint(a.ty);
                     self.diags
                         .error("E0701", a.span, format!("`{}` cannot be moved to another thread: it is not `Send`", a.ty))
                         .note(hint);
                     ok = false;
+                    continue;
                 }
-                continue;
-            }
-            // A borrowed argument: the thread reads the caller's data, which must be `Sync`.
-            if !self.cap_ok(pty, true, &mut Vec::new()) {
+            } else if !self.cap_ok(pty, true, &mut Vec::new()) {
+                // A borrowed argument: the thread reads the caller's data, which must be `Sync`.
                 self.diags
                     .error("E0702", a.span, format!("`{pty}` cannot be shared with another thread: it is not `Sync`"))
                     .note("move it to the thread with a `sink` parameter instead, or use a type that is `Sync` (e.g. `Box[Named + Send + Sync]`)");
                 ok = false;
                 continue;
             }
-            let mut ls = if a.ty.is_copy() { self.loans_of(a, cx) } else { self.storage_loans(a, cx) };
+            // Moving an owning container transfers its own storage, not the data its
+            // elements borrow. Keep those sources alive just like copied view descriptors.
+            // Do not borrow the moved container's former slot: the worker now owns it.
+            let mut ls = if sink || a.ty.is_copy() { self.loans_of(a, cx) } else { self.storage_loans(a, cx) };
             if a.ty.is_copy() && !a.ty.carries_borrow() {
                 ls.clear();
             }
@@ -3436,7 +3442,7 @@ impl Checker<'_> {
 
     /// Whether values of `ty` can be moved to another thread (`Send`, `sync == false`) or shared
     /// between threads (`Sync`, `sync == true`), derived from the type's structure (P6).
-    fn cap_ok(&self, ty: Ty, sync: bool, seen: &mut Vec<Ty>) -> bool {
+    fn cap_ok(&self, ty: Ty, sync: bool, seen: &mut Vec<(Ty, bool)>) -> bool {
         match ty {
             Ty::Int(_) | Ty::Float(_) | Ty::Bool | Ty::Unit | Ty::Str | Ty::String | Ty::Error => true,
             Ty::Vec(id) => self.cap_ok(vec_elem(id), sync, seen),
@@ -3456,10 +3462,11 @@ impl Checker<'_> {
             }
             Ty::Tuple(id) => tuple_elems(id).iter().all(|t| self.cap_ok(*t, sync, seen)),
             Ty::Struct(_) | Ty::Enum(_) => {
-                if seen.contains(&ty) {
+                if seen.contains(&(ty, sync)) {
                     return true;
                 }
-                seen.push(ty);
+                // A recursive Send proof cannot stand in for a separate Sync proof.
+                seen.push((ty, sync));
                 let Some(s) = self.structs.iter().find(|s| s.ty == ty) else { return true };
                 let mut tys: Vec<Ty> = s.fields.iter().map(|f| f.1).collect();
                 tys.extend(s.variants.iter().flat_map(|v| v.fields.iter().map(|f| f.1)));
@@ -6072,6 +6079,61 @@ impl Checker<'_> {
         }
     }
 
+    /// First type for which the built-in recursive clone has no valid implementation.
+    /// Copying a shared handle does not clone its payload; owning containers do.
+    fn clone_blocker(&self, ty: Ty, seen: &mut Vec<Ty>) -> Option<Ty> {
+        match ty {
+            Ty::Int(_) | Ty::Float(_) | Ty::Bool | Ty::Unit | Ty::Str | Ty::String | Ty::Error
+            | Ty::Ref(_) | Ty::Slice(_) => None,
+            Ty::RefMut(_) => Some(ty),
+            Ty::Dyn(id) => {
+                // All implementations are registered before checking bodies in the
+                // current single-unit compiler. Preserve vtable cloning only when
+                // every possible concrete value has a valid recursive clone.
+                // Separate compilation must carry this guarantee explicitly.
+                let base = dyn_base(id);
+                let key = Ty::Dyn(base);
+                if seen.contains(&key) {
+                    return None;
+                }
+                seen.push(key);
+                self.impls.iter().filter(|imp| imp.iface == base as usize)
+                    .find_map(|imp| self.clone_blocker(imp.ty, seen))
+            }
+            Ty::Sync(id) => match sync_parts(id).0 {
+                SyncKind::Rc | SyncKind::Arc | SyncKind::Channel => None,
+                SyncKind::Mutex | SyncKind::Guard | SyncKind::Join | SyncKind::Scope => Some(ty),
+            },
+            Ty::Vec(id) => self.clone_blocker(vec_elem(id), seen),
+            Ty::Box(id) => self.clone_blocker(box_inner(id), seen),
+            Ty::Opt(id) => self.clone_blocker(opt_inner(id), seen),
+            Ty::Map(id) | Ty::Set(id) => {
+                let (k, v) = map_parts(id);
+                self.clone_blocker(k, seen).or_else(|| self.clone_blocker(v, seen))
+            }
+            Ty::Res(id) => {
+                let (o, e) = res_parts(id);
+                self.clone_blocker(o, seen).or_else(|| self.clone_blocker(e, seen))
+            }
+            Ty::Tuple(id) => tuple_elems(id).into_iter().find_map(|t| self.clone_blocker(t, seen)),
+            Ty::Struct(_) | Ty::Enum(_) => {
+                // A user destructor can own a resource not represented by its fields.
+                // Fieldwise cloning must not invent a second owner of that resource.
+                if has_user_drop(ty) {
+                    return Some(ty);
+                }
+                if seen.contains(&ty) {
+                    return None;
+                }
+                seen.push(ty);
+                let Some(s) = self.structs.iter().find(|s| s.ty == ty) else { return Some(ty) };
+                s.fields.iter().map(|f| f.1)
+                    .chain(s.variants.iter().flat_map(|v| v.fields.iter().map(|f| f.1)))
+                    .find_map(|t| self.clone_blocker(t, seen))
+            }
+        }
+    }
+
     fn method_call(&mut self, base: &Expr, name: &str, args: &[Expr], span: Span, at: Span, cx: &mut FnCx) -> HExpr {
         // `Type.f(args)`: a function written inside a struct or enum, without `self`.
         if let ExprKind::Ident(tn) = &base.kind {
@@ -6260,6 +6322,15 @@ impl Checker<'_> {
                     return err_expr(span);
                 }
                 _ => {}
+            }
+        }
+        if name == "clone" && matches!(recv.ty, Ty::Vec(_) | Ty::Map(_) | Ty::Set(_)) {
+            if let Some(blocker) = self.clone_blocker(recv.ty, &mut Vec::new()) {
+                let code = if has_user_drop(blocker) { "U0001" } else { "E0001" };
+                self.diags
+                    .error(code, at, format!("cannot automatically clone `{}`: `{blocker}` has no built-in clone semantics", recv.ty))
+                    .note("rebuild owned resources explicitly; `Rc`, `Arc` and `Channel` handles can be cloned without cloning their contents");
+                return err_expr(span);
             }
         }
         let (method, ty) = match (recv.ty, name) {

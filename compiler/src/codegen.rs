@@ -305,9 +305,10 @@ pub fn generate(prog: &HProgram, file: &str) -> String {
             let _ = writeln!(g.out, "    if (p->len) memcpy(v.ptr, p->ptr, (size_t)p->len * sizeof({et}));");
             let _ = writeln!(g.out, "    v.len = p->len;");
         } else {
+            // The element object is const, not its pointee (`Vec[Arc[T]]`, etc.).
             let _ = writeln!(
                 g.out,
-                "    for (int64_t i = 0; i < p->len; i++) {{\n        (({et} *)v.ptr)[i] = {}(&((const {et} *)p->ptr)[i], line, col);\n        v.len = i + 1;\n    }}",
+                "    for (int64_t i = 0; i < p->len; i++) {{\n        (({et} *)v.ptr)[i] = {}(&(({et} const *)p->ptr)[i], line, col);\n        v.len = i + 1;\n    }}",
                 clone_fn(elem)
             );
         }
@@ -1282,9 +1283,9 @@ impl Gen {
                 // A failing operand must not leave an already-written outer prefix.
                 let o = self.fresh();
                 let writes = self.part_writes(&format!("&{o}"), parts, f);
-                self.line(&format!("yv_output_at({});", pos(s.span)));
                 self.line(&format!("const yv_out {o} = {{{fd}, NULL, 0, 0}};"));
                 self.line("yv_out_lock();");
+                self.line(&format!("yv_output_at({});", pos(s.span)));
                 for write in writes {
                     self.line(&write);
                 }

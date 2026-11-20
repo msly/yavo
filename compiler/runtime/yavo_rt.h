@@ -35,10 +35,16 @@ static const char *yv_rt_file = "?";
 static char yv_out_buf[8192];
 static size_t yv_out_len = 0;
 
-static uint32_t yv_io_line = 0, yv_io_col = 0;
+/* A pending statement's source location belongs to its thread. The buffered
+ * bytes and their last source location are protected by the output lock. */
+static _Thread_local uint32_t yv_io_line = 0, yv_io_col = 0;
 static uint32_t yv_out_line = 0, yv_out_col = 0;
 
 YV_NORETURN static void yv_output_failure(uint32_t line, uint32_t col);
+static void yv_out_lock(void);
+static void yv_out_unlock(void);
+static void yv_in_lock(void);
+static void yv_in_unlock(void);
 
 static inline void yv_output_at(uint32_t line, uint32_t col) {
     yv_io_line = line;
@@ -70,23 +76,28 @@ static bool yv_os_write(int fd, const char *p, size_t n) {
 }
 
 static void yv_flush(void) {
+    yv_out_lock();
     if (yv_out_len > 0) {
         if (!yv_os_write(1, yv_out_buf, yv_out_len))
             yv_output_failure(yv_out_line, yv_out_col);
         yv_out_len = 0;
     }
+    yv_out_unlock();
 }
 
 static void yv_write(int fd, const char *p, size_t n) {
+    yv_out_lock();
     if (fd != 1) {
         yv_flush();
         if (!yv_os_write(fd, p, n)) yv_output_failure(yv_io_line, yv_io_col);
+        yv_out_unlock();
         return;
     }
     if (n > sizeof yv_out_buf - yv_out_len) {
         yv_flush();
         if (n > sizeof yv_out_buf) {
             if (!yv_os_write(1, p, n)) yv_output_failure(yv_io_line, yv_io_col);
+            yv_out_unlock();
             return;
         }
     }
@@ -96,6 +107,7 @@ static void yv_write(int fd, const char *p, size_t n) {
         yv_out_line = yv_io_line;
         yv_out_col = yv_io_col;
     }
+    yv_out_unlock();
 }
 
 static void yv_write_u64(int fd, uint64_t v) {
@@ -176,6 +188,7 @@ static int64_t yv_live_blocks = 0;
 #define YV_COUNT_FREE()                                                                   \
     do {                                                                                  \
         if (__atomic_sub_fetch(&yv_live_blocks, 1, __ATOMIC_RELAXED) < 0) {                                                    \
+            yv_out_lock();                                                               \
             yv_flush();                                                                   \
             yv_write(2, "yavo alloc-check: a heap block was freed twice\n", 47);          \
             yv_exit_process(102);                                                         \
@@ -187,20 +200,28 @@ static int64_t yv_live_blocks = 0;
 #endif
 
 static int yv_rt_exit(void) {
+    yv_out_lock();
     yv_flush();
 #ifdef YV_ALLOC_CHECK
-    if (yv_live_blocks != 0) {
+    int64_t live = __atomic_load_n(&yv_live_blocks, __ATOMIC_RELAXED);
+    if (live != 0) {
         yv_write(2, "yavo alloc-check: ", 18);
-        yv_write_i64(2, yv_live_blocks);
+        yv_write_i64(2, live);
         yv_write(2, " heap block(s) still alive at exit\n", 35);
+        yv_out_unlock();
         return 102;
     }
 #endif
+    yv_out_unlock();
     return 0;
 }
 
 /* Format fixed by ERRORS.md: `yavo panic [<category>] at <file>:<line>:<col>: <message>` */
 static void yv_panic_begin(const char *category, uint32_t line, uint32_t col) {
+    /* Keep the lock until process termination so the diagnostic is one record.
+     * The lock is reentrant: printing/formatting may panic while already held. */
+    yv_out_lock();
+    yv_output_at(line, col);
     yv_flush();
     yv_write(2, "yavo panic [", 12);
     yv_write(2, category, strlen(category));
@@ -566,6 +587,8 @@ static void yv_map_free(yv_map *m) {
 
 /* `os.exit(code)`: output is flushed; nothing else is cleaned up (V11). */
 YV_NORETURN static void yv_os_exit(int64_t code) {
+    /* Stop other writers from appending between this flush and process exit. */
+    yv_out_lock();
     yv_flush();
     yv_exit_process((int)code);
     YV_UNREACHABLE();
@@ -945,7 +968,9 @@ static char yv_in_buf[65536];
 static size_t yv_in_pos = 0, yv_in_len = 0;
 static bool yv_in_eof = false;
 
-/* Refills the stdin buffer; false at end of input. A system error is reported through `*err`. */
+/* Refills the stdin buffer while the caller holds the input lock; false at end
+ * of input. The only nested I/O lock order is input -> output. A system error
+ * is reported through `*err`. */
 static bool yv_in_fill(int64_t *err) {
     if (yv_in_eof) return false;
     yv_flush(); /* a prompt written before reading must be visible */
@@ -995,6 +1020,7 @@ static int yv_utf8_status(const yv_string *s, int64_t *code) {
 
 /* `io.readAll()`: the rest of standard input. */
 static int yv_io_read_all(yv_string *out, int64_t *code, uint32_t line, uint32_t col) {
+    yv_in_lock();
     int64_t err = 0;
     for (;;) {
         if (yv_in_pos < yv_in_len) {
@@ -1004,6 +1030,7 @@ static int yv_io_read_all(yv_string *out, int64_t *code, uint32_t line, uint32_t
         }
         if (!yv_in_fill(&err)) break;
     }
+    yv_in_unlock();
     if (err != 0) {
         *code = err;
         return 2;
@@ -1013,6 +1040,7 @@ static int yv_io_read_all(yv_string *out, int64_t *code, uint32_t line, uint32_t
 
 /* `io.readLine()`: the next line without its `\n` (or `\r\n`); `*has` is false at the end. */
 static int yv_io_read_line(yv_string *out, bool *has, int64_t *code, uint32_t line, uint32_t col) {
+    yv_in_lock();
     int64_t err = 0;
     *has = false;
     for (;;) {
@@ -1030,6 +1058,7 @@ static int yv_io_read_line(yv_string *out, bool *has, int64_t *code, uint32_t li
             break;
         }
     }
+    yv_in_unlock();
     if (err != 0) {
         *code = err;
         return 2;
@@ -1227,7 +1256,7 @@ static void yv_rt_args(int argc, char **argv) {
  * OS threads only. Locks and condition variables are pthread on Unix and SRWLOCK /
  * CONDITION_VARIABLE on Windows. `Rc`, `Arc` and `Mutex` values point at their content, which
  * follows a `yv_hdr` in the same heap block; a `Guard` is the same pointer while the lock is
- * held. Output is serialized once a second thread has started. */
+ * held. I/O locks also cover runtime flushes, termination and shared stdin. */
 #ifdef _WIN32
 typedef SRWLOCK yv_lockt;
 typedef CONDITION_VARIABLE yv_condt;
@@ -1273,15 +1302,29 @@ static uint64_t yv_thread_id(void) {
     return yv_tid;
 }
 
-/* Output lock: print statements take it once a second thread may be running. */
-static bool yv_threaded = false;
+/* Lock every access, including before the first spawn. Generated print
+ * statements take the outer lock only after evaluating their expressions;
+ * yv_write/yv_flush also take it so runtime callers cannot bypass it. The
+ * thread-local depth makes these nested calls and fatal paths reentrant.
+ * No code holding the output lock acquires the input lock. */
 static yv_lockt yv_out_lk = YV_LOCK_INIT;
+static yv_lockt yv_in_lk = YV_LOCK_INIT;
+static _Thread_local unsigned yv_out_depth = 0;
 static void yv_out_lock(void) {
-    if (__atomic_load_n(&yv_threaded, __ATOMIC_ACQUIRE)) yv_lock_acq(&yv_out_lk);
+    if (yv_out_depth++ == 0) {
+#ifdef _WIN32
+        AcquireSRWLockExclusive(&yv_out_lk);
+#else
+        /* Lock failure itself cannot recurse into the buffered panic path. */
+        if (pthread_mutex_lock(&yv_out_lk) != 0) yv_output_failure(yv_io_line, yv_io_col);
+#endif
+    }
 }
 static void yv_out_unlock(void) {
-    if (__atomic_load_n(&yv_threaded, __ATOMIC_ACQUIRE)) yv_lock_rel(&yv_out_lk);
+    if (--yv_out_depth == 0) yv_lock_rel(&yv_out_lk);
 }
+static void yv_in_lock(void) { yv_lock_acq(&yv_in_lk); }
+static void yv_in_unlock(void) { yv_lock_rel(&yv_in_lk); }
 
 /* ---- Header blocks for Rc, Arc and Mutex. ---- */
 typedef struct {
@@ -1472,7 +1515,6 @@ static void yv_spawn(yv_scope *s, yv_join_base *j, void (*run)(void *), void *ar
     s->items[s->len++] = j;
     j->run = run;
     j->args = args;
-    __atomic_store_n(&yv_threaded, true, __ATOMIC_RELEASE);
 #ifdef _WIN32
     j->th = CreateThread(NULL, 0, yv_thread_main, j, 0, NULL);
     if (j->th == NULL) yv_panic("P-THREAD-SPAWN", "cannot start a thread", line, col);

@@ -1,0 +1,54 @@
+// expect-error: E0702 32:28
+// expect-error: E0701 38:28
+// expect-error: E0702 44:29
+// expect-error: E0702 50:30
+interface Named {
+    fn name(self) -> String
+}
+
+struct Item: Named {
+    fn name(self) -> String { return "item".toString() }
+}
+
+struct Wrap { item: Box[Named + Send] }
+struct Outer { values: Vec[Wrap] }
+enum Choice { One(value: Wrap), Empty }
+
+fn readWrap(_w: Arc[Wrap]) {
+}
+
+fn moveWrap(_w: sink Arc[Wrap]) {
+}
+
+fn readOuter(_w: Arc[Outer]) {
+}
+
+fn readChoice(_w: Arc[Choice]) {
+}
+
+fn sharedStruct() {
+    let item: Box[Named + Send] = Box(Item{})
+    let value = Arc(Wrap{item: item})
+    scope { spawn readWrap(value) }
+}
+
+fn movedArc() {
+    let item: Box[Named + Send] = Box(Item{})
+    let value = Arc(Wrap{item: item})
+    scope { spawn moveWrap(value) }
+}
+
+fn nestedVector() {
+    let item: Box[Named + Send] = Box(Item{})
+    let value = Arc(Outer{values: [Wrap{item: item}]})
+    scope { spawn readOuter(value) }
+}
+
+fn enumPayload() {
+    let item: Box[Named + Send] = Box(Item{})
+    let value = Arc(Choice.One(Wrap{item: item}))
+    scope { spawn readChoice(value) }
+}
+
+fn main() {
+}

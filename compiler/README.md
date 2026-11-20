@@ -1,9 +1,49 @@
-# Yavo P0 compiler prototype
+# Yavo compiler prototype
 
 The prototype compiles a limited `.yv` subset to C17, then uses the pinned
 `zig cc` toolchain (or the explicit `YAVO_CC` development override).
-This is a Linux x86-64 validated prototype, not a completed three-platform
-P0 acceptance or a P1 ownership implementation.
+The implementation includes ownership, views, containers, generics, interfaces and
+scoped OS threads. Native validation is on Linux x86-64; complete phase acceptance
+still requires the remaining tools, features and real-platform execution.
+
+## Safety review (2026-11-20)
+
+- `spawn` checks the borrowed sources inside moved containers as well as borrowed
+  arguments. Sources must outlive the scope and remain protected until it ends,
+  even after `join`. Mutable borrows hidden inside generic tuples receive `U0001`,
+  consistently with the existing restriction on `inout` thread arguments.
+- Recursive thread-capability proofs distinguish `(type, Send)` and `(type, Sync)`.
+  A struct wrapper cannot turn a Send-only interface into a Sync value.
+- Built-in container cloning recursively rejects `Mutex`, `Guard` and other
+  non-cloneable resources. Automatic fieldwise cloning of user `Drop` types is
+  unsupported (`U0001`); explicit resource construction or per-element user methods
+  remain available. Interface collections retain cloning when every registered
+  concrete implementation is cloneable in this single-compilation-unit prototype.
+  `Rc`/`Arc`/`Channel` clone their handles, independently of content cloneability.
+- Runtime writes, flushes, panic and exit share a reentrant output lock; input
+  operations serialize the entire read against the stdin buffer. The only nested
+  lock order is input then output. Output source positions are thread-local, and
+  interpolation operands still run before the outer print takes its lock.
+- Fixture builds and execution now have separate deadlines; manifest `timeout_ms`
+  is honored. Both pipes are drained concurrently, and Unix descendants are killed
+  as a process group. Baseline updates cannot remove previously passing cases.
+- The saved cold-start verifier uses checkout-relative sources, checks stdout,
+  stderr and exit status, and exits nonzero if any build or case fails.
+
+Six new `.yv` fixtures add 23 rejection checks and a positive combination program;
+the fixture total is 87. Debug and Release Cargo suites each pass 32 test functions
+(one legacy report ignored). The new runtime tests exercise concurrent I/O and
+fatal paths under both C optimization modes. Native suites, 12 cross-builds and
+40 separate ASan/UBSan or TSan checks are recorded in
+[`validation/safety-2026-11-20.json`](validation/safety-2026-11-20.json).
+
+Sanitizers ran with GCC 14.2 on a separate Linux analysis host, including T-P3;
+the automatic conformance runner still marks sanitizer scenarios `not_run`.
+LeakSanitizer cannot run under that host's ptrace environment, so ASan runs disable
+LSan while native heap-block checks remain enabled. Only the two intentional
+cross-thread panic/exit probes disable TSan's thread-leak report (V11 terminates
+without joining); normal programs keep it enabled. Windows/macOS/aarch64 outputs
+were compiled, not executed. These checks do not establish near-C performance.
 
 ## Build and test
 
@@ -810,7 +850,7 @@ The new system-level regression runner has a 60-second child-process limit
 and attempts process-tree cleanup on timeout. The earlier fixture runner is
 otherwise unchanged apart from testing both C optimization modes.
 
-## Validation record
+## Historical P0 validation record
 
 - Before implementation changes, the added tests failed on the original
   compiler: all six new fixture files and all seven system-level test functions

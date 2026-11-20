@@ -16,7 +16,10 @@ use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::process::{Command, Stdio};
+use std::time::Duration;
+
+mod common;
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug)]
 enum Status {
@@ -99,19 +102,23 @@ fn fixture_dir(entry: &Value) -> Result<Option<PathBuf>, Outcome> {
 type Errors = Vec<(String, u64, String)>;
 
 fn run_check(path: &Path) -> Result<Errors, Outcome> {
-    let out = yavo()
+    let result = common::capture(yavo()
         .arg("check")
         .arg(path)
         .arg("--json-diagnostics")
-        .output()
+        .stdin(Stdio::null()), common::RUN_TIMEOUT)
         .map_err(|e| outcome(Status::NotRun, format!("could not start yavo: {e}")))?;
+    if result.timed_out {
+        return Err(outcome(Status::Wrong, "yavo check exceeded its 10 second deadline"));
+    }
+    let out = result.output;
     let stdout = String::from_utf8_lossy(&out.stdout);
     let v: Value = serde_json::from_str(stdout.trim())
         .map_err(|e| outcome(Status::Wrong, format!("diagnostics are not valid JSON ({e}): {stdout}")))?;
-    Ok(v["diagnostics"]
-        .as_array()
-        .into_iter()
-        .flatten()
+    let diagnostics = v["diagnostics"].as_array()
+        .ok_or_else(|| outcome(Status::Wrong, "diagnostics JSON has no diagnostics array"))?;
+    let errors: Errors = diagnostics
+        .iter()
         .filter(|d| d["severity"] == "ERROR")
         .map(|d| {
             (
@@ -120,7 +127,12 @@ fn run_check(path: &Path) -> Result<Errors, Outcome> {
                 d["message"].as_str().unwrap_or("").to_string(),
             )
         })
-        .collect())
+        .collect();
+    let expected_exit = if errors.is_empty() { 0 } else { 1 };
+    if out.status.code() != Some(expected_exit) {
+        return Err(outcome(Status::Wrong, format!("yavo check exit {:?}; expected {expected_exit}", out.status.code())));
+    }
+    Ok(errors)
 }
 
 fn describe(errors: &Errors) -> String {
@@ -211,24 +223,52 @@ fn classify(entry: &Value, root: &Path) -> Outcome {
     }
 }
 
+fn runtime_limit(entry: &Value) -> Result<Duration, String> {
+    let Some(value) = entry.get("timeout_ms") else { return Ok(common::RUN_TIMEOUT); };
+    let millis = match value {
+        Value::Number(n) => n.as_u64(),
+        Value::String(s) => s.parse::<u64>().ok(),
+        _ => None,
+    }.filter(|n| *n > 0).ok_or_else(|| "timeout_ms must be a positive integer or decimal string".to_string())?;
+    Ok(Duration::from_millis(millis))
+}
+
 fn run_once(entry: &Value, path: &Path, kind: &str, release: bool, dir: Option<&Path>) -> Outcome {
+    let limit = match runtime_limit(entry) {
+        Ok(limit) => limit,
+        Err(e) => return outcome(Status::Wrong, e),
+    };
+    let scratch = match common::Scratch::new("conformance-run") {
+        Ok(scratch) => scratch,
+        Err(e) => return outcome(Status::NotRun, format!("cannot create build directory: {e}")),
+    };
+    let exe = scratch.exe("fixture");
     let mut cmd = yavo();
-    cmd.arg("run").arg(path);
-    if let Some(d) = dir {
-        cmd.current_dir(d);
-    }
+    cmd.arg("build").arg(path).arg("-o").arg(&exe).stdin(Stdio::null());
     if release {
         cmd.arg("--release");
     }
-    let out = match cmd.output() {
-        Ok(o) => o,
+    let built = match common::capture(&mut cmd, common::BUILD_TIMEOUT) {
+        Ok(o) if o.timed_out => return outcome(Status::Wrong, "C build exceeded its 120 second deadline"),
+        Ok(o) => o.output,
         Err(e) => return outcome(Status::NotRun, format!("could not start yavo: {e}")),
+    };
+    if built.status.code() == Some(3) {
+        return outcome(Status::NotRun, "C toolchain unavailable (run `yavo toolchain install`)");
+    }
+    if !built.status.success() {
+        return outcome(Status::Wrong, format!("build exit {:?}: {}", built.status.code(), String::from_utf8_lossy(&built.stderr)));
+    }
+    let mut run = Command::new(&exe);
+    run.stdin(Stdio::null());
+    if let Some(d) = dir { run.current_dir(d); }
+    let out = match common::capture(&mut run, limit) {
+        Ok(o) if o.timed_out => return outcome(Status::Wrong, format!("program exceeded its {} ms deadline", limit.as_millis())),
+        Ok(o) => o.output,
+        Err(e) => return outcome(Status::NotRun, format!("could not run program: {e}")),
     };
     let stdout = String::from_utf8_lossy(&out.stdout);
     let stderr = String::from_utf8_lossy(&out.stderr);
-    if out.status.code() == Some(3) {
-        return outcome(Status::NotRun, "C toolchain unavailable (run `yavo toolchain install`)");
-    }
     if kind == "run-pass" {
         let want = entry["expected_stdout"].as_str().unwrap_or("");
         if out.status.code() == Some(0) && stdout == want {
@@ -311,29 +351,72 @@ fn conformance() {
     std::fs::write(&report_path, serde_json::to_string_pretty(&report).unwrap()).expect("write report");
     println!("\nreport: {}", report_path.display());
 
-    // Regression ratchet.
+    // Regression ratchet. Updating must not erase regressions from the old set.
     let passing: BTreeSet<String> = rows.iter().filter(|r| r.3.status == Status::Pass).map(|r| r.0.clone()).collect();
+    let baseline = read_baseline(&baseline_path()).expect("read existing conformance baseline");
+    require_monotonic(&baseline, &passing).unwrap_or_else(|e| panic!("{e}"));
     if std::env::var_os("YAVO_UPDATE_BASELINE").is_some() {
-        let mut text = String::from("# Spec cases that must keep passing. Regenerate with YAVO_UPDATE_BASELINE=1.\n");
-        for id in &passing {
-            text.push_str(id);
-            text.push('\n');
-        }
-        std::fs::write(baseline_path(), text).expect("write baseline");
+        update_baseline(&baseline_path(), &passing).expect("update baseline without losing passing cases");
         println!("baseline updated: {} passing cases", passing.len());
         return;
     }
-    let baseline: BTreeSet<String> = std::fs::read_to_string(baseline_path())
-        .unwrap_or_default()
-        .lines()
-        .map(str::trim)
-        .filter(|l| !l.is_empty() && !l.starts_with('#'))
-        .map(String::from)
-        .collect();
     let newly: Vec<&String> = passing.difference(&baseline).collect();
     if !newly.is_empty() {
         println!("newly passing (refresh the baseline): {newly:?}");
     }
-    let regressed: Vec<&String> = baseline.difference(&passing).collect();
-    assert!(regressed.is_empty(), "spec cases that used to pass no longer pass: {regressed:?}");
+}
+
+fn read_baseline(path: &Path) -> Result<BTreeSet<String>, String> {
+    Ok(std::fs::read_to_string(path).map_err(|e| e.to_string())?
+        .lines().map(str::trim).filter(|l| !l.is_empty() && !l.starts_with('#'))
+        .map(String::from).collect())
+}
+
+fn require_monotonic(baseline: &BTreeSet<String>, passing: &BTreeSet<String>) -> Result<(), String> {
+    let regressed: Vec<_> = baseline.difference(passing).collect();
+    if regressed.is_empty() { Ok(()) }
+    else { Err(format!("spec cases that used to pass no longer pass: {regressed:?}")) }
+}
+
+fn update_baseline(path: &Path, passing: &BTreeSet<String>) -> Result<(), String> {
+    require_monotonic(&read_baseline(path)?, passing)?;
+    let mut text = String::from("# Spec cases that must keep passing. Regenerate with YAVO_UPDATE_BASELINE=1.\n");
+    for id in passing { text.push_str(id); text.push('\n'); }
+    std::fs::write(path, text).map_err(|e| e.to_string())
+}
+
+#[test]
+fn timeout_metadata_accepts_numbers_and_strings_and_rejects_invalid_limits() {
+    assert_eq!(runtime_limit(&json!({})).unwrap(), common::RUN_TIMEOUT);
+    for value in [json!(3000), json!("3000")] {
+        assert_eq!(runtime_limit(&json!({"timeout_ms": value})).unwrap(), Duration::from_millis(3000));
+    }
+    for value in [json!(0), json!("0"), json!(-1), json!(1.5), json!("bad"), json!(null), json!(true)] {
+        assert!(runtime_limit(&json!({"timeout_ms": value})).is_err(), "{value:?}");
+    }
+}
+
+#[test]
+fn baseline_update_cannot_erase_a_regression() {
+    let dir = common::Scratch::new("baseline-test").unwrap();
+    let path = dir.0.join("baseline.txt");
+    let original = "# saved baseline\nT-A\nT-B\n";
+    std::fs::write(&path, original).unwrap();
+    let regressed = BTreeSet::from(["T-A".to_string(), "T-C".to_string()]);
+    assert!(update_baseline(&path, &regressed).unwrap_err().contains("T-B"));
+    assert_eq!(std::fs::read_to_string(&path).unwrap(), original);
+    let progressed = BTreeSet::from(["T-A".to_string(), "T-B".to_string(), "T-C".to_string()]);
+    update_baseline(&path, &progressed).unwrap();
+    assert_eq!(read_baseline(&path).unwrap(), progressed);
+}
+
+#[test]
+fn runtime_deadline_is_enforced_separately_from_the_build() {
+    let dir = common::Scratch::new("manifest-timeout").unwrap();
+    let path = dir.0.join("loop.yv");
+    std::fs::write(&path, "fn main() {\n    while true {}\n}\n").unwrap();
+    let entry = json!({"timeout_ms": "100", "expected_stdout": ""});
+    let outcome = run_once(&entry, &path, "run-pass", false, None);
+    assert_eq!(outcome.status, Status::Wrong, "{}", outcome.reason);
+    assert!(outcome.reason.contains("program exceeded its 100 ms deadline"), "{}", outcome.reason);
 }

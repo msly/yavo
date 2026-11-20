@@ -1,0 +1,37 @@
+// expect-error: U0001 19:33
+// expect-error: U0001 30:35
+fn writePair[T](pair: sink T) {
+    let (p, _tag) = pair
+    *p = 5
+}
+
+fn writeNested[T](nested: sink T) {
+    let (pair, _tag) = nested
+    let (p, _innerTag) = pair
+    *p = 5
+}
+
+fn tupleBorrow() {
+    var n = 0
+    let p: &inout int = &n
+    let pair = (p, 0)
+    scope {
+        let h = spawn writePair(pair)
+        println(n)
+        h.join()
+    }
+}
+
+fn nestedTupleBorrow() {
+    var n = 0
+    let p: &inout int = &n
+    let nested = ((p, 0), 1)
+    scope {
+        let h = spawn writeNested(nested)
+        println(n)
+        h.join()
+    }
+}
+
+fn main() {
+}

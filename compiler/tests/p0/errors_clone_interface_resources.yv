@@ -1,0 +1,15 @@
+// expect-error: E0001 14:17
+use std/sync
+
+interface Named { fn name(self) -> int }
+
+struct NamedLock: Named {
+    lock: Mutex[int]
+    fn name(self) -> int { return 1 }
+}
+
+fn main() {
+    let item: Box[Named] = Box(NamedLock{lock: Mutex(1)})
+    let values: Vec[Box[Named]] = [item]
+    let _copy = values.clone()
+}

@@ -1,0 +1,74 @@
+// expect-error: E0705 21:28
+// expect-error: E0705 27:28
+// expect-error: E0102 36:9
+// expect-error: E0102 45:26
+// expect-error: E0102 55:9
+// expect-error: E0705 62:27
+// expect-error: E0705 69:28
+fn consumeParts(_parts: sink Vec[str]) {
+}
+
+fn consumeText(_text: sink str) {
+}
+
+fn consumeSlice(_values: sink []int) {
+}
+
+fn innerOwner() {
+    scope {
+        let text = "hello world".toString()
+        let parts = text.fields()
+        spawn consumeParts(parts)
+    }
+}
+
+fn temporaryOwner() {
+    scope {
+        spawn consumeParts("hello world".toString().fields())
+    }
+}
+
+fn outerOwnerMutation() {
+    var text = "hello world".toString()
+    let parts = text.fields()
+    scope {
+        spawn consumeParts(parts)
+        text.push("!")
+    }
+}
+
+fn outerOwnerMove() {
+    let text = "hello world".toString()
+    let parts = text.fields()
+    scope {
+        spawn consumeParts(parts)
+        let _movedText = text
+    }
+}
+
+fn joinedBorrowStillLives() {
+    var text = "hello world".toString()
+    let parts = text.fields()
+    scope {
+        let h = spawn consumeParts(parts)
+        h.join()
+        text.push("!")
+    }
+}
+
+fn copiedView() {
+    scope {
+        let text = "hello".toString()
+        spawn consumeText(text.trim())
+    }
+}
+
+fn copiedSlice() {
+    scope {
+        let values: Vec[int] = [1, 2]
+        spawn consumeSlice(values[0..2])
+    }
+}
+
+fn main() {
+}

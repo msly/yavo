@@ -5,7 +5,9 @@
 //! Use-after-free is not detected by this check.
 
 use std::path::Path;
-use std::process::Command;
+use std::process::{Command, Stdio};
+
+mod common;
 
 fn check_all(release: bool) {
     let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/p0");
@@ -18,12 +20,26 @@ fn check_all(release: bool) {
     assert!(!programs.is_empty());
     let mut failures = Vec::new();
     for p in &programs {
+        let scratch = common::Scratch::new("alloc-check").unwrap();
+        let exe = scratch.exe("fixture");
         let mut cmd = Command::new(env!("CARGO_BIN_EXE_yavo"));
-        cmd.env("YAVO_ALLOC_CHECK", "1").arg("run").arg(p);
+        cmd.env("YAVO_ALLOC_CHECK", "1").arg("build").arg(p).arg("-o").arg(&exe).stdin(Stdio::null());
         if release {
             cmd.arg("--release");
         }
-        let out = cmd.output().unwrap();
+        match common::output(&mut cmd, common::BUILD_TIMEOUT) {
+            Ok(out) if out.status.success() => {},
+            Ok(out) => {
+                failures.push(format!("{}: build exit {:?}\n{}", p.display(), out.status.code(),
+                    String::from_utf8_lossy(&out.stderr)));
+                continue;
+            }
+            Err(e) => { failures.push(format!("{}: build: {e}", p.display())); continue; }
+        };
+        let out = match common::output(Command::new(&exe).stdin(Stdio::null()), common::RUN_TIMEOUT) {
+            Ok(out) => out,
+            Err(e) => { failures.push(format!("{}: run: {e}", p.display())); continue; }
+        };
         let stderr = String::from_utf8_lossy(&out.stderr);
         if out.status.code() != Some(0) || stderr.contains("alloc-check") {
             failures.push(format!("{}: exit {:?}\n{stderr}", p.display(), out.status.code()));
