@@ -30,7 +30,7 @@ fn main() {
 - 循环：`for x in xs { }` 默认只读；`for x in &xs { }` 显式可变，Map 键始终只读。范围循环 `for i in 0..n { }`、`while cond { }`、`loop { }` 配合 `break`、`continue`。
 - 分支：`if`/`else` 是语句；要按情况取值，用 `match` 的 `=> 表达式` 分支（必须覆盖所有情况，`_` 兜底）。
 - 返回：有返回值的函数每条路径都写 `return`，没有返回值的函数可以自然结束。块体闭包也要写 `return`；单表达式闭包 `(a, b) => a < b` 不用。
-- 插值字符串 `"${expr}"` 只能直接传给 `println`、`print`、`eprintln`、`panic`、`assert` 和 `format`。前五个直接写输出，不分配内存；要得到 `String` 用 `format("${x}")`，会分配。保留两位小数写 `"${x:.2}"`。
+- 插值字符串 `"${expr}"` 只能直接传给 `println`、`print`、`eprintln`、`panic`、`assert` 和 `format`。前五个直接写输出，不分配内存；要得到 `String` 用 `format("${x}")`，会分配。`${...}` 里可以写任意表达式，包括函数调用和字符串字面量，如 `"${parts.join(", ")}"`。保留两位小数写 `"${x:.2}"`（只用于浮点数，整数先 `f64(n)`）。
 - 注释只有 `//`。声明顺序无关，函数可以先用后定义；`pub` 标记从包导出的函数和类型。
 - 入口只能写成 `fn main()`：没有参数、没有返回值（否则 `E0016`）。所以 `main` 里不能用 `try`；可能失败的步骤放进返回 `T ! E` 的辅助函数，在 `main` 里用 `catch` 处理后 `os.exit(1)`，写法见第 5 节。
 - 整数溢出、除零、越界移位、超出范围的转换执行时 panic，包括常量可知的表达式。`let b: u8 = 256` 则是字面量类型错误。回绕写 `+%`、`-%`、`*%`；截断转换写 `i32.wrap(x)`，仅接受整数。整数边界写 `i64.min`、`i64.max`。
@@ -44,7 +44,7 @@ fn main() {
 | 浮点、布尔 | `f64`、`f32`、`bool` |  |
 | 字符串 | `String`（拥有）、`str`（视图） | 始终是合法 UTF-8；字面量是 `str`，`s.toString()` 得到 `String` |
 | 动态数组 | `Vec[T]`，字面量 `[1, 2, 3]` | 切片视图是 `[]T` |
-| 映射、集合 | `Map[K, V]`（字面量 `[:]`）、`Set[T]` | 按插入顺序遍历 |
+| 映射、集合 | `Map[K, V]`（字面量 `[:]`）、`Set[T]`（`var s: Set[String] = []` 或 `Set[int]{}`） | 按插入顺序遍历 |
 | 元组 | `(int, String)` | 用 `.0`、`.1` 取，或 `let (a, b) = t` |
 | 借用 | `&T`（只读）、`&inout T`（可变） | `*p = v` 修改目标，`p = q` 重新绑定；构造时写如 `let p: &inout int = &n` |
 | 可选、结果 | `?T`、`T ! E` | 见第 3 节 |
@@ -103,7 +103,7 @@ fn largest[T: Ord + Copy](xs: []T) -> ?T of xs {   // 泛型和接口约束
 
 - 构造：`Point{x: 1.0}`、`Shape.Circle(r: 2.0)`；类型已知时可以简写成 `.Circle(r: 2.0)`。
 - 类型转换必须显式：`f64(n)`、`int(x)`。没有隐式转换，只有语义表第 8 节列出的几种自动操作。
-- 比较：`==` 需要类型实现 `Eq`，`<` 等需要实现 `Ord`；整数、`str`、`String`、可比较元素组成的元组自动实现。浮点数可以直接用 `==`、`<`（按 IEEE 754），但不满足 `Eq`、`Ord`：不能用 `v.sort()` 或 `largest[f64]`，排序写 `v.sortBy((a, b) => a.totalCmp(b) == .Less)`。自定义类型写 `struct Version: Ord` 并实现 `cmp` 方法。
+- 比较：`==` 需要类型实现 `Eq`，`<` 等需要实现 `Ord`；整数、`str`、`String`、可比较元素组成的元组自动实现。两边类型必须相同：`String` 和 `str` 不能直接比，写 `name == other.toString()`。浮点数可以直接用 `==`、`<`（按 IEEE 754），但不满足 `Eq`、`Ord`：不能用 `v.sort()` 或 `largest[f64]`，排序写 `v.sortBy((a, b) => a.totalCmp(b) == .Less)`。自定义类型写 `struct Version: Ord` 并实现 `cmp` 方法。
 - 泛型函数的返回值可能携带借用时也写来源，例如上面的 `largest` 写 `-> ?T of xs`；用在 `int` 上时不会借住数组。
 - 泛型结构体同样用方括号；字面量要写出类型参数，方法里用 `T`、`Self`：
 
@@ -295,7 +295,7 @@ fn main() {
 | 读入全部标准输入 | `let text = try io.readAll()`，返回 `String ! io.Error`；内容不是合法 UTF-8 时得到编码错误 | 是 |
 | 逐行读标准输入 | `while let line = try io.readLine() { }`，返回 `?String ! io.Error`，不含换行符 | 是 |
 | 读写文件 | `try fs.readText(path)`、`try fs.writeText(path, s)`；编码错误为 `fs.Error.Utf8(offset)`，从 0 开始计字节 | 都可能，包括平台路径转换 |
-| 命令行参数、退出 | `os.args()` 返回 `[]str of static`（启动时已转换，参数不是合法 UTF-8 时程序启动即报错退出）、`os.exit(1)` | 否 |
+| 命令行参数、退出 | `os.args()` 返回 `[]str of static`，第 0 个是程序名，用户参数从 `args[1]` 开始（启动时已转换，参数不是合法 UTF-8 时程序启动即报错退出）；`os.exit(1)` | 否 |
 | 按行、按空白、按分隔符切分 | `s.lines()`、`s.fields()`、`s.split(",")`，结果是 `Vec[str]`，不复制字符串 | 只分配集合本身 |
 | 字符串长度、字节、子串 | `s.len()`、`s[i]`（`byte`）按字节；`s[a..b]` 是视图，两端必须落在字符边界上。`byte` 是整数，`"${s[i]}"` 打印数字（`'a'` 打印 `97`）；要打印一个字符写 `s[i..i+1]` | 否 |
 | 修剪、大小写、查找 | `s.trim()`（视图）、`s.toLower()`、`s.toUpper()`（新 `String`）、`s.contains(t)`、`s.startsWith(t)`、`s.find(t)`（`?int`） | 只有大小写转换 |
@@ -303,13 +303,13 @@ fn main() {
 | 拼接字符串 | `var out = String{}`，`out.push("text")`；`push` 接受 `str` 或 `String`，只读取实参，不消费；或 `format("${a}-${b}")` | 是 |
 | 字节转字符串 | `String.fromUtf8(bytes)` 消费字节数组；成功得 `String`，失败得 `Utf8Error{offset: ...}`，输入被释放 | 契约为可能；允许复用原缓冲区 |
 | 字节字面量 | `'a'`、`'\n'`；判断：`c >= '0' && c <= '9'` | 否 |
-| `Vec` 基本操作 | `v.push(x)`、`v.pop()`（`?T`，拥有的值）、`v.len()`、`v[i]`、`v[a..b]`、`v.contains(x)`、`v.join(", ")`（元素必须是 `str` 或 `String`，数字先 `format` 成 `String`） | `push` 扩容和 `join` 时会 |
+| `Vec` 基本操作 | `v.push(x)`、`v.pop()`（`?T`，拥有的值）、`v.len()`、`v[i]`、`v[a..b]`、`v.contains(x)`、`v.join(", ")`（元素必须是 `str` 或 `String`，数字先 `format` 成 `String`）；v1 没有 `remove`、`insert`，要删改中间元素就构造新的 `Vec` | `push` 扩容和 `join` 时会 |
 | 排序 | `v.sort()`（要求 `Ord`）；`v.sortBy((a, b) => a.1 > b.1)`；浮点数用 `sortBy` 加 `totalCmp`；两者都是稳定排序 | 是（临时缓冲区） |
 | `Map` 读取 | `m.get(k)`（`?&V`）、`m.getMut(k)`（`?&inout V`）、`m.getCopy(k)`（`?V`，要求可复制）、`m.has(k)`、`m.len()`；`Map[String, V]` 的 `get`、`getMut`、`getCopy`、`has`、`remove` 直接收 `str` 键，如 `m.get("a")`；`set`、`update` 要拥有的 `String` 键；默认值写 `m.getCopy(k) ?? 0` | 否 |
 | `Map` 写入和计数 | `set(k, v)` 消费键和值；`remove(k) -> ?V` 返回拥有值；`update(k, initial, f)` 消费拥有键，v1 限不携带借用的 Copy 值，f 恰好执行一次 | 插入可能；remove 本身不分配 |
 | 遍历 | `for x in v`、`for i, x in v`、`for k, v in m` 默认只读；`in &v`、`in &m` 显式可变；Map 键始终只读 | 否 |
 | 优先队列 | `use std/collections`；`var h = Heap[(int, int)].by((a, b) => a.0 < b.0)`，`h.push(x)`、`h.pop()`（`?T`）；比较闭包会被保存，不能捕获借用 | `push` 扩容时会 |
-| 双端队列、集合 | `Deque[T]`：`pushBack`、`popFront`；`Set[T]`：`add`、`has`、`remove` | 插入时会 |
+| 双端队列、集合 | `Deque[T]`：`pushBack`、`popFront`；`Set[T]`：`s.add(x)`（消费元素，已有则不变）、`s.has(x)`（`Set[String]` 用 `str` 查询）、`s.remove(x)`（返回 `bool`）、`s.len()`，`for x in s` 按插入顺序只读遍历 | 插入时会 |
 | 数学 | `use std/math`；`math.sqrt(x)`、`math.pow(x, y)`、`math.floor(x)`、`math.pi` | 否 |
 | 时间、随机数 | `use std/time`：`time.now()`；`use std/rand`：`rand.int(lo, hi)` | 否 |
 

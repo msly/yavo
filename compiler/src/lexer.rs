@@ -467,14 +467,14 @@ impl Lexer<'_, '_> {
                     let mut depth = 0u32;
                     let mut colon: Option<usize> = None;
                     let mut closed = false;
-                    let mut nested_quote: Option<Span> = None;
                     let mut in_nested_str = false;
                     while let Some(c) = self.peek() {
                         if c == '\n' {
                             break;
                         }
+                        // A string literal inside `${...}` (e.g. `${parts.join(" ")}`): skip it, so
+                        // its quotes, braces and colons belong to it, not to this string.
                         if c == '"' {
-                            nested_quote.get_or_insert(Span { start: self.pos, end: self.pos + 1, line: self.line, col: self.col });
                             in_nested_str = !in_nested_str;
                             self.bump();
                             continue;
@@ -505,12 +505,6 @@ impl Lexer<'_, '_> {
                     }
                     let iend = self.pos;
                     self.bump();
-                    if let Some(span) = nested_quote {
-                        self.diags
-                            .error("E0020", span, "string literals cannot appear inside `${...}`")
-                            .note("bind the string to a variable first, e.g. `let s = \"...\"`, then write `${s}`");
-                        continue;
-                    }
                     if !text.is_empty() {
                         pieces.push(StrPiece::Text(std::mem::take(&mut text)));
                     }

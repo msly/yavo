@@ -701,6 +701,18 @@ static void yv_out_float(const yv_out *o, double v, bool single) {
 static void yv_out_f64(const yv_out *o, double v) { yv_out_float(o, v, false); }
 static void yv_out_f32(const yv_out *o, float v) { yv_out_float(o, (double)v, true); }
 
+/* `${x:.N}`: exactly N digits after the point (rounded as by C `%.*f`); NaN and infinities
+ * print as in `yv_out_float`. */
+static void yv_out_fixed(const yv_out *o, double v, int digits) {
+    if (v != v || isinf(v)) {
+        yv_out_float(o, v, false);
+        return;
+    }
+    char buf[400];
+    int n = snprintf(buf, sizeof buf, "%.*f", digits, v);
+    yv_out_bytes(o, buf, (size_t)(n > 0 ? n : 0));
+}
+
 /* `totalCmp` (stdlib contract §4): a total order over all bit patterns, from flipped-sign
  * unsigned keys. The result is an `Ordering` tag: Less 0, Equal 1, Greater 2. */
 static inline uint32_t yv_f64_total_cmp(double a, double b) {

@@ -447,6 +447,9 @@ pub enum Ty {
     RefMut(u32),
     /// `Map[K, V]`, by map id (see `map_of`): an insertion-ordered hash map (`yv_map` in C).
     Map(u32),
+    /// `Set[K]`, by the map id of `Map[K, bool]`: an insertion-ordered set stored as that map
+    /// (same C type, helpers and key), with its own methods.
+    Set(u32),
     /// `[]T`: a read-only view of consecutive elements, by slice id (see `slice_of`). Copyable;
     /// it carries a borrow. In C a `yv_vec` whose storage belongs to someone else.
     Slice(u32),
@@ -478,7 +481,7 @@ impl Ty {
     /// holding them) are moved.
     pub fn is_copy(self) -> bool {
         match self {
-            Ty::String | Ty::Vec(_) | Ty::Map(_) | Ty::RefMut(_) | Ty::Box(_) | Ty::Dyn(_) => false,
+            Ty::String | Ty::Vec(_) | Ty::Map(_) | Ty::Set(_) | Ty::RefMut(_) | Ty::Box(_) | Ty::Dyn(_) => false,
             Ty::Opt(id) => opt_inner(id).is_copy(),
             Ty::Tuple(id) => tuple_elems(id).iter().all(|t| t.is_copy()),
             Ty::Struct(id) | Ty::Enum(id) => agg_flags(id).0,
@@ -494,7 +497,7 @@ impl Ty {
     /// `&inout T` is not copyable but owns nothing.
     pub fn needs_drop(self) -> bool {
         match self {
-            Ty::String | Ty::Vec(_) | Ty::Map(_) | Ty::Box(_) | Ty::Dyn(_) => true,
+            Ty::String | Ty::Vec(_) | Ty::Map(_) | Ty::Set(_) | Ty::Box(_) | Ty::Dyn(_) => true,
             Ty::Opt(id) => opt_inner(id).needs_drop(),
             Ty::Tuple(id) => tuple_elems(id).iter().any(|t| t.needs_drop()),
             Ty::Struct(id) | Ty::Enum(id) => agg_flags(id).1,
@@ -537,6 +540,7 @@ impl Ty {
         match self {
             Ty::Str | Ty::Ref(_) | Ty::RefMut(_) | Ty::Slice(_) => true,
             Ty::Vec(id) => vec_elem(id).carries_borrow(),
+            Ty::Set(id) => map_parts(id).0.carries_borrow(),
             Ty::Box(id) => box_inner(id).carries_borrow(),
             Ty::Opt(id) => opt_inner(id).carries_borrow(),
             Ty::Tuple(id) => tuple_elems(id).iter().any(|t| t.carries_borrow()),
@@ -554,8 +558,9 @@ impl Ty {
 
     /// `take(&x)` leaves this value behind (stdlib contract §1). In C it is all-zero bytes.
     pub fn has_default(self) -> bool {
-        matches!(self, Ty::Int(_) | Ty::Float(_) | Ty::Bool | Ty::String | Ty::Vec(_) | Ty::Opt(_) | Ty::Map(_))
+        matches!(self, Ty::Int(_) | Ty::Float(_) | Ty::Bool | Ty::String | Ty::Vec(_) | Ty::Opt(_) | Ty::Map(_) | Ty::Set(_))
     }
+
 
     /// A name usable inside C identifiers, e.g. `Vec_Vec_String` for `Vec[Vec[String]]`.
     pub fn key(self) -> String {
@@ -572,7 +577,8 @@ impl Ty {
             Ty::RefMut(id) => format!("RefMut_{}", ref_mut_inner(id).key()),
             Ty::Box(id) => format!("Box_{}", box_inner(id).key()),
             Ty::Dyn(id) => format!("Dyn_{}", iface_name(id)),
-            Ty::Map(id) => {
+            // A set shares its map's key, so it shares the map's C helpers.
+            Ty::Map(id) | Ty::Set(id) => {
                 let (k, v) = map_parts(id);
                 format!("Map_{}_{}", k.key(), v.key())
             }
@@ -601,7 +607,7 @@ impl Ty {
             Ty::Ref(id) => REFS.with(|r| r.borrow()[id as usize].1),
             Ty::Opt(id) => OPTS.with(|o| o.borrow()[id as usize].1),
             Ty::RefMut(id) => REFMUTS.with(|r| r.borrow()[id as usize].1),
-            Ty::Map(_) => "yv_map",
+            Ty::Map(_) | Ty::Set(_) => "yv_map",
             Ty::Unit => "void",
             Ty::Struct(id) | Ty::Enum(id) => agg_names(id).1,
             Ty::Res(id) => RESS.with(|r| r.borrow()[id as usize].2),
@@ -632,6 +638,7 @@ impl fmt::Display for Ty {
                 let (k, v) = map_parts(*id);
                 write!(f, "Map[{k}, {v}]")
             }
+            Ty::Set(id) => write!(f, "Set[{}]", map_parts(*id).0),
             Ty::Unit => f.write_str("()"),
             Ty::Struct(id) | Ty::Enum(id) => f.write_str(agg_names(*id).0),
             Ty::Res(id) => {

@@ -638,6 +638,27 @@ target is written as `(*p)`. Tests: `tests/p0/run_deref.yv` (heap-block check cl
 in `tests/p0/errors_unsupported.yv` were replaced with other parse-time `U0001` cases at the
 same lines and columns.
 
+## Sets, `${x:.N}` and string literals in `${...}`
+
+Added after the second cold-start experiment found that the cheat sheet teaches them:
+
+- `Set[T]` (stdlib contract §3, C6): elements are integers, `bool`, `str` or `String` (others
+  `E0501`); `var s: Set[String] = []`, `[:]` or `Set[int]{}`; `s.add(x)` consumes the element
+  (already there: no change), `s.has(x)` and `s.remove(x)` (`bool`) take a `str` for `String`
+  elements, `s.len()`, `s.clone()`, `take(&s)`; `for x in s` reads the elements in insertion
+  order (one variable, else `E0001`; `in &s` is `E0103`). A set is stored as `Map[K, bool]` (same
+  C type and helpers, `Ty::Set` keeps its own methods and display name). `s.add(s.len())` is
+  `E0403`; storing views follows the map rules.
+- `${x:.N}` (N from 0 to 17) prints a float with exactly N decimals, rounded like C `%.*f`; NaN
+  and infinities print as usual. A non-float is `E0001`; other specifiers are `U0001`.
+- `${...}` may contain string literals (`${parts.join(", ")}`); they are lexed as ordinary
+  strings, so quotes, braces and colons inside them belong to them. This used to be `E0020`, which
+  broke the rule that valid code is never reported as a syntax error.
+
+Tests: `tests/p0/run_sets.yv`, `tests/p0/run_format_fixed.yv` (heap-block check clean),
+`tests/p0/errors_sets_format.yv` (8 errors), `tests/p0/errors_interp.yv` (now a bad escape inside a
+nested string: one error, no cascade).
+
 ## `String.fromUtf8` and `Utf8Error`
 
 `String.fromUtf8(bytes)` (stdlib contract §5) consumes a `Vec[byte]` and returns

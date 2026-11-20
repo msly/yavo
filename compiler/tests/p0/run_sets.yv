@@ -1,0 +1,50 @@
+// expect-stdout:
+// | 2 true false
+// | b
+// | a
+// | true
+// | false
+// | ab
+// | 3
+// | 3 true
+// | 3
+// | 3 0
+struct Tags {
+    names: Set[String]
+}
+
+fn main() {
+    var s: Set[String] = []
+    s.add("b".toString())
+    s.add("a".toString())
+    s.add("b".toString())
+    println("${s.len()} ${s.has("a")} ${s.has("zz")}")
+    for x in s {
+        println(x)
+    }
+    println(s.remove("b"))
+    println(s.remove("b"))
+    s.add("b".toString())
+    var line = String{}
+    for x in s {
+        line.push(x)
+    }
+    println(line)
+    var nums = Set[int]{}
+    for i in 0..5 {
+        nums.add(i % 3)
+    }
+    println(nums.len())
+    let copy = nums.clone()
+    var t = Tags{names: []}
+    t.names.add("x".toString())
+    println("${copy.len()} ${t.names.has("x")}")
+    let text = "a b a c".toString()
+    var words: Set[str] = [:]
+    for w in text.fields() {
+        words.add(w)
+    }
+    println(words.len())
+    let gone = take(&nums)
+    println("${gone.len()} ${nums.len()}")
+}

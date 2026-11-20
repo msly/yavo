@@ -1,6 +1,7 @@
-// One targeted error, no cascade, for a string literal inside `${...}`.
-// expect-error: E0020 5:21
+// expect-error: E0020 6:22
+// A string literal inside `${...}` is lexed as a normal string: one targeted error for a bad
+// escape in it, no cascade.
 fn main() {
     let n = "a"
-    println("${n == "a"}")
+    println("${n == "\q"}")
 }

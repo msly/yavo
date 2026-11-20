@@ -1,0 +1,54 @@
+// expect-error: E0501 10:16
+// expect-error: E0001 16:12
+// expect-error: E0103 24:9
+// expect-error: E0403 31:11
+// expect-error: E0014 35:5
+// expect-error: E0001 40:16
+// expect-error: U0001 45:16
+// expect-error: E0001 50:16
+fn floats() {
+    var s: Set[f64] = []
+}
+
+fn twoVars() {
+    var s: Set[int] = []
+    s.add(1)
+    for a, b in s {
+        println(a)
+    }
+}
+
+fn writeElements() {
+    var s: Set[int] = []
+    s.add(1)
+    for a in &s {
+        println(a)
+    }
+}
+
+fn alreadyBorrowed() {
+    var s: Set[int] = []
+    s.add(s.len())
+}
+
+fn readOnly(s: Set[int]) {
+    s.add(1)
+}
+
+fn formatInt() {
+    let n = 3
+    println("${n:.2}")
+}
+
+fn formatOther() {
+    let x = 1.5
+    println("${x:>8}")
+}
+
+fn formatTooMany() {
+    let x = 1.5
+    println("${x:.20}")
+}
+
+fn main() {
+}

@@ -1,4 +1,4 @@
-# Yavo 交接文档（2026-11-20，第四批已完成）
+# Yavo 交接文档（2026-11-20，第四、五批已完成）
 
 给下一个会话：先读完本文件，再按第 10 节开工。所有数字都是 2026-11-20 在本仓库实测的。
 
@@ -7,13 +7,14 @@
 规范 v0.5 已冻结（`docs/`、`yavo-tests/`）；Rust 写的编译器（约 14,600 行，含 C 运行时）已实现 P0、P1 的单线程写法和 P2 的单线程部分：
 结构体、`enum`、`T ! E` 与 `try`/`catch`、`match`、`String`/`Vec`/`Map`、`[]T` 与 `x[a..b]`、移动与析构、视图与 `of`、`&T`、`inout`、`?T`、
 方法、`Drop`、元组、不逃逸闭包、`Eq`/`Ord`、`Box[T]`、`interface` 与 `Box[I]`、泛型、`f64`/`f32`、切片、`reserve`，
-以及第四批新增的 **`*p`、`&inout T` 局部变量、`&x` 构造（A6、A7、`E0004`）和 `String.fromUtf8`**；
+以及第四批新增的 **`*p`、`&inout T` 局部变量、`&x` 构造（A6、A7、`E0004`）和 `String.fromUtf8`**，第五批新增的 **`Set[T]`、`${x:.N}`、`${...}` 里的字符串字面量**；
 标准库 I/O、`os.args`、`std/math`；六个目标的交叉编译。
 规范一致性：**129 项中通过 93、判错 0、不支持 22、未运行 14**（第四批开始时 84 / 0 / 31 / 14）。P1/P2 只剩 T-O5（`Heap`）不支持，其余 21 项都是 P3 并发。
 全部提交只在本地，**按用户决定暂不推远端**。
 
 “可用”三批已完成；2026-11-20 用户让我自己定后续顺序并分批：**第四批**（速查卡缺口 + 第 6 项 + 小卡点）已完成，
-**第五批**是第二轮冷启动实验（含 Rust 对照），**第六批**是 P3 并发。见第 9、10 节。
+**第五批**（第二轮冷启动实验 + 按实验结果修速查卡和编译器）已完成：换模型（Sonnet）、不点名特性的新题，Yavo 10/10、Rust 对照 10/10
+（`experiments/coldstart-2026-11-20/README.md`）。**第六批**是 P3 并发，见第 9、10 节。
 
 ## 2. 仓库与环境
 
@@ -57,6 +58,8 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 
 | 提交 | 内容 | 一致性通过数 |
 | --- | --- | --- |
+| 本文件所在提交 | 按第二轮实验修：`Set[T]`（存成 `Map[K, bool]`，`Ty::Set`）、`${x:.N}`（`PrintPart::Fixed`、运行时 `yv_out_fixed`）、`${...}` 里允许字符串字面量（原先误报 `E0020`）；速查卡补 `String`/`str` 不能混比、`os.args()[0]` 是程序名、`Set` 用法、`Vec` 没有 `remove`/`insert` | 93 |
+| `99dca58` `4f15824` | 第二轮冷启动实验（题目、Perl 参考、两组程序与日志、`verify.sh`、结果） | 93 |
 | `0ed6802` | 第 6 项：`*p` 读（可复制得副本，否则只读访问）、`*p = v`/`*p op= v` 经 `&inout T` 写；`let p: &inout T = &place`、`var p: &T = &place`、`let p = &x` 报 `E0004`；再借用 `&p`、`var` 引用重绑定；独占（`E0102`）与存活（`E0305`）沿用 `&inout` 规则；`for x in &v { *x += 1 }`、`getMut` 绑定可写可复制值。`String.fromUtf8`、prelude `Utf8Error`（成功复用缓冲区） | 93 |
 | `238a2cd` | 速查卡补 6 个缺口（泛型结构体、`fn main()` 与“辅助函数 + `catch` + `os.exit`”、`byte` 插值、`join`、`?T` 方法与 `if let ... else`、`Map` 的 `str` 键、`String.push`），示例都用编译器验证过 | 84 |
 | `96a8ff9` | 冷启动实验（`experiments/coldstart-2026-11-19/`）与上一版交接文档 | 84 |
@@ -148,7 +151,8 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - 切片：没有 `x[a..]`、`x[..b]`；v1 本来就没有可变切片。
 - 闭包：只能直接作为 `sortBy`/`update` 的实参。
 - 元组：不能给元素赋值、不能比较、不能整体打印、不能做 `Map` 键、没有元组模式。
-- 插值 `${...}` 里仍不能写字符串字面量；`"${b}"` 对 `byte` 打印数字（速查卡没写，冷启动实验里 agent 靠猜绕开）。
+- 格式说明只支持浮点的 `:.N`；`String == str` 混比报 `E0001`（规范 K1 没定义跨类型比较，速查卡已写明；要不要放开是语言决定，留给用户）。
+- `Set`：没有集合运算（并、交）、没有 `Set` 字面量里的元素（`[1, 2]` 不能直接当 `Set`）。
 - 堆块检查发现不了释放后使用；机器上没有 ASan。Windows、macOS、aarch64 产物只验证了文件格式。
 - 共享的 Claude 文档仍是 v0.4；以仓库 `docs/` 为准。
 
@@ -193,11 +197,38 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 | 批次 | 内容 | 状态 |
 | --- | --- | --- |
 | 第四批 | 速查卡 6 个缺口，第 6 项，`String.fromUtf8` | **已完成**，一致性 84 → 93 |
-| 第五批 | 第二轮冷启动实验：不点名特性的新题、换模型做受试者、Rust 对照并记 token | 进行中 |
+| 第五批 | 第二轮冷启动实验：不点名特性的新题、换模型做受试者、Rust 对照并记 token；按结果修 | **已完成**：Yavo 10/10（首编 7/10，116k token）、Rust 10/10（首编 9/10，90k token）；修了 `Set`、`:.N`、嵌套字符串 |
 | 第六批 | 第 12 项 P3 并发（`scope`/`spawn`、`Channel`、`Mutex`/`Arc`/`with`、`Send`/`Sync`） | 未开始 |
 
 ## 10. 下一个会话的第一步
 
 1. 设置第 2 节的环境变量，`cargo build --locked --offline --release`；跑 `cargo test --locked --offline`（和 `--release`），确认全部通过，conformance 是 93 / 0 / 22 / 14。
-2. 按第 9 节的后续三批继续：先看第五批（冷启动实验）是否已有 `experiments/coldstart-2026-11-20/README.md`，没有就从那里开始；然后第六批并发。
+2. 第六批（P3 并发）：规范在 `docs/semantics.md` P1–P8、`docs/stdlib_contract.md` §6（`Mutex`/`Guard`/`Channel`/`Join`/`spawn`）、
+   `yavo-tests/concurrency/`（21 项）和 `ERRORS.md` 的 `E0701`–`E0705`、`P-LOCK-REENTRANT`、`P-CHANNEL-CAP`。设计草案见第 11 节。
    `yavo fix`（7 项）和 T-O5（`Heap` 与保存的闭包）可以和任一批并行。
+
+## 11. P3 并发设计草案（第六批，2026-11-20 定）
+
+目标：解锁 `yavo-tests/concurrency/` 的 21 项（T-GA1/GA2/R1/R2 是报告类，未运行）。思路是尽量复用现有机制：
+
+- **类型**：新增一个 `Ty::Sync(id)`，表里存 `(种类, 内层类型)`，种类为 `Rc`、`Arc`、`Mutex`、`Guard`、`Channel`、`Join`、`Scope`（隐藏）。都不可复制。
+  `Rc`/`Arc`/`Mutex`/`Guard` 在 C 里都是 `T *`，指向“头部 + 值”分配块中的值（头部在值前面：锁、持有线程号、引用计数），
+  所以字段、方法、下标的投影可以直接复用 `Box` 的 `Unbox`/`BOX_STEP`（`Rc`/`Arc` 只读，写入 `E0101`；`Guard` 可写）。
+  `Channel` 是 `yv_chan *`；`Join[T]` 是每个 `T` 一个 `yv_jrec_K *`（公共前缀 `yv_join_base` + `T ret`）。`Guard` 携带借用（`Guard[T] of self`）。
+- **`Send`/`Sync`**：在检查器里按结构推导（结构体、枚举看字段，递归类型遇环当作成立）；`Rc`、`Guard`、`Join` 都不是；
+  `Arc[T]` 要求 `T` 同时 `Send`+`Sync`；`Mutex[T]`、`Channel[T]` 在 `T: Send` 时两者都是；`&T`、`[]T`、`str` 看 `T: Sync`；
+  `Box[I]` 看声明的能力（`Box[Named + Send]`）。类型语法 `I + Send` 解析成 `TypeExpr { name: "+", args: [I, Send, ...] }`。
+- **`scope`**：检查器在块开头声明一个隐藏局部（`Scope` 类型，`pinned`），它的析构函数 `yv_scope_drop` 等待所有未 `join` 的线程、
+  释放未取走的返回值。因为析构按逆序进行，`return`/`break`/`try` 提前离开时自动“先等线程、再释放外面的数据”（P3）。
+  线程借用的来源都存进这个隐藏局部；`check_not_borrowed`/`check_exclusive` 对 `pinned` 局部视为一直活到 scope 结束（T-GP7）。
+- **`spawn f(args)`**：只能出现在 `scope` 内，被调函数是具名函数。每个调用点生成一个参数结构和线程入口函数；
+  `sink` 实参要 `Send`（`E0701`），默认借用的形参类型要 `Sync`（`E0702`），返回值要 `Send` 且不带借用；
+  借用来源是临时值或在 scope 内声明的局部变量报 `E0705`（T-GP2、T-P3f）。`h.join()` 是 `sink self`，第二次 `join` 自然报 `E0402`。
+  `Join` 不能写出类型名，只能 `let h = spawn ...` 或作为语句丢弃，从而不能逃出 scope。
+- **`Mutex`/`Guard`/`with`**：`Mutex(v)`、`m.lock()`、`m.tryLock()`（经 `Arc`/`Rc`/`Box`/引用自动投影接收者）；
+  `with g = m.lock() { }` 把守卫绑定到块，块结束析构即解锁。`store_loans` 发现来源是 `with` 守卫局部时报 `E0703` 而不是 `E0305`（T-P4）。
+  同线程再次 `lock` 用持有线程号检测，panic `P-LOCK-REENTRANT`；`tryLock` 在任何竞争时返回 none。
+- **`Channel[T]{cap: n}`**：`T` 带借用报 `E0704`（T-P5），不是 `Send` 报 `E0701`；`send` 返回 `() ! SendError[T]`，
+  `SendError[T]` 按元素类型实例化一个库枚举（`.Closed(value)`），需要类似 `late_structs` 的晚登记；`recv`、`close`（幂等）、`clone`。
+- **运行时**：pthread 与 Win32（SRWLOCK、CONDITION_VARIABLE、CreateThread）两套；线程号用 `_Thread_local` + 原子计数；
+  堆块计数改成原子操作；第一次创建线程后打印语句加全局输出锁（单线程程序不受影响）。

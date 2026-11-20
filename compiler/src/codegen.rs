@@ -470,6 +470,7 @@ fn entry_name(map: Ty) -> String {
 fn map_value(map: Ty) -> Ty {
     match map {
         Ty::Map(id) => crate::types::map_parts(id).1,
+        Ty::Set(_) => Ty::Bool,
         _ => unreachable!("checked: a map"),
     }
 }
@@ -1253,6 +1254,11 @@ impl Gen {
                     let v = self.bind(e.ty, &v);
                     let call = value_writer(o, e.ty, &v).expect("checked: a printable type");
                     writes.push(call);
+                }
+                PrintPart::Fixed(e, n) => {
+                    let v = self.borrowed(e, f);
+                    let v = self.bind(e.ty, &v);
+                    writes.push(format!("yv_out_fixed({o}, (double){v}, {n});"));
                 }
             }
         }

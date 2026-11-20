@@ -162,6 +162,8 @@ pub enum CatchHandler {
 pub enum PrintPart {
     Text(String),
     Value(HExpr),
+    /// `${x:.N}`: a float with exactly `N` digits after the decimal point.
+    Fixed(HExpr, u8),
 }
 
 /// How an `if let`/`match` binding gets the value inside an optional (semantic table C5, C7).
@@ -402,7 +404,7 @@ const NO_FN: usize = usize::MAX;
 const DYN_BASE: usize = 1 << 40;
 const OUTPUT_FNS: [&str; 3] = ["println", "print", "eprintln"];
 const UNSUPPORTED_TYPES: &[&str] = &[
-    "Set", "Rc", "Arc", "Arena", "Id", "Mutex", "Atomic", "Channel", "Guard", "SendError", "Join",
+    "Rc", "Arc", "Arena", "Id", "Mutex", "Atomic", "Channel", "Guard", "SendError", "Join",
     "Heap", "Deque",
 ];
 /// Standard library modules and the public types each one brings in (stdlib contract §1).
@@ -1231,7 +1233,7 @@ fn is_untyped_literal(e: &Expr) -> bool {
 }
 
 fn is_type_name(name: &str) -> bool {
-    IntTy::from_name(name).is_some() || FloatTy::from_name(name).is_some() || matches!(name, "bool" | "str" | "String" | "Vec" | "Box")
+    IntTy::from_name(name).is_some() || FloatTy::from_name(name).is_some() || matches!(name, "bool" | "str" | "String" | "Vec" | "Box" | "Set")
 }
 
 fn plural(n: usize, noun: &str) -> String {
@@ -1553,6 +1555,19 @@ impl Checker<'_> {
     fn struct_lit(&mut self, name: &str, name_span: Span, targs: &[TypeExpr], inits: &[FieldInit], span: Span, cx: &mut FnCx) -> HExpr {
         if name == "String" && inits.is_empty() {
             return HExpr { kind: HExprKind::EmptyString, ty: Ty::String, span, at: span };
+        }
+        // `Set[T]{}`: an empty set.
+        if name == "Set" {
+            let te = TypeExpr { name: name.to_string(), span: name_span, args: targs.to_vec() };
+            let ty = self.resolve_ty(&te);
+            if let Some(init) = inits.first() {
+                self.diags.error("E0001", init.value.span, "`Set[T]{}` takes no fields; add elements with `add`");
+                return err_expr(span);
+            }
+            if ty == Ty::Error {
+                return err_expr(span);
+            }
+            return HExpr { kind: HExprKind::MapLit(Vec::new()), ty, span, at: span };
         }
         // `Wrapper[String]{...}`, or a generic struct's own name inside its methods.
         let generic = if !targs.is_empty() || self.subst.contains_key(name) || self.gen_structs.contains_key(name) {
@@ -2274,6 +2289,7 @@ impl Checker<'_> {
                 sub(self, 0, k, bound)?;
                 sub(self, 1, v, bound)
             }
+            ("Set", Ty::Set(m)) => sub(self, 0, map_parts(m).0, bound),
             ("!", Ty::Res(r)) => {
                 let (o, e) = res_parts(r);
                 sub(self, 0, o, bound)?;
@@ -2465,6 +2481,23 @@ impl Checker<'_> {
                 return Ty::Error;
             }
             return Ty::Map(map_of(k_ty, v_ty));
+        }
+        if t.name == "Set" {
+            let [k] = t.args.as_slice() else {
+                self.diags.error("E0001", t.span, "`Set` takes one type argument, e.g. `Set[String]`");
+                return Ty::Error;
+            };
+            let k_ty = self.resolve_ty(k);
+            if k_ty == Ty::Error {
+                return Ty::Error;
+            }
+            if !k_ty.is_hashable() {
+                self.diags
+                    .error("E0501", k.span, format!("`{k_ty}` cannot be a Set element"))
+                    .note("elements can be integers, bool, str or String");
+                return Ty::Error;
+            }
+            return Ty::Set(map_of(k_ty, Ty::Bool));
         }
         if t.name == "Vec" {
             let [elem] = t.args.as_slice() else {
@@ -4004,7 +4037,7 @@ impl Checker<'_> {
         cx: &mut FnCx,
     ) -> Option<HStmtKind> {
         let stmt_idx = cx.cur;
-        let iterable = |t: Ty| matches!(t, Ty::Vec(_) | Ty::Map(_) | Ty::Slice(_));
+        let iterable = |t: Ty| matches!(t, Ty::Vec(_) | Ty::Map(_) | Ty::Set(_) | Ty::Slice(_));
         let not_iterable = |this: &mut Self, t: Ty, sp: Span| {
             this.diags
                 .error("E0001", sp, format!("cannot iterate over a value of type `{t}`"))
@@ -4146,6 +4179,28 @@ impl Checker<'_> {
                 let vty = access(v);
                 let val = bind(self, cx, (n2, *s2), vty);
                 Shape::Map { key, key_ref: !k.is_copy(), val, val_ref: matches!(vty, Ty::Ref(_) | Ty::RefMut(_)) }
+            }
+            // `for x in s`: the elements, read-only (A5); the map's `bool` value is a hidden local.
+            Ty::Set(mid) => {
+                if let Some((_, s2)) = second {
+                    self.diags.error("E0001", *s2, "a `Set` is iterated with one variable: `for x in s`");
+                    self.pop_scope(cx);
+                    return None;
+                }
+                if mutable {
+                    self.diags
+                        .error("E0103", first.1, "the elements of a `Set` cannot be modified")
+                        .note("remove the element and add the new one");
+                    self.pop_scope(cx);
+                    return None;
+                }
+                let k = map_parts(mid).0;
+                let kty = if k.is_copy() { k } else { Ty::Ref(ref_of(k)) };
+                let key = bind(self, cx, first, kty);
+                cx.locals[key].map_key = true;
+                let val = self.declare(cx, "_", first.1, Ty::Bool, LocalKind::LoopVar);
+                cx.locals[val].used = true;
+                Shape::Map { key, key_ref: !k.is_copy(), val, val_ref: false }
             }
             _ => unreachable!("checked: a Vec or a Map"),
         };
@@ -4371,11 +4426,30 @@ impl Checker<'_> {
                     match seg {
                         StrSeg::Text(t) => parts.push(PrintPart::Text(t.clone())),
                         StrSeg::Expr { expr, spec } => {
-                            if spec.is_some() {
-                                self.diags.error("U0001", expr.span, "format specifiers such as `${x:.2}` are not supported in P0");
-                            }
                             let h = self.expr(expr, None, cx);
                             let h = self.deref(h);
+                            if let Some(spec) = spec {
+                                // `.N`: fixed decimals for a float (the only specifier v1 defines).
+                                let digits = spec.strip_prefix('.').filter(|d| !d.is_empty() && d.len() <= 2 && d.bytes().all(|b| b.is_ascii_digit()));
+                                match digits.map(|d| d.parse::<u8>().unwrap_or(99)) {
+                                    Some(n) if n <= 17 => match h.ty {
+                                        Ty::Float(_) => parts.push(PrintPart::Fixed(h, n)),
+                                        Ty::Error => {}
+                                        other => {
+                                            self.diags
+                                                .error("E0001", expr.span, format!("`:.{n}` formats a float, but this value has type `{other}`"))
+                                                .note("convert it first, e.g. `${f64(n):.2}`");
+                                        }
+                                    },
+                                    Some(_) => {
+                                        self.diags.error("E0001", expr.span, "at most 17 decimal places can be printed (`:.0` to `:.17`)");
+                                    }
+                                    None => {
+                                        self.diags.error("U0001", expr.span, format!("the format specifier `:{spec}` is not supported; only `:.N` (fixed decimals) is"));
+                                    }
+                                }
+                                continue;
+                            }
                             self.printable(&h);
                             parts.push(PrintPart::Value(h));
                         }
@@ -4408,7 +4482,7 @@ impl Checker<'_> {
                 .error("E0001", h.span, format!("a value that can fail (`{}`) cannot be printed directly", h.ty))
                 .note("handle the error first with `try`, `catch` or `match`");
         }
-        if let Ty::Struct(_) | Ty::Vec(_) | Ty::Map(_) | Ty::Slice(_) = h.ty {
+        if let Ty::Struct(_) | Ty::Vec(_) | Ty::Map(_) | Ty::Set(_) | Ty::Slice(_) = h.ty {
             self.diags
                 .error("E0001", h.span, format!("a value of type `{}` cannot be printed directly", h.ty))
                 .note("print its parts instead, e.g. `println(\"${p.x} ${p.y}\")`");
@@ -5577,6 +5651,11 @@ impl Checker<'_> {
                 return self.map_write_call(base, mid, name, args, span, at, cx);
             }
         }
+        if matches!(name, "add" | "remove") {
+            if let Some(Ty::Set(mid)) = self.peek_place_ty(base, cx) {
+                return self.set_write_call(base, mid, name, args, span, at, cx);
+            }
+        }
         let recv = self.expr(base, None, cx);
         let recv = self.deref(recv);
         let recv = self.unbox(recv);
@@ -5601,6 +5680,16 @@ impl Checker<'_> {
             match name {
                 "get" | "getCopy" | "has" => return self.map_read(recv, mid, name, args, span, at, cx),
                 "set" | "remove" | "getMut" | "update" => {
+                    self.diags.error("U0001", at, format!("`{name}` is only supported on a variable for now"));
+                    return err_expr(span);
+                }
+                _ => {}
+            }
+        }
+        if let Ty::Set(mid) = recv.ty {
+            match name {
+                "has" => return self.map_read(recv, mid, name, args, span, at, cx),
+                "add" | "remove" => {
                     self.diags.error("U0001", at, format!("`{name}` is only supported on a variable for now"));
                     return err_expr(span);
                 }
@@ -5632,6 +5721,8 @@ impl Checker<'_> {
             (Ty::Opt(_), "isNone") => (Builtin::IsNone, Ty::Bool),
             (Ty::Map(_), "len") => (Builtin::MapLen, Ty::Int(IntTy::I64)),
             (Ty::Map(_), "clone") => (Builtin::MapClone, recv.ty),
+            (Ty::Set(_), "len") => (Builtin::MapLen, Ty::Int(IntTy::I64)),
+            (Ty::Set(_), "clone") => (Builtin::MapClone, recv.ty),
             (Ty::Error, _) => return err_expr(span),
             (Ty::Dyn(i), m) => {
                 let iname = self.ifaces[i as usize].name.clone();
@@ -5848,6 +5939,49 @@ impl Checker<'_> {
         HExpr { kind: HExprKind::MapWrite { op, place, args: hargs }, ty, span, at }
     }
 
+    /// `s.add(x)` (consumes `x`; adding an element that is already there changes nothing) and
+    /// `s.remove(x)` (`bool`: whether it was there) on a writable set (stdlib contract §3).
+    #[allow(clippy::too_many_arguments)]
+    fn set_write_call(&mut self, base: &Expr, mid: u32, name: &str, args: &[Expr], span: Span, at: Span, cx: &mut FnCx) -> HExpr {
+        let Some(place) = self.mutable_place(base, name, cx) else { return err_expr(span) };
+        let id = place.local;
+        let local = cx.locals[id].name.clone();
+        if let Some(a) = args.iter().find(|a| mentions(a, &local)) {
+            self.diags
+                .error("E0403", a.span, format!("`{local}` is already borrowed by `{local}.{name}(...)`, so the argument cannot use it"))
+                .note(format!("compute the value first: `let x = ...` then `{local}.{name}(x)`"));
+            return err_expr(span);
+        }
+        let [arg] = args else {
+            self.diags.error("E0012", span, format!("`{name}` takes exactly one argument (the element)"));
+            return err_expr(span);
+        };
+        let k = map_parts(mid).0;
+        if name == "remove" {
+            let key = self.map_query(arg, k, cx);
+            let removed =
+                HExpr { kind: HExprKind::MapWrite { op: MapWrite::Remove, place, args: vec![key] }, ty: Ty::Opt(opt_of(Ty::Bool)), span, at };
+            return HExpr { kind: HExprKind::Method { method: Builtin::IsSome, recv: Box::new(removed) }, ty: Ty::Bool, span, at };
+        }
+        let kh = self.expr(arg, Some(k), cx);
+        let kh = self.fit(kh, k, cx);
+        let kh = self.consume(kh, cx);
+        if kh.ty.carries_borrow() {
+            let loans = self.loans_of(&kh, cx);
+            if !loans.is_empty() {
+                if matches!(cx.locals[id].ty, Ty::RefMut(_)) {
+                    self.diags.error("U0001", span, "storing a borrowed value through an `&inout` reference is not supported yet");
+                } else if cx.locals[id].kind == LocalKind::InoutParam {
+                    self.diags.error("E0306", span, format!("cannot store a borrow into the caller's `{local}`"));
+                } else {
+                    self.store_loans(cx, id, loans, span, false);
+                }
+            }
+        }
+        let yes = HExpr { kind: HExprKind::Bool(true), ty: Ty::Bool, span, at };
+        HExpr { kind: HExprKind::MapWrite { op: MapWrite::Set, place, args: vec![kh, yes] }, ty: Ty::Unit, span, at }
+    }
+
     /// The type of a variable or a field chain rooted at one, without reporting anything (an
     /// `&inout T` variable stands for its target).
     fn peek_place_ty(&self, base: &Expr, cx: &FnCx) -> Option<Ty> {
@@ -6038,6 +6172,10 @@ impl Checker<'_> {
         if expected == Some(Ty::Error) && items.is_empty() {
             return err_expr(span);
         }
+        // `var s: Set[String] = []`: an empty set.
+        if let (Some(t @ Ty::Set(_)), true) = (expected, items.is_empty()) {
+            return HExpr { kind: HExprKind::MapLit(Vec::new()), ty: t, span, at: span };
+        }
         let mut elem = match expected {
             Some(Ty::Vec(id)) => Some(vec_elem(id)),
             _ => None,
@@ -6078,6 +6216,9 @@ impl Checker<'_> {
     fn map_lit(&mut self, entries: &[(Expr, Expr)], expected: Option<Ty>, span: Span, cx: &mut FnCx) -> HExpr {
         if expected == Some(Ty::Error) && entries.is_empty() {
             return err_expr(span);
+        }
+        if let (Some(t @ Ty::Set(_)), true) = (expected, entries.is_empty()) {
+            return HExpr { kind: HExprKind::MapLit(Vec::new()), ty: t, span, at: span };
         }
         let mut parts = match expected {
             Some(Ty::Map(id)) => Some(map_parts(id)),

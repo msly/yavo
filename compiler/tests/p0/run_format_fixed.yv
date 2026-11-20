@@ -1,0 +1,25 @@
+// expect-stdout:
+// | 13.15 2.5 3.000 13 -0.00
+// | [26.3]
+// | inf -inf
+// | [a, b, c] x:y }
+// | a-b-c!
+// | 7 a"b
+fn main() {
+    // `${x:.N}`: fixed decimals for floats (rounded as by C printf).
+    let x = 13.15
+    let y: f32 = 2.5
+    let n = 3
+    println("${x:.2} ${y:.1} ${f64(n):.3} ${x:.0} ${-0.004:.2}")
+    let s = format("[${x * 2.0:.1}]")
+    println(s)
+    let inf = 1.0 / 0.0
+    println("${inf:.2} ${0.0 - inf:.1}")
+    // String literals inside `${...}`.
+    let parts = ["a", "b", "c"]
+    println("[${parts.join(", ")}] ${"x:y"} ${"}"}")
+    let t = format("${parts.join("-")}!")
+    println(t)
+    let m: Map[String, int] = [:]
+    println("${m.getCopy("k") ?? 7} ${"a\"b"}")
+}
