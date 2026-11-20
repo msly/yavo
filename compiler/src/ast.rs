@@ -135,6 +135,9 @@ pub enum StmtKind {
     Continue,
     Return(Option<Expr>),
     Block(Block),
+    /// `with g = m.lock() { }`: `g` (a lock guard) is bound for the block and released at its
+    /// end; borrows taken through it cannot leave the block (P4).
+    With { name: String, name_span: Span, init: Expr, body: Block },
 }
 
 pub enum Else {

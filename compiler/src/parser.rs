@@ -812,7 +812,15 @@ impl Parser<'_, '_> {
         if self.is_kw("match") {
             return self.match_stmt();
         }
-        for kw in ["scope", "defer", "unsafe", "with"] {
+        if self.is_kw("with") {
+            self.bump();
+            let (name, name_span) = self.ident("a name for the lock guard after `with`")?;
+            self.expect(Tok::Assign, "`=` after the guard name, e.g. `with g = m.lock() { ... }`")?;
+            let init = self.expr()?;
+            let body = self.block()?;
+            return Ok(Stmt { span: start, kind: StmtKind::With { name, name_span, init, body } });
+        }
+        for kw in ["scope", "defer", "unsafe"] {
             if self.is_kw(kw) {
                 self.unsupported(start, format!("`{kw}` is not supported in P0"))?;
             }

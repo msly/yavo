@@ -8,9 +8,9 @@ use crate::ast::BinOp;
 use crate::check::*;
 use crate::diag::Span;
 use crate::types::{
-    all_boxes, all_maps, all_opts, all_ress, all_tuples, all_vecs, box_inner, has_user_drop, iface_name, opt_inner, tuple_elems, opt_of,
+    all_boxes, all_maps, all_opts, all_ress, all_tuples, all_vecs, has_user_drop, iface_name, opt_inner, tuple_elems, opt_of,
     ref_inner,
-    ref_mut_inner, map_parts, res_parts, vec_elem, FloatTy, IntTy, Ty,
+    ref_mut_inner, map_parts, res_parts, vec_elem, FloatTy, IntTy, Ty, all_syncs, ptr_inner, sync_parts, SyncKind,
 };
 
 pub const RUNTIME_HEADER: &str = include_str!("../runtime/yavo_rt.h");
@@ -148,6 +148,16 @@ pub fn generate(prog: &HProgram, file: &str) -> String {
         let _ = writeln!(g.out, "static inline void yv_drop_{key}({c} *p);");
         let _ = writeln!(g.out, "static inline {c} yv_clone_{key}({c} const *p, uint32_t line, uint32_t col);");
     }
+    // Shared handles, locks, guards and channels are pointers too (the scope value's drop is in
+    // the runtime; a join handle owns nothing).
+    let syncs: Vec<(u32, SyncKind, Ty)> =
+        all_syncs().into_iter().filter(|(_, k, _)| !matches!(k, SyncKind::Join | SyncKind::Scope)).collect();
+    for (id, _, _) in &syncs {
+        let t = Ty::Sync(*id);
+        let (key, c) = (t.key(), t.c_name());
+        let _ = writeln!(g.out, "static inline void yv_drop_{key}({c} *p);");
+        let _ = writeln!(g.out, "static inline {c} yv_clone_{key}({c} const *p, uint32_t line, uint32_t col);");
+    }
     let enums: Vec<&HStruct> = prog.structs.iter().filter(|s| matches!(s.ty, Ty::Enum(_))).collect();
     for e in &enums {
         let _ = writeln!(g.out, "static void yv_print_{}(const yv_out *o, const {} *p);", e.ty.key(), e.ty.c_name());
@@ -210,6 +220,33 @@ pub fn generate(prog: &HProgram, file: &str) -> String {
              if (!*p) return NULL;\n    {c} o = ({c})yv_box_alloc(sizeof(**p), line, col);\n    *o = {};\n    (void)line; (void)col;\n    return o;\n}}\n",
             clone_value(inner, "(**p)")
         );
+    }
+    for (id, kind, inner) in &syncs {
+        let t = Ty::Sync(*id);
+        let (key, c) = (t.key(), t.c_name());
+        let drop_inner = if inner.needs_drop() { format!("{}(*p); ", drop_fn(*inner)) } else { String::new() };
+        let (drop_body, clone_body) = match kind {
+            SyncKind::Rc => (
+                format!("if (*p) {{ if (yv_rc_release(*p)) {{ {drop_inner}yv_hdr_free(*p, false); }} *p = NULL; }}"),
+                format!("(void)line; (void)col; return ({c})yv_rc_retain((void *)*p);"),
+            ),
+            SyncKind::Arc => (
+                format!("if (*p) {{ if (yv_arc_release(*p)) {{ {drop_inner}yv_hdr_free(*p, false); }} *p = NULL; }}"),
+                format!("(void)line; (void)col; return ({c})yv_arc_retain((void *)*p);"),
+            ),
+            SyncKind::Mutex => (
+                format!("if (*p) {{ {drop_inner}yv_hdr_free(*p, true); *p = NULL; }}"),
+                "(void)p; yv_panic(\"P-SYSTEM\", \"a Mutex cannot be cloned\", line, col);".to_string(),
+            ),
+            SyncKind::Guard => (
+                "if (*p) { yv_mutex_unlock(*p); *p = NULL; }".to_string(),
+                "(void)p; yv_panic(\"P-SYSTEM\", \"a lock guard cannot be cloned\", line, col);".to_string(),
+            ),
+            SyncKind::Channel => ("yv_chan_drop(p);".to_string(), "(void)line; (void)col; return yv_chan_clone(*p);".to_string()),
+            SyncKind::Join | SyncKind::Scope => unreachable!("filtered out"),
+        };
+        let _ = writeln!(g.out, "static inline void yv_drop_{key}({c} *p) {{\n    {drop_body}\n}}");
+        let _ = writeln!(g.out, "static inline {c} yv_clone_{key}({c} const *p, uint32_t line, uint32_t col) {{\n    {clone_body}\n}}\n");
     }
     for i in &prog.ifaces {
         let Ty::Dyn(id) = i.ty else { unreachable!() };
@@ -780,9 +817,9 @@ impl Gen {
                 continue;
             }
             if fi == BOX_STEP {
-                let Ty::Box(b) = ty else { unreachable!("a box step on a box") };
+                let inner = ptr_inner(ty).expect("a box step on a box, Rc, Arc or guard");
                 place = format!("(*{place})");
-                ty = box_inner(b);
+                ty = inner;
                 continue;
             }
             let Ty::Struct(id) = ty else { unreachable!() };
@@ -1219,12 +1256,14 @@ impl Gen {
                 let writes = self.part_writes(&format!("&{o}"), parts, f);
                 self.line(&format!("yv_output_at({});", pos(s.span)));
                 self.line(&format!("const yv_out {o} = {{{fd}, NULL, 0, 0}};"));
+                self.line("yv_out_lock();");
                 for write in writes {
                     self.line(&write);
                 }
                 if *newline {
                     self.line(&format!("yv_write({fd}, \"\\n\", 1);"));
                 }
+                self.line("yv_out_unlock();");
             }
             HStmtKind::Block(b) => {
                 self.line("{");
@@ -1984,6 +2023,51 @@ impl Gen {
                 let b = self.borrowed(inner, f);
                 format!("(*{b})")
             }
+            HExprKind::SyncNew { kind, value } => {
+                let v = self.owned(value, f);
+                let c = e.ty.c_name();
+                let t = self.fresh();
+                let lock = *kind == SyncKind::Mutex;
+                self.line(&format!("{c} {t} = ({c})yv_hdr_alloc(sizeof(*{t}), {lock}, {});", pos(e.at)));
+                self.line(&format!("*{t} = {v};"));
+                t
+            }
+            HExprKind::Lock { mutex, try_ } => {
+                let m = self.borrowed(mutex, f);
+                if *try_ {
+                    let Ty::Opt(o) = e.ty else { unreachable!("tryLock gives an optional guard") };
+                    let gc = opt_inner(o).c_name();
+                    let (r, g) = (self.fresh(), self.fresh());
+                    self.line(&format!("{} {r} = {{0}};", e.ty.c_name()));
+                    self.line(&format!("void *{g} = yv_mutex_try_lock((void *){m});"));
+                    self.line(&format!("if ({g}) {{ {r}.has = true; {r}.val = ({gc}){g}; }}"));
+                    r
+                } else {
+                    let c = e.ty.c_name();
+                    let g = self.fresh();
+                    self.line(&format!("{c} {g} = ({c})yv_mutex_lock((void *){m}, {});", pos(e.at)));
+                    g
+                }
+            }
+            HExprKind::SyncClone(handle) => {
+                let h = self.borrowed(handle, f);
+                let c = e.ty.c_name();
+                let retain = match e.ty {
+                    Ty::Sync(id) => match sync_parts(id).0 {
+                        SyncKind::Rc => "yv_rc_retain",
+                        SyncKind::Arc => "yv_arc_retain",
+                        _ => "yv_chan_clone",
+                    },
+                    _ => unreachable!("checked: a shared handle"),
+                };
+                let t = self.fresh();
+                if retain == "yv_chan_clone" {
+                    self.line(&format!("{c} {t} = yv_chan_clone({h});"));
+                } else {
+                    self.line(&format!("{c} {t} = ({c}){retain}((void *){h});"));
+                }
+                t
+            }
             HExprKind::SliceRange { base, start, end } => {
                 let at = pos(e.at);
                 if e.ty == Ty::Str {
@@ -2327,6 +2411,9 @@ impl Gen {
                 | HExprKind::Format(_)
                 | HExprKind::EmptyString
                 | HExprKind::BoxNew(_)
+                | HExprKind::SyncNew { .. }
+                | HExprKind::Lock { .. }
+                | HExprKind::SyncClone(_)
                 | HExprKind::ToDyn { .. }
                 | HExprKind::DynCall { .. }
                 | HExprKind::Io { .. }
@@ -2362,7 +2449,7 @@ impl Gen {
         match ty {
             Ty::Ref(_) => self.line(&format!("{} {t} = {value};", ty.c_name())),
             // A box is a pointer: the pointer is constant, its content is not.
-            Ty::Box(_) => self.line(&format!("{} const {t} = {value};", ty.c_name())),
+            Ty::Box(_) | Ty::Sync(_) => self.line(&format!("{} const {t} = {value};", ty.c_name())),
             _ => self.line(&format!("const {} {t} = {value};", ty.c_name())),
         }
         t

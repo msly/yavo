@@ -29,7 +29,94 @@ thread_local! {
     static BOXES: RefCell<Vec<(Ty, &'static str)>> = const { RefCell::new(Vec::new()) };
     /// Name and C struct name of each interface, indexed by interface id.
     static IFACES: RefCell<Vec<(&'static str, &'static str)>> = const { RefCell::new(Vec::new()) };
+    /// Kind, content type and C type of each concurrency/sharing type (`Ty::Sync`), by id.
+    static SYNCS: RefCell<Vec<(SyncKind, Ty, &'static str)>> = const { RefCell::new(Vec::new()) };
 }
+
+/// The built-in sharing and concurrency types (semantic table P6, stdlib contract §6). None is
+/// copyable. `Rc`, `Arc`, `Mutex` and `Guard` are, in C, a `T *` to the value inside a block
+/// that starts with a `yv_hdr` (lock, owner, count), so fields and methods project through them
+/// the way they do through `Box`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum SyncKind {
+    Rc,
+    Arc,
+    Mutex,
+    /// A held lock on a `Mutex[T]`; writable access to the `T`.
+    Guard,
+    /// `Channel[T]`: a `yv_chan *`.
+    Channel,
+    /// `Join[T]`: the handle `spawn` returns; a `yv_jrec_K *` owned by its scope.
+    Join,
+    /// The hidden value of a `scope` block (`yv_scope`): dropping it waits for its threads.
+    Scope,
+}
+
+impl SyncKind {
+    pub fn name(self) -> &'static str {
+        match self {
+            SyncKind::Rc => "Rc",
+            SyncKind::Arc => "Arc",
+            SyncKind::Mutex => "Mutex",
+            SyncKind::Guard => "Guard",
+            SyncKind::Channel => "Channel",
+            SyncKind::Join => "Join",
+            SyncKind::Scope => "scope",
+        }
+    }
+}
+
+/// Interns `Kind[inner]` and returns its id.
+pub fn sync_of(kind: SyncKind, inner: Ty) -> u32 {
+    let c_name = match kind {
+        SyncKind::Rc | SyncKind::Arc | SyncKind::Mutex | SyncKind::Guard => match inner {
+            Ty::Struct(_) | Ty::Enum(_) | Ty::Opt(_) | Ty::Res(_) | Ty::Tuple(_) => format!("struct {} *", inner.c_name()),
+            _ => format!("{} *", inner.c_name()),
+        },
+        SyncKind::Channel => "yv_chan *".to_string(),
+        SyncKind::Join => format!("yv_jrec_{} *", inner.key()),
+        SyncKind::Scope => "yv_scope".to_string(),
+    };
+    SYNCS.with(|s| {
+        let mut s = s.borrow_mut();
+        if let Some(i) = s.iter().position(|(k, t, _)| *k == kind && *t == inner) {
+            return i as u32;
+        }
+        let c: &'static str = Box::leak(c_name.into_boxed_str());
+        s.push((kind, inner, c));
+        (s.len() - 1) as u32
+    })
+}
+
+pub fn sync_parts(id: u32) -> (SyncKind, Ty) {
+    SYNCS.with(|s| {
+        let (k, t, _) = s.borrow()[id as usize];
+        (k, t)
+    })
+}
+
+/// Every `Ty::Sync` type created so far (contents first).
+pub fn all_syncs() -> Vec<(u32, SyncKind, Ty)> {
+    SYNCS.with(|s| s.borrow().iter().enumerate().map(|(i, (k, t, _))| (i as u32, *k, *t)).collect())
+}
+
+/// The content a pointer-like value projects to: `Box[T]`, `Rc[T]`, `Arc[T]`, `Guard[T]`.
+pub fn ptr_inner(ty: Ty) -> Option<Ty> {
+    match ty {
+        Ty::Box(b) => Some(box_inner(b)),
+        Ty::Sync(id) => match sync_parts(id) {
+            (SyncKind::Rc | SyncKind::Arc | SyncKind::Guard, t) => Some(t),
+            _ => None,
+        },
+        _ => None,
+    }
+}
+
+/// Whether the content behind this pointer-like type is read-only (`Rc`, `Arc`: P6).
+pub fn ptr_read_only(ty: Ty) -> bool {
+    matches!(ty, Ty::Sync(id) if matches!(sync_parts(id).0, SyncKind::Rc | SyncKind::Arc))
+}
+
 
 /// Registers an interface name and returns its id (`Ty::Dyn(id)` is `Box[Name]`).
 pub fn register_iface(name: &str) -> u32 {
@@ -472,6 +559,9 @@ pub enum Ty {
     /// some type that implements `I`. In C a `{ void *data; const void *vt; }` pair; a NULL
     /// `data` is a moved-out value.
     Dyn(u32),
+    /// `Rc[T]`, `Arc[T]`, `Mutex[T]`, `Guard[T]`, `Channel[T]`, `Join[T]` and the hidden scope
+    /// value, by id (see `sync_of`).
+    Sync(u32),
     /// Produced after an error has been reported; suppresses cascading diagnostics.
     Error,
 }
@@ -481,7 +571,7 @@ impl Ty {
     /// holding them) are moved.
     pub fn is_copy(self) -> bool {
         match self {
-            Ty::String | Ty::Vec(_) | Ty::Map(_) | Ty::Set(_) | Ty::RefMut(_) | Ty::Box(_) | Ty::Dyn(_) => false,
+            Ty::String | Ty::Vec(_) | Ty::Map(_) | Ty::Set(_) | Ty::RefMut(_) | Ty::Box(_) | Ty::Dyn(_) | Ty::Sync(_) => false,
             Ty::Opt(id) => opt_inner(id).is_copy(),
             Ty::Tuple(id) => tuple_elems(id).iter().all(|t| t.is_copy()),
             Ty::Struct(id) | Ty::Enum(id) => agg_flags(id).0,
@@ -498,6 +588,7 @@ impl Ty {
     pub fn needs_drop(self) -> bool {
         match self {
             Ty::String | Ty::Vec(_) | Ty::Map(_) | Ty::Set(_) | Ty::Box(_) | Ty::Dyn(_) => true,
+            Ty::Sync(id) => sync_parts(id).0 != SyncKind::Join,
             Ty::Opt(id) => opt_inner(id).needs_drop(),
             Ty::Tuple(id) => tuple_elems(id).iter().any(|t| t.needs_drop()),
             Ty::Struct(id) | Ty::Enum(id) => agg_flags(id).1,
@@ -542,6 +633,12 @@ impl Ty {
             Ty::Vec(id) => vec_elem(id).carries_borrow(),
             Ty::Set(id) => map_parts(id).0.carries_borrow(),
             Ty::Box(id) => box_inner(id).carries_borrow(),
+            // A guard is `Guard[T] of` its mutex (P4, P6).
+            Ty::Sync(id) => match sync_parts(id) {
+                (SyncKind::Guard, _) => true,
+                (SyncKind::Join | SyncKind::Scope, _) => false,
+                (_, t) => t.carries_borrow(),
+            },
             Ty::Opt(id) => opt_inner(id).carries_borrow(),
             Ty::Tuple(id) => tuple_elems(id).iter().any(|t| t.carries_borrow()),
             Ty::Res(id) => {
@@ -577,6 +674,13 @@ impl Ty {
             Ty::RefMut(id) => format!("RefMut_{}", ref_mut_inner(id).key()),
             Ty::Box(id) => format!("Box_{}", box_inner(id).key()),
             Ty::Dyn(id) => format!("Dyn_{}", iface_name(id)),
+            Ty::Sync(id) => {
+                let (k, t) = sync_parts(id);
+                match k {
+                    SyncKind::Scope => "Scope".to_string(),
+                    _ => format!("{}_{}", k.name(), t.key()),
+                }
+            }
             // A set shares its map's key, so it shares the map's C helpers.
             Ty::Map(id) | Ty::Set(id) => {
                 let (k, v) = map_parts(id);
@@ -614,6 +718,7 @@ impl Ty {
             Ty::Tuple(id) => TUPLES.with(|t| t.borrow()[id as usize].1),
             Ty::Box(id) => BOXES.with(|b| b.borrow()[id as usize].1),
             Ty::Dyn(id) => IFACES.with(|i| i.borrow()[id as usize].1),
+            Ty::Sync(id) => SYNCS.with(|s| s.borrow()[id as usize].2),
             Ty::Error => "void",
         }
     }
@@ -634,6 +739,13 @@ impl fmt::Display for Ty {
             Ty::RefMut(id) => write!(f, "&inout {}", ref_mut_inner(*id)),
             Ty::Box(id) => write!(f, "Box[{}]", box_inner(*id)),
             Ty::Dyn(id) => write!(f, "Box[{}]", iface_name(*id)),
+            Ty::Sync(id) => {
+                let (k, t) = sync_parts(*id);
+                match k {
+                    SyncKind::Scope => f.write_str("scope"),
+                    _ => write!(f, "{}[{t}]", k.name()),
+                }
+            }
             Ty::Map(id) => {
                 let (k, v) = map_parts(*id);
                 write!(f, "Map[{k}, {v}]")

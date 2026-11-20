@@ -172,10 +172,10 @@ static void yv_rt_init(const char *file) { yv_rt_file = file; }
  * Use-after-free is not detected by this check. */
 #ifdef YV_ALLOC_CHECK
 static int64_t yv_live_blocks = 0;
-#define YV_COUNT_ALLOC() (yv_live_blocks++)
+#define YV_COUNT_ALLOC() ((void)__atomic_add_fetch(&yv_live_blocks, 1, __ATOMIC_RELAXED))
 #define YV_COUNT_FREE()                                                                   \
     do {                                                                                  \
-        if (--yv_live_blocks < 0) {                                                       \
+        if (__atomic_sub_fetch(&yv_live_blocks, 1, __ATOMIC_RELAXED) < 0) {                                                    \
             yv_flush();                                                                   \
             yv_write(2, "yavo alloc-check: a heap block was freed twice\n", 47);          \
             yv_exit_process(102);                                                         \
@@ -1221,5 +1221,287 @@ static void yv_rt_args(int argc, char **argv) {
     }
 }
 #endif
+
+
+/* ---- Concurrency (semantic table P1-P8, stdlib contract §6). ----
+ * OS threads only. Locks and condition variables are pthread on Unix and SRWLOCK /
+ * CONDITION_VARIABLE on Windows. `Rc`, `Arc` and `Mutex` values point at their content, which
+ * follows a `yv_hdr` in the same heap block; a `Guard` is the same pointer while the lock is
+ * held. Output is serialized once a second thread has started. */
+#ifdef _WIN32
+typedef SRWLOCK yv_lockt;
+typedef CONDITION_VARIABLE yv_condt;
+typedef HANDLE yv_thread;
+#define YV_LOCK_INIT SRWLOCK_INIT
+static void yv_lock_init(yv_lockt *l) { InitializeSRWLock(l); }
+static void yv_lock_acq(yv_lockt *l) { AcquireSRWLockExclusive(l); }
+static bool yv_lock_try(yv_lockt *l) { return TryAcquireSRWLockExclusive(l) != 0; }
+static void yv_lock_rel(yv_lockt *l) { ReleaseSRWLockExclusive(l); }
+static void yv_lock_destroy(yv_lockt *l) { (void)l; }
+static void yv_cond_init(yv_condt *c) { InitializeConditionVariable(c); }
+static void yv_cond_wait(yv_condt *c, yv_lockt *l) { SleepConditionVariableSRW(c, l, INFINITE, 0); }
+static void yv_cond_wake(yv_condt *c) { WakeAllConditionVariable(c); }
+static void yv_cond_destroy(yv_condt *c) { (void)c; }
+#else
+#include <pthread.h>
+typedef pthread_mutex_t yv_lockt;
+typedef pthread_cond_t yv_condt;
+typedef pthread_t yv_thread;
+#define YV_LOCK_INIT PTHREAD_MUTEX_INITIALIZER
+static void yv_lock_init(yv_lockt *l) {
+    if (pthread_mutex_init(l, NULL) != 0) yv_panic("P-SYSTEM", "cannot create a lock", 0, 0);
+}
+static void yv_lock_acq(yv_lockt *l) {
+    if (pthread_mutex_lock(l) != 0) yv_panic("P-SYSTEM", "cannot acquire a lock", 0, 0);
+}
+static bool yv_lock_try(yv_lockt *l) { return pthread_mutex_trylock(l) == 0; }
+static void yv_lock_rel(yv_lockt *l) { (void)pthread_mutex_unlock(l); }
+static void yv_lock_destroy(yv_lockt *l) { (void)pthread_mutex_destroy(l); }
+static void yv_cond_init(yv_condt *c) {
+    if (pthread_cond_init(c, NULL) != 0) yv_panic("P-SYSTEM", "cannot create a condition variable", 0, 0);
+}
+static void yv_cond_wait(yv_condt *c, yv_lockt *l) { (void)pthread_cond_wait(c, l); }
+static void yv_cond_wake(yv_condt *c) { (void)pthread_cond_broadcast(c); }
+static void yv_cond_destroy(yv_condt *c) { (void)pthread_cond_destroy(c); }
+#endif
+
+/* Small per-thread ids; 0 means "nobody". */
+static uint64_t yv_next_tid = 1;
+static _Thread_local uint64_t yv_tid = 0;
+static uint64_t yv_thread_id(void) {
+    if (yv_tid == 0) yv_tid = __atomic_fetch_add(&yv_next_tid, 1, __ATOMIC_RELAXED);
+    return yv_tid;
+}
+
+/* Output lock: print statements take it once a second thread may be running. */
+static bool yv_threaded = false;
+static yv_lockt yv_out_lk = YV_LOCK_INIT;
+static void yv_out_lock(void) {
+    if (__atomic_load_n(&yv_threaded, __ATOMIC_ACQUIRE)) yv_lock_acq(&yv_out_lk);
+}
+static void yv_out_unlock(void) {
+    if (__atomic_load_n(&yv_threaded, __ATOMIC_ACQUIRE)) yv_lock_rel(&yv_out_lk);
+}
+
+/* ---- Header blocks for Rc, Arc and Mutex. ---- */
+typedef struct {
+    yv_lockt lk;
+    uint64_t owner;  /* Mutex: the thread holding the lock, 0 if free */
+    int64_t count;   /* Rc/Arc: number of handles */
+} yv_hdr;
+#define YV_HDR_SIZE ((sizeof(yv_hdr) + 15) & ~(size_t)15)
+
+static void *yv_hdr_alloc(size_t size, bool with_lock, uint32_t line, uint32_t col) {
+    char *base = (char *)yv_box_alloc(YV_HDR_SIZE + size, line, col);
+    yv_hdr *h = (yv_hdr *)base;
+    if (with_lock) yv_lock_init(&h->lk);
+    h->owner = 0;
+    h->count = 1;
+    return base + YV_HDR_SIZE;
+}
+static yv_hdr *yv_hdr_of(const void *p) { return (yv_hdr *)((char *)p - YV_HDR_SIZE); }
+static void yv_hdr_free(void *p, bool with_lock) {
+    yv_hdr *h = yv_hdr_of(p);
+    if (with_lock) yv_lock_destroy(&h->lk);
+    yv_box_free(h);
+}
+
+/* Rc: plain counts (never shared between threads). Arc: atomic counts. Release returns
+ * true when the last handle is gone and the content must be dropped. */
+static void *yv_rc_retain(void *p) {
+    yv_hdr_of(p)->count++;
+    return p;
+}
+static bool yv_rc_release(void *p) { return --yv_hdr_of(p)->count == 0; }
+static void *yv_arc_retain(void *p) {
+    __atomic_add_fetch(&yv_hdr_of(p)->count, 1, __ATOMIC_RELAXED);
+    return p;
+}
+static bool yv_arc_release(void *p) { return __atomic_sub_fetch(&yv_hdr_of(p)->count, 1, __ATOMIC_ACQ_REL) == 0; }
+
+/* Mutex: `lock` blocks; locking again on the holding thread panics (P8). `tryLock` fails on
+ * any contention, the holding thread included. */
+static void *yv_mutex_lock(void *m, uint32_t line, uint32_t col) {
+    yv_hdr *h = yv_hdr_of(m);
+    uint64_t me = yv_thread_id();
+    if (__atomic_load_n(&h->owner, __ATOMIC_RELAXED) == me) {
+        yv_panic("P-LOCK-REENTRANT", "this thread already holds the lock", line, col);
+    }
+    yv_lock_acq(&h->lk);
+    __atomic_store_n(&h->owner, me, __ATOMIC_RELAXED);
+    return m;
+}
+static void *yv_mutex_try_lock(void *m) {
+    yv_hdr *h = yv_hdr_of(m);
+    if (__atomic_load_n(&h->owner, __ATOMIC_RELAXED) == yv_thread_id()) return NULL;
+    if (!yv_lock_try(&h->lk)) return NULL;
+    __atomic_store_n(&h->owner, yv_thread_id(), __ATOMIC_RELAXED);
+    return m;
+}
+static void yv_mutex_unlock(void *m) {
+    yv_hdr *h = yv_hdr_of(m);
+    __atomic_store_n(&h->owner, 0, __ATOMIC_RELAXED);
+    yv_lock_rel(&h->lk);
+}
+
+/* ---- Channel[T]: a bounded queue of `esz`-byte values. ---- */
+typedef struct yv_chan {
+    yv_lockt lk;
+    yv_condt nonempty, nonfull;
+    int64_t refs;
+    bool closed;
+    int64_t cap, head, len;
+    size_t esz;
+    char *buf;
+    void (*drop)(void *);
+} yv_chan;
+
+static yv_chan *yv_chan_new(int64_t cap, size_t esz, void (*drop)(void *), uint32_t line, uint32_t col) {
+    if (cap <= 0) yv_panic("P-CHANNEL-CAP", "channel capacity must be positive", line, col);
+    size_t bytes;
+    if (__builtin_mul_overflow((size_t)cap, esz ? esz : 1, &bytes) || bytes > (size_t)PTRDIFF_MAX) yv_capacity_overflow(line, col);
+    yv_chan *c = (yv_chan *)yv_box_alloc(sizeof(yv_chan), line, col);
+    c->buf = (char *)yv_box_alloc(bytes, line, col);
+    yv_lock_init(&c->lk);
+    yv_cond_init(&c->nonempty);
+    yv_cond_init(&c->nonfull);
+    c->refs = 1;
+    c->closed = false;
+    c->cap = cap;
+    c->head = c->len = 0;
+    c->esz = esz;
+    c->drop = drop;
+    return c;
+}
+/* Moves `*v` into the queue (true), or leaves it with the caller when closed (false). */
+static bool yv_chan_send(yv_chan *c, const void *v) {
+    yv_lock_acq(&c->lk);
+    while (c->len == c->cap && !c->closed) yv_cond_wait(&c->nonfull, &c->lk);
+    if (c->closed) {
+        yv_lock_rel(&c->lk);
+        return false;
+    }
+    memcpy(c->buf + (size_t)((c->head + c->len) % c->cap) * c->esz, v, c->esz);
+    c->len++;
+    yv_cond_wake(&c->nonempty);
+    yv_lock_rel(&c->lk);
+    return true;
+}
+/* Moves the oldest value into `*out` (true); false once closed and empty. */
+static bool yv_chan_recv(yv_chan *c, void *out) {
+    yv_lock_acq(&c->lk);
+    while (c->len == 0 && !c->closed) yv_cond_wait(&c->nonempty, &c->lk);
+    if (c->len == 0) {
+        yv_lock_rel(&c->lk);
+        return false;
+    }
+    memcpy(out, c->buf + (size_t)c->head * c->esz, c->esz);
+    c->head = (c->head + 1) % c->cap;
+    c->len--;
+    yv_cond_wake(&c->nonfull);
+    yv_lock_rel(&c->lk);
+    return true;
+}
+static void yv_chan_close(yv_chan *c) {
+    yv_lock_acq(&c->lk);
+    c->closed = true;
+    yv_cond_wake(&c->nonempty);
+    yv_cond_wake(&c->nonfull);
+    yv_lock_rel(&c->lk);
+}
+static yv_chan *yv_chan_clone(yv_chan *c) {
+    __atomic_add_fetch(&c->refs, 1, __ATOMIC_RELAXED);
+    return c;
+}
+static void yv_chan_drop(yv_chan **p) {
+    yv_chan *c = *p;
+    *p = NULL;
+    if (c == NULL || __atomic_sub_fetch(&c->refs, 1, __ATOMIC_ACQ_REL) != 0) return;
+    if (c->drop) {
+        for (int64_t i = 0; i < c->len; i++) c->drop(c->buf + (size_t)((c->head + i) % c->cap) * c->esz);
+    }
+    yv_box_free(c->buf);
+    yv_lock_destroy(&c->lk);
+    yv_cond_destroy(&c->nonempty);
+    yv_cond_destroy(&c->nonfull);
+    yv_box_free(c);
+}
+
+/* ---- Threads: `scope` and `spawn`. ----
+ * Every spawned thread has a join record owned by its scope; dropping the scope (normal end,
+ * `return`, `break`, `try`) waits for the threads that were not joined, drops results nobody
+ * took and frees the records (P3). */
+typedef struct yv_join_base {
+    yv_thread th;
+    bool joined, taken;
+    void (*drop_ret)(void *);
+    void *ret;
+    void (*run)(void *);
+    void *args;
+} yv_join_base;
+
+typedef struct {
+    yv_join_base **items;
+    int64_t len, cap;
+} yv_scope;
+
+#ifdef _WIN32
+static DWORD WINAPI yv_thread_main(LPVOID p) {
+    yv_join_base *j = (yv_join_base *)p;
+    j->run(j->args);
+    return 0;
+}
+#else
+static void *yv_thread_main(void *p) {
+    yv_join_base *j = (yv_join_base *)p;
+    j->run(j->args);
+    return NULL;
+}
+#endif
+
+/* Starts `run(args)` on a new thread for the record `j` and adds it to scope `s`. */
+static void yv_spawn(yv_scope *s, yv_join_base *j, void (*run)(void *), void *args, uint32_t line, uint32_t col) {
+    if (s->len == s->cap) {
+        int64_t ncap = s->cap ? s->cap * 2 : 4;
+        yv_join_base **items = (yv_join_base **)realloc(s->items, (size_t)ncap * sizeof *items);
+        if (items == NULL) yv_panic("P-OOM", "out of memory", line, col);
+        if (s->items == NULL) YV_COUNT_ALLOC();
+        s->items = items;
+        s->cap = ncap;
+    }
+    s->items[s->len++] = j;
+    j->run = run;
+    j->args = args;
+    __atomic_store_n(&yv_threaded, true, __ATOMIC_RELEASE);
+#ifdef _WIN32
+    j->th = CreateThread(NULL, 0, yv_thread_main, j, 0, NULL);
+    if (j->th == NULL) yv_panic("P-THREAD-SPAWN", "cannot start a thread", line, col);
+#else
+    if (pthread_create(&j->th, NULL, yv_thread_main, j) != 0) yv_panic("P-THREAD-SPAWN", "cannot start a thread", line, col);
+#endif
+}
+
+static void yv_join_wait(yv_join_base *j) {
+    if (j->joined) return;
+#ifdef _WIN32
+    WaitForSingleObject(j->th, INFINITE);
+    CloseHandle(j->th);
+#else
+    (void)pthread_join(j->th, NULL);
+#endif
+    j->joined = true;
+}
+
+static void yv_drop_Scope(yv_scope *s) {
+    for (int64_t i = 0; i < s->len; i++) yv_join_wait(s->items[i]);
+    for (int64_t i = 0; i < s->len; i++) {
+        yv_join_base *j = s->items[i];
+        if (!j->taken && j->drop_ret) j->drop_ret(j->ret);
+        yv_box_free(j);
+    }
+    if (s->items) yv_box_free(s->items);
+    s->items = NULL;
+    s->len = s->cap = 0;
+}
 
 #endif

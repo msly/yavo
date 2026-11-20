@@ -1,0 +1,54 @@
+// expect-error: E0101 16:5
+// expect-error: E0101 21:5
+// expect-error: E0301 26:16
+// expect-error: E0703 34:17
+// expect-error: E0102 42:15
+// expect-error: E0001 48:14
+use std/sync
+
+struct Counter {
+    n: int
+    log: Vec[String]
+}
+
+fn rcFieldWrite() {
+    let a = Rc(Counter{n: 1, log: []})
+    a.n = 2
+}
+
+fn rcMethodWrite() {
+    var v = Arc([1, 2])
+    v.push(3)
+}
+
+fn rcView() {
+    let text = "a b".toString()
+    let r = Rc(text.trim())
+    println(r.len())
+}
+
+fn guardEscapes() {
+    let m = Mutex(Counter{n: 1, log: ["a".toString()]})
+    var first: str = ""
+    with g = m.lock() {
+        first = g.log[0].trim()
+    }
+    println(first)
+}
+
+fn moveWhileLocked() {
+    let m = Mutex(Counter{n: 1, log: []})
+    let g = m.lock()
+    let _m2 = m
+    println(g.n)
+}
+
+fn withNotGuard() {
+    let n = 3
+    with g = n {
+        println(g)
+    }
+}
+
+fn main() {
+}

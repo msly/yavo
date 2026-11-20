@@ -659,6 +659,27 @@ Tests: `tests/p0/run_sets.yv`, `tests/p0/run_format_fixed.yv` (heap-block check 
 `tests/p0/errors_sets_format.yv` (8 errors), `tests/p0/errors_interp.yv` (now a bad escape inside a
 nested string: one error, no cascade).
 
+## Concurrency, part 1: `Rc`, `Arc`, `Mutex`, `Guard`, `with`
+
+Supported (semantic table P4, P6, P8; stdlib contract §6):
+
+- `Rc(v)`, `Arc(v)` (prelude) and `Mutex(v)` (`use std/sync`, else `E0010`) move `v` into one heap
+  block that starts with a header (lock, holding thread, count); the value is a `T *` to the content.
+  `.clone()` of `Rc`/`Arc` adds a handle (atomic for `Arc`); the last drop drops the content.
+  Fields, methods and indexing project through `Rc`/`Arc` like `Box`, read-only: writing is `E0101`.
+  A view inside is `E0301`.
+- `m.lock()` gives a `Guard[T] of m` (blocking; locking again on the holding thread panics with
+  `P-LOCK-REENTRANT`), `m.tryLock()` a `?Guard[T]` (none on any contention). Through a guard the
+  content is writable whatever the guard's binding; dropping it unlocks (`let _ = m.lock()` at
+  once, `let _g` at the end of the scope). Moving `m` while a guard is alive is `E0102`.
+- `with g = m.lock() { ... }` binds the guard for the block; a borrow taken through it that would
+  outlive the block is `E0703` (T-P4). A `Channel[T]` type whose elements carry borrows is `E0704`.
+- Not yet in this step: `scope`, `spawn`, channels, `Send`/`Sync` (next commits).
+
+Runtime: pthread or Win32 locks and condition variables, per-thread ids, atomic heap-block
+counting, and an output lock taken by print statements once a thread has started. Tests:
+`tests/p0/run_sync_local.yv` (heap-block check clean), `tests/p0/errors_sync_local.yv` (6 errors).
+
 ## `String.fromUtf8` and `Utf8Error`
 
 `String.fromUtf8(bytes)` (stdlib contract §5) consumes a `Vec[byte]` and returns
@@ -684,8 +705,9 @@ runs all 129 cases in `yavo-tests/MANIFEST.json`, after checking each fixture ag
 | unsupported | the compiler reported `U0001` |
 | not_run | needs `yavo fix`, `yavo verify`, fixtures, sanitizers or other platforms |
 
-At this commit: pass 93, wrong 0, unsupported 22, not_run 14 (P1: 75 / 0 / 1 / 7;
-P2: 18 / 0 / 0 / 3; P3: 0 / 0 / 21 / 4). Dereference and `&inout T` variables added T-G01–T-G04,
+At this commit: pass 99, wrong 0, unsupported 16, not_run 14 (P1: 75 / 0 / 1 / 7;
+P2: 18 / 0 / 0 / 3; P3: 6 / 0 / 15 / 4). `Rc`, `Arc`, `Mutex`, `Guard` and `with` added T-GP5, T-V5,
+T-P4, T-P4p, T-P5 and T-P6p. Dereference and `&inout T` variables added T-G01–T-G04,
 T-G17, T-G18, T-G21 and T-GR11; `String.fromUtf8` added T-GR4. Slices added T-C4, T-G09, T-G19 and T-S1, and
 `reserve` added T-GR7 (T-GR8 now reaches its allocation-fault injection, which the runner does
 not support, so it counts as not run). Floats added T-G27, T-K1, T-K1p and T-N1d.

@@ -1,0 +1,48 @@
+// expect-stdout:
+// | 1 1 1
+// | 5
+// | 3
+// | false
+// | true
+// | 5 five
+// | 4
+use std/sync
+
+struct Counter {
+    n: int
+    log: Vec[String]
+}
+
+fn total(c: &Counter) -> int {
+    return c.n + c.log.len()
+}
+
+fn main() {
+    let a = Rc(Counter{n: 1, log: ["x".toString()]})
+    let b = a.clone()
+    println("${b.n} ${a.log.len()} ${total(&Counter{n: b.n, log: []})}")
+    let s = Arc("hello".toString())
+    let s2 = s.clone()
+    println(s2.len())
+    let m = Mutex([1, 2])
+    with g = m.lock() {
+        g.push(3)
+    }
+    with g = m.lock() {
+        println(g.len())
+        println(m.tryLock().isSome())
+    }
+    println(m.tryLock().isSome())
+    let shared = Arc(Mutex(Counter{n: 0, log: []}))
+    let other = shared.clone()
+    with g = other.lock() {
+        g.n += 5
+        g.log.push("five".toString())
+    }
+    with g = shared.lock() {
+        println("${g.n} ${g.log[0]}")
+    }
+    var held = m.lock()
+    held.push(4)
+    println(held.len())
+}

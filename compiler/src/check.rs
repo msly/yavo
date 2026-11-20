@@ -8,7 +8,7 @@ use crate::types::{
     box_inner, box_of, finish_agg, map_of, map_parts, opt_inner, opt_of, ref_inner, ref_mut_inner, ref_mut_of, ref_of, register_enum,
     register_iface,
     register_struct, res_of, res_parts, set_user_drop, has_user_drop, slice_elem, slice_of, tuple_elems, tuple_of, vec_elem,
-    vec_of, FloatTy, IntTy, Ty,
+    vec_of, FloatTy, IntTy, Ty, sync_of, sync_parts, ptr_inner, ptr_read_only, SyncKind,
 };
 
 pub type LocalId = usize;
@@ -235,6 +235,12 @@ pub enum HExprKind {
     StrView(Box<HExpr>),
     /// Reading through a `&T`.
     Deref(Box<HExpr>),
+    /// `Rc(v)`, `Arc(v)`, `Mutex(v)`: a new shared block holding `v`.
+    SyncNew { kind: SyncKind, value: Box<HExpr> },
+    /// `m.lock()` (a `Guard[T]`) or `m.tryLock()` (a `?Guard[T]`) on a `Mutex[T]` value.
+    Lock { mutex: Box<HExpr>, try_: bool },
+    /// `.clone()` of an `Rc`, `Arc` or `Channel`: one more handle to the same block.
+    SyncClone(Box<HExpr>),
     /// `String.fromUtf8(bytes)`: consumes a `Vec[byte]`; the result is `String ! Utf8Error`
     /// (stdlib contract §5).
     FromUtf8(Box<HExpr>),
@@ -404,7 +410,7 @@ const NO_FN: usize = usize::MAX;
 const DYN_BASE: usize = 1 << 40;
 const OUTPUT_FNS: [&str; 3] = ["println", "print", "eprintln"];
 const UNSUPPORTED_TYPES: &[&str] = &[
-    "Rc", "Arc", "Arena", "Id", "Mutex", "Atomic", "Channel", "Guard", "SendError", "Join",
+    "Arena", "Id", "Atomic", "SendError", "Join",
     "Heap", "Deque",
 ];
 /// Standard library modules and the public types each one brings in (stdlib contract §1).
@@ -419,7 +425,7 @@ const MODULES: &[(&str, &[&str])] = &[
     ("sync", &["Mutex", "Guard", "Channel", "SendError", "Join"]),
 ];
 const UNSUPPORTED_FNS: &[&str] = &[
-    "len", "Rc", "Arc", "Mutex",
+    "len",
 ];
 
 struct Sig {
@@ -466,6 +472,11 @@ struct LocalState {
     loans: Vec<Loan>,
     /// A key bound by `for k, v in m`: keys are never writable (A5).
     map_key: bool,
+    /// A lock guard bound by `with`: borrows taken through it cannot leave the block (P4).
+    guard: bool,
+    /// Holds borrows until the end of its scope whatever its last use (the hidden value of a
+    /// `scope` block, which keeps its threads' borrows: P3).
+    pinned: bool,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -585,6 +596,12 @@ impl Pre {
             }
             StmtKind::Block(b) => self.block(&b.stmts, stack),
             StmtKind::Break | StmtKind::Continue | StmtKind::Return(None) => {}
+            // The guard is a binding of this statement that lives until the end of the body.
+            StmtKind::With { init, body, .. } => {
+                self.expr(init, idx, stack);
+                self.block(&body.stmts, stack);
+                self.bind_end.insert((idx, 0), self.next);
+            }
         }
     }
 
@@ -1004,6 +1021,10 @@ fn idents_block(stmts: &[Stmt], out: &mut Vec<(String, u32)>) {
                 idents_block(&body.stmts, out);
             }
             StmtKind::Loop { body } | StmtKind::Block(body) => idents_block(&body.stmts, out),
+            StmtKind::With { init, body, .. } => {
+                idents_expr(init, out);
+                idents_block(&body.stmts, out);
+            }
             StmtKind::For { start, end, body, .. } => {
                 idents_expr(start, out);
                 idents_expr(end, out);
@@ -1278,6 +1299,7 @@ fn stmt_terminates(s: &Stmt) -> bool {
         StmtKind::Match { arms, .. } => !arms.is_empty() && arms.iter().all(|a| terminates(&a.body.stmts)),
         StmtKind::Loop { body } => !contains_break(&body.stmts),
         StmtKind::Block(b) => terminates(&b.stmts),
+        StmtKind::With { body, .. } => terminates(&body.stmts),
         _ => false,
     }
 }
@@ -1313,6 +1335,7 @@ fn contains_break(stmts: &[Stmt]) -> bool {
         }
         StmtKind::Match { arms, .. } => arms.iter().any(|a| contains_break(&a.body.stmts)),
         StmtKind::Block(b) => contains_break(&b.stmts),
+        StmtKind::With { body, .. } => contains_break(&body.stmts),
         _ => false,
     })
 }
@@ -1574,6 +1597,13 @@ impl Checker<'_> {
             let te = TypeExpr { name: name.to_string(), span: name_span, args: targs.to_vec() };
             match self.resolve_ty(&te) {
                 t @ Ty::Struct(_) => self.structs.iter().position(|s| s.ty == t),
+                Ty::Sync(_) => {
+                    for init in inits {
+                        self.expr(&init.value, None, cx);
+                    }
+                    self.diags.error("U0001", name_span, format!("constructing `{name}` with `{{...}}` is not supported yet"));
+                    return err_expr(span);
+                }
                 Ty::Error => {
                     for init in inits {
                         self.expr(&init.value, Some(Ty::Error), cx);
@@ -2499,6 +2529,40 @@ impl Checker<'_> {
             }
             return Ty::Set(map_of(k_ty, Ty::Bool));
         }
+        let sync_kind = match t.name.as_str() {
+            "Rc" => Some(SyncKind::Rc),
+            "Arc" => Some(SyncKind::Arc),
+            "Mutex" => Some(SyncKind::Mutex),
+            "Guard" => Some(SyncKind::Guard),
+            "Channel" => Some(SyncKind::Channel),
+            _ => None,
+        };
+        if let Some(kind) = sync_kind {
+            if matches!(kind, SyncKind::Mutex | SyncKind::Guard | SyncKind::Channel) && !self.need_sync(&t.name, t.span) {
+                return Ty::Error;
+            }
+            let [a] = t.args.as_slice() else {
+                self.diags.error("E0001", t.span, format!("`{}` takes one type argument, e.g. `{}[int]`", t.name, t.name));
+                return Ty::Error;
+            };
+            let inner = self.resolve_ty(a);
+            if inner == Ty::Error {
+                return Ty::Error;
+            }
+            if inner.carries_borrow() {
+                if kind == SyncKind::Channel {
+                    self.diags
+                        .error("E0704", t.span, format!("a channel cannot carry `{inner}`: its values point into data owned by the sender"))
+                        .note("send owned values, e.g. `Vec[String]` (call `.toString()` on each view)");
+                } else {
+                    self.diags
+                        .error("E0301", a.span, format!("a `{}` cannot hold a `{inner}`: a view cannot be stored in it", t.name))
+                        .note("store owned values instead, e.g. `String`");
+                }
+                return Ty::Error;
+            }
+            return Ty::Sync(sync_of(kind, inner));
+        }
         if t.name == "Vec" {
             let [elem] = t.args.as_slice() else {
                 self.diags.error("E0001", t.span, "`Vec` takes exactly one type argument, e.g. `Vec[int]`");
@@ -2838,6 +2902,8 @@ impl Checker<'_> {
             depth,
             loans: Vec::new(),
             map_key: false,
+            guard: false,
+            pinned: false,
         });
         cx.moved.resize(cx.locals.len(), None);
         cx.moved[id] = None;
@@ -3087,6 +3153,96 @@ impl Checker<'_> {
         out
     }
 
+    /// `with g = m.lock() { body }`: `g` lives until the end of `body`, where the lock is
+    /// released; borrows through it cannot leave the block (P4, `E0703`).
+    fn with_stmt(&mut self, name: &str, name_span: Span, init: &Expr, body: &Block, span: Span, cx: &mut FnCx) -> Option<HStmt> {
+        let stmt_idx = cx.cur;
+        let h = self.expr(init, None, cx);
+        let is_guard = matches!(h.ty, Ty::Sync(id) if sync_parts(id).0 == SyncKind::Guard);
+        if !is_guard && h.ty != Ty::Error {
+            self.diags
+                .error("E0001", h.span, format!("`with` binds a lock guard, but this value has type `{}`", h.ty))
+                .note("write `with g = m.lock() { ... }`");
+        }
+        let h = self.consume(h, cx);
+        let loans = if h.ty.carries_borrow() { self.loans_of(&h, cx) } else { Vec::new() };
+        cx.scopes.push(Vec::new());
+        let local = self.declare(cx, name, name_span, h.ty, LocalKind::Let);
+        if let Some(&end) = cx.pre.bind_end.get(&(stmt_idx, 0)) {
+            cx.locals[local].scope_end = end;
+        }
+        cx.locals[local].guard = true;
+        if h.ty.carries_borrow() {
+            self.store_loans(cx, local, loans, h.span, true);
+        }
+        let inner = self.block(body, cx);
+        self.pop_scope(cx);
+        let stmts = vec![HStmt { kind: HStmtKind::Let { local, init: h }, span }, HStmt { kind: HStmtKind::Block(inner), span }];
+        Some(HStmt { kind: HStmtKind::Block(stmts), span })
+    }
+
+    /// `Mutex`, `Guard` and `Channel` come from `std/sync` (stdlib contract §1).
+    fn need_sync(&mut self, name: &str, span: Span) -> bool {
+        match self.imports.get_mut("sync") {
+            Some((_, used)) => {
+                *used = true;
+                true
+            }
+            None => {
+                self.diags.error("E0010", span, format!("`{name}` comes from `std/sync`, which is not imported")).note("add `use std/sync`");
+                false
+            }
+        }
+    }
+
+    /// `Rc(v)`, `Arc(v)`, `Mutex(v)`: moves `v` into a new shared block (stdlib contract §6).
+    fn sync_new(&mut self, kind: SyncKind, args: &[Expr], expected: Option<Ty>, span: Span, at: Span, cx: &mut FnCx) -> HExpr {
+        let kname = kind.name();
+        if kind == SyncKind::Mutex && !self.need_sync(kname, at) {
+            for a in args {
+                self.expr(a, None, cx);
+            }
+            return err_expr(span);
+        }
+        let [arg] = args else {
+            self.diags.error("E0012", span, format!("`{kname}` takes exactly one argument, the value to share"));
+            for a in args {
+                self.expr(a, None, cx);
+            }
+            return err_expr(span);
+        };
+        let want = match expected {
+            Some(Ty::Sync(id)) if sync_parts(id).0 == kind => Some(sync_parts(id).1),
+            _ => None,
+        };
+        let h = self.expr(arg, want, cx);
+        let h = match want {
+            Some(t) => self.coerce(h, t, cx),
+            None => match h.ty {
+                Ty::Ref(r) if ref_inner(r).is_copy() => self.deref(h),
+                Ty::RefMut(r) if ref_mut_inner(r).is_copy() => self.deref(h),
+                _ => h,
+            },
+        };
+        match h.ty {
+            Ty::Error => return err_expr(span),
+            Ty::Unit => {
+                self.diags.error("E0001", h.span, format!("`()` cannot be put in a `{kname}`"));
+                return err_expr(span);
+            }
+            t if t.carries_borrow() => {
+                self.diags
+                    .error("E0301", h.span, format!("a `{kname}` cannot hold a `{t}`: a view cannot be stored in it"))
+                    .note("store owned values instead, e.g. `String`");
+                return err_expr(span);
+            }
+            _ => {}
+        }
+        let h = self.consume(h, cx);
+        let ty = Ty::Sync(sync_of(kind, h.ty));
+        HExpr { kind: HExprKind::SyncNew { kind, value: Box::new(h) }, ty, span, at }
+    }
+
     /// `&place` where an `&inout T` is expected (A7): the place must be writable, and nothing
     /// else may use it while the new reference is alive (A3). `&p` for an `&inout T` variable
     /// `p` reborrows its target (A4).
@@ -3210,6 +3366,8 @@ impl Checker<'_> {
         };
         match &h.kind {
             HExprKind::Local(id) | HExprKind::Move(id) => cx.locals[*id].loans.clone(),
+            // A guard is `of` its mutex (stdlib contract §6).
+            HExprKind::Lock { mutex, .. } => self.storage_loans(mutex, cx),
             // `&x` / `&x.f` (and a reborrow `&p`): points into the root variable and whatever it
             // already points into.
             HExprKind::InoutPlace(p) => {
@@ -3366,9 +3524,15 @@ impl Checker<'_> {
                 }
                 Loan::Local(s) if !Self::outlives(cx, s, v) => {
                     let (sn, vn) = (cx.locals[s].name.clone(), cx.locals[v].name.clone());
-                    self.diags
-                        .error("E0305", span, format!("`{sn}` does not live long enough: `{vn}` would still point into it after it is dropped"))
-                        .note(format!("declare `{sn}` before `{vn}`, in the same or an enclosing block"));
+                    if cx.locals[s].guard {
+                        self.diags
+                            .error("E0703", span, format!("`{vn}` would keep a borrow taken through the lock guard `{sn}` after the `with` block ends"))
+                            .note("outside the block the data is no longer protected by the lock; use the value inside the block, or `.clone()` an owned copy there");
+                    } else {
+                        self.diags
+                            .error("E0305", span, format!("`{sn}` does not live long enough: `{vn}` would still point into it after it is dropped"))
+                            .note(format!("declare `{sn}` before `{vn}`, in the same or an enclosing block"));
+                    }
                 }
                 Loan::Local(_) => {}
             }
@@ -3727,7 +3891,9 @@ impl Checker<'_> {
                 }
                 // `r.f = v` writes through a reference: a `&T` never allows it (A1), an `&inout T`
                 // always does, whatever the binding itself was declared with (rule 3).
-                let through = star.is_some() || !fields_rev.is_empty() && matches!(root_ty, Ty::Ref(_) | Ty::RefMut(_));
+                // Through a guard (writable) or an `Rc`/`Arc` (read-only) as well (P6).
+                let shared = matches!(root_ty, Ty::Sync(_)) && ptr_inner(root_ty).is_some();
+                let through = star.is_some() || !fields_rev.is_empty() && (matches!(root_ty, Ty::Ref(_) | Ty::RefMut(_)) || shared);
                 if cx.locals[id].map_key {
                     self.diags
                         .error("E0103", target.span, format!("cannot modify the Map key `{name}`"))
@@ -3736,6 +3902,12 @@ impl Checker<'_> {
                     return None;
                 }
                 if through {
+                    cx.locals[id].used = true;
+                    if ptr_read_only(root_ty) {
+                        self.read_only_ptr(root_ty, target.span);
+                        self.expr(value, None, cx);
+                        return None;
+                    }
                     if let Ty::Ref(_) = root_ty {
                         self.diags
                             .error("E0101", target.span, format!("cannot modify through `{name}`: it is a read-only reference (`{root_ty}`)"))
@@ -3974,6 +4146,7 @@ impl Checker<'_> {
                 HStmtKind::Return(self.return_value(value.as_ref(), s.span, cx))
             }
             StmtKind::Block(b) => HStmtKind::Block(self.block(b, cx)),
+            StmtKind::With { name, name_span, init, body } => return self.with_stmt(name, *name_span, init, body, s.span, cx),
         };
         Some(HStmt { kind, span: s.span })
     }
@@ -5056,8 +5229,13 @@ impl Checker<'_> {
         cx.locals[id].used = true;
         self.check_moved(cx, id, root.span);
         let root_ty = cx.locals[id].ty;
-        let through = !fields_rev.is_empty() && matches!(root_ty, Ty::Ref(_) | Ty::RefMut(_));
+        let shared = matches!(root_ty, Ty::Sync(_)) && ptr_inner(root_ty).is_some();
+        let through = !fields_rev.is_empty() && (matches!(root_ty, Ty::Ref(_) | Ty::RefMut(_)) || shared);
         if through {
+            if ptr_read_only(root_ty) {
+                self.read_only_ptr(root_ty, root.span);
+                return None;
+            }
             if let Ty::Ref(_) = root_ty {
                 self.diags.error("E0101", root.span, format!("cannot modify through `{name}`: it is a read-only reference (`{root_ty}`)"));
                 return None;
@@ -5079,9 +5257,13 @@ impl Checker<'_> {
     fn field_path(&mut self, mut ty: Ty, fields_rev: &[(&str, Span)]) -> Option<(Vec<usize>, Ty)> {
         let mut path = Vec::new();
         for (fname, fspan) in fields_rev.iter().rev() {
-            while let Ty::Box(b) = ty {
+            while let Some(inner) = ptr_inner(ty) {
+                if ptr_read_only(ty) {
+                    self.read_only_ptr(ty, *fspan);
+                    return None;
+                }
                 path.push(BOX_STEP);
-                ty = box_inner(b);
+                ty = inner;
             }
             match self.struct_field(ty, fname) {
                 Some((fi, fty)) => {
@@ -5103,11 +5285,19 @@ impl Checker<'_> {
         Some((path, ty))
     }
 
-    /// The content of a `Box` (of nested boxes) where a field, method or element is used (A7).
+    /// Writing through an `Rc`/`Arc` (P6): they give shared read-only access.
+    fn read_only_ptr(&mut self, ty: Ty, span: Span) {
+        self.diags
+            .error("E0101", span, format!("cannot modify through `{ty}`: it gives shared, read-only access"))
+            .note("to share data that changes, put it in a `Mutex`, e.g. `Arc[Mutex[T]]`, and write through `lock()`");
+    }
+
+    /// The content of a `Box`, `Rc`, `Arc` or `Guard` (nested ones too) where a field, method or
+    /// element is used (A7).
     fn unbox(&self, mut h: HExpr) -> HExpr {
-        while let Ty::Box(b) = h.ty {
+        while let Some(inner) = ptr_inner(h.ty) {
             let (span, at) = (h.span, h.at);
-            h = HExpr { kind: HExprKind::Unbox(Box::new(h)), ty: box_inner(b), span, at };
+            h = HExpr { kind: HExprKind::Unbox(Box::new(h)), ty: inner, span, at };
         }
         h
     }
@@ -5365,6 +5555,9 @@ impl Checker<'_> {
                     match name.as_str() {
                         "some" => return self.some_call(args, expected, span, callee.span, cx),
                         "Box" => return self.box_new(args, expected, span, callee.span, cx),
+                        "Rc" => return self.sync_new(SyncKind::Rc, args, expected, span, callee.span, cx),
+                        "Arc" => return self.sync_new(SyncKind::Arc, args, expected, span, callee.span, cx),
+                        "Mutex" => return self.sync_new(SyncKind::Mutex, args, expected, span, callee.span, cx),
                         "take" | "replace" | "swap" => return self.place_builtin(name, args, span, callee.span, cx),
                         "ok" => {
                             let [arg] = args else {
@@ -5587,8 +5780,8 @@ impl Checker<'_> {
                 Ty::Ref(r) => ref_inner(r),
                 t => t,
             };
-            while let Ty::Box(b) = t {
-                t = box_inner(b);
+            while let Some(inner) = ptr_inner(t) {
+                t = inner;
             }
             if let Some((fi, full)) = self.user_method(t, name, at) {
                 return self.method_on_place(fi, &full, base, args, span, at, cx);
@@ -5658,7 +5851,29 @@ impl Checker<'_> {
         }
         let recv = self.expr(base, None, cx);
         let recv = self.deref(recv);
+        // `.clone()` of a shared handle shares the same block (it does not clone the content).
+        if name == "clone" && args.is_empty() {
+            if let Ty::Sync(id) = recv.ty {
+                if matches!(sync_parts(id).0, SyncKind::Rc | SyncKind::Arc | SyncKind::Channel) {
+                    let ty = recv.ty;
+                    return HExpr { kind: HExprKind::SyncClone(Box::new(recv)), ty, span, at };
+                }
+            }
+        }
         let recv = self.unbox(recv);
+        if let Ty::Sync(id) = recv.ty {
+            let (kind, inner) = sync_parts(id);
+            if kind == SyncKind::Mutex && matches!(name, "lock" | "tryLock") {
+                if !args.is_empty() {
+                    self.diags.error("E0012", span, format!("`{name}` takes no arguments"));
+                    return err_expr(span);
+                }
+                let guard = Ty::Sync(sync_of(SyncKind::Guard, inner));
+                let try_ = name == "tryLock";
+                let ty = if try_ { Ty::Opt(opt_of(guard)) } else { guard };
+                return HExpr { kind: HExprKind::Lock { mutex: Box::new(recv), try_ }, ty, span, at };
+            }
+        }
         if let Some((fi, full)) = self.user_method(recv.ty, name, at) {
             if fi == NO_FN {
                 return err_expr(span);
@@ -5995,8 +6210,8 @@ impl Checker<'_> {
                     t => t,
                 };
                 let mut t = t;
-                while let Ty::Box(bx) = t {
-                    t = box_inner(bx);
+                while let Some(inner) = ptr_inner(t) {
+                    t = inner;
                 }
                 self.struct_field(t, name).map(|(_, t)| t)
             }
@@ -6020,12 +6235,26 @@ impl Checker<'_> {
             }
         }
         if fields_rev.is_empty() {
+            if let ExprKind::Ident(n) = &base.kind {
+                if let Some(id) = self.lookup(cx, n) {
+                    let t = Self::receiver_ty(cx, id);
+                    if ptr_read_only(t) {
+                        cx.locals[id].used = true;
+                        self.read_only_ptr(t, base.span);
+                        return None;
+                    }
+                }
+            }
             let id = self.mutable_receiver(base, method, cx)?;
             let (mut path, mut ty) = (Vec::new(), Self::receiver_ty(cx, id));
             // A method of the content of a box (`b.push(x)` on a `Box[Vec[int]]`) works in place.
-            while let Ty::Box(b) = ty {
+            while let Some(inner) = ptr_inner(ty) {
+                if ptr_read_only(ty) {
+                    self.read_only_ptr(ty, base.span);
+                    return None;
+                }
                 path.push(BOX_STEP);
-                ty = box_inner(b);
+                ty = inner;
             }
             return Some(HPlace { local: id, path, ty });
         }
@@ -6048,6 +6277,12 @@ impl Checker<'_> {
                 return None;
             }
             Ty::RefMut(_) => self.check_exclusive(cx, id, root.span),
+            // Fields of a locked value are writable through the guard, whatever its binding (P6).
+            Ty::Sync(sid) if sync_parts(sid).0 == SyncKind::Guard => {}
+            t if ptr_read_only(t) => {
+                self.read_only_ptr(t, root.span);
+                return None;
+            }
             _ => {
                 if !self.writable(cx, id, root.span) {
                     return None;
@@ -6055,9 +6290,13 @@ impl Checker<'_> {
             }
         }
         let (mut path, mut ty) = self.field_path(Self::receiver_ty(cx, id), &fields_rev)?;
-        while let Ty::Box(b) = ty {
+        while let Some(inner) = ptr_inner(ty) {
+            if ptr_read_only(ty) {
+                self.read_only_ptr(ty, base.span);
+                return None;
+            }
             path.push(BOX_STEP);
-            ty = box_inner(b);
+            ty = inner;
         }
         self.check_not_borrowed(cx, id, base.span, "modify");
         Some(HPlace { local: id, path, ty })
@@ -6077,7 +6316,8 @@ impl Checker<'_> {
         cx.locals[id].used = true;
         self.check_moved(cx, id, base.span);
         self.check_not_borrowed(cx, id, base.span, "modify");
-        if matches!(cx.locals[id].ty, Ty::RefMut(_)) || self.writable(cx, id, base.span) {
+        let guard = matches!(cx.locals[id].ty, Ty::Sync(sid) if sync_parts(sid).0 == SyncKind::Guard);
+        if matches!(cx.locals[id].ty, Ty::RefMut(_)) || guard || self.writable(cx, id, base.span) {
             Some(id)
         } else {
             None
