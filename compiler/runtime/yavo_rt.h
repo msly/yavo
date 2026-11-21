@@ -32,6 +32,22 @@ typedef struct {
 /* ---- Output: stdout is buffered, stderr is written immediately. ---- */
 
 static const char *yv_rt_file = "?";
+typedef struct { const char *file; uint32_t line; } yv_source_entry;
+static const yv_source_entry *yv_rt_sources = NULL;
+static size_t yv_rt_sources_len = 0;
+static void yv_rt_set_sources(const yv_source_entry *sources, size_t len) {
+    yv_rt_sources = sources;
+    yv_rt_sources_len = len;
+}
+static const char *yv_source_location(uint32_t *line) {
+    for (size_t i = yv_rt_sources_len; i > 0; --i) {
+        if (*line >= yv_rt_sources[i - 1].line) {
+            *line -= yv_rt_sources[i - 1].line - 1;
+            return yv_rt_sources[i - 1].file;
+        }
+    }
+    return yv_rt_file;
+}
 static char yv_out_buf[8192];
 static size_t yv_out_len = 0;
 
@@ -164,10 +180,11 @@ static void yv_os_write_u32(int fd, uint32_t value) {
 /* stdout/stderr may both be unusable. Attempt one raw diagnostic, then exit;
  * do not call yv_panic/yv_write/yv_flush here and recurse on the same error. */
 YV_NORETURN static void yv_output_failure(uint32_t line, uint32_t col) {
+    const char *file = yv_source_location(&line);
     static const char prefix[] = "yavo panic [P-SYSTEM] at ";
     static const char suffix[] = ": output write failed\n";
     (void)yv_os_write(2, prefix, sizeof prefix - 1);
-    (void)yv_os_write(2, yv_rt_file, strlen(yv_rt_file));
+    (void)yv_os_write(2, file, strlen(file));
     (void)yv_os_write(2, ":", 1);
     yv_os_write_u32(2, line);
     (void)yv_os_write(2, ":", 1);
@@ -226,7 +243,8 @@ static void yv_panic_begin(const char *category, uint32_t line, uint32_t col) {
     yv_write(2, "yavo panic [", 12);
     yv_write(2, category, strlen(category));
     yv_write(2, "] at ", 5);
-    yv_write(2, yv_rt_file, strlen(yv_rt_file));
+    const char *file = yv_source_location(&line);
+    yv_write(2, file, strlen(file));
     yv_write(2, ":", 1);
     yv_write_u64(2, line);
     yv_write(2, ":", 1);

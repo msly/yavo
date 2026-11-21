@@ -9,6 +9,7 @@ mod fix_plan;
 mod lexer;
 mod parser;
 mod process;
+mod project;
 mod toolchain;
 mod types;
 mod verify;
@@ -114,14 +115,18 @@ fn compile_to_c(opts: &Options) -> Option<String> {
             return None;
         }
     };
-    let toks = lexer::lex_file(&src, &mut diags);
-    let program = parser::parse(toks, &src, &mut diags);
-    let typed = if diags.has_errors() { None } else { check::check(&program, &mut diags) };
-    if let Err(e) = fix::prepare(&src, &program, &mut diags) {
-        eprintln!("error: {e}");
-        exit(EXIT_INTERNAL);
+    let project = project::Project::load(&opts.input, &src, &mut diags).unwrap_or_else(|e| {
+        eprintln!("error: cannot load {display}: {e}");
+        exit(EXIT_USAGE);
+    });
+    let typed = if diags.has_errors() { None } else { check::check(&project.program, &mut diags) };
+    if !project.modular {
+        if let Err(e) = fix::prepare(&src, &project.program, &mut diags) {
+            eprintln!("error: {e}");
+            exit(EXIT_INTERNAL);
+        }
     }
-    report(&display, &src, &mut diags, opts.json);
+    report_project(&project, &mut diags, opts.json);
     typed.map(|p| codegen::generate(&p, &display))
 }
 
@@ -132,6 +137,12 @@ fn report(path: &str, src: &str, diags: &mut Diags, json: bool) {
     } else if !diags.items.is_empty() {
         eprint!("{}", diag::render_human(path, src, diags));
     }
+}
+
+fn report_project(project: &project::Project, diags: &mut Diags, json: bool) {
+    diags.sort();
+    if json { println!("{}", project.json(diags)); }
+    else if !diags.items.is_empty() { eprint!("{}", project.human(diags)); }
 }
 
 fn scratch_dir() -> PathBuf {
@@ -213,21 +224,30 @@ fn run_allocations(args: &[String]) -> i32 {
     };
     let path = input.to_string_lossy().replace('\\', "/");
     let mut diags = Diags::default();
-    let tokens = lexer::lex_file(&source, &mut diags);
-    let program = parser::parse(tokens, &source, &mut diags);
-    let typed = if diags.has_errors() { None } else { check::check(&program, &mut diags) };
+    let project = match project::Project::load(&input, &source, &mut diags) {
+        Ok(project) => project,
+        Err(e) => { eprintln!("error: cannot load {}: {e}", input.display()); return EXIT_USAGE; }
+    };
+    let typed = if diags.has_errors() { None } else { check::check(&project.program, &mut diags) };
     diags.sort();
     if diags.has_errors() || typed.is_none() {
-        report(&path, &source, &mut diags, json);
+        report_project(&project, &mut diags, json);
         return EXIT_COMPILE_ERROR;
     }
-    match allocations::analyze(&program, &typed.unwrap(), &subject, &path, &source) {
+    match allocations::analyze(&project.program, &typed.unwrap(), &project.query_name(&subject), &path, &project.source) {
         Ok(mut result) => {
-            result["diagnostics"] = diag::render_json_value(&path, &source, &diags);
+            if project.modular {
+                project.map_operation_locations(&mut result);
+                result["subject"] = serde_json::json!(subject);
+                result["source_sha256"] = serde_json::json!(diag::source_hash(&source));
+                result["project_sha256"] = serde_json::json!(project.hash());
+                result["sources"] = project.manifest();
+            }
+            result["diagnostics"] = project.json(&diags);
             if json {
                 println!("{}", serde_json::to_string_pretty(&result).unwrap());
             } else {
-                eprint!("{}", diag::render_human(&path, &source, &diags));
+                eprint!("{}", project.human(&diags));
                 println!("{}: {}", subject, result["status"].as_str().unwrap_or("unknown"));
                 println!("{}", serde_json::to_string_pretty(&result["operations"]).unwrap());
             }
@@ -265,6 +285,18 @@ fn main() {
         }
         "fix" => {
             let opts = parse_options(rest, true);
+            if let Ok(source) = fs::read_to_string(&opts.input) {
+                let mut diagnostics = Diags::default();
+                let tokens = lexer::lex_file(&source, &mut diagnostics);
+                let program = parser::parse(tokens, &source, &mut diagnostics);
+                if let Some(import) = program.uses.iter().find(|u| !u.path.starts_with("std/")) {
+                    let mut diagnostics = Diags::default();
+                    diagnostics.error("U0001", import.span, "multi-file source repairs are not implemented yet")
+                        .note("check/build/run/allocations/verify load the full project; fix does not write any file");
+                    report(&opts.input.to_string_lossy(), &source, &mut diagnostics, opts.json);
+                    exit(EXIT_COMPILE_ERROR);
+                }
+            }
             match fix::run(&opts.input, opts.dry_run, opts.json) {
                 Ok(code) => exit(code),
                 Err(e) => {

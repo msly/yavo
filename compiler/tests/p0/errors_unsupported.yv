@@ -1,4 +1,4 @@
-// expect-error: U0001 13:5
+// User module imports now have positive and negative coverage in tests/modules.rs.
 // expect-error: U0001 15:14
 // expect-error: U0001 18:5
 // expect-error: U0001 21:13
@@ -10,7 +10,7 @@
 // expect-error: U0001 42:9
 // expect-error: U0001 48:13
 // expect-error: U0001 50:15
-use mine/thing
+// use mine/thing is supported when its source file exists.
 // Valid v0.5 syntax that P0 does not implement must be reported as U0001, never as a syntax error (E0020).
 fn change(x: [int]) {
 }

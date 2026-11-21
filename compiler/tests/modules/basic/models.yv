@@ -1,0 +1,11 @@
+use contracts
+
+pub struct Person: contracts.Named {
+    name: String
+    fn name(self) -> str of self { return self.name }
+}
+
+pub struct Wrap[T] {
+    value: T
+    fn get(self) -> T { return self.value }
+}

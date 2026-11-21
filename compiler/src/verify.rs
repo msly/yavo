@@ -1,6 +1,6 @@
 //! Evidence-bound verification. A build, a target execution, a sanitizer run and
 //! an audit are distinct checks; missing evidence never becomes a pass.
-use crate::{check, codegen, diag, lexer, parser, process, toolchain};
+use crate::{check, codegen, diag, process, project, toolchain};
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
 use std::fs;
@@ -547,7 +547,7 @@ fn sanitizer_check(
 }
 
 fn reproducibility_check(
-    item: &mut Value, tc: &toolchain::Toolchain, source: &[u8], dir: &Path,
+    item: &mut Value, tc: &toolchain::Toolchain, source: &[u8], project: &project::Project, dir: &Path,
     target: &toolchain::Target, timeout: Duration,
 ) -> Result<(), Error> {
     let mut builds = Vec::new();
@@ -555,16 +555,22 @@ fn reproducibility_check(
     let mut generated = Vec::new();
     let mut status = "passed";
     let mut backend_attempts = 0;
-    let snapshot = dir.join("source.yv");
+    let snapshot = if project.modular { project.snapshot(&dir.join("project"))? } else { dir.join("source.yv") };
     // Both processes use the same logical source path. Each process constructs
     // its own parser, type tables, monomorphizations and generated translation unit.
     item["scope"] = json!("source_to_binary");
     item["source_path"] = json!(snapshot);
     item["source_sha256"] = json!(digest(source));
+    if project.modular {
+        item["scope"] = json!("project_to_binary");
+        item["project_sha256"] = json!(format!("sha256:{}", project.hash()));
+        item["source_files"] = project.manifest();
+    }
     for number in 1..=2 {
         let subdir = dir.join(format!("repro-{number}"));
         fs::create_dir(&subdir)?;
-        fs::write(&snapshot, source)?;
+        if project.modular { project.snapshot(&dir.join("project"))?; }
+        else { fs::write(&snapshot, source)?; }
         let c_file = subdir.join("main.c");
         fs::write(subdir.join("yavo_rt.h"), codegen::RUNTIME_HEADER)?;
         let mut frontend = Command::new(std::env::current_exe()?);
@@ -722,11 +728,24 @@ pub fn run(opts: Options) -> Result<i32, Error> {
             return finish(report, checks, &opts, &dir);
         }
     };
-    let tokens = lexer::lex_file(src, &mut diags);
-    let program = parser::parse(tokens, src, &mut diags);
-    let typed = if diags.has_errors() { None } else { check::check(&program, &mut diags) };
+    let project = project::Project::load(&opts.input, src, &mut diags).map_err(|e| input_error(&opts.input, e))?;
+    if project.modular {
+        project.snapshot(&dir.join("project"))?;
+        let mut manifest = project.manifest();
+        for item in manifest.as_array_mut().unwrap() {
+            item["snapshot_path"] = json!(dir.join("project").join(item["relative_path"].as_str().unwrap()));
+        }
+        let bytes = serde_json::to_vec_pretty(&manifest).unwrap();
+        let manifest_path = dir.join("project-manifest.json");
+        fs::write(&manifest_path, &bytes)?;
+        report["inputs"]["project"] = json!(format!("sha256:{}", project.hash()));
+        report["dependencies"]["source_files"] = manifest;
+        checks[0]["artifact"] = json!(digest(&bytes));
+        checks[0]["artifact_path"] = json!(manifest_path);
+    }
+    let typed = if diags.has_errors() { None } else { check::check(&project.program, &mut diags) };
     diags.sort();
-    report["diagnostics"] = diag::render_json_value(&opts.input.to_string_lossy(), src, &diags);
+    report["diagnostics"] = project.json(&diags);
     if diags.has_errors() || typed.is_none() {
         set_status(&mut checks[0], "failed", "Yavo front end rejected the program");
         return finish(report, checks, &opts, &dir);
@@ -766,9 +785,10 @@ pub fn run(opts: Options) -> Result<i32, Error> {
     sanitizer_check(&mut checks[5], &tc, &c_file, &c_code, &dir, &assertions, &opts, "address,undefined")?;
     sanitizer_check(&mut checks[6], &tc, &c_file, &c_code, &dir, &assertions, &opts, "thread")?;
     if opts.reproducible {
-        reproducibility_check(&mut checks[7], &tc, &source, &dir, target, opts.build_timeout)?;
+        reproducibility_check(&mut checks[7], &tc, &source, &project, &dir, target, opts.build_timeout)?;
     }
     fs::write(dir.join("source.yv"), &source)?;
+    if project.modular { project.snapshot(&dir.join("project"))?; }
     fs::write(&c_file, &c_code)?;
     fs::write(dir.join("yavo_rt.h"), codegen::RUNTIME_HEADER)?;
     if let Some((path, bytes)) = &assertions.stdin { fs::write(path, bytes)?; }

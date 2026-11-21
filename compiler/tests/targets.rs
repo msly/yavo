@@ -140,8 +140,16 @@ fn host_runnable_target_runs_correctly() {
 
 #[test]
 fn collections_and_mutable_returns_compile_for_all_targets() {
-    let scratch = common::Scratch::new("completion-targets").unwrap();
-    let path = fixture("run_collection_returns.yv");
+    assert_source_targets(fixture("run_collection_returns.yv"), "completion-targets");
+}
+
+#[test]
+fn modules_compile_for_all_targets() {
+    assert_source_targets(Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/modules/basic/main.yv"), "module-targets");
+}
+
+fn assert_source_targets(path: PathBuf, tag: &str) {
+    let scratch = common::Scratch::new(tag).unwrap();
     let want = expected_stdout(&std::fs::read_to_string(&path).unwrap());
     for (name, os, arch) in TARGETS {
         let artifact = scratch.0.join(format!("{name}{}", if *os == "windows" { ".exe" } else { "" }));

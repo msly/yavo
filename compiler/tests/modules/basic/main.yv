@@ -1,0 +1,15 @@
+// expect-stdout:
+// | Ada 10 8
+use models
+use algorithms
+use util
+
+fn main() {
+    let person = models.Person{name: " Ada ".toString()}
+    let wrapped = Wrap[int]{value: 9}
+    var values: Vec[int] = [3, 4]
+    let first = util.first(&values)
+    *first += 5
+    let name = util.word(algorithms.display(person))
+    println("${name} ${util.increment(wrapped.get())} ${*first}")
+}

@@ -21,6 +21,7 @@ pub const BOX_STEP: usize = usize::MAX;
 pub const DEREF_STEP: usize = usize::MAX - 1;
 
 pub struct HProgram {
+    pub files: Vec<SourceFile>,
     pub fns: Vec<HFn>,
     /// Struct and enum definitions, ordered so that every type comes after the types it
     /// contains by value.
@@ -1091,7 +1092,7 @@ struct Checker<'d> {
     structs: Vec<StructDef>,
     struct_index: HashMap<String, usize>,
     /// Imported modules: where they were imported and whether anything used them.
-    imports: HashMap<String, (Span, bool)>,
+    imports: HashMap<(usize, String), (Span, bool)>,
     /// User comparison protocols by struct/enum id (K2): the `cmp` function of a `T: Ord`, the
     /// `eq` function of a `T: Eq`.
     protocols: HashMap<u32, (Option<usize>, Option<usize>)>,
@@ -1164,6 +1165,24 @@ const LIBRARY_ENUMS: &[(&str, &[(&str, &[&str])])] = &[
     ("Ordering", &[("Less", &[]), ("Equal", &[]), ("Greater", &[])]),
 ];
 
+/// Validate original spellings before a project's private symbols are renamed.
+pub fn check_declaration_names(prog: &Program, diags: &mut Diags) {
+    for f in &prog.fns {
+        if f.owner.is_none() && (OUTPUT_FNS.contains(&f.name.as_str()) || is_type_name(&f.name)) {
+            diags.error("E0011", f.name_span, format!("`{}` is a built-in name and cannot be redefined", f.name));
+        }
+    }
+    for (name, span, interface) in prog.structs.iter().map(|s| (&s.name, s.name_span, false))
+        .chain(prog.enums.iter().map(|e| (&e.name, e.name_span, false)))
+        .chain(prog.interfaces.iter().map(|i| (&i.name, i.name_span, true))) {
+        if is_type_name(name) || UNSUPPORTED_TYPES.contains(&name.as_str())
+            || matches!(name.as_str(), "Ordering" | "Utf8Error")
+            || (interface && matches!(name.as_str(), "Drop" | "Eq" | "Ord" | "Copy" | "Send" | "Sync")) {
+            diags.error("E0011", span, format!("`{name}` is a built-in name and cannot be redefined"));
+        }
+    }
+}
+
 pub fn check(prog: &Program, diags: &mut Diags) -> Option<HProgram> {
     let mut ck = Checker {
         diags,
@@ -1223,7 +1242,7 @@ pub fn check(prog: &Program, diags: &mut Diags) -> Option<HProgram> {
     }
     fns.append(&mut ck.lifted);
     let mut unused: Vec<(Span, String)> =
-        ck.imports.iter().filter(|(_, (_, used))| !used).map(|(m, (sp, _))| (*sp, m.clone())).collect();
+        ck.imports.iter().filter(|(_, (_, used))| !used).map(|((_, m), (sp, _))| (*sp, m.clone())).collect();
     unused.sort_by_key(|(sp, _)| sp.start);
     for (sp, m) in unused {
         ck.diags.warn("W0003", sp, format!("unused import `std/{m}`")).note("remove it");
@@ -1265,7 +1284,7 @@ pub fn check(prog: &Program, diags: &mut Diags) -> Option<HProgram> {
                     .collect(),
             })
             .collect();
-        Some(HProgram { fns, structs, tramps: std::mem::take(&mut ck.tramps), ifaces, impls: std::mem::take(&mut ck.impls) })
+        Some(HProgram { files: prog.files.clone(), fns, structs, tramps: std::mem::take(&mut ck.tramps), ifaces, impls: std::mem::take(&mut ck.impls) })
     }
 }
 
@@ -1296,6 +1315,11 @@ fn is_untyped_literal(e: &Expr) -> bool {
         }
         _ => false,
     }
+}
+
+pub fn is_builtin_namespace(name: &str) -> bool {
+    is_type_name(name) || UNSUPPORTED_TYPES.contains(&name)
+        || matches!(name, "Ordering" | "Utf8Error") || MODULES.iter().any(|(m, _)| *m == name)
 }
 
 fn is_type_name(name: &str) -> bool {
@@ -1391,27 +1415,33 @@ impl Checker<'_> {
     /// `use std/m` (stdlib contract §1).
     fn collect_uses(&mut self, prog: &Program) {
         for u in &prog.uses {
-            if !MODULES.iter().any(|(m, _)| *m == u.module) {
+            if !u.path.starts_with("std/") {
+                self.diags.error("U0001", u.span, "user modules need project loading through check/build/run");
+                continue;
+            }
+            let key = (crate::project::file_id(&prog.files, u.span), u.module.clone());
+            if u.path != format!("std/{}", u.module) || !MODULES.iter().any(|(m, _)| *m == u.module) {
                 let known: Vec<&str> = MODULES.iter().map(|(m, _)| *m).collect();
                 self.diags
                     .error("E0010", u.span, format!("there is no standard library module `std/{}`", u.module))
                     .note(format!("the modules are: {}", known.join(", ")));
-            } else if let Some((first, _)) = self.imports.get(&u.module) {
+            } else if let Some((first, _)) = self.imports.get(&key) {
                 let line = first.line;
                 self.diags
                     .error("E0011", u.span, format!("`std/{}` is imported more than once", u.module))
                     .note(format!("first imported on line {line}"));
             } else {
-                self.imports.insert(u.module.clone(), (u.span, false));
+                self.imports.insert(key, (u.span, false));
             }
         }
     }
 
     /// A use of a type that a module provides marks that module's import as used.
-    fn mark_type_used(&mut self, name: &str) {
+    fn mark_type_used(&mut self, name: &str, span: Span) {
+        let file = crate::project::file_id(&self.prog.files, span);
         for (m, types) in MODULES {
             if types.contains(&name) {
-                if let Some((_, used)) = self.imports.get_mut(*m) {
+                if let Some((_, used)) = self.imports.get_mut(&(file, m.to_string())) {
                     *used = true;
                 }
             }
@@ -1424,7 +1454,8 @@ impl Checker<'_> {
         if !MODULES.iter().any(|(name, _)| *name == m) {
             return false;
         }
-        match self.imports.get_mut(m) {
+        let key = (crate::project::file_id(&self.prog.files, span), m.to_string());
+        match self.imports.get_mut(&key) {
             Some((_, used)) => *used = true,
             None => {
                 self.diags
@@ -1693,7 +1724,7 @@ impl Checker<'_> {
         };
         let Some(si) = generic.or_else(|| self.struct_index.get(name).copied()) else {
             if UNSUPPORTED_TYPES.contains(&name) {
-                self.mark_type_used(name);
+                self.mark_type_used(name, name_span);
                 self.diags.error("U0001", name_span, format!("constructing `{name}` is not supported in P0"));
             } else {
                 self.diags.error("E0010", name_span, format!("cannot find struct `{name}`"));
@@ -2746,7 +2777,7 @@ impl Checker<'_> {
         }
         if !t.args.is_empty() {
             if UNSUPPORTED_TYPES.contains(&t.name.as_str()) {
-                self.mark_type_used(&t.name);
+                self.mark_type_used(&t.name, t.span);
                 self.diags.error("U0001", t.span, format!("type `{}` is not supported in P0", t.name));
             } else if is_type_name(&t.name) || self.struct_index.contains_key(&t.name) {
                 self.diags.error("E0001", t.span, format!("type `{}` takes no type arguments", t.name));
@@ -2775,7 +2806,7 @@ impl Checker<'_> {
             "str" => Ty::Str,
             "String" => Ty::String,
             name if UNSUPPORTED_TYPES.contains(&name) => {
-                self.mark_type_used(name);
+                self.mark_type_used(name, t.span);
                 self.diags.error(
                     "U0001",
                     t.span,
@@ -3623,7 +3654,8 @@ impl Checker<'_> {
 
     /// `Mutex`, `Guard` and `Channel` come from `std/sync` (stdlib contract §1).
     fn need_sync(&mut self, name: &str, span: Span) -> bool {
-        match self.imports.get_mut("sync") {
+        let key = (crate::project::file_id(&self.prog.files, span), "sync".to_string());
+        match self.imports.get_mut(&key) {
             Some((_, used)) => {
                 *used = true;
                 true
@@ -7378,7 +7410,7 @@ impl Checker<'_> {
             if self.lookup(cx, n).is_none()
                 && (is_type_name(n) || UNSUPPORTED_TYPES.contains(&n.as_str()) || self.struct_index.contains_key(n))
             {
-                self.mark_type_used(n);
+                self.mark_type_used(n, span);
                 self.diags.error("U0001", span, "type arguments in expressions (`Name[T]`) are not supported in P0");
                 return err_expr(span);
             }

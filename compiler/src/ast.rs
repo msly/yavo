@@ -1,6 +1,7 @@
 use crate::diag::Span;
 
 pub struct Program {
+    pub files: Vec<SourceFile>,
     pub fns: Vec<FnDecl>,
     pub structs: Vec<StructDecl>,
     pub enums: Vec<EnumDecl>,
@@ -8,9 +9,19 @@ pub struct Program {
     pub uses: Vec<Use>,
 }
 
+/// Original file boundaries in the combined compilation source.
+#[derive(Clone)]
+pub struct SourceFile {
+    pub path: String,
+    pub start: usize,
+    pub end: usize,
+    pub line: u32,
+}
+
 /// `interface Name { fn method(self, ...) -> T }`: method signatures without bodies. Each
 /// method's `name` is `Name.method` and its body is empty.
 pub struct InterfaceDecl {
+    pub public: bool,
     pub name: String,
     pub name_span: Span,
     pub methods: Vec<FnDecl>,
@@ -18,11 +29,13 @@ pub struct InterfaceDecl {
 
 /// One module named by `use std/m` or `use std/{a, b}`.
 pub struct Use {
+    pub path: String,
     pub module: String,
     pub span: Span,
 }
 
 pub struct StructDecl {
+    pub public: bool,
     pub name: String,
     pub name_span: Span,
     /// `struct Wrapper[T] { ... }`: a generic struct; each `Wrapper[X]` is a struct of its own.
@@ -43,6 +56,7 @@ pub struct TypeParam {
 
 /// `enum Name { Case, Case(field: T, ...) }`
 pub struct EnumDecl {
+    pub public: bool,
     pub name: String,
     pub name_span: Span,
     pub variants: Vec<VariantDecl>,
@@ -69,6 +83,7 @@ pub struct FieldInit {
 }
 
 pub struct FnDecl {
+    pub public: bool,
     /// A method's name is `Type.method`.
     pub name: String,
     pub name_span: Span,

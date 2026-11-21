@@ -6,6 +6,67 @@ The implementation includes ownership, views, containers, generics, interfaces a
 scoped OS threads. Native validation is on Linux x86-64; complete phase acceptance
 still requires the remaining tools, features and real-platform execution.
 
+## Source modules (2026-11-21)
+
+The entry file's directory is the project root. A source file is one module:
+`use maths` loads `maths.yv`; `use util/maths` loads `util/maths.yv` from that
+root, including when the import is written in a nested file. `use util/{a, b}`
+loads both files. The final path component is the module name used in expressions.
+Modules are loaded once; cyclic imports are supported because this subset has no
+module-level executable initialization.
+
+Top-level functions and types need `pub` to be exported. Imported functions use
+qualified calls such as `maths.double(7)`; public types are also available by
+their short names. Ambiguous imported types require `a.Point` or `b.Point`.
+Imports belong to the file containing them and are not implicitly re-exported;
+a child module cannot see the entry file's private names. Each module has one
+top-level declaration namespace. Standard-library imports are likewise scoped
+to their own file.
+
+For this implementation, exported types retain the existing accessible fields
+and methods; separate private-field/private-method rules are not introduced.
+Missing, private or unimported names are E0010; duplicate declarations/import
+aliases are E0011; unused imports are W0003.
+
+`maths.yv`:
+
+```text
+fn base(x: int) -> int { return x + x }
+pub fn double(x: int) -> int { return base(x) }
+```
+
+`main.yv`:
+
+```text
+use maths
+fn main() { println(maths.double(7)) }
+```
+
+`check`, `build`, `run`, `allocations` and `verify` load the complete reachable
+source graph. Diagnostics, allocation operation byte ranges and panic locations
+refer to original files. For module allocation queries, use
+`yavo allocations util/maths.double --file main.yv --json`; a short module name
+is accepted only when unambiguous. The entry module's functions keep their normal
+query names.
+
+Verification retains every source file, a source manifest and a project content
+hash. Reproducibility rebuilds from that complete snapshot in independent front
+ends and empty C caches. The required audit remains unimplemented. Multi-file
+`fix` returns U0001 without writing: the existing repair planner can only recheck
+one source file.
+
+Local-path/Git dependency packages and a program lockfile are still unimplemented.
+Imports cannot escape the entry directory; symlink module aliases are explicitly
+unsupported until alias graphs can be preserved in verification snapshots.
+The loader bounds a graph to 128 import levels, 1024 files and 16 MiB. Original
+files are parsed independently before linking, so a comment, string or block
+cannot be closed by a different file. Compiler module names beginning
+`__yvm_` are reserved in modular projects.
+
+Coverage is in `tests/modules.rs`; `tests/modules/basic/main.yv` is also built
+for all six supported targets. Runtime execution remains limited to matching
+available hosts.
+
 ## Collections and mutable-reference returns (2026-11-21)
 
 `use std/collections` now provides `Heap[T].by(comparator)` with `push`, `pop`
@@ -437,7 +498,7 @@ once also built with UBSan, which was clean) and `tests/p0/errors_optionals.yv`
 `use std/m` and `use std/{a, b}` import the modules `io`, `fs`, `os`, `math`, `time`, `rand`,
 `collections` and `sync` (stdlib contract Â§1). An unknown module is `E0010`, a module imported
 twice `E0011`, and an import nothing uses is warning `W0003`. Using `m.f(...)` or `m.name`
-without importing `m` is `E0010`. Importing anything other than `std/...` is `U0001`.
+without importing `m` is `E0010`. User source modules are supported as described above.
 
 `os.exit(code)` flushes output and ends the
 process without running drops (V11), and counts as never returning, so a path that ends in it

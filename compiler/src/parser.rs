@@ -136,7 +136,7 @@ impl Parser<'_, '_> {
                 Err(()) => self.sync_item(),
             }
         }
-        Program { fns, structs, enums, interfaces, uses }
+        Program { files: Vec::new(), fns, structs, enums, interfaces, uses }
     }
 
     fn sync_item(&mut self) {
@@ -171,21 +171,19 @@ impl Parser<'_, '_> {
         if self.is_kw("use") {
             return self.use_decl().map(|u| Some(Item::Use(u)));
         }
-        // P0 compiles a single file, so `pub` is accepted and has no effect yet.
-        if self.is_kw("pub") {
-            self.bump();
-        }
+        let public = self.is_kw("pub");
+        if public { self.bump(); }
         if self.is_kw("fn") {
-            return self.function(None, true).map(|f| Some(Item::Fn(f)));
+            return self.function(None, true).map(|mut f| { f.public = public; Some(Item::Fn(f)) });
         }
         if self.is_kw("struct") {
-            return self.struct_decl().map(|s| Some(Item::Struct(s)));
+            return self.struct_decl().map(|mut s| { s.public = public; Some(Item::Struct(s)) });
         }
         if self.is_kw("enum") {
-            return self.enum_decl().map(|e| Some(Item::Enum(e)));
+            return self.enum_decl().map(|mut e| { e.public = public; Some(Item::Enum(e)) });
         }
         if self.is_kw("interface") {
-            return self.interface_decl().map(|i| Some(Item::Interface(i)));
+            return self.interface_decl().map(|mut i| { i.public = public; Some(Item::Interface(i)) });
         }
         for kw in ["impl", "const", "type"] {
             if self.is_kw(kw) {
@@ -202,7 +200,7 @@ impl Parser<'_, '_> {
         let mut out = Vec::new();
         if self.eat(&Tok::Colon) {
             loop {
-                out.push(self.ident("an interface name")?);
+                out.push(self.qualified_type_name("an interface name")?);
                 if !self.eat(&Tok::Plus) {
                     break;
                 }
@@ -266,7 +264,7 @@ impl Parser<'_, '_> {
                 return Err(());
             }
         }
-        Ok(InterfaceDecl { name, name_span, methods })
+        Ok(InterfaceDecl { public: false, name, name_span, methods })
     }
 
     /// `struct Name { field: Type ... fn method(self) { } }`, one member per line (commas are
@@ -304,10 +302,19 @@ impl Parser<'_, '_> {
                 return Err(());
             }
         }
-        Ok(StructDecl { name, name_span, type_params, fields, impls, methods })
+        Ok(StructDecl { public: false, name, name_span, type_params, fields, impls, methods })
     }
 
     /// `[T, U: Ord + Copy]` after a function or struct name (none when absent).
+    fn qualified_type_name(&mut self, what: &str) -> PResult<(String, Span)> {
+        let (mut name, mut span) = self.ident(what)?;
+        if self.eat(&Tok::Dot) {
+            let (member, end) = self.ident("a type name after the module")?;
+            name.push('.'); name.push_str(&member); span = span.to(end);
+        }
+        Ok((name, span))
+    }
+
     fn type_params(&mut self) -> PResult<Vec<TypeParam>> {
         let mut out = Vec::new();
         if !self.eat(&Tok::LBracket) {
@@ -318,7 +325,7 @@ impl Parser<'_, '_> {
             let mut bounds = Vec::new();
             if self.eat(&Tok::Colon) {
                 loop {
-                    bounds.push(self.ident("a bound such as `Ord` or `Copy`")?);
+                    bounds.push(self.qualified_type_name("a bound such as `Ord` or `Copy`")?);
                     if !self.eat(&Tok::Plus) {
                         break;
                     }
@@ -403,58 +410,37 @@ impl Parser<'_, '_> {
                 return Err(());
             }
         }
-        Ok(EnumDecl { name, name_span, variants, impls, methods })
+        Ok(EnumDecl { public: false, name, name_span, variants, impls, methods })
     }
 
     /// `use std/m` or `use std/{a, b}`.
     fn use_decl(&mut self) -> PResult<Vec<Use>> {
-        let start = self.bump().span;
-        let (root, root_span) = match self.peek().clone() {
-            Tok::Ident(s) => (s, self.bump().span),
-            other => {
-                self.err_here(format!("expected a module path such as `std/io` after `use`, found {}", describe(&other)));
-                return Err(());
-            }
-        };
-        self.expect(Tok::Slash, "`/` in the module path, e.g. `std/io`")?;
-        if root != "std" {
-            self.unsupported(root_span, "only standard library modules (`use std/...`) can be imported for now")?;
-        }
+        self.bump();
+        let (first, first_span) = self.ident("a module path")?;
+        let mut parts = vec![first];
+        let mut last = first_span;
         let mut out = Vec::new();
-        let mut one = |p: &mut Self| -> PResult<()> {
-            match p.peek().clone() {
-                Tok::Ident(s) => {
-                    let span = p.bump().span;
-                    if matches!(p.peek(), Tok::Slash) {
-                        let sp = p.span();
-                        p.unsupported(sp, "nested module paths are not supported yet")?;
-                    }
-                    out.push(Use { module: s, span });
-                    Ok(())
+        while self.eat(&Tok::Slash) {
+            if self.eat(&Tok::LBrace) {
+                loop {
+                    let (module, span) = self.ident("a module name")?;
+                    out.push(Use { path: format!("{}/{}", parts.join("/"), module), module, span });
+                    if !self.eat(&Tok::Comma) { break; }
                 }
-                other => {
-                    p.err_here(format!("expected a module name, found {}", describe(&other)));
-                    Err(())
-                }
+                self.expect(Tok::RBrace, "`,` or `}` in the module list")?;
+                break;
             }
-        };
-        if self.eat(&Tok::LBrace) {
-            loop {
-                one(self)?;
-                if !self.eat(&Tok::Comma) {
-                    break;
-                }
-            }
-            self.expect(Tok::RBrace, "`,` or `}` in the module list")?;
-        } else {
-            one(self)?;
+            let (part, span) = self.ident("a module path component")?;
+            parts.push(part);
+            last = span;
+        }
+        if out.is_empty() {
+            out.push(Use { path: parts.join("/"), module: parts.last().unwrap().clone(), span: last });
         }
         if !matches!(self.peek(), Tok::Newline | Tok::Eof) {
-            let found = describe(self.peek());
-            self.err_here(format!("expected a newline after the import, found {found}"));
+            self.err_here("expected a newline after the import");
             return Err(());
         }
-        let _ = start;
         Ok(out)
     }
 
@@ -549,7 +535,7 @@ impl Parser<'_, '_> {
             Some(o) => format!("{o}.{name}"),
             None => name,
         };
-        Ok(FnDecl { name, name_span, owner: owner.map(str::to_string), type_params, params, ret, ret_of, body })
+        Ok(FnDecl { public: false, name, name_span, owner: owner.map(str::to_string), type_params, params, ret, ret_of, body })
     }
 
     /// A type, including `T ! E` (which binds loosest: `?String ! io.Error` is a result whose
@@ -1313,6 +1299,14 @@ impl Parser<'_, '_> {
         Ok(Expr { span: start.to(e.span), kind: ExprKind::Unary { op, op_span: start, expr: Box::new(e) } })
     }
 
+    fn qualified_expr_name(e: &Expr) -> Option<String> {
+        match &e.kind {
+            ExprKind::Ident(name) => Some(name.clone()),
+            ExprKind::Field { base, name } => Self::qualified_expr_name(base).map(|prefix| format!("{prefix}.{name}")),
+            _ => None,
+        }
+    }
+
     fn postfix(&mut self) -> PResult<Expr> {
         let mut e = self.primary()?;
         loop {
@@ -1358,9 +1352,8 @@ impl Parser<'_, '_> {
                 }
                 Tok::LBracket => {
                     // `name[T](...)` / `Name[T]{...}`: type arguments, not an index.
-                    if let ExprKind::Ident(name) = &e.kind {
-                        if self.type_args_ahead(name == "Heap") {
-                            let name = name.clone();
+                    if let Some(name) = Self::qualified_expr_name(&e) {
+                        if self.type_args_ahead(name == "Heap" || name == "collections.Heap") {
                             self.bump();
                             let mut targs = vec![self.ty()?];
                             while self.eat(&Tok::Comma) {
@@ -1407,11 +1400,11 @@ impl Parser<'_, '_> {
                 // `Name{field: value}`: a struct literal. Written without a space, which keeps it
                 // apart from `if cond {` blocks.
                 Tok::LBrace
-                    if matches!(&e.kind, ExprKind::Ident(n) if n.starts_with(|c: char| c.is_ascii_uppercase()))
+                    if Self::qualified_expr_name(&e).is_some_and(|n| n.rsplit('.').next().unwrap().starts_with(|c: char| c.is_ascii_uppercase()))
                         && self.span().start == e.span.end =>
                 {
-                    let ExprKind::Ident(name) = &e.kind else { unreachable!() };
-                    let (name, name_span) = (name.clone(), e.span);
+                    let name = Self::qualified_expr_name(&e).unwrap();
+                    let name_span = e.span;
                     e = self.struct_lit_body(name, name_span, Vec::new())?;
                 }
                 _ => return Ok(e),
