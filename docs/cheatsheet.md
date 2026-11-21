@@ -1,10 +1,10 @@
 # Yavo 速查卡（v0.5 冻结候选）
 
-这是给 agent 放进上下文的一页语言写法。语法是草案，编译器还不存在；命令是 `yavo`，源文件扩展名是 `.yv`。本卡只给常用写法，精确的安全规则以“语义表”为准，库签名见《标准库契约》。v0.5 的新增决定及与旧版差异见《决议与变更》，没有声称 Yavo 测试已经运行。
+这是给 agent 放进上下文的一页语言写法。命令是 `yavo`，源文件扩展名是 `.yv`。本卡只写当前编译器原型**已经实现**的写法；规范里有但尚未实现的功能在第 9 节列出，用到会得到 `U0001`（“not supported yet”）。精确的安全规则以“语义表”为准，库签名见《标准库契约》。
 
 ## 1. 程序骨架和基本语法
 
-一个文件就是一个程序，入口是 `main`；语句以换行结束，不写分号，代码块必须用花括号。
+入口文件里写 `main`；程序可以只有这一个文件，也可以拆成多个文件（第 6 节）。语句以换行结束，不写分号，代码块必须用花括号。
 
 ```
 // 导入写在文件开头，例如 use std/fs；没用到的导入会有警告
@@ -309,9 +309,9 @@ fn main() {
 | `Map` 写入和计数 | `set(k, v)` 消费键和值；`remove(k) -> ?V` 返回拥有值；`update(k, initial, f)` 消费拥有键，v1 限不携带借用的 Copy 值，f 恰好执行一次 | 插入可能；remove 本身不分配 |
 | 遍历 | `for x in v`、`for i, x in v`、`for k, v in m` 默认只读；`in &v`、`in &m` 显式可变；Map 键始终只读 | 否 |
 | 优先队列 | `use std/collections`；`var h = Heap[(int, int)].by((a, b) => a.0 < b.0)`，`h.push(x)`、`h.pop()`（`?T`）；比较闭包会被保存，不能捕获借用 | `push` 扩容时会 |
-| 双端队列、集合 | `Deque[T]`：`pushBack`、`popFront`；`Set[T]`：`s.add(x)`（消费元素，已有则不变）、`s.has(x)`（`Set[String]` 用 `str` 查询）、`s.remove(x)`（返回 `bool`）、`s.len()`，`for x in s` 按插入顺序只读遍历 | 插入时会 |
+| 双端队列、集合 | `use std/collections`；`var d = Deque[T]{}`：`pushBack`、`pushFront`、`popFront`、`popBack`（`?T`）、`len`，没有下标和遍历；`Set[T]`（prelude）：`s.add(x)`（消费元素，已有则不变）、`s.has(x)`（`Set[String]` 用 `str` 查询）、`s.remove(x)`（返回 `bool`）、`s.len()`，`for x in s` 按插入顺序只读遍历 | 插入时会 |
+| Arena | `var a = Arena[T]{}`；`a.add(x)` 返回 `Id[T]`；`a.get(id)`（`?&T`）、`a.getMut(id)`（`?&inout T`）、`a.getCopy(id)`、`a.remove(id)`（`?T`，拥有的值）、`a.has(id)`、`a.len()`。Arena **不能遍历**：需要按顺序访问时，自己另存一个 `Vec[Id[T]]`。`Id` 可复制，可比较、排序，可做 `Map`/`Set` 键 | `add` 时会 |
 | 数学 | `use std/math`；`math.sqrt(x)`、`math.pow(x, y)`、`math.floor(x)`、`math.pi` | 否 |
-| 时间、随机数 | `use std/time`：`time.now()`；`use std/rand`：`rand.int(lo, hi)` | 否 |
 
 读入并处理输入的标准写法：
 
@@ -371,7 +371,41 @@ struct Resource: Drop {
 
 只能编译器调用 `drop`，不能手动 `.drop()`；要提前释放已有拥有值，写 `let _ = resource`。完整对象先执行用户 drop，再按字段声明逆序清理；未完成构造不执行整体 drop。带析构的类型不是 Copy。普通退出有清理，panic 和 os.exit 不展开栈。
 
-## 6. 并发、测试和命令行
+## 6. 多文件、并发和命令行
+
+### 多个源文件
+
+入口文件所在目录是项目根。一个 `.yv` 文件就是一个模块：`use geom` 加载同目录的 `geom.yv`，`use util/text` 加载 `util/text.yv`，`use util/{a, b}` 同时加载两个。只需要构建入口文件：`yavo build main.yv -o app` 会自动找到所有被 `use` 的文件。
+
+```
+// geom.yv
+pub struct Rect {                     // 顶层的函数和类型要写 pub 才能被别的文件用
+    w: int
+    h: int
+}
+pub fn area(r: Rect) -> int {
+    return r.w * r.h
+}
+fn helper() -> int {                  // 不写 pub：只在本文件可见
+    return 0
+}
+```
+
+```
+// main.yv
+use geom
+
+fn main() {
+    let r = Rect{w: 2, h: 3}          // 公开类型可以直接用短名，也可以写 geom.Rect
+    println(geom.area(r))             // 函数必须写模块名限定
+}
+```
+
+- 公开类型的字段和方法都可以访问（还没有字段级私有）。导入只对写它的文件有效，不会传递；每个文件各自写 `use std/...`。互相导入是允许的。
+- 两个模块有同名类型时必须写 `a.Point`、`b.Point`。找不到或未导出的名字报 `E0010`。
+- `yavo fix` 目前只处理单文件程序；多文件项目报 `U0001` 并且不改文件。
+
+### 并发
 
 并发只有 OS 线程：`scope` 块里用 `spawn` 启动线程，块结束时等待所有线程。`use std/sync` 引入 `Mutex`、`Guard`、`Channel`、`SendError`、`Join`。`Rc/Arc` 已在 prelude 中。底层数据必须在 scope 外已存在；复制临时切片描述符合法，借用临时拥有数组不合法。
 
@@ -406,28 +440,21 @@ fn parallelSum(nums: Vec[int]) -> int {
 - `Arc[T]` 跨线程要求 `T` 同时满足 `Send` 和 `Sync`；`Rc` 永远不能跨线程，所以 `Arc[Mutex[Rc[T]]]` 也不行。接口值默认不能跨线程；`Box[Named + Send]` 只能转交给另一个线程，要被多个线程共享还需要 `+ Sync`。
 - panic 直接终止整个进程，不展开栈，也不会只结束一个线程；可能失败的操作要用 `T ! E`。
 
-测试写在同一个文件里，用 `yavo test` 运行；每个测试在单独的子进程里跑并带超时，一个测试 panic 或卡死不影响其他测试。随机测试的种子只保证随机输入可以重放，不保证线程调度可以重放。ASan/UBSan 与 TSan 分开构建和执行，不合并为同一二进制：
+### 命令行
 
-```
-test "sum adds up" {
-    assert(sum([1, 2, 3]) == 6)
-}
-```
+`test` 块和 `yavo test` 还没有实现（写 `test "..." { }` 是语法错误）；要自测就写一个小程序或在 `main` 里用 `assert`。
 
 | 命令 | 作用 |
 | --- | --- |
 | `yavo run main.yv` | 编译并运行 |
 | `yavo build main.yv -o app` | 编译；`--release` 开优化，`--target x86_64-windows-gnu` 交叉编译 |
-| `yavo toolchain install <目标>` | 提前下载并校验交叉编译工具链；`build` 从不联网 |
-| `yavo check --json` | 只检查，输出 JSON 诊断 |
-| `yavo fix` | 只应用不改变语义的修复；其余只给候选补丁 |
-| `yavo test` | 运行 `test` 块 |
-| `yavo fmt` | 格式化 |
-| `yavo outline <包>`、`yavo doc <模块>` | 只看签名；看标准库文档 |
-| `yavo explain <错误码>` | 错误说明，带一个错误写法和一个正确写法 |
-| `yavo allocations <函数>` | 每个操作给出“不分配、可能分配、未知”之一 |
-| `yavo audit` | 列出 `unsafe`、C 互操作、关闭检查的位置 |
-| `yavo verify --target <目标>` | 构建、测试、审计，输出验证报告；没执行的检查记为 `not_run` |
+| `yavo check main.yv [--json]` | 只检查，不生成程序；`--json` 输出结构化诊断 |
+| `yavo fix main.yv [--dry-run]` | 只自动应用不改变语义的修复（如拆开 `v.push(v.len())`、未用变量改名 `_x`），其余只列候选；`--dry-run` 只预览 |
+| `yavo allocations 函数名 --file main.yv` | 每个操作给出“不分配、可能分配、未知”之一 |
+| `yavo verify main.yv [--stdin f] [--expect-stdout f]` | 构建、运行并输出验证报告；审计尚未实现，所以总体结论是 `not_verified`（退出码 5） |
+| `yavo toolchain status` | 查看交叉编译工具链 |
+
+退出码：`yavo` 自身 0 成功、1 编译失败、2 用法错误；`yavo run` 返回程序自己的退出码，panic 是 101，被信号杀死是 128+N（段错误多半是递归太深导致栈溢出）。
 
 ## 7. 常见错误和修法
 
@@ -477,4 +504,6 @@ test "sum adds up" {
 
 本轮补定：标量写入 `*p`；可选模式 `some/none`；视图形参接受 `Vec → []`；析构 `Drop.drop(inout self)`；标准库接口见《标准库契约》；不允许部分移动；常量可知的有效表达式失败仍是运行时 panic；`catch _` 与 `_e` 有不同丢弃时点；修复临时名为 `vLen`，冲突加 `2/3/...`；`for` 默认只读、`in &xs` 才可写。
 
-这张卡的边界：没有覆盖 `unsafe`、C 互操作、包和多文件项目、泛型的全部规则，这些等对应功能进入路线图后再补。放进上下文之前建议先删掉本节；这张卡的实际 token 数还没有量过。
+## 9. 尚未实现（用了会报 `U0001` 或语法错误）
+
+`test` 块与 `yavo test`、`yavo fmt/doc/explain/audit`；`std/time`、`std/rand`；`Vec` 的 `remove`、`insert`、`clear`；开放切片 `x[a..]`、`x[..b]`（写 `x[a..x.len()]`）；遍历 `Arena`；元组做 `Map` 键、元组比较和打印；泛型枚举；带载荷枚举的 `==`；`match` 里的字面量模式（`.Num(0)`、`1 =>`）；一般闭包值和把闭包当参数传给自己的函数（`sortBy`、`update`、`Heap.by` 可以）；`spawn` 之外的线程写法，`spawn` 的实参不能是 `&inout`；包依赖、`unsafe`、C 互操作。
