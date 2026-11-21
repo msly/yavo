@@ -1,5 +1,6 @@
 mod allocations;
 mod ast;
+mod cache;
 mod check;
 mod closure_free;
 mod codegen;
@@ -51,7 +52,12 @@ TARGETS (cross-compilation uses the pinned zig toolchain; `run` only accepts tar
 EXIT CODES:
     0 success, 1 compile/check failure, 2 usage error, 3 C toolchain unavailable, 4 internal error,
     5 verification incomplete. The prototype records the required audit as not_run.
-    `yavo run` exits with the program's own status (101 on panic).";
+    `yavo run` exits with the program's own status (101 on panic; 128+N if signal N killed it).
+
+BUILD CACHE:
+    Binaries are cached by the generated C, runtime, toolchain, flags and target, so rebuilding
+    unchanged code skips the C compiler. YAVO_NO_CACHE=1 disables it, YAVO_CACHE_DIR moves it
+    (default ~/.cache/yavo), YAVO_CACHE_MAX_ENTRIES limits it (256). `verify` never uses it.";
 
 struct Options {
     input: PathBuf,
@@ -169,16 +175,12 @@ fn default_output(input: &Path, target: Option<&toolchain::Target>) -> PathBuf {
 
 fn build(opts: &Options, output: &Path) {
     let Some(c_code) = compile_to_c(opts) else { exit(EXIT_COMPILE_ERROR) };
-    let scratch = scratch_dir();
-    let c_file = scratch.join("main.c");
     let write = |p: &Path, s: &str| {
         fs::write(p, s).unwrap_or_else(|e| {
             eprintln!("error: cannot write {}: {e}", p.display());
             exit(EXIT_INTERNAL);
         })
     };
-    write(&c_file, &c_code);
-    write(&scratch.join("yavo_rt.h"), codegen::RUNTIME_HEADER);
     if let Some(path) = &opts.emit_c {
         write(path, &c_code);
     }
@@ -187,16 +189,112 @@ fn build(opts: &Options, output: &Path) {
         exit(EXIT_TOOLCHAIN);
     });
     if opts.target.is_some() && !tc.can_cross_compile() {
-        let _ = fs::remove_dir_all(&scratch);
         eprintln!("error: `--target` needs the pinned zig toolchain; unset YAVO_CC ({})", tc.description);
         exit(EXIT_TOOLCHAIN);
     }
+    if tc.can_cross_compile() {
+        if let Some(root) = cache::root() {
+            match build_cached(&tc, &root, &c_code, opts, output) {
+                Ok(()) => return,
+                // A cache I/O problem (read-only home, full disk) must not fail the build.
+                Err(CacheError::Io(e)) => {
+                    if std::env::var_os("YAVO_CACHE_TRACE").is_some() {
+                        eprintln!("yavo: build cache unavailable ({e}); building without it");
+                    }
+                }
+                Err(CacheError::Compile(e)) => {
+                    eprintln!("error: {e}");
+                    exit(EXIT_INTERNAL);
+                }
+            }
+        }
+    }
+    let scratch = scratch_dir();
+    let c_file = scratch.join("main.c");
+    write(&c_file, &c_code);
+    write(&scratch.join("yavo_rt.h"), codegen::RUNTIME_HEADER);
     let result = tc.compile(&c_file, &scratch, output, opts.release, opts.target);
     let _ = fs::remove_dir_all(&scratch);
     if let Err(e) = result {
         eprintln!("error: {e}");
         exit(EXIT_INTERNAL);
     }
+}
+
+enum CacheError {
+    Io(std::io::Error),
+    Compile(String),
+}
+
+impl From<std::io::Error> for CacheError {
+    fn from(e: std::io::Error) -> Self { CacheError::Io(e) }
+}
+
+/// Builds through the content-addressed back-end cache (see `cache.rs`).
+fn build_cached(
+    tc: &toolchain::Toolchain, root: &Path, c_code: &str, opts: &Options, output: &Path,
+) -> Result<(), CacheError> {
+    let flags = tc.flags(opts.release, opts.target);
+    let key = cache::key(&cache::Inputs {
+        c_code,
+        runtime_header: codegen::RUNTIME_HEADER,
+        toolchain_lock: toolchain::lock_contents(),
+        compiler: &tc.program,
+        args: &flags,
+        native: opts.target.is_none(),
+    });
+    let trace = std::env::var_os("YAVO_CACHE_TRACE").is_some();
+    let entry = cache::Entry::open(root, &key)?;
+    if entry.restore(output) {
+        if trace { eprintln!("yavo: build cache hit {key}"); }
+        return Ok(());
+    }
+    if trace { eprintln!("yavo: build cache miss {key}"); }
+    entry.stage(c_code, codegen::RUNTIME_HEADER)?;
+    let built = entry.scratch_output();
+    let result = tc.compile(&entry.c_file(), &entry.dir, &built, opts.release, opts.target);
+    if let Err(e) = result {
+        let _ = fs::remove_file(&built);
+        return Err(CacheError::Compile(e));
+    }
+    let published = entry.publish(&built, output);
+    let _ = fs::remove_file(&built);
+    published?;
+    cache::evict(root, &key);
+    Ok(())
+}
+
+/// Reports how the program ended when `yavo run` cannot pass its exit code through.
+fn program_status(status: std::process::ExitStatus) -> i32 {
+    if let Some(code) = status.code() {
+        return code;
+    }
+    #[cfg(unix)]
+    {
+        use std::os::unix::process::ExitStatusExt;
+        if let Some(sig) = status.signal() {
+            let name = match sig {
+                4 => "SIGILL",
+                6 => "SIGABRT",
+                7 => "SIGBUS",
+                8 => "SIGFPE",
+                9 => "SIGKILL",
+                11 => "SIGSEGV",
+                13 => "SIGPIPE",
+                15 => "SIGTERM",
+                _ => "signal",
+            };
+            let hint = if matches!(sig, 7 | 11) {
+                "\n  note: in safe Yavo code this is almost always a stack overflow (deep recursion, or dropping a very deeply nested Box chain)\n  note: output the program had not yet flushed is lost"
+            } else {
+                ""
+            };
+            eprintln!("error: the program was terminated by signal {sig} ({name}){hint}");
+            return 128 + sig;
+        }
+    }
+    eprintln!("error: the program ended without an exit status");
+    EXIT_INTERNAL
 }
 
 fn run_allocations(args: &[String]) -> i32 {
@@ -338,7 +436,7 @@ fn main() {
             let status = Command::new(&exe).status();
             let _ = fs::remove_dir_all(&dir);
             match status {
-                Ok(s) => exit(s.code().unwrap_or(EXIT_INTERNAL)),
+                Ok(s) => exit(program_status(s)),
                 Err(e) => {
                     eprintln!("error: cannot start {}: {e}", exe.display());
                     exit(EXIT_INTERNAL);

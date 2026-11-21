@@ -1,6 +1,7 @@
 //! Locates the C toolchain. Yavo pins one exact `zig cc` release (see `toolchain.lock`)
 //! so generated C compiles the same way on every host; `YAVO_CC` overrides it.
 
+use std::ffi::OsString;
 use std::fs;
 use std::io::{self, Read, Write};
 use std::path::{Path, PathBuf};
@@ -161,6 +162,29 @@ impl Toolchain {
         self.prefix_args.first().map(String::as_str) == Some("cc") && !self.description.starts_with("YAVO_CC=")
     }
 
+    /// Every compiler argument except the include directory, input and output paths. The build
+    /// cache hashes exactly this list, so it cannot drift from what `compile` passes.
+    pub fn flags(&self, release: bool, target: Option<&Target>) -> Vec<OsString> {
+        let mut args: Vec<OsString> = self.prefix_args.iter().map(OsString::from).collect();
+        args.extend(["-std=c17", "-fno-strict-aliasing"].map(OsString::from));
+        if let Some(t) = target {
+            args.push("-target".into());
+            args.push(t.zig_triple.into());
+        }
+        // Test hook: count heap blocks to catch leaks and double drops (see `yavo_rt.h`).
+        if std::env::var_os("YAVO_ALLOC_CHECK").is_some() {
+            args.push("-DYV_ALLOC_CHECK".into());
+        }
+        if release {
+            // Release binaries carry no debug info or symbols (decision 2026-11-16): a static musl
+            // build drops from ~1.3 MB to ~12 KB and Windows targets no longer leave a `.pdb` file.
+            args.extend(["-O2", "-s"].map(OsString::from));
+        } else {
+            args.extend(["-O0", "-g"].map(OsString::from));
+        }
+        args
+    }
+
     pub fn compile(
         &self,
         c_file: &Path,
@@ -170,21 +194,7 @@ impl Toolchain {
         target: Option<&Target>,
     ) -> Result<(), String> {
         let mut cmd = Command::new(&self.program);
-        cmd.args(&self.prefix_args).args(["-std=c17", "-fno-strict-aliasing"]);
-        if let Some(t) = target {
-            cmd.arg("-target").arg(t.zig_triple);
-        }
-        // Test hook: count heap blocks to catch leaks and double drops (see `yavo_rt.h`).
-        if std::env::var_os("YAVO_ALLOC_CHECK").is_some() {
-            cmd.arg("-DYV_ALLOC_CHECK");
-        }
-        if release {
-            // Release binaries carry no debug info or symbols (decision 2026-11-16): a static musl
-            // build drops from ~1.3 MB to ~12 KB and Windows targets no longer leave a `.pdb` file.
-            cmd.args(["-O2", "-s"]);
-        } else {
-            cmd.args(["-O0", "-g"]);
-        }
+        cmd.args(self.flags(release, target));
         cmd.arg("-I").arg(include_dir).arg(c_file).arg("-o").arg(output);
         let out = cmd.output().map_err(|e| format!("cannot run {}: {e}", self.description))?;
         // A successful compiler may still emit warnings. Preserve both streams on

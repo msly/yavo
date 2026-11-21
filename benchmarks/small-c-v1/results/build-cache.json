@@ -1,0 +1,21 @@
+{
+  "schema": "yavo-build-latency/1",
+  "date": "2026-11-21",
+  "host": "project Linux server, 4 cores, idle (load 0.00)",
+  "toolchain": "pinned zig 0.17.1",
+  "method": "wall-clock of `yavo build` per benchmark source, 7 samples, median; warm = unchanged source after one build; edit = a new comment line inserted at line 1 before each build (shifts lines, so generated C changes: cache miss); no_cache = YAVO_NO_CACHE=1",
+  "release_ms": {
+    "integer_recurrence": {"warm": 2, "edit": 214, "no_cache": 215},
+    "vec_transform": {"warm": 3, "edit": 247, "no_cache": 237},
+    "mutref_scatter": {"warm": 2, "edit": 244, "no_cache": 240},
+    "deque_ring": {"warm": 2, "edit": 233, "no_cache": 231}
+  },
+  "debug_ms": {"vec_transform": {"warm": 10, "edit": 159}},
+  "frontend_check_ms": {"vec_transform": 3},
+  "backend_breakdown_ms": {
+    "empty_c_compile_link_O2": 47,
+    "runtime_header_only_compile_link_O2": 105,
+    "runtime_header_only_compile_link_O0_g": 96
+  },
+  "conclusion": "The cache removes the back end for unchanged code (warm builds 2-10 ms). It does not help the edit-compile loop, where the generated C always changes: release 214-247 ms (above the 200 ms target), debug 159 ms. About 50-60 ms of each miss is recompiling the 1759-line runtime header; a precompiled runtime object per target/mode is the next lever."
+}
