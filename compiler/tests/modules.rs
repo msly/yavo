@@ -72,6 +72,12 @@ fn public_types_generics_interfaces_and_borrowed_returns_work_across_files() {
 }
 
 #[test]
+fn arena_graphs_and_thread_transfers_preserve_identity_across_modules() {
+    let entry = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/modules/arena/main.yv");
+    runs(&entry, "B\n1 1\n");
+}
+
+#[test]
 fn private_missing_and_transitively_unimported_symbols_are_not_visible() {
     rejects(&[
         ("main.yv", "use lib\nfn main() { println(lib.hidden()) }\n"),

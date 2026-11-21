@@ -1,0 +1,21 @@
+// expect-stdout:
+// | B
+// | 1 1
+use graph
+
+fn main() {
+    var g = graph.Graph{nodes: Arena[graph.Node]{}}
+    let a = graph.pool(&g).add(graph.Node{name: "A".toString(), edges: []})
+    let b = graph.pool(&g).add(graph.Node{name: "B".toString(), edges: [a]})
+    if let node = graph.pool(&g).getMut(a) { node.edges.push(b) }
+    let removed = graph.pool(&g).remove(a) ?? Node{name: "missing".toString(), edges: []}
+    assert(removed.name == "A".toString())
+    assert(g.nodes.get(a).isNone())
+    scope {
+        let task = spawn graph.transfer(g)
+        let moved = task.join()
+        if let node = moved.nodes.get(b) { println(node.name) }
+        println("${moved.nodes.len()} ${removed.edges.len()}")
+        assert(moved.nodes.get(a).isNone())
+    }
+}

@@ -146,6 +146,7 @@ fn collections_and_mutable_returns_compile_for_all_targets() {
 #[test]
 fn modules_compile_for_all_targets() {
     assert_source_targets(Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/modules/basic/main.yv"), "module-targets");
+    assert_source_targets(Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/modules/arena/main.yv"), "arena-module-targets");
 }
 
 fn assert_source_targets(path: PathBuf, tag: &str) {

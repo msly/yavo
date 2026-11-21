@@ -1,0 +1,10 @@
+pub struct Node {
+    name: String
+    edges: Vec[Id[Node]]
+}
+pub struct Graph { nodes: Arena[Node] }
+
+pub fn pool(g: inout Graph) -> &inout Arena[Node] of g {
+    return &g.nodes
+}
+pub fn transfer(g: sink Graph) -> Graph { return g }
