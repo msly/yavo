@@ -78,3 +78,39 @@ percentage. Use regressions or unusually slow cases to choose the next measureme
 
 Measured reports are stored in results/. The source revision, compiler executable
 hash and all input hashes in each report identify what was actually tested.
+
+### Initial implementation baseline (2026-11-21)
+
+The first run used worktree commit 39254e4, whose compiler/runtime inputs are
+identical to f5469dc. The four-case runtime suite was committed before timing.
+Full raw measurements and 385 unique referenced file hashes were checked in
+results/f5469dc-baseline.json. These figures are a baseline for the forthcoming
+Arena/module changes, not measurements of those changes.
+
+| Case | Yavo median ms | C median ms | Yavo / C | Yavo warm build P50 ms | Stripped Yavo / C bytes |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| integer_recurrence | 70.134 | 74.317 | 0.944 | 217.006 | 16896 / 21576 |
+| vec_transform | 160.242 | 129.270 | 1.240 | 218.753 | 17952 / 24200 |
+| mutref_scatter | 100.450 | 103.648 | 0.969 | 224.323 | 18048 / 24120 |
+| deque_ring | 128.784 | 114.929 | 1.121 | 260.611 | 18208 / 24424 |
+
+The four median ratios have geometric mean 1.062; the worst case is vec_transform
+at 1.240. This pilot's four warm build medians exceed the 200 ms target. Small
+static binary sizes satisfy the numerical size threshold only for these programs;
+C uses libc printf while Yavo uses its runtime formatter, so their size difference
+does not isolate an intrinsic language cost.
+
+### Source-path cache diagnostic
+
+Run after the main suite, selecting its report:
+
+    perl benchmarks/small-c-v1/cache_probe.pl --baseline-json benchmarks/small-c-v1/results/current.json --report benchmarks/small-c-v1/results/current-cache-path.json
+
+The diagnostic holds generated C bytes, runtime include directory, compiler flags
+and output path fixed. A primed stable C path is alternated with five fresh C
+paths. Every resulting executable must have identical SHA-256 and exact output.
+The initial baseline gave 41.843 ms for a stable input path and 211.961 ms for a
+fresh input path (5.066x); see results/f5469dc-cache-path.json. The current compiler
+uses a per-process temporary C directory. This contrast identifies a substantial
+path-dependent cache cost; it does not measure every source of frontend or build
+overhead. No compiler/cache optimization was made for this experiment.
