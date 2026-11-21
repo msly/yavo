@@ -68,3 +68,15 @@ python3 tools/plan_evaluation.py --pilot-total 60 --pilot-discordant 9
 前三个工具各自验证元数据、校验器、C 能力；它们都不是 Yavo 编译器。真正的验收仍须运行 yavo check/fix/build/test/verify。报告已经区分 passed/not_run，不能把结构自检的 passed 抄成语言测试通过。
 
 P0 继续完成真实工具链锁和三平台最小链路；P1 使用本版语义和 check/fix 清单实现。不再把上述 11 项作为待定语法来回选择。实现若发现反例，新增编号和回归测试后做版本化修正，不声称本版穷尽所有未来缺陷。
+
+## 六、2026-11-21 第三轮 agent 实验后的语言决定
+
+依据：`experiments/coldstart-2026-11-21/README.md`（Yavo 组 8 次有效编译失败中，下列规则直接或间接造成 5 次）。用户同意按开发者建议执行；冻结测试包不改，被推翻的旧期望在 `compiler/tests/conformance_superseded.txt` 中逐条登记。
+
+| 项 | 决定 | 定位 |
+| --- | --- | --- |
+| 12 两阶段借用 | 修改接收者（变量或其字段）的调用和下标赋值中，接收者在实参求值期间只被预留：实参可读，不可修改、移动，值不能在调用开始后仍指向它（E0403）。推翻 v0.5 的“不做两阶段借用”；T-V1、T-GF2 登记为 superseded | V2、V13；`errors_two_phase_defaults.yv` |
+| 13 `String`/`str` 比较 | 比较运算符两侧可以分别是 `String` 和 `str`，按文本比较；不改变类型、泛型约束和 Map 键 | K1 |
+| 14 字段默认值 | `field: T = 常量`，限数值、布尔、字节、无插值字符串字面量（`String` 字段）、`none`、`[]`、`[:]`；每次构造重新求得 | V6a |
+| 15 栈溢出 | 新 panic 类别 P-STACK，行列 `0:0`，尽力写出缓冲输出；不运行用户代码的 `Box` 内容按工作列表释放，不随嵌套深度消耗栈 | V14；ERRORS.md 补记 |
+| 16 下标赋值 | 规范 C2 早已允许，这次补齐实现：先求新值，再求下标与越界检查，再析构旧元素并写入 | C2、V5 |

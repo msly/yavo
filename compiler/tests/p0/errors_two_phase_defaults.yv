@@ -1,0 +1,42 @@
+// expect-error: E0001 21:14
+// expect-error: E0001 22:14
+// expect-error: E0403 32:12
+// expect-error: E0403 33:7
+// expect-error: E0403 35:12
+// expect-error: E0404 37:12
+// expect-error: E0403 39:11
+struct C {
+    n: int
+
+    fn add(inout self, k: int) {
+        self.n += k
+    }
+    fn bump(inout self) -> int {
+        self.n += 1
+        return self.n
+    }
+}
+
+struct Bad {
+    a: int = "text"
+    b: int = compute()
+    c: String = "fine"
+}
+
+fn compute() -> int {
+    return 1
+}
+
+fn main() {
+    var v = [1, 2]
+    v.push(v.pop() ?? 0)
+    v[v.pop() ?? 0] = 3
+    var t = "ab".toString()
+    t.push(t)
+    var w = ["a".toString()]
+    w.push(w[0])
+    var c = C{n: 0}
+    c.add(c.bump())
+    let bad = Bad{a: 1, b: 2}
+    println("${v.len()} ${t} ${c.n} ${bad.c}")
+}

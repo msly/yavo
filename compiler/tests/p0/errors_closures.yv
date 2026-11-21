@@ -54,7 +54,7 @@ fn updates() {
     var groups: Map[String, Vec[int]] = [:]
     groups.update("a".toString(), [], (g) => g)
     var counts: Map[String, int] = [:]
-    counts.update("a".toString(), counts.len(), (n) => n + 1)
+    counts.update("a".toString(), counts.remove("a") ?? 0, (n) => n + 1)
     counts.update("b".toString(), 0, (n, m) => n)
 }
 

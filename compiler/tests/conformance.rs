@@ -36,6 +36,8 @@ enum Status {
     Wrong,
     Unsupported,
     NotRun,
+    /// The old expectation is overturned by a dated decision in `tests/conformance_superseded.txt`.
+    Superseded,
 }
 
 impl Status {
@@ -45,6 +47,7 @@ impl Status {
             Status::Wrong => "wrong",
             Status::Unsupported => "unsupported",
             Status::NotRun => "not_run",
+            Status::Superseded => "superseded",
         }
     }
 }
@@ -60,6 +63,14 @@ fn outcome(status: Status, reason: impl Into<String>) -> Outcome {
 
 fn tests_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../yavo-tests")
+}
+
+fn superseded() -> BTreeMap<String, String> {
+    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/conformance_superseded.txt");
+    std::fs::read_to_string(path).expect("read conformance_superseded.txt")
+        .lines().map(str::trim).filter(|l| !l.is_empty() && !l.starts_with('#'))
+        .filter_map(|l| l.split_once(' ').map(|(id, why)| (id.to_string(), why.to_string())))
+        .collect()
 }
 
 fn baseline_path() -> PathBuf {
@@ -889,15 +900,19 @@ fn conformance() {
             .expect("parse MANIFEST.json");
     let entries = manifest.as_array().expect("MANIFEST.json must be an array");
 
+    let superseded = superseded();
     let rows: Vec<(String, String, String, Outcome)> = entries
         .iter()
         .map(|e| {
-            (
-                e["id"].as_str().unwrap_or("?").to_string(),
-                e["phase"].as_str().unwrap_or("?").to_string(),
-                e["category"].as_str().unwrap_or("?").to_string(),
-                classify(e, &root),
-            )
+            let id = e["id"].as_str().unwrap_or("?").to_string();
+            let mut o = classify(e, &root);
+            if let Some(why) = superseded.get(&id) {
+                o = match o.status {
+                    Status::Pass => outcome(Status::Wrong, "listed as superseded but still meets its old expectation; remove it from the list"),
+                    _ => outcome(Status::Superseded, format!("{why} (was: {})", o.reason)),
+                };
+            }
+            (id, e["phase"].as_str().unwrap_or("?").to_string(), e["category"].as_str().unwrap_or("?").to_string(), o)
         })
         .collect();
 
@@ -912,15 +927,19 @@ fn conformance() {
         }
     }
     println!("\nconformance: {} cases", rows.len());
-    println!("{:<8}{:>7}{:>7}{:>13}{:>9}", "phase", "pass", "wrong", "unsupported", "not_run");
+    println!("{:<8}{:>7}{:>7}{:>13}{:>9}{:>12}", "phase", "pass", "wrong", "unsupported", "not_run", "superseded");
     let mut phases: Vec<String> = rows.iter().map(|r| r.1.clone()).collect::<BTreeSet<_>>().into_iter().collect();
     phases.push("total".into());
     for p in &phases {
         let n = |s| by_phase.get(&(p.clone(), s)).copied().unwrap_or(0);
-        println!("{:<8}{:>7}{:>7}{:>13}{:>9}", p, n(Status::Pass), n(Status::Wrong), n(Status::Unsupported), n(Status::NotRun));
+        println!("{:<8}{:>7}{:>7}{:>13}{:>9}{:>12}", p, n(Status::Pass), n(Status::Wrong), n(Status::Unsupported), n(Status::NotRun), n(Status::Superseded));
     }
     println!("\nwrong:");
     for (id, _, _, o) in rows.iter().filter(|r| r.3.status == Status::Wrong) {
+        println!("  {id}: {}", o.reason);
+    }
+    println!("\nsuperseded by later decisions:");
+    for (id, _, _, o) in rows.iter().filter(|r| r.3.status == Status::Superseded) {
         println!("  {id}: {}", o.reason);
     }
     println!("\nmost common unsupported features:");
@@ -941,7 +960,9 @@ fn conformance() {
 
     // Regression ratchet. Updating must not erase regressions from the old set.
     let passing: BTreeSet<String> = rows.iter().filter(|r| r.3.status == Status::Pass).map(|r| r.0.clone()).collect();
-    let baseline = read_baseline(&baseline_path()).expect("read existing conformance baseline");
+    // A superseded case leaves the baseline: its old expectation no longer holds by decision.
+    let baseline: BTreeSet<String> = read_baseline(&baseline_path()).expect("read existing conformance baseline")
+        .into_iter().filter(|id| !superseded.contains_key(id)).collect();
     require_monotonic(&baseline, &passing).unwrap_or_else(|e| panic!("{e}"));
     if std::env::var_os("YAVO_UPDATE_BASELINE").is_some() {
         update_baseline(&baseline_path(), &passing).expect("update baseline without losing passing cases");
@@ -967,7 +988,9 @@ fn require_monotonic(baseline: &BTreeSet<String>, passing: &BTreeSet<String>) ->
 }
 
 fn update_baseline(path: &Path, passing: &BTreeSet<String>) -> Result<(), String> {
-    require_monotonic(&read_baseline(path)?, passing)?;
+    let superseded = superseded();
+    let old: BTreeSet<String> = read_baseline(path)?.into_iter().filter(|id| !superseded.contains_key(id)).collect();
+    require_monotonic(&old, passing)?;
     let mut text = String::from("# Spec cases that must keep passing. Regenerate with YAVO_UPDATE_BASELINE=1.\n");
     for id in passing { text.push_str(id); text.push('\n'); }
     std::fs::write(path, text).map_err(|e| e.to_string())

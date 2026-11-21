@@ -282,10 +282,11 @@ fn program_status(status: std::process::ExitStatus) -> i32 {
                 11 => "SIGSEGV",
                 13 => "SIGPIPE",
                 15 => "SIGTERM",
+                24 => "SIGXCPU",
                 _ => "signal",
             };
             let hint = if matches!(sig, 7 | 11) {
-                "\n  note: in safe Yavo code this is almost always a stack overflow (deep recursion, or dropping a very deeply nested Box chain)\n  note: output the program had not yet flushed is lost"
+                "\n  note: the runtime reports stack overflow as P-STACK, so this points to a bug in the Yavo runtime or compiler; please report it\n  note: output the program had not yet flushed is lost"
             } else {
                 ""
             };

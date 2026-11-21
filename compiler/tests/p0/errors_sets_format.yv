@@ -1,7 +1,7 @@
 // expect-error: E0501 10:16
 // expect-error: E0001 16:12
 // expect-error: E0103 24:9
-// expect-error: E0403 31:11
+// expect-error: E0403 31:17
 // expect-error: E0014 35:5
 // expect-error: E0001 40:16
 // expect-error: U0001 45:16
@@ -28,7 +28,7 @@ fn writeElements() {
 
 fn alreadyBorrowed() {
     var s: Set[int] = []
-    s.add(s.len())
+    s.add(take(&s).len())
 }
 
 fn readOnly(s: Set[int]) {

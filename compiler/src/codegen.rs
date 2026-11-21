@@ -226,11 +226,23 @@ pub fn generate(prog: &HProgram, file: &str) -> String {
     for (id, inner) in all_boxes() {
         let t = Ty::Box(id);
         let (key, c) = (t.key(), t.c_name());
-        let drop_inner = if inner.needs_drop() { format!("\n        {}(*p);", drop_fn(inner)) } else { String::new() };
-        let _ = writeln!(
-            g.out,
-            "static inline void yv_drop_{key}({c} *p) {{\n    if (*p) {{{drop_inner}\n        yv_box_free(*p);\n        *p = NULL;\n    }}\n}}"
-        );
+        if inner.needs_drop() && !inner.may_run_user_drop() {
+            // No user code runs while the contents are dropped, so nested boxes (a long list,
+            // a deep tree) are released from a worklist instead of recursively: no stack depth.
+            let _ = writeln!(
+                g.out,
+                "static void yv_dropc_{key}(void *q) {{ {}(({} *)q); }}\n\
+                 static inline void yv_drop_{key}({c} *p) {{\n    if (*p) {{\n        yv_box_release(*p, yv_dropc_{key});\n        *p = NULL;\n    }}\n}}",
+                drop_fn(inner),
+                inner.c_name()
+            );
+        } else {
+            let drop_inner = if inner.needs_drop() { format!("\n        {}(*p);", drop_fn(inner)) } else { String::new() };
+            let _ = writeln!(
+                g.out,
+                "static inline void yv_drop_{key}({c} *p) {{\n    if (*p) {{{drop_inner}\n        yv_box_free(*p);\n        *p = NULL;\n    }}\n}}"
+            );
+        }
         let _ = writeln!(
             g.out,
             "static inline {c} yv_clone_{key}({c} const *p, uint32_t line, uint32_t col) {{\n    \

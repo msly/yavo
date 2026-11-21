@@ -1,0 +1,133 @@
+// expect-stdout:
+// | 101 8 7 14 5 zz a! world hello
+// | 5 3 30 2 1 4 4 1 ab2
+// | anon 8080 -0.5 false 1 0 3 44 1
+// | srv 1 0 q 1
+// | mixed ok
+// | deep ok
+use std/collections
+
+struct P {
+    x: int
+    name: String
+}
+
+struct C {
+    n: int
+    items: Vec[int]
+
+    fn add(inout self, k: int) {
+        self.n += k
+    }
+    fn get(self) -> int {
+        return self.n
+    }
+}
+
+struct Cfg {
+    name: String = "anon"
+    port: int = 8080
+    ratio: f64 = -0.5
+    debug: bool = false
+    tags: Vec[String] = []
+    extra: Map[String, int] = [:]
+    limit: ?int = 3
+    sep: byte = ','
+    id: int
+}
+
+struct Holder[T] {
+    v: T
+    n: int = 1
+}
+
+struct Node {
+    kids: Vec[Box[Node]]
+    next: ?Box[Node]
+}
+
+fn total(xs: []int) -> int {
+    var s = 0
+    for x in xs {
+        s += x
+    }
+    return s
+}
+
+fn indexWrites() {
+    var dp = [1, 1, 0, 0, 0, 0]
+    for i in 2..dp.len() {
+        dp[i] = dp[i - 1] + dp[i - 2]
+    }
+    dp[0] += 100
+    var grid: Vec[Vec[int]] = [[0, 0], [0, 0]]
+    grid[1][0] = 7
+    grid[1][1] += grid[1][0] * 2
+    var ps = [P{x: 1, name: "a".toString()}, P{x: 2, name: "b".toString()}]
+    ps[1].x *= 10
+    ps[0].name = "zz".toString()
+    ps[1] = P{x: 5, name: ps[0].name.clone()}
+    var names = ["a".toString(), "b".toString()]
+    names[1] = format("${names[0]}!")
+    let text = "hello world".toString()
+    var words: Vec[str] = ["", ""]
+    let ws = text.fields()
+    words[0] = ws[1]
+    words[1] = ws[0]
+    println("${dp[0]} ${dp[5]} ${grid[1][0]} ${grid[1][1]} ${ps[1].x} ${ps[1].name} ${names[1]} ${words.join(" ")}")
+}
+
+fn twoPhase() {
+    var v = [1, 2]
+    v.push(v.len())
+    v.push(v[0] + v[1])
+    v.push(total(v))
+    v[v.len() - 1] = v[v.len() - 2] * 10
+    var m: Map[String, int] = [:]
+    m.set("a".toString(), m.len())
+    m.set(format("k${m.len()}"), m.getCopy("a") ?? 7)
+    var s: Set[int] = []
+    s.add(s.len())
+    var c = C{n: 1, items: []}
+    c.add(c.n)
+    c.add(c.get())
+    c.items.push(c.n)
+    var d = Deque[int]{}
+    d.pushBack(d.len())
+    var t = "ab".toString()
+    t.push(format("${t.len()}"))
+    println("${v.len()} ${v[3]} ${v[4]} ${m.len()} ${s.len()} ${c.n} ${c.items[0]} ${d.len()} ${t}")
+}
+
+fn defaults() {
+    var a = Cfg{id: 1}
+    a.tags.push("x".toString())
+    let b = Cfg{id: 2, port: 1, name: "srv".toString()}
+    let h = Holder[String]{v: "q".toString()}
+    println("${a.name} ${a.port} ${a.ratio:.1} ${a.debug} ${a.tags.len()} ${a.extra.len()} ${a.limit ?? 0} ${a.sep} ${a.id}")
+    println("${b.name} ${b.port} ${b.tags.len()} ${h.v} ${h.n}")
+    let owned = "abc".toString()
+    let view = "abc"
+    if owned == view && view == owned && owned < "abd" && "abb" < owned && owned != "x" {
+        println("mixed ok")
+    }
+}
+
+fn deepDrops() {
+    var root = Node{kids: []}
+    for _i in 0..200000 {
+        root = Node{kids: [Box(root)]}
+    }
+    var list: ?Box[Node] = none
+    for _j in 0..200000 {
+        list = Box(Node{kids: [], next: list})
+    }
+    println("deep ok")
+}
+
+fn main() {
+    indexWrites()
+    twoPhase()
+    defaults()
+    deepDrops()
+}

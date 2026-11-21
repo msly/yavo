@@ -76,7 +76,7 @@ fn exclusive() {
         m.set("b".toString(), Counter{n: 1})
         println(r.n)
     }
-    m.set("c".toString(), Counter{n: m.len()})
+    m.set("c".toString(), m.remove("x") ?? Counter{n: 0})
 }
 fn literals() {
     let _m = [:]

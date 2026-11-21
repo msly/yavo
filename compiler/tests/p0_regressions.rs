@@ -228,6 +228,8 @@ fn runtime_retries_eintr_and_partial_writes_but_rejects_zero_writes() {
     fs::copy(Path::new(env!("CARGO_MANIFEST_DIR")).join("runtime/yavo_rt.h"),
         scratch.0.join("yavo_rt.h")).unwrap();
     let source = r#"
+#define _DEFAULT_SOURCE 1
+#define _XOPEN_SOURCE 700
 #include <unistd.h>
 #include <errno.h>
 #include <stdlib.h>

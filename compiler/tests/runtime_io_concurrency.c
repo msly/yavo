@@ -1,4 +1,5 @@
-#define _POSIX_C_SOURCE 200809L
+#define _DEFAULT_SOURCE 1
+#define _XOPEN_SOURCE 700
 #include <stdlib.h>
 static _Thread_local int fail_alloc;
 static void *controlled_malloc(size_t n) { return fail_alloc ? NULL : malloc(n); }

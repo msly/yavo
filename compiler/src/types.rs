@@ -672,6 +672,45 @@ impl Ty {
         }
     }
 
+    /// Whether dropping a value of this type may run user code: a `Drop` method anywhere
+    /// inside, an interface value (its concrete type is unknown here), or a heap whose saved
+    /// comparator may own such values. When it cannot, the order in which the parts are
+    /// released is unobservable.
+    pub fn may_run_user_drop(self) -> bool {
+        self.user_drop_in(&mut Vec::new())
+    }
+
+    fn user_drop_in(self, seen: &mut Vec<Ty>) -> bool {
+        match self {
+            Ty::Dyn(_) | Ty::Heap(_) => true,
+            Ty::Struct(id) | Ty::Enum(id) => {
+                if seen.contains(&self) {
+                    return false;
+                }
+                seen.push(self);
+                let (user, members) = AGGS.with(|s| {
+                    let a = &s.borrow()[id as usize];
+                    (a.user_drop, a.members.clone())
+                });
+                user || members.iter().flatten().any(|t| t.user_drop_in(seen))
+            }
+            Ty::Box(id) => box_inner(id).user_drop_in(seen),
+            Ty::Opt(id) => opt_inner(id).user_drop_in(seen),
+            Ty::Tuple(id) => tuple_elems(id).iter().any(|t| t.user_drop_in(seen)),
+            Ty::Vec(id) | Ty::Deque(id) | Ty::Arena(id) => vec_elem(id).user_drop_in(seen),
+            Ty::Map(id) | Ty::Set(id) => {
+                let (k, v) = map_parts(id);
+                k.user_drop_in(seen) || v.user_drop_in(seen)
+            }
+            Ty::Res(id) => {
+                let (o, e) = res_parts(id);
+                o.user_drop_in(seen) || e.user_drop_in(seen)
+            }
+            Ty::Sync(id) => sync_parts(id).1.user_drop_in(seen),
+            _ => false,
+        }
+    }
+
     /// Whether this type contains an `&inout T` (such values keep exclusive access).
     pub fn contains_ref_mut(self) -> bool {
         match self {

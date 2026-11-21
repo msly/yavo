@@ -291,11 +291,8 @@ impl Parser<'_, '_> {
             let (fname, fspan) = self.ident("a field name")?;
             self.expect(Tok::Colon, "`:` followed by the field type")?;
             let ty = self.ty()?;
-            if matches!(self.peek(), Tok::Assign) {
-                let sp = self.span();
-                self.unsupported(sp, "field default values are not supported in P0")?;
-            }
-            fields.push(FieldDecl { name: fname, span: fspan, ty });
+            let default = if self.eat(&Tok::Assign) { Some(self.expr()?) } else { None };
+            fields.push(FieldDecl { name: fname, span: fspan, ty, default });
             if !matches!(self.peek(), Tok::Newline | Tok::Comma | Tok::RBrace) {
                 let found = describe(self.peek());
                 self.err_here(format!("expected a newline or `,` after the field, found {found}"));
@@ -396,7 +393,7 @@ impl Parser<'_, '_> {
                     let (fname, fspan) = self.ident("a payload field name")?;
                     self.expect(Tok::Colon, "`:` followed by the field type (case payloads are named, e.g. `Circle(r: f64)`)")?;
                     let ty = self.ty()?;
-                    fields.push(FieldDecl { name: fname, span: fspan, ty });
+                    fields.push(FieldDecl { name: fname, span: fspan, ty, default: None });
                     if !self.eat(&Tok::Comma) {
                         break;
                     }

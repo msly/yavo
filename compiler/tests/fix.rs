@@ -99,14 +99,15 @@ fn dry_run_and_apply_preserve_utf8_crlf_comments_and_are_idempotent() {
     let source = "// 中文头注释：保留字节\r\nfn main() {\r\n\tlet _count = 1\r\n\tlet count = 2 // 未使用，不能立即析构\r\n\tvar v: Vec[int] = [1, 2]\r\n\tv.push(v.len()) // 保留尾注释\r\n\tprintln(\"https://example/中文 ${_count} ${v.len()}\")\r\n}\r\n";
     let (_scratch, path) = input("fix-crlf", source);
     let (out, preview) = fix(&path, true);
-    assert_eq!(out.status.code(), Some(1));
-    assert_eq!(preview["automatic"].as_array().unwrap().len(), 2, "{preview:#}");
+    // Only a warning remains, so the preview exits 0.
+    assert_eq!(out.status.code(), Some(0));
+    // `v.push(v.len())` is valid since the V2 revision (two-phase receivers): only the rename remains.
+    assert_eq!(preview["automatic"].as_array().unwrap().len(), 1, "{preview:#}");
     assert_eq!(fs::read(&path).unwrap(), source.as_bytes());
     let (out, applied) = fix(&path, false);
     assert_eq!(out.status.code(), Some(0));
     assert_eq!(applied["applied"], preview["automatic"]);
-    let expected = source.replace("let count = 2", "let _count2 = 2")
-        .replace("\tv.push(v.len())", "\tlet vLen = v.len()\r\n\tv.push(vLen)");
+    let expected = source.replace("let count = 2", "let _count2 = 2");
     assert_eq!(fs::read_to_string(&path).unwrap(), expected);
     check(&path);
     let (_, second) = fix(&path, false);
@@ -129,10 +130,6 @@ fn fresh_names_avoid_later_bindings_and_function_calls_without_cross_function_po
         (
             "fn helper() { let _count = 7 }\nfn main() {\n    let count = 1\n    helper()\n}\n",
             "let _count = 1",
-        ),
-        (
-            "fn main() {\n    var v: Vec[int] = [1]\n    v.push(v.len())\n    let vLen = 7\n    println(vLen)\n}\n",
-            "let vLen2 = v.len()",
         ),
     ];
     for (source, expected) in cases {
@@ -250,14 +247,14 @@ fn writes_and_interpolation_reads_are_not_renamed_as_unused() {
 }
 
 #[test]
-fn splitting_keeps_a_call_inside_its_conditional_and_loop_blocks() {
+fn receiver_reads_in_arguments_compile_without_splitting() {
     let source = "fn main() {\n    var v: Vec[int] = [1]\n    if false {\n        v.push(v.len())\n    }\n    while v.len() < 4 {\n        v.push(v.len())\n    }\n    println(v.len())\n}\n";
     let (scratch, path) = input("fix-control-flow", source);
-    let (_, report) = fix(&path, false);
-    assert_eq!(report["applied"].as_array().unwrap().len(), 2, "{report:#}");
-    let fixed = fs::read_to_string(&path).unwrap();
-    assert!(fixed.contains("if false {\n        let vLen = v.len()\n        v.push(vLen)"), "{fixed}");
-    assert!(fixed.contains("while v.len() < 4 {\n        let vLen2 = v.len()\n        v.push(vLen2)"), "{fixed}");
+    let (out, report) = fix(&path, false);
+    // Two-phase receivers (V2): the argument may read the vector, so nothing is rewritten.
+    assert_eq!(out.status.code(), Some(0), "{report:#}");
+    assert_eq!(report["applied"], json!([]));
+    assert_eq!(fs::read_to_string(&path).unwrap(), source);
     assert_eq!(build_run(&path, &scratch, "control", false).stdout, b"4\n");
 }
 
@@ -270,8 +267,7 @@ fn side_effecting_conditional_and_unsupported_receivers_are_never_automatically_
     ];
     for source in cases {
         let (_scratch, path) = input("fix-not-safe", &source);
-        let (out, report) = fix(&path, false);
-        assert_eq!(out.status.code(), Some(1), "{report:#}");
+        let (_out, report) = fix(&path, false);
         assert_eq!(report["automatic"], json!([]));
         assert_eq!(report["applied"], json!([]));
         assert_eq!(fs::read_to_string(&path).unwrap(), source);
@@ -361,7 +357,7 @@ fn import_repairs_preserve_used_modules_comments_and_reject_name_guessing() {
 
 #[test]
 fn check_json_exposes_actionable_fixes_without_writing_the_source() {
-    let source = "fn main() {\n    var v: Vec[int] = [1]\n    v.push(v.len())\n}\n";
+    let source = "fn main() {\n    var v: Vec[int] = [1]\n    v.push(v.pop() ?? 0)\n}\n";
     let (_scratch, path) = input("fix-check-json", source);
     let (out, report) = invoke(&path, "check", &["--json"]);
     assert_eq!(out.status.code(), Some(1));
@@ -371,8 +367,8 @@ fn check_json_exposes_actionable_fixes_without_writing_the_source() {
     assert!(diagnostic["primary"].is_object());
     let fixes = diagnostic["fixes"].as_array().unwrap();
     assert_eq!(fixes.len(), 1, "{report:#}");
-    assert_eq!(fixes[0]["id"], "split-receiver-read");
-    assert_eq!(fixes[0]["applicability"], "automatic");
+    assert_eq!(fixes[0]["id"], "hoist-argument");
+    assert_eq!(fixes[0]["applicability"], "candidate");
     assert_eq!(fixes[0]["recheck"], "passed");
     assert_eq!(fs::read_to_string(&path).unwrap(), source);
 }

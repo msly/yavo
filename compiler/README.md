@@ -47,6 +47,36 @@ Records: [batch validation](validation/arena-modules-2026-11-21.json),
 [module reproducibility](validation/arena-modules-repro-2026-11-21.json), and
 [small-C benchmark method/results](../benchmarks/small-c-v1/README.md).
 
+## Language decisions after the third agent experiment (2026-11-21)
+
+- **Index assignment** (C2, V5): `v[i] = x`, `v[i] op= x`, `v[i].f = x`, `grid[i][j] = x`. The
+  checker lowers it to `{ let $value = x; let $slot = &v[i]; *$slot... = $value }`, so the new value
+  is computed first (it may read `v`), then the element is bounds-checked (P-INDEX), the old value
+  dropped and the new one written. A borrowed element (`Vec[str]`) adds its sources to the local
+  container, as `push` does; through a reference or an `inout` parameter that stays U0001/E0306.
+- **Two-phase receivers** (V2, revised): `push`, `set`/`remove`/`getMut`/`update`, Set
+  `add`/`remove`, Deque pushes, Arena writes, `inout self` methods and the index of an element
+  write reserve their receiver (`FnCx::call_reserved`) while the arguments run. Reads are allowed;
+  modifying or moving the receiver is E0403 (`check_not_borrowed`), and so is an argument value
+  that still points into it (`reserved_conflict`, e.g. `t.push(t)`). A receiver that is itself a
+  call returning `&inout` keeps the old rule. The automatic `split-receiver-read` fix therefore has
+  nothing to do any more; `hoist-argument` remains a candidate for the remaining E0403.
+- **`String` vs `str` comparison** (K1): the owned side is viewed (`StrView`) for `==`, `<`, ...
+- **Field defaults** (V6a): `field: T = constant` (numbers, booleans, bytes, plain string
+  literals for `String`, `none`, `[]`, `[:]`), validated at the declaration and evaluated afresh in
+  every literal that leaves the field out.
+- **Stack overflow** (V14, P-STACK): the runtime installs an alternate signal stack per thread
+  (Windows: a vectored handler with a stack guarantee) and reports a fault in the stack guard area
+  as `yavo panic [P-STACK] at <file>:0:0: ...`, writing buffered stdout first. Box contents whose
+  drop runs no user code (`Ty::may_run_user_drop`) are released from a per-thread worklist
+  (`yv_box_release`), so dropping long lists or deep trees uses no stack depth. `yavo run` now
+  names SIGXCPU and treats a raw SIGSEGV as a runtime bug.
+
+Tests: `tests/p0/run_index_two_phase_defaults.yv`, `errors_two_phase_defaults.yv`,
+`panic_index_write.yv`, `panic_stack.yv`, and `tests/build_cache.rs` (P-STACK keeps buffered
+output; signal reporting via a CPU limit). Frozen conformance cases T-V1 and T-GF2 expect the old
+V2 and are listed in `tests/conformance_superseded.txt`.
+
 ## Arena and typed IDs (2026-11-21)
 
 `Arena[T]{}` creates a distinct process-wide identity without allocating heap

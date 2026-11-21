@@ -1,3 +1,7 @@
+#if !defined(_WIN32)
+#define _DEFAULT_SOURCE 1
+#define _XOPEN_SOURCE 700
+#endif
 /* Test-only allocation failure injection. Never included by production code.
  * Include before the generated translation unit: allocations in yv_rt_args
  * remain real, then the configured allocation fails after entry to user main.

@@ -51,7 +51,7 @@ fn borrow_then_move() {
 }
 fn push_self() {
     var v: Vec[int] = []
-    v.push(v.len())
+    v.push(v.pop() ?? 0)
 }
 fn push_let() {
     let w: Vec[int] = []

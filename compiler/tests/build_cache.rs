@@ -211,16 +211,33 @@ fn bypass_paths_leave_no_cache() {
     assert_eq!(stdout_of(&out), "one\n");
 }
 
+#[test]
+fn stack_overflow_is_a_panic_and_keeps_buffered_output() {
+    let s = Scratch::new("cache-stack").unwrap();
+    let cache = s.0.join("cache");
+    let src = write(&s.0, "main.yv",
+        "fn down(n: int) -> int {\n    if n == 0 { return 0 }\n    return down(n - 1) + 1\n}\nfn main() {\n    println(\"before\")\n    println(\"${down(100000000)}\")\n}\n");
+    let o = run(yavo(&cache).arg("run").arg(&src));
+    let err = String::from_utf8_lossy(&o.stderr);
+    assert_eq!(o.status.code(), Some(101), "{err}");
+    assert_eq!(String::from_utf8_lossy(&o.stdout), "before\n");
+    assert!(err.contains("yavo panic [P-STACK] at "), "{err}");
+    assert!(err.contains(":0:0: stack overflow"), "{err}");
+}
+
 #[cfg(unix)]
 #[test]
 fn run_reports_a_program_killed_by_a_signal() {
     let s = Scratch::new("cache-signal").unwrap();
     let cache = s.0.join("cache");
-    let src = write(&s.0, "main.yv",
-        "fn down(n: int) -> int {\n    if n == 0 { return 0 }\n    return down(n - 1) + 1\n}\nfn main() {\n    println(\"${down(100000000)}\")\n}\n");
-    let o = run(yavo(&cache).arg("run").arg(&src));
+    let src = write(&s.0, "main.yv", "fn main() {\n    var x = 0\n    while true {\n        x = x +% 1\n    }\n}\n");
+    // Build first so that only the program runs under the CPU limit, not the C compiler.
+    let o = run(yavo(&cache).arg("build").arg(&src).arg("-o").arg(s.exe("spin")));
+    assert!(o.status.success(), "{}", String::from_utf8_lossy(&o.stderr));
+    let script = "ulimit -S -t 1; exec \"$1\" run \"$2\"";
+    let o = run(Command::new("sh").arg("-c").arg(script).arg("sh").arg(env!("CARGO_BIN_EXE_yavo")).arg(&src)
+        .env_remove("YAVO_CC").env_remove("YAVO_NO_CACHE").env_remove("YAVO_ALLOC_CHECK").env("YAVO_CACHE_DIR", &cache));
     let err = String::from_utf8_lossy(&o.stderr);
-    assert_eq!(o.status.code(), Some(128 + 11), "{err}");
-    assert!(err.contains("terminated by signal 11 (SIGSEGV)"), "{err}");
-    assert!(err.contains("stack overflow"), "{err}");
+    assert_eq!(o.status.code(), Some(128 + 24), "{err}");
+    assert!(err.contains("terminated by signal 24 (SIGXCPU)"), "{err}");
 }

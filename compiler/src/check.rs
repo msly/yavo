@@ -518,6 +518,38 @@ enum Loan {
     Temp,
 }
 
+fn mentions(e: &Expr, name: &str) -> bool {
+    match &e.kind {
+        ExprKind::Ident(n) => n == name,
+        ExprKind::Int(_) | ExprKind::Byte(_) | ExprKind::Bool(_) | ExprKind::None | ExprKind::Break | ExprKind::Continue | ExprKind::Unit | ExprKind::Generic { .. } | ExprKind::Float(_) => false,
+        ExprKind::Return(v) => v.as_ref().is_some_and(|v| mentions(v, name)),
+        ExprKind::Case { args, .. } => args.iter().flatten().any(|a| mentions(a, name)),
+        ExprKind::Named { value, .. } | ExprKind::Err(value) | ExprKind::Try(value) | ExprKind::Spawn(value) => mentions(value, name),
+        ExprKind::Catch { value, handler, .. } => mentions(value, name) || mentions(handler, name),
+        ExprKind::Match { value, arms } => mentions(value, name) || arms.iter().any(|a| mentions(&a.body, name)),
+        // Statements inside a block are not searched: only the call's own arguments matter here.
+        ExprKind::Block(_) => false,
+        ExprKind::Str(segs) => segs.iter().any(|s| matches!(s, StrSeg::Expr { expr, .. } if mentions(expr, name))),
+        ExprKind::Call { callee, args } => mentions(callee, name) || args.iter().any(|a| mentions(a, name)),
+        ExprKind::Field { base, .. } => mentions(base, name),
+        ExprKind::StructLit { fields, .. } => fields.iter().any(|f| mentions(&f.value, name)),
+        ExprKind::VecLit(items) => items.iter().any(|i| mentions(i, name)),
+        ExprKind::Tuple(items) => items.iter().any(|i| mentions(i, name)),
+        ExprKind::Closure { body, .. } => {
+            let mut names = Vec::new();
+            idents_expr(body, &mut names);
+            names.iter().any(|(n, _)| n == name)
+        }
+        ExprKind::MapLit(entries) => entries.iter().any(|(k, v)| mentions(k, name) || mentions(v, name)),
+        ExprKind::Index { base, index } => mentions(base, name) || mentions(index, name),
+        ExprKind::SliceRange { base, start, end } => mentions(base, name) || mentions(start, name) || mentions(end, name),
+        ExprKind::Unary { expr, .. } | ExprKind::Paren(expr) | ExprKind::Borrow(expr) => mentions(expr, name),
+        ExprKind::Binary { lhs, rhs, .. } | ExprKind::Coalesce { lhs, rhs, .. } => {
+            mentions(lhs, name) || mentions(rhs, name)
+        }
+    }
+}
+
 /// Statement numbering and name uses of one function body, computed before checking it.
 /// The checker visits statements in the same order, so `FnCx::cur` matches these numbers.
 #[derive(Default)]
@@ -795,6 +827,10 @@ struct FnCx {
     /// call starts. These also cover returned references with no named local.
     call_shared: Vec<LocalId>,
     call_mut: Vec<LocalId>,
+    /// Receivers reserved by an enclosing modifying call while its arguments run (V2,
+    /// two-phase): the arguments may read them, but not modify or move them, and the
+    /// argument values must not keep pointing into them. With a description of the call.
+    call_reserved: Vec<(LocalId, String)>,
 }
 
 type Moved = Vec<Option<Span>>;
@@ -819,6 +855,7 @@ impl FnCx {
             captures: Vec::new(),
             call_shared: Vec::new(),
             call_mut: Vec::new(),
+            call_reserved: Vec::new(),
         }
     }
 }
@@ -941,37 +978,6 @@ fn place_root(h: &HExpr) -> Option<LocalId> {
 }
 
 /// Whether `e` mentions the variable `name` anywhere.
-fn mentions(e: &Expr, name: &str) -> bool {
-    match &e.kind {
-        ExprKind::Ident(n) => n == name,
-        ExprKind::Int(_) | ExprKind::Byte(_) | ExprKind::Bool(_) | ExprKind::None | ExprKind::Break | ExprKind::Continue | ExprKind::Unit | ExprKind::Generic { .. } | ExprKind::Float(_) => false,
-        ExprKind::Return(v) => v.as_ref().is_some_and(|v| mentions(v, name)),
-        ExprKind::Case { args, .. } => args.iter().flatten().any(|a| mentions(a, name)),
-        ExprKind::Named { value, .. } | ExprKind::Err(value) | ExprKind::Try(value) | ExprKind::Spawn(value) => mentions(value, name),
-        ExprKind::Catch { value, handler, .. } => mentions(value, name) || mentions(handler, name),
-        ExprKind::Match { value, arms } => mentions(value, name) || arms.iter().any(|a| mentions(&a.body, name)),
-        // Statements inside a block are not searched: only the call's own arguments matter here.
-        ExprKind::Block(_) => false,
-        ExprKind::Str(segs) => segs.iter().any(|s| matches!(s, StrSeg::Expr { expr, .. } if mentions(expr, name))),
-        ExprKind::Call { callee, args } => mentions(callee, name) || args.iter().any(|a| mentions(a, name)),
-        ExprKind::Field { base, .. } => mentions(base, name),
-        ExprKind::StructLit { fields, .. } => fields.iter().any(|f| mentions(&f.value, name)),
-        ExprKind::VecLit(items) => items.iter().any(|i| mentions(i, name)),
-        ExprKind::Tuple(items) => items.iter().any(|i| mentions(i, name)),
-        ExprKind::Closure { body, .. } => {
-            let mut names = Vec::new();
-            idents_expr(body, &mut names);
-            names.iter().any(|(n, _)| n == name)
-        }
-        ExprKind::MapLit(entries) => entries.iter().any(|(k, v)| mentions(k, name) || mentions(v, name)),
-        ExprKind::Index { base, index } => mentions(base, name) || mentions(index, name),
-        ExprKind::SliceRange { base, start, end } => mentions(base, name) || mentions(start, name) || mentions(end, name),
-        ExprKind::Unary { expr, .. } | ExprKind::Paren(expr) | ExprKind::Borrow(expr) => mentions(expr, name),
-        ExprKind::Binary { lhs, rhs, .. } | ExprKind::Coalesce { lhs, rhs, .. } => {
-            mentions(lhs, name) || mentions(rhs, name)
-        }
-    }
-}
 
 /// Every name used in `e` (statements of nested blocks included), with its line.
 fn idents_expr(e: &Expr, out: &mut Vec<(String, u32)>) {
@@ -1148,6 +1154,8 @@ struct StructDef {
     span: Span,
     ty: Ty,
     fields: Vec<(String, Ty, Span)>,
+    /// The constant default of each field, if any (`field: T = value`).
+    defaults: Vec<Option<(FieldDefault, Span)>>,
     /// For an enum: its cases and their payload fields.
     variants: Vec<VariantDef>,
 }
@@ -1155,6 +1163,96 @@ struct StructDef {
 struct VariantDef {
     name: String,
     fields: Vec<(String, Ty, Span)>,
+}
+
+/// A field default (`field: T = value`). Only constants are allowed, so a literal that
+/// leaves the field out has no hidden side effects or evaluation order to worry about.
+#[derive(Clone)]
+enum FieldDefault {
+    /// An integer literal; `true`: negated.
+    Int(u128, bool),
+    Float(f64, bool),
+    Byte(u8),
+    Bool(bool),
+    /// A string literal without interpolation; it initializes a `String` field.
+    Str(String),
+    None,
+    EmptyVec,
+    EmptyMap,
+}
+
+impl FieldDefault {
+    fn of(e: &Expr) -> Option<FieldDefault> {
+        Some(match &e.kind {
+            ExprKind::Paren(inner) => return FieldDefault::of(inner),
+            ExprKind::Int(n) => FieldDefault::Int(*n, false),
+            ExprKind::Float(f) => FieldDefault::Float(*f, false),
+            ExprKind::Byte(b) => FieldDefault::Byte(*b),
+            ExprKind::Bool(b) => FieldDefault::Bool(*b),
+            ExprKind::Unary { op: UnOp::Neg, expr, .. } => match expr.kind {
+                ExprKind::Int(n) => FieldDefault::Int(n, true),
+                ExprKind::Float(f) => FieldDefault::Float(f, true),
+                _ => return None,
+            },
+            ExprKind::Str(segs) => {
+                let mut text = String::new();
+                for s in segs {
+                    match s {
+                        StrSeg::Text(t) => text.push_str(t),
+                        StrSeg::Expr { .. } => return None,
+                    }
+                }
+                FieldDefault::Str(text)
+            }
+            ExprKind::None => FieldDefault::None,
+            ExprKind::VecLit(items) if items.is_empty() => FieldDefault::EmptyVec,
+            ExprKind::MapLit(items) if items.is_empty() => FieldDefault::EmptyMap,
+            _ => return None,
+        })
+    }
+
+    /// Whether this constant can initialize a field of type `ty`.
+    fn fits(&self, ty: Ty) -> bool {
+        let inner = match ty {
+            Ty::Opt(o) => opt_inner(o),
+            t => t,
+        };
+        match self {
+            FieldDefault::None => matches!(ty, Ty::Opt(_)),
+            FieldDefault::Int(..) => matches!(inner, Ty::Int(_) | Ty::Float(_)),
+            FieldDefault::Float(..) => matches!(inner, Ty::Float(_)),
+            FieldDefault::Byte(_) => matches!(inner, Ty::Int(_)),
+            FieldDefault::Bool(_) => inner == Ty::Bool,
+            FieldDefault::Str(_) => inner == Ty::String,
+            FieldDefault::EmptyVec => matches!(inner, Ty::Vec(_) | Ty::Set(_)),
+            FieldDefault::EmptyMap => matches!(inner, Ty::Map(_)),
+        }
+    }
+
+    /// The source expression for a literal that leaves the field out.
+    fn expr(&self, span: Span) -> Expr {
+        let e = |kind| Expr { kind, span };
+        match self {
+            FieldDefault::Int(..) | FieldDefault::Float(..) => {
+                let (lit, neg) = match self {
+                    FieldDefault::Int(n, neg) => (e(ExprKind::Int(*n)), *neg),
+                    FieldDefault::Float(f, neg) => (e(ExprKind::Float(*f)), *neg),
+                    _ => unreachable!(),
+                };
+                if neg { e(ExprKind::Unary { op: UnOp::Neg, op_span: span, expr: Box::new(lit) }) } else { lit }
+            }
+            FieldDefault::Byte(b) => e(ExprKind::Byte(*b)),
+            FieldDefault::Bool(b) => e(ExprKind::Bool(*b)),
+            FieldDefault::Str(t) => {
+                let lit = e(ExprKind::Str(vec![StrSeg::Text(t.clone())]));
+                let callee = e(ExprKind::Field { base: Box::new(lit), name: "toString".into() });
+                e(ExprKind::Call { callee: Box::new(callee), args: Vec::new() })
+            }
+            FieldDefault::None => e(ExprKind::None),
+            FieldDefault::EmptyVec => e(ExprKind::VecLit(Vec::new())),
+            FieldDefault::EmptyMap => e(ExprKind::MapLit(Vec::new())),
+        }
+    }
 }
 
 /// Enums that standard library modules provide (stdlib contract §5).
@@ -1489,7 +1587,7 @@ impl Checker<'_> {
             }
             // Every declaration gets an id, even a duplicate, so ids and indexes stay equal.
             let ty = if is_enum { Ty::Enum(register_enum(name)) } else { Ty::Struct(register_struct(name)) };
-            self.structs.push(StructDef { name: name.to_string(), span, ty, fields: Vec::new(), variants: Vec::new() });
+            self.structs.push(StructDef { name: name.to_string(), span, ty, fields: Vec::new(), variants: Vec::new(), defaults: Vec::new() });
         }
         for (lname, cases) in LIBRARY_ENUMS {
             let ty = Ty::Enum(register_enum(lname));
@@ -1500,7 +1598,7 @@ impl Checker<'_> {
                 .iter()
                 .map(|(n, fs)| VariantDef { name: n.to_string(), fields: fs.iter().map(|f| (f.to_string(), int, span)).collect() })
                 .collect();
-            self.structs.push(StructDef { name: lname.to_string(), span, ty, fields: Vec::new(), variants });
+            self.structs.push(StructDef { name: lname.to_string(), span, ty, fields: Vec::new(), variants, defaults: Vec::new() });
         }
         // Prelude (stdlib contract §5): `struct Utf8Error { offset: int }`.
         {
@@ -1508,7 +1606,7 @@ impl Checker<'_> {
             self.struct_index.insert("Utf8Error".to_string(), self.structs.len());
             let span = Span { start: 0, end: 0, line: 1, col: 1 };
             let fields = vec![("offset".to_string(), Ty::Int(IntTy::I64), span)];
-            self.structs.push(StructDef { name: "Utf8Error".to_string(), span, ty, fields, variants: Vec::new() });
+            self.structs.push(StructDef { name: "Utf8Error".to_string(), span, ty, fields, variants: Vec::new(), defaults: Vec::new() });
         }
         for (i, s) in prog.structs.iter().enumerate() {
             // A generic struct's fields are resolved per instance.
@@ -1517,9 +1615,11 @@ impl Checker<'_> {
                 if let Some((n, sp)) = s.impls.first() {
                     self.diags.error("U0001", *sp, format!("a generic struct cannot declare `{n}` yet"));
                 }
+                self.field_defaults(&s.fields, true);
                 continue;
             }
             self.structs[i].fields = self.member_fields(&s.fields, &s.name);
+            self.structs[i].defaults = self.field_defaults(&s.fields, true);
         }
         let base = prog.structs.len();
         for (j, e) in prog.enums.iter().enumerate() {
@@ -1564,6 +1664,38 @@ impl Checker<'_> {
     }
 
     /// Resolves the fields of a struct or of an enum case. A view cannot be stored (rule 4).
+    /// The defaults of `decls` (`field: T = value`). With `report`, a default that is not a
+    /// constant, or does not fit the field's type, is an error (reported once per declaration).
+    fn field_defaults(&mut self, decls: &[FieldDecl], report: bool) -> Vec<Option<(FieldDefault, Span)>> {
+        let mut out = Vec::new();
+        for f in decls {
+            let Some(e) = &f.default else {
+                out.push(None);
+                continue;
+            };
+            match FieldDefault::of(e) {
+                Some(d) => {
+                    if report {
+                        let ty = self.resolve_ty(&f.ty);
+                        if ty != Ty::Error && !self.subst.contains_key(&f.ty.name) && !d.fits(ty) {
+                            self.diags.error("E0001", e.span, format!("this default does not fit the type of field `{}` (`{ty}`)", f.name));
+                        }
+                    }
+                    out.push(Some((d, e.span)));
+                }
+                None => {
+                    if report {
+                        self.diags
+                            .error("E0001", e.span, format!("the default of field `{}` must be a constant", f.name))
+                            .note("allowed: a number, `true`/`false`, a byte, a string literal, `none`, `[]` or `[:]`");
+                    }
+                    out.push(None);
+                }
+            }
+        }
+        out
+    }
+
     fn member_fields(&mut self, decls: &[FieldDecl], owner: &str) -> Vec<(String, Ty, Span)> {
         let mut fields: Vec<(String, Ty, Span)> = Vec::new();
         for f in decls {
@@ -1770,6 +1902,20 @@ impl Checker<'_> {
                 }
             }
         }
+        // A field with a declared default takes it, evaluated afresh for each literal.
+        for fi in 0..decl.len() {
+            if seen[fi] {
+                continue;
+            }
+            let Some((d, dspan)) = self.structs[si].defaults.get(fi).cloned().flatten() else { continue };
+            seen[fi] = true;
+            let fty = decl[fi].1;
+            let e = d.expr(dspan);
+            let h = self.expr(&e, Some(fty), cx);
+            let h = self.fit(h, fty, cx);
+            let h = self.consume(h, cx);
+            out.push((fi, h));
+        }
         // An optional field that is not written is `none` (stdlib contract §1).
         for (fi, (_, fty)) in decl.iter().enumerate() {
             if !seen[fi] && matches!(fty, Ty::Opt(_)) {
@@ -1782,7 +1928,7 @@ impl Checker<'_> {
         if !missing.is_empty() {
             self.diags
                 .error("E0018", name_span, format!("missing {} in `{name}`: {}", plural(missing.len(), "field"), missing.join(", ")))
-                .note("every field must be given; Yavo has no implicit default values");
+                .note("give every field that has no declared default (`field: T = value`); optional fields default to `none`");
             ok = false;
         }
         if !ok {
@@ -2275,7 +2421,7 @@ impl Checker<'_> {
         }
         let ty = Ty::Struct(register_struct(&inst_name));
         let si = self.structs.len();
-        self.structs.push(StructDef { name: inst_name.clone(), span: decl.name_span, ty, fields: Vec::new(), variants: Vec::new() });
+        self.structs.push(StructDef { name: inst_name.clone(), span: decl.name_span, ty, fields: Vec::new(), variants: Vec::new(), defaults: Vec::new() });
         // Registered before the fields are resolved, so `?Box[List[T]]` inside `List[T]` works.
         self.struct_insts.insert((di, args.clone()), ty);
         self.inst_of.insert(ty, (di, args.clone()));
@@ -2285,6 +2431,7 @@ impl Checker<'_> {
         let fields = self.member_fields(&decl.fields, &inst_name);
         self.subst = saved;
         self.structs[si].fields = fields;
+        self.structs[si].defaults = self.field_defaults(&decl.fields, false);
         if self.structs_done {
             let (Ty::Struct(id) | Ty::Enum(id)) = ty else { unreachable!() };
             finish_agg(id, vec![self.structs[si].fields.iter().map(|f| f.1).collect()]);
@@ -3015,12 +3162,7 @@ impl Checker<'_> {
         };
         let id = place.local;
         let local = cx.locals[id].name.clone();
-        if let Some(a) = [ka, ia].into_iter().find(|a| mentions(a, &local)) {
-            self.diags
-                .error("E0403", a.span, format!("`{local}` is already borrowed by `{local}.update(...)`, so the argument cannot use it"))
-                .note(format!("compute the value first: `let x = ...` then `{local}.update(x, ...)`"));
-            return err_expr(span);
-        }
+        cx.call_reserved.push((id, format!("{local}.update(...)")));
         let (k, v) = map_parts(mid);
         if !v.is_copy() || v.carries_borrow() {
             self.diags
@@ -3418,7 +3560,7 @@ impl Checker<'_> {
         let si = self.structs.len();
         self.struct_index.insert(name.clone(), si);
         let variants = vec![VariantDef { name: "Closed".to_string(), fields: vec![("value".to_string(), t, span)] }];
-        self.structs.push(StructDef { name, span, ty, fields: Vec::new(), variants });
+        self.structs.push(StructDef { name, span, ty, fields: Vec::new(), variants, defaults: Vec::new() });
         let Ty::Enum(id) = ty else { unreachable!() };
         finish_agg(id, vec![vec![t]]);
         self.late_structs.push(si);
@@ -3762,9 +3904,6 @@ impl Checker<'_> {
                 let pointer = self.mutable_address(base, cx);
                 if pointer.ty == Ty::Error { return pointer; }
                 let loans = self.loans_of(&pointer, cx);
-                if self.borrowed_argument_conflict(std::slice::from_ref(&**index), &loans, cx, "index") {
-                    return err_expr(span);
-                }
                 let b = self.deref(pointer);
                 let b = self.mutable_projection(b);
                 if b.ty == Ty::Error { return b; }
@@ -3772,7 +3911,17 @@ impl Checker<'_> {
                     self.diags.error("E0101", span, format!("mutable element borrowing requires a Vec, found `{}`", b.ty));
                     return err_expr(span);
                 };
+                // The index runs before the element is borrowed (V2): it may read the vector
+                // (`v[v.len() - 1] = x`), but not modify it.
+                let mark = cx.call_reserved.len();
+                for l in &loans {
+                    if let Loan::Local(id) = *l {
+                        let call = format!("{}[...] = ...", cx.locals[id].name);
+                        cx.call_reserved.push((id, call));
+                    }
+                }
                 let i = self.expr(index, None, cx);
+                cx.call_reserved.truncate(mark);
                 if !matches!(i.ty, Ty::Int(_) | Ty::Error) {
                     self.diags.error("E0001", i.span, format!("an index must be an integer, found `{}`", i.ty));
                 }
@@ -3832,6 +3981,35 @@ impl Checker<'_> {
             }
         }
         false
+    }
+
+    /// Runs a modifying built-in call; the receiver it reserves (V2) is released afterwards.
+    fn with_reservation(&mut self, cx: &mut FnCx, f: impl FnOnce(&mut Self, &mut FnCx) -> HExpr) -> HExpr {
+        let mark = cx.call_reserved.len();
+        let h = f(self, cx);
+        cx.call_reserved.truncate(mark);
+        h
+    }
+
+    /// V2 (two-phase): the value of an argument of a call that modifies `recv` must not keep
+    /// pointing into `recv` once the call starts. `by_ref`: the argument stays borrowed during
+    /// the call (a read-only parameter) instead of being moved or copied in.
+    fn reserved_conflict(&mut self, h: &HExpr, recv: LocalId, by_ref: bool, call: &str, cx: &FnCx) -> bool {
+        let mut loans = if h.ty.carries_borrow() { self.loans_of(h, cx) } else { Vec::new() };
+        if by_ref && !h.ty.is_copy() {
+            loans.extend(self.storage_loans(h, cx));
+        }
+        let hit = loans.iter().any(|l| match *l {
+            Loan::Local(s) => s == recv || cx.locals[s].loans.contains(&Loan::Local(recv)),
+            Loan::Temp => false,
+        });
+        if hit {
+            let name = cx.locals[recv].name.clone();
+            self.diags
+                .error("E0403", h.span, format!("this argument still points into `{name}`, which `{call}` is about to modify"))
+                .note("pass an owned copy (`.clone()`) or a copyable value read from it, computed before the call");
+        }
+        hit
     }
 
     /// The declared type of a local variable. Unlike other positions, a local may be an
@@ -4119,6 +4297,13 @@ impl Checker<'_> {
     /// Moving or modifying `s` while a view into it is still used later is an error (A3).
     fn check_not_borrowed(&mut self, cx: &FnCx, s: LocalId, span: Span, what: &str) {
         let p = cx.cur;
+        if let Some((_, call)) = cx.call_reserved.iter().find(|(r, _)| *r == s) {
+            let name = cx.locals[s].name.clone();
+            self.diags
+                .error("E0403", span, format!("cannot {what} `{name}` in an argument of `{call}`: the call is about to modify it"))
+                .note(format!("an argument may read `{name}`, but not modify or move it; do that in a separate statement first"));
+            return;
+        }
         if cx.call_shared.contains(&s) || cx.call_mut.contains(&s)
             || cx.locals[s].loans.iter().any(|l| matches!(l, Loan::Local(id) if cx.call_shared.contains(id) || cx.call_mut.contains(id)))
         {
@@ -4335,6 +4520,111 @@ impl Checker<'_> {
         stmts.iter().filter_map(|s| self.stmt(s, cx)).collect()
     }
 
+    /// `place[i](.field)* (op)= value` (C2, V5). The new value is computed first, so it may
+    /// read the container (`dp[i] = dp[i - 1] + dp[i - 2]`); then the element is located and
+    /// bounds-checked, the old value is dropped and the new one written, through a temporary
+    /// `&inout` to the element. Lowered to `{ let $value = v; let $slot = &place; *$slot... = $value }`.
+    #[allow(clippy::too_many_arguments)]
+    fn index_assign(
+        &mut self,
+        target: &Expr,
+        place: &Expr,
+        fields_rev: &[(&str, Span)],
+        op: Option<BinOp>,
+        op_span: Span,
+        value: &Expr,
+        span: Span,
+        cx: &mut FnCx,
+    ) -> Option<HStmt> {
+        let expected = self.peek_ty(target, cx);
+        cx.scopes.push(Vec::new());
+        if op.is_none() {
+            cx.diverge_ok = Some(value.span);
+        }
+        let v = self.expr(value, expected, cx);
+        cx.diverge_ok = None;
+        let slot_h = self.mutable_address(place, cx);
+        let Ty::RefMut(r) = slot_h.ty else {
+            self.pop_scope(cx);
+            return None;
+        };
+        let Some((mut path, lty)) = self.field_path(ref_mut_inner(r), fields_rev) else {
+            self.pop_scope(cx);
+            return None;
+        };
+        path.insert(0, DEREF_STEP);
+        let v = if op.is_none() { self.fit(v, lty, cx) } else { self.coerce(v, lty, cx) };
+        let v = self.consume(v, cx);
+        let vloans = if v.ty.carries_borrow() { self.loans_of(&v, cx) } else { Vec::new() };
+        if lty.carries_borrow() && !vloans.is_empty() && !self.index_store_loans(place, &vloans, v.span, cx) {
+            self.pop_scope(cx);
+            return None;
+        }
+        let tv_name = format!("$value{}", cx.locals.len());
+        let tv = self.declare(cx, &tv_name, value.span, v.ty, LocalKind::Let);
+        cx.locals[tv].used = true;
+        cx.locals[tv].loans = vloans;
+        let mut stmts = vec![HStmt { kind: HStmtKind::Let { local: tv, init: v }, span }];
+        let slot_loans = self.loans_of(&slot_h, cx);
+        let slot_name = format!("$slot{}", cx.locals.len());
+        let slot = self.declare(cx, &slot_name, place.span, slot_h.ty, LocalKind::Let);
+        cx.locals[slot].used = true;
+        cx.locals[slot].loans = slot_loans;
+        stmts.push(HStmt { kind: HStmtKind::Let { local: slot, init: slot_h }, span });
+        let tv_expr = HExpr { kind: HExprKind::Local(tv), ty: cx.locals[tv].ty, span: value.span, at: value.span };
+        let new = match op {
+            None => self.consume(tv_expr, cx),
+            Some(op) => {
+                let slot_expr = HExpr { kind: HExprKind::Local(slot), ty: cx.locals[slot].ty, span: place.span, at: place.span };
+                let mut lhs = self.deref(slot_expr);
+                for &fi in &path[1..] {
+                    if fi == BOX_STEP {
+                        lhs = self.unbox(lhs);
+                        continue;
+                    }
+                    let Ty::Struct(sid) = lhs.ty else { unreachable!() };
+                    let ty = self.structs[sid as usize].fields[fi].1;
+                    lhs = HExpr { kind: HExprKind::Field { base: Box::new(lhs), field: fi }, ty, span: target.span, at: target.span };
+                }
+                self.arith(op, lhs, tv_expr, op_span, span)
+            }
+        };
+        stmts.push(HStmt { kind: HStmtKind::Assign { local: slot, path, value: new }, span });
+        self.pop_scope(cx);
+        Some(HStmt { kind: HStmtKind::Block(stmts), span })
+    }
+
+    /// A borrowed value stored into an element: the container (a local variable) now also
+    /// holds the value's sources, as `push` does (O4). Through a reference or into a caller's
+    /// `inout` container this would add a new external source, which is not allowed.
+    fn index_store_loans(&mut self, place: &Expr, loans: &[Loan], span: Span, cx: &mut FnCx) -> bool {
+        let mut root = place;
+        loop {
+            match &root.kind {
+                ExprKind::Index { base, .. } | ExprKind::Field { base, .. } => root = base,
+                ExprKind::Paren(inner) => root = inner,
+                _ => break,
+            }
+        }
+        let ExprKind::Ident(name) = &root.kind else {
+            self.diags.error("U0001", span, "storing a borrowed value through an `&inout` reference is not supported yet");
+            return false;
+        };
+        let Some(id) = self.lookup(cx, name) else { return false };
+        if cx.locals[id].kind == LocalKind::InoutParam {
+            self.diags
+                .error("E0306", span, format!("cannot store a borrow into the caller's `{name}`"))
+                .note("return it instead, e.g. `-> Vec[str] of text`");
+            return false;
+        }
+        if matches!(cx.locals[id].ty, Ty::Ref(_) | Ty::RefMut(_)) {
+            self.diags.error("U0001", span, "storing a borrowed value through an `&inout` reference is not supported yet");
+            return false;
+        }
+        self.store_loans(cx, id, loans.to_vec(), span, false);
+        true
+    }
+
     fn cond(&mut self, e: &Expr, cx: &mut FnCx) -> HExpr {
         let h = self.expr(e, Some(Ty::Bool), cx);
         self.expect_ty(&h, Ty::Bool);
@@ -4428,6 +4718,11 @@ impl Checker<'_> {
                         }
                         _ => break,
                     }
+                }
+                // `v[i] = x`, `v[i].f += x`, `m[i][j] = x` (C2): written through a temporary
+                // `&inout` to the element, after the new value has been computed (V5).
+                if star.is_none() && matches!(root.kind, ExprKind::Index { .. }) {
+                    return self.index_assign(target, root, &fields_rev, *op, *op_span, value, s.span, cx);
                 }
                 let ExprKind::Ident(name) = &root.kind else {
                     if star.is_some() {
@@ -6102,6 +6397,16 @@ impl Checker<'_> {
             }
             BinOp::Eq | BinOp::Ne | BinOp::Lt | BinOp::Le | BinOp::Gt | BinOp::Ge => {
                 let (l, r) = self.pair(lhs, rhs, None, cx);
+                // `String` and `str` compare by their text (K1): the owned side is viewed.
+                let view = |h: HExpr| {
+                    let (span, at) = (h.span, h.at);
+                    HExpr { kind: HExprKind::StrView(Box::new(h)), ty: Ty::Str, span, at }
+                };
+                let (l, r) = match (l.ty, r.ty) {
+                    (Ty::String, Ty::Str) => (view(l), r),
+                    (Ty::Str, Ty::String) => (l, view(r)),
+                    _ => (l, r),
+                };
                 if l.ty == r.ty && self.protocol(l.ty).is_some() {
                     return self.protocol_compare(op, l, r, span, at).expect("checked: the type has a protocol");
                 }
@@ -6261,9 +6566,25 @@ impl Checker<'_> {
         let shared_mark = cx.call_shared.len();
         let mutable_mark = cx.call_mut.len();
         let mut hargs = Vec::new();
+        let reserved_mark = cx.call_reserved.len();
+        let mut reserved: Option<(LocalId, String)> = None;
         if let Some(r) = recv {
-            self.hold_call_argument(&r, inouts.first().copied().unwrap_or(false),
-                sinks.first().copied().unwrap_or(false), cx);
+            let recv_inout = inouts.first().copied().unwrap_or(false);
+            let root = match &r.kind {
+                HExprKind::InoutArg(id) => Some(*id),
+                HExprKind::InoutPlace(p) => Some(p.local),
+                _ => None,
+            };
+            match root {
+                // Two-phase (V2): an `inout self` receiver is reserved while the arguments run;
+                // they may read it (`c.add(c.n)`), but not modify, move or keep borrowing it.
+                Some(id) if recv_inout => {
+                    let call = format!("{}.{}(...)", cx.locals[id].name, name.rsplit('.').next().unwrap_or(name));
+                    cx.call_reserved.push((id, call.clone()));
+                    reserved = Some((id, call));
+                }
+                _ => self.hold_call_argument(&r, recv_inout, sinks.first().copied().unwrap_or(false), cx),
+            }
             hargs.push(r);
         }
         for (i, a) in args.iter().enumerate() {
@@ -6294,9 +6615,13 @@ impl Checker<'_> {
             };
             let h = match exp { Some(t) => self.fit(h, t, cx), None => h };
             let h = if sink { self.consume(h, cx) } else { h };
+            if let Some((rid, call)) = &reserved {
+                self.reserved_conflict(&h, *rid, !sink, call, cx);
+            }
             self.hold_call_argument(&h, false, sink, cx);
             hargs.push(h);
         }
+        cx.call_reserved.truncate(reserved_mark);
         cx.call_shared.truncate(shared_mark);
         cx.call_mut.truncate(mutable_mark);
         let kind = match self.dyn_slots.get(&fi) {
@@ -6506,10 +6831,10 @@ impl Checker<'_> {
             }
         }
         if matches!(name, "pushBack" | "pushFront" | "popBack" | "popFront") && matches!(self.peek_place_ty(base, cx), Some(Ty::Deque(_))) {
-            return self.deque_call(base, name, args, span, at, cx);
+            return self.with_reservation(cx, |s, cx| s.deque_call(base, name, args, span, at, cx));
         }
         if name == "push" {
-            return self.push_call(base, args, span, at, cx);
+            return self.with_reservation(cx, |s, cx| s.push_call(base, args, span, at, cx));
         }
         if name == "pop" {
             return self.pop_call(base, args, span, at, cx);
@@ -6535,12 +6860,12 @@ impl Checker<'_> {
         }
         if matches!(name, "set" | "remove" | "getMut" | "update") {
             if let Some(Ty::Map(mid)) = self.peek_place_ty(base, cx) {
-                return self.map_write_call(base, mid, name, args, span, at, cx);
+                return self.with_reservation(cx, |s, cx| s.map_write_call(base, mid, name, args, span, at, cx));
             }
         }
         if matches!(name, "add" | "remove") {
             if let Some(Ty::Set(mid)) = self.peek_place_ty(base, cx) {
-                return self.set_write_call(base, mid, name, args, span, at, cx);
+                return self.with_reservation(cx, |s, cx| s.set_write_call(base, mid, name, args, span, at, cx));
             }
         }
         if matches!(name, "add" | "remove" | "getMut") {
@@ -6549,7 +6874,7 @@ impl Checker<'_> {
                 if let Ty::Arena(id) = ty {
                     // Box and Guard project writable storage; mutable_place still rejects
                     // shared Rc/Arc pointers and read-only parameter/binding access.
-                    return self.arena_write_call(base, id, name, args, span, at, cx);
+                    return self.with_reservation(cx, |s, cx| s.arena_write_call(base, id, name, args, span, at, cx));
                 }
             }
         }
@@ -6876,16 +7201,11 @@ impl Checker<'_> {
             self.diags.error("E0012", span, format!("`{name}` takes exactly one argument"));
             return err_expr(span);
         };
-        if mentions(arg, &owner) {
-            self.diags.error("E0403", arg.span, format!("`{owner}` is already borrowed by `{owner}.{name}(...)`, so the argument cannot use it"))
-                .note("compute the argument in a separate statement before acquiring the mutable receiver");
-            return err_expr(span);
-        }
         let elem = vec_elem(aid);
         let wanted = if name == "add" { elem } else { Ty::Id(aid) };
         let mark = cx.call_mut.len();
         let shared_mark = cx.call_shared.len();
-        cx.call_mut.push(local);
+        cx.call_reserved.push((local, format!("{owner}.{name}(...)")));
         let source_loans = cx.locals[local].loans.clone();
         let exclusive = cx.locals[local].ty.contains_ref_mut() || cx.locals[local].guard;
         for loan in source_loans {
@@ -6953,13 +7273,9 @@ impl Checker<'_> {
         let Some(place) = self.mutable_place(base, name, cx) else { return err_expr(span) };
         let id = place.local;
         let local = cx.locals[id].name.clone();
-        // v1 has no two-phase borrows: the map is borrowed before the arguments run (V2).
-        if let Some(a) = args.iter().find(|a| mentions(a, &local)) {
-            self.diags
-                .error("E0403", a.span, format!("`{local}` is already borrowed by `{local}.{name}(...)`, so the argument cannot use it"))
-                .note(format!("compute the value first: `let x = ...` then `{local}.{name}(x)`"));
-            return err_expr(span);
-        }
+        // Two-phase (V2): the arguments may read the collection, but not modify or move it.
+        let call = format!("{local}.{name}(...)");
+        cx.call_reserved.push((id, call.clone()));
         let (k, v) = map_parts(mid);
         let want = if name == "set" { 2 } else { 1 };
         if args.len() != want {
@@ -6975,6 +7291,9 @@ impl Checker<'_> {
                 let vh = self.expr(&args[1], Some(v), cx);
                 let vh = self.fit(vh, v, cx);
                 let vh = self.consume(vh, cx);
+                if self.reserved_conflict(&kh, id, false, &call, cx) || self.reserved_conflict(&vh, id, false, &call, cx) {
+                    return err_expr(span);
+                }
                 let mut loans = Vec::new();
                 for h in [&kh, &vh] {
                     if h.ty.carries_borrow() {
@@ -6994,8 +7313,17 @@ impl Checker<'_> {
                 }
                 (MapWrite::Set, vec![kh, vh], Ty::Unit)
             }
-            "remove" => (MapWrite::Remove, vec![self.map_query(&args[0], k, cx)], Ty::Opt(opt_of(v))),
-            _ => (MapWrite::GetMut, vec![self.map_query(&args[0], k, cx)], Ty::Opt(opt_of(Ty::RefMut(ref_mut_of(v))))),
+            _ => {
+                let key = self.map_query(&args[0], k, cx);
+                if self.reserved_conflict(&key, id, true, &call, cx) {
+                    return err_expr(span);
+                }
+                if name == "remove" {
+                    (MapWrite::Remove, vec![key], Ty::Opt(opt_of(v)))
+                } else {
+                    (MapWrite::GetMut, vec![key], Ty::Opt(opt_of(Ty::RefMut(ref_mut_of(v)))))
+                }
+            }
         };
         HExpr { kind: HExprKind::MapWrite { op, place, args: hargs }, ty, span, at }
     }
@@ -7007,12 +7335,9 @@ impl Checker<'_> {
         let Some(place) = self.mutable_place(base, name, cx) else { return err_expr(span) };
         let id = place.local;
         let local = cx.locals[id].name.clone();
-        if let Some(a) = args.iter().find(|a| mentions(a, &local)) {
-            self.diags
-                .error("E0403", a.span, format!("`{local}` is already borrowed by `{local}.{name}(...)`, so the argument cannot use it"))
-                .note(format!("compute the value first: `let x = ...` then `{local}.{name}(x)`"));
-            return err_expr(span);
-        }
+        // Two-phase (V2): the arguments may read the collection, but not modify or move it.
+        let call = format!("{local}.{name}(...)");
+        cx.call_reserved.push((id, call.clone()));
         let [arg] = args else {
             self.diags.error("E0012", span, format!("`{name}` takes exactly one argument (the element)"));
             return err_expr(span);
@@ -7020,6 +7345,9 @@ impl Checker<'_> {
         let k = map_parts(mid).0;
         if name == "remove" {
             let key = self.map_query(arg, k, cx);
+            if self.reserved_conflict(&key, id, true, &call, cx) {
+                return err_expr(span);
+            }
             let removed =
                 HExpr { kind: HExprKind::MapWrite { op: MapWrite::Remove, place, args: vec![key] }, ty: Ty::Opt(opt_of(Ty::Bool)), span, at };
             return HExpr { kind: HExprKind::Method { method: Builtin::IsSome, recv: Box::new(removed) }, ty: Ty::Bool, span, at };
@@ -7027,6 +7355,9 @@ impl Checker<'_> {
         let kh = self.expr(arg, Some(k), cx);
         let kh = self.fit(kh, k, cx);
         let kh = self.consume(kh, cx);
+        if self.reserved_conflict(&kh, id, false, &call, cx) {
+            return err_expr(span);
+        }
         if kh.ty.carries_borrow() {
             let loans = self.loans_of(&kh, cx);
             if !loans.is_empty() {
@@ -7215,14 +7546,14 @@ impl Checker<'_> {
         };
         let id = place.local;
         let name = cx.locals[id].name.clone();
-        if mentions(arg, &name) {
-            self.diags.error("E0403", arg.span, format!("`{name}` is already mutably borrowed by `{method}`"))
-                .note("compute the argument before borrowing the receiver");
-            return err_expr(span);
-        }
+        let call = format!("{name}.{method}(...)");
+        cx.call_reserved.push((id, call.clone()));
         let h = self.expr(arg, Some(et), cx);
         let h = self.fit(h, et, cx);
         let h = self.consume(h, cx);
+        if self.reserved_conflict(&h, id, false, &call, cx) {
+            return err_expr(span);
+        }
         if et.carries_borrow() {
             let loans = self.loans_of(&h, cx);
             if !loans.is_empty() && (matches!(cx.locals[id].ty, Ty::RefMut(_)) || cx.locals[id].kind == LocalKind::InoutParam) {
@@ -7261,20 +7592,21 @@ impl Checker<'_> {
             self.diags.error("E0012", span, "`push` takes exactly one argument");
             return err_expr(span);
         };
-        // v1 has no two-phase borrows: the receiver is borrowed mutably before the argument runs.
-        if mentions(arg, name) {
-            self.diags
-                .error("E0403", arg.span, format!("`{name}` is already borrowed by `{name}.push(...)`, so the argument cannot use it"))
-                .note(format!("compute the value first: `let x = ...` then `{name}.push(x)`"));
-            return err_expr(span);
-        }
+        // Two-phase (V2): the argument may read the vector, but not modify or move it.
+        let call = format!("{name}.push(...)");
+        cx.call_reserved.push((id, call.clone()));
         let rty = place.ty;
         let value = match rty {
             Ty::Vec(vid) | Ty::Heap(vid) => {
                 let et = vec_elem(vid);
+                let errors = self.diags.count(crate::diag::Severity::Error);
                 let h = self.expr(arg, Some(et), cx);
                 let h = self.fit(h, et, cx);
                 let h = self.consume(h, cx);
+                // One mistake, one error: a value already rejected is not reported again.
+                if self.diags.count(crate::diag::Severity::Error) == errors && self.reserved_conflict(&h, id, false, &call, cx) {
+                    return err_expr(span);
+                }
                 if et.carries_borrow() {
                     let loans = self.loans_of(&h, cx);
                     if matches!(cx.locals[id].ty, Ty::RefMut(_)) && !loans.is_empty() {
@@ -7296,6 +7628,9 @@ impl Checker<'_> {
             Ty::String => {
                 let h = self.expr(arg, None, cx);
                 let h = self.deref(h);
+                if self.reserved_conflict(&h, id, true, &call, cx) {
+                    return err_expr(span);
+                }
                 if !matches!(h.ty, Ty::Str | Ty::String | Ty::Error) {
                     self.diags.error("E0001", h.span, format!("expected `str` or `String`, found `{}`", h.ty));
                 }

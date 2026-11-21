@@ -74,6 +74,8 @@ pub struct FieldDecl {
     pub name: String,
     pub span: Span,
     pub ty: TypeExpr,
+    /// `field: T = value`: a constant used when a struct literal leaves the field out.
+    pub default: Option<Expr>,
 }
 
 pub struct FieldInit {

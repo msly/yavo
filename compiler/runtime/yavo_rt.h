@@ -3,6 +3,20 @@
 #ifndef YAVO_RT_H
 #define YAVO_RT_H
 
+/* Strict C17 hides POSIX declarations; the runtime is the first header of every generated
+ * file, so request them here (signals and alternate stacks are used for P-STACK). */
+#if !defined(_WIN32)
+#ifndef _DEFAULT_SOURCE
+#define _DEFAULT_SOURCE 1
+#endif
+#ifndef _XOPEN_SOURCE
+#define _XOPEN_SOURCE 700
+#endif
+#if defined(__APPLE__) && !defined(_DARWIN_C_SOURCE)
+#define _DARWIN_C_SOURCE 1
+#endif
+#endif
+
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -17,6 +31,10 @@
 #else
 #include <errno.h>
 #include <fcntl.h>
+#include <pthread.h>
+#include <signal.h>
+#include <sys/mman.h>
+#include <sys/resource.h>
 #include <unistd.h>
 #endif
 
@@ -193,7 +211,122 @@ YV_NORETURN static void yv_output_failure(uint32_t line, uint32_t col) {
     yv_exit_process(YV_PANIC_EXIT_CODE);
 }
 
-static void yv_rt_init(const char *file) { yv_rt_file = file; }
+/* ---- Stack overflow (P-STACK). A fault in the guard area of the current thread's stack is
+ * reported as a panic from an alternate signal stack (Windows: a vectored handler with a
+ * reserved stack guarantee). Buffered stdout is written best effort, without taking the
+ * output lock. The faulting source position is unknown, so line and column are 0. ---- */
+#define YV_ALT_STACK 65536
+YV_NORETURN static void yv_stack_overflow(void) {
+    if (yv_out_len > 0 && yv_out_len <= sizeof yv_out_buf) (void)yv_os_write(1, yv_out_buf, yv_out_len);
+    static const char prefix[] = "yavo panic [P-STACK] at ";
+    static const char suffix[] = ":0:0: stack overflow (recursion or values nested too deeply)\n";
+    (void)yv_os_write(2, prefix, sizeof prefix - 1);
+    (void)yv_os_write(2, yv_rt_file, strlen(yv_rt_file));
+    (void)yv_os_write(2, suffix, sizeof suffix - 1);
+    yv_exit_process(YV_PANIC_EXIT_CODE);
+}
+
+#ifdef _WIN32
+static LONG CALLBACK yv_stack_handler(PEXCEPTION_POINTERS e) {
+    if (e->ExceptionRecord->ExceptionCode == EXCEPTION_STACK_OVERFLOW) yv_stack_overflow();
+    return EXCEPTION_CONTINUE_SEARCH;
+}
+static void yv_stack_guard_thread(void) {
+    ULONG guarantee = YV_ALT_STACK;
+    (void)SetThreadStackGuarantee(&guarantee);
+}
+static void yv_stack_guard_release(void) {}
+static void yv_stack_guard_init(void) {
+    (void)AddVectoredExceptionHandler(1, yv_stack_handler);
+    yv_stack_guard_thread();
+}
+#else
+#if defined(__linux__)
+int pthread_getattr_np(pthread_t thread, pthread_attr_t *attr);
+#endif
+/* The highest address of the current thread's stack and how far it may grow down. */
+static _Thread_local uintptr_t yv_stack_hi = 0, yv_stack_max = 0;
+static _Thread_local void *yv_alt_stack = NULL;
+
+static void yv_fault(int sig, siginfo_t *si, void *ctx) {
+    (void)ctx;
+    uintptr_t a = (uintptr_t)si->si_addr;
+    /* A fault below the stack top and at most a guard area past its maximum size. */
+    if (yv_stack_hi != 0 && a < yv_stack_hi && yv_stack_hi - a <= yv_stack_max + ((uintptr_t)1 << 20)) yv_stack_overflow();
+    signal(sig, SIG_DFL); /* not a stack overflow: the default action when the fault repeats */
+}
+
+static void yv_stack_guard_bounds(bool main_thread) {
+#if defined(__APPLE__)
+    pthread_t self = pthread_self();
+    yv_stack_hi = (uintptr_t)pthread_get_stackaddr_np(self);
+    yv_stack_max = pthread_get_stacksize_np(self);
+#elif defined(__linux__)
+    pthread_attr_t attr;
+    if (pthread_getattr_np(pthread_self(), &attr) == 0) {
+        void *addr = NULL;
+        size_t size = 0;
+        if (pthread_attr_getstack(&attr, &addr, &size) == 0) {
+            yv_stack_hi = (uintptr_t)addr + size;
+            yv_stack_max = size;
+        }
+        pthread_attr_destroy(&attr);
+    }
+#endif
+    /* The main thread's stack grows on demand up to the resource limit; some libcs report
+     * only the part mapped so far. */
+    struct rlimit rl;
+    if (main_thread && getrlimit(RLIMIT_STACK, &rl) == 0) {
+        uintptr_t limit = rl.rlim_cur == RLIM_INFINITY ? ((uintptr_t)1 << 30) : (uintptr_t)rl.rlim_cur;
+        if (limit > yv_stack_max) yv_stack_max = limit;
+    }
+}
+
+static void yv_stack_guard_thread(void) {
+    yv_stack_guard_bounds(false);
+    /* mmap, not malloc: the alternate stack is not a program allocation (alloc-check, fault injection). */
+    yv_alt_stack = mmap(NULL, YV_ALT_STACK, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    if (yv_alt_stack == MAP_FAILED) yv_alt_stack = NULL;
+    if (yv_alt_stack != NULL) {
+        stack_t ss;
+        memset(&ss, 0, sizeof ss);
+        ss.ss_sp = yv_alt_stack;
+        ss.ss_size = YV_ALT_STACK;
+        if (sigaltstack(&ss, NULL) != 0) {
+            munmap(yv_alt_stack, YV_ALT_STACK);
+            yv_alt_stack = NULL;
+        }
+    }
+}
+
+static void yv_stack_guard_release(void) {
+    if (yv_alt_stack != NULL) {
+        stack_t ss;
+        memset(&ss, 0, sizeof ss);
+        ss.ss_flags = SS_DISABLE;
+        (void)sigaltstack(&ss, NULL);
+        munmap(yv_alt_stack, YV_ALT_STACK);
+        yv_alt_stack = NULL;
+    }
+}
+
+static void yv_stack_guard_init(void) {
+    yv_stack_guard_thread();
+    yv_stack_guard_bounds(true);
+    struct sigaction sa;
+    memset(&sa, 0, sizeof sa);
+    sa.sa_sigaction = yv_fault;
+    sa.sa_flags = SA_SIGINFO | SA_ONSTACK;
+    sigemptyset(&sa.sa_mask);
+    (void)sigaction(SIGSEGV, &sa, NULL);
+    (void)sigaction(SIGBUS, &sa, NULL);
+}
+#endif
+
+static void yv_rt_init(const char *file) {
+    yv_rt_file = file;
+    yv_stack_guard_init();
+}
 
 /* Test builds (`YAVO_ALLOC_CHECK=1` adds -DYV_ALLOC_CHECK) count live heap blocks. Freeing more
  * blocks than were allocated (two copies of one value both dropped) stops the program at once;
@@ -665,6 +798,40 @@ static void yv_box_free(void *p) {
         YV_COUNT_FREE();
         free(p);
     }
+}
+
+/* Box contents that run no user code when dropped are released from a per-thread worklist
+ * instead of recursively, so a long chain or a deep tree of boxes needs no stack depth. The
+ * release order is unobservable because no user `drop` runs (the compiler checks this). */
+typedef struct { void *p; void (*drop)(void *); } yv_released;
+static _Thread_local yv_released *yv_release_items = NULL;
+static _Thread_local size_t yv_release_len = 0, yv_release_cap = 0;
+static _Thread_local bool yv_releasing = false;
+
+static void yv_box_release(void *p, void (*drop)(void *)) {
+    if (yv_release_len == yv_release_cap) {
+        size_t ncap = yv_release_cap ? yv_release_cap * 2 : 64;
+        yv_released *items = (yv_released *)realloc(yv_release_items, ncap * sizeof *items);
+        if (items == NULL) yv_panic("P-OOM", "out of memory", 0, 0);
+        yv_release_items = items;
+        yv_release_cap = ncap;
+    }
+    yv_release_items[yv_release_len++] = (yv_released){p, drop};
+    if (yv_releasing) return;
+    yv_releasing = true;
+    while (yv_release_len > 0) {
+        yv_released r = yv_release_items[--yv_release_len];
+        r.drop(r.p);
+        yv_box_free(r.p);
+    }
+    yv_releasing = false;
+}
+
+/* The worklist buffer of a finishing thread. */
+static void yv_release_done(void) {
+    free(yv_release_items);
+    yv_release_items = NULL;
+    yv_release_len = yv_release_cap = 0;
 }
 
 /* ---- Map[K, V]: insertion-ordered hash map. ----
@@ -1701,13 +1868,18 @@ typedef struct {
 #ifdef _WIN32
 static DWORD WINAPI yv_thread_main(LPVOID p) {
     yv_join_base *j = (yv_join_base *)p;
+    yv_stack_guard_thread();
     j->run(j->args);
+    yv_release_done();
     return 0;
 }
 #else
 static void *yv_thread_main(void *p) {
     yv_join_base *j = (yv_join_base *)p;
+    yv_stack_guard_thread();
     j->run(j->args);
+    yv_release_done();
+    yv_stack_guard_release();
     return NULL;
 }
 #endif
