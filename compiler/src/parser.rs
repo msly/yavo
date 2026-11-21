@@ -335,7 +335,7 @@ impl Parser<'_, '_> {
 
     /// Whether `[` at the current position opens type arguments: the matching `]` is followed
     /// by `(` (a generic call) or, without a space, by `{` (a generic struct literal).
-    fn type_args_ahead(&self) -> bool {
+    fn type_args_ahead(&self, allow_static_method: bool) -> bool {
         let mut depth = 0usize;
         let mut i = 0;
         loop {
@@ -346,6 +346,7 @@ impl Parser<'_, '_> {
                     if depth == 0 {
                         return match self.peek_at(i + 1) {
                             Tok::LParen => true,
+                            Tok::Dot if allow_static_method => true,
                             Tok::LBrace => self.toks.get(self.pos + i + 1).is_some_and(|t| t.span.start == self.toks[self.pos + i].span.end),
                             _ => false,
                         };
@@ -1358,7 +1359,7 @@ impl Parser<'_, '_> {
                 Tok::LBracket => {
                     // `name[T](...)` / `Name[T]{...}`: type arguments, not an index.
                     if let ExprKind::Ident(name) = &e.kind {
-                        if self.type_args_ahead() {
+                        if self.type_args_ahead(name == "Heap") {
                             let name = name.clone();
                             self.bump();
                             let mut targs = vec![self.ty()?];

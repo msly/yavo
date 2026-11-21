@@ -6,6 +6,8 @@
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+mod common;
+
 const TARGETS: &[(&str, &str, &str)] = &[
     ("x86_64-linux-musl", "linux", "x86_64"),
     ("aarch64-linux-musl", "linux", "aarch64"),
@@ -134,6 +136,31 @@ fn host_runnable_target_runs_correctly() {
     let res = yavo().arg("run").arg(&path).args(["--target", name]).output().unwrap();
     assert_eq!(res.status.code(), Some(0), "{}", String::from_utf8_lossy(&res.stderr));
     assert_eq!(String::from_utf8_lossy(&res.stdout), want);
+}
+
+#[test]
+fn collections_and_mutable_returns_compile_for_all_targets() {
+    let scratch = common::Scratch::new("completion-targets").unwrap();
+    let path = fixture("run_collection_returns.yv");
+    let want = expected_stdout(&std::fs::read_to_string(&path).unwrap());
+    for (name, os, arch) in TARGETS {
+        let artifact = scratch.0.join(format!("{name}{}", if *os == "windows" { ".exe" } else { "" }));
+        let built = common::output(yavo().arg("build").arg(&path)
+            .args(["--release", "--target", name, "-o"]).arg(&artifact), common::BUILD_TIMEOUT).unwrap();
+        assert!(built.status.success(), "{name}: {}", String::from_utf8_lossy(&built.stderr));
+        assert!(built.stderr.is_empty(), "{name}: unexpected compiler diagnostics: {}", String::from_utf8_lossy(&built.stderr));
+        let bytes = std::fs::read(&artifact).unwrap();
+        assert_eq!(format_of(&bytes), Some((*os, *arch)), "{name}: wrong executable format");
+        if *os == "linux" {
+            assert!(!contains(&bytes, b"ld-linux") && !contains(&bytes, b"ld-musl"), "{name}: expected static linking");
+        }
+        if *os == std::env::consts::OS && *arch == std::env::consts::ARCH {
+            let run = common::output(&mut Command::new(&artifact), common::RUN_TIMEOUT).unwrap();
+            assert_eq!(run.status.code(), Some(0), "{name}: {}", String::from_utf8_lossy(&run.stderr));
+            assert!(run.stderr.is_empty(), "{name}: {}", String::from_utf8_lossy(&run.stderr));
+            assert_eq!(run.stdout, want.as_bytes(), "{name}");
+        }
+    }
 }
 
 #[test]

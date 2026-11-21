@@ -396,6 +396,22 @@ fn split_push(
     ))
 }
 
+/// Hoisting across a receiver call can change observable order. It is always a
+/// reviewable candidate; complete-file rechecking still gates publication.
+fn hoist_argument(src: &str, statement: &Stmt, diagnostic_start: usize, names: &mut BTreeSet<String>) -> Option<Proposal> {
+    let StmtKind::Expr(Expr { kind: ExprKind::Call { callee, args }, .. }) = &statement.kind else { return None };
+    let ExprKind::Field { .. } = &callee.kind else { return None };
+    let arg = args.iter().find(|arg| arg.span.start == diagnostic_start)?;
+    let name = fresh("argument", names);
+    let inserted = format!("let {name} = {}{}{}", text(src, arg.span)?, newline(src), indentation(src, statement.span.start));
+    Some(proposal(
+        "E0403", diagnostic_start, "hoist-argument", "Evaluate the argument before acquiring the mutable receiver".into(), false,
+        "Moves this argument's evaluation before the receiver and any preceding arguments; their side effects, panic order and resource lifetimes can change.",
+        &["Choose only when evaluating this argument first matches the intended behavior.", "The call remains in its original statement block; the entire patched file must recheck."],
+        vec![Edit { start: statement.span.start, end: statement.span.start, replacement: inserted }, edit(arg.span, name)],
+    ))
+}
+
 fn import_proposals(src: &str, program: &Program, functions: &[Function<'_>], diags: &Diags, out: &mut Vec<Proposal>) {
     let mut lexical = Diags::default();
     let tokens = lexer::lex_file(src, &mut lexical);
@@ -656,6 +672,8 @@ pub fn suggest(src: &str, program: &Program, diags: &Diags) -> Vec<Proposal> {
                 for (index, function) in functions.iter().enumerate() {
                     for statement in &function.statements {
                         if let Some(p) = split_push(src, function, statement, diagnostic.span.start, &mut reserved[index]) {
+                            out.push(p);
+                        } else if let Some(p) = hoist_argument(src, statement, diagnostic.span.start, &mut reserved[index]) {
                             out.push(p);
                         }
                     }

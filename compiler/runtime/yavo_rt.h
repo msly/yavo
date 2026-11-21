@@ -489,6 +489,67 @@ static void yv_vec_free(yv_vec *v) {
     v->len = v->cap = 0;
 }
 
+/* A ring buffer: removing from either end never shifts the remaining elements. */
+typedef struct {
+    void *ptr;
+    int64_t len, cap, head;
+} yv_deque;
+
+static int64_t yv_deque_index(const yv_deque *d, int64_t logical) {
+    /* Avoid head + logical overflowing even when a capacity approaches PTRDIFF_MAX. */
+    int64_t tail = d->cap - d->head;
+    return logical < tail ? d->head + logical : logical - tail;
+}
+
+static void *yv_deque_slot(const yv_deque *d, int64_t elem, int64_t logical) {
+    return (char *)d->ptr + yv_deque_index(d, logical) * elem;
+}
+
+static void yv_deque_reserve(yv_deque *d, int64_t elem, int64_t need, uint32_t line, uint32_t col) {
+    if (need < 0) yv_capacity_overflow(line, col);
+    if (need <= d->cap) return;
+    void *fresh = NULL;
+    int64_t cap = 0;
+    /* yv_grow validates both multiplication and PTRDIFF_MAX before allocating. */
+    yv_grow(&fresh, &cap, elem, need, line, col);
+    if (d->len) {
+        int64_t first = d->cap - d->head;
+        if (first > d->len) first = d->len;
+        memcpy(fresh, (char *)d->ptr + d->head * elem, (size_t)first * (size_t)elem);
+        if (first < d->len) memcpy((char *)fresh + first * elem, d->ptr, (size_t)(d->len - first) * (size_t)elem);
+    }
+    if (d->ptr) { YV_COUNT_FREE(); free(d->ptr); }
+    d->ptr = fresh;
+    d->cap = cap;
+    d->head = 0;
+}
+
+static void *yv_deque_push_slot(yv_deque *d, int64_t elem, bool front, uint32_t line, uint32_t col) {
+    int64_t need;
+    if (__builtin_add_overflow(d->len, (int64_t)1, &need)) yv_capacity_overflow(line, col);
+    yv_deque_reserve(d, elem, need, line, col);
+    if (front) d->head = d->head ? d->head - 1 : d->cap - 1;
+    void *slot = yv_deque_slot(d, elem, front ? 0 : d->len);
+    d->len = need;
+    return slot;
+}
+
+static bool yv_deque_pop(yv_deque *d, int64_t elem, bool front, void *out) {
+    if (!d->len) return false;
+    void *slot = yv_deque_slot(d, elem, front ? 0 : d->len - 1);
+    memcpy(out, slot, (size_t)elem);
+    memset(slot, 0, (size_t)elem);
+    d->len--;
+    if (!d->len) d->head = 0;
+    else if (front) d->head = d->head == d->cap - 1 ? 0 : d->head + 1;
+    return true;
+}
+
+static void yv_deque_free(yv_deque *d) {
+    if (d->ptr) { YV_COUNT_FREE(); free(d->ptr); }
+    memset(d, 0, sizeof(*d));
+}
+
 /* ---- Box[T]: one heap block; NULL is an empty (moved-out) box. ---- */
 static void *yv_box_alloc(size_t size, uint32_t line, uint32_t col) {
     void *p = malloc(size ? size : 1);
@@ -897,6 +958,53 @@ static int64_t yv_utf8_check(const char *p, size_t n) {
 typedef int (*yv_cmp_fn)(const void *, const void *);
 /* A comparison with a context (the captured values of a `sortBy` closure). */
 typedef int (*yv_cmp_ctx_fn)(void *, const void *, const void *);
+
+/* Heap owns its elements and its comparator environment. Comparator results choose only
+ * which in-bounds slots to exchange; every iteration moves strictly up/down the tree, so
+ * inconsistent comparators cannot loop forever or duplicate/drop elements. */
+typedef struct {
+    yv_vec elems;
+    void *ctx;
+    yv_cmp_ctx_fn cmp;
+    void (*drop_ctx)(void *);
+} yv_heap;
+
+static void yv_heap_swap(char *a, char *b, size_t elem) {
+    for (size_t i = 0; i < elem; i++) { char c = a[i]; a[i] = b[i]; b[i] = c; }
+}
+
+static void yv_heap_sift_up(yv_heap *h, int64_t elem) {
+    int64_t child = h->elems.len - 1;
+    char *p = (char *)h->elems.ptr;
+    while (child > 0) {
+        int64_t parent = (child - 1) / 2;
+        if (h->cmp(h->ctx, p + child * elem, p + parent * elem) >= 0) break;
+        yv_heap_swap(p + child * elem, p + parent * elem, (size_t)elem);
+        child = parent;
+    }
+}
+
+static bool yv_heap_pop(yv_heap *h, int64_t elem, void *out) {
+    int64_t n = h->elems.len;
+    if (!n) return false;
+    char *p = (char *)h->elems.ptr;
+    memcpy(out, p, (size_t)elem);
+    n--;
+    if (n) memcpy(p, p + n * elem, (size_t)elem);
+    memset(p + n * elem, 0, (size_t)elem);
+    h->elems.len = n;
+    int64_t parent = 0;
+    /* parent < n / 2 is the exact condition for an existing left child; multiplication
+     * below is bounded by n, including when n is close to the capacity limit. */
+    while (parent < n / 2) {
+        int64_t child = parent * 2 + 1;
+        if (child + 1 < n && h->cmp(h->ctx, p + (child + 1) * elem, p + child * elem) < 0) child++;
+        if (h->cmp(h->ctx, p + child * elem, p + parent * elem) >= 0) break;
+        yv_heap_swap(p + child * elem, p + parent * elem, (size_t)elem);
+        parent = child;
+    }
+    return true;
+}
 
 /* Only `cmp(x, y) < 0` ("x goes strictly before y") is asked, so a comparison that breaks its
    contract gives a wrong order but never touches memory outside the vector (K3). */

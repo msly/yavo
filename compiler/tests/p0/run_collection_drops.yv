@@ -1,0 +1,62 @@
+// expect-stdout:
+// | before early drop
+// | drop early
+// | drop elem b
+// | drop elem a
+// | drop retained
+// | drop tuple two
+// | drop tuple one
+// | end
+// | drop queued
+// | drop cap 2
+// | drop cap 1
+use std/collections
+
+struct Resource: Drop {
+    name: String
+    fn drop(inout self) {
+        println("drop ${self.name}")
+    }
+}
+
+fn make() -> Heap[int] {
+    let one = Resource{name: "cap 1".toString()}
+    let two = Resource{name: "cap 2".toString()}
+    return Heap[int].by((a, b) => a + one.name.len() < b + two.name.len())
+}
+
+fn early() {
+    let capture = Resource{name: "early".toString()}
+    let _h = Heap[int].by((a, b) => a + capture.name.len() < b)
+    println("before early drop")
+    return
+}
+
+enum Failure {
+    Stop
+}
+
+fn fail() -> int ! Failure {
+    return err(.Stop)
+}
+
+fn partial() -> (Heap[int], int) ! Failure {
+    let retained = Resource{name: "retained".toString()}
+    return (Heap[int].by((a, b) => a + retained.name.len() < b), try fail())
+}
+
+fn main() {
+    let h = make()
+    let _moved = h
+    early()
+    var elems = Heap[Resource].by((a, b) => a.name > b.name)
+    elems.push(Resource{name: "elem a".toString()})
+    elems.push(Resource{name: "elem b".toString()})
+    let _ = elems.pop()
+    let _ = elems
+    let _ = partial()
+    let _ = (Resource{name: "tuple one".toString()}, Resource{name: "tuple two".toString()})
+    var q = Deque[Resource]{}
+    q.pushBack(Resource{name: "queued".toString()})
+    println("end")
+}

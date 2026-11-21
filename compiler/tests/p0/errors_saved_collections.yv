@@ -1,0 +1,129 @@
+// expect-error: E0307 26:27
+// expect-error: E0307 31:27
+// expect-error: E0307 37:27
+// expect-error: E0402 43:13
+// expect-error: E0401 47:27
+// expect-error: E0401 53:17
+// expect-error: E0014 61:9
+// expect-error: E0102 71:5
+// expect-error: E0102 80:5
+// expect-error: E0306 85:16
+// expect-error: E0303 90:12
+// expect-error: U0001 101:28
+// expect-error: U0001 111:15
+// expect-error: E0001 116:15
+// expect-error: E0402 122:13
+// expect-error: E0401 126:13
+use std/collections
+use std/sync
+
+fn consume(s: sink String) {
+    println(s)
+}
+
+fn borrowedCapture() {
+    let view = "static view"
+    let _h = Heap[int].by((a, b) => a + view.len() < b)
+}
+
+fn nestedCapture() {
+    let views: Vec[str] = ["x"]
+    let _h = Heap[int].by((a, b) => a + views.len() < b)
+}
+
+fn refCapture() {
+    var n = 2
+    let r: &inout int = &n
+    let _h = Heap[int].by((a, b) => a + *r < b)
+}
+
+fn movedCapture() {
+    let owned = "owner".toString()
+    let _h = Heap[int].by((a, b) => a + owned.len() < b)
+    println(owned)
+}
+
+fn borrowedOwner(s: String) {
+    let _h = Heap[int].by((a, b) => a + s.len() < b)
+}
+
+fn consumeCapture() {
+    let s = "owned".toString()
+    let _h = Heap[int].by((a, b) => {
+        consume(s)
+        return a < b
+    })
+}
+
+fn mutateCapture() {
+    var s = "owned".toString()
+    let _h = Heap[int].by((a, b) => {
+        s.push("x")
+        return a < b
+    })
+}
+
+fn dequeBorrow() {
+    var s = "owner".toString()
+    var q = Deque[str]{}
+    q.pushBack(s.trim())
+    let view = q.popFront()
+    s.push("x")
+    println(view ?? "")
+}
+
+fn heapBorrow() {
+    var s = "owner".toString()
+    var h = Heap[str].by((a, b) => a < b)
+    h.push(s.trim())
+    let view = h.pop()
+    s.push("x")
+    println(view ?? "")
+}
+
+fn enqueue(q: inout Deque[str], text: str) {
+    q.pushBack(text)
+}
+
+fn missingOf(q: Deque[str]) -> ?str of static {
+    var local = q.clone()
+    return local.popFront()
+}
+
+fn send(h: sink Heap[int]) {
+    println(h.len())
+}
+
+fn hiddenCapture() {
+    let value = Rc("one".toString())
+    let h = Heap[int].by((a, b) => a + value.len() < b)
+    scope {
+        let j = spawn send(h)
+        j.join()
+    }
+}
+
+struct Holder {
+    heap: Heap[int]
+}
+
+fn nestedChannel() {
+    let _ch = Channel[Holder]{cap: 1}
+}
+
+fn clonedHeap() {
+    let h = Heap[int].by((a, b) => a < b)
+    let _hs = [h].clone()
+}
+
+fn discardedOwner() {
+    let h = Heap[int].by((a, b) => a < b)
+    let _ = h
+    println(h.len())
+}
+
+fn discardedBorrow(s: String) {
+    let _ = s
+}
+
+fn main() {}

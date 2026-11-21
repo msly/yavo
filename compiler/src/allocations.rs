@@ -229,7 +229,14 @@ impl Analyzer<'_> {
                     ));
                 }
             }
-            Ty::Vec(id) => self.drop_calls(vec_elem(id), span, seen, ops),
+            Ty::Vec(id) | Ty::Deque(id) => self.drop_calls(vec_elem(id), span, seen, ops),
+            Ty::Heap(id) => {
+                self.drop_calls(vec_elem(id), span, seen, ops);
+                ops.push(Operation::new(
+                    "dynamic_drop", "drop Heap comparator captures", span, Vec::new(),
+                    Effect::UNKNOWN, "the saved comparator environment has an erased destructor",
+                ));
+            }
             Ty::Map(id) | Ty::Set(id) => {
                 let (key, value) = map_parts(id);
                 self.drop_calls(key, span, seen, ops);
@@ -370,7 +377,8 @@ impl Visitor<'_, '_> {
         let mut ops = self.expr(expr);
         let fresh = matches!(
             expr.kind,
-            HExprKind::Call { .. } | HExprKind::VecLit(_) | HExprKind::Move(_)
+            HExprKind::Call { .. } | HExprKind::LetTemp { .. } | HExprKind::VecLit(_) | HExprKind::Move(_)
+                | HExprKind::HeapNew { .. } | HExprKind::DequeNew | HExprKind::DequePop { .. }
                 | HExprKind::Some(_) | HExprKind::Coalesce { .. } | HExprKind::Take(_)
                 | HExprKind::Replace(..) | HExprKind::Pop(_) | HExprKind::MapLit(_)
                 | HExprKind::MapWrite { .. } | HExprKind::StructLit { .. }
@@ -502,7 +510,17 @@ impl Visitor<'_, '_> {
         match &expr.kind {
             E::Int(_) | E::Float(_) | E::Bool(_) | E::Str(_) | E::Local(_)
             | E::Move(_) | E::InoutArg(_) | E::InoutPlace(_) | E::None
-            | E::EmptyString | E::ScopeNew => Vec::new(),
+            | E::EmptyString | E::ScopeNew | E::DequeNew => Vec::new(),
+            E::HeapNew { caps, .. } => self.builtin(
+                "Heap.by", expr, self.exprs(caps),
+                if caps.is_empty() { Effect::NONE } else { Effect::MAY },
+                "a saved comparator owns its captures; a nonempty environment allocates",
+            ),
+            E::LetTemp { init, value, .. } => {
+                let mut ops = self.expr(init);
+                ops.extend(self.expr(value));
+                ops
+            }
             E::Break | E::Continue => {
                 let name = if matches!(expr.kind, E::Break) { "break" } else { "continue" };
                 vec![self.transfer(name, expr.at, Vec::new())]
@@ -605,6 +623,7 @@ impl Visitor<'_, '_> {
                     Builtin::StringLen => ("String.len", Effect::NONE),
                     Builtin::StringClone => ("String.clone", Effect::MAY),
                     Builtin::VecLen => ("Vec.len", Effect::NONE),
+                    Builtin::HeapLen => ("Heap.len", Effect::NONE),
                     Builtin::VecClone => ("Vec.clone", Effect::MAY),
                     Builtin::Trim => ("str.trim", Effect::NONE),
                     Builtin::Fields => ("str.fields", Effect::MAY),
@@ -617,8 +636,19 @@ impl Visitor<'_, '_> {
                 };
                 self.builtin(name, expr, self.borrowed(recv), effect, if effect.may_alloc { ALLOC } else { NO })
             }
+            E::Push { place, value } if matches!(place.ty, Ty::Heap(_)) => self.builtin(
+                "Heap.push", expr, self.expr(value), Effect::MAY.join(Effect::UNKNOWN),
+                "growing the heap may allocate; its stored comparator has an opaque allocation effect",
+            ),
             E::Push { place, value } => self.builtin(
                 format!("{}.push", place.ty), expr, self.expr(value), Effect::MAY, ALLOC,
+            ),
+            E::DequePush { value, front, .. } => self.builtin(
+                if *front { "Deque.pushFront" } else { "Deque.pushBack" },
+                expr, self.expr(value), Effect::MAY, ALLOC,
+            ),
+            E::DequePop { front, .. } => self.builtin(
+                if *front { "Deque.popFront" } else { "Deque.popBack" }, expr, Vec::new(), Effect::NONE, NO,
             ),
             E::Reserve { place, n } => self.builtin(
                 format!("{}.reserve", place.ty), expr, self.expr(n), Effect::MAY, ALLOC,
@@ -692,6 +722,10 @@ impl Visitor<'_, '_> {
             E::Take(_) => self.builtin("take", expr, Vec::new(), Effect::NONE, NO),
             E::Replace(_, value) => self.builtin("replace", expr, self.expr(value), Effect::NONE, NO),
             E::Swap(..) => self.builtin("swap", expr, Vec::new(), Effect::NONE, NO),
+            E::Pop(place) if matches!(place.ty, Ty::Heap(_)) => self.builtin(
+                "Heap.pop", expr, Vec::new(), Effect::UNKNOWN,
+                "removing a heap element invokes its stored comparator, whose effect is opaque",
+            ),
             E::Pop(_) => self.builtin("Vec.pop", expr, Vec::new(), Effect::NONE, NO),
             E::MapRead { op, recv, key } => {
                 let name = match op {

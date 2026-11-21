@@ -8,7 +8,7 @@ use crate::types::{
     box_inner, box_of, finish_agg, map_of, map_parts, opt_inner, opt_of, ref_inner, ref_mut_inner, ref_mut_of, ref_of, register_enum,
     register_iface,
     register_struct, res_of, res_parts, set_user_drop, has_user_drop, slice_elem, slice_of, tuple_elems, tuple_of, vec_elem,
-    vec_of, FloatTy, IntTy, Ty, sync_of, sync_parts, ptr_inner, ptr_read_only, SyncKind, dyn_base, dyn_caps, dyn_with_caps,
+    vec_of, deque_of, heap_of, FloatTy, IntTy, Ty, sync_of, sync_parts, ptr_inner, ptr_read_only, SyncKind, dyn_base, dyn_caps, dyn_with_caps,
 };
 
 pub type LocalId = usize;
@@ -64,6 +64,8 @@ pub struct Tramp {
     /// `func` is a user `cmp(self, other: &T) -> Ordering` (for `sort()` on a `T: Ord`), not a
     /// closure returning "goes before".
     pub by_cmp: bool,
+    /// An owning environment stored by Heap.by, rather than a borrowed stack callback.
+    pub saved: bool,
 }
 
 pub struct HStruct {
@@ -202,6 +204,9 @@ pub enum HExprKind {
     Bool(bool),
     Str(String),
     Local(LocalId),
+    /// Evaluate a returned mutable reference once, then use it as a receiver. The
+    /// hidden descriptor has no ownership or destructor of its own.
+    LetTemp { local: LocalId, init: Box<HExpr>, value: Box<HExpr> },
     Call { func: usize, args: Vec<HExpr> },
     Neg(Box<HExpr>),
     Not(Box<HExpr>),
@@ -220,6 +225,10 @@ pub enum HExprKind {
     /// Moves a non-copyable local out; the slot is left empty.
     Move(LocalId),
     VecLit(Vec<HExpr>),
+    DequeNew,
+    HeapNew { tramp: usize, caps: Vec<HExpr> },
+    DequePush { place: HPlace, value: Box<HExpr>, front: bool },
+    DequePop { place: HPlace, front: bool },
     /// `(a, b, ...)`: element values in order.
     TupleLit(Vec<HExpr>),
     /// `base[index]` for a copyable element, or a byte of a string.
@@ -406,6 +415,7 @@ pub enum Builtin {
     StringClone,
     VecLen,
     VecClone,
+    HeapLen,
     /// View-producing methods on `str`/`String`: the result points into the receiver's text.
     Trim,
     Fields,
@@ -426,7 +436,6 @@ const DYN_BASE: usize = 1 << 40;
 const OUTPUT_FNS: [&str; 3] = ["println", "print", "eprintln"];
 const UNSUPPORTED_TYPES: &[&str] = &[
     "Arena", "Id", "Atomic", "SendError", "Join",
-    "Heap", "Deque",
 ];
 /// Standard library modules and the public types each one brings in (stdlib contract §1).
 const MODULES: &[(&str, &[&str])] = &[
@@ -775,6 +784,10 @@ struct FnCx {
     in_drop: bool,
     /// In a closure function: the parameters that stand for captured outer variables.
     captures: Vec<LocalId>,
+    /// Arguments already evaluated by an enclosing call stay borrowed until the
+    /// call starts. These also cover returned references with no named local.
+    call_shared: Vec<LocalId>,
+    call_mut: Vec<LocalId>,
 }
 
 type Moved = Vec<Option<Span>>;
@@ -797,6 +810,8 @@ impl FnCx {
             diverge_ok: None,
             in_drop: false,
             captures: Vec::new(),
+            call_shared: Vec::new(),
+            call_mut: Vec::new(),
         }
     }
 }
@@ -1605,6 +1620,14 @@ impl Checker<'_> {
         if name == "String" && inits.is_empty() {
             return HExpr { kind: HExprKind::EmptyString, ty: Ty::String, span, at: span };
         }
+        if name == "Deque" {
+            let ty = self.resolve_ty(&TypeExpr { name: name.into(), span: name_span, args: targs.to_vec() });
+            if let Some(init) = inits.first() {
+                self.diags.error("E0001", init.value.span, "`Deque[T]{}` takes no fields; insert elements with `pushBack` or `pushFront`");
+                return err_expr(span);
+            }
+            return HExpr { kind: HExprKind::DequeNew, ty, span, at: span };
+        }
         // `Set[T]{}`: an empty set.
         if name == "Set" {
             let te = TypeExpr { name: name.to_string(), span: name_span, args: targs.to_vec() };
@@ -1841,7 +1864,7 @@ impl Checker<'_> {
                 }
                 let mut params = vec![Ty::Dyn(ii as u32)];
                 params.extend(m.params.iter().skip(1).map(|p| self.resolve_ty(&p.ty)));
-                let ret = m.ret.as_ref().map(|t| self.resolve_ty(t)).unwrap_or(Ty::Unit);
+                let ret = m.ret.as_ref().map(|t| self.local_ty(t)).unwrap_or(Ty::Unit);
                 self.check_ret_of(m, ret);
                 let ret_of = m.ret_of.as_ref().map(|names| {
                     names.iter().filter_map(|(n, _)| m.params.iter().position(|p| p.name == *n)).collect()
@@ -1958,6 +1981,9 @@ impl Checker<'_> {
         let Some(&imp) = self.impl_index.get(&(inner, dyn_base(iface) as usize)) else { return h };
         // Boxing as `Box[Named + Send]` checks the concrete type (P2).
         let (send, sync) = dyn_caps(iface);
+        if (send || sync) && self.heap_thread_gap(inner, h.span) {
+            return err_expr(h.span);
+        }
         if send && !self.cap_ok(inner, false, &mut Vec::new()) {
             self.diags.error("E0701", h.span, format!("`{inner}` is not `Send`, so it cannot be boxed as `{}`", Ty::Dyn(iface)));
         } else if sync && !self.cap_ok(inner, true, &mut Vec::new()) {
@@ -2081,7 +2107,7 @@ impl Checker<'_> {
         let params = f.params.iter().map(|p| self.resolve_ty(&p.ty)).collect();
         let sinks = f.params.iter().map(|p| p.sink).collect();
         let inouts = f.params.iter().map(|p| p.inout).collect();
-        let ret = f.ret.as_ref().map(|t| self.resolve_ty(t)).unwrap_or(Ty::Unit);
+        let ret = f.ret.as_ref().map(|t| self.local_ty(t)).unwrap_or(Ty::Unit);
         let ret_of = f.ret_of.as_ref().map(|names| {
             names.iter().filter_map(|(n, _)| f.params.iter().position(|p| p.name == *n)).collect()
         });
@@ -2357,6 +2383,7 @@ impl Checker<'_> {
         let sub = |s: &Self, i: usize, t: Ty, bound: &mut [Option<Ty>]| s.unify(&te.args[i], t, names, bound);
         match (te.name.as_str(), t) {
             ("[]" | "Vec", Ty::Vec(v)) => sub(self, 0, vec_elem(v), bound),
+            ("Deque", Ty::Deque(v)) | ("Heap", Ty::Heap(v)) => sub(self, 0, vec_elem(v), bound),
             ("[]", Ty::Slice(s)) => sub(self, 0, slice_elem(s), bound),
             ("?", Ty::Opt(o)) => sub(self, 0, opt_inner(o), bound),
             // A `T` passed where `?T` is expected is wrapped.
@@ -2535,7 +2562,7 @@ impl Checker<'_> {
         }
         if t.name == "&inout" {
             self.diags
-                .error("U0001", t.span, "`&inout T` is only supported as the type of a local variable for now")
+                .error("U0001", t.span, "`&inout T` is supported for local variables and return values; explicit parameter and nested types are not supported yet")
                 .note("use an `inout` parameter to modify the caller's value");
             return Ty::Error;
         }
@@ -2622,6 +2649,23 @@ impl Checker<'_> {
                 Ty::Error => Ty::Error,
                 e => Ty::Vec(vec_of(e)),
             };
+        }
+        if matches!(t.name.as_str(), "Heap" | "Deque") {
+            if !self.module_ref("collections", t.span) {
+                self.diags.error("E0010", t.span, format!("`{}` comes from `std/collections`, which is not imported", t.name))
+                    .note("add `use std/collections`");
+                return Ty::Error;
+            }
+            let [arg] = t.args.as_slice() else {
+                self.diags.error("E0001", t.span, format!("`{}` takes one element type", t.name));
+                return Ty::Error;
+            };
+            let elem = self.resolve_ty(arg);
+            if matches!(elem, Ty::Error | Ty::Unit) {
+                if elem == Ty::Unit { self.diags.error("E0001", arg.span, "a collection element cannot be `()`"); }
+                return Ty::Error;
+            }
+            return if t.name == "Heap" { Ty::Heap(heap_of(elem)) } else { Ty::Deque(deque_of(elem)) };
         }
         if t.name == "Box" {
             let [inner] = t.args.as_slice() else {
@@ -2772,7 +2816,7 @@ impl Checker<'_> {
     /// O5) as a function of its own. The captured outer variables become its first parameters,
     /// read-only and passed in place for the duration of the call; the closure's own
     /// parameters follow. Returns the function's index and the captured values.
-    fn lift_closure(&mut self, e: &Expr, param_tys: &[Ty], ret: Ty, what: &str, cx: &mut FnCx) -> Option<(usize, Vec<HExpr>)> {
+    fn lift_closure(&mut self, e: &Expr, param_tys: &[Ty], ret: Ty, what: &str, saved: bool, cx: &mut FnCx) -> Option<(usize, Vec<HExpr>)> {
         let ExprKind::Closure { params, body } = &e.kind else {
             self.diags.error("E0001", e.span, format!("`{what}` takes a closure here, e.g. `(a, b) => a < b`"));
             self.expr(e, None, cx);
@@ -2786,8 +2830,7 @@ impl Checker<'_> {
             );
             return None;
         }
-        let mut names = Vec::new();
-        idents_expr(body, &mut names);
+        let names = crate::closure_free::free_variables(params, body);
         let mut caps: Vec<LocalId> = Vec::new();
         for (n, _) in &names {
             if params.iter().any(|(p, _, _)| p == n) {
@@ -2808,12 +2851,17 @@ impl Checker<'_> {
         let mut cap_exprs = Vec::new();
         for &id in &caps {
             let (name, ty) = (cx.locals[id].name.clone(), cx.locals[id].ty);
+            cx.locals[id].used = true;
+            self.check_moved(cx, id, e.span);
+            if saved && (ty.carries_borrow() || matches!(ty, Ty::Sync(s) if matches!(sync_parts(s).0, SyncKind::Join | SyncKind::Scope))) {
+                self.diags.error("E0307", e.span, format!("the stored `{what}` closure cannot capture `{name}`: `{ty}` carries a borrow"))
+                    .note("capture owned data instead; convert views to owned values before constructing the closure");
+                return None;
+            }
             if ty.contains_ref_mut() {
                 self.diags.error("U0001", e.span, format!("a closure cannot use the `&inout` value `{name}` yet"));
                 return None;
             }
-            cx.locals[id].used = true;
-            self.check_moved(cx, id, e.span);
             let pid = self.declare(&mut ccx, &name, e.span, ty, LocalKind::Param);
             ccx.locals[pid].used = true;
             ccx.captures.push(pid);
@@ -2821,7 +2869,8 @@ impl Checker<'_> {
                 ccx.locals[pid].loans = vec![Loan::Local(pid)];
             }
             ids.push(pid);
-            cap_exprs.push(HExpr { kind: HExprKind::Local(id), ty, span: e.span, at: e.span });
+            let cap = HExpr { kind: HExprKind::Local(id), ty, span: e.span, at: e.span };
+            cap_exprs.push(if saved { self.consume(cap, cx) } else { cap });
         }
         for ((n, sp, t), &pt) in params.iter().zip(param_tys) {
             if let Some(t) = t {
@@ -2880,7 +2929,7 @@ impl Checker<'_> {
                 return err_expr(span);
             }
         };
-        let Some((func, caps)) = self.lift_closure(arg, &[elem, elem], Ty::Bool, "sortBy", cx) else { return err_expr(span) };
+        let Some((func, caps)) = self.lift_closure(arg, &[elem, elem], Ty::Bool, "sortBy", false, cx) else { return err_expr(span) };
         if caps.iter().any(|c| matches!(c.kind, HExprKind::Local(id) if id == place.local)) {
             let n = cx.locals[place.local].name.clone();
             self.diags
@@ -2889,7 +2938,7 @@ impl Checker<'_> {
             return err_expr(span);
         }
         let tramp = self.tramps.len();
-        self.tramps.push(Tramp { func, caps: caps.iter().map(|c| c.ty).collect(), elem, by_cmp: false });
+        self.tramps.push(Tramp { func, caps: caps.iter().map(|c| c.ty).collect(), elem, by_cmp: false, saved: false });
         HExpr { kind: HExprKind::SortBy { place, tramp, caps }, ty: Ty::Unit, span, at }
     }
 
@@ -2932,7 +2981,7 @@ impl Checker<'_> {
         }
         let ih = self.expr(ia, Some(v), cx);
         let ih = self.fit(ih, v, cx);
-        let Some((func, caps)) = self.lift_closure(fa, &[v], v, "update", cx) else { return err_expr(span) };
+        let Some((func, caps)) = self.lift_closure(fa, &[v], v, "update", false, cx) else { return err_expr(span) };
         if caps.iter().any(|c| matches!(c.kind, HExprKind::Local(c_id) if c_id == id)) {
             self.diags.error("E0102", fa.span, format!("`{local}` is being updated, so the closure cannot use it"));
             return err_expr(span);
@@ -3174,16 +3223,23 @@ impl Checker<'_> {
         };
         cx.locals[id].used = true;
         self.check_moved(cx, id, inner.span);
+        if cx.call_shared.contains(&id) || cx.call_mut.contains(&id)
+            || cx.locals[id].loans.iter().any(|l| matches!(l, Loan::Local(s) if cx.call_shared.contains(s) || cx.call_mut.contains(s)))
+        {
+            self.diags.error("E0102", span, format!("`{name}` is already borrowed by an earlier argument of this call"));
+            return err_expr(span);
+        }
         // An `&inout T` (a writable binding, `getMut`'s result) passes its target on: `&n`.
         if let Ty::RefMut(r) = cx.locals[id].ty {
             let target = ref_mut_inner(r);
             if exp.is_none_or(|t| t == target) {
+                if !self.ref_mut_writable(cx, id, span) { return err_expr(span); }
                 if borrowed.contains(&id) || mut_borrowed.contains(&id) {
                     self.diags
                         .error("E0102", span, format!("`{name}` is already borrowed by an earlier argument of this call"))
                         .note("a variable passed as `inout` cannot be used by any other argument of the same call");
                 }
-                self.check_exclusive(cx, id, inner.span);
+                self.check_not_borrowed(cx, id, inner.span, "borrow mutably");
                 mut_borrowed.push(id);
                 let place = HPlace { local: id, path: Vec::new(), ty: target };
                 return HExpr { kind: HExprKind::InoutPlace(place), ty: target, span, at: span };
@@ -3278,6 +3334,9 @@ impl Checker<'_> {
             self.diags.error("E0001", name_span, "a channel needs its capacity: `Channel[T]{cap: n}`");
             return err_expr(span);
         };
+        if self.heap_thread_gap(elem, name_span) {
+            return err_expr(span);
+        }
         if !self.cap_ok(elem, false, &mut Vec::new()) {
             let hint = self.send_hint(elem);
             self.diags.error("E0701", name_span, format!("a channel cannot carry `{elem}`: it is not `Send`")).note(hint);
@@ -3367,6 +3426,10 @@ impl Checker<'_> {
                 continue;
             }
             let sink = sinks.get(i).copied().unwrap_or(false);
+            if self.heap_thread_gap(if sink { a.ty } else { pty }, a.span) {
+                ok = false;
+                continue;
+            }
             if sink {
                 if !self.cap_ok(a.ty, false, &mut Vec::new()) {
                     let hint = self.send_hint(a.ty);
@@ -3415,7 +3478,9 @@ impl Checker<'_> {
             }
         }
         let ret = h.ty;
-        if ret != Ty::Error && (!self.cap_ok(ret, false, &mut Vec::new()) || ret.carries_borrow()) {
+        if self.heap_thread_gap(ret, call.span) {
+            ok = false;
+        } else if ret != Ty::Error && (!self.cap_ok(ret, false, &mut Vec::new()) || ret.carries_borrow()) {
             self.diags
                 .error("E0701", call.span, format!("a thread cannot return `{ret}`: the result must be `Send` and own its data"))
                 .note("return owned values, e.g. `String` instead of `str`");
@@ -3427,6 +3492,44 @@ impl Checker<'_> {
         self.store_loans(cx, scope, loans, span, false);
         let ty = Ty::Sync(sync_of(SyncKind::Join, ret));
         HExpr { kind: HExprKind::Spawn { scope, func, args }, ty, span, at: span }
+    }
+
+    /// Thread capability propagation for an erased Heap environment needs a public
+    /// capability contract. Keep this implementation boundary distinct from a type that
+    /// the language permanently declares !Send / !Sync, including nested containers.
+    fn heap_thread_gap(&mut self, ty: Ty, span: Span) -> bool {
+        fn contains(ck: &Checker<'_>, ty: Ty, seen: &mut Vec<Ty>) -> bool {
+            if seen.contains(&ty) { return false; }
+            seen.push(ty);
+            match ty {
+                Ty::Heap(_) => true,
+                Ty::Vec(id) | Ty::Deque(id) => contains(ck, vec_elem(id), seen),
+                Ty::Slice(id) => contains(ck, slice_elem(id), seen),
+                Ty::Ref(id) => contains(ck, ref_inner(id), seen),
+                Ty::RefMut(id) => contains(ck, ref_mut_inner(id), seen),
+                Ty::Opt(id) => contains(ck, opt_inner(id), seen),
+                Ty::Box(id) => contains(ck, box_inner(id), seen),
+                Ty::Sync(id) => contains(ck, sync_parts(id).1, seen),
+                Ty::Map(id) | Ty::Set(id) => {
+                    let (a, b) = map_parts(id);
+                    contains(ck, a, seen) || contains(ck, b, seen)
+                }
+                Ty::Res(id) => {
+                    let (a, b) = res_parts(id);
+                    contains(ck, a, seen) || contains(ck, b, seen)
+                }
+                Ty::Tuple(id) => tuple_elems(id).iter().any(|t| contains(ck, *t, seen)),
+                Ty::Struct(_) | Ty::Enum(_) => ck.structs.iter().find(|s| s.ty == ty).is_some_and(|s| {
+                    s.fields.iter().map(|f| f.1).chain(s.variants.iter().flat_map(|v| v.fields.iter().map(|f| f.1)))
+                        .any(|t| contains(ck, t, seen))
+                }),
+                _ => false,
+            }
+        }
+        if !contains(self, ty, &mut Vec::new()) { return false; }
+        self.diags.error("U0001", span, "thread capabilities of saved Heap comparators are not supported yet")
+            .note("the comparator owns hidden captures; checking only the heap element type would be unsafe");
+        true
     }
 
     /// A hint for a value that is not `Send`.
@@ -3445,7 +3548,10 @@ impl Checker<'_> {
     fn cap_ok(&self, ty: Ty, sync: bool, seen: &mut Vec<(Ty, bool)>) -> bool {
         match ty {
             Ty::Int(_) | Ty::Float(_) | Ty::Bool | Ty::Unit | Ty::Str | Ty::String | Ty::Error => true,
-            Ty::Vec(id) => self.cap_ok(vec_elem(id), sync, seen),
+            Ty::Vec(id) | Ty::Deque(id) => self.cap_ok(vec_elem(id), sync, seen),
+            // Heap's erased capture environment has no public capability parameter yet.
+            // Never derive a capability from the element type alone.
+            Ty::Heap(_) => false,
             // Views and read-only references share what they point to.
             Ty::Slice(id) => self.cap_ok(slice_elem(id), true, seen),
             Ty::Ref(id) => self.cap_ok(ref_inner(id), true, seen),
@@ -3550,36 +3656,119 @@ impl Checker<'_> {
     /// else may use it while the new reference is alive (A3). `&p` for an `&inout T` variable
     /// `p` reborrows its target (A4).
     fn borrow_mut(&mut self, inner: &Expr, r: u32, span: Span, cx: &mut FnCx) -> HExpr {
-        let want = ref_mut_inner(r);
-        let mut root = inner;
-        while let ExprKind::Paren(e) = &root.kind {
-            root = e;
-        }
-        if let ExprKind::Ident(name) = &root.kind {
-            if let Some(id) = self.lookup(cx, name) {
-                if let Ty::RefMut(pr) = cx.locals[id].ty {
-                    if ref_mut_inner(pr) == want {
-                        cx.locals[id].used = true;
-                        self.check_moved(cx, id, root.span);
-                        self.check_exclusive(cx, id, root.span);
-                        let place = HPlace { local: id, path: Vec::new(), ty: want };
-                        return HExpr { kind: HExprKind::InoutPlace(place), ty: Ty::RefMut(r), span, at: span };
+        let mut h = self.mutable_address(inner, cx);
+        self.expect_ty(&h, Ty::RefMut(r));
+        h.span = span;
+        h
+    }
+
+    /// A checked address to a writable position, including indexed/nested positions.
+    /// Building it never consumes the owner; every result retains its storage loans.
+    fn mutable_address(&mut self, inner: &Expr, cx: &mut FnCx) -> HExpr {
+        let span = inner.span;
+        match &inner.kind {
+            ExprKind::Paren(e) => self.mutable_address(e, cx),
+            ExprKind::Ident(name) => {
+                let before = self.diags.count(crate::diag::Severity::Error);
+                let Some(place) = self.mutable_place(inner, "borrow mutably", cx) else { return err_expr(span) };
+                let id = place.local;
+                if matches!(cx.locals[id].ty, Ty::RefMut(_)) && cx.locals[id].kind == LocalKind::Param {
+                    self.diags.error("E0101", span, format!("cannot modify through `{name}`: a default parameter is read-only"));
+                    return err_expr(span);
+                }
+                if self.diags.count(crate::diag::Severity::Error) == before {
+                    self.check_exclusive(cx, id, span);
+                }
+                let ty = Ty::RefMut(ref_mut_of(place.ty));
+                HExpr { kind: HExprKind::InoutPlace(place), ty, span, at: span }
+            }
+            ExprKind::Field { base, name } => {
+                let pointer = self.mutable_address(base, cx);
+                if pointer.ty == Ty::Error { return pointer; }
+                let b = self.deref(pointer);
+                let b = self.mutable_projection(b);
+                if b.ty == Ty::Error { return b; }
+                let Some((field, ty)) = self.struct_field(b.ty, name) else {
+                    self.diags.error("E0001", span, format!("a value of type `{}` has no field `{name}`", b.ty));
+                    return err_expr(span);
+                };
+                let field = HExpr { kind: HExprKind::Field { base: Box::new(b), field }, ty, span, at: span };
+                HExpr { kind: HExprKind::AddrOf(Box::new(field)), ty: Ty::RefMut(ref_mut_of(ty)), span, at: span }
+            }
+            ExprKind::Index { base, index } => {
+                let pointer = self.mutable_address(base, cx);
+                if pointer.ty == Ty::Error { return pointer; }
+                let loans = self.loans_of(&pointer, cx);
+                if self.borrowed_argument_conflict(std::slice::from_ref(&**index), &loans, cx, "index") {
+                    return err_expr(span);
+                }
+                let b = self.deref(pointer);
+                let b = self.mutable_projection(b);
+                if b.ty == Ty::Error { return b; }
+                let Ty::Vec(v) = b.ty else {
+                    self.diags.error("E0101", span, format!("mutable element borrowing requires a Vec, found `{}`", b.ty));
+                    return err_expr(span);
+                };
+                let i = self.expr(index, None, cx);
+                if !matches!(i.ty, Ty::Int(_) | Ty::Error) {
+                    self.diags.error("E0001", i.span, format!("an index must be an integer, found `{}`", i.ty));
+                }
+                HExpr { kind: HExprKind::Index { base: Box::new(b), index: Box::new(i) },
+                    ty: Ty::RefMut(ref_mut_of(vec_elem(v))), span, at: span }
+            }
+            ExprKind::Unary { op: UnOp::Deref, expr, .. } => {
+                let h = self.expr(expr, None, cx);
+                if let HExprKind::Local(id) = h.kind {
+                    if !self.ref_mut_writable(cx, id, span) { return err_expr(span); }
+                }
+                if matches!(h.ty, Ty::RefMut(_)) { h } else {
+                    if h.ty != Ty::Error {
+                        self.diags.error("E0101", span, "a mutable reborrow requires an `&inout` reference");
                     }
+                    err_expr(span)
+                }
+            }
+            _ => {
+                let h = self.expr(inner, None, cx);
+                if matches!(h.ty, Ty::RefMut(_)) { h } else {
+                    if h.ty != Ty::Error {
+                        self.diags.error("E0014", span, "cannot mutably borrow an owned temporary; bind it with `var` first");
+                    }
+                    err_expr(span)
                 }
             }
         }
-        let before = self.diags.count(crate::diag::Severity::Error);
-        let Some(place) = self.place_expr(inner, "`&inout`", cx) else { return err_expr(span) };
-        // One primary diagnostic per root cause: a conflict already reported by `place_expr`
-        // is not reported again as an exclusivity conflict.
-        if self.diags.count(crate::diag::Severity::Error) == before {
-            self.check_exclusive(cx, place.local, span);
+    }
+
+    fn mutable_projection(&mut self, mut h: HExpr) -> HExpr {
+        while let Some(ty) = ptr_inner(h.ty) {
+            if ptr_read_only(h.ty) {
+                self.read_only_ptr(h.ty, h.span);
+                return err_expr(h.span);
+            }
+            let (span, at) = (h.span, h.at);
+            h = HExpr { kind: HExprKind::Unbox(Box::new(h)), ty, span, at };
         }
-        if place.ty != want && place.ty != Ty::Error {
-            self.diags.error("E0001", span, format!("mismatched types: expected `&inout {want}`, found `&inout {}`", place.ty));
-            return err_expr(span);
+        h
+    }
+
+    /// A mutable receiver is acquired before its arguments (V2). Check aliases,
+    /// including all sources preserved through a returned/reborrowed descriptor.
+    fn borrowed_argument_conflict(&mut self, args: &[Expr], loans: &[Loan], cx: &FnCx, operation: &str) -> bool {
+        for arg in args {
+            let mut names = Vec::new();
+            idents_expr(arg, &mut names);
+            for (name, _) in names {
+                let Some(id) = self.lookup(cx, &name) else { continue };
+                if loans.contains(&Loan::Local(id)) || cx.locals[id].loans.iter().any(|l| loans.contains(l)) {
+                    self.diags.error("E0403", arg.span,
+                        format!("`{name}` is already borrowed by the receiver of `{operation}`, so the argument cannot use it"))
+                        .note("evaluate the argument in a separate statement before acquiring the mutable receiver");
+                    return true;
+                }
+            }
         }
-        HExpr { kind: HExprKind::InoutPlace(place), ty: Ty::RefMut(r), span, at: span }
+        false
     }
 
     /// The declared type of a local variable. Unlike other positions, a local may be an
@@ -3651,8 +3840,12 @@ impl Checker<'_> {
         let recv_loans = |r: &HExpr| -> Vec<Loan> {
             match (&r.kind, r.ty) {
                 (HExprKind::Local(id), Ty::String) => vec![Loan::Local(*id)],
-                (HExprKind::InoutArg(id), _) => vec![Loan::Local(*id)],
-                (HExprKind::InoutPlace(p), _) => vec![Loan::Local(p.local)],
+                (HExprKind::InoutArg(id), _) => {
+                    let mut out = vec![Loan::Local(*id)];
+                    out.extend(cx.locals[*id].loans.iter().copied());
+                    out
+                }
+                (HExprKind::InoutPlace(_), _) => self.loans_of(r, cx),
                 // A `String` stored in a field or an element, or read through a reference.
                 (HExprKind::Field { .. } | HExprKind::Deref(_) | HExprKind::Unbox(_), Ty::String) => self.storage_loans(r, cx),
                 (_, Ty::String) => vec![Loan::Temp],
@@ -3669,12 +3862,13 @@ impl Checker<'_> {
         };
         match &h.kind {
             HExprKind::Local(id) | HExprKind::Move(id) => cx.locals[*id].loans.clone(),
+            HExprKind::LetTemp { value, .. } => self.loans_of(value, cx),
             // A guard is `of` its mutex (stdlib contract §6).
             HExprKind::Lock { mutex, .. } => self.storage_loans(mutex, cx),
             // `&x` / `&x.f` (and a reborrow `&p`): points into the root variable and whatever it
             // already points into.
             HExprKind::InoutPlace(p) => {
-                let mut out = vec![Loan::Local(p.local)];
+                let mut out = if cx.locals[p.local].name.starts_with("$receiver") { Vec::new() } else { vec![Loan::Local(p.local)] };
                 out.extend(cx.locals[p.local].loans.iter().copied());
                 out
             }
@@ -3714,13 +3908,15 @@ impl Checker<'_> {
                 out
             }
             // Elements taken out of a vector keep pointing where the vector's elements point.
-            HExprKind::Pop(p) => cx.locals[p.local].loans.clone(),
+            HExprKind::Pop(p) | HExprKind::DequePop { place: p, .. } => cx.locals[p.local].loans.clone(),
             HExprKind::Take(p) | HExprKind::Replace(p, _) => cx.locals[p.local].loans.clone(),
             // `get` borrows the map's slot; `getCopy` copies a value that keeps the elements' loans.
             HExprKind::MapRead { op: MapRead::Get, recv, .. } => self.storage_loans(recv, cx),
             HExprKind::MapRead { recv, .. } => self.loans_of(recv, cx),
             HExprKind::MapWrite { op: MapWrite::GetMut, place, .. } => {
-                let mut out = vec![Loan::Local(place.local)];
+                // A temporary receiver is only a pointer descriptor. The slot
+                // returned by getMut belongs to its actual Map/Guard sources.
+                let mut out = if cx.locals[place.local].name.starts_with("$receiver") { Vec::new() } else { vec![Loan::Local(place.local)] };
                 out.extend(cx.locals[place.local].loans.iter().copied());
                 out
             }
@@ -3738,7 +3934,7 @@ impl Checker<'_> {
                 out
             }
             // `&v[i]` points into `v`'s storage (and into whatever `v`'s elements point into).
-            HExprKind::Index { base, .. } if matches!(h.ty, Ty::Ref(_)) => self.storage_loans(base, cx),
+            HExprKind::Index { base, .. } if matches!(h.ty, Ty::Ref(_) | Ty::RefMut(_)) => self.storage_loans(base, cx),
             // A view of a view points where it points; a view of owned data borrows its storage.
             HExprKind::SliceRange { base, .. } => match (base.ty, &base.kind) {
                 (Ty::Str | Ty::Slice(_), _) => self.loans_of(base, cx),
@@ -3856,6 +4052,12 @@ impl Checker<'_> {
     /// Moving or modifying `s` while a view into it is still used later is an error (A3).
     fn check_not_borrowed(&mut self, cx: &FnCx, s: LocalId, span: Span, what: &str) {
         let p = cx.cur;
+        if cx.call_shared.contains(&s) || cx.call_mut.contains(&s)
+            || cx.locals[s].loans.iter().any(|l| matches!(l, Loan::Local(id) if cx.call_shared.contains(id) || cx.call_mut.contains(id)))
+        {
+            self.diags.error("E0102", span, format!("cannot {what} `{}`: an earlier call argument still borrows it", cx.locals[s].name));
+            return;
+        }
         if cx.iterating.contains(&s) {
             let sn = cx.locals[s].name.clone();
             self.diags
@@ -3889,6 +4091,12 @@ impl Checker<'_> {
     /// reference has exclusive access.
     fn check_exclusive(&mut self, cx: &FnCx, s: LocalId, span: Span) {
         let name = cx.locals[s].name.clone();
+        if cx.call_mut.contains(&s)
+            || cx.locals[s].loans.iter().any(|l| matches!(l, Loan::Local(id) if cx.call_mut.contains(id)))
+        {
+            self.diags.error("E0102", span, format!("cannot use `{name}`: an earlier call argument has exclusive access to it"));
+            return;
+        }
         if cx.iterating_mut.contains(&s) {
             self.diags
                 .error("E0102", span, format!("cannot use `{name}` inside `for ... in &{name}`: the loop has exclusive access to it"))
@@ -3987,6 +4195,12 @@ impl Checker<'_> {
                 Loan::Local(id) => {
                     let local = &cx.locals[id];
                     let is_param = matches!(local.kind, LocalKind::Param | LocalKind::SinkParam | LocalKind::InoutParam);
+                    // A reborrow depends on the descriptor for local permission,
+                    // but its returned pointer does not point into that slot.
+                    // Transitive pointee sources are present in the same loan set.
+                    if !is_param && matches!(local.ty, Ty::RefMut(_)) && !local.loans.is_empty() {
+                        continue;
+                    }
                     if is_param && names.contains(&local.name) {
                         continue;
                     }
@@ -4079,8 +4293,9 @@ impl Checker<'_> {
                     }
                 };
                 if name == "_" {
-                    // `let _ = x` neither moves nor drops a variable; any other value is dropped now.
-                    HStmtKind::Discard(init)
+                    // Explicit discard consumes an owning value and drops it now (§6).
+                    // `_name` is the distinct form that retains it until scope exit.
+                    HStmtKind::Discard(self.consume(init, cx))
                 } else {
                     let init = self.consume(init, cx);
                     let loans = if ty.carries_borrow() { self.loans_of(&init, cx) } else { Vec::new() };
@@ -4212,6 +4427,10 @@ impl Checker<'_> {
                 // Through a guard (writable) or an `Rc`/`Arc` (read-only) as well (P6).
                 let shared = matches!(root_ty, Ty::Sync(_)) && ptr_inner(root_ty).is_some();
                 let through = star.is_some() || !fields_rev.is_empty() && (matches!(root_ty, Ty::Ref(_) | Ty::RefMut(_)) || shared);
+                if through && !self.ref_mut_writable(cx, id, target.span) {
+                    self.expr(value, None, cx);
+                    return None;
+                }
                 if cx.locals[id].map_key {
                     self.diags
                         .error("E0103", target.span, format!("cannot modify the Map key `{name}`"))
@@ -5552,6 +5771,7 @@ impl Checker<'_> {
         let shared = matches!(root_ty, Ty::Sync(_)) && ptr_inner(root_ty).is_some();
         let through = !fields_rev.is_empty() && (matches!(root_ty, Ty::Ref(_) | Ty::RefMut(_)) || shared);
         if through {
+            if !self.ref_mut_writable(cx, id, root.span) { return None; }
             if ptr_read_only(root_ty) {
                 self.read_only_ptr(root_ty, root.span);
                 return None;
@@ -5959,123 +6179,86 @@ impl Checker<'_> {
     /// A call of user function `fi`. For a method call, `recv` is the receiver, already
     /// borrowed, moved or passed as `inout`; it is the first parameter and `args` the rest.
     fn call_fn(&mut self, fi: usize, name: &str, recv: Option<HExpr>, args: &[Expr], span: Span, at: Span, cx: &mut FnCx) -> HExpr {
-        {
-            let skip = usize::from(recv.is_some());
-                let params = self.sig(fi).params.clone();
-                let ret = self.sig(fi).ret;
-                if args.len() + skip != params.len() {
-                    let what = if skip == 1 { "method" } else { "function" };
-                    self.diags.error(
-                        "E0012",
-                        span,
-                        format!(
-                            "{what} `{name}` takes {} but {} {} supplied",
-                            plural(params.len() - skip, "argument"),
-                            args.len(),
-                            if args.len() == 1 { "was" } else { "were" }
-                        ),
-                    );
+        let skip = usize::from(recv.is_some());
+        let params = self.sig(fi).params.clone();
+        let sinks = self.sig(fi).sinks.clone();
+        let inouts = self.sig(fi).inouts.clone();
+        let ret = self.sig(fi).ret;
+        if args.len() + skip != params.len() {
+            let what = if skip == 1 { "method" } else { "function" };
+            self.diags.error("E0012", span,
+                format!("{what} `{name}` takes {} but {} {} supplied",
+                    plural(params.len().saturating_sub(skip), "argument"), args.len(),
+                    if args.len() == 1 { "was" } else { "were" }));
+        }
+        let shared_mark = cx.call_shared.len();
+        let mutable_mark = cx.call_mut.len();
+        let mut hargs = Vec::new();
+        if let Some(r) = recv {
+            self.hold_call_argument(&r, inouts.first().copied().unwrap_or(false),
+                sinks.first().copied().unwrap_or(false), cx);
+            hargs.push(r);
+        }
+        for (i, a) in args.iter().enumerate() {
+            let i = i + skip;
+            let exp = params.get(i).copied();
+            let inout = inouts.get(i).copied().unwrap_or(false);
+            let sink = sinks.get(i).copied().unwrap_or(false);
+            if inout {
+                let h = self.inout_arg(a, exp, &[], &mut Vec::new(), cx);
+                self.hold_call_argument(&h, true, false, cx);
+                hargs.push(h);
+                continue;
+            }
+            let h = self.expr(a, exp, cx);
+            let h = if matches!(h.ty, Ty::Ref(_) | Ty::RefMut(_)) && !matches!(exp, Some(Ty::Ref(_) | Ty::RefMut(_))) {
+                self.deref(h)
+            } else { h };
+            let h = if exp == Some(Ty::Str) && h.ty == Ty::String {
+                let (span, at) = (h.span, h.at);
+                HExpr { kind: HExprKind::StrView(Box::new(h)), ty: Ty::Str, span, at }
+            } else { h };
+            let h = match (exp, h.ty) {
+                (Some(Ty::Slice(s)), Ty::Vec(v)) if slice_elem(s) == vec_elem(v) => {
+                    let (span, at) = (h.span, h.at);
+                    HExpr { kind: HExprKind::SliceOf(Box::new(h)), ty: Ty::Slice(s), span, at }
                 }
-                // Arguments are processed left to right; each is borrowed or (for a `sink`
-                // parameter) moved before the next one is evaluated.
-                let sinks = self.sig(fi).sinks.clone();
-                let mut borrowed: Vec<LocalId> = Vec::new();
-                let inouts = self.sig(fi).inouts.clone();
-                let mut mut_borrowed: Vec<LocalId> = Vec::new();
-                let mut hargs = Vec::new();
-                if let Some(r) = recv {
-                    match &r.kind {
-                        HExprKind::InoutPlace(p) => mut_borrowed.push(p.local),
-                        _ => {
-                            if let Some(id) = place_root(&r) {
-                                if !r.ty.is_copy() {
-                                    borrowed.push(id);
-                                }
-                            }
-                        }
-                    }
-                    hargs.push(r);
+                _ => h,
+            };
+            let h = match exp { Some(t) => self.fit(h, t, cx), None => h };
+            let h = if sink { self.consume(h, cx) } else { h };
+            self.hold_call_argument(&h, false, sink, cx);
+            hargs.push(h);
+        }
+        cx.call_shared.truncate(shared_mark);
+        cx.call_mut.truncate(mutable_mark);
+        let kind = match self.dyn_slots.get(&fi) {
+            Some(&(iface, method)) => HExprKind::DynCall { iface, method, sig: fi, args: hargs },
+            None => HExprKind::Call { func: fi, args: hargs },
+        };
+        HExpr { kind, ty: ret, span, at }
+    }
+
+    fn hold_call_argument(&self, h: &HExpr, inout: bool, sink: bool, cx: &mut FnCx) {
+        if !inout && h.ty.is_copy() && !h.ty.carries_borrow() {
+            return;
+        }
+        let mut loans = self.loans_of(h, cx);
+        if inout || !sink && !h.ty.is_copy() {
+            match &h.kind {
+                HExprKind::InoutArg(id) => {
+                    loans.push(Loan::Local(*id));
+                    loans.extend(cx.locals[*id].loans.iter().copied());
                 }
-                for (i, a) in args.iter().enumerate() {
-                    let i = i + skip;
-                    let exp = params.get(i).copied();
-                    if inouts.get(i).copied().unwrap_or(false) {
-                        let h = self.inout_arg(a, exp, &borrowed, &mut mut_borrowed, cx);
-                        hargs.push(h);
-                        continue;
-                    }
-                    let h = self.expr(a, exp, cx);
-                    // A `&T` passed to a parameter of type `T` is read in place.
-                    let h = if matches!(h.ty, Ty::Ref(_) | Ty::RefMut(_)) && !matches!(exp, Some(Ty::Ref(_) | Ty::RefMut(_))) {
-                        self.deref(h)
-                    } else {
-                        h
-                    };
-                    // Passing a `String` to a `str` parameter borrows it for the call (whitelist).
-                    let h = if exp == Some(Ty::Str) && h.ty == Ty::String {
-                        let (span, at) = (h.span, h.at);
-                        HExpr { kind: HExprKind::StrView(Box::new(h)), ty: Ty::Str, span, at }
-                    } else {
-                        h
-                    };
-                    // Passing a `Vec[T]` to a `[]T` parameter borrows it for the call (whitelist).
-                    let h = match (exp, h.ty) {
-                        (Some(Ty::Slice(s)), Ty::Vec(v)) if slice_elem(s) == vec_elem(v) => {
-                            let (span, at) = (h.span, h.at);
-                            HExpr { kind: HExprKind::SliceOf(Box::new(h)), ty: Ty::Slice(s), span, at }
-                        }
-                        _ => h,
-                    };
-                    if let HExprKind::StrView(inner) | HExprKind::SliceOf(inner) = &h.kind {
-                        if let HExprKind::Local(id) = inner.kind {
-                            borrowed.push(id);
-                        }
-                    }
-                    let used = match &h.kind {
-                        HExprKind::Local(id) => Some(*id),
-                        HExprKind::StrView(x) | HExprKind::Deref(x) | HExprKind::SliceOf(x) => match x.kind {
-                            HExprKind::Local(id) => Some(id),
-                            _ => None,
-                        },
-                        _ => None,
-                    };
-                    if let Some(id) = used {
-                        if mut_borrowed.contains(&id) {
-                            let n = cx.locals[id].name.clone();
-                            self.diags
-                                .error("E0102", h.span, format!("`{n}` is passed as `inout` by an earlier argument, so it cannot be used here"))
-                                .note("a variable passed as `inout` cannot be used by any other argument of the same call");
-                        }
-                    }
-                    let h = match exp {
-                        Some(t) => self.fit(h, t, cx),
-                        None => h,
-                    };
-                    let h = if sinks.get(i).copied().unwrap_or(false) {
-                        if let HExprKind::Local(id) = h.kind {
-                            if borrowed.contains(&id) {
-                                let n = cx.locals[id].name.clone();
-                                self.diags
-                                    .error("E0102", h.span, format!("`{n}` is borrowed by an earlier argument of this call, so it cannot be moved here"))
-                                    .note("pass a copy with `.clone()`, or move it in a separate statement");
-                            }
-                        }
-                        self.consume(h, cx)
-                    } else {
-                        if let HExprKind::Local(id) = h.kind {
-                            if !h.ty.is_copy() {
-                                borrowed.push(id);
-                            }
-                        }
-                        h
-                    };
-                    hargs.push(h);
-                }
-                let kind = match self.dyn_slots.get(&fi) {
-                    Some(&(iface, method)) => HExprKind::DynCall { iface, method, sig: fi, args: hargs },
-                    None => HExprKind::Call { func: fi, args: hargs },
-                };
-                HExpr { kind, ty: ret, span, at }
+                HExprKind::InoutPlace(_) => {}
+                _ => loans.extend(self.storage_loans(h, cx)),
+            }
+        }
+        let dst = if inout || h.ty.contains_ref_mut() { &mut cx.call_mut } else { &mut cx.call_shared };
+        for loan in loans {
+            if let Loan::Local(id) = loan {
+                dst.push(id);
+            }
         }
     }
 
@@ -6104,7 +6287,8 @@ impl Checker<'_> {
                 SyncKind::Rc | SyncKind::Arc | SyncKind::Channel => None,
                 SyncKind::Mutex | SyncKind::Guard | SyncKind::Join | SyncKind::Scope => Some(ty),
             },
-            Ty::Vec(id) => self.clone_blocker(vec_elem(id), seen),
+            Ty::Vec(id) | Ty::Deque(id) => self.clone_blocker(vec_elem(id), seen),
+            Ty::Heap(_) => Some(ty),
             Ty::Box(id) => self.clone_blocker(box_inner(id), seen),
             Ty::Opt(id) => self.clone_blocker(opt_inner(id), seen),
             Ty::Map(id) | Ty::Set(id) => {
@@ -6135,6 +6319,71 @@ impl Checker<'_> {
     }
 
     fn method_call(&mut self, base: &Expr, name: &str, args: &[Expr], span: Span, at: Span, cx: &mut FnCx) -> HExpr {
+        if let ExprKind::Generic { name: tn, targs } = &base.kind {
+            if tn == "Heap" && name == "by" && self.lookup(cx, tn).is_none() {
+                let ty = self.resolve_ty(&TypeExpr { name: tn.clone(), span: base.span, args: targs.clone() });
+                let Ty::Heap(id) = ty else { return err_expr(span) };
+                let [callback] = args else {
+                    self.diags.error("E0012", span, "`Heap[T].by` takes one comparison closure");
+                    return err_expr(span);
+                };
+                let elem = vec_elem(id);
+                let Some((func, caps)) = self.lift_closure(callback, &[elem, elem], Ty::Bool, "Heap.by", true, cx) else { return err_expr(span) };
+                let tramp = self.tramps.len();
+                self.tramps.push(Tramp { func, caps: caps.iter().map(|c| c.ty).collect(), elem, by_cmp: false, saved: true });
+                return HExpr { kind: HExprKind::HeapNew { tramp, caps }, ty, span, at };
+            }
+        }
+        // Calls returning an exclusive descriptor can be receivers directly. Bind
+        // the descriptor once; the callee's declared sources remain pinned while
+        // the method arguments run. Owned temporary receivers keep the old rules.
+        if self.peek_place_ty(base, cx).is_none()
+            && matches!(base.kind, ExprKind::Call { .. } | ExprKind::Paren(_) | ExprKind::Field { .. })
+        {
+            let init = self.expr(base, None, cx);
+            if matches!(init.ty, Ty::RefMut(_)) {
+                let loans = self.loans_of(&init, cx);
+                if self.borrowed_argument_conflict(args, &loans, cx, name) {
+                    return err_expr(span);
+                }
+                cx.scopes.push(Vec::new());
+                let temp_name = format!("$receiver{}", cx.locals.len());
+                let local = self.declare(cx, &temp_name, base.span, init.ty, LocalKind::Let);
+                cx.locals[local].used = true;
+                cx.locals[local].loans = loans;
+                let receiver = Expr { kind: ExprKind::Ident(temp_name), span: base.span };
+                let value = self.method_call_inner(&receiver, name, args, span, at, cx, None);
+                self.pop_scope(cx);
+                let ty = value.ty;
+                return HExpr { kind: HExprKind::LetTemp { local, init: Box::new(init), value: Box::new(value) }, ty, span, at };
+            }
+            return self.method_call_inner(base, name, args, span, at, cx, Some(init));
+        }
+        // Named exclusive references need the same transitive alias check as
+        // temporary ones; checking only the descriptor spelling misses its owner.
+        let mut root = base;
+        loop {
+            match &root.kind {
+                ExprKind::Field { base, .. } | ExprKind::Paren(base) => root = base,
+                _ => break,
+            }
+        }
+        if let ExprKind::Ident(n) = &root.kind {
+            if let Some(id) = self.lookup(cx, n) {
+                if matches!(cx.locals[id].ty, Ty::RefMut(_)) {
+                    let mut loans = vec![Loan::Local(id)];
+                    loans.extend(cx.locals[id].loans.iter().copied());
+                    if self.borrowed_argument_conflict(args, &loans, cx, name) {
+                        return err_expr(span);
+                    }
+                }
+            }
+        }
+        self.method_call_inner(base, name, args, span, at, cx, None)
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn method_call_inner(&mut self, base: &Expr, name: &str, args: &[Expr], span: Span, at: Span, cx: &mut FnCx, checked: Option<HExpr>) -> HExpr {
         // `Type.f(args)`: a function written inside a struct or enum, without `self`.
         if let ExprKind::Ident(tn) = &base.kind {
             if self.lookup(cx, tn).is_none() {
@@ -6189,6 +6438,9 @@ impl Checker<'_> {
                 return err_expr(span);
             }
         }
+        if matches!(name, "pushBack" | "pushFront" | "popBack" | "popFront") && matches!(self.peek_place_ty(base, cx), Some(Ty::Deque(_))) {
+            return self.deque_call(base, name, args, span, at, cx);
+        }
         if name == "push" {
             return self.push_call(base, args, span, at, cx);
         }
@@ -6242,7 +6494,7 @@ impl Checker<'_> {
                 }
             }
         }
-        let recv = self.expr(base, None, cx);
+        let recv = checked.unwrap_or_else(|| self.expr(base, None, cx));
         let recv = self.deref(recv);
         // `.clone()` of a shared handle shares the same block (it does not clone the content).
         if name == "clone" && args.is_empty() {
@@ -6324,7 +6576,7 @@ impl Checker<'_> {
                 _ => {}
             }
         }
-        if name == "clone" && matches!(recv.ty, Ty::Vec(_) | Ty::Map(_) | Ty::Set(_)) {
+        if name == "clone" && matches!(recv.ty, Ty::Vec(_) | Ty::Deque(_) | Ty::Heap(_) | Ty::Map(_) | Ty::Set(_)) {
             if let Some(blocker) = self.clone_blocker(recv.ty, &mut Vec::new()) {
                 let code = if has_user_drop(blocker) { "U0001" } else { "E0001" };
                 self.diags
@@ -6339,8 +6591,11 @@ impl Checker<'_> {
             (Ty::String, "len") => (Builtin::StringLen, Ty::Int(IntTy::I64)),
             (Ty::String, "clone") => (Builtin::StringClone, Ty::String),
             (Ty::Vec(_), "len") => (Builtin::VecLen, Ty::Int(IntTy::I64)),
+            (Ty::Deque(_), "len") => (Builtin::VecLen, Ty::Int(IntTy::I64)),
+            (Ty::Heap(_), "len") => (Builtin::HeapLen, Ty::Int(IntTy::I64)),
             (Ty::Slice(_), "len") => (Builtin::VecLen, Ty::Int(IntTy::I64)),
             (Ty::Vec(_), "clone") => (Builtin::VecClone, recv.ty),
+            (Ty::Deque(_), "clone") => (Builtin::VecClone, recv.ty),
             (Ty::Slice(s), "toVec") => {
                 let e = slice_elem(s);
                 if !e.is_copy() {
@@ -6698,7 +6953,10 @@ impl Checker<'_> {
                     .note("get a writable reference instead, e.g. with `getMut`");
                 return None;
             }
-            Ty::RefMut(_) => self.check_exclusive(cx, id, root.span),
+            Ty::RefMut(_) => {
+                if !self.ref_mut_writable(cx, id, root.span) { return None; }
+                self.check_exclusive(cx, id, root.span);
+            }
             // Fields of a locked value are writable through the guard, whatever its binding (P6).
             Ty::Sync(sid) if sync_parts(sid).0 == SyncKind::Guard => {}
             t if ptr_read_only(t) => {
@@ -6737,6 +6995,7 @@ impl Checker<'_> {
         };
         cx.locals[id].used = true;
         self.check_moved(cx, id, base.span);
+        if !self.ref_mut_writable(cx, id, base.span) { return None; }
         self.check_not_borrowed(cx, id, base.span, "modify");
         let guard = matches!(cx.locals[id].ty, Ty::Sync(sid) if sync_parts(sid).0 == SyncKind::Guard);
         if matches!(cx.locals[id].ty, Ty::RefMut(_)) || guard || self.writable(cx, id, base.span) {
@@ -6744,6 +7003,13 @@ impl Checker<'_> {
         } else {
             None
         }
+    }
+
+    fn ref_mut_writable(&mut self, cx: &FnCx, id: LocalId, span: Span) -> bool {
+        if matches!(cx.locals[id].ty, Ty::RefMut(_)) && cx.locals[id].kind == LocalKind::Param {
+            self.diags.error("E0101", span, format!("cannot modify through `{}`: a default parameter only grants read-only access", cx.locals[id].name));
+            false
+        } else { true }
     }
 
     /// The type a receiver variable stands for: the target of an `&inout T`.
@@ -6754,6 +7020,43 @@ impl Checker<'_> {
         }
     }
 
+    fn deque_call(&mut self, base: &Expr, method: &str, args: &[Expr], span: Span, at: Span, cx: &mut FnCx) -> HExpr {
+        let Some(place) = self.mutable_place(base, method, cx) else { return err_expr(span) };
+        let Ty::Deque(did) = place.ty else { return err_expr(span) };
+        let et = vec_elem(did);
+        let front = method.ends_with("Front");
+        if method.starts_with("pop") {
+            if !args.is_empty() {
+                self.diags.error("E0012", span, format!("`{method}` takes no arguments"));
+                return err_expr(span);
+            }
+            return HExpr { kind: HExprKind::DequePop { place, front }, ty: Ty::Opt(opt_of(et)), span, at };
+        }
+        let [arg] = args else {
+            self.diags.error("E0012", span, format!("`{method}` takes one value"));
+            return err_expr(span);
+        };
+        let id = place.local;
+        let name = cx.locals[id].name.clone();
+        if mentions(arg, &name) {
+            self.diags.error("E0403", arg.span, format!("`{name}` is already mutably borrowed by `{method}`"))
+                .note("compute the argument before borrowing the receiver");
+            return err_expr(span);
+        }
+        let h = self.expr(arg, Some(et), cx);
+        let h = self.fit(h, et, cx);
+        let h = self.consume(h, cx);
+        if et.carries_borrow() {
+            let loans = self.loans_of(&h, cx);
+            if !loans.is_empty() && (matches!(cx.locals[id].ty, Ty::RefMut(_)) || cx.locals[id].kind == LocalKind::InoutParam) {
+                self.diags.error("E0306", h.span, format!("cannot store a borrow into the caller's `{name}`"));
+            } else {
+                self.store_loans(cx, id, loans, h.span, false);
+            }
+        }
+        HExpr { kind: HExprKind::DequePush { place, value: Box::new(h), front }, ty: Ty::Unit, span, at }
+    }
+
     /// `v.pop()`: the last element as an owned `?T`.
     fn pop_call(&mut self, base: &Expr, args: &[Expr], span: Span, at: Span, cx: &mut FnCx) -> HExpr {
         let Some(place) = self.mutable_place(base, "pop", cx) else { return err_expr(span) };
@@ -6762,7 +7065,7 @@ impl Checker<'_> {
             return err_expr(span);
         }
         match place.ty {
-            Ty::Vec(vid) => HExpr { kind: HExprKind::Pop(place), ty: Ty::Opt(opt_of(vec_elem(vid))), span, at },
+            Ty::Vec(vid) | Ty::Heap(vid) => HExpr { kind: HExprKind::Pop(place), ty: Ty::Opt(opt_of(vec_elem(vid))), span, at },
             Ty::Error => err_expr(span),
             other => {
                 self.diags.error("U0001", at, format!("method `pop` on `{other}` is not supported yet"));
@@ -6790,7 +7093,7 @@ impl Checker<'_> {
         }
         let rty = place.ty;
         let value = match rty {
-            Ty::Vec(vid) => {
+            Ty::Vec(vid) | Ty::Heap(vid) => {
                 let et = vec_elem(vid);
                 let h = self.expr(arg, Some(et), cx);
                 let h = self.fit(h, et, cx);
@@ -7770,7 +8073,7 @@ impl Checker<'_> {
                 e if self.protocol(e).is_some_and(|(cmp, _)| cmp.is_some()) => {
                     let func = self.protocol(e).and_then(|(cmp, _)| cmp).expect("checked above");
                     let tramp = self.tramps.len();
-                    self.tramps.push(Tramp { func, caps: Vec::new(), elem: e, by_cmp: true });
+                    self.tramps.push(Tramp { func, caps: Vec::new(), elem: e, by_cmp: true, saved: false });
                     HExpr { kind: HExprKind::SortBy { place, tramp, caps: Vec::new() }, ty: Ty::Unit, span, at }
                 }
                 e => {

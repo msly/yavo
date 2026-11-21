@@ -8,7 +8,7 @@ use crate::ast::BinOp;
 use crate::check::*;
 use crate::diag::Span;
 use crate::types::{
-    all_boxes, all_maps, all_opts, all_ress, all_tuples, all_vecs, has_user_drop, iface_name, opt_inner, tuple_elems, opt_of,
+    all_boxes, all_maps, all_opts, all_ress, all_tuples, all_vecs, all_deques, all_heaps, has_user_drop, iface_name, opt_inner, tuple_elems, opt_of,
     ref_inner,
     ref_mut_inner, map_parts, res_parts, vec_elem, FloatTy, IntTy, Ty, all_syncs, ptr_inner, sync_parts, SyncKind,
 };
@@ -128,6 +128,8 @@ pub fn generate(prog: &HProgram, file: &str) -> String {
     );
     let owned_opts: Vec<(u32, Ty)> = all_opts().into_iter().filter(|(_, t)| t.needs_drop()).collect();
     let mut helpers: Vec<Ty> = all_vecs().into_iter().map(|(id, _)| Ty::Vec(id)).collect();
+    helpers.extend(all_deques().into_iter().map(Ty::Deque));
+    helpers.extend(all_heaps().into_iter().map(Ty::Heap));
     helpers.extend(owned_opts.iter().map(|(id, _)| Ty::Opt(*id)));
     helpers.extend(all_maps().into_iter().map(|(id, _, _)| Ty::Map(id)));
     let owned_aggs: Vec<&HStruct> = prog.structs.iter().filter(|s| s.ty.needs_drop()).collect();
@@ -314,6 +316,31 @@ pub fn generate(prog: &HProgram, file: &str) -> String {
         }
         let _ = writeln!(g.out, "    return v;\n}}\n");
     }
+    for id in all_deques() {
+        let t = Ty::Deque(id);
+        let elem = vec_elem(id);
+        let (key, et) = (t.key(), elem.c_name());
+        let drop = if elem.needs_drop() {
+            format!("for (int64_t i = p->len; i > 0; i--) {}(({et} *)yv_deque_slot(p, (int64_t)sizeof({et}), i - 1));", drop_fn(elem))
+        } else { String::new() };
+        let _ = writeln!(g.out, "static inline void yv_drop_{key}(yv_deque *p) {{ {drop} yv_deque_free(p); }}");
+        let clone = clone_value(elem, &format!("(*({et} const *)yv_deque_slot(p, (int64_t)sizeof({et}), i))"));
+        let _ = writeln!(g.out,
+            "static inline yv_deque yv_clone_{key}(const yv_deque *p, uint32_t line, uint32_t col) {{\n    yv_deque out = {{0}};\n    yv_deque_reserve(&out, (int64_t)sizeof({et}), p->len, line, col);\n    for (int64_t i = 0; i < p->len; i++) {{\n        *({et} *)yv_deque_push_slot(&out, (int64_t)sizeof({et}), false, line, col) = {clone};\n    }}\n    return out;\n}}\n");
+    }
+    for id in all_heaps() {
+        let t = Ty::Heap(id);
+        let key = t.key();
+        let elem = vec_elem(id);
+        let et = elem.c_name();
+        let drop = if elem.needs_drop() {
+            format!("for (int64_t i = p->elems.len; i > 0; i--) {}(&(({et} *)p->elems.ptr)[i - 1]);", drop_fn(elem))
+        } else { String::new() };
+        let _ = writeln!(g.out, "static inline void yv_drop_{key}(yv_heap *p) {{\n    {drop}\n    yv_vec_free(&p->elems);\n    if (p->ctx) p->drop_ctx(p->ctx);\n    memset(p, 0, sizeof(*p));\n}}");
+        // These helpers also make aggregate helper generation well formed. Type checking
+        // rejects recursive cloning of a Heap because its saved callback is not cloneable.
+        let _ = writeln!(g.out, "static inline yv_heap yv_clone_{key}(const yv_heap *p, uint32_t line, uint32_t col) {{\n    (void)p; yv_panic(\"P-SYSTEM\", \"a Heap cannot be cloned\", line, col);\n}}\n");
+    }
     for f in &prog.fns {
         let sig = g.signature(f);
         let _ = writeln!(g.out, "static {sig};");
@@ -355,6 +382,29 @@ pub fn generate(prog: &HProgram, file: &str) -> String {
     }
     // `sortBy` adapters: the runtime sort asks whether element `a` goes before `b`.
     for (i, t) in prog.tramps.iter().enumerate() {
+        if t.saved {
+            let mut args = Vec::new();
+            let mut drop = String::new();
+            let mut prelude = "    (void)ctx;\n".to_string();
+            if !t.caps.is_empty() {
+                let _ = writeln!(g.out, "typedef struct yv_heap_ctx_{i} {{");
+                for (j, cap) in t.caps.iter().enumerate() {
+                    let _ = writeln!(g.out, "    {} c{j};", cap.c_name());
+                    args.push(format!("c->c{j}"));
+                }
+                let _ = writeln!(g.out, "}} yv_heap_ctx_{i};");
+                for (j, cap) in t.caps.iter().enumerate().rev().filter(|(_, cap)| cap.needs_drop()) {
+                    let _ = writeln!(drop, "    {}(&c->c{j});", drop_fn(*cap));
+                }
+                let _ = writeln!(g.out, "static void yv_heap_ctx_drop_{i}(void *p) {{\n    yv_heap_ctx_{i} *c = (yv_heap_ctx_{i} *)p;\n{drop}    yv_box_free(c);\n}}");
+                prelude = format!("    const yv_heap_ctx_{i} *c = (const yv_heap_ctx_{i} *)ctx;\n");
+            }
+            let et = t.elem.c_name();
+            args.push(format!("*({et} const *)a"));
+            args.push(format!("*({et} const *)b"));
+            let _ = writeln!(g.out, "static int yv_tramp_{i}(void *ctx, const void *a, const void *b) {{\n{prelude}    return {}({}) ? -1 : 0;\n}}\n", g.fn_names[t.func], args.join(", "));
+            continue;
+        }
         if t.by_cmp {
             // `cmp(a, &b)` is `Ordering.Less` (tag 0) when `a` goes before `b`.
             let ec = t.elem.c_name();
@@ -1116,12 +1166,11 @@ impl Gen {
                 self.line(&format!("{place} = {v};"));
             }
             HStmtKind::Discard(e) => {
-                // `let _ = x` leaves a variable alone; any other value is dropped right away.
-                if !matches!(e.kind, HExprKind::Local(_)) {
-                    let v = self.borrowed(e, f);
-                    if e.ty != Ty::Unit {
-                        self.line(&format!("(void){v};"));
-                    }
+                // The checker marks a discarded owner as Move, so borrowed() schedules
+                // its temporary's drop at this statement boundary.
+                let v = self.borrowed(e, f);
+                if e.ty != Ty::Unit {
+                    self.line(&format!("(void){v};"));
                 }
             }
             HStmtKind::Expr(e) => {
@@ -1602,6 +1651,12 @@ impl Gen {
             HExprKind::Bool(b) => b.to_string(),
             HExprKind::Str(s) => format!("((yv_str){{{}, {}}})", c_string(s.as_bytes()), s.len()),
             HExprKind::Local(id) => local_name(&f.locals, *id),
+            HExprKind::LetTemp { local, init, value } => {
+                let pointer = self.expr(init, f);
+                let name = local_name(&f.locals, *local);
+                self.line(&format!("{} {name} = {pointer};", init.ty.c_name()));
+                self.expr(value, f)
+            }
             HExprKind::Error => unreachable!("codegen only runs on error-free programs"),
             HExprKind::None => format!("(({}){{0}})", e.ty.c_name()),
             HExprKind::Some(inner) => {
@@ -1664,10 +1719,14 @@ impl Gen {
             }
             HExprKind::Pop(place) => {
                 let (v, rty) = self.recv_place(place, f);
-                let Ty::Vec(vid) = rty else { unreachable!() };
+                let (Ty::Vec(vid) | Ty::Heap(vid)) = rty else { unreachable!() };
                 let et = vec_elem(vid).c_name();
                 let t = self.fresh();
                 self.line(&format!("{} {t} = {{0}};", e.ty.c_name()));
+                if matches!(rty, Ty::Heap(_)) {
+                    self.line(&format!("{t}.has = yv_heap_pop(&{v}, (int64_t)sizeof({et}), &{t}.val);"));
+                    return t;
+                }
                 self.line(&format!("if (({v}).len > 0) {{"));
                 self.line(&format!("    ({v}).len--;"));
                 self.line(&format!("    {t}.val = (({et} *)({v}).ptr)[({v}).len];"));
@@ -2315,6 +2374,42 @@ impl Gen {
                 self.line(&format!("{name} = ({}){{0}};", e.ty.c_name()));
                 t
             }
+            HExprKind::DequeNew => self.bind_mut(e.ty, "(yv_deque){0}"),
+            HExprKind::HeapNew { tramp, caps } => {
+                let t = self.fresh();
+                self.line(&format!("yv_heap {t} = {{0}};"));
+                self.line(&format!("{t}.cmp = yv_tramp_{tramp};"));
+                self.hold(&t, e.ty);
+                if !caps.is_empty() {
+                    let c = self.fresh();
+                    self.line(&format!("yv_heap_ctx_{tramp} *{c} = (yv_heap_ctx_{tramp} *)yv_box_alloc(sizeof(yv_heap_ctx_{tramp}), {});", pos(e.at)));
+                    self.line(&format!("memset({c}, 0, sizeof(*{c}));"));
+                    self.line(&format!("{t}.ctx = {c}; {t}.drop_ctx = yv_heap_ctx_drop_{tramp};"));
+                    for (i, cap) in caps.iter().enumerate() {
+                        let v = self.owned(cap, f);
+                        self.line(&format!("{c}->c{i} = {v};"));
+                    }
+                }
+                self.release(std::slice::from_ref(&t));
+                t
+            }
+            HExprKind::DequePush { place, value, front } => {
+                let (p, rty) = self.recv_place(place, f);
+                let Ty::Deque(id) = rty else { unreachable!() };
+                let et = vec_elem(id).c_name();
+                let v = self.owned(value, f);
+                self.line(&format!("*({et} *)yv_deque_push_slot(&{p}, (int64_t)sizeof({et}), {front}, {}) = {v};", pos(e.at)));
+                String::new()
+            }
+            HExprKind::DequePop { place, front } => {
+                let (p, rty) = self.recv_place(place, f);
+                let Ty::Deque(id) = rty else { unreachable!() };
+                let et = vec_elem(id).c_name();
+                let t = self.fresh();
+                self.line(&format!("{} {t} = {{0}};", e.ty.c_name()));
+                self.line(&format!("{t}.has = yv_deque_pop(&{p}, (int64_t)sizeof({et}), {front}, &{t}.val);"));
+                t
+            }
             HExprKind::VecLit(items) => {
                 let Ty::Vec(vid) = e.ty else { unreachable!() };
                 let et = vec_elem(vid).c_name();
@@ -2337,7 +2432,7 @@ impl Gen {
                 let at = pos(e.at);
                 let text = match base.ty {
                     // A non-copyable element is read in place: the value is a pointer into `v`.
-                    Ty::Vec(_) | Ty::Slice(_) if matches!(e.ty, Ty::Ref(_)) => {
+                    Ty::Vec(_) | Ty::Slice(_) if matches!(e.ty, Ty::Ref(_) | Ty::RefMut(_)) => {
                         let et = seq_elem(base.ty).expect("a sequence").c_name();
                         format!("(({et} *)yv_vec_at(&{b}, (int64_t)sizeof({et}), (int64_t){i}, {at}))")
                     }
@@ -2369,6 +2464,10 @@ impl Gen {
                     Builtin::MapLen => {
                         let s = self.borrowed(recv, f);
                         self.bind(e.ty, &format!("({s}).live"))
+                    }
+                    Builtin::HeapLen => {
+                        let s = self.borrowed(recv, f);
+                        self.bind(e.ty, &format!("({s}).elems.len"))
                     }
                     Builtin::StringClone | Builtin::VecClone | Builtin::MapClone => {
                         let s = self.borrowed(recv, f);
@@ -2437,6 +2536,12 @@ impl Gen {
                         let et = vec_elem(vid).c_name();
                         let v = self.owned(value, f);
                         self.line(&format!("*({et} *)yv_vec_push_slot(&{name}, (int64_t)sizeof({et}), {at}) = {v};"));
+                    }
+                    Ty::Heap(id) => {
+                        let et = vec_elem(id).c_name();
+                        let v = self.owned(value, f);
+                        self.line(&format!("*({et} *)yv_vec_push_slot(&({name}).elems, (int64_t)sizeof({et}), {at}) = {v};"));
+                        self.line(&format!("yv_heap_sift_up(&{name}, (int64_t)sizeof({et}));"));
                     }
                     _ => unreachable!(),
                 }
@@ -2521,7 +2626,11 @@ impl Gen {
         let fresh = matches!(
             e.kind,
             HExprKind::Call { .. }
+                | HExprKind::LetTemp { .. }
                 | HExprKind::VecLit(_)
+                | HExprKind::DequeNew
+                | HExprKind::HeapNew { .. }
+                | HExprKind::DequePop { .. }
                 | HExprKind::Move(_)
                 | HExprKind::Some(_)
                 | HExprKind::Coalesce { .. }
@@ -2531,6 +2640,7 @@ impl Gen {
                 | HExprKind::MapLit(_)
                 | HExprKind::MapWrite { .. }
                 | HExprKind::StructLit { .. }
+                | HExprKind::TupleLit(_)
                 | HExprKind::EnumLit { .. }
                 | HExprKind::Ok(_)
                 | HExprKind::ErrVal(_)
@@ -2582,7 +2692,7 @@ impl Gen {
         match ty {
             Ty::Ref(_) => self.line(&format!("{} {t} = {value};", ty.c_name())),
             // A box is a pointer: the pointer is constant, its content is not.
-            Ty::Box(_) | Ty::Sync(_) => self.line(&format!("{} const {t} = {value};", ty.c_name())),
+            Ty::Box(_) | Ty::Sync(_) | Ty::RefMut(_) => self.line(&format!("{} const {t} = {value};", ty.c_name())),
             _ => self.line(&format!("const {} {t} = {value};", ty.c_name())),
         }
         t

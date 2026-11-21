@@ -1,6 +1,7 @@
 mod allocations;
 mod ast;
 mod check;
+mod closure_free;
 mod codegen;
 mod diag;
 mod fix;

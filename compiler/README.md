@@ -6,6 +6,71 @@ The implementation includes ownership, views, containers, generics, interfaces a
 scoped OS threads. Native validation is on Linux x86-64; complete phase acceptance
 still requires the remaining tools, features and real-platform execution.
 
+## Collections and mutable-reference returns (2026-11-21)
+
+`use std/collections` now provides `Heap[T].by(comparator)` with `push`, `pop`
+and `len`, and `Deque[T]{}` with `pushBack`, `pushFront`, `popFront`, `popBack`,
+`len` and `clone` when its elements are cloneable. Heap removal is logarithmic;
+Deque uses a ring buffer with amortized constant-time insertion and constant-time
+removal from either end. Popped values are owned `?T` results. Moving a collection
+transfers its storage; stored elements are dropped exactly once. Borrow-carrying
+elements retain their sources across insertion, moves and removal.
+
+```text
+use std/collections
+
+fn main() {
+    var priorities = Heap[int].by((a, b) => a < b)
+    priorities.push(2)
+    priorities.push(1)
+    println(priorities.pop() ?? 0)
+    var queue = Deque[int]{}
+    queue.pushBack(7)
+    println(queue.popFront() ?? 0)
+}
+```
+
+Heap comparators are saved: copyable captures are copied, owning captures move
+into an environment that is released with the heap. Any capture carrying a borrow
+is rejected with E0307, including a `str` whose contents happen to be static.
+Comparator invocation borrows the saved environment, so it cannot consume or
+mutate its owning captures. Capture discovery follows lexical bindings; a local
+declared inside the callback does not accidentally move an outer variable of the
+same name. The existing `sortBy`/`update` callbacks retain their noescape contract.
+General closure values, user higher-order parameters and closure fields are still
+unimplemented. Heap cloning and cross-thread capability propagation for its erased
+environment remain unsupported; Deque derives capabilities from its elements.
+
+`&inout T` can be returned with an explicit `of` source, including a mutable
+element borrowed from an `inout Vec[T]`. Local reborrows retain the original owner
+and lock/guard provenance. Returning local storage, overlapping exclusive borrows,
+or writing through `Rc`/`Arc` remains rejected. A call returning a mutable reference
+can be a method receiver; the receiver executes exactly once before the arguments.
+If an argument uses its exclusively borrowed owner, E0403 prevents the conflict.
+For a complex receiver, `fix` offers a separately rechecked `hoist-argument`
+candidate, preserving the decision to change evaluation order for explicit review.
+Explicit `&inout` parameter/nested type syntax and storing borrowed values through
+such references retain the documented implementation limits.
+
+Explicit discard now consumes an existing owning local: `let _ = resource` drops
+it immediately, and later use is E0402. `_kept` retains an owned value until scope
+exit. Discarding a borrow descriptor does not release the referenced owner.
+
+The conformance runner now handles native raw-byte arguments, allocation-failure
+injection after runtime startup, allowed outcome sets, and separate sanitizer
+artifacts. Injection lives only in a test translation-unit wrapper; production
+builds expose no allocation-failure switch. Sanitizer cases require demonstrated
+defect detection, actual artifact hashes and complete runtime output; an unavailable
+ASan profile does not prevent checking the requested TSan profile for failures.
+
+Validation: Debug and Release each pass **88 tests**, with zero failures or compiler
+warnings and one legacy report ignored. There are 91 compile/run fixtures; runnable
+fixtures use both C optimization modes and heap-block checks. The mixed collection
+and mutable-return program compiles for all six targets and executes on the Linux
+x86-64 host. Frozen conformance is **126 / 0 / 3 / 0**. The final receipt independently
+rechecks 125 source files and 11 retained artifact hashes:
+[validation/completion-2026-11-21.json](validation/completion-2026-11-21.json).
+
 ## Allocation queries and verification (2026-11-21)
 
 ```sh
@@ -65,7 +130,7 @@ Unix timeout cleanup kills the ordinary process group and allows at most two
 additional seconds; Windows uses a bounded taskkill fallback, without a Job
 Object guarantee for orphaned descendants.
 
-Validation: Debug and Release each pass 71 test functions, with zero failures or
+At the allocation/verification batch, Debug and Release each passed 71 test functions, with zero failures or
 compiler warnings and one legacy report ignored. The current host demonstrates
 TSan and UBSan defect detection; the requested ASan+UBSan profile remains
 unsupported because ASan runtime symbols cannot link. Two independent source-to-
@@ -121,11 +186,11 @@ directory. Symbolic links, multiple hard links and read-only sources are not
 replaced. This file handling has been executed on Linux.
 
 The conformance runner checks original diagnostics, real lexical tokens against
-the fixed fixtures, candidate application, and second-run idempotence. Six frozen
-fix cases pass. Debug and Release suites each pass 50 test functions (zero failures
+the fixed fixtures, candidate application, and second-run idempotence. At the source-repair
+batch, six frozen fix cases passed. Debug and Release suites each passed 50 test functions (zero failures
 or compiler warnings, one legacy report ignored), including 13 fix integration
-tests and four repair-engine unit tests. T-V3 still depends on unsupported mutable-reference returns and
-complex mutable receivers, and is recorded as unsupported. The implementation
+tests and four repair-engine unit tests. T-V3 was then blocked by mutable-reference returns and
+complex mutable receivers, both addressed in the collections/return completion batch above. The earlier implementation
 and validation receipt is [validation/fix-2026-11-21.json](validation/fix-2026-11-21.json).
 
 ## Safety review (2026-11-20)
@@ -160,7 +225,7 @@ fatal paths under both C optimization modes. Native suites, 12 cross-builds and
 [`validation/safety-2026-11-20.json`](validation/safety-2026-11-20.json).
 
 Sanitizers ran with GCC 14.2 on a separate Linux analysis host, including T-P3;
-the automatic conformance runner still marks sanitizer scenarios `not_run`.
+at that batch the automatic conformance runner still marked sanitizer scenarios `not_run`.
 LeakSanitizer cannot run under that host's ptrace environment, so ASan runs disable
 LSan while native heap-block checks remain enabled. Only the two intentional
 cross-thread panic/exit probes disable TSan's thread-leak report (V11 terminates
@@ -587,8 +652,8 @@ Supported (cheat sheet Â§5; semantic table O5, K3, V8; stdlib contract Â§3, 
   variable, borrowed in place for the duration of the call. It cannot assign to them (`E0014`),
   move them (`E0401`), capture an `&inout` value (`U0001`), or use the collection being
   sorted/updated (`E0102`).
-- Not yet: closures anywhere else (stored in variables or fields, passed to your own
-  functions, `Heap.by`) are `U0001`.
+- `Heap.by` saves an owning comparator (see the current collections section above).
+  General closure variables/fields and callbacks passed to user functions remain `U0001`.
 
 Code generation: the checker lifts each closure into a function of its own (`closure.N`,
 C `yv_fn_closure__N`) whose first parameters are the captured variables. `update` calls it
@@ -790,8 +855,11 @@ Supported (semantic table A1, A2, A3, A4, A6, A7):
   target (`E0305`). Moving `p` (`let q = p`) is checked as before (`E0402`).
 - `for x in &v { *x += 1 }` and `if let c = m.getMut(k) { *c += 5 }` now write copyable
   elements and values.
-- Not yet: `&inout T` as a parameter, field, element or return type (`U0001`; use an `inout`
-  parameter); storing borrowed values through `*p` (`U0001`).
+- Return values may use `&inout T of source`, including mutable vector elements;
+  returned references can be method receivers, as described above.
+- Not yet: explicit `&inout T` parameter or nested type syntax (`U0001`; use an `inout`
+  parameter); storing borrowed values through `*p` (`U0001`). Ordinary owning fields
+  cannot store references under the frozen escape contract.
 
 Code generation: `&inout T` and `&T` are C pointers; `&place` reuses the `inout`-argument
 place lowering, and `*p = v` is an assignment whose path starts with `DEREF_STEP`, so the
@@ -899,28 +967,30 @@ runs all 129 cases in `yavo-tests/MANIFEST.json`, after checking each fixture ag
 | unsupported | an explicitly unsupported compiler feature or a requested sanitizer capability unavailable on the actual host |
 | not_run | needs specialized runner support, sanitizers or other platforms |
 
-At this commit: pass 122, wrong 0, unsupported 3, not_run 4 (P1: 81 / 0 / 2 / 0;
-P2: 18 / 0 / 0 / 3; P3: 23 / 0 / 1 / 1). Allocation queries add T-GA1/T-GA2, and
-the actual Windows build plus unavailable Windows execution adds T-R1. T-R2 remains
-unsupported because the pinned toolchain cannot link ASan; TSan capability is
-confirmed by its data-race negative probe. `scope`, `spawn`, `Send`/`Sync` and channels added T-GP1âT-GP4,
-T-GP6, T-GP7, T-P1, T-P1p, T-P2, T-P2p, T-P2s, T-P3f, T-P5p and T-P6 (T-P3 runs correctly but asks for
-sanitizer builds the runner does not make, so it counts as not run). `Rc`, `Arc`, `Mutex`, `Guard` and `with` added T-GP5, T-V5,
-T-P4, T-P4p, T-P5 and T-P6p. Dereference and `&inout T` variables added T-G01âT-G04,
-T-G17, T-G18, T-G21 and T-GR11; `String.fromUtf8` added T-GR4. Slices added T-C4, T-G09, T-G19 and T-S1, and
-`reserve` added T-GR7 (T-GR8 now reaches its allocation-fault injection, which the runner does
-not support, so it counts as not run). Floats added T-G27, T-K1, T-K1p and T-N1d.
-Generics added T-O6, T-O7, T-E1 and T-E1p. `Box`
-added T-A3, T-A3f, T-E2, T-E2p, T-G28 and
-T-G29. Comparison protocols added T-G25 and T-G26; closures added T-C7 and tuples T-O5p. User destructors added T-D1, T-GR1, T-GR2 and
-T-G10âT-G13. The standard library step added T-G08, T-V4, T-V4p and
-T-S2 (the runner now writes `fixture_hex` fixtures into a directory of their own and runs the case
-there). Enums, results and owning struct fields added T-C4p, T-C6, T-C6p, T-G14, T-G15 and
-T-G16. Optional values added T-C5, T-G05, T-G06, T-G07 and
-T-G24; maps added T-A1, T-A1p, T-A4, T-A4p, T-C1, T-C1p, T-C7f, T-C8, T-C8f and T-GR10 (T-C7
-waits for closures). The
-cases that import `std/sync`, `std/fs` or `std/collections` now stop at those modules' types
-and functions. The per-case report is written to `target/tmp/conformance-report.json`.
+Current results: **126 pass, 0 wrong, 3 unsupported, 0 not_run**.
+
+| Phase | Pass | Wrong | Unsupported | Not run |
+| --- | ---: | ---: | ---: | ---: |
+| P1 | 83 | 0 | 0 | 0 |
+| P2 | 20 | 0 | 1 | 0 |
+| P3 | 23 | 0 | 2 | 0 |
+
+The completion batch adds T-O5 (saved-capture rejection), T-V3 (candidate-only
+complex-receiver repair), T-GR8 (allocation-failure injection) and T-S3 (raw invalid
+UTF-8 arguments). All seven frozen repair cases pass. T-GR9, T-P3 and T-R2 remain
+unsupported because their ASan+UBSan profile cannot link the ASan runtime on this
+host. Their scenarios are now actually attempted; requested TSan checks execute
+independently and unavailable ASan never masks a TSan failure.
+
+The runner validates fixture source hashes, build-mode metadata, complete allowed
+outcomes, exact output and required preceding stderr. It uses a test-only C
+allocation wrapper for after-main-entry faults and native Unix argument bytes for
+startup rejection. Sanitizer scenarios reuse verify's real artifact and negative
+capability evidence. Reports are written to `target/tmp/conformance-report.json`;
+sanitizer receipts are retained under `target/tmp/conformance-sanitizers/`.
+
+These 129 fixtures do not cover every v1 commitment. Full remaining functionality
+and acceptance evidence are tracked in [../HANDOFF.md](../HANDOFF.md), section 16.
 
 The test is a ratchet, not a gate: it fails only when a case listed in
 `tests/conformance_baseline.txt` stops passing. After real progress, refresh the baseline with

@@ -1,0 +1,47 @@
+// expect-stdout:
+// | collection returns ok
+use std/collections
+
+struct Work {
+    queue: Deque[String]
+    heap: Heap[String]
+}
+
+fn queue(work: inout Work) -> &inout Deque[String] of work {
+    return &work.queue
+}
+
+fn heap(work: inout Work) -> &inout Heap[String] of work {
+    return &work.heap
+}
+
+fn main() {
+    let context = "owning comparison context".toString()
+    var work = Work{
+        queue: Deque[String]{},
+        heap: Heap[String].by((a, b) => a.len() + context.len() < b.len() + context.len())
+    }
+    for i in 0..40 {
+        queue(&work).pushBack(format("item ${i}"))
+    }
+    for i in 0..20 {
+        let expected = format("item ${i}")
+        let word = queue(&work).popFront() ?? "missing".toString()
+        assert(word == expected)
+        heap(&work).push(word)
+    }
+    for i in 40..90 {
+        queue(&work).pushBack(format("item ${i}"))
+    }
+    // A borrowed read of an owning pop result still destroys that temporary.
+    assert(queue(&work).popFront().isSome())
+    assert(heap(&work).pop().isSome())
+    let p: &inout Deque[String] = queue(&work)
+    p.pushFront("front".toString())
+    assert((p.popFront() ?? "missing".toString()) == "front".toString())
+    assert(p.len() == 69)
+    assert(heap(&work).len() == 19)
+    // Explicitly discard the whole aggregate and its saved owning environment.
+    let _ = work
+    println("collection returns ok")
+}

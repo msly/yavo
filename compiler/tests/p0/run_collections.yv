@@ -1,0 +1,156 @@
+// expect-stdout:
+// | collections ok
+use std/collections
+
+fn heapFrom(s: sink String) -> Heap[int] {
+    return Heap[int].by((a, b) => a + s.len() < b + s.len())
+}
+
+fn dequeSize[T](q: Deque[T]) -> int {
+    return q.len()
+}
+
+fn heapSize[T](h: Heap[T]) -> int {
+    return h.len()
+}
+
+fn threadQueue(q: sink Deque[String]) -> int {
+    return q.len()
+}
+
+struct Queues {
+    q: Deque[String]
+    h: Heap[String]
+}
+
+fn transfer(h: sink Heap[int]) -> Heap[int] {
+    return h
+}
+
+fn borrowedDeque(text: str) -> Deque[str] of text {
+    var d = Deque[str]{}
+    d.pushBack(text)
+    return d
+}
+
+fn borrowedHeap(text: str) -> Heap[str] of text {
+    var h = Heap[str].by((a, b) => a < b)
+    h.push(text)
+    return h
+}
+
+fn main() {
+    var q = Deque[int]{}
+    assert(q.popFront().isNone())
+    assert(q.popBack().isNone())
+    for i in 0..32 {
+        q.pushBack(i)
+    }
+    for i in 0..17 {
+        assert((q.popFront() ?? -1) == i)
+    }
+    for i in 32..100 {
+        q.pushBack(i)
+    }
+    for i in 0..17 {
+        q.pushFront(16 - i)
+    }
+    assert(dequeSize(q) == 100)
+    var copied = q.clone()
+    for i in 0..50 {
+        assert((q.popFront() ?? -1) == i)
+        assert((q.popBack() ?? -1) == 99 - i)
+    }
+    assert(q.len() == 0)
+    for i in 0..100 {
+        assert((copied.popFront() ?? -1) == i)
+    }
+    var h = transfer(heapFrom("owned environment".toString()))
+    for i in 0..100 {
+        h.push(99 - i)
+    }
+    assert(heapSize(h) == 100)
+    for i in 0..100 {
+        assert((h.pop() ?? -1) == i)
+    }
+    assert(h.pop().isNone())
+    // An inconsistent comparator may change the order, but not ownership or termination.
+    var invalid = Heap[int].by((a, b) => a == b || a != b)
+    var allFalse = Heap[int].by((a, b) => a == b && a != b)
+    for i in 0..200 {
+        invalid.push(i)
+        allFalse.push(i)
+    }
+    var sum = 0
+    var sumFalse = 0
+    var seen = Set[int]{}
+    var seenFalse = Set[int]{}
+    while let n = invalid.pop() {
+        assert(n >= 0 && n < 200)
+        assert(!seen.has(n))
+        seen.add(n)
+        sum += n
+    }
+    while let n = allFalse.pop() {
+        assert(n >= 0 && n < 200)
+        assert(!seenFalse.has(n))
+        seenFalse.add(n)
+        sumFalse += n
+    }
+    assert(seen.len() == 200 && seenFalse.len() == 200)
+    assert(sum == 19900)
+    assert(sumFalse == sum)
+    var pair = Queues{q: Deque[String]{}, h: Heap[String].by((a, b) => a < b)}
+    for i in 0..40 {
+        pair.q.pushBack(format("word ${i}"))
+    }
+    for i in 0..19 {
+        let expected = format("word ${i}")
+        assert((pair.q.popFront() ?? "missing".toString()) == expected)
+    }
+    for i in 40..90 {
+        pair.q.pushBack(format("word ${i}"))
+    }
+    while let word = pair.q.popFront() {
+        pair.h.push(word)
+    }
+    assert(pair.h.len() == 71)
+    let _ = pair.h.pop()
+    var badOwners = Heap[String].by((a, b) => a == b || a != b)
+    for i in 0..80 {
+        badOwners.push(format("${i}"))
+    }
+    var ownedSeen = Set[String]{}
+    while let word = badOwners.pop() {
+        assert(!ownedSeen.has(word))
+        ownedSeen.add(word)
+    }
+    assert(ownedSeen.len() == 80)
+    var threadInput = Deque[String]{}
+    threadInput.pushBack("sendable owner".toString())
+    scope {
+        let task = spawn threadQueue(threadInput)
+        assert(task.join() == 1)
+    }
+    // Copies capture by value; owned captures move; block-local names are not captures.
+    var direction = 1
+    var order = Heap[int].by((a, b) => a * direction < b * direction)
+    direction = -1
+    assert(direction == -1)
+    order.push(2)
+    order.push(1)
+    assert((order.pop() ?? 0) == 1)
+    let x = "still owned here".toString()
+    var local = Heap[int].by((a, b) => {
+        let x = 1
+        return a + x < b + x
+    })
+    local.push(1)
+    assert(x.len() == 16)
+    let text = "borrowed".toString()
+    var views = borrowedDeque(text)
+    assert((views.popFront() ?? "missing") == "borrowed")
+    var viewHeap = borrowedHeap(text)
+    assert((viewHeap.pop() ?? "missing") == "borrowed")
+    println("collections ok")
+}

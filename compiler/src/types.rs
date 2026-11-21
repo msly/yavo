@@ -11,6 +11,9 @@ thread_local! {
     /// Element type of each `Vec[T]`, indexed by vec id. An element is always registered
     /// before the vectors that contain it, so ids are in dependency order.
     static VECS: RefCell<Vec<Ty>> = const { RefCell::new(Vec::new()) };
+    /// Collection element ids share VECS; only instantiated collection helpers are emitted.
+    static DEQUES: RefCell<Vec<u32>> = const { RefCell::new(Vec::new()) };
+    static HEAPS: RefCell<Vec<u32>> = const { RefCell::new(Vec::new()) };
     /// Referent type and C pointer type of each `&T`, indexed by ref id.
     static REFS: RefCell<Vec<(Ty, &'static str)>> = const { RefCell::new(Vec::new()) };
     /// Payload type and C struct name of each `?T`, indexed by opt id. A payload is always
@@ -367,6 +370,21 @@ pub fn vec_elem(id: u32) -> Ty {
     VECS.with(|v| v.borrow()[id as usize])
 }
 
+pub fn deque_of(elem: Ty) -> u32 {
+    let id = vec_of(elem);
+    DEQUES.with(|v| { if !v.borrow().contains(&id) { v.borrow_mut().push(id); } });
+    id
+}
+
+pub fn heap_of(elem: Ty) -> u32 {
+    let id = vec_of(elem);
+    HEAPS.with(|v| { if !v.borrow().contains(&id) { v.borrow_mut().push(id); } });
+    id
+}
+
+pub fn all_deques() -> Vec<u32> { DEQUES.with(|v| v.borrow().clone()) }
+pub fn all_heaps() -> Vec<u32> { HEAPS.with(|v| v.borrow().clone()) }
+
 /// Interns `&inner` and returns its id.
 pub fn ref_of(inner: Ty) -> u32 {
     // Computed before borrowing the table: `c_name` of a nested `&T` reads the same table.
@@ -561,6 +579,10 @@ pub enum Ty {
     String,
     /// `Vec[T]`, by vec id (see `vec_of`).
     Vec(u32),
+    /// Owning ring buffer, indexed by element type in VECS.
+    Deque(u32),
+    /// Owning priority queue with an erased, owning comparison environment.
+    Heap(u32),
     /// `&T`: a read-only reference, by ref id (see `ref_of`). Copyable; it carries a borrow.
     Ref(u32),
     /// `?T`: a value that may be absent, by opt id (see `opt_of`). In C a `{ bool has; T val; }`
@@ -608,7 +630,7 @@ impl Ty {
     /// holding them) are moved.
     pub fn is_copy(self) -> bool {
         match self {
-            Ty::String | Ty::Vec(_) | Ty::Map(_) | Ty::Set(_) | Ty::RefMut(_) | Ty::Box(_) | Ty::Dyn(_) | Ty::Sync(_) => false,
+            Ty::String | Ty::Vec(_) | Ty::Deque(_) | Ty::Heap(_) | Ty::Map(_) | Ty::Set(_) | Ty::RefMut(_) | Ty::Box(_) | Ty::Dyn(_) | Ty::Sync(_) => false,
             Ty::Opt(id) => opt_inner(id).is_copy(),
             Ty::Tuple(id) => tuple_elems(id).iter().all(|t| t.is_copy()),
             Ty::Struct(id) | Ty::Enum(id) => agg_flags(id).0,
@@ -624,7 +646,7 @@ impl Ty {
     /// `&inout T` is not copyable but owns nothing.
     pub fn needs_drop(self) -> bool {
         match self {
-            Ty::String | Ty::Vec(_) | Ty::Map(_) | Ty::Set(_) | Ty::Box(_) | Ty::Dyn(_) => true,
+            Ty::String | Ty::Vec(_) | Ty::Deque(_) | Ty::Heap(_) | Ty::Map(_) | Ty::Set(_) | Ty::Box(_) | Ty::Dyn(_) => true,
             Ty::Sync(id) => sync_parts(id).0 != SyncKind::Join,
             Ty::Opt(id) => opt_inner(id).needs_drop(),
             Ty::Tuple(id) => tuple_elems(id).iter().any(|t| t.needs_drop()),
@@ -644,7 +666,7 @@ impl Ty {
             Ty::Opt(id) => opt_inner(id).contains_ref_mut(),
             Ty::Box(id) => box_inner(id).contains_ref_mut(),
             Ty::Tuple(id) => tuple_elems(id).iter().any(|t| t.contains_ref_mut()),
-            Ty::Vec(id) => vec_elem(id).contains_ref_mut(),
+            Ty::Vec(id) | Ty::Deque(id) | Ty::Heap(id) => vec_elem(id).contains_ref_mut(),
             Ty::Slice(id) => slice_elem(id).contains_ref_mut(),
             Ty::Res(id) => {
                 let (o, e) = res_parts(id);
@@ -667,7 +689,7 @@ impl Ty {
     pub fn carries_borrow(self) -> bool {
         match self {
             Ty::Str | Ty::Ref(_) | Ty::RefMut(_) | Ty::Slice(_) => true,
-            Ty::Vec(id) => vec_elem(id).carries_borrow(),
+            Ty::Vec(id) | Ty::Deque(id) | Ty::Heap(id) => vec_elem(id).carries_borrow(),
             Ty::Set(id) => map_parts(id).0.carries_borrow(),
             Ty::Box(id) => box_inner(id).carries_borrow(),
             // A guard is `Guard[T] of` its mutex (P4, P6).
@@ -705,6 +727,8 @@ impl Ty {
             Ty::Str => "str".into(),
             Ty::String => "String".into(),
             Ty::Vec(id) => format!("Vec_{}", vec_elem(id).key()),
+            Ty::Deque(id) => format!("Deque_{}", vec_elem(id).key()),
+            Ty::Heap(id) => format!("Heap_{}", vec_elem(id).key()),
             Ty::Slice(id) => format!("Slice_{}", slice_elem(id).key()),
             Ty::Ref(id) => format!("Ref_{}", ref_inner(id).key()),
             Ty::Opt(id) => format!("Opt_{}", opt_inner(id).key()),
@@ -745,6 +769,8 @@ impl Ty {
             Ty::Str => "yv_str",
             Ty::String => "yv_string",
             Ty::Vec(_) | Ty::Slice(_) => "yv_vec",
+            Ty::Deque(_) => "yv_deque",
+            Ty::Heap(_) => "yv_heap",
             Ty::Ref(id) => REFS.with(|r| r.borrow()[id as usize].1),
             Ty::Opt(id) => OPTS.with(|o| o.borrow()[id as usize].1),
             Ty::RefMut(id) => REFMUTS.with(|r| r.borrow()[id as usize].1),
@@ -770,6 +796,8 @@ impl fmt::Display for Ty {
             Ty::Str => f.write_str("str"),
             Ty::String => f.write_str("String"),
             Ty::Vec(id) => write!(f, "Vec[{}]", vec_elem(*id)),
+            Ty::Deque(id) => write!(f, "Deque[{}]", vec_elem(*id)),
+            Ty::Heap(id) => write!(f, "Heap[{}]", vec_elem(*id)),
             Ty::Slice(id) => write!(f, "[]{}", slice_elem(*id)),
             Ty::Ref(id) => write!(f, "&{}", ref_inner(*id)),
             Ty::Opt(id) => write!(f, "?{}", opt_inner(*id)),

@@ -1,6 +1,6 @@
-# Yavo 交接文档（2026-11-21，第九批：分配分析与验证报告）
+# Yavo 交接文档（2026-11-21，第十批：容器、可变借用返回与运行器）
 
-给下一个会话：先读完本文件，再按第 10 节开工。当前结果以第 14 节和对应验证记录为准；历史批次保留其测试日期与范围。
+给下一个会话：先读完本文件，再按第 10 节开工。当前结果以第 15 节和对应验证记录为准；完整 v1 剩余工作见第 16 节。历史批次保留其测试日期与范围。
 
 ## 1. 一句话状态
 
@@ -12,13 +12,14 @@
 标准库 I/O、`os.args`、`std/math`；六个目标的交叉编译。
 第八批新增 **`yavo fix`**：保守自动修复、独立重检的候选、`--dry-run` 和结构化补丁。
 第九批新增分配查询、绑定实际工件的验证报告、Sanitizer 能力探针与独立前端/空缓存可复现构建。
-规范一致性：**129 项中通过 122、判错 0、不支持 3、未运行 4**。不支持的是 T-O5（Heap 与保存的比较闭包）、T-V3（可变引用返回及复杂接收者）和 T-R2（锁定工具链缺少可链接的 ASan 运行时）；
-未运行的是运行器不支持的 3 项和要求 sanitizer 分开构建的 T-P3（独立验证记录见第 12 节）。
+第十批补齐 **Heap/Deque、Heap 保存的拥有闭包、可变引用返回和复杂接收者**；修复显式丢弃与元组临时值析构，接入故障注入、原始 argv 和分开 Sanitizer 工件的运行器。
+规范一致性：**129 项中通过 126、判错 0、不支持 3、未运行 0**。剩余 T-GR9/T-P3/T-R2 都要求锁定工具链当前无法链接的 ASan 运行时；其中要求的 TSan 路径单独执行，不冒充 ASan 通过。该统计只表示既有用例覆盖，不是完整 v1 完成比例。
 全部提交只在本地，**按用户决定暂不推远端**。
+本批全量 Debug/Release 各 **88 通过、0 失败、0 编译警告，1 个旧报告忽略**；91 个编译/运行 fixture，新组合程序六目标构建与格式检查通过。
 
 “可用”三批已完成；2026-11-20 用户让我自己定后续顺序并分批：**第四批**（速查卡缺口 + 第 6 项 + 小卡点）已完成，
 **第五批**（第二轮冷启动实验 + 按实验结果修速查卡和编译器）已完成：换模型（Sonnet）、不点名特性的新题，Yavo 10/10、Rust 对照 10/10
-（`experiments/coldstart-2026-11-20/README.md`）。**第六批**（P3 并发）已完成，分三次提交。**第七批**安全与验证收敛见第 12 节；**第八批**源码修复见第 13 节；**第九批**分配分析与验证工具见第 14 节；第 10 节列出后续优先级。
+（`experiments/coldstart-2026-11-20/README.md`）。**第六批**（P3 并发）已完成，分三次提交。**第七批**安全与验证收敛见第 12 节；**第八批**源码修复见第 13 节；**第九批**分配分析与验证工具见第 14 节；**第十批**功能补齐见第 15 节；第 10 节列出后续优先级。
 
 ## 2. 仓库与环境
 
@@ -57,6 +58,8 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 | `tests/stdlib_io.rs` | 需要标准输入、命令行参数或临时目录的程序（`io`、`fs`、`os.args`），带堆块检查构建 |
 | `tests/fix.rs` | 源码字节、名字捕获、析构次序、条件执行、泛型导入、候选影响、JSON 和幂等；冻结 fix 用例由 conformance 执行 |
 | `tests/verify.rs` | 分配三态、未知效应保留、隐式析构、工件与输入哈希、真实执行、超时、跨平台限制、工具链覆盖拒绝、输出截断、Sanitizer 负例能力门 |
+| `tests/collections.rs`、`src/closure_free.rs` | 保存比较器与析构的分配未知、绑定感知捕获的 5 个解析器回归；运行/拒绝 fixture 在 p0 目录 |
+| `tests/mutref_returns.rs` | 6 个集成测试：返回来源、索引/字段、转交/重绑定、12 类拒绝、Guard 边界、准确求值顺序、候选修复 |
 
 常用命令：`yavo check f.yv [--json] [--emit-c f.c]`、`yavo fix f.yv [--dry-run] [--json]`、`yavo run f.yv [--release] [--target T]`、`yavo build f.yv -o out [--release] [--target T] [--emit-c f.c]`。
 新增：`yavo allocations 函数名 --file f.yv --json`、`yavo verify f.yv [--target T] [--sanitize] [--reproducible] --json`；全部选项见 `compiler/README.md`。
@@ -65,12 +68,13 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 
 | 提交 | 内容 | 一致性通过数 |
 | --- | --- | --- |
-| 本文件所在提交 | 分配查询、真实验证报告、负例 Sanitizer 能力门、两次独立前端与空缓存构建；3 项新增通过，T-R2 明确不支持 | 122 |
+| 本文件所在提交 | Heap/Deque、拥有比较闭包、可变引用返回与候选修复；显式 discard/元组析构；故障注入/argv/允许结果/分开 Sanitizer 运行器 | 126 |
+| `47df1ad` | 分配查询、真实验证报告、负例 Sanitizer 能力门、两次独立前端与空缓存构建；3 项新增通过，T-R2 明确不支持 | 122 |
 | `96999de` | `yavo fix`、可审查补丁、原子写回及修复验收；6 项新增通过，T-V3 从未运行转为明确不支持 | 119 |
 | `faac6ac` | 安全与验证收敛：线程借用、Send/Sync、资源克隆、I/O 锁、测试时限、实验复核、独立 sanitizer 记录 | 113 |
 | `baa1bad` | 并发第 2、3 部分：`scope`（隐藏局部的析构等待线程）、`spawn`（每个调用点一个参数结构和线程入口）、`join`、结构推导的 `Send`/`Sync`、`Box[I + Send]`（接口别名）、`Channel[T]{cap}`/`send`/`recv`/`close`/`clone`、`SendError[T]`（按元素类型晚登记的库枚举）；`ok(_u)` 可忽略 `()` 载荷 | 113 |
 | `907896c` | 并发第 1 部分：`Ty::Sync`、`Rc`/`Arc`/`Mutex`/`Guard`/`with`（`E0703`）、运行时（pthread/Win32 锁、条件变量、线程、channel、scope；原子堆块计数；输出锁） | 99 |
-| 本文件所在提交 | 按第二轮实验修：`Set[T]`（存成 `Map[K, bool]`，`Ty::Set`）、`${x:.N}`（`PrintPart::Fixed`、运行时 `yv_out_fixed`）、`${...}` 里允许字符串字面量（原先误报 `E0020`）；速查卡补 `String`/`str` 不能混比、`os.args()[0]` 是程序名、`Set` 用法、`Vec` 没有 `remove`/`insert` | 93 |
+| `1c17168` | 按第二轮实验修：`Set[T]`（存成 `Map[K, bool]`，`Ty::Set`）、`${x:.N}`（`PrintPart::Fixed`、运行时 `yv_out_fixed`）、`${...}` 里允许字符串字面量（原先误报 `E0020`）；速查卡补 `String`/`str` 不能混比、`os.args()[0]` 是程序名、`Set` 用法、`Vec` 没有 `remove`/`insert` | 93 |
 | `99dca58` `4f15824` | 第二轮冷启动实验（题目、Perl 参考、两组程序与日志、`verify.sh`、结果） | 93 |
 | `0ed6802` | 第 6 项：`*p` 读（可复制得副本，否则只读访问）、`*p = v`/`*p op= v` 经 `&inout T` 写；`let p: &inout T = &place`、`var p: &T = &place`、`let p = &x` 报 `E0004`；再借用 `&p`、`var` 引用重绑定；独占（`E0102`）与存活（`E0305`）沿用 `&inout` 规则；`for x in &v { *x += 1 }`、`getMut` 绑定可写可复制值。`String.fromUtf8`、prelude `Utf8Error`（成功复用缓冲区） | 93 |
 | `238a2cd` | 速查卡补 6 个缺口（泛型结构体、`fn main()` 与“辅助函数 + `catch` + `os.exit`”、`byte` 插值、`join`、`?T` 方法与 `if let ... else`、`Map` 的 `str` 键、`String.push`），示例都用编译器验证过 | 84 |
@@ -132,7 +136,7 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - 解引用（第四批）：`*p` 是 `UnOp::Deref`，检查器读时降为 `HExprKind::Deref`；赋值目标 `*p`（可再接字段）在 `StmtKind::Assign` 里识别，
   路径开头插入 `DEREF_STEP`（`usize::MAX - 1`），代码生成的 `walk` 跳过它、`place_root` 走 `(*p)`。
   期望 `&inout T` 的 `&place` 由 `borrow_mut` 降为 `InoutPlace`（类型 `RefMut`），`loans_of` 对 `InoutPlace` 记根变量及其已有借用（再借用因此能挡住原引用）。
-  `&inout T` 类型只在局部变量注解里由 `local_ty` 解析，其他位置 `U0001`。`String.fromUtf8` 是 `HExprKind::FromUtf8`，`Utf8Error` 在 `LIBRARY_ENUMS` 之后登记为库结构体。
+  第十批把 `local_ty` 扩展到顶层返回类型；`LetTemp` 先保存复杂可变接收者，避免重复求值，`mutable_address` 支持字段与 Vec 元素地址，来源保留实际拥有者及 Guard。`String.fromUtf8` 是 `HExprKind::FromUtf8`，`Utf8Error` 在 `LIBRARY_ENUMS` 之后登记为库结构体。
 - 并发（第六批）：`types.rs` 的 `Ty::Sync(id)` + `SyncKind`；`ptr_inner`/`ptr_read_only` 让 `unbox`、`field_path`、`mutable_place` 穿过 `Rc`/`Arc`/`Guard`
   （`BOX_STEP` 复用；`Rc`/`Arc` 写入报 `E0101`）。`LocalState` 新增 `guard`（`with` 绑定，`store_loans` 据此报 `E0703`）和 `pinned`（scope 的隐藏局部，
   `check_not_borrowed` 视为活到 scope 结束）。`FnCx::thread_scopes` 是当前嵌套的 scope。接口能力用 `dyn_with_caps`/`dyn_base`/`dyn_caps`（别名 id 共享 C 类型和虚表，
@@ -154,7 +158,7 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - 借用检查按语句粒度和语句顺序：`if` 里修改、只在 `else` 里用视图也会报错；`E0305` 不看存储目标之后是否还被使用。第七批已修复 sink 视图容器跨线程的来源漏检，并补组合回归；此前“不会漏报”的表述没有依据。
 - 可选值：对可写位置的 `if let`，**不可复制**载荷的绑定可写（`&inout`）；**可复制**载荷仍按值复制，给绑定赋值报 `U0001`。可写绑定还在使用时，原变量的任何使用都报 `E0102`（保守）。
   对 `&inout` 绑定的字段再做 `if let`（`if let l = n.left`）得到只读绑定。`a ?? b` 把 `a` 整体消费。`?? return/break/continue` 只允许作为整个 `let` 初值或赋值右侧。
-- `&inout T`：局部变量可以写出类型并用 `&place` 构造，`*p` 读写。仍不能作参数、字段、元素或返回类型（`U0001`，参数用 `inout`）；
+- `&inout T`：局部变量可写类型并用 `&place` 构造，`*p` 读写；顶层返回携带 `of`，支持可变 Vec 元素。显式 `&inout` 参数、嵌套类型注解和任意下标位置的 `inout` 实参仍未开放（参数用 `inout`）；普通拥有字段保存借用本来违反逃逸规则。
   经 `*p` 存入带借用的值 `U0001`。借用按语句粒度，所以 `println("${q.len()} ${s}")`（`q` 指向 `s`）会多报 `E0102`，要拆成两句。
 - `Map`：键只支持整数、`bool`、`str`、`String`；`update` 的值类型限可复制且不带借用。
 - 导入：已实现的模块成员有 `os.exit`、`os.args`、`io.readAll`/`readLine`、`fs.readText`/`writeText`、`math.sqrt/pow/floor/ceil/round/pi/e`，其余报 `U0001`。`os.exit` 不运行析构。
@@ -165,7 +169,7 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
   没有泛型枚举、方法自己的类型参数、`Stack[int].make()` 这类在实例上的静态调用。
 - 浮点：`%` 和位运算不支持；`1 + 1.5`（两个字面量）报类型不符；Windows/macOS 上的浮点打印未在真机验证（依赖各自 libc 的 `snprintf`/`strtod`）。
 - 切片：没有 `x[a..]`、`x[..b]`；v1 本来就没有可变切片。
-- 闭包：只能直接作为 `sortBy`/`update` 的实参。
+- 闭包：支持 `sortBy`/`update` 的不逃逸借用回调和 `Heap.by` 保存的拥有比较器；一般闭包值、用户高阶参数和闭包字段仍未实现。Heap 的 clone 与隐藏捕获跨线程能力暂报 U0001；Deque 未提供索引、切片或迭代接口。
 - 元组：不能给元素赋值、不能比较、不能整体打印、不能做 `Map` 键、没有元组模式。
 - 格式说明只支持浮点的 `:.N`；`String == str` 混比报 `E0001`（规范 K1 没定义跨类型比较，速查卡已写明；要不要放开是语言决定，留给用户）。
 - `Set`：没有集合运算（并、交）、没有 `Set` 字面量里的元素（`[1, 2]` 不能直接当 `Set`）。
@@ -177,15 +181,14 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 
 ## 8. 一致性测试里的卡点
 
-当前不支持 3 项、未运行 4 项（统计只算每个测试的第一个卡点）：
+当前 **3 项不支持、0 项未运行**；全部冻结 P1 用例已通过，但完整阶段承诺仍需第 16 节的功能与证据。
 
-| 卡点 | 测试 |
+| 卡点 | 测试与状态 |
 | --- | --- |
-| `std/collections` 的 `Heap[T].by(闭包)`（保存比较闭包，O5） | T-O5（不支持） |
-| 可变引用返回、复杂可变接收者 | T-V3（不支持；其余 6 项 fix 已通过） |
-| 锁定 Zig 缺少 ASan 运行时；已确认 TSan，不能替代 ASan+UBSan 组合 | T-R2（不支持；另外 3 项报告通过） |
-| 运行器：`run-allowed`（T-GR9）、`run-exit`（T-S3）、分配失败注入（T-GR8） | 3 项（未运行） |
-| 运行器：`sanitize-mode: separate-artifacts`（ASan/UBSan 与 TSan 分开构建） | T-P3（未运行；尚未接入此运行器，且本机缺 ASan 运行时） |
+| 锁定 Zig 缺少可链接 ASan 运行时；ASan+UBSan 能力探针失败 | T-GR9、T-P3、T-R2：unsupported |
+| TSan | 有负例数据竞争检测证明；要求该配置的场景实际单独运行，不能替代 ASan |
+
+本批解锁 T-O5、T-V3、T-GR8 和 T-S3。运行器已接入 run-allowed、run-exit、故障注入和 sanitizer 分开构建；缺少平台或插桩能力会保留明确状态。
 
 ## 9. 计划表
 
@@ -197,8 +200,8 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 | 8 | 浮点 `f64`、`totalCmp` | **已完成**（`16527cb`） |
 | 9 | 切片 `x[a..b]`、`P-STR-BOUNDARY` | **已完成**（`e7e106f`，顺带 `toVec`、`reserve`） |
 | 10 | 泛型函数和泛型结构体 | **已完成**（`bd8ab57`） |
-| 11 | `yavo fix`（只自动应用不改变语义的修复） | **已实现**；6 项通过，T-V3 受既有前端缺口阻塞 |
-| 12 | P3：`scope`/`spawn`、channel、`Mutex`/`Arc`、`Send`/`Sync` | **已完成**（`907896c` 与本文件所在提交；20 项通过，T-P3 未运行） |
+| 11 | `yavo fix`（只自动应用不改变语义的修复） | **已实现**；7 项冻结修复用例通过，T-V3 只给重检后的候选 |
+| 12 | P3：`scope`/`spawn`、channel、`Mutex`/`Arc`、`Send`/`Sync` | **已实现主要路径**（`907896c`、`baa1bad`）；T-P3 已尝试，受 ASan 能力限制；公开 Join / spawn inout 仍缺 |
 | 13 | `yavo verify` 与验证报告 | **已实现**；GA1/GA2/R1 通过，R2 受本机 ASan 能力限制 |
 | 冷启动实验 | 只给速查卡写 T01–T10 | **已做一轮**：10/10 一次通过（局限见实验 README） |
 | 待定 | 三平台 CI | 需要远端仓库，用户暂不推 |
@@ -217,21 +220,19 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 | --- | --- | --- |
 | 第四批 | 速查卡 6 个缺口，第 6 项，`String.fromUtf8` | **已完成**，一致性 84 → 93 |
 | 第五批 | 第二轮冷启动实验：不点名特性的新题、换模型做受试者、Rust 对照并记 token；按结果修 | **已完成**：Yavo 10/10（首编 7/10，116k token）、Rust 10/10（首编 9/10，90k token）；修了 `Set`、`:.N`、嵌套字符串 |
-| 第六批 | 第 12 项 P3 并发（`scope`/`spawn`、`Channel`、`Mutex`/`Arc`/`with`、`Send`/`Sync`） | **已完成**：(a) `Rc`/`Arc`/`Mutex`/`Guard`/`with` 与运行时（`907896c`，93 → 99）；(b) `scope`/`spawn`/`join`/`Send`/`Sync`、(c) `Channel`（本文件所在提交，99 → 113） |
+| 第六批 | 第 12 项 P3 并发（`scope`/`spawn`、`Channel`、`Mutex`/`Arc`/`with`、`Send`/`Sync`） | **已完成**：(a) `Rc`/`Arc`/`Mutex`/`Guard`/`with` 与运行时（`907896c`，93 → 99）；(b) `scope`/`spawn`/`join`/`Send`/`Sync`、(c) `Channel`（`baa1bad`，99 → 113） |
 
 ## 10. 下一个会话的第一步
 
-1. 设置第 2 节的环境变量，`cargo build --locked --offline --release`；跑 `cargo test --locked --offline`（和 `--release`），确认全部通过，conformance 是 122 / 0 / 3 / 4。
-2. 第九批分配分析与验证工具已完成。后续建议按以下顺序推进：
-   - **T-O5：`std/collections` 的 `Heap`/`Deque`** 和能保存的闭包（O5）；**T-V3** 的可变引用返回与复杂接收者要按借用规则实现后再开放候选。
-   - **第三轮冷启动实验，带并发题**：本轮实验没测并发；同时可以量速查卡的实际 token 数（28 KB，未量过）。
-   - 运行器支持 sanitizer 分开构建（T-P3），接入第七批已有的独立验证路径。
-   - 平台与性能证据：Windows/macOS 真机运行、少量与 C 同算法同数据布局的基准。当前尚无近 C 性能结论。
-   - 语言决定：`String == str` 是否允许混比。`Join` 的公开类型与作用域限制、`spawn inout` 的 Send 条件已在标准库契约规定，按实现缺口处理。
+1. 先检查 Git 状态和最新提交，确认其他人是否有后续修改；环境见第 2 节。当前冻结用例基线为 **126 / 0 / 3 / 0**。分析或文档维护不需要重复全量测试；修改编译器后按具体风险加回归，提交前跑 Debug/Release。
+2. 下一阶段优先补 **Arena / Id** 和 **多文件/用户模块/本地及 Git 依赖**；现有 129 个用例不足以验收这两块，需要对应实现测试。
+3. 补用户测试入口、FFI/unsafe 与 audit；修复当前工具链的 ASan 能力，完成 Windows/macOS 真机执行。不得把 verifier 的部分检查通过改写成整体已验证。
+4. 并行开展少量同算法/同布局的 C 对照基准，以及使用最新 fix/verify 的第三轮隔离冷启动实验，覆盖并发和资源任务；成本假设成立前不直接投入 400 题正式评测。
+5. 语言决定仅保留尚未冻结的接口（如一般 callable 类型、Atomic 具体 API、String/str 混比）；公开 Join 与 spawn inout 已有契约，应按实现缺口处理。完整验收清单见第 16 节。
 
 ## 11. P3 并发设计（第六批，2026-11-20；已按此实现）
 
-目标：解锁 `yavo-tests/concurrency/` 的 21 项（T-GA1/GA2/R1/R2 是报告类，未运行）。思路是尽量复用现有机制：
+本节记录第六批设计：当时目标是解锁 `yavo-tests/concurrency/` 的 21 项，四个报告类当时未运行；报告已在第九批接入，当前状态见第 15 节。实现复用以下机制：
 
 - **类型**：新增一个 `Ty::Sync(id)`，表里存 `(种类, 内层类型)`，种类为 `Rc`、`Arc`、`Mutex`、`Guard`、`Channel`、`Join`、`Scope`（隐藏）。都不可复制。
   `Rc`/`Arc`/`Mutex`/`Guard` 在 C 里都是 `T *`，指向“头部 + 值”分配块中的值（头部在值前面：锁、持有线程号、引用计数），
@@ -307,3 +308,45 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - 完整结果、源码/日志哈希、实际报告和负例证据见 `compiler/validation/verify-2026-11-21.json`。独立复核重新读取并校验了 21 处工件引用（12 个不同文件）及四个隔离缓存目录。原始日志和工件在 `compiler/target/verify-review/`。
 
 完整 P1/P3 验收仍受 Heap/保存闭包、可变借用返回、专用运行器、审计和平台执行限制；没有新增近 C 性能结论。
+
+## 15. 第十批：容器、可变借用返回与运行器补齐（2026-11-21）
+
+基线为已提交且干净的 `47df1ad`。冻结规范、历史快照和 129 个测试输入保持原样。
+
+- `Heap[T].by` 保存拥有比较器，支持 push/pop/len；Copy 捕获复制，拥有捕获移动进环境，任何携带借用的捕获报 E0307。比较器调用借用捕获，不能重复移走捕获资源。Heap 整体移动，元素和环境恰好一次析构；不一致比较器下上滤/下滤仍有界且不丢失元素。
+- `Deque[T]{}` 使用环形缓冲，支持 pushBack/pushFront/popFront/popBack/len，以及满足递归克隆条件时的 clone；扩容按逻辑顺序搬移，弹出 O(1)。两类容器的借用元素在插入、移动、弹出和返回时保留来源；Deque 按元素推导线程能力，Heap 隐藏捕获的线程能力暂报 U0001，不能只看元素就放行。
+- `closure_free.rs` 按实际词法绑定收集捕获，覆盖声明初值、局部、分支/模式、循环、catch/with 和嵌套闭包；内部同名局部不会错误移动外层资源。
+- 顶层 `-> &inout T of ...` 可用于函数、方法和接口方法；支持字段、Vec 元素与嵌套索引地址。接收者可直接是返回可变引用的调用，用 HIR `LetTemp` 保证只求值一次并先于实参。跨调用再借用仍指向原始拥有者，先求值的借用实参不会被后面的实参破坏；Rc/Arc 以及默认只读参数不能因此取得写权限。
+- `fix` 对复杂接收者的冲突提供独立重检的 `hoist-argument` 候选，不自动改变求值顺序。Map.getMut 经临时接收者时保留真实 Map/Guard 来源，不再把隐藏指针描述符误当作拥有者。
+- 修复 `let _ = 已有拥有值` 没有消费/立即析构的旧行为，之后再用报 E0402；丢弃默认借用的拥有参数报 E0401。引用描述符不析构其目标。修复拥有元组临时值遗漏清理，新增逆序析构的精确输出回归。
+- 运行器接入 run-exit 原始字节 argv、main 后分配失败注入、run-allowed 和 sanitizer 分开工件；注入器只在测试 C 包装文件，不向生产构建增加开关。输出、退出码、此前 stderr、超时和负例 Sanitizer 能力证据均参与判定；所有可运行的必需配置先检查，ASan 不可用不会掩盖 TSan 失败。
+- 修复运行器对空/无效 modes 零次执行也通过的问题：现在只接受非空、去重的 debug/release 模式。分配查询保留 Heap 保存比较器及其析构的 unknown，已知分配不抹掉 unknown；LetTemp 和新容器临时值清理纳入分析。
+
+- 全量 Debug/Release 各 **88 通过、0 失败、0 编译警告，1 个旧报告忽略**；91 个编译/运行 fixture，运行用例覆盖两种 C 优化模式及堆块检查。Heap/Deque 与可变返回的组合程序对六目标构建、校验格式与架构，在匹配的 Linux x86_64 主机执行。
+- 一致性 **122 / 0 / 3 / 4 → 126 / 0 / 3 / 0**；新增 T-O5/T-V3/T-GR8/T-S3，原 122 项全部保留。T-GR9/T-P3/T-R2 均因 ASan+UBSan 无法链接而明确 unsupported，现有 83 个 P1 冻结用例全部通过。
+- 验证记录复核了 125 个源码文件、11 个实际工件哈希和完整 Debug/Release 日志。首次组合驱动在 Debug 完成后的 Release 构建阶段达到命令时限，Release 独立重跑完整通过；没有将中断作为通过结果。
+
+验证工件与日志汇总写入 `compiler/validation/completion-2026-11-21.json`；原始执行记录在 `compiler/target/completion-review/`。新增语言功能仍不等于完整 v1 验收，剩余项见第 16 节。
+
+## 16. 完整 v1 目标与未闭合验收
+
+129 个冻结用例只覆盖规格的一部分，通过比例不能作为 v1 完成百分比。第 7 节列的是当前语言限制，本节记录更完整的工程交付范围。
+
+| 目标或工作项 | 已有能力 | 仍需完成的功能或证据 |
+| --- | --- | --- |
+| 无追踪式 GC | 确定性析构、显式 `Rc`/`Arc`、拥有值移动 | 后续容器、Arena、FFI 必须保持同一资源规则；自动循环回收不是 v1 目标 |
+| 近 C 性能 | C17 后端、release 优化、安全检查保留 | 同算法和数据布局的基准；安全检查开启时，运行时间比 C 的几何平均不超过 1.5，报告最差项；编译延迟 P50/P95 与产物大小需实测 |
+| 跨平台编译与运行 | Linux/Windows/macOS 的 x86_64/aarch64 六目标交叉编译 | Windows/macOS 和其他架构实际运行与 CI；交叉编译通过不代替目标平台运行 |
+| Arena / Id | 规格已定义，尚无实现 | 存储、借用、身份校验、容量与身份计数溢出、析构及对抗测试 |
+| 多文件与包 | 单文件编译；标准库导入由编译器识别 | 用户模块、导出可见性、跨文件检查、本地路径/Git 依赖、程序锁文件；包注册中心不在 v1 范围 |
+| 闭包与线程能力 | 库内不逃逸回调；Heap 保存拥有捕获；具名函数 `spawn` | 一般闭包值/高阶参数与字段存储接口；保存环境的线程能力表示；公开可移动 Join 和 `spawn inout` 的契约实现 |
+| 标准库剩余面 | String/Vec/Map/Set/Heap/Deque、基本 I/O、同步与数学 | `time.now`、`rand.int`；Map/Set 的 Id/元组键；元组 Default 等契约缺口；Atomic 的具体公开接口需要确定后实现 |
+| 用户测试与 agent 工具 | 编译器开发测试、`check`/`fix`/`allocations`/`verify` | 测试块与 `yavo test`，fmt/outline/type-at/explain/doc；verify 当前只有单程序执行与可选输出断言 |
+| unsafe / C FFI / audit | 关键字和设计预留；verify 明确记录未审计 | 真实 FFI/unsafe 入口、依赖及边界审计；在 audit 未通过前，verify 不能宣称整体验证成功 |
+| 工具链分发与缓存 | 固定 Zig、下载校验；Zig 自身缓存 | 完整 Core/Full 分发、预编译运行时、Yavo 内容寻址缓存、依赖/单态化缓存、容量限制与 LRU 回收 |
+| 诊断机器契约 | 主诊断、notes、结构化修复和哈希绑定 | 相关位置 secondary 与被抑制级联诊断标记等剩余契约 |
+| agent 冷启动与成本 | 第二轮 10 道单文件题，Yavo/Rust 均 10/10；Yavo 116096 token，Rust 89784 | 使用最新 fix/verify 与并发功能重做隔离上下文实验；正式验收需配对通过率差的一侧 95% 下界不低于 −5 个百分点、每个成功任务的总成本至少低 20%，并独立复现 |
+
+正式评测按 `docs/plan.md` 的后续定量设计：60 个独立任务的 pilot，根据分歧率和功效调整，正式不少于 400 题；使用隐藏验收、多模型、每个任务×模型×语言的新上下文并保存原始成本。先做实现驱动的小规模验证，再投入正式评测。
+
+可变切片、两阶段借用、async/M:N 调度、panic 展开、自动循环回收、WASI/MSVC ABI、自有机器码后端、包注册中心和内建 HTTP/TLS 均属于已排除的 v1 范围，不应记作本批待补功能。
