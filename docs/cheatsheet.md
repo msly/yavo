@@ -31,6 +31,7 @@ fn main() {
 - 分支：`if`/`else` 是语句；要按情况取值，用 `match` 的 `=> 表达式` 分支（必须覆盖所有情况，`_` 兜底）。
 - 返回：有返回值的函数每条路径都写 `return`，没有返回值的函数可以自然结束。块体闭包也要写 `return`；单表达式闭包 `(a, b) => a < b` 不用。
 - 插值字符串 `"${expr}"` 只能直接传给 `println`、`print`、`eprintln`、`panic`、`assert` 和 `format`。前五个直接写输出，不分配内存；要得到 `String` 用 `format("${x}")`，会分配。`${...}` 里可以写任意表达式，包括函数调用和字符串字面量，如 `"${parts.join(", ")}"`。保留两位小数写 `"${x:.2}"`（只用于浮点数，整数先 `f64(n)`）。
+- 字符串转义：`\n`、`\t`、`\\`、`\"`；要写字面的 `${`，写 `"\${"`（单独的 `$` 不用转义）。
 - 注释只有 `//`。声明顺序无关，函数可以先用后定义；`pub` 标记从包导出的函数和类型。
 - 入口只能写成 `fn main()`：没有参数、没有返回值（否则 `E0016`）。所以 `main` 里不能用 `try`；可能失败的步骤放进返回 `T ! E` 的辅助函数，在 `main` 里用 `catch` 处理后 `os.exit(1)`，写法见第 5 节。
 - 整数溢出、除零、越界移位、超出范围的转换执行时 panic，包括常量可知的表达式。`let b: u8 = 256` 则是字面量类型错误。回绕写 `+%`、`-%`、`*%`；截断转换写 `i32.wrap(x)`，仅接受整数。整数边界写 `i64.min`、`i64.max`。
@@ -433,7 +434,7 @@ fn parallelSum(nums: Vec[int]) -> int {
 ```
 
 - 线程借用保守持续到 scope 结束；`join()` 消耗句柄取得返回值，但不提前缩短借用。丢弃句柄不会分离线程。中途 `return` 或 `try` 也先等待。v1 线程返回值必须不携带借用且满足 Send。
-- 线程之间传值用 channel：`let ch = Channel[Job]{cap: 8}`；`ch.send(v)` 移动值，关闭后返回 `err(.Closed(v))` 把值还回来；`ch.recv()` 返回拥有的 `?Job`，关闭后先取完缓冲区，再返回 `none`。channel 只传拥有值，不传 `str`、`Vec[str]` 这类携带借用的值。
+- 线程之间传值用 channel：`let ch = Channel[Job]{cap: 8}`，传给线程函数时写 `spawn worker(&ch)`，参数类型 `&Channel[Job]`，多个线程可以共用一个 channel 收发。`ch.send(v)` 移动值，关闭后返回 `err(.Closed(v))` 把值还回来；`ch.recv()` 返回拥有的 `?Job`，关闭后先取完缓冲区，再返回 `none`，所以工作线程写 `while let job = ch.recv() { }`；`ch.close()` 关闭。channel 只传拥有值，不传 `str`、`Vec[str]` 这类携带借用的值。
 - `Channel[T]{cap: n}` 要求 `n > 0`；关闭幂等并唤醒等待者。`Mutex(T)` 接收拥有值，`m.lock() -> Guard[T] of self`，`m.tryLock() -> ?Guard[T] of self`；竞争时 tryLock 返回 none。
 - 共享可变状态用 `Arc[Mutex[T]]`，要求 `T` 可以交给别的线程（`Send`）：`with g = m.lock() { g.count += 1 }`。从 `g` 借出的引用不能带出 `with` 块；锁守卫也不能交给别的线程。
 - 通过 `Rc`、`Arc` 只能读里面的值，把句柄放进 `var` 也一样；要修改就用 `Mutex`。
