@@ -1,6 +1,6 @@
-# Yavo 交接文档（2026-11-21，第十批：容器、可变借用返回与运行器）
+# Yavo 交接文档（2026-11-21，第十一批：Arena/Id、多文件模块与实测工作流）
 
-给下一个会话：先读完本文件，再按第 10 节开工。当前结果以第 15 节和对应验证记录为准；完整 v1 剩余工作见第 16 节。历史批次保留其测试日期与范围。
+给下一个会话：先读完本文件，再按第 10 节开工。当前实现与验证状态见第 17 节；完整 v1 剩余工作见第 16 节。第 11–15 节保留历史批次的日期、数值与验证范围，不能当作当前源码的重新验证。
 
 ## 1. 一句话状态
 
@@ -13,13 +13,14 @@
 第八批新增 **`yavo fix`**：保守自动修复、独立重检的候选、`--dry-run` 和结构化补丁。
 第九批新增分配查询、绑定实际工件的验证报告、Sanitizer 能力探针与独立前端/空缓存可复现构建。
 第十批补齐 **Heap/Deque、Heap 保存的拥有闭包、可变引用返回和复杂接收者**；修复显式丢弃与元组临时值析构，接入故障注入、原始 argv 和分开 Sanitizer 工件的运行器。
+第十一批补齐 **`Arena[T]` / `Id[T]`、Id 比较与集合键、源文件模块、顶层 `pub`、跨文件诊断与全项目验证快照**；关闭默认只读 Guard 参数取得写权限的漏洞，建立独立 ASan/UBSan 和小规模 C 对照及缓存路径测量工作流。
 规范一致性：**129 项中通过 126、判错 0、不支持 3、未运行 0**。剩余 T-GR9/T-P3/T-R2 都要求锁定工具链当前无法链接的 ASan 运行时；其中要求的 TSan 路径单独执行，不冒充 ASan 通过。该统计只表示既有用例覆盖，不是完整 v1 完成比例。
 全部提交只在本地，**按用户决定暂不推远端**。
-本批全量 Debug/Release 各 **88 通过、0 失败、0 编译警告，1 个旧报告忽略**；91 个编译/运行 fixture，新组合程序六目标构建与格式检查通过。
+当前源码验证基准为 **`0a69e75`**。Debug、Release 各完成 15 组，均汇总 **113 通过、0 失败、1 个旧报告忽略**：Debug 完整驱动在最后的 verify 组超时，前 14 组 98 项成功，verify 单独重跑 15 项成功；Release 分四个有界批次完成，不能描述为两次单命令全量成功。独立 GCC 14.2 的当前 ASan+UBSan 58 项全部通过。P0 已扩到 95 个编译/运行 fixture；Arena、模块与线程组合已加入回归。对应证据与性能重跑状态见第 17 节。
 
 “可用”三批已完成；2026-11-20 用户让我自己定后续顺序并分批：**第四批**（速查卡缺口 + 第 6 项 + 小卡点）已完成，
 **第五批**（第二轮冷启动实验 + 按实验结果修速查卡和编译器）已完成：换模型（Sonnet）、不点名特性的新题，Yavo 10/10、Rust 对照 10/10
-（`experiments/coldstart-2026-11-20/README.md`）。**第六批**（P3 并发）已完成，分三次提交。**第七批**安全与验证收敛见第 12 节；**第八批**源码修复见第 13 节；**第九批**分配分析与验证工具见第 14 节；**第十批**功能补齐见第 15 节；第 10 节列出后续优先级。
+（`experiments/coldstart-2026-11-20/README.md`）。**第六批**（P3 并发）已完成，分三次提交。**第七批**安全与验证收敛见第 12 节；**第八批**源码修复见第 13 节；**第九批**分配分析与验证工具见第 14 节；**第十批**功能补齐见第 15 节；**第十一批**见第 17 节；第 10 节列出后续优先级。最近的 agent 实验仍是上述 10 道题，尚未测量 Arena、模块、fix/verify 等新功能的冷启动效果与任务成本。
 
 ## 2. 仓库与环境
 
@@ -33,7 +34,7 @@ cd /data1/workspace/github/workspace/yavo/compiler
 ```
 
 - C 工具链：固定版本 zig 0.17.1，在 `~/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig`（`toolchain.lock` 有各平台哈希）。
-- 这台机器**没有** python3、gcc、clang、valgrind，`tools/*.py` 跑不了。固定 Zig 的 UBSan 与 TSan 已用故意出错的探针验证；ASan 插桩缺少可链接运行时，ASan+UBSan 组合仍不支持。
+- 这台机器**没有** python3、gcc、clang、valgrind，Python 验证器需在独立环境运行。固定 Zig 的 UBSan 与 TSan 已用故意出错的探针验证；ASan 插桩缺少可链接运行时，ASan+UBSan 组合仍不支持。`tools/sanitizers/export.pl` 在服务器导出绑定源码哈希的 C，`tools/sanitizers/run.py` 在独立 Linux/GCC 14.2 环境执行 ASan+UBSan；它不替换生产工具链，也不改变自动 conformance 的 unsupported 分类。
 - 长任务用 mcp-3 `exec_command(wait:false, timeout:...)` 并写入独立日志和 `.exit` 文件；再用短命令读取。当前 `read_output` 的参数接口有问题，不依赖它。
 - 提交身份沿用已有提交：`git -c user.name="Yavo Development" -c user.email="yavo-dev@localhost" commit ...`。
 - 用户用中文交流；用户请我“帮你定”的事项我直接决定并在回复里写明理由。
@@ -60,15 +61,25 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 | `tests/verify.rs` | 分配三态、未知效应保留、隐式析构、工件与输入哈希、真实执行、超时、跨平台限制、工具链覆盖拒绝、输出截断、Sanitizer 负例能力门 |
 | `tests/collections.rs`、`src/closure_free.rs` | 保存比较器与析构的分配未知、绑定感知捕获的 5 个解析器回归；运行/拒绝 fixture 在 p0 目录 |
 | `tests/mutref_returns.rs` | 6 个集成测试：返回来源、索引/字段、转交/重绑定、12 类拒绝、Guard 边界、准确求值顺序、候选修复 |
+| `tests/arena.rs`、`tests/arena_runtime.c` | 6 个集成测试：身份/代际、所有权与借用、计数耗尽、8×4096 个线程身份、外来 Id 精确 panic、Guard 权限及分配效果 |
+| `tests/modules.rs` | 17 个集成测试：导出与逐文件导入、循环、同名类型、真实文件位置、项目快照/verify/allocations、Arena 与模块/线程组合 |
+| `tools/sanitizers/` | 独立源码导出与 ASan+UBSan 执行；能力负例先通过，再检查精确输出、退出状态、源码/工具链/工件哈希 |
+| `benchmarks/small-c-v1/` | 固定四项 C 对照、独立正确性参考、两次预热与七次计时；编译延迟与源码路径缓存诊断单独记录 |
 
 常用命令：`yavo check f.yv [--json] [--emit-c f.c]`、`yavo fix f.yv [--dry-run] [--json]`、`yavo run f.yv [--release] [--target T]`、`yavo build f.yv -o out [--release] [--target T] [--emit-c f.c]`。
 新增：`yavo allocations 函数名 --file f.yv --json`、`yavo verify f.yv [--target T] [--sanitize] [--reproducible] --json`；全部选项见 `compiler/README.md`。
+入口文件可通过 `use` 加载整个可达模块图；模块函数查询使用 `yavo allocations util/maths.double --file main.yv --json`。多文件 `fix` 当前明确报 `U0001` 且不写入。长套件可以分组执行，但必须逐组保留结果，不能把驱动超时描述为一次完整通过。
 
 ## 4. 已完成（按提交，最新在上）
 
 | 提交 | 内容 | 一致性通过数 |
 | --- | --- | --- |
-| 本文件所在提交 | Heap/Deque、拥有比较闭包、可变引用返回与候选修复；显式 discard/元组析构；故障注入/argv/允许结果/分开 Sanitizer 运行器 | 126 |
+| `0a69e75` | Arena 跨模块导出、移动、共享线程与 panic 位置组合回归；六目标构建 | 126 |
+| `2b994fb`、`78ee9d5` | 固定四项 C 性能套件及源码路径缓存探针；保存的是 `f5469dc` 的历史初始基线 | 126 |
+| `cd1e7ed` | 独立 ASan/UBSan 导出与执行工作流；保存实施前 52 项历史基线 | 126 |
+| `12531c3` | 用户源文件模块、顶层导出、逐文件名字/标准库作用域、跨文件位置、全项目不可变快照与验证 | 126 |
+| `bec0ed1` | Arena/Id、非回绕身份/代际、Id 集合键、所有权/分配分析；修复默认 Guard 参数越权 | 126 |
+| `f5469dc` | Heap/Deque、拥有比较闭包、可变引用返回与候选修复；显式 discard/元组析构；故障注入/argv/允许结果/分开 Sanitizer 运行器 | 126 |
 | `47df1ad` | 分配查询、真实验证报告、负例 Sanitizer 能力门、两次独立前端与空缓存构建；3 项新增通过，T-R2 明确不支持 | 122 |
 | `96999de` | `yavo fix`、可审查补丁、原子写回及修复验收；6 项新增通过，T-V3 从未运行转为明确不支持 | 119 |
 | `faac6ac` | 安全与验证收敛：线程借用、Send/Sync、资源克隆、I/O 锁、测试时限、实验复核、独立 sanitizer 记录 | 113 |
@@ -102,20 +113,20 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 
 ## 5. 架构速览
 
-流水线：`lexer.rs` → `parser.rs`（AST 在 `ast.rs`）→ `check.rs`（类型、所有权、借用，产出 HIR）→ `codegen.rs`（生成 C17）→ zig cc。
+流水线：`project.rs` 从入口加载/快照模块图，各文件经 `lexer.rs` → `parser.rs`（AST 在 `ast.rs`）独立解析，再链接到 `check.rs`（类型、所有权、借用，产出 HIR）→ `codegen.rs`（生成一个 C17 翻译单元）→ zig cc。
 
 - `types.rs`：`Ty` 是小的 `Copy` 枚举；结构体和枚举共用一张聚合表（`register_struct`/`register_enum`，`finish_agg` 按依赖顺序算出能否复制、是否要析构），`Vec[T]`、`[]T`、`&T`、`?T`、`T ! E` 等通过线程局部表登记（`vec_of`、`slice_of`、`ref_of`、`opt_of`、`res_of`）。`is_copy()` 决定移动还是复制，`carries_borrow()` 决定是否需要跟踪来源。
-- 移动：检查器把被移动的局部变量改写成 `HExprKind::Move`；生成代码时复制后把源**清零**。空值和被移走的值都是全零，所以析构永远安全，不需要运行时标志。
+- 移动：检查器把被移动的局部变量改写成 `HExprKind::Move`；生成代码时转移后把源**清零**。运行时容器析构接受移走后的零状态；用户 `Drop` 类型另有 `yv_live` 防止重复执行用户析构。零状态可安全清理不表示每种类型都拥有可构造的 Default，例如 Arena 没有 Default。
 - 析构：代码生成维护作用域栈，作用域结束和 `return`/`break`/`continue` 前逆序释放；只被借用的临时值（`f().len()`）在语句末释放。
 - 移动检查：`FnCx::moved` 按控制流合并（`if` 两支取并集，提前离开的分支不算），循环体再检查一遍。
 - 借用：每个局部变量有 `loans`（指向哪些变量，或临时值）。`Pre` 预扫描给语句编号并记录名字的使用位置和所在循环，`live_after` 据此判断视图是否还会被用到。循环里的使用会延长到循环结束。
 - 运行时 `runtime/yavo_rt.h`：输出缓冲、panic、整数检查、`yv_string`/`yv_vec`、视图函数、`YV_ALLOC_CHECK` 计数。 新增 `yv_out`（打印和 `format` 共用的输出目标）、文本查询、稳定归并排序、标准输入缓冲、文件读写（含 Windows 的 UTF-16 路径）、启动时的参数转换。
-- 枚举是 `{ tag; union { v0, v1, ... } u; }`，结果是 `{ ok; val; err; }`；全零都是合法值，所以“移走后清零”的做法照旧成立。`match` 统一走 `HPat` 模式树：检查器做可用性（usefulness）分析判断穷尽和不可达分支，代码生成成 `if`/`else if` 链；匹配拥有的临时值时，绑定拿走对应部分，其余部分在分支开头析构。只含 `some(x)`/`none`/`_` 的 `match` 仍走原来的 `match_opt`。
+- 枚举是 `{ tag; union { v0, v1, ... } u; }`，结果是 `{ ok; val; err; }`；清理路径接受移走后的零状态。`match` 统一走 `HPat` 模式树：检查器做可用性（usefulness）分析判断穷尽和不可达分支，代码生成成 `if`/`else if` 链；匹配拥有的临时值时，绑定拿走对应部分，其余部分在分支开头析构。只含 `some(x)`/`none`/`_` 的 `match` 仍走原来的 `match_opt`。
 - 表达式里的语句块（`catch` 块、`match` 分支块）用 `Gen::outer` 保存外层语句的临时值，跳转时一并释放；`try` 提前返回时，正在构造的结构体字段、向量元素、`sink` 实参通过 `hold`/`release` 记在临时值里，一并释放（V3、V6）。
 - 方法：解析器把方法改名为 `Type.m` 放进 `Program::fns`（`FnDecl::owner`），接收者是名为 `self` 的第一个参数；检查器 `method_call` 先查用户方法（`user_method`、`method_on_place`），统一走 `call_fn`。`inout self` 的接收者是 `HExprKind::InoutPlace(HPlace)`（可带字段路径）。C 函数名把 `.` 换成 `__`。
 - `Drop`：`types.rs` 的聚合表有 `user_drop`；带 `Drop` 的类型 C 结构里多一个 `uint8_t yv_live`，字面量置 1，析构帮助函数先看标志、清零、调用 `yv_fn_T__drop`，再析构字段。`FnCx::in_drop` 用于 `E0803`。
 - 元组：`Ty::Tuple(id)`（`tuple_of`/`tuple_elems`），C 里是成员 `f0`、`f1`…的结构；元素访问复用 `HExprKind::Field`（基类型是元组时下标就是元素号），所以移动、借用来源等规则和字段一致。
-- 闭包：`lift_closure` 用新的 `FnCx` 把闭包体检查成独立 `HFn`（名字 `closure.N`，追加在用户函数之后，下标 `n_fns + k`）；捕获变量由 `idents_expr` 找出，作为前置 `Param`（`FnCx::captures` 记录，用于错误信息）。`HProgram::tramps` 记录每个 `sortBy`/`Ord` 排序的适配函数。外层 `Pre` 只记录闭包里的名字使用，不给闭包体的语句编号。
+- 闭包：`lift_closure` 用新的 `FnCx` 把闭包体检查成独立 `HFn`（名字 `closure.N`，追加在用户函数之后，下标 `n_fns + k`）；捕获由 `closure_free::free_variables` 按词法绑定收集，借用回调的捕获作为前置 `Param`（`FnCx::captures` 记录，用于错误信息），Heap 保存比较器则生成拥有环境。`HProgram::tramps` 记录每个 `sortBy`/`Ord` 排序的适配函数。外层 `Pre` 只记录闭包里的名字使用，不给闭包体的语句编号。
 - 比较协议：`Checker::protocols`（按聚合 id 记 `cmp`/`eq` 函数），`protocol_compare` 生成 `Call` 加 `HExprKind::TagTest`；无载荷枚举用 `HExprKind::SameTag`。
 - `Box[T]`：`Ty::Box(id)`（`box_of`/`box_inner`），C 里是 `T *`（结构体类内容用 struct 标签写，所以 `?Box[Node]` 能出现在 `Node` 里），NULL 即被移走。
   位置路径里的 `BOX_STEP`（`usize::MAX`）表示“进入盒子”，`field_path` 统一处理字段链；读取用 `HExprKind::Unbox`（像字段一样不能移出）。
@@ -141,6 +152,8 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
   （`BOX_STEP` 复用；`Rc`/`Arc` 写入报 `E0101`）。`LocalState` 新增 `guard`（`with` 绑定，`store_loans` 据此报 `E0703`）和 `pinned`（scope 的隐藏局部，
   `check_not_borrowed` 视为活到 scope 结束）。`FnCx::thread_scopes` 是当前嵌套的 scope。接口能力用 `dyn_with_caps`/`dyn_base`/`dyn_caps`（别名 id 共享 C 类型和虚表，
   检查器里按 `dyn_base` 查表）。代码生成：`Gen::spawns` 收集参数结构和 `yv_run_N`，在函数体之前插入；`yv_jrec_K` 在辅助函数之后定义。
+- Arena：`Ty::Arena`/`Ty::Id` 共用元素类型登记；C 侧 `yv_arena` 持有槽位向量、free list 和进程内唯一 identity，`yv_id` 是 identity/slot/generation 三个整数。`ArenaRead`/`ArenaWrite` 保留存储与 payload 来源，生成按元素类型区分的槽位及析构帮助函数；身份由原子 CAS 分配，溢出不回绕。
+- 模块：入口目录固定导入根，文件独立解析后解析名字与可见性；AST/HIR 的文件表把内部偏移映射回原始文件。诊断与运行时 panic 共用不可变源码映射，验证报告保存完整源图和项目内容哈希；当前仍生成一个 C 文件，未引入分离编译或包依赖管理。
 
 ## 6. 约定
 
@@ -151,7 +164,7 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - 一个特性做完：补 `run_*` 和 `errors_*` 两类测试；跑全部测试（debug、release）；跑堆块检查；交叉编译抽查；刷新一致性基线；更新 `compiler/README.md` 对应小节和根 `README.md` 的数字；本地提交。
 - 已解锁的旧写法可能让旧测试失效（例如某行不再报 `U0001`），改测试时保持行列不变，换成仍然成立的用例。
 - `tools/expect_header.sh` 默认用 **debug** 版 `yavo`；只构建了 release 时要写 `YAVO=$PWD/target/release/yavo bash ../tools/expect_header.sh ...`，否则会拿旧二进制的输出生成头部。
-- 新错误码登记在 `yavo-tests/ERRORS.md` 的“前端通用错误”表里（本轮加了 `E0019`，注明日期）。
+- 历史批次曾在 `yavo-tests/ERRORS.md` 登记前端通用错误（如 `E0019`）；当前该测试包已冻结，新工作优先复用既有码，不回写历史快照或冻结输入来适配实现。
 
 ## 7. 已知限制与保守之处
 
@@ -160,8 +173,10 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
   对 `&inout` 绑定的字段再做 `if let`（`if let l = n.left`）得到只读绑定。`a ?? b` 把 `a` 整体消费。`?? return/break/continue` 只允许作为整个 `let` 初值或赋值右侧。
 - `&inout T`：局部变量可写类型并用 `&place` 构造，`*p` 读写；顶层返回携带 `of`，支持可变 Vec 元素。显式 `&inout` 参数、嵌套类型注解和任意下标位置的 `inout` 实参仍未开放（参数用 `inout`）；普通拥有字段保存借用本来违反逃逸规则。
   经 `*p` 存入带借用的值 `U0001`。借用按语句粒度，所以 `println("${q.len()} ${s}")`（`q` 指向 `s`）会多报 `E0102`，要拆成两句。
-- `Map`：键只支持整数、`bool`、`str`、`String`；`update` 的值类型限可复制且不带借用。
-- 导入：已实现的模块成员有 `os.exit`、`os.args`、`io.readAll`/`readLine`、`fs.readText`/`writeText`、`math.sqrt/pow/floor/ceil/round/pi/e`，其余报 `U0001`。`os.exit` 不运行析构。
+- `Map`/`Set`：键支持整数、`bool`、`str`、`String`、`Id[T]`，元组键仍未实现；`update` 的值类型限可复制且不带借用。
+- Arena：返回 `&inout Arena[str] of a` 的函数只给出来源上界，经该 descriptor 的 remove/getCopy 可能继续借用整个 Arena，因此提前丢弃容器会被 `E0102` 保守拒绝；直接本地 remove/getCopy 能只保留外部 payload 来源。准确放宽需区分存储与 payload 来源，不能按来源类型直接删除 loans。
+- 用户模块：已支持根目录相对路径、顶层 `pub`、逐文件作用域、循环导入和跨文件位置；公开类型的成员沿用既有可见性。尚无包依赖与程序锁文件、独立字段/方法隐私规则、分离编译；symlink 模块明确不支持，多文件 `fix` 报 `U0001` 且不写入。
+- 标准库导入：已实现成员有 `os.exit`、`os.args`、`io.readAll`/`readLine`、`fs.readText`/`writeText`、`math.sqrt/pow/floor/ceil/round/pi/e`，其余报 `U0001`；每个源文件须自行导入。`os.exit` 不运行析构。
 - 枚举和结果：不支持字面量模式（`.Num(0)`、`1 =>`）、模式里的命名字段、`if let` 带模式、带载荷枚举的比较、泛型枚举、结构体里的结果字段。
 - `Box`：没有 `.clone()`（写 `Box(b.clone())`）、不能打印或比较。
 - 接口：已支持 `+ Send`/`+ Sync`；接口作泛型约束只做检查（单态化后直接调用具体方法），没有接口继承、`Self`、默认方法；`struct S[T]: I` 报 `U0001`。
@@ -173,7 +188,7 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - 元组：不能给元素赋值、不能比较、不能整体打印、不能做 `Map` 键、没有元组模式。
 - 格式说明只支持浮点的 `:.N`；`String == str` 混比报 `E0001`（规范 K1 没定义跨类型比较，速查卡已写明；要不要放开是语言决定，留给用户）。
 - `Set`：没有集合运算（并、交）、没有 `Set` 字面量里的元素（`[1, 2]` 不能直接当 `Set`）。
-- 堆块检查发现不了释放后使用；第九批已证实项目服务器的 TSan，但仍缺少 ASan 运行时。第七批在另一 Linux 环境分开运行过 ASan/UBSan、TSan，详见第 12 节。Windows、macOS、aarch64 产物只验证了编译与文件格式。
+- 堆块检查发现不了释放后使用；项目服务器的固定 Zig 仍缺少 ASan 运行时。独立 ASan+UBSan 工作流已建立，当前源码运行结果见第 17 节；第七批的独立 ASan/UBSan、TSan 为历史证据，见第 12 节。Windows、macOS、aarch64 产物只验证了编译与文件格式。
 - 并发：`spawn` 只接受具名函数调用，可变借用（包括泛型元组中嵌套的 `&inout`）暂报 `U0001`；`Join` 不能写出类型名或移动（`U0001`）。规范已定义 inout 线程参数与公开 Join，属于实现缺口。
   容器递归克隆遇到不可克隆资源现已在检查期拒绝；用户 `Drop` 类型的自动逐字段克隆报 `U0001`，须显式构建资源或逐元素调用用户方法。
   当前接口集合的克隆检查遍历本编译单元所有具体实现；未来分离编译需要显式传递该保证。`&b` 不会把 `Rc[T]` 转成 `&T`（规范只对字段、方法、下标投影）。
@@ -188,7 +203,7 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 | 锁定 Zig 缺少可链接 ASan 运行时；ASan+UBSan 能力探针失败 | T-GR9、T-P3、T-R2：unsupported |
 | TSan | 有负例数据竞争检测证明；要求该配置的场景实际单独运行，不能替代 ASan |
 
-本批解锁 T-O5、T-V3、T-GR8 和 T-S3。运行器已接入 run-allowed、run-exit、故障注入和 sanitizer 分开构建；缺少平台或插桩能力会保留明确状态。
+第十批解锁 T-O5、T-V3、T-GR8 和 T-S3；第十一批新增 Arena/模块实现回归，冻结 129 项统计保持不变。运行器已接入 run-allowed、run-exit、故障注入和 sanitizer 分开构建；缺少平台或插桩能力会保留明确状态。
 
 ## 9. 计划表
 
@@ -203,7 +218,9 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 | 11 | `yavo fix`（只自动应用不改变语义的修复） | **已实现**；7 项冻结修复用例通过，T-V3 只给重检后的候选 |
 | 12 | P3：`scope`/`spawn`、channel、`Mutex`/`Arc`、`Send`/`Sync` | **已实现主要路径**（`907896c`、`baa1bad`）；T-P3 已尝试，受 ASan 能力限制；公开 Join / spawn inout 仍缺 |
 | 13 | `yavo verify` 与验证报告 | **已实现**；GA1/GA2/R1 通过，R2 受本机 ASan 能力限制 |
-| 冷启动实验 | 只给速查卡写 T01–T10 | **已做一轮**：10/10 一次通过（局限见实验 README） |
+| 14 | Arena/Id、Id 比较/集合键、资源与身份边界 | **已实现**；Arena 6 项集成测试、4 个运行 fixture 与模块/线程组合回归 |
+| 15 | 多文件源模块、顶层导出、全项目验证 | **已实现**；17 项模块测试；包依赖与程序锁文件仍待做 |
+| 冷启动实验 | 两轮各 10 道单文件任务 | **历史实验**：最近一轮最终 Yavo 10/10、首编 7/10；Rust 最终 10/10、首编 9/10。未重测本批功能 |
 | 待定 | 三平台 CI | 需要远端仓库，用户暂不推 |
 
 “可用”三批（2026-11-19 与用户约定）：
@@ -224,19 +241,19 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 
 ## 10. 下一个会话的第一步
 
-1. 先检查 Git 状态和最新提交，确认其他人是否有后续修改；环境见第 2 节。当前冻结用例基线为 **126 / 0 / 3 / 0**。分析或文档维护不需要重复全量测试；修改编译器后按具体风险加回归，提交前跑 Debug/Release。
-2. 下一阶段优先补 **Arena / Id** 和 **多文件/用户模块/本地及 Git 依赖**；现有 129 个用例不足以验收这两块，需要对应实现测试。
-3. 补用户测试入口、FFI/unsafe 与 audit；修复当前工具链的 ASan 能力，完成 Windows/macOS 真机执行。不得把 verifier 的部分检查通过改写成整体已验证。
-4. 并行开展少量同算法/同布局的 C 对照基准，以及使用最新 fix/verify 的第三轮隔离冷启动实验，覆盖并发和资源任务；成本假设成立前不直接投入 400 题正式评测。
-5. 语言决定仅保留尚未冻结的接口（如一般 callable 类型、Atomic 具体 API、String/str 混比）；公开 Join 与 spawn inout 已有契约，应按实现缺口处理。完整验收清单见第 16 节。
+1. 先检查 Git 状态和最新提交，确认其他人是否有后续修改；环境见第 2 节。当前冻结用例基线为 **126 / 0 / 3 / 0**，实施与证据见第 17 节。分析或文档维护不需要重复全量测试；代码修改按具体风险加回归，明确记录 Debug/Release 实际完成范围。
+2. 优先做 **Yavo 内容寻址构建缓存**：已有路径对照发现相同 C 字节换临时路径会失去大量缓存收益。先把完整源图、目标、选项、运行时、实际工具链及锁文件纳入缓存键，再补命中/失效/并发发布/损坏恢复回归；优化后用相同探针与基准复测，不靠关闭安全检查换结果。
+3. 在已实现源模块基础上补 **本地路径/Git 依赖与程序锁文件**，保持不可变验证快照、可见性和路径边界；另排用户测试块/`yavo test`、FFI/unsafe 与 audit、Windows/macOS 真机运行与 CI。固定工具链的 ASan 能力仍要解决，独立验证不能替代 verifier 的必需检查。
+4. 补一般闭包值/高阶参数/环境线程能力、公开 Join 与 spawn inout 等既定实现缺口；尚未冻结的 callable 类型、Atomic API、String/str 混比再作具体语言决定。完整清单见第 16 节。
+5. 扩展当前四项 C pilot 到 Arena/Map/字符串/分配/并发等工作负载，并开展使用最新 fix/verify、模块与资源功能的第三轮隔离 agent 实验；先验证通过率和每个成功任务成本，再决定正式 400 题评测投入。
 
 ## 11. P3 并发设计（第六批，2026-11-20；已按此实现）
 
-本节记录第六批设计：当时目标是解锁 `yavo-tests/concurrency/` 的 21 项，四个报告类当时未运行；报告已在第九批接入，当前状态见第 15 节。实现复用以下机制：
+本节记录第六批设计：当时目标是解锁 `yavo-tests/concurrency/` 的 21 项，四个报告类当时未运行；报告已在第九批接入，当前状态见第 17 节。实现复用以下机制：
 
 - **类型**：新增一个 `Ty::Sync(id)`，表里存 `(种类, 内层类型)`，种类为 `Rc`、`Arc`、`Mutex`、`Guard`、`Channel`、`Join`、`Scope`（隐藏）。都不可复制。
   `Rc`/`Arc`/`Mutex`/`Guard` 在 C 里都是 `T *`，指向“头部 + 值”分配块中的值（头部在值前面：锁、持有线程号、引用计数），
-  所以字段、方法、下标的投影可以直接复用 `Box` 的 `Unbox`/`BOX_STEP`（`Rc`/`Arc` 只读，写入 `E0101`；`Guard` 可写）。
+  所以字段、方法、下标的投影可以直接复用 `Box` 的 `Unbox`/`BOX_STEP`（`Rc`/`Arc` 只读，写入 `E0101`；局部独占 Guard 和显式 inout Guard 可写，默认借用参数只读，相关修复见第 17 节）。
   `Channel` 是 `yv_chan *`；`Join[T]` 是每个 `T` 一个 `yv_jrec_K *`（公共前缀 `yv_join_base` + `T ret`）。`Guard` 携带借用（`Guard[T] of self`）。
 - **`Send`/`Sync`**：在检查器里按结构推导（结构体、枚举看字段，递归类型遇环当作成立）；`Rc`、`Guard`、`Join` 都不是；
   `Arc[T]` 要求 `T` 同时 `Send`+`Sync`；`Mutex[T]`、`Channel[T]` 在 `T: Send` 时两者都是；`&T`、`[]T`、`str` 看 `T: Sync`；
@@ -307,7 +324,7 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - 一致性从 **119 / 0 / 2 / 8** 变为 **122 / 0 / 3 / 4**；新增 T-GA1/T-GA2/T-R1，T-R2 已实际执行并因 ASan 能力分类为不支持。旧 119 项全部保留。没有使用缺少负例门时出现的中间 123 结果更新基线。
 - 完整结果、源码/日志哈希、实际报告和负例证据见 `compiler/validation/verify-2026-11-21.json`。独立复核重新读取并校验了 21 处工件引用（12 个不同文件）及四个隔离缓存目录。原始日志和工件在 `compiler/target/verify-review/`。
 
-完整 P1/P3 验收仍受 Heap/保存闭包、可变借用返回、专用运行器、审计和平台执行限制；没有新增近 C 性能结论。
+上述为第九批历史状态；Heap/保存闭包、可变借用返回和运行器随后在第十批补齐，当前剩余验收见第 16 节。本节验证未包含近 C 性能测量。
 
 ## 15. 第十批：容器、可变借用返回与运行器补齐（2026-11-21）
 
@@ -334,19 +351,74 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 
 | 目标或工作项 | 已有能力 | 仍需完成的功能或证据 |
 | --- | --- | --- |
-| 无追踪式 GC | 确定性析构、显式 `Rc`/`Arc`、拥有值移动 | 后续容器、Arena、FFI 必须保持同一资源规则；自动循环回收不是 v1 目标 |
-| 近 C 性能 | C17 后端、release 优化、安全检查保留 | 同算法和数据布局的基准；安全检查开启时，运行时间比 C 的几何平均不超过 1.5，报告最差项；编译延迟 P50/P95 与产物大小需实测 |
+| 无追踪式 GC | 确定性析构、显式 `Rc`/`Arc`、拥有值移动、Arena 槽位与 Id | 后续 FFI、依赖及一般闭包继续保持同一资源规则；自动循环回收不是 v1 目标 |
+| 近 C 性能 | C17 后端、release 优化、安全检查保留；固定四项 C pilot、构建延迟/产物大小/路径缓存探针 | 扩展代表性工作负载；正式验收仍要求几何平均不超过 C 的 1.5 倍并报告最差项。当前四项不能证明语言总体目标，编译延迟还需实现缓存后复测 |
 | 跨平台编译与运行 | Linux/Windows/macOS 的 x86_64/aarch64 六目标交叉编译 | Windows/macOS 和其他架构实际运行与 CI；交叉编译通过不代替目标平台运行 |
-| Arena / Id | 规格已定义，尚无实现 | 存储、借用、身份校验、容量与身份计数溢出、析构及对抗测试 |
-| 多文件与包 | 单文件编译；标准库导入由编译器识别 | 用户模块、导出可见性、跨文件检查、本地路径/Git 依赖、程序锁文件；包注册中心不在 v1 范围 |
+| Arena / Id | 已实现存储、借用、身份/代际检查、容量/计数耗尽、Id 比较/集合键、析构、线程与模块组合 | 函数返回可变 Arena descriptor 的 payload 来源仍保守；继续扩展图工作负载性能与组合安全验证 |
+| 多文件与包 | 已实现源模块、顶层导出、循环导入、逐文件名字/标准库作用域、真实跨文件位置与全项目验证快照 | 本地路径/Git 依赖、程序锁文件、多文件修复、symlink 快照别名语义；包注册中心不在 v1 范围 |
 | 闭包与线程能力 | 库内不逃逸回调；Heap 保存拥有捕获；具名函数 `spawn` | 一般闭包值/高阶参数与字段存储接口；保存环境的线程能力表示；公开可移动 Join 和 `spawn inout` 的契约实现 |
-| 标准库剩余面 | String/Vec/Map/Set/Heap/Deque、基本 I/O、同步与数学 | `time.now`、`rand.int`；Map/Set 的 Id/元组键；元组 Default 等契约缺口；Atomic 的具体公开接口需要确定后实现 |
-| 用户测试与 agent 工具 | 编译器开发测试、`check`/`fix`/`allocations`/`verify` | 测试块与 `yavo test`，fmt/outline/type-at/explain/doc；verify 当前只有单程序执行与可选输出断言 |
+| 标准库剩余面 | String/Vec/Map/Set/Heap/Deque/Arena、Id 键、基本 I/O、同步与数学 | `time.now`、`rand.int`；Map/Set 元组键；元组 Default 等契约缺口；Atomic 的具体公开接口需要确定后实现 |
+| 用户测试与 agent 工具 | 编译器开发测试、`check`/`fix`/`allocations`/`verify`；除 fix 外已贯通模块图 | 测试块与 `yavo test`，fmt/outline/type-at/explain/doc；多文件 fix；verify 当前执行一个项目入口及可选输出断言 |
 | unsafe / C FFI / audit | 关键字和设计预留；verify 明确记录未审计 | 真实 FFI/unsafe 入口、依赖及边界审计；在 audit 未通过前，verify 不能宣称整体验证成功 |
-| 工具链分发与缓存 | 固定 Zig、下载校验；Zig 自身缓存 | 完整 Core/Full 分发、预编译运行时、Yavo 内容寻址缓存、依赖/单态化缓存、容量限制与 LRU 回收 |
+| 工具链分发与缓存 | 固定 Zig、下载校验；Zig 自身缓存；实测定位相同 C 内容因临时路径变化产生的缓存成本 | Yavo 内容寻址缓存与可靠失效/并发发布优先；完整 Core/Full 分发、预编译运行时、依赖/单态化缓存、容量限制与 LRU 回收 |
 | 诊断机器契约 | 主诊断、notes、结构化修复和哈希绑定 | 相关位置 secondary 与被抑制级联诊断标记等剩余契约 |
-| agent 冷启动与成本 | 第二轮 10 道单文件题，Yavo/Rust 均 10/10；Yavo 116096 token，Rust 89784 | 使用最新 fix/verify 与并发功能重做隔离上下文实验；正式验收需配对通过率差的一侧 95% 下界不低于 −5 个百分点、每个成功任务的总成本至少低 20%，并独立复现 |
+| agent 冷启动与成本 | 最近仍为第二轮 10 道单文件题：最终 Yavo/Rust 均 10/10，首编 7/10 与 9/10；token 为 116096 与 89784 | 使用最新 Arena/模块/fix/verify/并发功能重做隔离实验；正式验收需配对通过率差的一侧 95% 下界不低于 −5 个百分点、每个成功任务总成本至少低 20%，并独立复现 |
 
 正式评测按 `docs/plan.md` 的后续定量设计：60 个独立任务的 pilot，根据分歧率和功效调整，正式不少于 400 题；使用隐藏验收、多模型、每个任务×模型×语言的新上下文并保存原始成本。先做实现驱动的小规模验证，再投入正式评测。
 
 可变切片、两阶段借用、async/M:N 调度、panic 展开、自动循环回收、WASI/MSVC ABI、自有机器码后端、包注册中心和内建 HTTP/TLS 均属于已排除的 v1 范围，不应记作本批待补功能。
+
+## 17. 第十一批：Arena/Id、源模块与当前源码实测（2026-11-21）
+
+实现从 `f5469dc` 开始，当前验证源码冻结在 `0a69e75`。Arena、模块、验证工作流和组合回归分别见第 4 节提交；未修改冻结 `docs/`、历史快照或 129 项规范测试输入。本批没有开展新的 agent 冷启动实验。
+
+### 17.1 Arena 与资源/权限边界
+
+- `Arena[T]{}` 空构造不分配堆块；`add` 移入值并返回 `Id[T]`，`get`/`getMut` 借用，`getCopy` 要求 Copy，`remove -> ?T` 移出拥有值，`has`/`len` 查询存活状态。移动 Arena 保持 identity，清理只析构仍存活的元素，移出值恰好析构一次。
+- Id 包含进程内 Arena identity、slot、generation，不含指针。删除后旧 Id 返回 none，槽位复用不能复活旧 Id；外来 Id 在所有查询/移除入口报 `P-ARENA-ID`。identity 使用原子 CAS，identity/generation/capacity 达上限报 `P-CAPACITY`，两种构建模式均不回绕。
+- Id 是 Copy/Send/Sync，支持 Eq/Ord、排序、contains、Map/Set 键；这些能力不依赖虚标记 T。Arena 不可 Copy/clone，也无 Default；其 Send/Sync 递归取决于 T。支持 `Vec[Id[Node]]` 图、Box 投影、Guard 与 `Arc[Mutex[Arena[T]]]` 共享、线程移出/返回 Arena。
+- 补上默认只读 Guard 参数的权限门。原先函数体能修改容器，而调用方仍持共享元素引用；现在 direct/generic/field 方法、字段赋值、take、inout 转交和可变索引借用均不能越权，局部独占 Guard 和显式 inout 保持可写。独立审查复现了原漏洞并复核修复后的 `E0101`。
+- 专项覆盖 8×4096 个并发身份、伪造边界值、身份/代际/容量耗尽、foreign/stale Id、精确 panic 位置、借用拒绝、析构次序、部分构造与参数失败、线程退出、分配效果。返回可变 Arena descriptor 的来源上界仍采用第 7 节的保守处理。
+
+### 17.2 源模块与项目证据
+
+- 入口目录是项目根；`use maths` 加载 `maths.yv`，`use util/maths` 从根加载子目录，嵌套文件也按同一根解释路径。每个文件只加载一次；支持循环导入，当前没有模块级可执行初始化。
+- 顶层函数与类型用 `pub` 导出，调用按模块限定；类型重名时需 `a.Point`/`b.Point`。私有入口名字不能泄露给子模块，导入不隐式再导出，标准库导入也逐文件生效。公开类型的成员保持既有可见性。
+- 原文件先独立解析，再做链接/检查；注释、字符串或代码块不能跨文件闭合。载入图限制 128 层、1024 文件、16 MiB；路径不能逃出根，symlink 模块明确不支持。
+- `check/build/run/allocations/verify` 贯通可达模块图；诊断、分配查询字节范围和 panic 指向原文件。验证保存每个源文件、源清单与项目内容哈希，可复现构建使用完整不可变快照、独立前端和空 C 缓存。多文件 `fix` 明确 `U0001` 且不写入；本地/Git 依赖和程序锁文件仍未实现。
+- `tests/modules.rs` 17 项与 `tests/targets.rs` 6 项覆盖模块语义、源码变更/快照、工具入口及 Arena/模块/线程组合。六目标均构建并核对文件格式，实际执行仍受宿主平台限制。
+
+### 17.3 当前验证矩阵
+
+| 验证 | 当前结果与执行方式 | 证据范围 |
+| --- | --- | --- |
+| Debug | 15 组汇总 **113 passed / 0 failed / 1 ignored**；完整驱动最后 verify 组超时，已完成 14 组 98 项加独立 verify 15 项补齐 | 不声称一次全量命令成功 |
+| Release | 四个有界批次全部退出 0，15 组汇总 **113 passed / 0 failed / 1 ignored** | 使用预编译后的 Release 测试工件，逐批记录结果 |
+| P0 与堆块 | 95 个编译/运行 fixture；运行测试按 C `-O0`、`-O2` 及 `YAVO_ALLOC_CHECK` 验证 | 堆块平衡不能替代访问安全检测 |
+| 冻结 conformance | **126 / 0 / 3 / 0**；P1 **83/0/0/0**、P2 **20/0/1/0**、P3 **23/0/2/0** | T-GR9/T-P3/T-R2 仍受固定 Zig ASan 运行时缺失限制 |
+| 独立 ASan+UBSan | 当前 GCC 14.2 环境 **58 项通过、0 失败**；包括 4 个 Arena 与 2 个多文件入口 | 独立工具链/宿主，精确输出与退出码；LSan 关闭，正常退出另验堆块平衡 |
+| Arena+模块真实可复现构建 | main/graph 两文件完整快照，两次独立前端及各自空 local/global Zig 缓存：C 与二进制哈希分别相同，`reproducibility: passed` | 实际 stdout 为 `B\n1 1\n`；整体仍 `not_verified` / 退出 5，因为 audit `not_run`，本次未请求内置 sanitizer |
+| 当前四项 C 性能与路径缓存探针 | 运行时间 Yavo/C 几何平均 **0.949**、最差 **1.069**；热构建 P50 **242.282–249.000 ms**；固定 C 路径 **36.292 ms**、新路径 **225.525 ms** | 单 Linux 主机的四个人工选定微基准；不作为正式 near-C 验收，前后比值变化不等于编译器优化 |
+
+整批记录归档为 `compiler/validation/arena-modules-2026-11-21.json`，当前独立访问安全记录为 `compiler/validation/asan-arena-modules-2026-11-21.json`；真实模块可复现记录是 `compiler/validation/arena-modules-repro-2026-11-21.json`。复现对象为 `compiler/tests/modules/arena/main.yv` 及 graph 模块，两份 C SHA-256 均以 `cc2a8557` 开头，二进制哈希均以 `9e8faddd` 开头；完整哈希在报告内。
+
+ASan 的正常分配/释放、故意 use-after-free 与有符号溢出三项能力探针均通过；使用分开的 `-fsanitize=address` 与 `-fsanitize=undefined` 参数。独立复核重新计算 426 项工件引用哈希，未见差异，141 个核心/测试源码哈希与验证前冻结清单一致。原始 bundle 与 build/run/probe 日志归档在 `compiler/target/independent-sanitizers/`（`arena-modules-0a69e75.json` 与 `arena-modules-0a69e75-outputs.tar.gz`）。独立结果不改变锁定工具链或自动 conformance 的状态，也不能填补尚未实现的 audit。
+
+### 17.4 性能证据与下一步依据
+
+`benchmarks/small-c-v1/` 固定整数递推、Vec 变换、可变引用随机访问、Deque 环形队列四项；同算法/布局，运行输入防常量折叠，每次校验 checksum，另用独立 Rust 实现核对正确性。Yavo 的安全检查保留；两端使用相同固定 Zig、目标、优化与静态 musl，计时不启用 sanitizer/堆块计数，交替运行并固定 CPU，保留全部样本。范围不含 Arena、Map、字符串、一般分配、并发和其他平台。
+
+历史初始记录 `benchmarks/small-c-v1/results/f5469dc-baseline.json` 对应实施前源码：四项比值几何平均 **1.062**、最差 **1.240**；构建预热中位数约 217–261 ms。历史路径探针 `f5469dc-cache-path.json` 保持 C 内容与输出不变，稳定路径 **41.843 ms**、新路径 **211.961 ms**。这些是已提交的历史基线，不是 `0a69e75` 的最终测量。
+
+当前源码测量见 `benchmarks/small-c-v1/results/arena-modules.json`，每项两次预热、七次运行计时，所有输出与独立正确性参考匹配：
+
+| 微基准 | Yavo 运行中位数 ms | C 运行中位数 ms | Yavo / C | Yavo 热构建 P50 ms |
+| --- | ---: | ---: | ---: | ---: |
+| integer_recurrence | 70.249 | 74.598 | 0.942 | 242.282 |
+| vec_transform | 156.536 | 146.413 | 1.069 | 249.000 |
+| mutref_scatter | 101.606 | 132.334 | 0.768 | 247.232 |
+| deque_ring | 115.015 | 109.443 | 1.051 | 245.484 |
+
+四项几何平均 **0.949**，最差为 Vec **1.069**；它们是单 Linux 主机上的四个人工选定微基准，没有覆盖正式 near-C 验收。当前四个 C 对照二进制与历史基线逐字节相同，但随机访问 C 中位数从 **103.648 ms** 变为 **132.334 ms**，主机波动足以明显改变比值。本批未做性能优化，不能把历史 1.062 到当前 0.949 的变化归因于编译器加速。
+
+每项五次热构建的 P50 为 **242.282–249.000 ms**，仍高于 200 ms 目标；P95 只是五次样本的描述值。`arena-modules-cache-path.json` 保持 C 字节、运行时、选项、输出不变，稳定输入路径 **36.292 ms**，新输入路径 **225.525 ms**，相差 **6.214 倍**，输出与二进制哈希全部相同；两份报告共 439 个唯一工件引用哈希已独立复核。该对照定位了路径相关的 C 编译缓存成本，不是已实现的端到端缓存加速结果。当前实现仍每次创建新 C 临时路径，因此内容寻址缓存排在第 10 节第一项；新功能降低 agent 任务成本的假设仍需单独实验。

@@ -100,6 +100,49 @@ static binary sizes satisfy the numerical size threshold only for these programs
 C uses libc printf while Yavo uses its runtime formatter, so their size difference
 does not isolate an intrinsic language cost.
 
+### Current Arena/module compiler (2026-11-21)
+
+The final run used main commit **0a69e75aa9e6671858f5d167bffd27de451f6f5c**
+after the full Debug/Release and ASan builds finished. Its release compiler SHA-256
+is 1688b0bc62552dc3718c55641e0c2e1a687e779e2f137ce7eee3fa32276abc33.
+Compiler source inputs and the benchmark harness stayed unchanged during the run.
+Both the performance command and the separate cache diagnostic completed with
+exit 0 within their 115-second command limits; no timed attempt was discarded.
+
+| Case | Yavo median ms | C median ms | Yavo / C |
+| --- | ---: | ---: | ---: |
+| integer_recurrence | 70.249 | 74.598 | 0.942 |
+| vec_transform | 156.536 | 146.413 | 1.069 |
+| mutref_scatter | 101.606 | 132.334 | 0.768 |
+| deque_ring | 115.015 | 109.443 | 1.051 |
+
+The geometric mean is **0.949x**; the worst ratio is **1.069x** for vec_transform.
+All measured outputs and all small correctness cases matched the independent
+reference. The four workloads remain single-file programs: they validate the
+current compiler on the original suite, not Arena operation costs or multi-file
+project compilation performance. Reports are results/arena-modules.json and
+results/arena-modules-cache-path.json; their 439 unique referenced files were
+independently rehashed with zero mismatches. The hash, baseline and driver-exit
+review is recorded in results/arena-modules-review.json.
+
+| Case | Yavo warm build P50 / P95 ms | C warm build P50 / P95 ms | Stripped Yavo / C bytes |
+| --- | ---: | ---: | ---: |
+| integer_recurrence | 242.282 / 264.825 | 38.333 / 44.099 | 16896 / 21576 |
+| vec_transform | 249.000 / 271.954 | 43.588 / 53.755 | 17936 / 24200 |
+| mutref_scatter | 247.232 / 293.445 | 36.085 / 42.183 | 18032 / 24120 |
+| deque_ring | 245.484 / 260.387 | 40.241 / 40.749 | 18192 / 24424 |
+
+P95 here is the nearest-rank maximum of five warm-build samples. All four Yavo
+warm-build medians remain above 200 ms. The small stripped programs remain below
+250 KB; cold/debug compilation and broader program sizes remain unmeasured.
+
+The change from the initial geometric mean of 1.062x to 0.949x is not evidence of
+a compiler speedup. All four C executables are byte-identical to the initial
+baseline, yet the C scatter median changed from 103.648 to 132.334 ms; its current
+samples span 107.048 to 156.288 ms. The shared VM introduces material run-to-run
+variation. This four-case pilot establishes reproducible correctness checks and
+descriptive timing, not formal near-C acceptance or statistical superiority.
+
 ### Source-path cache diagnostic
 
 Run after the main suite, selecting its report:
@@ -114,3 +157,11 @@ fresh input path (5.066x); see results/f5469dc-cache-path.json. The current comp
 uses a per-process temporary C directory. This contrast identifies a substantial
 path-dependent cache cost; it does not measure every source of frontend or build
 overhead. No compiler/cache optimization was made for this experiment.
+
+For the final 0a69e75 compiler, the same contrast measured **36.292 ms** with a
+stable C path and **225.525 ms** with a fresh path (**6.214x**); all eleven resulting
+executables had identical hashes and output. The repeated controlled contrast,
+together with 242-249 ms Yavo warm-build medians, supports implementing a stable
+content-addressed intermediate/build cache next. A correct cache must include
+source/runtime/toolchain/target/flag identities and concurrent-build isolation;
+reusing a fixed filename without those keys would not be sufficient.

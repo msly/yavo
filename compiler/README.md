@@ -6,6 +6,88 @@ The implementation includes ownership, views, containers, generics, interfaces a
 scoped OS threads. Native validation is on Linux x86-64; complete phase acceptance
 still requires the remaining tools, features and real-platform execution.
 
+## Current validation (2026-11-21)
+
+The Arena/module code snapshot is `0a69e75`; all 141 compiler/runtime/test input
+hashes were rechecked after validation. Debug and Release each complete 15 Cargo
+test groups: **113 passed, 0 failed, 1 ignored**, with no compiler warnings.
+The initial Debug driver hit the command lifetime limit during its last group;
+its 14 completed groups contribute 98 passes, and a separately completed verify
+group contributes 15. Release ran in four bounded batches after a successful
+prebuild. Partial results from the interrupted group are not counted.
+
+The suites include 95 P0 fixture files under each C optimization mode, 17 module
+tests, six Arena tests and six target tests. Cargo function totals and embedded
+fixture totals are different counting units. Frozen conformance remains
+**126 pass / 0 wrong / 3 unsupported / 0 not_run** in both modes. These three
+unsupported cases still require an ASan runtime unavailable in the pinned Zig.
+
+Independent GCC 14.2 ASan+UBSan validation passes **58/58** generated programs,
+including four Arena fixtures and two module entry programs. A clean probe and
+intentional address/overflow faults verify actual sanitizer operation; 426 local
+artifact references were independently rehashed. LeakSanitizer is disabled in
+this ptrace-compatible profile; normal exits also require balanced Yavo heap
+blocks. This independent profile does not change pinned-toolchain conformance.
+
+The Arena/module/thread program also passes exact-output execution and two
+independent source-to-binary builds using the complete two-file source snapshot
+and separate empty Zig caches. Generated C and binary hashes agree between the
+two builds. Overall `verify` remains `not_verified` (exit 5), because its required
+audit is still `not_run`. Six target formats/architectures compile; execution is
+validated only on available Linux x86-64 hosts.
+
+Four paired small-C workloads give a current runtime ratio geometric mean of
+0.949 and a worst ratio of 1.069, with safety checks retained. Hot Yavo builds have
+P50 of about 242–249 ms, above the proposed 200 ms target. Stable versus fresh C
+input paths take 36.292 versus 225.525 ms in the cache probe. This bounded workload
+set and a shared host do not establish the formal v1 performance gate.
+
+Records: [batch validation](validation/arena-modules-2026-11-21.json),
+[independent sanitizers](validation/asan-arena-modules-2026-11-21.json),
+[module reproducibility](validation/arena-modules-repro-2026-11-21.json), and
+[small-C benchmark method/results](../benchmarks/small-c-v1/README.md).
+
+## Arena and typed IDs (2026-11-21)
+
+`Arena[T]{}` creates a distinct process-wide identity without allocating heap
+storage. `add(value)` moves a value into a slot and returns a copyable `Id[T]`.
+`get` returns `?&T`, `getMut` returns `?&inout T`, and `getCopy` requires a
+Copy element and returns `?T`. `remove` transfers an owned `?T` out of the
+Arena; `has` and `len` query membership and the live count.
+
+An Id contains Arena identity, slot and generation. Deleting an element makes
+its old IDs return none; reusing the slot cannot revive those IDs. An ID from
+another Arena causes P-ARENA-ID at every lookup/removal entry point. Atomic
+identity allocation never wraps; identity, generation and capacity exhaustion
+are P-CAPACITY in both build modes. IDs remain usable as pure values after their
+Arena is dropped, but do not keep storage alive or provide pointers.
+
+Ids support equality, ordering, sorting, contains, and Map/Set keys. Their
+Copy/Send/Sync capabilities do not depend on the phantom element type. Arena is
+not Copy or cloneable; its Send/Sync capabilities follow the stored element.
+Arena has no Default, so default-based take is rejected. Moving an Arena preserves
+its identity and ownership. Live stored elements and removed values are released
+exactly once. Recursive graphs use fields such as `Vec[Id[Node]]`.
+
+Box and Guard project to an Arena, including `Arc[Mutex[Arena[T]]]` across scoped
+threads. This work also closes an existing Guard permission gap: a default
+read-only Guard parameter cannot obtain mutation permission through methods,
+fields, take, inout forwarding or mutable-reference returns. Local guards and
+explicit inout parameters retain exclusive access.
+
+Allocation analysis treats empty construction and lookups as intrinsically
+no-allocation, insertion as possibly allocating, and includes element destruction
+and removed-value cleanup. A remaining conservative case is a borrowed payload
+removed through a function-returned `&inout Arena[str]`: the declared `of`
+upper bound may keep the whole Arena borrowed. Direct local removal distinguishes
+its external payload sources; loosening the returned-reference case requires a
+more precise source representation.
+
+Regressions: `tests/arena.rs`, `tests/arena_runtime.c`, `tests/p0/run_arena*.yv`,
+and `tests/modules/arena/main.yv`. They include identity uniqueness across threads,
+foreign/stale IDs, counter exhaustion, ownership, permission rejections and
+Arena/module/thread combinations. The graph programs also build for all six targets.
+
 ## Source modules (2026-11-21)
 
 The entry file's directory is the project root. A source file is one module:
@@ -124,8 +206,9 @@ builds expose no allocation-failure switch. Sanitizer cases require demonstrated
 defect detection, actual artifact hashes and complete runtime output; an unavailable
 ASan profile does not prevent checking the requested TSan profile for failures.
 
-Validation: Debug and Release each pass **88 tests**, with zero failures or compiler
-warnings and one legacy report ignored. There are 91 compile/run fixtures; runnable
+At the earlier collections/mutable-return batch, Debug and Release each passed
+**88 tests**, with zero failures or compiler warnings and one legacy report ignored.
+That batch had 91 compile/run fixtures; runnable
 fixtures use both C optimization modes and heap-block checks. The mixed collection
 and mutable-return program compiles for all six targets and executes on the Linux
 x86-64 host. Frozen conformance is **126 / 0 / 3 / 0**. The final receipt independently
@@ -324,14 +407,21 @@ It is superseded by `tests/conformance.rs` (below), which makes that distinction
 | `W0002` | Warning: a `match` arm that can never run (added to `ERRORS.md` on 2026-11-18). |
 | `W0003` | Warning: an unused import (added to `ERRORS.md` on 2026-11-19). |
 
-Valid v0.5 syntax must never be reported as a syntax error. `tests/p0/errors_unsupported.yv`
-locks this in for non-`std` imports, slice types, `*p`, closures, `try`, slices, `.Case`,
-`catch`, tuple literals, `match` patterns other than `some(x)`/`none`/`_` (the parser resumes
-after the `match`) and module-qualified types (`fs.Error`), and the conformance test counts any
-`E0020` on a spec case as wrong (slices
-`x[a..b]`, tuple fields `t.0` and bounds `T + Send` are reported as `U0001`).
+Valid v0.5 syntax must not be misclassified as a syntax error merely because its
+semantics are unimplemented. `tests/p0/errors_unsupported.yv` retains regressions
+from earlier stages; implemented constructs now undergo ordinary semantic checks.
+`U0001` remains for explicitly unsupported forms, including general closure values
+and nested mutable-reference type syntax. The conformance runner treats an
+unexpected `E0020` on a spec case as wrong.
 
-## Structs (first P1 feature)
+## Historical implementation notes
+
+These feature notes preserve the order of implementation, including the original
+fixture counts and then-open items. Current coverage and remaining work are in
+the sections above and [HANDOFF.md](../HANDOFF.md); the conformance and target
+sections following these notes are maintained separately.
+
+### Structs (first P1 feature)
 
 Supported: `struct` declarations whose fields are integers, `bool` or other structs; struct
 literals `Name{a: 1, b: 2}` (every field given exactly once, values evaluated in the order
@@ -361,7 +451,7 @@ literal leaves them out. Tests: `tests/p0/run_fields.yv`.
 Effect on the spec cases: none changed status. Every case that uses `struct` is also blocked
 by generic types, imports or `String`; those are the next features to implement.
 
-## Ownership: `String` and `Vec[T]`
+### Ownership: `String` and `Vec[T]`
 
 Supported: `String`; `Vec[T]` for integer, `bool`, `str`, `String`, `Vec` and struct elements;
 vector literals `[a, b]` (`[]` needs a type annotation); `s.len()`, `s.clone()`, `s.push(text)`,
@@ -396,7 +486,7 @@ zeroing made the program fail (the C library's own double-free check fired first
 detect use-after-free. AddressSanitizer is not available here: zig ships no ASan runtime, and
 the machine has no gcc, clang or valgrind; UBSan does work.
 
-## Views: `str` borrowed from a `String`
+### Views: `str` borrowed from a `String`
 
 Supported: passing a `String` to a `str` parameter borrows it for the call (the whitelist's
 only automatic borrow); `s.trim()`, `s.fields()`, `s.lines()` return views into `s` (no
@@ -420,7 +510,7 @@ into the arguments named by the callee's `of`. Tests: `tests/p0/run_views.yv`,
 `tests/p0/errors_views.yv` (10 diagnostics, including the loop case and a cloned `Vec[str]`).
 Three older P0 fixtures that returned `str` without `of` now say `of static` / `of name`.
 
-## References, iteration and `inout`
+### References, iteration and `inout`
 
 Supported:
 
@@ -444,7 +534,7 @@ moving out of a reference is `E0401`; iterating views of a temporary is `E0305`.
 variables" below. `for x in &v`, `for i, x in v` and `getMut` are covered in the Map section.
 Tests: `tests/p0/run_refs.yv`, `tests/p0/errors_refs.yv` (9 diagnostics).
 
-## Optional values
+### Optional values
 
 Supported (semantic table C5, C7, V9; stdlib contract Â§1):
 
@@ -493,7 +583,7 @@ Tests: `tests/p0/run_optionals.yv` (28 lines of output, also run under the heap-
 once also built with UBSan, which was clean) and `tests/p0/errors_optionals.yv`
 (18 errors, 1 warning).
 
-## Imports
+### Imports
 
 `use std/m` and `use std/{a, b}` import the modules `io`, `fs`, `os`, `math`, `time`, `rand`,
 `collections` and `sync` (stdlib contract Â§1). An unknown module is `E0010`, a module imported
@@ -507,12 +597,12 @@ needs no `return` (V8). Every other module function, constant and type (`fs.list
 using one still marks the import as used. Tests: `tests/p0/run_imports.yv`; the import diagnostics are in
 `tests/p0/errors_maps.yv`.
 
-## Maps and `&inout` references
+### Maps and `&inout` references
 
 Supported (stdlib contract Â§3; semantic table A1, A2, A3, A5, C4, C6):
 
-- `Map[K, V]` with integer, `bool`, `str` or `String` keys (other keys are `E0501`) and any
-  value type; `[:]` and `[k: v, ...]` literals (`[:]` needs a type from context).
+- `Map[K, V]` with integer, `bool`, `str`, `String` or `Id[T]` keys (other keys are
+  `E0501`) and any value type; `[:]` and `[k: v, ...]` literals (`[:]` needs a type from context).
 - `m.get(k)` (`?&V`, borrowing the map), `m.getCopy(k)` (`?V`, `V` must be copyable, else
   `E0404`), `m.has(k)`, `m.len()`, `m.clone()`; on a writable map `m.set(k, v)` (moves key and
   value; an existing key keeps its entry and position, the new key and the old value are
@@ -538,13 +628,14 @@ Code generation: the runtime keeps entries in a vector in insertion order and an
 open-addressing table of entry indexes (kept at most half full, so probing ends); a removed
 entry stays, not live, until the next rebuild compacts the vector. Hashing is splitmix64 for
 integers and FNV-1a over the UTF-8 bytes for `str` and `String` keys, so both kinds of lookup
-key agree. Each map type gets generated find/insert/remove/drop/clone functions. `&inout T` is
+key agree. Id keys incorporate Arena identity, slot and generation in hashing and
+equality. Each map type gets generated find/insert/remove/drop/clone functions. `&inout T` is
 a `T *` and owns nothing, so it is never dropped (types now distinguish "not copyable" from
 "needs a drop"). Tests: `tests/p0/run_maps.yv` (21 lines, including 100 inserts and 50 removals
 that force rebuilds; heap-block check in debug and release, and UBSan once, all clean) and
 `tests/p0/errors_maps.yv` (22 errors, 1 warning, together with the import checks).
 
-## Enums, results and `match`
+### Enums, results and `match`
 
 Supported (plan item 4; cheat sheet Â§2âÂ§3; semantic table V3, V8, V12, C7):
 
@@ -595,7 +686,7 @@ listed, so a jump out of it drops them too. Tests: `tests/p0/run_enums.yv`,
 `tests/p0/run_results.yv` (both also under the heap-block check, which exercises the early
 exits) and `tests/p0/errors_enums.yv` (16 errors, 1 warning).
 
-## Standard library: text, sequences, I/O and arguments
+### Standard library: text, sequences, I/O and arguments
 
 Supported (cheat sheet Â§5; stdlib contract Â§2, Â§4, Â§5; semantic table S5, M5):
 
@@ -630,7 +721,7 @@ values that own nothing. Tests: `tests/p0/run_stdlib.yv`, `tests/p0/errors_stdli
 (11 errors, 1 warning), and `tests/stdlib_io.rs`, which builds programs with the heap-block
 check and runs them with stdin, arguments (including a non-UTF-8 one) and a scratch directory.
 
-## Methods
+### Methods
 
 Supported (cheat sheet Â§2; semantic table O1, O2, V1):
 
@@ -651,7 +742,7 @@ Code generation: a method is an ordinary C function `yv_fn_Type__name` whose fir
 is the receiver (by value for `self`/`sink self`, a pointer for `inout self`). Tests:
 `tests/p0/run_methods.yv`, `tests/p0/errors_methods.yv` (11 errors).
 
-## User destructors (`Drop`)
+### User destructors (`Drop`)
 
 Supported (cheat sheet Â§5 "ææ"; semantic table V4, V6, V10, V11):
 
@@ -674,7 +765,7 @@ fields. Tests: `tests/p0/run_drop.yv` (scope order, sink, `let _`, vectors, opti
 with `Drop`, a field taken inside `drop`), `tests/p0/errors_drop.yv` (8 errors, 2 warnings);
 spec cases T-D1, T-GR1, T-GR2 and T-G10âT-G13 pass.
 
-## Tuples
+### Tuples
 
 Supported (cheat sheet Â§2; semantic table E2, V10, rule 8):
 
@@ -695,7 +786,7 @@ its first use, with drop and clone helpers when needed. The lexer never reads a 
 `.` as a float, so `t.0.1` is two element accesses. Tests: `tests/p0/run_tuples.yv`,
 `tests/p0/errors_tuples.yv` (7 errors).
 
-## Closures for `sortBy` and `update`
+### Closures for `sortBy` and `update`
 
 Supported (cheat sheet Â§5; semantic table O5, K3, V8; stdlib contract Â§3, Â§4):
 
@@ -724,7 +815,7 @@ now a wrapper around it). `total += n` with `n: &inout int` now reads `n` (C4), 
 needed. Tests: `tests/p0/run_closures.yv`, `tests/p0/errors_closures.yv` (11 errors, 3
 warnings).
 
-## Comparison protocols (`Eq`, `Ord`, `Ordering`)
+### Comparison protocols (`Eq`, `Ord`, `Ordering`)
 
 Supported (cheat sheet Â§2; semantic table K1, K2):
 
@@ -745,7 +836,7 @@ Code generation: a comparison is `yv_fn_T__cmp(a, &b).tag` tested against the `O
 tag (Less 0, Equal 1, Greater 2). Tests: `tests/p0/run_protocols.yv`,
 `tests/p0/errors_protocols.yv` (7 errors, 2 warnings); spec cases T-G25 and T-G26 pass.
 
-## `Box[T]`
+### `Box[T]`
 
 Supported (cheat sheet Â§4 rule 9; semantic table A4, A7, C5, C8, E1, E2; stdlib contract Â§1):
 
@@ -778,7 +869,7 @@ in the runtime count blocks for the heap check. Place paths use `BOX_STEP` for "
 box" (`(*p)` in C). `&Box[T]` is `T * const *`. Tests: `tests/p0/run_box.yv`,
 `tests/p0/errors_box.yv` (7 errors, 1 warning).
 
-## Interfaces (`interface`, `struct T: I`, `Box[I]`)
+### Interfaces (`interface`, `struct T: I`, `Box[I]`)
 
 Supported (cheat sheet Â§2; semantic table O1, P2; section 8 whitelist):
 
@@ -808,7 +899,7 @@ plus `yv_vtd_K`/`yv_vtc_K` (drop and free the block, clone into a new block) and
 `static const yv_vt_I yv_vt_K`. Tests: `tests/p0/run_interfaces.yv`,
 `tests/p0/errors_interfaces.yv` (9 errors, 1 warning).
 
-## Generics (functions and structs)
+### Generics (functions and structs)
 
 Supported (cheat sheet Â§2; semantic table O1, E2, K1; plan item 10):
 
@@ -842,7 +933,7 @@ functions; struct instances made after `collect_structs` are finished at once an
 the ordered structs. C names of instances are made C-safe (`Stack[String]` â `yv_s_Stack_String_`).
 Tests: `tests/p0/run_generics.yv`, `tests/p0/errors_generics.yv` (9 errors).
 
-## Floating point (`f64`, `f32`)
+### Floating point (`f64`, `f32`)
 
 Supported (cheat sheet Â§2, Â§6; semantic table Â§7, N2, K1; stdlib contract Â§4):
 
@@ -872,7 +963,7 @@ fast-math). The runtime gains `yv_out_f64`/`yv_out_f32` (snprintf/strtod), `yv_f
 Tests: `tests/p0/run_floats.yv`, `tests/p0/errors_floats.yv` (10 errors, 1 warning),
 `tests/p0/panic_float_convert.yv`.
 
-## Slices `x[a..b]`, `toVec`, `reserve`
+### Slices `x[a..b]`, `toVec`, `reserve`
 
 Supported (semantic table S3, A2, A3, C3, O6; stdlib contract Â§2):
 
@@ -894,7 +985,7 @@ Code generation: runtime `yv_vec_slice` / `yv_str_slice` build descriptors witho
 `tests/p0/run_slices.yv`, `tests/p0/errors_slices.yv` (4 errors, 1 warning),
 `tests/p0/panic_slice_bounds.yv`, `tests/p0/panic_str_boundary.yv`.
 
-## Dereference and `&inout T` variables
+### Dereference and `&inout T` variables
 
 Supported (semantic table A1, A2, A3, A4, A6, A7):
 
@@ -929,7 +1020,7 @@ target is written as `(*p)`. Tests: `tests/p0/run_deref.yv` (heap-block check cl
 in `tests/p0/errors_unsupported.yv` were replaced with other parse-time `U0001` cases at the
 same lines and columns.
 
-## Sets, `${x:.N}` and string literals in `${...}`
+### Sets, `${x:.N}` and string literals in `${...}`
 
 Added after the second cold-start experiment found that the cheat sheet teaches them:
 
@@ -950,7 +1041,7 @@ Tests: `tests/p0/run_sets.yv`, `tests/p0/run_format_fixed.yv` (heap-block check 
 `tests/p0/errors_sets_format.yv` (8 errors), `tests/p0/errors_interp.yv` (now a bad escape inside a
 nested string: one error, no cascade).
 
-## Concurrency, part 1: `Rc`, `Arc`, `Mutex`, `Guard`, `with`
+### Concurrency, part 1: `Rc`, `Arc`, `Mutex`, `Guard`, `with`
 
 Supported (semantic table P4, P6, P8; stdlib contract Â§6):
 
@@ -971,7 +1062,7 @@ Runtime: pthread or Win32 locks and condition variables, per-thread ids, atomic 
 counting, and an output lock taken by print statements once a thread has started. Tests:
 `tests/p0/run_sync_local.yv` (heap-block check clean), `tests/p0/errors_sync_local.yv` (6 errors).
 
-## Concurrency, part 2: `scope`, `spawn`, `Send`/`Sync`, channels
+### Concurrency, part 2: `scope`, `spawn`, `Send`/`Sync`, channels
 
 Supported (semantic table P1–P3, P5, P7, P8; stdlib contract §6):
 
@@ -1003,7 +1094,7 @@ nested scopes, early `return`), `tests/p0/run_channels.yv` (producer and consume
 both heap-block checked; `tests/p0/errors_threads.yv` (6), `tests/p0/errors_channels.yv` (5),
 `tests/p0/panic_channel_cap.yv`. Windows and macOS builds compile but were not run.
 
-## `String.fromUtf8` and `Utf8Error`
+### `String.fromUtf8` and `Utf8Error`
 
 `String.fromUtf8(bytes)` (stdlib contract Â§5) consumes a `Vec[byte]` and returns
 `String ! Utf8Error`; `Utf8Error { offset: int }` is in the prelude and cannot be redefined

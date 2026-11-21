@@ -1,0 +1,492 @@
+{
+  "artifact_dir": "/data1/workspace/github/workspace/yavo/compiler/target/arena-modules-review/project-verify/run-1040107-1795240707196108335-0",
+  "checks": [
+    {
+      "artifact": "sha256:68035848084eedd8622cedb33215211fd730fa81c13d21015bddc8deef935952",
+      "artifact_path": "/data1/workspace/github/workspace/yavo/compiler/target/arena-modules-review/project-verify/run-1040107-1795240707196108335-0/project-manifest.json",
+      "id": "front_end",
+      "name": "front_end",
+      "ran_on": "x86_64-linux-gnu",
+      "reason": "lexing, parsing and implemented semantic checks passed",
+      "required": true,
+      "status": "passed",
+      "target": "x86_64-linux-musl"
+    },
+    {
+      "artifact": "sha256:58959f01285c05a74276f09327b551d42ed6006bf325a78dc661a024e314987b",
+      "artifact_path": "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+      "capture_limit_bytes": 4194304,
+      "command": {
+        "args": [
+          "version"
+        ],
+        "program": "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig"
+      },
+      "duration_ms": 10,
+      "exit_code": 0,
+      "id": "toolchain",
+      "name": "toolchain",
+      "ran_on": "x86_64-linux-gnu",
+      "reason": "pinned compiler path and actual version match; executable and lock were hashed",
+      "required": true,
+      "signal": null,
+      "status": "passed",
+      "stderr": "",
+      "stderr_bytes": 0,
+      "stderr_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_truncated": false,
+      "stderr_valid_utf8": true,
+      "stdout": "0.17.1\n",
+      "stdout_bytes": 7,
+      "stdout_sha256": "sha256:cd81ec19767ffb807bada6d48578a18d77a29adb394e09e9cdfcd5ea9eebb6a2",
+      "stdout_truncated": false,
+      "stdout_valid_utf8": true,
+      "success": true,
+      "target": "x86_64-linux-gnu",
+      "text_encoding": "utf-8-lossy",
+      "timed_out": false
+    },
+    {
+      "allocation_check": false,
+      "artifact": "sha256:117c7a7b1651083c661de4d9093c0c84a035846417b1e6ef291bfa709614c511",
+      "artifact_path": "/data1/workspace/github/workspace/yavo/compiler/target/arena-modules-review/project-verify/run-1040107-1795240707196108335-0/program",
+      "cache": {
+        "bypassed": false,
+        "mode": "pinned_toolchain_default"
+      },
+      "capture_limit_bytes": 4194304,
+      "command": {
+        "args": [
+          "cc",
+          "-std=c17",
+          "-fno-strict-aliasing",
+          "-target",
+          "x86_64-linux-musl",
+          "-O2",
+          "-s",
+          "-I",
+          "/data1/workspace/github/workspace/yavo/compiler/target/arena-modules-review/project-verify/run-1040107-1795240707196108335-0",
+          "/data1/workspace/github/workspace/yavo/compiler/target/arena-modules-review/project-verify/run-1040107-1795240707196108335-0/main.c",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/arena-modules-review/project-verify/run-1040107-1795240707196108335-0/program"
+        ],
+        "program": "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig"
+      },
+      "duration_ms": 256,
+      "exit_code": 0,
+      "id": "build",
+      "name": "build",
+      "ran_on": "x86_64-linux-gnu",
+      "reason": "pinned C compiler produced the requested artifact",
+      "required": true,
+      "signal": null,
+      "status": "passed",
+      "stderr": "",
+      "stderr_bytes": 0,
+      "stderr_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_truncated": false,
+      "stderr_valid_utf8": true,
+      "stdout": "",
+      "stdout_bytes": 0,
+      "stdout_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_truncated": false,
+      "stdout_valid_utf8": true,
+      "success": true,
+      "target": "x86_64-linux-musl",
+      "text_encoding": "utf-8-lossy",
+      "timed_out": false
+    },
+    {
+      "artifact": "sha256:117c7a7b1651083c661de4d9093c0c84a035846417b1e6ef291bfa709614c511",
+      "artifact_path": "/data1/workspace/github/workspace/yavo/compiler/target/arena-modules-review/project-verify/run-1040107-1795240707196108335-0/program",
+      "artifact_unchanged": true,
+      "capture_limit_bytes": 4194304,
+      "command": {
+        "args": [],
+        "program": "/data1/workspace/github/workspace/yavo/compiler/target/arena-modules-review/project-verify/run-1040107-1795240707196108335-0/program"
+      },
+      "duration_ms": 5,
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "id": "tests",
+      "name": "tests",
+      "ran_on": "x86_64-linux-gnu",
+      "reason": "artifact execution and requested assertions passed",
+      "required": true,
+      "signal": null,
+      "status": "passed",
+      "stderr": "",
+      "stderr_bytes": 0,
+      "stderr_matches": null,
+      "stderr_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_truncated": false,
+      "stderr_valid_utf8": true,
+      "stdout": "B\n1 1\n",
+      "stdout_bytes": 6,
+      "stdout_matches": true,
+      "stdout_sha256": "sha256:29bae554bcfa326c52093606f4521a1dc8a789dfa7ce69e7977d89224c05ff31",
+      "stdout_truncated": false,
+      "stdout_valid_utf8": true,
+      "success": true,
+      "target": "x86_64-linux-musl",
+      "test_kind": "output_assertion",
+      "tests_run": 1,
+      "text_encoding": "utf-8-lossy",
+      "timed_out": false
+    },
+    {
+      "artifact": "sha256:117c7a7b1651083c661de4d9093c0c84a035846417b1e6ef291bfa709614c511",
+      "artifact_path": "/data1/workspace/github/workspace/yavo/compiler/target/arena-modules-review/project-verify/run-1040107-1795240707196108335-0/program",
+      "id": "audit",
+      "name": "audit",
+      "ran_on": null,
+      "reason": "source and dependency audit is not implemented in this prototype",
+      "required": true,
+      "runtime_header_sha256": "sha256:abd91da9f6f10917c05132bbfba859a6511f87f05307c3dd91c6fa76f092e830",
+      "scope": {
+        "app": "not_audited",
+        "c_runtime": "trusted_pinned",
+        "dependencies": "not_audited",
+        "stdlib": "not_audited"
+      },
+      "status": "not_run",
+      "target": "x86_64-linux-musl",
+      "trust_basis": "pinned toolchain path and version; archive and compiler libraries are not reverified"
+    },
+    {
+      "artifact": null,
+      "artifact_path": null,
+      "id": "address-undefined",
+      "name": "sanitizers",
+      "ran_on": null,
+      "reason": "not requested",
+      "required": false,
+      "status": "not_run",
+      "target": "x86_64-linux-gnu",
+      "tools": [
+        "address",
+        "undefined"
+      ]
+    },
+    {
+      "artifact": null,
+      "artifact_path": null,
+      "id": "thread",
+      "name": "sanitizers",
+      "ran_on": null,
+      "reason": "not requested",
+      "required": false,
+      "status": "not_run",
+      "target": "x86_64-linux-gnu",
+      "tools": [
+        "thread"
+      ]
+    },
+    {
+      "artifact": "sha256:9e8faddd13a6f372f2a3937812d78f51cf05524cece60faf3c131d3033a5612d",
+      "artifact_path": "/data1/workspace/github/workspace/yavo/compiler/target/arena-modules-review/project-verify/run-1040107-1795240707196108335-0/repro-2/program",
+      "backend_builds_attempted": 2,
+      "builds": [
+        {
+          "backend": {
+            "allocation_check": false,
+            "artifact": "sha256:9e8faddd13a6f372f2a3937812d78f51cf05524cece60faf3c131d3033a5612d",
+            "artifact_path": "/data1/workspace/github/workspace/yavo/compiler/target/arena-modules-review/project-verify/run-1040107-1795240707196108335-0/repro-1/program",
+            "cache": {
+              "bypassed": true,
+              "global": "/data1/workspace/github/workspace/yavo/compiler/target/arena-modules-review/project-verify/run-1040107-1795240707196108335-0/repro-1/cache/global",
+              "local": "/data1/workspace/github/workspace/yavo/compiler/target/arena-modules-review/project-verify/run-1040107-1795240707196108335-0/repro-1/cache/local"
+            },
+            "capture_limit_bytes": 4194304,
+            "command": {
+              "args": [
+                "cc",
+                "-std=c17",
+                "-fno-strict-aliasing",
+                "-target",
+                "x86_64-linux-musl",
+                "-O2",
+                "-s",
+                "-I",
+                "/data1/workspace/github/workspace/yavo/compiler/target/arena-modules-review/project-verify/run-1040107-1795240707196108335-0/repro-1",
+                "/data1/workspace/github/workspace/yavo/compiler/target/arena-modules-review/project-verify/run-1040107-1795240707196108335-0/repro-1/main.c",
+                "-o",
+                "/data1/workspace/github/workspace/yavo/compiler/target/arena-modules-review/project-verify/run-1040107-1795240707196108335-0/repro-1/program"
+              ],
+              "program": "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig"
+            },
+            "duration_ms": 30512,
+            "exit_code": 0,
+            "ran_on": "x86_64-linux-gnu",
+            "reason": "pinned C compiler produced the requested artifact",
+            "signal": null,
+            "status": "passed",
+            "stderr": "",
+            "stderr_bytes": 0,
+            "stderr_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_truncated": false,
+            "stderr_valid_utf8": true,
+            "stdout": "",
+            "stdout_bytes": 0,
+            "stdout_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stdout_truncated": false,
+            "stdout_valid_utf8": true,
+            "success": true,
+            "target": "x86_64-linux-musl",
+            "text_encoding": "utf-8-lossy",
+            "timed_out": false
+          },
+          "frontend": {
+            "artifact": "sha256:cc2a85570460ddb91845c46975b39b0296c27c29f249130e8f8e97747ccb8832",
+            "artifact_path": "/data1/workspace/github/workspace/yavo/compiler/target/arena-modules-review/project-verify/run-1040107-1795240707196108335-0/repro-1/main.c",
+            "capture_limit_bytes": 4194304,
+            "command": {
+              "args": [
+                "check",
+                "/data1/workspace/github/workspace/yavo/compiler/target/arena-modules-review/project-verify/run-1040107-1795240707196108335-0/project/main.yv",
+                "--emit-c",
+                "/data1/workspace/github/workspace/yavo/compiler/target/arena-modules-review/project-verify/run-1040107-1795240707196108335-0/repro-1/main.c"
+              ],
+              "program": "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo"
+            },
+            "duration_ms": 6,
+            "exit_code": 0,
+            "ran_on": "x86_64-linux-gnu",
+            "signal": null,
+            "status": "passed",
+            "stderr": "",
+            "stderr_bytes": 0,
+            "stderr_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_truncated": false,
+            "stderr_valid_utf8": true,
+            "stdout": "",
+            "stdout_bytes": 0,
+            "stdout_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stdout_truncated": false,
+            "stdout_valid_utf8": true,
+            "success": true,
+            "text_encoding": "utf-8-lossy",
+            "timed_out": false
+          },
+          "status": "passed"
+        },
+        {
+          "backend": {
+            "allocation_check": false,
+            "artifact": "sha256:9e8faddd13a6f372f2a3937812d78f51cf05524cece60faf3c131d3033a5612d",
+            "artifact_path": "/data1/workspace/github/workspace/yavo/compiler/target/arena-modules-review/project-verify/run-1040107-1795240707196108335-0/repro-2/program",
+            "cache": {
+              "bypassed": true,
+              "global": "/data1/workspace/github/workspace/yavo/compiler/target/arena-modules-review/project-verify/run-1040107-1795240707196108335-0/repro-2/cache/global",
+              "local": "/data1/workspace/github/workspace/yavo/compiler/target/arena-modules-review/project-verify/run-1040107-1795240707196108335-0/repro-2/cache/local"
+            },
+            "capture_limit_bytes": 4194304,
+            "command": {
+              "args": [
+                "cc",
+                "-std=c17",
+                "-fno-strict-aliasing",
+                "-target",
+                "x86_64-linux-musl",
+                "-O2",
+                "-s",
+                "-I",
+                "/data1/workspace/github/workspace/yavo/compiler/target/arena-modules-review/project-verify/run-1040107-1795240707196108335-0/repro-2",
+                "/data1/workspace/github/workspace/yavo/compiler/target/arena-modules-review/project-verify/run-1040107-1795240707196108335-0/repro-2/main.c",
+                "-o",
+                "/data1/workspace/github/workspace/yavo/compiler/target/arena-modules-review/project-verify/run-1040107-1795240707196108335-0/repro-2/program"
+              ],
+              "program": "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig"
+            },
+            "duration_ms": 31973,
+            "exit_code": 0,
+            "ran_on": "x86_64-linux-gnu",
+            "reason": "pinned C compiler produced the requested artifact",
+            "signal": null,
+            "status": "passed",
+            "stderr": "",
+            "stderr_bytes": 0,
+            "stderr_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_truncated": false,
+            "stderr_valid_utf8": true,
+            "stdout": "",
+            "stdout_bytes": 0,
+            "stdout_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stdout_truncated": false,
+            "stdout_valid_utf8": true,
+            "success": true,
+            "target": "x86_64-linux-musl",
+            "text_encoding": "utf-8-lossy",
+            "timed_out": false
+          },
+          "frontend": {
+            "artifact": "sha256:cc2a85570460ddb91845c46975b39b0296c27c29f249130e8f8e97747ccb8832",
+            "artifact_path": "/data1/workspace/github/workspace/yavo/compiler/target/arena-modules-review/project-verify/run-1040107-1795240707196108335-0/repro-2/main.c",
+            "capture_limit_bytes": 4194304,
+            "command": {
+              "args": [
+                "check",
+                "/data1/workspace/github/workspace/yavo/compiler/target/arena-modules-review/project-verify/run-1040107-1795240707196108335-0/project/main.yv",
+                "--emit-c",
+                "/data1/workspace/github/workspace/yavo/compiler/target/arena-modules-review/project-verify/run-1040107-1795240707196108335-0/repro-2/main.c"
+              ],
+              "program": "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo"
+            },
+            "duration_ms": 5,
+            "exit_code": 0,
+            "ran_on": "x86_64-linux-gnu",
+            "signal": null,
+            "status": "passed",
+            "stderr": "",
+            "stderr_bytes": 0,
+            "stderr_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_truncated": false,
+            "stderr_valid_utf8": true,
+            "stdout": "",
+            "stdout_bytes": 0,
+            "stdout_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stdout_truncated": false,
+            "stdout_valid_utf8": true,
+            "success": true,
+            "text_encoding": "utf-8-lossy",
+            "timed_out": false
+          },
+          "status": "passed"
+        }
+      ],
+      "builds_attempted": 2,
+      "cache_bypassed": true,
+      "frontend_processes_attempted": 2,
+      "generated_c_hashes": [
+        "sha256:cc2a85570460ddb91845c46975b39b0296c27c29f249130e8f8e97747ccb8832",
+        "sha256:cc2a85570460ddb91845c46975b39b0296c27c29f249130e8f8e97747ccb8832"
+      ],
+      "generated_c_identical": true,
+      "hashes": [
+        "sha256:9e8faddd13a6f372f2a3937812d78f51cf05524cece60faf3c131d3033a5612d",
+        "sha256:9e8faddd13a6f372f2a3937812d78f51cf05524cece60faf3c131d3033a5612d"
+      ],
+      "id": "reproducibility",
+      "name": "reproducible_build",
+      "project_sha256": "sha256:2463d0e9081189be7fe2c107b226140ea6081ba8d2ba55aa2039e8e69c52fa61",
+      "ran_on": "x86_64-linux-gnu",
+      "reason": "two independent Yavo frontend processes and separate empty Zig caches produced identical artifact bytes",
+      "required": true,
+      "scope": "project_to_binary",
+      "source_files": [
+        {
+          "bytes": 763,
+          "path": "compiler/tests/modules/arena/main.yv",
+          "relative_path": "main.yv",
+          "sha256": "11aed70e7dcb0948e589b5590034135cd7af618eda5589b5bc15eab814ea8277"
+        },
+        {
+          "bytes": 235,
+          "path": "compiler/tests/modules/arena/graph.yv",
+          "relative_path": "graph.yv",
+          "sha256": "075d1641f3eb330aec44d065107b5eb2aeea906c935a454f3d55e02e92f98ece"
+        }
+      ],
+      "source_path": "/data1/workspace/github/workspace/yavo/compiler/target/arena-modules-review/project-verify/run-1040107-1795240707196108335-0/project/main.yv",
+      "source_sha256": "sha256:11aed70e7dcb0948e589b5590034135cd7af618eda5589b5bc15eab814ea8277",
+      "status": "passed",
+      "target": "x86_64-linux-musl"
+    }
+  ],
+  "compiler": {
+    "executable_sha256": "sha256:1688b0bc62552dc3718c55641e0c2e1a687e779e2f137ce7eee3fa32276abc33",
+    "version": "0.0.1"
+  },
+  "dependencies": {
+    "generated_c_sha256": "sha256:0f3007770f1718aaf8afed683977314c76830a3984bd92be0f7c2926f30948f9",
+    "runtime_header_sha256": "sha256:abd91da9f6f10917c05132bbfba859a6511f87f05307c3dd91c6fa76f092e830",
+    "scope": "generated translation unit and embedded Yavo runtime; C toolchain libraries are not content-audited",
+    "source_files": [
+      {
+        "bytes": 763,
+        "path": "compiler/tests/modules/arena/main.yv",
+        "relative_path": "main.yv",
+        "sha256": "11aed70e7dcb0948e589b5590034135cd7af618eda5589b5bc15eab814ea8277",
+        "snapshot_path": "/data1/workspace/github/workspace/yavo/compiler/target/arena-modules-review/project-verify/run-1040107-1795240707196108335-0/project/main.yv"
+      },
+      {
+        "bytes": 235,
+        "path": "compiler/tests/modules/arena/graph.yv",
+        "relative_path": "graph.yv",
+        "sha256": "075d1641f3eb330aec44d065107b5eb2aeea906c935a454f3d55e02e92f98ece",
+        "snapshot_path": "/data1/workspace/github/workspace/yavo/compiler/target/arena-modules-review/project-verify/run-1040107-1795240707196108335-0/project/graph.yv"
+      }
+    ]
+  },
+  "diagnostics": {
+    "diagnostics": [],
+    "error_count": 0,
+    "file": "compiler/tests/modules/arena/main.yv",
+    "project_sha256": "2463d0e9081189be7fe2c107b226140ea6081ba8d2ba55aa2039e8e69c52fa61",
+    "schema": "yavo-diagnostics/p0",
+    "source_sha256": "11aed70e7dcb0948e589b5590034135cd7af618eda5589b5bc15eab814ea8277",
+    "sources": [
+      {
+        "bytes": 763,
+        "path": "compiler/tests/modules/arena/main.yv",
+        "relative_path": "main.yv",
+        "sha256": "11aed70e7dcb0948e589b5590034135cd7af618eda5589b5bc15eab814ea8277"
+      },
+      {
+        "bytes": 235,
+        "path": "compiler/tests/modules/arena/graph.yv",
+        "relative_path": "graph.yv",
+        "sha256": "075d1641f3eb330aec44d065107b5eb2aeea906c935a454f3d55e02e92f98ece"
+      }
+    ],
+    "warning_count": 0
+  },
+  "exit_code": 5,
+  "inputs": {
+    "dependencies": "sha256:35ad26506fb594a2babab657e5724b8ecf1c7fef2e55f92f4ca5a7068f5e8bf8",
+    "expected_stderr": null,
+    "expected_stdout": "sha256:29bae554bcfa326c52093606f4521a1dc8a789dfa7ce69e7977d89224c05ff31",
+    "project": "sha256:2463d0e9081189be7fe2c107b226140ea6081ba8d2ba55aa2039e8e69c52fa61",
+    "source": "sha256:11aed70e7dcb0948e589b5590034135cd7af618eda5589b5bc15eab814ea8277",
+    "stdin": null,
+    "toolchain": "sha256:6bed74daeeb4392e88293562c34dcb07b78cba82089138629ee5236b97417274"
+  },
+  "overall": "not_verified",
+  "policy": {
+    "allocation_check": false,
+    "audit_implemented": false,
+    "build_timeout_ms": 120000,
+    "no_run": false,
+    "release": true,
+    "reproducible_requested": true,
+    "required": [
+      "front_end",
+      "toolchain",
+      "build",
+      "tests",
+      "audit",
+      "reproducibility"
+    ],
+    "sanitize_requested": false,
+    "test_scope": "one program execution; no unrequested test suite is inferred",
+    "timeout_ms": 5000
+  },
+  "report_path": "/data1/workspace/github/workspace/yavo/compiler/target/arena-modules-review/project-verify/run-1040107-1795240707196108335-0/report.json",
+  "schema": "yavo-verify/1",
+  "source_path": "/data1/workspace/github/workspace/yavo/compiler/tests/modules/arena/main.yv",
+  "toolchain": {
+    "actual_version": "0.17.1",
+    "compiler_libraries_hashed": false,
+    "environment": "OS allowlist; compiler and loader overrides removed",
+    "executable": "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+    "executable_sha256": "sha256:58959f01285c05a74276f09327b551d42ed6006bf325a78dc661a024e314987b",
+    "expected_version": "0.17.1",
+    "hash_scope": [
+      "embedded_toolchain_lock",
+      "zig_executable"
+    ],
+    "installed_archive_reverified": false,
+    "library_dir": "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/lib",
+    "lock_sha256": "sha256:a9bbe83e644b0e1cee19c8dba8b5157eaed3e9ddc71b96d8aab2b2d2bb15f53c"
+  }
+}
