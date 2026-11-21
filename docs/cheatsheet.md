@@ -54,7 +54,7 @@ fn main() {
 ```
 struct Point {
     x: f64
-    y: f64 = 0.0                      // 字段可以有默认值
+    y: f64                            // 字段默认值（y: f64 = 0.0）尚未实现，构造时每个字段都要写
 
     fn norm(self) -> f64 {            // 方法写在结构体里
         return math.sqrt(self.x * self.x + self.y * self.y)
@@ -174,6 +174,7 @@ fn main() {
 ```
 
 - `?T` 的模式是 `some(x)`、`none`；构造可以显式 `some(value)`，也保留有值自动包装。`if let` 是只处理有值分支的简写，`??` 只在缺失时计算右侧。
+- `if let`/`match` 对**临时值**（如 `if let x = v.pop()`）取得拥有的值；对**已有变量**（`let o = v.pop()` 之后 `if let x = o`）只借用，要拿走里面的值写 `match take(&o) { some(x) => … none => … }`。
 - `?T` 的方法：`o.isSome()`、`o.isNone()`（都返回 `bool`）；取值用 `if let`、`while let`、`??`、`match`（标准库契约里没有 `unwrap`）。`if let` 可以带 `else`：
 
 ```
@@ -207,7 +208,7 @@ match take(&opt) {
 4. **视图不能逃逸。** 视图（`str`、`[]T`、`&T`、`&inout T`）和携带视图的值（如 `Vec[str]`）可以做局部变量、参数和返回值，不能进入普通字段、`Box`、接口值、channel 或被保存的闭包。`.toVec()` 不会消除元素里的借用；要长期保存，逐个 `.toString()`，或者只存下标区间。v1 没有可变切片。
 5. **每个具名函数返回借用时都写来源**，私有函数和泛型函数也一样：`-> str of s`、`-> str of (a, b)`、`-> str of self`、`-> str of static`、`-> ?T of xs`。`of` 只能指向借用参数：`fn bad(text: sink String) -> str of text` 会被拒绝，因为 `text` 在函数结束时就被释放了。
 6. **不能通过参数写入新借用。** 函数不能把来自其他参数的借用写进 `inout` 参数（如 `out: inout Vec[str]`），要改为返回 `Vec[str] of text`。
-7. **借用持续到最后一次使用；实参从左到右，每个立即完成移动或借用。** `v.push(v.len())` 会被拒绝，写成 `let n = v.len()` 再 `v.push(n)`；`yavo fix` 对这类已证明安全的固定写法会自动拆开，其他情况只给候选。
+7. **借用持续到最后一次使用；实参从左到右，每个立即完成移动或借用。** 调用 `v.方法(...)` 时 `v` 已被借用，所以**实参里任何读 `v` 的表达式都会被拒绝**（`E0403`）：`v.push(v.len())`、`v.push(v[i] + v[j])`、`v.push(f(v))` 都不行。先 `let x = …` 算好再 `v.push(x)`。`yavo fix` 目前只自动拆开 `v.push(v.len())` 这类固定写法。
 8. **不允许部分移动。** 非 Copy 字段、`Box` 内容或集合元素都不能直接移出，即使外层由本函数拥有。 有默认值的类型用 `take(&x)` 取走并留下默认值（可选值留下 `none`，数字留下 0，`String`、`Vec`、`Map` 留下空值）；其他类型用 `replace(&x, 新值)` 或 `swap(&a, &b)`。例外：匹配拥有的临时值（如 `match ch.recv()`）可以移出其中的值；要消费已有的可选变量，写 `match take(&opt)`。
 9. **结构的选择。** 递归结构用 `?Box[T]`；单线程共享用 `Rc[T]`；跨线程共享用 `Arc[T]`，条件见第 6 节；互相引用的图用 `Arena[T]` 加 `Id[T]`。
 
@@ -306,7 +307,7 @@ fn main() {
 | 字节字面量 | `'a'`、`'\n'`；判断：`c >= '0' && c <= '9'` | 否 |
 | `Vec` 基本操作 | `v.push(x)`、`v.pop()`（`?T`，拥有的值）、`v.len()`、`v[i]`、`v[a..b]`、`v.contains(x)`、`v.join(", ")`（元素必须是 `str` 或 `String`，数字先 `format` 成 `String`）；v1 没有 `remove`、`insert`，要删改中间元素就构造新的 `Vec` | `push` 扩容和 `join` 时会 |
 | 排序 | `v.sort()`（要求 `Ord`）；`v.sortBy((a, b) => a.1 > b.1)`；浮点数用 `sortBy` 加 `totalCmp`；两者都是稳定排序 | 是（临时缓冲区） |
-| `Map` 读取 | `m.get(k)`（`?&V`）、`m.getMut(k)`（`?&inout V`）、`m.getCopy(k)`（`?V`，要求可复制）、`m.has(k)`、`m.len()`；`Map[String, V]` 的 `get`、`getMut`、`getCopy`、`has`、`remove` 直接收 `str` 键，如 `m.get("a")`；`set`、`update` 要拥有的 `String` 键；默认值写 `m.getCopy(k) ?? 0` | 否 |
+| `Map` 读取 | `m.get(k)`（`?&V`）、`m.getMut(k)`（`?&inout V`）、`m.getCopy(k)`（`?V`，要求可复制）、`m.has(k)`、`m.len()`；`Map[String, V]` 的 `get`、`getMut`、`getCopy`、`has`、`remove` 直接收 `str` 键，如 `m.get("a")`；`set`、`update` 要拥有的 `String` 键；默认值写 `m.getCopy(k) ?? 0`；值不可复制（如 `String`）时没有 `getCopy`，用 `if let s = m.get(k)` 再 `s.clone()` | 否 |
 | `Map` 写入和计数 | `set(k, v)` 消费键和值；`remove(k) -> ?V` 返回拥有值；`update(k, initial, f)` 消费拥有键，v1 限不携带借用的 Copy 值，f 恰好执行一次 | 插入可能；remove 本身不分配 |
 | 遍历 | `for x in v`、`for i, x in v`、`for k, v in m` 默认只读；`in &v`、`in &m` 显式可变；Map 键始终只读 | 否 |
 | 优先队列 | `use std/collections`；`var h = Heap[(int, int)].by((a, b) => a.0 < b.0)`，`h.push(x)`、`h.pop()`（`?T`）；比较闭包会被保存，不能捕获借用 | `push` 扩容时会 |
@@ -507,4 +508,4 @@ fn parallelSum(nums: Vec[int]) -> int {
 
 ## 9. 尚未实现（用了会报 `U0001` 或语法错误）
 
-`test` 块与 `yavo test`、`yavo fmt/doc/explain/audit`；`std/time`、`std/rand`；`Vec` 的 `remove`、`insert`、`clear`；开放切片 `x[a..]`、`x[..b]`（写 `x[a..x.len()]`）；遍历 `Arena`；元组做 `Map` 键、元组比较和打印；泛型枚举；带载荷枚举的 `==`；`match` 里的字面量模式（`.Num(0)`、`1 =>`）；一般闭包值和把闭包当参数传给自己的函数（`sortBy`、`update`、`Heap.by` 可以）；`spawn` 之外的线程写法，`spawn` 的实参不能是 `&inout`；包依赖、`unsafe`、C 互操作。
+**下标赋值 `v[i] = x`**（只能给变量和结构体字段赋值；要改元素就用 `Map[int, V]` 的 `set`，或 `for x in &v` 逐个改，或重建 `Vec`）；结构体字段默认值；`test` 块与 `yavo test`、`yavo fmt/doc/explain/audit`；`std/time`、`std/rand`；`Vec` 的 `remove`、`insert`、`clear`；开放切片 `x[a..]`、`x[..b]`（写 `x[a..x.len()]`）；遍历 `Arena`；元组做 `Map` 键、元组比较和打印；泛型枚举；带载荷枚举的 `==`；`match` 里的字面量模式（`.Num(0)`、`1 =>`）；一般闭包值和把闭包当参数传给自己的函数（`sortBy`、`update`、`Heap.by` 可以）；`spawn` 之外的线程写法，`spawn` 的实参不能是 `&inout`；包依赖、`unsafe`、C 互操作。

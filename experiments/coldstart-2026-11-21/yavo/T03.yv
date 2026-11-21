@@ -1,0 +1,192 @@
+use std/{io, os}
+
+enum PErr {
+    End
+    Bad(col: int, text: String)
+}
+
+struct Res {
+    s: String
+    v: int
+    z: bool
+}
+
+struct Parser {
+    toks: Vec[String]
+    kinds: Vec[byte]
+    cols: Vec[int]
+    pos: int
+    dz: bool
+
+    fn bad(self) -> PErr {
+        return PErr.Bad(col: self.cols[self.pos], text: self.toks[self.pos].clone())
+    }
+
+    fn expr(inout self) -> Res ! PErr {
+        var left = try self.term()
+        while self.pos < self.toks.len() {
+            let k = self.kinds[self.pos]
+            if k != '+' && k != '-' {
+                break
+            }
+            self.pos += 1
+            let right = try self.term()
+            var v = 0
+            if !self.dz {
+                if k == '+' {
+                    v = left.v + right.v
+                } else {
+                    v = left.v - right.v
+                }
+            }
+            let op = if_op(k)
+            left = Res{s: format("(${left.s} ${op} ${right.s})"), v: v, z: false}
+        }
+        return left
+    }
+
+    fn term(inout self) -> Res ! PErr {
+        var left = try self.unary()
+        while self.pos < self.toks.len() {
+            let k = self.kinds[self.pos]
+            if k != '*' && k != '/' && k != '%' {
+                break
+            }
+            self.pos += 1
+            let right = try self.unary()
+            var v = 0
+            if !self.dz {
+                if k == '*' {
+                    v = left.v * right.v
+                } else if right.v == 0 {
+                    self.dz = true
+                } else if k == '/' {
+                    v = left.v / right.v
+                } else {
+                    v = left.v % right.v
+                }
+            }
+            let op = if_op(k)
+            left = Res{s: format("(${left.s} ${op} ${right.s})"), v: v, z: false}
+        }
+        return left
+    }
+
+    fn unary(inout self) -> Res ! PErr {
+        if self.pos >= self.toks.len() {
+            return err(.End)
+        }
+        if self.kinds[self.pos] == '-' {
+            self.pos += 1
+            let r = try self.unary()
+            var v = 0
+            if !self.dz {
+                v = 0 - r.v
+            }
+            return Res{s: format("(-${r.s})"), v: v, z: false}
+        }
+        return try self.primary()
+    }
+
+    fn primary(inout self) -> Res ! PErr {
+        if self.pos >= self.toks.len() {
+            return err(.End)
+        }
+        let k = self.kinds[self.pos]
+        if k == '0' {
+            let t = self.toks[self.pos].clone()
+            self.pos += 1
+            let n = t.parseInt() ?? 0
+            return Res{s: t, v: n, z: false}
+        }
+        if k == '(' {
+            self.pos += 1
+            let r = try self.expr()
+            if self.pos >= self.toks.len() {
+                return err(.End)
+            }
+            if self.kinds[self.pos] != ')' {
+                return err(self.bad())
+            }
+            self.pos += 1
+            return r
+        }
+        return err(self.bad())
+    }
+}
+
+fn if_op(k: byte) -> str of static {
+    if k == '+' {
+        return "+"
+    }
+    if k == '-' {
+        return "-"
+    }
+    if k == '*' {
+        return "*"
+    }
+    if k == '/' {
+        return "/"
+    }
+    return "%"
+}
+
+fn evalLine(line: str) -> Res ! PErr {
+    var p = Parser{toks: [], kinds: [], cols: [], pos: 0, dz: false}
+    var i = 0
+    let n = line.len()
+    while i < n {
+        let c = line[i]
+        if c == ' ' || c == '\t' {
+            i += 1
+            continue
+        }
+        if c >= '0' && c <= '9' {
+            var j = i
+            while j < n && line[j] >= '0' && line[j] <= '9' {
+                j += 1
+            }
+            p.toks.push(line[i..j].toString())
+            p.kinds.push('0')
+            p.cols.push(i + 1)
+            i = j
+        } else {
+            p.toks.push(line[i..i + 1].toString())
+            p.kinds.push(c)
+            p.cols.push(i + 1)
+            i += 1
+        }
+    }
+    let r = try p.expr()
+    if p.pos < p.toks.len() {
+        return err(p.bad())
+    }
+    if p.dz {
+        return Res{s: r.s.clone(), v: 0, z: true}
+    }
+    return r
+}
+
+fn main() {
+    let input = io.readAll() catch e {
+        eprintln("read error: ${e}")
+        os.exit(1)
+    }
+    for line in input.lines() {
+        match evalLine(line) {
+            ok(r) => {
+                if r.z {
+                    println("${r.s} = error: division by zero")
+                } else {
+                    println("${r.s} = ${r.v}")
+                }
+            }
+            err(e) => {
+                match e {
+                    .End => println("error: unexpected end")
+                    .Bad(col, text) => println("error at col ${col}: unexpected '${text}'")
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,90 @@
+use std/{io, os}
+
+struct Job {
+    name: String
+    arrival: int
+    dur: int
+    prio: int
+}
+
+fn process(text: str) {
+    var jobs: Vec[Job] = []
+    var n = 0
+    for line in text.lines() {
+        n += 1
+        let f = line.fields()
+        var ok = f.len() == 4
+        var a = 0
+        var d = 0
+        var p = 0
+        if ok {
+            a = f[1].parseInt() ?? -1
+            d = f[2].parseInt() ?? 0
+            p = f[3].parseInt() ?? -1
+            if a < 0 || d <= 0 || p < 0 {
+                ok = false
+            }
+        }
+        if !ok {
+            eprintln("line ${n}: invalid")
+            continue
+        }
+        jobs.push(Job{name: f[0].toString(), arrival: a, dur: d, prio: p})
+    }
+    let total = jobs.len()
+    var done: Set[int] = []
+    var finished = 0
+    var t = 0
+    var idle = 0
+    var waitSum = 0
+    while finished < total {
+        var best = -1
+        var nextArr = -1
+        var i = 0
+        while i < total {
+            if !done.has(i) {
+                let j = jobs[i]
+                if j.arrival <= t {
+                    if best < 0 {
+                        best = i
+                    } else {
+                        let b = jobs[best]
+                        if j.prio > b.prio || (j.prio == b.prio && (j.arrival < b.arrival || (j.arrival == b.arrival && j.name < b.name))) {
+                            best = i
+                        }
+                    }
+                } else if nextArr < 0 || j.arrival < nextArr {
+                    nextArr = j.arrival
+                }
+            }
+            i += 1
+        }
+        if best < 0 {
+            idle += nextArr - t
+            t = nextArr
+            continue
+        }
+        let j = jobs[best]
+        let w = t - j.arrival
+        println("t=${t} ${j.name} (waited ${w})")
+        waitSum += w
+        t += j.dur
+        done.add(best)
+        finished += 1
+    }
+    var avg = 0.0
+    if total > 0 {
+        avg = f64(waitSum) / f64(total)
+    }
+    println("avg wait: ${avg:.2}")
+    println("idle: ${idle}")
+    println("end: ${t}")
+}
+
+fn main() {
+    let text = io.readAll() catch e {
+        eprintln("read error: ${e}")
+        os.exit(1)
+    }
+    process(text)
+}

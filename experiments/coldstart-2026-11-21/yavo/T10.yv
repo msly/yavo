@@ -1,0 +1,121 @@
+use std/{io, os, sync}
+
+struct Job {
+    idx: int
+    text: String
+}
+
+struct Item {
+    idx: int
+    valid: bool
+    n: int
+    steps: int
+    peak: int
+}
+
+fn digitsOnly(s: str) -> bool {
+    if s.len() == 0 || s.len() > 9 {
+        return false
+    }
+    var i = 0
+    while i < s.len() {
+        if s[i] < '0' || s[i] > '9' {
+            return false
+        }
+        i += 1
+    }
+    return true
+}
+
+fn evalJob(idx: int, text: str) -> Item {
+    var it = Item{idx: idx, valid: false, n: 0, steps: 0, peak: 0}
+    if text.len() == 8 && text == "10000000" {
+        it.valid = true
+        it.n = 10000000
+    } else if digitsOnly(text) {
+        let v = text.parseInt() ?? 0
+        if v >= 1 && v <= 10000000 {
+            it.valid = true
+            it.n = v
+        }
+    }
+    if !it.valid {
+        return it
+    }
+    var x = it.n
+    it.peak = x
+    while x != 1 {
+        if x % 2 == 0 {
+            x = x / 2
+        } else {
+            x = 3 * x + 1
+        }
+        it.steps += 1
+        if x > it.peak {
+            it.peak = x
+        }
+    }
+    return it
+}
+
+fn worker(ch: &Channel[Job]) -> Vec[Item] {
+    var out: Vec[Item] = []
+    while let job = ch.recv() {
+        out.push(evalJob(job.idx, job.text))
+    }
+    return out
+}
+
+fn process(text: str) {
+    let ch = Channel[Job]{cap: 8}
+    var all: Vec[Item] = []
+    scope {
+        let h1 = spawn worker(&ch)
+        let h2 = spawn worker(&ch)
+        let h3 = spawn worker(&ch)
+        var k = 0
+        for line in text.lines() {
+            k += 1
+            ch.send(Job{idx: k, text: line.toString()}) catch e {
+                panic("channel closed")
+            }
+        }
+        ch.close()
+        for it in h1.join() {
+            all.push(it)
+        }
+        for it in h2.join() {
+            all.push(it)
+        }
+        for it in h3.join() {
+            all.push(it)
+        }
+    }
+    all.sortBy((a, b) => a.idx < b.idx)
+    var bestN = 0
+    var bestS = -1
+    for it in all {
+        if !it.valid {
+            println("line ${it.idx}: invalid")
+            continue
+        }
+        println("${it.n}: steps=${it.steps} peak=${it.peak}")
+        if it.steps > bestS {
+            bestS = it.steps
+            bestN = it.n
+        }
+    }
+    if bestS < 0 {
+        println("longest: none")
+    } else {
+        println("longest: ${bestN} (${bestS} steps)")
+    }
+}
+
+fn main() {
+    let text = io.readAll() catch e {
+        eprintln("read error: ${e}")
+        os.exit(1)
+    }
+    process(text)
+}

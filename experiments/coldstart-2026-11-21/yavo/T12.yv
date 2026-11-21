@@ -1,0 +1,133 @@
+use std/{io, os}
+
+struct Tree {
+    left: Vec[int]
+    right: Vec[int]
+    sym: Vec[int]
+}
+
+fn walk(t: Tree, n: int, code: str, out: inout Map[int, String]) {
+    if t.left[n] < 0 {
+        out.set(t.sym[n], code.toString())
+        return
+    }
+    var c0 = String{}
+    c0.push(code)
+    c0.push("0")
+    walk(t, t.left[n], c0, &out)
+    var c1 = String{}
+    c1.push(code)
+    c1.push("1")
+    walk(t, t.right[n], c1, &out)
+}
+
+fn label(b: int) -> String {
+    let printable = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
+    let hex = "0123456789ABCDEF"
+    var out = String{}
+    if b >= 33 && b <= 126 {
+        out.push(printable[b - 33..b - 32])
+    } else {
+        out.push("\\x")
+        out.push(hex[b / 16..b / 16 + 1])
+        out.push(hex[b % 16..b % 16 + 1])
+    }
+    return out
+}
+
+fn process(text: str) {
+    var counts: Map[int, int] = [:]
+    var i = 0
+    while i < text.len() {
+        counts.update(int(text[i]), 0, (n) => n + 1)
+        i += 1
+    }
+    var t = Tree{left: [], right: [], sym: []}
+    var cnt: Vec[int] = []
+    var minb: Vec[int] = []
+    var active: Vec[int] = []
+    var b = 0
+    while b < 256 {
+        let c = counts.getCopy(b) ?? 0
+        if c > 0 {
+            active.push(cnt.len())
+            cnt.push(c)
+            minb.push(b)
+            t.left.push(-1)
+            t.right.push(-1)
+            t.sym.push(b)
+        }
+        b += 1
+    }
+    if active.len() == 0 {
+        println("bits: 0")
+        return
+    }
+    while active.len() > 1 {
+        var b1 = -1
+        var b2 = -1
+        var k = 0
+        while k < active.len() {
+            let nd = active[k]
+            if b1 < 0 || cnt[nd] < cnt[active[b1]] || (cnt[nd] == cnt[active[b1]] && minb[nd] < minb[active[b1]]) {
+                b2 = b1
+                b1 = k
+            } else if b2 < 0 || cnt[nd] < cnt[active[b2]] || (cnt[nd] == cnt[active[b2]] && minb[nd] < minb[active[b2]]) {
+                b2 = k
+            }
+            k += 1
+        }
+        let x = active[b1]
+        let y = active[b2]
+        let id = cnt.len()
+        let sumc = cnt[x] + cnt[y]
+        cnt.push(sumc)
+        let mb = min(minb[x], minb[y])
+        minb.push(mb)
+        t.left.push(x)
+        t.right.push(y)
+        t.sym.push(-1)
+        var next: Vec[int] = []
+        k = 0
+        while k < active.len() {
+            if k != b1 && k != b2 {
+                next.push(active[k])
+            }
+            k += 1
+        }
+        next.push(id)
+        active = next
+    }
+    var codes: Map[int, String] = [:]
+    if cnt.len() == 1 {
+        codes.set(t.sym[0], "0".toString())
+    } else {
+        walk(t, active[0], "", &codes)
+    }
+    var bits = 0
+    var depth = 0
+    b = 0
+    while b < 256 {
+        let c = counts.getCopy(b) ?? 0
+        if c > 0 {
+            var code = String{}
+            if let cs = codes.get(b) {
+                code = cs.clone()
+            }
+            println("${label(b)} ${c} ${code}")
+            bits += c * code.len()
+            depth = max(depth, code.len())
+        }
+        b += 1
+    }
+    println("bits: ${bits}")
+    println("depth: ${depth}")
+}
+
+fn main() {
+    let text = io.readAll() catch e {
+        eprintln("read error: ${e}")
+        os.exit(1)
+    }
+    process(text)
+}

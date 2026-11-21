@@ -1,0 +1,125 @@
+use parse
+
+pub fn schedule(courses: Vec[Course], limit: int) -> Vec[String] ! String {
+    let n = courses.len()
+    for c in courses {
+        if c.credits > limit {
+            return err(format("too big ${c.name}"))
+        }
+    }
+    var idx: Map[String, int] = [:]
+    var i = 0
+    while i < n {
+        idx.set(courses[i].name.clone(), i)
+        i += 1
+    }
+    // topological order by passes
+    var done: Map[int, int] = [:]
+    i = 0
+    while i < n {
+        done.set(i, 0)
+        i += 1
+    }
+    var order: Vec[int] = []
+    var progress = true
+    while progress {
+        progress = false
+        i = 0
+        while i < n {
+            if get(done, i) == 0 {
+                var ready = true
+                for p in courses[i].prereqs {
+                    let j = idx.getCopy(p) ?? 0
+                    if get(done, j) == 0 {
+                        ready = false
+                    }
+                }
+                if ready {
+                    done.set(i, 1)
+                    order.push(i)
+                    progress = true
+                }
+            }
+            i += 1
+        }
+    }
+    if order.len() < n {
+        var bad: Vec[String] = []
+        i = 0
+        while i < n {
+            if get(done, i) == 0 {
+                bad.push(courses[i].name.clone())
+            }
+            i += 1
+        }
+        bad.sort()
+        return err(format("cycle: ${bad.join(" ")}"))
+    }
+    var chain: Map[int, int] = [:]
+    i = 0
+    while i < n {
+        chain.set(i, 1)
+        i += 1
+    }
+    var k = n
+    while k > 0 {
+        k -= 1
+        let c = order[k]
+        let cc = get(chain, c)
+        for p in courses[c].prereqs {
+            let j = idx.getCopy(p) ?? 0
+            if cc + 1 > get(chain, j) {
+                chain.set(j, cc + 1)
+            }
+        }
+    }
+    var termOf: Map[int, int] = [:]
+    i = 0
+    while i < n {
+        termOf.set(i, 0)
+        i += 1
+    }
+    var out: Vec[String] = []
+    var scheduled = 0
+    var term = 0
+    while scheduled < n {
+        term += 1
+        var cand: Vec[int] = []
+        i = 0
+        while i < n {
+            if get(termOf, i) == 0 {
+                var ok = true
+                for p in courses[i].prereqs {
+                    let j = idx.getCopy(p) ?? 0
+                    if get(termOf, j) == 0 {
+                        ok = false
+                    }
+                }
+                if ok {
+                    cand.push(i)
+                }
+            }
+            i += 1
+        }
+        cand.sortBy((a, b) => get(chain, a) > get(chain, b) || (get(chain, a) == get(chain, b) && courses[a].name < courses[b].name))
+        var total = 0
+        var line = String{}
+        for c in cand {
+            let cr = courses[c].credits
+            if total + cr <= limit {
+                total += cr
+                termOf.set(c, term)
+                scheduled += 1
+                line.push(" ")
+                line.push(courses[c].name)
+            }
+        }
+        out.push(format("term ${term}:${line} (${total})"))
+    }
+    out.push(format("terms: ${term}"))
+    return out
+}
+
+fn get(m: Map[int, int], k: int) -> int {
+    return m.getCopy(k) ?? 0
+}

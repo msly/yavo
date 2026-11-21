@@ -1,0 +1,23 @@
+use std/{io, os}
+use config
+
+fn load() -> Config ! config.SyntaxError {
+    let text = io.readAll() catch e {
+        eprintln("read error: ${e}")
+        os.exit(1)
+    }
+    return try config.parse(text)
+}
+
+fn main() {
+    let cfg = load() catch e {
+        eprintln("line ${e.line}: syntax error")
+        os.exit(2)
+    }
+    let args = os.args()
+    var i = 1
+    while i < args.len() {
+        println(config.query(cfg, args[i]))
+        i += 1
+    }
+}

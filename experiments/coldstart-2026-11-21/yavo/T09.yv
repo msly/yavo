@@ -1,0 +1,290 @@
+use std/{io, os}
+
+fn lastSlash(p: str) -> int {
+    var i = p.len()
+    while i > 0 {
+        i -= 1
+        if p[i] == '/' {
+            return i
+        }
+    }
+    return 0
+}
+
+fn parentOf(p: str) -> String {
+    let i = lastSlash(p)
+    if i == 0 {
+        return "/".toString()
+    }
+    return p[0..i].toString()
+}
+
+fn baseName(p: str) -> String {
+    let i = lastSlash(p)
+    return p[i + 1..p.len()].toString()
+}
+
+fn joinPath(dir: str, name: str) -> String {
+    var out = String{}
+    out.push(dir)
+    if dir != "/" {
+        out.push("/")
+    }
+    out.push(name)
+    return out
+}
+
+fn prefixOf(p: str) -> String {
+    var out = String{}
+    out.push(p)
+    if p != "/" {
+        out.push("/")
+    }
+    return out
+}
+
+// -2 none, -1 directory, >= 0 file size
+fn kind(m: Map[String, int], p: str) -> int {
+    return m.getCopy(p) ?? -2
+}
+
+fn under(key: str, p: str) -> bool {
+    let pre = prefixOf(p)
+    return key.len() > pre.len() && key.startsWith(pre)
+}
+
+fn subtree(m: Map[String, int], p: str) -> Vec[String] {
+    var out: Vec[String] = []
+    for k, _v in m {
+        if k == p.toString() || under(k, p) {
+            out.push(k.clone())
+        }
+    }
+    return out
+}
+
+fn size(m: Map[String, int], p: str) -> int {
+    var total = 0
+    for k, v in m {
+        if v >= 0 && (k == p.toString() || under(k, p)) {
+            total += v
+        }
+    }
+    return total
+}
+
+fn children(m: Map[String, int], dir: str) -> Vec[String] {
+    let prefix = prefixOf(dir)
+    var out: Vec[String] = []
+    for k, _v in m {
+        if k.len() > prefix.len() && k.startsWith(prefix) {
+            let rest = k[prefix.len()..k.len()]
+            if !rest.contains("/") {
+                out.push(k.clone())
+            }
+        }
+    }
+    out.sort()
+    return out
+}
+
+fn mkdir(m: inout Map[String, int], p: str) {
+    var cur = "/".toString()
+    for comp in p.split("/") {
+        if comp.len() == 0 {
+            continue
+        }
+        let next = joinPath(cur, comp)
+        let k = kind(m, next)
+        if k == -2 {
+            m.set(next.clone(), -1)
+        } else if k >= 0 {
+            println("error: not a directory ${next}")
+            return
+        }
+        cur = next
+    }
+}
+
+fn touch(m: inout Map[String, int], p: str, sz: int) {
+    if p == "/" {
+        println("error: is a directory /")
+        return
+    }
+    let par = parentOf(p)
+    if kind(m, par) != -1 {
+        println("error: no such directory ${par}")
+        return
+    }
+    if kind(m, p) == -1 {
+        println("error: is a directory ${p}")
+        return
+    }
+    m.set(p.toString(), sz)
+}
+
+fn rm(m: inout Map[String, int], p: str) {
+    if p == "/" {
+        println("error: cannot remove root")
+        return
+    }
+    if kind(m, p) == -2 {
+        println("error: no such path ${p}")
+        return
+    }
+    let ks = subtree(m, p)
+    for k in ks {
+        let _r = m.remove(k)
+    }
+}
+
+fn mv(m: inout Map[String, int], s: str, d: str) {
+    if kind(m, s) == -2 {
+        println("error: no such path ${s}")
+        return
+    }
+    if s == "/" {
+        println("error: cannot move root")
+        return
+    }
+    var target = String{}
+    let dk = kind(m, d)
+    if dk == -1 {
+        target = joinPath(d, baseName(s))
+    } else if dk >= 0 {
+        println("error: exists ${d}")
+        return
+    } else {
+        let par = parentOf(d)
+        if kind(m, par) != -1 {
+            println("error: no such directory ${par}")
+            return
+        }
+        target = d.toString()
+    }
+    if target == s.toString() || under(target, s) {
+        println("error: cannot move into itself")
+        return
+    }
+    if kind(m, target) != -2 {
+        println("error: exists ${target}")
+        return
+    }
+    let ks = subtree(m, s)
+    var vals: Vec[int] = []
+    var news: Vec[String] = []
+    for k in ks {
+        vals.push(kind(m, k))
+        var nk = String{}
+        nk.push(target)
+        nk.push(k[s.len()..k.len()])
+        news.push(nk)
+    }
+    for k in ks {
+        let _r = m.remove(k)
+    }
+    var i = 0
+    while i < news.len() {
+        m.set(news[i].clone(), vals[i])
+        i += 1
+    }
+}
+
+fn ls(m: Map[String, int], p: str) {
+    let k = kind(m, p)
+    if k == -2 {
+        println("error: no such path ${p}")
+        return
+    }
+    if k >= 0 {
+        println("${p}")
+        return
+    }
+    let ch = children(m, p)
+    if ch.len() == 0 {
+        println("${p}: (empty)")
+        return
+    }
+    var names: Vec[String] = []
+    for c in ch {
+        var nm = baseName(c)
+        if kind(m, c) == -1 {
+            nm.push("/")
+        }
+        names.push(nm)
+    }
+    println("${p}: ${names.join(" ")}")
+}
+
+fn dump(m: Map[String, int], dir: str, indent: str) {
+    let ch = children(m, dir)
+    for c in ch {
+        let nm = baseName(c)
+        if kind(m, c) == -1 {
+            println("${indent}${nm}/ ${size(m, c)}")
+            var deeper = String{}
+            deeper.push(indent)
+            deeper.push("  ")
+            dump(m, c, deeper)
+        } else {
+            println("${indent}${nm} ${size(m, c)}")
+        }
+    }
+}
+
+fn process(text: str) {
+    var m: Map[String, int] = [:]
+    m.set("/".toString(), -1)
+    for line in text.lines() {
+        let f = line.fields()
+        let n = f.len()
+        if n == 0 {
+            continue
+        }
+        let cmd = f[0]
+        if cmd == "mkdir" && n == 2 {
+            mkdir(&m, f[1])
+        } else if cmd == "touch" && n == 3 {
+            var ok = true
+            var sz = 0
+            if f[2].len() == 0 || f[2][0] == '-' || f[2][0] == '+' {
+                ok = false
+            } else {
+                if let v = f[2].parseInt() {
+                    sz = v
+                } else {
+                    ok = false
+                }
+            }
+            if ok {
+                touch(&m, f[1], sz)
+            } else {
+                println("error: bad command")
+            }
+        } else if cmd == "rm" && n == 2 {
+            rm(&m, f[1])
+        } else if cmd == "mv" && n == 3 {
+            mv(&m, f[1], f[2])
+        } else if cmd == "du" && n == 2 {
+            if kind(m, f[1]) == -2 {
+                println("error: no such path ${f[1]}")
+            } else {
+                println("${f[1]} ${size(m, f[1])}")
+            }
+        } else if cmd == "ls" && n == 2 {
+            ls(m, f[1])
+        } else {
+            println("error: bad command")
+        }
+    }
+    println("/ ${size(m, "/")}")
+    dump(m, "/", "  ")
+}
+
+fn main() {
+    let text = io.readAll() catch e {
+        eprintln("read error: ${e}")
+        os.exit(1)
+    }
+    process(text)
+}

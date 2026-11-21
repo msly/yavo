@@ -1,0 +1,142 @@
+use std/{io, os}
+
+struct Stats {
+    lines: int
+    valid: int
+    sum: int
+    primes: int
+    mn: int
+    mx: int
+}
+
+fn isNumber(s: str) -> bool {
+    var i = 0
+    let n = s.len()
+    if n > 0 && s[0] == '-' {
+        i = 1
+    }
+    if i >= n {
+        return false
+    }
+    while i < n {
+        if s[i] < '0' || s[i] > '9' {
+            return false
+        }
+        i += 1
+    }
+    return true
+}
+
+fn isPrime(n: int) -> bool {
+    if n < 2 {
+        return false
+    }
+    var d = 2
+    while d * d <= n {
+        if n % d == 0 {
+            return false
+        }
+        d += 1
+    }
+    return true
+}
+
+fn chunk(xs: []str) -> Stats {
+    var st = Stats{lines: 0, valid: 0, sum: 0, primes: 0, mn: 0, mx: 0}
+    for x in xs {
+        st.lines += 1
+        if !isNumber(x) {
+            continue
+        }
+        let v = x.parseInt() ?? 0
+        if st.valid == 0 {
+            st.mn = v
+            st.mx = v
+        } else {
+            if v < st.mn {
+                st.mn = v
+            }
+            if v > st.mx {
+                st.mx = v
+            }
+        }
+        st.valid += 1
+        st.sum += v
+        if isPrime(v) {
+            st.primes += 1
+        }
+    }
+    return st
+}
+
+fn process(text: str) {
+    let ls = text.lines()
+    let n = ls.len()
+    let base = n / 4
+    let extra = n % 4
+    var bounds: Vec[int] = [0]
+    var k = 0
+    var pos = 0
+    while k < 4 {
+        pos += base
+        if k < extra {
+            pos += 1
+        }
+        bounds.push(pos)
+        k += 1
+    }
+    let p1 = ls[bounds[0]..bounds[1]]
+    let p2 = ls[bounds[1]..bounds[2]]
+    let p3 = ls[bounds[2]..bounds[3]]
+    let p4 = ls[bounds[3]..bounds[4]]
+    var results: Vec[Stats] = []
+    scope {
+        let h1 = spawn chunk(p1)
+        let h2 = spawn chunk(p2)
+        let h3 = spawn chunk(p3)
+        let h4 = spawn chunk(p4)
+        results.push(h1.join())
+        results.push(h2.join())
+        results.push(h3.join())
+        results.push(h4.join())
+    }
+    var tl = 0
+    var tv = 0
+    var ts = 0
+    var tp = 0
+    var mn = 0
+    var mx = 0
+    var any = false
+    var c = 0
+    for r in results {
+        c += 1
+        println("chunk ${c}: lines=${r.lines} valid=${r.valid} sum=${r.sum} primes=${r.primes}")
+        tl += r.lines
+        tv += r.valid
+        ts += r.sum
+        tp += r.primes
+        if r.valid > 0 {
+            if !any {
+                mn = r.mn
+                mx = r.mx
+                any = true
+            } else {
+                mn = min(mn, r.mn)
+                mx = max(mx, r.mx)
+            }
+        }
+    }
+    if any {
+        println("total: lines=${tl} valid=${tv} invalid=${tl - tv} sum=${ts} min=${mn} max=${mx} primes=${tp}")
+    } else {
+        println("total: lines=${tl} valid=${tv} invalid=${tl - tv} sum=${ts} min=none max=none primes=${tp}")
+    }
+}
+
+fn main() {
+    let text = io.readAll() catch e {
+        eprintln("read error: ${e}")
+        os.exit(1)
+    }
+    process(text)
+}

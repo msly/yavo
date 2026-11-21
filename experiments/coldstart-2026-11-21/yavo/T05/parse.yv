@@ -1,0 +1,46 @@
+pub struct Course {
+    name: String
+    credits: int
+    prereqs: Vec[String]
+}
+
+pub fn parse(text: str) -> Vec[Course] ! String {
+    var courses: Vec[Course] = []
+    var n = 0
+    for line in text.lines() {
+        n += 1
+        let f = line.fields()
+        if f.len() == 0 {
+            continue
+        }
+        var credits = 0
+        if f.len() >= 2 {
+            credits = f[1].parseInt() ?? 0
+        }
+        if f.len() < 2 || credits <= 0 {
+            return err(format("line ${n}: invalid"))
+        }
+        var pre: Vec[String] = []
+        var i = 2
+        while i < f.len() {
+            pre.push(f[i].toString())
+            i += 1
+        }
+        courses.push(Course{name: f[0].toString(), credits: credits, prereqs: pre})
+    }
+    var seen: Set[String] = []
+    for c in courses {
+        if seen.has(c.name) {
+            return err(format("duplicate ${c.name}"))
+        }
+        seen.add(c.name.clone())
+    }
+    for c in courses {
+        for p in c.prereqs {
+            if !seen.has(p) {
+                return err(format("unknown ${p}"))
+            }
+        }
+    }
+    return courses
+}

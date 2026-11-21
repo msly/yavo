@@ -1,0 +1,27 @@
+use std/{io, os}
+use parse
+use plan
+
+fn run(limit: int) -> Vec[String] ! String {
+    let text = io.readAll() catch e {
+        eprintln("read error: ${e}")
+        os.exit(1)
+    }
+    let courses = try parse.parse(text)
+    return try plan.schedule(courses, limit)
+}
+
+fn main() {
+    let args = os.args()
+    var limit = 0
+    if args.len() > 1 {
+        limit = args[1].parseInt() ?? 0
+    }
+    let lines = run(limit) catch e {
+        eprintln("${e}")
+        os.exit(1)
+    }
+    for l in lines {
+        println(l)
+    }
+}

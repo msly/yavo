@@ -1,0 +1,161 @@
+use std/{io, os}
+use std/collections
+
+fn sortedFriends(m: Map[String, Set[String]], name: str) -> Vec[String] {
+    var out: Vec[String] = []
+    if let s = m.get(name) {
+        for x in s {
+            out.push(x.clone())
+        }
+    }
+    out.sort()
+    return out
+}
+
+fn bfs(m: Map[String, Set[String]], a: str, b: str) -> Vec[String] {
+    var prev: Map[String, String] = [:]
+    var seen: Set[String] = []
+    var q = Deque[String]{}
+    seen.add(a.toString())
+    q.pushBack(a.toString())
+    var found = a == b
+    while !found {
+        let cur = q.popFront() ?? return []
+        let fr = sortedFriends(m, cur)
+        for f in fr {
+            if !seen.has(f) {
+                seen.add(f.clone())
+                prev.set(f.clone(), cur.clone())
+                q.pushBack(f.clone())
+                if f == b.toString() {
+                    found = true
+                    break
+                }
+            }
+        }
+    }
+    var path: Vec[String] = []
+    var c = b.toString()
+    path.push(c.clone())
+    while c != a.toString() {
+        var p = String{}
+        if let x = prev.get(c) {
+            p = x.clone()
+        }
+        path.push(p.clone())
+        c = p
+    }
+    var rev: Vec[String] = []
+    var i = path.len()
+    while i > 0 {
+        i -= 1
+        rev.push(path[i].clone())
+    }
+    return rev
+}
+
+fn process(text: str) {
+    var m: Map[String, Set[String]] = [:]
+    var links = 0
+    for line in text.lines() {
+        let f = line.fields()
+        if f.len() == 0 {
+            continue
+        }
+        let cmd = f[0]
+        let n = f.len()
+        if cmd == "add" && n == 2 {
+            if m.has(f[1]) {
+                println("error: ${f[1]} exists")
+                continue
+            }
+            var s: Set[String] = []
+            m.set(f[1].toString(), s)
+        } else if (cmd == "link" || cmd == "unlink" || cmd == "path") && n == 3 {
+            if !m.has(f[1]) {
+                println("error: no user ${f[1]}")
+                continue
+            }
+            if !m.has(f[2]) {
+                println("error: no user ${f[2]}")
+                continue
+            }
+            let a = f[1]
+            let b = f[2]
+            if cmd == "link" {
+                if a == b {
+                    println("error: self link")
+                    continue
+                }
+                var linked = false
+                if let s = m.get(a) {
+                    linked = s.has(b)
+                }
+                if !linked {
+                    if let s = m.getMut(a) {
+                        s.add(b.toString())
+                    }
+                    if let s = m.getMut(b) {
+                        s.add(a.toString())
+                    }
+                    links += 1
+                }
+            } else if cmd == "unlink" {
+                var linked = false
+                if let s = m.get(a) {
+                    linked = s.has(b)
+                }
+                if !linked {
+                    println("error: not linked")
+                    continue
+                }
+                if let s = m.getMut(a) {
+                    let _r = s.remove(b)
+                }
+                if let s = m.getMut(b) {
+                    let _r = s.remove(a)
+                }
+                links -= 1
+            } else {
+                let p = bfs(m, a, b)
+                if p.len() == 0 {
+                    println("path: none")
+                } else {
+                    println("path: ${p.join(" -> ")}")
+                }
+            }
+        } else if (cmd == "remove" || cmd == "friends") && n == 2 {
+            if !m.has(f[1]) {
+                println("error: no user ${f[1]}")
+                continue
+            }
+            let fr = sortedFriends(m, f[1])
+            if cmd == "friends" {
+                if fr.len() == 0 {
+                    println("${f[1]}: (none)")
+                } else {
+                    println("${f[1]}: ${fr.join(" ")}")
+                }
+            } else {
+                for x in fr {
+                    if let s = m.getMut(x) {
+                        let _r = s.remove(f[1])
+                    }
+                    links -= 1
+                }
+                let _o = m.remove(f[1])
+            }
+        } else {
+            println("error: bad command")
+        }
+    }
+    println("users: ${m.len()} links: ${links}")
+}
+
+fn main() {
+    let text = io.readAll() catch e {
+        eprintln("read error: ${e}")
+        os.exit(1)
+    }
+    process(text)
+}

@@ -1,0 +1,76 @@
+use std/{io, os}
+
+struct Entry {
+    name: String
+    score: int
+}
+
+fn longer(a: str, b: str) -> str of (a, b) {
+    if b.len() > a.len() {
+        return b
+    }
+    return a
+}
+
+fn parse(text: str) -> Vec[Entry] {
+    var out: Vec[Entry] = []
+    for line in text.lines() {
+        let f = line.fields()
+        if f.len() != 2 {
+            continue
+        }
+        let s = f[1].parseInt() ?? continue
+        out.push(Entry{name: f[0].toString(), score: s})
+    }
+    return out
+}
+
+fn main() {
+    let text = io.readAll() catch e {
+        eprintln("read error: ${e}")
+        os.exit(1)
+    }
+    var entries = parse(text)
+    if entries.len() == 0 {
+        println("no entries")
+        return
+    }
+    var names: Vec[String] = []
+    for e in entries {
+        names.push(e.name.clone())
+    }
+    let saved = names.clone()
+    let first = names[0].trim().toString()
+    names.push("zz-sentinel".toString())
+    println("first: ${first}")
+    println("count: ${names.len() - 1}")
+    var best = ""
+    for n in saved {
+        best = longer(best, n)
+    }
+    println("longest: ${best}")
+    entries.sortBy((a, b) => a.score > b.score || (a.score == b.score && a.name < b.name))
+    let top = entries[0].name.clone()
+    println("top: ${top}")
+    var groups: Map[String, int] = [:]
+    for e in entries {
+        groups.update(e.name[0..1].toString(), 0, (n) => n + 1)
+    }
+    var extra: Vec[String] = []
+    for k, v in groups {
+        if v == 1 {
+            extra.push(format("${k}*"))
+        }
+    }
+    for x in extra {
+        groups.set(x.clone(), 0)
+    }
+    var keys: Vec[String] = []
+    for k, _v in groups {
+        keys.push(k.clone())
+    }
+    keys.sort()
+    for k in keys {
+        println("${k}: ${groups.getCopy(k) ?? 0}")
+    }
+}

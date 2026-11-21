@@ -1,0 +1,109 @@
+pub struct Config {
+    map: Map[String, String]
+}
+
+pub struct SyntaxError {
+    line: int
+}
+
+pub fn parse(text: str) -> Config ! SyntaxError {
+    var cfg = Config{map: [:]}
+    var section = String{}
+    var n = 0
+    for raw in text.lines() {
+        n += 1
+        let line = raw.trim()
+        if line.len() == 0 {
+            continue
+        }
+        if line[0] == '#' || line[0] == ';' {
+            continue
+        }
+        if line[0] == '[' && line[line.len() - 1] == ']' {
+            let name = line[1..line.len() - 1].trim()
+            if name.len() == 0 {
+                return err(SyntaxError{line: n})
+            }
+            section = name.toString()
+            continue
+        }
+        if let eq = line.find("=") {
+            let key = line[0..eq].trim()
+            let value = line[eq + 1..line.len()].trim()
+            if key.len() == 0 {
+                return err(SyntaxError{line: n})
+            }
+            var full = String{}
+            if section.len() > 0 {
+                full.push(section)
+                full.push(".")
+            }
+            full.push(key)
+            cfg.map.set(full, value.toString())
+        } else {
+            return err(SyntaxError{line: n})
+        }
+    }
+    return cfg
+}
+
+fn expand(c: Config, key: str, stack: inout Vec[String], out: inout String, bad: inout String) -> int {
+    var v = String{}
+    if let x = c.map.get(key) {
+        v = x.clone()
+    }
+    stack.push(key.toString())
+    let n = v.len()
+    var pos = 0
+    var status = 0
+    while pos < n {
+        let rest = v[pos..n]
+        if let a = rest.find("\${") {
+            let after = rest[a + 2..rest.len()]
+            if let b = after.find("}") {
+                out.push(rest[0..a])
+                let ref = after[0..b]
+                if stack.contains(ref.toString()) {
+                    status = 2
+                    break
+                }
+                if !c.map.has(ref) {
+                    bad.push(ref)
+                    status = 1
+                    break
+                }
+                let st = expand(c, ref, &stack, &out, &bad)
+                if st != 0 {
+                    status = st
+                    break
+                }
+                pos += a + 2 + b + 1
+            } else {
+                out.push(rest)
+                break
+            }
+        } else {
+            out.push(rest)
+            break
+        }
+    }
+    let _p = stack.pop()
+    return status
+}
+
+pub fn query(c: Config, q: str) -> String {
+    if !c.map.has(q) {
+        return format("${q}: not found")
+    }
+    var stack: Vec[String] = []
+    var out = String{}
+    var bad = String{}
+    let st = expand(c, q, &stack, &out, &bad)
+    if st == 1 {
+        return format("${q}: missing ${bad}")
+    }
+    if st == 2 {
+        return format("${q}: cycle")
+    }
+    return format("${q} = ${out}")
+}

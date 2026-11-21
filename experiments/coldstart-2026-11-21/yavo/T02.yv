@@ -1,0 +1,96 @@
+use std/{io, os}
+
+fn num(s: str) -> int {
+    let n = s.parseInt() ?? return -1
+    if n <= 0 {
+        return -1
+    }
+    return n
+}
+
+fn process(input: str) {
+    var text = String{}
+    var cur = 0
+    var undoText: Vec[String] = []
+    var undoCur: Vec[int] = []
+    var lineNo = 0
+    for line in input.lines() {
+        lineNo += 1
+        if lineNo == 1 {
+            text.push(line)
+            cur = text.len()
+            continue
+        }
+        let f = line.fields()
+        let nf = f.len()
+        var ok = false
+        if nf == 1 && line == "P" {
+            ok = true
+            var o = String{}
+            o.push(text[0..cur])
+            o.push("|")
+            o.push(text[cur..text.len()])
+            println("${o}")
+        } else if nf == 1 && line == "U" {
+            ok = true
+            let c = undoCur.pop()
+            match undoText.pop() {
+                some(tt) => {
+                    text = tt
+                    cur = c ?? 0
+                }
+                none => println("nothing to undo")
+            }
+        } else if nf == 2 && (line.startsWith("L ") || line.startsWith("R ") || line.startsWith("D ") || line.startsWith("B ")) {
+            let n = num(f[1])
+            if n > 0 {
+                ok = true
+                let cmd = f[0]
+                if cmd == "L" {
+                    cur = max(0, cur - n)
+                } else if cmd == "R" {
+                    cur = min(text.len(), cur + n)
+                } else {
+                    undoText.push(text.clone())
+                    undoCur.push(cur)
+                    var nt = String{}
+                    if cmd == "D" {
+                        let e = min(text.len(), cur + n)
+                        nt.push(text[0..cur])
+                        nt.push(text[e..text.len()])
+                    } else {
+                        let s = max(0, cur - n)
+                        nt.push(text[0..s])
+                        nt.push(text[cur..text.len()])
+                        cur = s
+                    }
+                    text = nt
+                }
+            }
+        } else if line.startsWith("I ") && line.len() > 2 {
+            ok = true
+            undoText.push(text.clone())
+            undoCur.push(cur)
+            let ins = line[2..line.len()]
+            var nt = String{}
+            nt.push(text[0..cur])
+            nt.push(ins)
+            nt.push(text[cur..text.len()])
+            cur += ins.len()
+            text = nt
+        }
+        if !ok {
+            println("bad command at line ${lineNo}")
+        }
+    }
+    println("final: ${text}")
+    println("length: ${text.len()}")
+}
+
+fn main() {
+    let input = io.readAll() catch e {
+        eprintln("read error: ${e}")
+        os.exit(1)
+    }
+    process(input)
+}
