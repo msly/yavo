@@ -8,7 +8,7 @@ use crate::ast::BinOp;
 use crate::check::*;
 use crate::diag::Span;
 use crate::types::{
-    all_boxes, all_maps, all_opts, all_ress, all_tuples, all_vecs, all_deques, all_heaps, has_user_drop, iface_name, opt_inner, tuple_elems, opt_of,
+    all_boxes, all_maps, all_opts, all_ress, all_tuples, all_vecs, all_deques, all_heaps, all_arenas, has_user_drop, iface_name, opt_inner, tuple_elems, opt_of,
     ref_inner,
     ref_mut_inner, map_parts, res_parts, vec_elem, FloatTy, IntTy, Ty, all_syncs, ptr_inner, sync_parts, SyncKind,
 };
@@ -106,6 +106,10 @@ pub fn generate(prog: &HProgram, file: &str) -> String {
         let e = entry_name(Ty::Map(id));
         let _ = writeln!(g.out, "typedef struct {e} {{\n    bool live;\n    {} key;\n    {} val;\n}} {e};\n", k.c_name(), v.c_name());
     }
+    for id in all_arenas() {
+        let e = arena_entry_name(id);
+        let _ = writeln!(g.out, "typedef struct {e} {{ yv_arena_slot header; {} val; }} {e};\n", vec_elem(id).c_name());
+    }
     // One vtable layout per interface: drop, clone, then one slot per method. A slot takes the
     // receiver as `void *` (the boxed value) and the other arguments as the method does.
     for i in &prog.ifaces {
@@ -130,6 +134,7 @@ pub fn generate(prog: &HProgram, file: &str) -> String {
     let mut helpers: Vec<Ty> = all_vecs().into_iter().map(|(id, _)| Ty::Vec(id)).collect();
     helpers.extend(all_deques().into_iter().map(Ty::Deque));
     helpers.extend(all_heaps().into_iter().map(Ty::Heap));
+    helpers.extend(all_arenas().into_iter().map(Ty::Arena));
     helpers.extend(owned_opts.iter().map(|(id, _)| Ty::Opt(*id)));
     helpers.extend(all_maps().into_iter().map(|(id, _, _)| Ty::Map(id)));
     let owned_aggs: Vec<&HStruct> = prog.structs.iter().filter(|s| s.ty.needs_drop()).collect();
@@ -380,6 +385,13 @@ pub fn generate(prog: &HProgram, file: &str) -> String {
         }
         let _ = writeln!(g.out, "static const yv_vt_{} yv_vt_{k} = {{ {} }};\n", iface_name(iid), slots.join(", "));
     }
+    for id in all_arenas() {
+        let (ty, elem) = (Ty::Arena(id), vec_elem(id));
+        let (key, entry) = (ty.key(), arena_entry_name(id));
+        let drop = if elem.needs_drop() { format!("{}(&es[i - 1].val);", drop_fn(elem)) } else { String::new() };
+        let _ = writeln!(g.out, "static inline void yv_drop_{key}(yv_arena *p) {{\n    {entry} *es = ({entry} *)p->slots.ptr;\n    for (int64_t i = p->slots.len; i > 0; i--) {{ if (es[i - 1].header.live) {{ {drop} }} }}\n    yv_arena_free(p);\n}}");
+        let _ = writeln!(g.out, "static inline yv_arena yv_clone_{key}(const yv_arena *p, uint32_t line, uint32_t col) {{\n    (void)p; yv_panic(\"P-SYSTEM\", \"an Arena cannot be cloned\", line, col);\n}}\n");
+    }
     // `sortBy` adapters: the runtime sort asks whether element `a` goes before `b`.
     for (i, t) in prog.tramps.iter().enumerate() {
         if t.saved {
@@ -486,6 +498,8 @@ struct Scope {
     /// Number of `outer` temporary lists when the scope was opened.
     temps_depth: usize,
 }
+
+fn arena_entry_name(id: u32) -> String { format!("yv_arena_entry_{}", Ty::Arena(id).key()) }
 
 fn drop_fn(ty: Ty) -> String {
     format!("yv_drop_{}", ty.key())
@@ -612,6 +626,8 @@ impl KeyOps {
     fn hash(&self, q: &str) -> String {
         if self.q == "yv_str" {
             format!("yv_hash_bytes((const uint8_t *){q}.ptr, {q}.len)")
+        } else if matches!(self.k, Ty::Id(_)) {
+            format!("yv_hash_u64(({q}).arena ^ yv_hash_u64(({q}).slot ^ yv_hash_u64(({q}).generation)))")
         } else {
             format!("yv_hash_u64((uint64_t){q})")
         }
@@ -619,6 +635,7 @@ impl KeyOps {
     fn eq(&self, key: &str, q: &str) -> String {
         match self.k {
             Ty::String | Ty::Str => format!("yv_str_eq({}, {q})", self.query(key)),
+            Ty::Id(_) => format!("yv_id_eq({key}, {q})"),
             _ => format!("{key} == {q}"),
         }
     }
@@ -1470,6 +1487,7 @@ impl Gen {
             if method == Method2::SeqContains {
                 let eq = match elem {
                     Ty::Str | Ty::String => format!("yv_str_eq({}, {x})", view(&item)),
+                    Ty::Id(_) => format!("yv_id_eq({item}, {x})"),
                     _ => format!("{item} == {x}"),
                 };
                 self.line(&format!("bool {t} = false;"));
@@ -2019,6 +2037,7 @@ impl Gen {
                 let elem = seq_elem(vty).expect("checked: a vector");
                 let cmp = match elem {
                     Ty::Int(t) => t.suffix().to_string(),
+                    Ty::Id(_) => "id".to_string(),
                     other => other.key(),
                 };
                 self.line(&format!("yv_sort(&{v}, sizeof({}), yv_cmp_{cmp}, {});", elem.c_name(), pos(e.at)));
@@ -2375,6 +2394,42 @@ impl Gen {
                 t
             }
             HExprKind::DequeNew => self.bind_mut(e.ty, "(yv_deque){0}"),
+            HExprKind::ArenaNew => self.bind_mut(e.ty, &format!("yv_arena_new({})", pos(e.at))),
+            HExprKind::ArenaRead { op, recv, key } => {
+                let a = self.borrowed(recv, f);
+                let q = self.expr(key, f);
+                let Ty::Arena(id) = recv.ty else { unreachable!() };
+                let entry = arena_entry_name(id);
+                let p = self.fresh();
+                self.line(&format!("{entry} *{p} = ({entry} *)yv_arena_get(&{a}, {q}, sizeof({entry}), {});", pos(e.at)));
+                if *op == MapRead::Has { return self.bind(e.ty, &format!("({p} != NULL)")); }
+                let t = self.fresh();
+                self.line(&format!("{} {t} = {{0}};", e.ty.c_name()));
+                let addr = if *op == MapRead::GetCopy { "" } else { "&" };
+                self.line(&format!("if ({p}) {{ {t}.has = true; {t}.val = {addr}{p}->val; }}"));
+                t
+            }
+            HExprKind::ArenaWrite { op, place, value } => {
+                let (a, ty) = self.recv_place(place, f);
+                let Ty::Arena(id) = ty else { unreachable!() };
+                let entry = arena_entry_name(id);
+                let v = self.owned(value, f);
+                let (t, p) = (self.fresh(), self.fresh());
+                if *op == ArenaWrite::Add {
+                    self.line(&format!("yv_id {t} = yv_arena_add_slot(&{a}, sizeof({entry}), {});", pos(e.at)));
+                    self.line(&format!("{entry} *{p} = ({entry} *)yv_arena_entry(&{a}, sizeof({entry}), {t}.slot);"));
+                    self.line(&format!("{p}->val = {v};"));
+                } else {
+                    let operation = if *op == ArenaWrite::Remove { "remove" } else { "get" };
+                    self.line(&format!("{entry} *{p} = ({entry} *)yv_arena_{operation}(&{a}, {v}, sizeof({entry}), {});", pos(e.at)));
+                    self.line(&format!("{} {t} = {{0}};", e.ty.c_name()));
+                    let addr = if *op == ArenaWrite::Remove { "" } else { "&" };
+                    self.line(&format!("if ({p}) {{ {t}.has = true; {t}.val = {addr}{p}->val;"));
+                    if *op == ArenaWrite::Remove { self.line(&format!("    memset(&{p}->val, 0, sizeof({p}->val));")); }
+                    self.line("}");
+                }
+                t
+            }
             HExprKind::HeapNew { tramp, caps } => {
                 let t = self.fresh();
                 self.line(&format!("yv_heap {t} = {{0}};"));
@@ -2629,6 +2684,8 @@ impl Gen {
                 | HExprKind::LetTemp { .. }
                 | HExprKind::VecLit(_)
                 | HExprKind::DequeNew
+                | HExprKind::ArenaNew
+                | HExprKind::ArenaWrite { .. }
                 | HExprKind::HeapNew { .. }
                 | HExprKind::DequePop { .. }
                 | HExprKind::Move(_)
@@ -2740,6 +2797,9 @@ impl Gen {
             _ => None,
         };
         if let Some(c) = cmp {
+            if matches!(lty, Ty::Id(_)) {
+                return format!("(yv_id_cmp({l}, {r}) {c} 0)");
+            }
             if matches!(lty, Ty::Str | Ty::String) {
                 let (lv, rv) = if lty == Ty::String {
                     (format!("yv_string_view(&{l})"), format!("yv_string_view(&{r})"))

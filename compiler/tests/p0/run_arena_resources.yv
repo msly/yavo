@@ -1,0 +1,33 @@
+// expect-stdout:
+// | drop partial
+// | drop argument
+// | drop temporary
+// | drop scope
+// | arena resources ok
+struct Resource: Drop {
+    name: String
+    fn drop(inout self) { println("drop ${self.name}") }
+}
+struct Pair { arena: Arena[Resource], value: int }
+fn make(name: str) -> Arena[Resource] {
+    var a = Arena[Resource]{}
+    let _id = a.add(Resource{name: name.toString()})
+    return a
+}
+fn fail() -> int ! int { return err(9) }
+fn partial() -> int ! int {
+    let _pair = Pair{arena: make("partial"), value: try fail()}
+    return ok(1)
+}
+fn accept(_a: sink Arena[Resource], _n: int) {}
+fn arguments() -> int ! int {
+    accept(make("argument"), try fail())
+    return ok(1)
+}
+fn main() {
+    let _x = partial() catch _ => 0
+    let _y = arguments() catch _ => 0
+    assert(make("temporary").len() == 1)
+    scope { let _h = spawn make("scope") }
+    println("arena resources ok")
+}

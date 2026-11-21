@@ -8,7 +8,7 @@ use crate::types::{
     box_inner, box_of, finish_agg, map_of, map_parts, opt_inner, opt_of, ref_inner, ref_mut_inner, ref_mut_of, ref_of, register_enum,
     register_iface,
     register_struct, res_of, res_parts, set_user_drop, has_user_drop, slice_elem, slice_of, tuple_elems, tuple_of, vec_elem,
-    vec_of, deque_of, heap_of, FloatTy, IntTy, Ty, sync_of, sync_parts, ptr_inner, ptr_read_only, SyncKind, dyn_base, dyn_caps, dyn_with_caps,
+    vec_of, deque_of, heap_of, arena_of, FloatTy, IntTy, Ty, sync_of, sync_parts, ptr_inner, ptr_read_only, SyncKind, dyn_base, dyn_caps, dyn_with_caps,
 };
 
 pub type LocalId = usize;
@@ -226,6 +226,9 @@ pub enum HExprKind {
     Move(LocalId),
     VecLit(Vec<HExpr>),
     DequeNew,
+    ArenaNew,
+    ArenaRead { op: MapRead, recv: Box<HExpr>, key: Box<HExpr> },
+    ArenaWrite { op: ArenaWrite, place: HPlace, value: Box<HExpr> },
     HeapNew { tramp: usize, caps: Vec<HExpr> },
     DequePush { place: HPlace, value: Box<HExpr>, front: bool },
     DequePop { place: HPlace, front: bool },
@@ -406,6 +409,9 @@ pub enum MapWrite {
     Remove,
     GetMut,
 }
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum ArenaWrite { Add, Remove, GetMut }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Builtin {
@@ -1617,6 +1623,18 @@ impl Checker<'_> {
     }
 
     fn struct_lit(&mut self, name: &str, name_span: Span, targs: &[TypeExpr], inits: &[FieldInit], span: Span, cx: &mut FnCx) -> HExpr {
+        if name == "Arena" {
+            let ty = self.resolve_ty(&TypeExpr { name: name.into(), span: name_span, args: targs.to_vec() });
+            if let Some(init) = inits.first() {
+                self.diags.error("E0001", init.value.span, "`Arena[T]{}` takes no fields; insert elements with `add`");
+                return err_expr(span);
+            }
+            return HExpr { kind: HExprKind::ArenaNew, ty, span, at: span };
+        }
+        if name == "Id" {
+            self.diags.error("E0001", name_span, "an Id is produced by `Arena.add`; it cannot be constructed directly");
+            return err_expr(span);
+        }
         if name == "String" && inits.is_empty() {
             return HExpr { kind: HExprKind::EmptyString, ty: Ty::String, span, at: span };
         }
@@ -2157,7 +2175,7 @@ impl Checker<'_> {
             "Eq" | "Ord" => {
                 let ord = b == "Ord";
                 match t {
-                    Ty::Int(_) | Ty::Bool | Ty::Str | Ty::String | Ty::Error => true,
+                    Ty::Int(_) | Ty::Bool | Ty::Str | Ty::String | Ty::Id(_) | Ty::Error => true,
                     Ty::Tuple(id) => tuple_elems(id).iter().all(|e| self.satisfies(*e, b)),
                     Ty::Struct(_) | Ty::Enum(_) => match self.protocol(t) {
                         Some((cmp, eq)) => cmp.is_some() || (!ord && eq.is_some()),
@@ -2384,6 +2402,7 @@ impl Checker<'_> {
         match (te.name.as_str(), t) {
             ("[]" | "Vec", Ty::Vec(v)) => sub(self, 0, vec_elem(v), bound),
             ("Deque", Ty::Deque(v)) | ("Heap", Ty::Heap(v)) => sub(self, 0, vec_elem(v), bound),
+            ("Arena", Ty::Arena(v)) | ("Id", Ty::Id(v)) => sub(self, 0, vec_elem(v), bound),
             ("[]", Ty::Slice(s)) => sub(self, 0, slice_elem(s), bound),
             ("?", Ty::Opt(o)) => sub(self, 0, opt_inner(o), bound),
             // A `T` passed where `?T` is expected is wrapped.
@@ -2584,7 +2603,7 @@ impl Checker<'_> {
             if !k_ty.is_hashable() {
                 self.diags
                     .error("E0501", k.span, format!("`{k_ty}` cannot be a Map key"))
-                    .note("keys can be integers, bool, str or String");
+                    .note("keys can be integers, bool, str, String or Id");
                 return Ty::Error;
             }
             return Ty::Map(map_of(k_ty, v_ty));
@@ -2601,7 +2620,7 @@ impl Checker<'_> {
             if !k_ty.is_hashable() {
                 self.diags
                     .error("E0501", k.span, format!("`{k_ty}` cannot be a Set element"))
-                    .note("elements can be integers, bool, str or String");
+                    .note("elements can be integers, bool, str, String or Id");
                 return Ty::Error;
             }
             return Ty::Set(map_of(k_ty, Ty::Bool));
@@ -2649,6 +2668,18 @@ impl Checker<'_> {
                 Ty::Error => Ty::Error,
                 e => Ty::Vec(vec_of(e)),
             };
+        }
+        if matches!(t.name.as_str(), "Arena" | "Id") {
+            let [arg] = t.args.as_slice() else {
+                self.diags.error("E0001", t.span, format!("`{}` takes one element type", t.name));
+                return Ty::Error;
+            };
+            let elem = self.resolve_ty(arg);
+            if matches!(elem, Ty::Error | Ty::Unit) {
+                if elem == Ty::Unit { self.diags.error("E0001", arg.span, "an Arena element cannot be `()`"); }
+                return Ty::Error;
+            }
+            return if t.name == "Arena" { Ty::Arena(arena_of(elem)) } else { Ty::Id(vec_of(elem)) };
         }
         if matches!(t.name.as_str(), "Heap" | "Deque") {
             if !self.module_ref("collections", t.span) {
@@ -3503,7 +3534,7 @@ impl Checker<'_> {
             seen.push(ty);
             match ty {
                 Ty::Heap(_) => true,
-                Ty::Vec(id) | Ty::Deque(id) => contains(ck, vec_elem(id), seen),
+                Ty::Vec(id) | Ty::Deque(id) | Ty::Arena(id) => contains(ck, vec_elem(id), seen),
                 Ty::Slice(id) => contains(ck, slice_elem(id), seen),
                 Ty::Ref(id) => contains(ck, ref_inner(id), seen),
                 Ty::RefMut(id) => contains(ck, ref_mut_inner(id), seen),
@@ -3547,8 +3578,8 @@ impl Checker<'_> {
     /// between threads (`Sync`, `sync == true`), derived from the type's structure (P6).
     fn cap_ok(&self, ty: Ty, sync: bool, seen: &mut Vec<(Ty, bool)>) -> bool {
         match ty {
-            Ty::Int(_) | Ty::Float(_) | Ty::Bool | Ty::Unit | Ty::Str | Ty::String | Ty::Error => true,
-            Ty::Vec(id) | Ty::Deque(id) => self.cap_ok(vec_elem(id), sync, seen),
+            Ty::Int(_) | Ty::Float(_) | Ty::Bool | Ty::Unit | Ty::Str | Ty::String | Ty::Id(_) | Ty::Error => true,
+            Ty::Vec(id) | Ty::Deque(id) | Ty::Arena(id) => self.cap_ok(vec_elem(id), sync, seen),
             // Heap's erased capture environment has no public capability parameter yet.
             // Never derive a capability from the element type alone.
             Ty::Heap(_) => false,
@@ -3912,8 +3943,11 @@ impl Checker<'_> {
             HExprKind::Take(p) | HExprKind::Replace(p, _) => cx.locals[p.local].loans.clone(),
             // `get` borrows the map's slot; `getCopy` copies a value that keeps the elements' loans.
             HExprKind::MapRead { op: MapRead::Get, recv, .. } => self.storage_loans(recv, cx),
+            HExprKind::ArenaRead { op: MapRead::Get, recv, .. } => self.storage_loans(recv, cx),
+            HExprKind::ArenaRead { recv, .. } => self.loans_of(recv, cx),
             HExprKind::MapRead { recv, .. } => self.loans_of(recv, cx),
-            HExprKind::MapWrite { op: MapWrite::GetMut, place, .. } => {
+            HExprKind::MapWrite { op: MapWrite::GetMut, place, .. }
+            | HExprKind::ArenaWrite { op: ArenaWrite::GetMut, place, .. } => {
                 // A temporary receiver is only a pointer descriptor. The slot
                 // returned by getMut belongs to its actual Map/Guard sources.
                 let mut out = if cx.locals[place.local].name.starts_with("$receiver") { Vec::new() } else { vec![Loan::Local(place.local)] };
@@ -3921,6 +3955,7 @@ impl Checker<'_> {
                 out
             }
             HExprKind::MapWrite { place, .. } => cx.locals[place.local].loans.clone(),
+            HExprKind::ArenaWrite { place, .. } => cx.locals[place.local].loans.clone(),
             HExprKind::Method { method: Builtin::MapClone, recv } if h.ty.carries_borrow() => self.loans_of(recv, cx),
             HExprKind::MapLit(entries) => {
                 let mut out = Vec::new();
@@ -6057,8 +6092,8 @@ impl Checker<'_> {
                         self.diags
                             .error("U0001", span, format!("comparing optional values (`{}`) is not supported yet", l.ty))
                             .note("use `if let`, `isSome()` or `??` instead");
-                    } else if (ordering && !matches!(l.ty, Ty::Int(_) | Ty::Float(_) | Ty::Str | Ty::String))
-                        || !matches!(l.ty, Ty::Int(_) | Ty::Float(_) | Ty::Bool | Ty::Str | Ty::String)
+                    } else if (ordering && !matches!(l.ty, Ty::Int(_) | Ty::Float(_) | Ty::Str | Ty::String | Ty::Id(_)))
+                        || !matches!(l.ty, Ty::Int(_) | Ty::Float(_) | Ty::Bool | Ty::Str | Ty::String | Ty::Id(_))
                     {
                         let what = if ordering { "ordered with `<`, `<=`, `>`, `>=`" } else { "compared" };
                         self.diags.error("E0501", span, format!("values of type `{}` cannot be {what}", l.ty));
@@ -6267,7 +6302,7 @@ impl Checker<'_> {
     fn clone_blocker(&self, ty: Ty, seen: &mut Vec<Ty>) -> Option<Ty> {
         match ty {
             Ty::Int(_) | Ty::Float(_) | Ty::Bool | Ty::Unit | Ty::Str | Ty::String | Ty::Error
-            | Ty::Ref(_) | Ty::Slice(_) => None,
+            | Ty::Ref(_) | Ty::Slice(_) | Ty::Id(_) => None,
             Ty::RefMut(_) => Some(ty),
             Ty::Dyn(id) => {
                 // All implementations are registered before checking bodies in the
@@ -6288,7 +6323,7 @@ impl Checker<'_> {
                 SyncKind::Mutex | SyncKind::Guard | SyncKind::Join | SyncKind::Scope => Some(ty),
             },
             Ty::Vec(id) | Ty::Deque(id) => self.clone_blocker(vec_elem(id), seen),
-            Ty::Heap(_) => Some(ty),
+            Ty::Heap(_) | Ty::Arena(_) => Some(ty),
             Ty::Box(id) => self.clone_blocker(box_inner(id), seen),
             Ty::Opt(id) => self.clone_blocker(opt_inner(id), seen),
             Ty::Map(id) | Ty::Set(id) => {
@@ -6476,6 +6511,16 @@ impl Checker<'_> {
                 return self.set_write_call(base, mid, name, args, span, at, cx);
             }
         }
+        if matches!(name, "add" | "remove" | "getMut") {
+            if let Some(mut ty) = self.peek_place_ty(base, cx) {
+                while let Some(inner) = ptr_inner(ty) { ty = inner; }
+                if let Ty::Arena(id) = ty {
+                    // Box and Guard project writable storage; mutable_place still rejects
+                    // shared Rc/Arc pointers and read-only parameter/binding access.
+                    return self.arena_write_call(base, id, name, args, span, at, cx);
+                }
+            }
+        }
         // `h.join()` consumes the handle (`Join.join(sink self)`): a second join is `E0402`.
         if name == "join" && args.is_empty() {
             if let ExprKind::Ident(n) = &base.kind {
@@ -6576,7 +6621,17 @@ impl Checker<'_> {
                 _ => {}
             }
         }
-        if name == "clone" && matches!(recv.ty, Ty::Vec(_) | Ty::Deque(_) | Ty::Heap(_) | Ty::Map(_) | Ty::Set(_)) {
+        if let Ty::Arena(id) = recv.ty {
+            match name {
+                "get" | "getCopy" | "has" => return self.arena_read(recv, id, name, args, span, at, cx),
+                "add" | "remove" | "getMut" => {
+                    self.diags.error("E0014", at, format!("`{name}` requires a writable Arena position"));
+                    return err_expr(span);
+                }
+                _ => {}
+            }
+        }
+        if name == "clone" && matches!(recv.ty, Ty::Vec(_) | Ty::Deque(_) | Ty::Heap(_) | Ty::Arena(_) | Ty::Map(_) | Ty::Set(_)) {
             if let Some(blocker) = self.clone_blocker(recv.ty, &mut Vec::new()) {
                 let code = if has_user_drop(blocker) { "U0001" } else { "E0001" };
                 self.diags
@@ -6592,6 +6647,7 @@ impl Checker<'_> {
             (Ty::String, "clone") => (Builtin::StringClone, Ty::String),
             (Ty::Vec(_), "len") => (Builtin::VecLen, Ty::Int(IntTy::I64)),
             (Ty::Deque(_), "len") => (Builtin::VecLen, Ty::Int(IntTy::I64)),
+            (Ty::Arena(_), "len") => (Builtin::VecLen, Ty::Int(IntTy::I64)),
             (Ty::Heap(_), "len") => (Builtin::HeapLen, Ty::Int(IntTy::I64)),
             (Ty::Slice(_), "len") => (Builtin::VecLen, Ty::Int(IntTy::I64)),
             (Ty::Vec(_), "clone") => (Builtin::VecClone, recv.ty),
@@ -6748,6 +6804,87 @@ impl Checker<'_> {
         };
         self.expect_ty(&h, q);
         h
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn arena_read(&mut self, recv: HExpr, id: u32, name: &str, args: &[Expr], span: Span, at: Span, cx: &mut FnCx) -> HExpr {
+        let [arg] = args else {
+            self.diags.error("E0012", span, format!("`{name}` takes exactly one argument (the Id)"));
+            return err_expr(span);
+        };
+        let shared_mark = cx.call_shared.len();
+        let mutable_mark = cx.call_mut.len();
+        self.hold_call_argument(&recv, false, false, cx);
+        let key = self.expr(arg, Some(Ty::Id(id)), cx);
+        let key = self.fit(key, Ty::Id(id), cx);
+        cx.call_shared.truncate(shared_mark);
+        cx.call_mut.truncate(mutable_mark);
+        let elem = vec_elem(id);
+        let (op, ty) = match name {
+            "get" => (MapRead::Get, Ty::Opt(opt_of(Ty::Ref(ref_of(elem))))),
+            "getCopy" => {
+                if !elem.is_copy() {
+                    self.diags.error("E0404", span, format!("`getCopy` needs a copyable element type, and `{elem}` is not"))
+                        .note("borrow the element with `get`, or remove it to take ownership");
+                    return err_expr(span);
+                }
+                (MapRead::GetCopy, Ty::Opt(opt_of(elem)))
+            }
+            _ => (MapRead::Has, Ty::Bool),
+        };
+        HExpr { kind: HExprKind::ArenaRead { op, recv: Box::new(recv), key: Box::new(key) }, ty, span, at }
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn arena_write_call(&mut self, base: &Expr, aid: u32, name: &str, args: &[Expr], span: Span, at: Span, cx: &mut FnCx) -> HExpr {
+        let Some(place) = self.mutable_place(base, name, cx) else { return err_expr(span) };
+        let local = place.local;
+        let owner = cx.locals[local].name.clone();
+        let [arg] = args else {
+            self.diags.error("E0012", span, format!("`{name}` takes exactly one argument"));
+            return err_expr(span);
+        };
+        if mentions(arg, &owner) {
+            self.diags.error("E0403", arg.span, format!("`{owner}` is already borrowed by `{owner}.{name}(...)`, so the argument cannot use it"))
+                .note("compute the argument in a separate statement before acquiring the mutable receiver");
+            return err_expr(span);
+        }
+        let elem = vec_elem(aid);
+        let wanted = if name == "add" { elem } else { Ty::Id(aid) };
+        let mark = cx.call_mut.len();
+        let shared_mark = cx.call_shared.len();
+        cx.call_mut.push(local);
+        let source_loans = cx.locals[local].loans.clone();
+        let exclusive = cx.locals[local].ty.contains_ref_mut() || cx.locals[local].guard;
+        for loan in source_loans {
+            if let Loan::Local(id) = loan {
+                if exclusive { cx.call_mut.push(id); } else { cx.call_shared.push(id); }
+            }
+        }
+        let value = self.expr(arg, Some(wanted), cx);
+        let value = self.fit(value, wanted, cx);
+        let value = if name == "add" { self.consume(value, cx) } else { value };
+        cx.call_mut.truncate(mark);
+        cx.call_shared.truncate(shared_mark);
+        if name == "add" && elem.carries_borrow() {
+            let loans = self.loans_of(&value, cx);
+            if !loans.is_empty() {
+                if matches!(cx.locals[local].ty, Ty::RefMut(_)) {
+                    self.diags.error("U0001", span, "storing a borrowed value through an `&inout` reference is not supported yet");
+                } else if cx.locals[local].kind == LocalKind::InoutParam {
+                    self.diags.error("E0306", span, format!("cannot store a borrow into the caller's `{owner}`"))
+                        .note("return the Arena with an explicit `of` source instead");
+                } else {
+                    self.store_loans(cx, local, loans, span, false);
+                }
+            }
+        }
+        let (op, ty) = match name {
+            "add" => (ArenaWrite::Add, Ty::Id(aid)),
+            "remove" => (ArenaWrite::Remove, Ty::Opt(opt_of(elem))),
+            _ => (ArenaWrite::GetMut, Ty::Opt(opt_of(Ty::RefMut(ref_mut_of(elem))))),
+        };
+        HExpr { kind: HExprKind::ArenaWrite { op, place, value: Box::new(value) }, ty, span, at }
     }
 
     /// `m.get(k)`, `m.getCopy(k)`, `m.has(k)` (stdlib contract §3).
@@ -6957,8 +7094,11 @@ impl Checker<'_> {
                 if !self.ref_mut_writable(cx, id, root.span) { return None; }
                 self.check_exclusive(cx, id, root.span);
             }
-            // Fields of a locked value are writable through the guard, whatever its binding (P6).
-            Ty::Sync(sid) if sync_parts(sid).0 == SyncKind::Guard => {}
+            // A locally owned guard grants exclusive access (P6); borrowing the guard as
+            // a default parameter does not pass that exclusive capability to the callee.
+            Ty::Sync(sid) if sync_parts(sid).0 == SyncKind::Guard => {
+                if !self.ref_mut_writable(cx, id, root.span) { return None; }
+            }
             t if ptr_read_only(t) => {
                 self.read_only_ptr(t, root.span);
                 return None;
@@ -7006,8 +7146,13 @@ impl Checker<'_> {
     }
 
     fn ref_mut_writable(&mut self, cx: &FnCx, id: LocalId, span: Span) -> bool {
-        if matches!(cx.locals[id].ty, Ty::RefMut(_)) && cx.locals[id].kind == LocalKind::Param {
+        let local = &cx.locals[id];
+        let guard = matches!(local.ty, Ty::Sync(sid) if sync_parts(sid).0 == SyncKind::Guard);
+        if (matches!(local.ty, Ty::RefMut(_)) || guard) && local.kind == LocalKind::Param {
             self.diags.error("E0101", span, format!("cannot modify through `{}`: a default parameter only grants read-only access", cx.locals[id].name));
+            false
+        } else if guard && matches!(local.kind, LocalKind::Bind | LocalKind::LoopVar) {
+            self.diags.error("E0101", span, format!("cannot modify through `{}`: this binding only grants read-only access", local.name));
             false
         } else { true }
     }
@@ -7218,7 +7363,7 @@ impl Checker<'_> {
             return err_expr(span);
         }
         if !kt.is_hashable() {
-            self.diags.error("E0501", span, format!("`{kt}` cannot be a Map key")).note("keys can be integers, bool, str or String");
+            self.diags.error("E0501", span, format!("`{kt}` cannot be a Map key")).note("keys can be integers, bool, str, String or Id");
             return err_expr(span);
         }
         if vt.contains_ref_mut() {
@@ -8068,7 +8213,7 @@ impl Checker<'_> {
         }
         match place.ty {
             Ty::Vec(v) => match vec_elem(v) {
-                Ty::Int(_) | Ty::Str | Ty::String => HExpr { kind: HExprKind::Sort(place), ty: Ty::Unit, span, at },
+                Ty::Int(_) | Ty::Str | Ty::String | Ty::Id(_) => HExpr { kind: HExprKind::Sort(place), ty: Ty::Unit, span, at },
                 Ty::Error => err_expr(span),
                 e if self.protocol(e).is_some_and(|(cmp, _)| cmp.is_some()) => {
                     let func = self.protocol(e).and_then(|(cmp, _)| cmp).expect("checked above");
@@ -8114,7 +8259,7 @@ impl Checker<'_> {
             }
             ("contains", Ty::Vec(_) | Ty::Slice(_)) => {
                 let e = seq_elem(recv.ty).expect("a sequence");
-                if !matches!(e, Ty::Int(_) | Ty::Bool | Ty::Str | Ty::String) {
+                if !matches!(e, Ty::Int(_) | Ty::Bool | Ty::Str | Ty::String | Ty::Id(_)) {
                     self.diags.error("E0501", span, format!("values of type `{e}` cannot be compared, so `contains` cannot be used"));
                     return Ok(err_expr(span));
                 }

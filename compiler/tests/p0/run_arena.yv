@@ -1,0 +1,78 @@
+// expect-stdout:
+// | arena ok
+
+struct Person {
+    name: String
+    friends: Vec[Id[Person]]
+}
+struct World { people: Arena[Person] }
+fn pool(w: inout World) -> &inout Arena[Person] of w { return &w.people }
+fn identity[T](a: inout Arena[T]) -> &inout Arena[T] of a { return &a }
+fn read[T: Copy](a: Arena[T], id: Id[T]) -> ?T of a { return a.getCopy(id) }
+fn moved(a: sink Arena[int]) -> Arena[int] { return a }
+fn makeId() -> Id[int] {
+    var a = Arena[int]{}
+    return a.add(1)
+}
+fn sendId(id: Id[Rc[int]]) -> Id[Rc[int]] { return id }
+fn main() {
+    var world = World{people: Arena[Person]{}}
+    let a = pool(&world).add(Person{name: "Ann".toString(), friends: []})
+    let b = pool(&world).add(Person{name: "Bo".toString(), friends: [a]})
+    if let p = pool(&world).getMut(a) { p.friends.push(b) }
+    if let p = world.people.get(b) {
+        assert(p.name == "Bo".toString())
+        assert(p.friends[0] == a)
+    }
+    var names: Map[Id[Person], String] = [:]
+    names.set(a, "Ann".toString())
+    names.set(b, "Bo".toString())
+    if let name = names.get(b) { assert(name.len() == 2) }
+    var ids: Set[Id[Person]] = Set[Id[Person]]{}
+    ids.add(a)
+    ids.add(b)
+    assert(ids.has(a))
+    var order: Vec[Id[Person]] = [b, a, b]
+    order.sort()
+    assert(order[0] == a)
+    assert(order.contains(b))
+    let removed = pool(&world).remove(a) ?? Person{name: "missing".toString(), friends: []}
+    assert(removed.name == "Ann".toString())
+    assert(world.people.get(a).isNone())
+    let c = pool(&world).add(Person{name: "Cy".toString(), friends: []})
+    assert(c != a)
+    assert(names.has(a))
+    assert(!names.has(c))
+    assert(world.people.get(a).isNone())
+    assert(world.people.remove(a).isNone())
+    assert(world.people.len() == 2)
+    var numbers = Arena[int]{}
+    var handles: Vec[Id[int]] = []
+    for i in 0..300 { handles.push(identity(&numbers).add(i)) }
+    for i in 0..300 {
+        if let n = identity(&numbers).getMut(handles[i]) { *n += 10 }
+        assert((read(numbers, handles[i]) ?? -1) == i + 10)
+    }
+    var owned = moved(numbers)
+    for i in 0..300 {
+        assert((owned.remove(handles[i]) ?? -1) == i + 10)
+    }
+    assert(owned.len() == 0)
+    for i in 0..300 { let _id = owned.add(i) }
+    for id in handles { assert(owned.getCopy(id).isNone()) }
+    scope {
+        let h = spawn moved(owned)
+        let returned = h.join()
+        assert(returned.len() == 300)
+    }
+    var rcArena = Arena[Rc[int]]{}
+    let token = rcArena.add(Rc(4))
+    scope {
+        let x = spawn makeId()
+        let y = spawn makeId()
+        let z = spawn sendId(token)
+        assert(x.join() != y.join())
+        assert(z.join() == token)
+    }
+    println("arena ok")
+}

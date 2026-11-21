@@ -164,6 +164,30 @@ fn collections_and_mutable_returns_compile_for_all_targets() {
 }
 
 #[test]
+fn arena_identity_and_graphs_compile_for_all_targets() {
+    let scratch = common::Scratch::new("arena-targets").unwrap();
+    let path = fixture("run_arena.yv");
+    let want = expected_stdout(&std::fs::read_to_string(&path).unwrap());
+    for (name, os, arch) in TARGETS {
+        let artifact = scratch.0.join(format!("{name}{}", if *os == "windows" { ".exe" } else { "" }));
+        let built = common::output(yavo().arg("build").arg(&path)
+            .args(["--release", "--target", name, "-o"]).arg(&artifact), common::BUILD_TIMEOUT).unwrap();
+        assert!(built.status.success() && built.stderr.is_empty(), "{name}: {built:?}");
+        let bytes = std::fs::read(&artifact).unwrap();
+        assert_eq!(format_of(&bytes), Some((*os, *arch)), "{name}: wrong executable format");
+        if *os == "linux" {
+            assert!(!contains(&bytes, b"ld-linux") && !contains(&bytes, b"ld-musl"), "{name}: expected static linking");
+        }
+        if *os == std::env::consts::OS && *arch == std::env::consts::ARCH {
+            let run = common::output(&mut Command::new(&artifact), common::RUN_TIMEOUT).unwrap();
+            assert_eq!(run.status.code(), Some(0), "{name}: {run:?}");
+            assert!(run.stderr.is_empty(), "{name}: {run:?}");
+            assert_eq!(run.stdout, want.as_bytes(), "{name}");
+        }
+    }
+}
+
+#[test]
 fn target_errors_and_default_output_name() {
     let path = fixture("run_arith.yv");
 

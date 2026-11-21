@@ -13,7 +13,7 @@ use serde_json::{json, Value};
 use crate::ast;
 use crate::check::{
     self, BindMode, Builtin, CatchHandler, HExpr, HExprKind, HProgram,
-    HStmt, HStmtKind, IoOp, MapRead, MapWrite, Method2, PrintPart,
+    HStmt, HStmtKind, IoOp, MapRead, MapWrite, ArenaWrite, Method2, PrintPart,
 };
 use crate::diag::{self, Span};
 use crate::types::{
@@ -229,7 +229,7 @@ impl Analyzer<'_> {
                     ));
                 }
             }
-            Ty::Vec(id) | Ty::Deque(id) => self.drop_calls(vec_elem(id), span, seen, ops),
+            Ty::Vec(id) | Ty::Deque(id) | Ty::Arena(id) => self.drop_calls(vec_elem(id), span, seen, ops),
             Ty::Heap(id) => {
                 self.drop_calls(vec_elem(id), span, seen, ops);
                 ops.push(Operation::new(
@@ -276,7 +276,7 @@ impl Analyzer<'_> {
             // Deallocation itself does not allocate Yavo heap storage. Views do
             // not own their referents, and scalars have no cleanup.
             Ty::String | Ty::Float(_) | Ty::Int(_) | Ty::Bool | Ty::Str
-            | Ty::Ref(_) | Ty::RefMut(_) | Ty::Slice(_) | Ty::Unit => {}
+            | Ty::Ref(_) | Ty::RefMut(_) | Ty::Slice(_) | Ty::Id(_) | Ty::Unit => {}
         }
     }
 
@@ -379,6 +379,7 @@ impl Visitor<'_, '_> {
             expr.kind,
             HExprKind::Call { .. } | HExprKind::LetTemp { .. } | HExprKind::VecLit(_) | HExprKind::Move(_)
                 | HExprKind::HeapNew { .. } | HExprKind::DequeNew | HExprKind::DequePop { .. }
+                | HExprKind::ArenaNew | HExprKind::ArenaWrite { .. }
                 | HExprKind::Some(_) | HExprKind::Coalesce { .. } | HExprKind::Take(_)
                 | HExprKind::Replace(..) | HExprKind::Pop(_) | HExprKind::MapLit(_)
                 | HExprKind::MapWrite { .. } | HExprKind::StructLit { .. }
@@ -510,7 +511,7 @@ impl Visitor<'_, '_> {
         match &expr.kind {
             E::Int(_) | E::Float(_) | E::Bool(_) | E::Str(_) | E::Local(_)
             | E::Move(_) | E::InoutArg(_) | E::InoutPlace(_) | E::None
-            | E::EmptyString | E::ScopeNew | E::DequeNew => Vec::new(),
+            | E::EmptyString | E::ScopeNew | E::DequeNew | E::ArenaNew => Vec::new(),
             E::HeapNew { caps, .. } => self.builtin(
                 "Heap.by", expr, self.exprs(caps),
                 if caps.is_empty() { Effect::NONE } else { Effect::MAY },
@@ -727,6 +728,20 @@ impl Visitor<'_, '_> {
                 "removing a heap element invokes its stored comparator, whose effect is opaque",
             ),
             E::Pop(_) => self.builtin("Vec.pop", expr, Vec::new(), Effect::NONE, NO),
+            E::ArenaRead { op, recv, key } => {
+                let name = match op { MapRead::Get => "Arena.get", MapRead::GetCopy => "Arena.getCopy", MapRead::Has => "Arena.has" };
+                let mut parameters = self.borrowed(recv);
+                parameters.extend(self.expr(key));
+                self.builtin(name, expr, parameters, Effect::NONE, NO)
+            }
+            E::ArenaWrite { op, value, .. } => {
+                let (name, effect) = match op {
+                    ArenaWrite::Add => ("Arena.add", Effect::MAY),
+                    ArenaWrite::Remove => ("Arena.remove", Effect::NONE),
+                    ArenaWrite::GetMut => ("Arena.getMut", Effect::NONE),
+                };
+                self.builtin(name, expr, self.expr(value), effect, if effect.may_alloc { ALLOC } else { NO })
+            }
             E::MapRead { op, recv, key } => {
                 let name = match op {
                     MapRead::Get => "Map.get",

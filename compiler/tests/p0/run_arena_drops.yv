@@ -1,0 +1,21 @@
+// expect-stdout:
+// | drop one
+// | removed
+// | drop two
+// | drop three
+// | done
+struct Resource: Drop {
+    name: String
+    fn drop(inout self) { println("drop ${self.name}") }
+}
+fn main() {
+    var a = Arena[Resource]{}
+    let first = a.add(Resource{name: "one".toString()})
+    let _second = a.add(Resource{name: "two".toString()})
+    let _ = a.remove(first)
+    println("removed")
+    let _third = a.add(Resource{name: "three".toString()})
+    assert(a.remove(first).isNone())
+    let _ = a
+    println("done")
+}

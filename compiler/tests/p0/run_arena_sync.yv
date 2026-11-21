@@ -1,0 +1,57 @@
+// expect-stdout:
+// | arena sync ok
+use std/sync
+struct Store { pool: Arena[int] }
+fn insert(store: sink Arc[Mutex[Arena[int]]], value: int) -> Id[int] {
+    with a = store.lock() { return a.add(value) }
+}
+fn read(g: Guard[Arena[int]], id: Id[int]) -> int { return g.getCopy(id) ?? 0 }
+fn add(g: inout Guard[Arena[int]], value: int) -> Id[int] { return g.add(value) }
+fn pool(g: inout Guard[Store]) -> &inout Arena[int] of g { return &g.pool }
+fn append(g: inout Guard[Vec[int]]) { g.push(8) }
+fn main() {
+    var boxed = Box(Box(Arena[int]{}))
+    let boxedId = boxed.add(3)
+    if let p = boxed.getMut(boxedId) { *p += 1 }
+    assert((boxed.remove(boxedId) ?? 0) == 4)
+    let store = Arc(Mutex(Arena[int]{}))
+    scope {
+        let one = spawn insert(store.clone(), 11)
+        let two = spawn insert(store.clone(), 29)
+        let first = one.join()
+        let second = two.join()
+        assert(first != second)
+        with a = store.lock() {
+            assert(read(a, first) == 11)
+            assert(read(a, second) == 29)
+            if let p = a.getMut(first) { *p += 1 }
+            assert((a.remove(first) ?? 0) == 12)
+            assert(!a.has(first))
+            assert(a.len() == 1)
+        }
+    }
+    let mutex = Mutex(Arena[int]{})
+    {
+        var held = mutex.lock()
+        let id = add(&held, 17)
+        assert(read(held, id) == 17)
+        assert((held.remove(id) ?? 0) == 17)
+    }
+    let nested = Mutex(Store{pool: Arena[int]{}})
+    {
+        var held = nested.lock()
+        let id = pool(&held).add(5)
+        if let p = pool(&held).getMut(id) { *p *= 2 }
+        assert((pool(&held).remove(id) ?? 0) == 10)
+        let direct = held.pool.add(21)
+        assert((held.pool.remove(direct) ?? 0) == 21)
+    }
+    let vec = Mutex([1])
+    {
+        var held = vec.lock()
+        append(&held)
+        assert(held.len() == 2)
+        assert(held[1] == 8)
+    }
+    println("arena sync ok")
+}

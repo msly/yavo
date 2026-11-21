@@ -489,6 +489,90 @@ static void yv_vec_free(yv_vec *v) {
     v->len = v->cap = 0;
 }
 
+/* An Id contains no address. Both Arena identities and reused-slot generations
+ * are nonwrapping, so dropping an Arena or reusing a slot cannot revive an Id. */
+typedef struct { uint64_t arena, slot, generation; } yv_id;
+typedef struct { uint64_t generation; int64_t next; bool live; } yv_arena_slot;
+typedef struct {
+    yv_vec slots;
+    uint64_t identity;
+    int64_t free_head, len;
+} yv_arena;
+
+static uint64_t yv_arena_identity_counter = 0;
+
+static yv_arena yv_arena_new(uint32_t line, uint32_t col) {
+    uint64_t old = __atomic_load_n(&yv_arena_identity_counter, __ATOMIC_RELAXED);
+    for (;;) {
+        if (old == UINT64_MAX) yv_capacity_overflow(line, col);
+        if (__atomic_compare_exchange_n(&yv_arena_identity_counter, &old, old + 1, false,
+                                        __ATOMIC_RELAXED, __ATOMIC_RELAXED)) break;
+    }
+    yv_arena a = {0};
+    a.identity = old + 1;
+    a.free_head = -1;
+    return a;
+}
+
+static int yv_id_cmp(yv_id a, yv_id b) {
+    if (a.arena != b.arena) return a.arena < b.arena ? -1 : 1;
+    if (a.slot != b.slot) return a.slot < b.slot ? -1 : 1;
+    return a.generation < b.generation ? -1 : a.generation > b.generation;
+}
+
+static bool yv_id_eq(yv_id a, yv_id b) { return yv_id_cmp(a, b) == 0; }
+static int yv_cmp_id(const void *a, const void *b) { return yv_id_cmp(*(const yv_id *)a, *(const yv_id *)b); }
+
+/* The compiler emits a typed entry with this header as its first member. */
+static yv_arena_slot *yv_arena_entry(const yv_arena *a, int64_t stride, uint64_t slot) {
+    return (yv_arena_slot *)((char *)a->slots.ptr + (int64_t)slot * stride);
+}
+
+static yv_id yv_arena_add_slot(yv_arena *a, int64_t stride, uint32_t line, uint32_t col) {
+    int64_t live;
+    if (__builtin_add_overflow(a->len, (int64_t)1, &live)) yv_capacity_overflow(line, col);
+    yv_arena_slot *s;
+    uint64_t index;
+    if (a->free_head >= 0) {
+        index = (uint64_t)a->free_head;
+        s = yv_arena_entry(a, stride, index);
+        if (s->generation == UINT64_MAX) yv_capacity_overflow(line, col);
+        a->free_head = s->next;
+        s->generation++;
+    } else {
+        index = (uint64_t)a->slots.len;
+        s = (yv_arena_slot *)yv_vec_push_slot(&a->slots, stride, line, col);
+        s->generation = 1;
+    }
+    s->next = -1;
+    s->live = true;
+    a->len = live;
+    yv_id id = {a->identity, index, s->generation};
+    return id;
+}
+
+static yv_arena_slot *yv_arena_get(const yv_arena *a, yv_id id, int64_t stride, uint32_t line, uint32_t col) {
+    if (id.arena != a->identity) yv_panic("P-ARENA-ID", "Id belongs to another Arena", line, col);
+    if (id.slot >= (uint64_t)a->slots.len) return NULL;
+    yv_arena_slot *s = yv_arena_entry(a, stride, id.slot);
+    return s->live && s->generation == id.generation ? s : NULL;
+}
+
+static yv_arena_slot *yv_arena_remove(yv_arena *a, yv_id id, int64_t stride, uint32_t line, uint32_t col) {
+    yv_arena_slot *s = yv_arena_get(a, id, stride, line, col);
+    if (!s) return NULL;
+    s->live = false;
+    s->next = a->free_head;
+    a->free_head = (int64_t)id.slot;
+    a->len--;
+    return s;
+}
+
+static void yv_arena_free(yv_arena *a) {
+    yv_vec_free(&a->slots);
+    memset(a, 0, sizeof(*a));
+}
+
 /* A ring buffer: removing from either end never shifts the remaining elements. */
 typedef struct {
     void *ptr;
