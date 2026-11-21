@@ -1,0 +1,24 @@
+use std/{os, collections}
+
+fn main() {
+    let args = os.args()
+    assert(args.len() == 4)
+    let n = args[1].parseInt() ?? 0
+    let work = args[2].parseInt() ?? 0
+    let seed = args[3].parseInt() ?? 0
+    assert(n > 0 && n <= 2000000 && work > 0 && work <= 20000000 && seed > 0 && seed <= 100000)
+    var queue = Deque[int]{}
+    for i in 0..n {
+        queue.pushBack((i * 17 + seed) % 65521)
+    }
+    var checksum = 0
+    for _i in 0..work {
+        let value = queue.popFront() ?? -1
+        checksum += value
+        queue.pushBack((value + 1) % 65521)
+    }
+    while let value = queue.popFront() {
+        checksum += value
+    }
+    println(checksum)
+}

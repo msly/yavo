@@ -1,0 +1,25 @@
+use std/os
+
+fn main() {
+    let args = os.args()
+    assert(args.len() == 4)
+    let n = args[1].parseInt() ?? 0
+    let work = args[2].parseInt() ?? 0
+    let seed = args[3].parseInt() ?? 0
+    assert(n > 0 && n <= 2000000 && work > 0 && work <= 1000 && seed > 0 && seed <= 100000)
+    var values: Vec[int] = []
+    values.reserve(n)
+    for i in 0..n {
+        values.push((i * 17 + seed) % 65521)
+    }
+    for round in 0..work {
+        for value in &values {
+            *value = (*value * 3 + round) % 65521
+        }
+    }
+    var checksum = 0
+    for i in 0..n {
+        checksum += values[i]
+    }
+    println(checksum)
+}
