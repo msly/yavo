@@ -32,9 +32,9 @@ Source modules support top-level exports, per-file imports, cyclic imports and o
 
 ### GitHub CI
 
-**[Run 44991523612](https://github.com/msly/yavo/actions/runs/44991523612) passed all four jobs
-at `8a65228` on 2026-11-22.** The language-feature baseline remains `b3c27a6`;
-the latest code change fixes Windows paths in the verification build driver.
+**[Run 44996118634](https://github.com/msly/yavo/actions/runs/44996118634) passed all five jobs
+at `0bad3d2` on 2026-11-22.** The language-feature baseline remains `b3c27a6`;
+the last compiler-tool change, `8a65228`, fixes Windows paths in the verification build driver.
 
 | Job | Result | Scope |
 | --- | --- | --- |
@@ -42,6 +42,7 @@ the latest code change fixes Windows paths in the verification build driver.
 | Windows x86-64 | Debug **71/0/1**, Release **71/0/1** | Selected native suites and compiler unit tests |
 | macOS arm64 | Debug **74/0/1**, Release **74/0/1** | The same selection, including its Unix-only cases |
 | Independent Linux ASan+UBSan | **60 passed, 0 failed** | GCC 13.3; all exported P0 run/panic fixtures and clean/UAF/signed-overflow capability probes |
+| Round-five experiment evidence | **Passed** | 1,344 judgments, 96 source stages, 16 structural reviews, 43 frozen files and 28 task-packet files |
 
 Counts are passed/failed/ignored. Three Unix-only tests are compiled out on
 Windows; no selected tests were filtered at runtime. Windows/macOS selection
@@ -49,11 +50,12 @@ is narrower than the full Linux suite. Linux conformance remains **124 pass,
 0 wrong, 3 unsupported, 0 not_run, 2 superseded** in both modes; independent GCC
 success does not change the pinned Zig ASan exceptions.
 
-[CI scope](tools/ci/README.md) · [source-bound receipt and earlier run history](compiler/validation/github-ci-2026-11-22.json)
+[CI scope](tools/ci/README.md) · [current source-bound receipt](compiler/validation/github-ci-round5-2026-11-22.json) · [earlier run history](compiler/validation/github-ci-2026-11-22.json)
 
-A fifth job now validates the archived round-five experiment evidence. Its first
-remote result is **pending the final commit/push and CI run**; the four passing
-results above remain the recorded `8a65228` run.
+The fifth job validates the archived round-five evidence, including raw records,
+source identities and recomputed summaries. It does not launch new model sessions
+or rerun all participant programs. All five artifact downloads were checked against
+their GitHub-reported byte counts and SHA-256 digests.
 
 ### Measurements tied to earlier snapshots
 

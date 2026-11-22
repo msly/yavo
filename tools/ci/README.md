@@ -20,6 +20,7 @@ test totals; the existing 120-second per-fixture build deadline is unchanged.
 | Windows 2025, x86_64 | Native compiler unit tests and the explicitly listed portable integration suites, in Debug and Release |
 | macOS 15, arm64 | The same native selection, in Debug and Release |
 | Independent Linux ASan+UBSan | Export the current generated C and runtime, validate sanitizer positive/negative probes, then execute every exported P0 run/panic fixture with strict output and exit expectations |
+| Round-five experiment evidence | Recreate the frozen task packet, verify archived source/output identities, recompute all 1,344 judgments and summary values, and check 16 hash-bound module/thread reviews |
 
 The native selection is declared in `NATIVE_TESTS` in `run.py`: P0 fixtures,
 allocation checks, Arena, modules, indexed assignment/methods, mutable-reference
@@ -38,13 +39,24 @@ of `conformance.json`; CI never updates the baseline. The one ignored Cargo test
 is the old exploratory `p0::conformance_report`; the active conformance suite is
 not ignored. This gate does not measure v1 completeness.
 
-Each job uploads `compiler/target/ci/` for 14 days, even after failure. It contains
+Each job uploads `compiler/target/ci/` for 14 days, even after failure. Native artifacts contain
 the source revision, host, exact command/exit/time records, toolchain and Cargo
 lock hashes, compiler hash, full logs, actual test totals, and (on Linux) separate
 Debug/Release conformance JSON. The sanitizer artifact additionally retains the
 source/C/runtime bundle, capability probes, executables, and detailed validator
 receipts. Independent GCC results do not turn the pinned Zig ASan exceptions
 into conformance passes.
+
+The experiment job runs `experiment_evidence.py` against the archived four
+sessions at the frozen `8c200aa` packet. It checks evidence integrity rather than
+requiring every participant answer to be correct; a recorded failure is valid
+experiment data, while missing or inconsistent evidence fails CI. Unavailable
+token usage remains `null`. This job does not invoke a model or rerun participant
+executables. Its artifact contains the source revision, gate hash, packet
+regeneration/self-test logs, independently recomputed totals, and integrity
+receipt. The six recorded string-to-integer conversions of documentation line
+numbers are checked under the narrow policy documented in the receipt; original
+request and event logs are preserved.
 
 For local reproduction in a fresh checkout with Rustup and Python available:
 
@@ -53,6 +65,7 @@ python3 tools/ci/run.py setup
 python3 tools/ci/run.py native --suite full   # Linux x86_64
 python3 tools/ci/run.py native --suite native # Windows/macOS selection
 python3 tools/ci/run.py sanitize             # Linux with Perl and GCC
+python3 tools/ci/experiment_evidence.py       # Archived round-five evidence
 ```
 
 Use `python` on Windows. A setup/download failure is a failing job, never a skip.

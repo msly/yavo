@@ -27,8 +27,8 @@ Six target formats/architectures cross-compile. Overall `verify` remains
 `not_verified` (exit 5), because required audit is unimplemented.
 
 History and CI are published at [msly/yavo](https://github.com/msly/yavo).
-**[CI run 44991523612](https://github.com/msly/yavo/actions/runs/44991523612) passed all four
-jobs at `8a65228` on 2026-11-22:**
+**[CI run 44996118634](https://github.com/msly/yavo/actions/runs/44996118634) passed all five
+jobs at `0bad3d2` on 2026-11-22:**
 
 | Platform/job | Debug | Release | Scope |
 | --- | --- | --- | --- |
@@ -36,6 +36,7 @@ jobs at `8a65228` on 2026-11-22:**
 | Windows x86-64 | 71/0/1 | 71/0/1 | Selected native suites and compiler unit tests |
 | macOS arm64 | 74/0/1 | 74/0/1 | Same selection, including Unix-only cases |
 | Independent GCC 13.3 ASan+UBSan | 60 passed, 0 failed | — | All exported P0 run/panic fixtures; all capability probes passed |
+| Round-five experiment evidence | Passed | — | 1,344 judgments, 96 source stages, 16 structural reviews, 43 frozen files and 28 task-packet files |
 
 Native counts are passed/failed/ignored. Two Unix process unit tests and one
 Unix symlink-module test are compiled out on Windows; there are no runtime
@@ -46,13 +47,14 @@ contract. Independent GCC evidence does not reclassify pinned Zig ASan cases.
 The `8a65228` verification driver uses validated artifact-relative paths on
 Windows and records its working directory. The module snapshot regression
 covers spaces and Unicode. Parser, type/borrow rules, codegen and runtime remain
-at the `b3c27a6` language-feature baseline. See [CI scope](../tools/ci/README.md)
-and [the source-bound receipt](validation/github-ci-2026-11-22.json) for all
-three runs, actual artifacts and the earlier failures.
+at the `b3c27a6` language-feature baseline. See [CI scope](../tools/ci/README.md),
+the [current source-bound receipt](validation/github-ci-round5-2026-11-22.json)
+and [earlier run history](validation/github-ci-2026-11-22.json).
 
-The round-five experiment adds an evidence-validation job to CI. Its first
-remote result is **pending the final commit/push and CI run**; the recorded
-four-job compiler/platform result above remains bound to `8a65228`.
+The round-five evidence job passed on the same commit as all four compiler/platform
+jobs. It checks archived raw records, source identities and recomputed summaries;
+it does not launch new model sessions or rerun all participant programs. All five
+downloaded artifacts match their GitHub-reported byte counts and SHA-256 digests.
 
 ### Earlier measurements and their source scope
 

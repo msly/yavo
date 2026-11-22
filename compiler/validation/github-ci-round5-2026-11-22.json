@@ -1,0 +1,2385 @@
+{
+   "api_receipt_sha256" : {
+      "artifacts" : "5ab191b5d80ed3e550fc55fba00b330e9aaa9e4921a2ad38d88f3b6356f365bc",
+      "jobs" : "f170595070659cda43e92c793db59bda8074901685dadc97fb21795c1260991b",
+      "run" : "d2f20a114332c1a94c4e4a7e6f5d17b2e6c67da348a31edd08b2e604b2f2263f"
+   },
+   "artifact_count" : 5,
+   "job_count" : 5,
+   "jobs" : [
+      {
+         "artifact" : {
+            "created_at" : "2026-11-22T07:05:07Z",
+            "digest" : "sha256:d4804e61cf16f34156e990d3466c596fa470fcea6dd41b7164d211a7319fec4c",
+            "downloaded_zip_sha256" : "d4804e61cf16f34156e990d3466c596fa470fcea6dd41b7164d211a7319fec4c",
+            "expired" : false,
+            "expires_at" : "2026-12-06T07:05:05Z",
+            "id" : 14743733177,
+            "name" : "native-ubuntu-24.04-0bad3d2bde99a0142e00b42ccc68fda9cd00512e",
+            "size_in_bytes" : 1230649,
+            "updated_at" : "2026-11-22T07:05:07Z",
+            "url" : "https://github.com/msly/yavo/actions/runs/44996118634/artifacts/14743733177"
+         },
+         "command_receipts" : [
+            {
+               "argv" : [
+                  "rustup",
+                  "toolchain",
+                  "install",
+                  "1.99.1",
+                  "--profile",
+                  "minimal"
+               ],
+               "cwd" : "/home/runner/work/yavo/yavo/compiler",
+               "exit_code" : 0,
+               "label" : "rust-install",
+               "log" : "rust-install.log",
+               "log_sha256" : "7e5bf50cc393c1f03c7178c759b5c1960efc88004516ee203f5ef5f878c96de8",
+               "seconds" : 7.429551742,
+               "timed_out" : false
+            },
+            {
+               "argv" : [
+                  "rustc",
+                  "-vV"
+               ],
+               "cwd" : "/home/runner/work/yavo/yavo/compiler",
+               "exit_code" : 0,
+               "label" : "rust-version",
+               "log" : "rust-version.log",
+               "log_sha256" : "f22d5e4e9ced367e774ce5bc140d9e6b1235c1882fec80d011044851f3ae6369",
+               "seconds" : 0.0158474149999961,
+               "timed_out" : false
+            },
+            {
+               "argv" : [
+                  "cargo",
+                  "--version"
+               ],
+               "cwd" : "/home/runner/work/yavo/yavo/compiler",
+               "exit_code" : 0,
+               "label" : "cargo-version",
+               "log" : "cargo-version.log",
+               "log_sha256" : "c35608815f43d0b8788a9b826fad2bb17384f49fb328dc4fe64da9db5f5ef4d6",
+               "seconds" : 0.00767677400000366,
+               "timed_out" : false
+            },
+            {
+               "argv" : [
+                  "cargo",
+                  "fetch",
+                  "--locked"
+               ],
+               "cwd" : "/home/runner/work/yavo/yavo/compiler",
+               "exit_code" : 0,
+               "label" : "cargo-fetch",
+               "log" : "cargo-fetch.log",
+               "log_sha256" : "789870be3b9d38a131d01aec6ce2f50876a1fdaffa9356baf84842c28bf67911",
+               "seconds" : 0.264240610000002,
+               "timed_out" : false
+            },
+            {
+               "argv" : [
+                  "cargo",
+                  "build",
+                  "--locked",
+                  "--offline",
+                  "--release"
+               ],
+               "cwd" : "/home/runner/work/yavo/yavo/compiler",
+               "exit_code" : 0,
+               "label" : "compiler-build",
+               "log" : "compiler-build.log",
+               "log_sha256" : "f0218813853926e68c3df4194669bdaf71740469136920a5fc52041c6b4797b7",
+               "seconds" : 13.112472711,
+               "timed_out" : false
+            },
+            {
+               "argv" : [
+                  "/home/runner/work/yavo/yavo/compiler/target/release/yavo",
+                  "--version"
+               ],
+               "cwd" : "/home/runner/work/yavo/yavo/compiler",
+               "exit_code" : 0,
+               "label" : "compiler-version",
+               "log" : "compiler-version.log",
+               "log_sha256" : "dbd8cc3c396a3be4ca0c8d787d716b25a1388157061ebd4009fb059e72ad2613",
+               "seconds" : 0.00150608600000623,
+               "timed_out" : false
+            },
+            {
+               "argv" : [
+                  "/home/runner/work/yavo/yavo/compiler/target/release/yavo",
+                  "toolchain",
+                  "install"
+               ],
+               "cwd" : "/home/runner/work/yavo/yavo/compiler",
+               "exit_code" : 0,
+               "label" : "zig-install",
+               "log" : "zig-install.log",
+               "log_sha256" : "103675aabb88a25ea13cee4285b6487ce01b272537bf99c7aeb05313e3bc7dfc",
+               "seconds" : 8.182187242,
+               "timed_out" : false
+            },
+            {
+               "argv" : [
+                  "/home/runner/work/yavo/yavo/compiler/target/release/yavo",
+                  "toolchain",
+                  "status"
+               ],
+               "cwd" : "/home/runner/work/yavo/yavo/compiler",
+               "exit_code" : 0,
+               "label" : "zig-status",
+               "log" : "zig-status.log",
+               "log_sha256" : "8d05b2f5d7e27fc208e87379b65015742e43e3a07a5d5d47a710f9b418441f09",
+               "seconds" : 0.00152037100002644,
+               "timed_out" : false
+            },
+            {
+               "argv" : [
+                  "/home/runner/work/yavo/yavo/compiler/target/release/yavo",
+                  "build",
+                  "/home/runner/work/yavo/yavo/compiler/tests/p0/run_arith.yv",
+                  "-o",
+                  "/home/runner/work/yavo/yavo/compiler/target/ci/warmup-debug"
+               ],
+               "cwd" : "/home/runner/work/yavo/yavo/compiler",
+               "exit_code" : 0,
+               "label" : "zig-warmup-build-debug",
+               "log" : "zig-warmup-build-debug.log",
+               "log_sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "seconds" : 12.490694929,
+               "timed_out" : false
+            },
+            {
+               "argv" : [
+                  "/home/runner/work/yavo/yavo/compiler/target/ci/warmup-debug"
+               ],
+               "cwd" : "/home/runner/work/yavo/yavo/compiler",
+               "exit_code" : 0,
+               "label" : "zig-warmup-run-debug",
+               "log" : "zig-warmup-run-debug.log",
+               "log_sha256" : "debc3d3df2f0a22a129585695ab546565d578334fc3b6647d0e1b6beaf095c84",
+               "seconds" : 0.00163203300002124,
+               "timed_out" : false
+            },
+            {
+               "argv" : [
+                  "/home/runner/work/yavo/yavo/compiler/target/release/yavo",
+                  "build",
+                  "/home/runner/work/yavo/yavo/compiler/tests/p0/run_arith.yv",
+                  "-o",
+                  "/home/runner/work/yavo/yavo/compiler/target/ci/warmup-release",
+                  "--release"
+               ],
+               "cwd" : "/home/runner/work/yavo/yavo/compiler",
+               "exit_code" : 0,
+               "label" : "zig-warmup-build-release",
+               "log" : "zig-warmup-build-release.log",
+               "log_sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "seconds" : 2.16849251500003,
+               "timed_out" : false
+            },
+            {
+               "argv" : [
+                  "/home/runner/work/yavo/yavo/compiler/target/ci/warmup-release"
+               ],
+               "cwd" : "/home/runner/work/yavo/yavo/compiler",
+               "exit_code" : 0,
+               "label" : "zig-warmup-run-release",
+               "log" : "zig-warmup-run-release.log",
+               "log_sha256" : "debc3d3df2f0a22a129585695ab546565d578334fc3b6647d0e1b6beaf095c84",
+               "seconds" : 0.00151502599999276,
+               "timed_out" : false
+            },
+            {
+               "argv" : [
+                  "cargo",
+                  "test",
+                  "--locked",
+                  "--offline",
+                  "--",
+                  "--nocapture"
+               ],
+               "cwd" : "/home/runner/work/yavo/yavo/compiler",
+               "exit_code" : 0,
+               "label" : "tests-debug",
+               "log" : "tests-debug.log",
+               "log_sha256" : "636d2ec1ae691fcf448bcecfb585f437d985c9dda64a0709cd57371218cddf5e",
+               "seconds" : 266.998932227,
+               "timed_out" : false
+            },
+            {
+               "argv" : [
+                  "cargo",
+                  "test",
+                  "--locked",
+                  "--offline",
+                  "--release",
+                  "--",
+                  "--nocapture"
+               ],
+               "cwd" : "/home/runner/work/yavo/yavo/compiler",
+               "exit_code" : 0,
+               "label" : "tests-release",
+               "log" : "tests-release.log",
+               "log_sha256" : "d82efe5e98c57f2a0d5a4d8b9e98a6503237a6aabbb3fefb10839bcc080d8540",
+               "seconds" : 56.530385949,
+               "timed_out" : false
+            }
+         ],
+         "conformance" : {
+            "debug" : {
+               "case_count" : 129,
+               "not_run" : 0,
+               "pass" : 124,
+               "report_sha256" : "eb67ee505e0a0f0fad8dacfad2df80851a80fdfd3db1aed1b7e02c2531edeefe",
+               "superseded" : 2,
+               "superseded_ids" : [
+                  "T-GF2",
+                  "T-V1"
+               ],
+               "unsupported" : 3,
+               "unsupported_ids" : [
+                  "T-GR9",
+                  "T-P3",
+                  "T-R2"
+               ],
+               "wrong" : 0
+            },
+            "release" : {
+               "case_count" : 129,
+               "not_run" : 0,
+               "pass" : 124,
+               "report_sha256" : "eb67ee505e0a0f0fad8dacfad2df80851a80fdfd3db1aed1b7e02c2531edeefe",
+               "superseded" : 2,
+               "superseded_ids" : [
+                  "T-GF2",
+                  "T-V1"
+               ],
+               "unsupported" : 3,
+               "unsupported_ids" : [
+                  "T-GR9",
+                  "T-P3",
+                  "T-R2"
+               ],
+               "wrong" : 0
+            }
+         },
+         "job" : {
+            "completed_at" : "2026-11-22T07:05:10Z",
+            "conclusion" : "success",
+            "html_url" : "https://github.com/msly/yavo/actions/runs/44996118634/job/137127420489",
+            "id" : 137127420489,
+            "labels" : [
+               "ubuntu-24.04"
+            ],
+            "name" : "Native Linux x86_64",
+            "runner_group_name" : "GitHub Actions",
+            "runner_name" : "GitHub Actions 1000000878",
+            "started_at" : "2026-11-22T06:58:53Z",
+            "status" : "completed"
+         },
+         "key" : "linux",
+         "native_report" : {
+            "cargo_lock_sha256" : "1855e4b98bba9e064b54ffdb43935981e5dc2f22d8c5561688cac88bcf73ad41",
+            "compiler_sha256" : "ac7116537b9f8deae2b1161922398f38c38f513c734a27c6ae31ebb6c87ced8b",
+            "host" : {
+               "machine" : "x86_64",
+               "platform" : "Linux-7.0.0-1014-aws-x86_64-with-glibc2.39"
+            },
+            "revision" : "0bad3d2bde99a0142e00b42ccc68fda9cd00512e",
+            "rust_toolchain" : "1.99.1",
+            "schema" : "yavo-ci/1",
+            "scope" : "All Cargo tests and frozen conformance on Linux x86_64",
+            "setup_warmup" : {
+               "fixture" : "compiler/tests/p0/run_arith.yv",
+               "included_in_test_totals" : false,
+               "modes" : [
+                  "debug",
+                  "release"
+               ]
+            },
+            "status" : "passed",
+            "suites" : {
+               "debug" : {
+                  "conformance" : {
+                     "counts" : {
+                        "pass" : 124,
+                        "superseded" : 2,
+                        "unsupported" : 3
+                     },
+                     "errors" : [],
+                     "passed" : true,
+                     "report" : "conformance-debug.json",
+                     "sha256" : "eb67ee505e0a0f0fad8dacfad2df80851a80fdfd3db1aed1b7e02c2531edeefe"
+                  },
+                  "exit_code" : 0,
+                  "passed" : true,
+                  "selection" : [],
+                  "totals" : {
+                     "failed" : 0,
+                     "filtered_out" : 0,
+                     "ignored" : 1,
+                     "measured" : 0,
+                     "passed" : 129
+                  }
+               },
+               "release" : {
+                  "conformance" : {
+                     "counts" : {
+                        "pass" : 124,
+                        "superseded" : 2,
+                        "unsupported" : 3
+                     },
+                     "errors" : [],
+                     "passed" : true,
+                     "report" : "conformance-release.json",
+                     "sha256" : "eb67ee505e0a0f0fad8dacfad2df80851a80fdfd3db1aed1b7e02c2531edeefe"
+                  },
+                  "exit_code" : 0,
+                  "passed" : true,
+                  "selection" : [],
+                  "totals" : {
+                     "failed" : 0,
+                     "filtered_out" : 0,
+                     "ignored" : 1,
+                     "measured" : 0,
+                     "passed" : 129
+                  }
+               }
+            },
+            "toolchain_lock_sha256" : "a9bbe83e644b0e1cee19c8dba8b5157eaed3e9ddc71b96d8aab2b2d2bb15f53c"
+         },
+         "report_identities" : {
+            "conformance-debug.json" : {
+               "bytes" : 14930,
+               "sha256" : "eb67ee505e0a0f0fad8dacfad2df80851a80fdfd3db1aed1b7e02c2531edeefe"
+            },
+            "conformance-release.json" : {
+               "bytes" : 14930,
+               "sha256" : "eb67ee505e0a0f0fad8dacfad2df80851a80fdfd3db1aed1b7e02c2531edeefe"
+            },
+            "results.json" : {
+               "bytes" : 8072,
+               "sha256" : "a0e133ea84edfe6391f0bb9dfe16e52664b082e1d1bdea701b520667a4411b3e"
+            }
+         }
+      },
+      {
+         "artifact" : {
+            "created_at" : "2026-11-22T07:07:23Z",
+            "digest" : "sha256:cd94b69befaceff8632fa3b2ebaf41ac38d5b3afcd342355aec6022944b8eb9b",
+            "downloaded_zip_sha256" : "cd94b69befaceff8632fa3b2ebaf41ac38d5b3afcd342355aec6022944b8eb9b",
+            "expired" : false,
+            "expires_at" : "2026-12-06T07:07:22Z",
+            "id" : 14743593678,
+            "name" : "native-windows-2025-0bad3d2bde99a0142e00b42ccc68fda9cd00512e",
+            "size_in_bytes" : 351584,
+            "updated_at" : "2026-11-22T07:07:23Z",
+            "url" : "https://github.com/msly/yavo/actions/runs/44996118634/artifacts/14743593678"
+         },
+         "command_receipts" : [
+            {
+               "argv" : [
+                  "rustup",
+                  "toolchain",
+                  "install",
+                  "1.99.1",
+                  "--profile",
+                  "minimal"
+               ],
+               "cwd" : "D:\\a\\yavo\\yavo\\compiler",
+               "exit_code" : 0,
+               "label" : "rust-install",
+               "log" : "rust-install.log",
+               "log_sha256" : "2768f8a0c870eca02595e6ec531b3fb95980966403dcd25cc75b42c691713270",
+               "seconds" : 8.82800000000009,
+               "timed_out" : false
+            },
+            {
+               "argv" : [
+                  "rustc",
+                  "-vV"
+               ],
+               "cwd" : "D:\\a\\yavo\\yavo\\compiler",
+               "exit_code" : 0,
+               "label" : "rust-version",
+               "log" : "rust-version.log",
+               "log_sha256" : "341fed434cf52bd9ba5ab2f3507dbd943a2062212028574e529fc3e7e5ecd7a8",
+               "seconds" : 0.483999999999924,
+               "timed_out" : false
+            },
+            {
+               "argv" : [
+                  "cargo",
+                  "--version"
+               ],
+               "cwd" : "D:\\a\\yavo\\yavo\\compiler",
+               "exit_code" : 0,
+               "label" : "cargo-version",
+               "log" : "cargo-version.log",
+               "log_sha256" : "c35608815f43d0b8788a9b826fad2bb17384f49fb328dc4fe64da9db5f5ef4d6",
+               "seconds" : 0.5,
+               "timed_out" : false
+            },
+            {
+               "argv" : [
+                  "cargo",
+                  "fetch",
+                  "--locked"
+               ],
+               "cwd" : "D:\\a\\yavo\\yavo\\compiler",
+               "exit_code" : 0,
+               "label" : "cargo-fetch",
+               "log" : "cargo-fetch.log",
+               "log_sha256" : "9c5b27ff2704b014237223a30cb4b6fe0567c6b701fccef133b1c713b314343b",
+               "seconds" : 1.40700000000004,
+               "timed_out" : false
+            },
+            {
+               "argv" : [
+                  "cargo",
+                  "build",
+                  "--locked",
+                  "--offline",
+                  "--release"
+               ],
+               "cwd" : "D:\\a\\yavo\\yavo\\compiler",
+               "exit_code" : 0,
+               "label" : "compiler-build",
+               "log" : "compiler-build.log",
+               "log_sha256" : "455bda36305427f2542b7557dc084211f42379abeefc3b370d253138b9f3c26c",
+               "seconds" : 23.671,
+               "timed_out" : false
+            },
+            {
+               "argv" : [
+                  "D:\\a\\yavo\\yavo\\compiler\\target\\release\\yavo.exe",
+                  "--version"
+               ],
+               "cwd" : "D:\\a\\yavo\\yavo\\compiler",
+               "exit_code" : 0,
+               "label" : "compiler-version",
+               "log" : "compiler-version.log",
+               "log_sha256" : "dbd8cc3c396a3be4ca0c8d787d716b25a1388157061ebd4009fb059e72ad2613",
+               "seconds" : 0.0159999999999627,
+               "timed_out" : false
+            },
+            {
+               "argv" : [
+                  "D:\\a\\yavo\\yavo\\compiler\\target\\release\\yavo.exe",
+                  "toolchain",
+                  "install"
+               ],
+               "cwd" : "D:\\a\\yavo\\yavo\\compiler",
+               "exit_code" : 0,
+               "label" : "zig-install",
+               "log" : "zig-install.log",
+               "log_sha256" : "09c473cc4c1ab8487acff0d6537f3e249b25a80e88334c7ba218d229bbd2fcc3",
+               "seconds" : 10.703,
+               "timed_out" : false
+            },
+            {
+               "argv" : [
+                  "D:\\a\\yavo\\yavo\\compiler\\target\\release\\yavo.exe",
+                  "toolchain",
+                  "status"
+               ],
+               "cwd" : "D:\\a\\yavo\\yavo\\compiler",
+               "exit_code" : 0,
+               "label" : "zig-status",
+               "log" : "zig-status.log",
+               "log_sha256" : "3f4cd6c4c1dc5a749f1de206f7f3020f044da5cc084825da0cd7e59456e82a89",
+               "seconds" : 0.125,
+               "timed_out" : false
+            },
+            {
+               "argv" : [
+                  "D:\\a\\yavo\\yavo\\compiler\\target\\release\\yavo.exe",
+                  "build",
+                  "D:\\a\\yavo\\yavo\\compiler\\tests\\p0\\run_arith.yv",
+                  "-o",
+                  "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\warmup-debug.exe"
+               ],
+               "cwd" : "D:\\a\\yavo\\yavo\\compiler",
+               "exit_code" : 0,
+               "label" : "zig-warmup-build-debug",
+               "log" : "zig-warmup-build-debug.log",
+               "log_sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "seconds" : 94.328,
+               "timed_out" : false
+            },
+            {
+               "argv" : [
+                  "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\warmup-debug.exe"
+               ],
+               "cwd" : "D:\\a\\yavo\\yavo\\compiler",
+               "exit_code" : 0,
+               "label" : "zig-warmup-run-debug",
+               "log" : "zig-warmup-run-debug.log",
+               "log_sha256" : "debc3d3df2f0a22a129585695ab546565d578334fc3b6647d0e1b6beaf095c84",
+               "seconds" : 0.0160000000000764,
+               "timed_out" : false
+            },
+            {
+               "argv" : [
+                  "D:\\a\\yavo\\yavo\\compiler\\target\\release\\yavo.exe",
+                  "build",
+                  "D:\\a\\yavo\\yavo\\compiler\\tests\\p0\\run_arith.yv",
+                  "-o",
+                  "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\warmup-release.exe",
+                  "--release"
+               ],
+               "cwd" : "D:\\a\\yavo\\yavo\\compiler",
+               "exit_code" : 0,
+               "label" : "zig-warmup-build-release",
+               "log" : "zig-warmup-build-release.log",
+               "log_sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "seconds" : 55.9839999999999,
+               "timed_out" : false
+            },
+            {
+               "argv" : [
+                  "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\warmup-release.exe"
+               ],
+               "cwd" : "D:\\a\\yavo\\yavo\\compiler",
+               "exit_code" : 0,
+               "label" : "zig-warmup-run-release",
+               "log" : "zig-warmup-run-release.log",
+               "log_sha256" : "debc3d3df2f0a22a129585695ab546565d578334fc3b6647d0e1b6beaf095c84",
+               "seconds" : 0.0160000000000764,
+               "timed_out" : false
+            },
+            {
+               "argv" : [
+                  "cargo",
+                  "test",
+                  "--locked",
+                  "--offline",
+                  "--bin",
+                  "yavo",
+                  "--test",
+                  "p0",
+                  "--test",
+                  "alloc_check",
+                  "--test",
+                  "arena",
+                  "--test",
+                  "modules",
+                  "--test",
+                  "index_assignment",
+                  "--test",
+                  "mutref_returns",
+                  "--test",
+                  "collections",
+                  "--test",
+                  "fix",
+                  "--test",
+                  "runtime_io_concurrency",
+                  "--test",
+                  "stdlib_io",
+                  "--",
+                  "--nocapture"
+               ],
+               "cwd" : "D:\\a\\yavo\\yavo\\compiler",
+               "exit_code" : 0,
+               "label" : "tests-debug",
+               "log" : "tests-debug.log",
+               "log_sha256" : "c7aa6a118a0fd42d79cbf0d6938ad890153dc488ceb820782a8810547732a8a2",
+               "seconds" : 179.156,
+               "timed_out" : false
+            },
+            {
+               "argv" : [
+                  "cargo",
+                  "test",
+                  "--locked",
+                  "--offline",
+                  "--release",
+                  "--bin",
+                  "yavo",
+                  "--test",
+                  "p0",
+                  "--test",
+                  "alloc_check",
+                  "--test",
+                  "arena",
+                  "--test",
+                  "modules",
+                  "--test",
+                  "index_assignment",
+                  "--test",
+                  "mutref_returns",
+                  "--test",
+                  "collections",
+                  "--test",
+                  "fix",
+                  "--test",
+                  "runtime_io_concurrency",
+                  "--test",
+                  "stdlib_io",
+                  "--",
+                  "--nocapture"
+               ],
+               "cwd" : "D:\\a\\yavo\\yavo\\compiler",
+               "exit_code" : 0,
+               "label" : "tests-release",
+               "log" : "tests-release.log",
+               "log_sha256" : "cbfcfe46585203b60943e13ab60cad81eaff5e71df918b520e5c9ac30b4fa6b2",
+               "seconds" : 123.547,
+               "timed_out" : false
+            }
+         ],
+         "job" : {
+            "completed_at" : "2026-11-22T07:07:28Z",
+            "conclusion" : "success",
+            "html_url" : "https://github.com/msly/yavo/actions/runs/44996118634/job/137127420416",
+            "id" : 137127420416,
+            "labels" : [
+               "windows-2025"
+            ],
+            "name" : "Native Windows x86_64",
+            "runner_group_name" : "GitHub Actions",
+            "runner_name" : "GitHub Actions 1000000875",
+            "started_at" : "2026-11-22T06:58:52Z",
+            "status" : "completed"
+         },
+         "key" : "windows",
+         "native_report" : {
+            "cargo_lock_sha256" : "1855e4b98bba9e064b54ffdb43935981e5dc2f22d8c5561688cac88bcf73ad41",
+            "compiler_sha256" : "fdbf6dc22d5c61ea36e7c6955448f51c2aa18a767a02d9e0877334d211f49d18",
+            "host" : {
+               "machine" : "AMD64",
+               "platform" : "Windows-2025Server-10.0.26100-SP0"
+            },
+            "revision" : "0bad3d2bde99a0142e00b42ccc68fda9cd00512e",
+            "rust_toolchain" : "1.99.1",
+            "schema" : "yavo-ci/1",
+            "scope" : "Native compiler unit tests plus p0, alloc_check, arena, modules, index_assignment, mutref_returns, collections, fix, runtime_io_concurrency, stdlib_io; excludes platform-limited frozen conformance",
+            "setup_warmup" : {
+               "fixture" : "compiler/tests/p0/run_arith.yv",
+               "included_in_test_totals" : false,
+               "modes" : [
+                  "debug",
+                  "release"
+               ]
+            },
+            "status" : "passed",
+            "suites" : {
+               "debug" : {
+                  "exit_code" : 0,
+                  "passed" : true,
+                  "selection" : [
+                     "--bin",
+                     "yavo",
+                     "--test",
+                     "p0",
+                     "--test",
+                     "alloc_check",
+                     "--test",
+                     "arena",
+                     "--test",
+                     "modules",
+                     "--test",
+                     "index_assignment",
+                     "--test",
+                     "mutref_returns",
+                     "--test",
+                     "collections",
+                     "--test",
+                     "fix",
+                     "--test",
+                     "runtime_io_concurrency",
+                     "--test",
+                     "stdlib_io"
+                  ],
+                  "totals" : {
+                     "failed" : 0,
+                     "filtered_out" : 0,
+                     "ignored" : 1,
+                     "measured" : 0,
+                     "passed" : 71
+                  }
+               },
+               "release" : {
+                  "exit_code" : 0,
+                  "passed" : true,
+                  "selection" : [
+                     "--bin",
+                     "yavo",
+                     "--test",
+                     "p0",
+                     "--test",
+                     "alloc_check",
+                     "--test",
+                     "arena",
+                     "--test",
+                     "modules",
+                     "--test",
+                     "index_assignment",
+                     "--test",
+                     "mutref_returns",
+                     "--test",
+                     "collections",
+                     "--test",
+                     "fix",
+                     "--test",
+                     "runtime_io_concurrency",
+                     "--test",
+                     "stdlib_io"
+                  ],
+                  "totals" : {
+                     "failed" : 0,
+                     "filtered_out" : 0,
+                     "ignored" : 1,
+                     "measured" : 0,
+                     "passed" : 71
+                  }
+               }
+            },
+            "toolchain_lock_sha256" : "a9bbe83e644b0e1cee19c8dba8b5157eaed3e9ddc71b96d8aab2b2d2bb15f53c"
+         },
+         "report_identities" : {
+            "results.json" : {
+               "bytes" : 9466,
+               "sha256" : "6c42b01cdeb08dce6bfe8a4c12b5d3cd57d6b2a458ac6fa90accd6a7c782d707"
+            }
+         }
+      },
+      {
+         "artifact" : {
+            "created_at" : "2026-11-22T07:02:58Z",
+            "digest" : "sha256:99f532a2eb6c51e1fcd4e3db20601746a1c3c050bae77e6345e6b2586e57c0c3",
+            "downloaded_zip_sha256" : "99f532a2eb6c51e1fcd4e3db20601746a1c3c050bae77e6345e6b2586e57c0c3",
+            "expired" : false,
+            "expires_at" : "2026-12-06T07:02:57Z",
+            "id" : 14744260714,
+            "name" : "native-macos-15-0bad3d2bde99a0142e00b42ccc68fda9cd00512e",
+            "size_in_bytes" : 310722,
+            "updated_at" : "2026-11-22T07:02:58Z",
+            "url" : "https://github.com/msly/yavo/actions/runs/44996118634/artifacts/14744260714"
+         },
+         "command_receipts" : [
+            {
+               "argv" : [
+                  "rustup",
+                  "toolchain",
+                  "install",
+                  "1.99.1",
+                  "--profile",
+                  "minimal"
+               ],
+               "cwd" : "/Users/runner/work/yavo/yavo/compiler",
+               "exit_code" : 0,
+               "label" : "rust-install",
+               "log" : "rust-install.log",
+               "log_sha256" : "a023e8d819045327bb158af3cfb25b9f1a7ae159f02e1e19840e0f371ac6cd42",
+               "seconds" : 6.55793383399998,
+               "timed_out" : false
+            },
+            {
+               "argv" : [
+                  "rustc",
+                  "-vV"
+               ],
+               "cwd" : "/Users/runner/work/yavo/yavo/compiler",
+               "exit_code" : 0,
+               "label" : "rust-version",
+               "log" : "rust-version.log",
+               "log_sha256" : "e003fd3d385fcd0de16bc6b049124efb20207831dd810fd4ab39ff079bbb12a5",
+               "seconds" : 0.0356742090000353,
+               "timed_out" : false
+            },
+            {
+               "argv" : [
+                  "cargo",
+                  "--version"
+               ],
+               "cwd" : "/Users/runner/work/yavo/yavo/compiler",
+               "exit_code" : 0,
+               "label" : "cargo-version",
+               "log" : "cargo-version.log",
+               "log_sha256" : "c35608815f43d0b8788a9b826fad2bb17384f49fb328dc4fe64da9db5f5ef4d6",
+               "seconds" : 0.0398347079999439,
+               "timed_out" : false
+            },
+            {
+               "argv" : [
+                  "cargo",
+                  "fetch",
+                  "--locked"
+               ],
+               "cwd" : "/Users/runner/work/yavo/yavo/compiler",
+               "exit_code" : 0,
+               "label" : "cargo-fetch",
+               "log" : "cargo-fetch.log",
+               "log_sha256" : "28cd6abf87770d286983e229499ba865564ed53950b896a8bd8b92c7236c9a56",
+               "seconds" : 0.600325540999961,
+               "timed_out" : false
+            },
+            {
+               "argv" : [
+                  "cargo",
+                  "build",
+                  "--locked",
+                  "--offline",
+                  "--release"
+               ],
+               "cwd" : "/Users/runner/work/yavo/yavo/compiler",
+               "exit_code" : 0,
+               "label" : "compiler-build",
+               "log" : "compiler-build.log",
+               "log_sha256" : "d4e45a45e3c9cbe017830f066db6ce32924ec0bf544d3726b0e878ee5b328171",
+               "seconds" : 18.7329942089999,
+               "timed_out" : false
+            },
+            {
+               "argv" : [
+                  "/Users/runner/work/yavo/yavo/compiler/target/release/yavo",
+                  "--version"
+               ],
+               "cwd" : "/Users/runner/work/yavo/yavo/compiler",
+               "exit_code" : 0,
+               "label" : "compiler-version",
+               "log" : "compiler-version.log",
+               "log_sha256" : "dbd8cc3c396a3be4ca0c8d787d716b25a1388157061ebd4009fb059e72ad2613",
+               "seconds" : 0.0078294579999465,
+               "timed_out" : false
+            },
+            {
+               "argv" : [
+                  "/Users/runner/work/yavo/yavo/compiler/target/release/yavo",
+                  "toolchain",
+                  "install"
+               ],
+               "cwd" : "/Users/runner/work/yavo/yavo/compiler",
+               "exit_code" : 0,
+               "label" : "zig-install",
+               "log" : "zig-install.log",
+               "log_sha256" : "4162d2c374f08cd41614d0160d7f6be39484c09cf23fbc146cb45c478d8a706d",
+               "seconds" : 11.696353208,
+               "timed_out" : false
+            },
+            {
+               "argv" : [
+                  "/Users/runner/work/yavo/yavo/compiler/target/release/yavo",
+                  "toolchain",
+                  "status"
+               ],
+               "cwd" : "/Users/runner/work/yavo/yavo/compiler",
+               "exit_code" : 0,
+               "label" : "zig-status",
+               "log" : "zig-status.log",
+               "log_sha256" : "4879238e90e8e0df7a28755f5f537569132fda99ab20f5f838b9ff0b4c2d1fc6",
+               "seconds" : 0.00460183300003791,
+               "timed_out" : false
+            },
+            {
+               "argv" : [
+                  "/Users/runner/work/yavo/yavo/compiler/target/release/yavo",
+                  "build",
+                  "/Users/runner/work/yavo/yavo/compiler/tests/p0/run_arith.yv",
+                  "-o",
+                  "/Users/runner/work/yavo/yavo/compiler/target/ci/warmup-debug"
+               ],
+               "cwd" : "/Users/runner/work/yavo/yavo/compiler",
+               "exit_code" : 0,
+               "label" : "zig-warmup-build-debug",
+               "log" : "zig-warmup-build-debug.log",
+               "log_sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "seconds" : 13.4250819590001,
+               "timed_out" : false
+            },
+            {
+               "argv" : [
+                  "/Users/runner/work/yavo/yavo/compiler/target/ci/warmup-debug"
+               ],
+               "cwd" : "/Users/runner/work/yavo/yavo/compiler",
+               "exit_code" : 0,
+               "label" : "zig-warmup-run-debug",
+               "log" : "zig-warmup-run-debug.log",
+               "log_sha256" : "debc3d3df2f0a22a129585695ab546565d578334fc3b6647d0e1b6beaf095c84",
+               "seconds" : 0.00869295799998326,
+               "timed_out" : false
+            },
+            {
+               "argv" : [
+                  "/Users/runner/work/yavo/yavo/compiler/target/release/yavo",
+                  "build",
+                  "/Users/runner/work/yavo/yavo/compiler/tests/p0/run_arith.yv",
+                  "-o",
+                  "/Users/runner/work/yavo/yavo/compiler/target/ci/warmup-release",
+                  "--release"
+               ],
+               "cwd" : "/Users/runner/work/yavo/yavo/compiler",
+               "exit_code" : 0,
+               "label" : "zig-warmup-build-release",
+               "log" : "zig-warmup-build-release.log",
+               "log_sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "seconds" : 3.07853433299999,
+               "timed_out" : false
+            },
+            {
+               "argv" : [
+                  "/Users/runner/work/yavo/yavo/compiler/target/ci/warmup-release"
+               ],
+               "cwd" : "/Users/runner/work/yavo/yavo/compiler",
+               "exit_code" : 0,
+               "label" : "zig-warmup-run-release",
+               "log" : "zig-warmup-run-release.log",
+               "log_sha256" : "debc3d3df2f0a22a129585695ab546565d578334fc3b6647d0e1b6beaf095c84",
+               "seconds" : 0.0097887910000054,
+               "timed_out" : false
+            },
+            {
+               "argv" : [
+                  "cargo",
+                  "test",
+                  "--locked",
+                  "--offline",
+                  "--bin",
+                  "yavo",
+                  "--test",
+                  "p0",
+                  "--test",
+                  "alloc_check",
+                  "--test",
+                  "arena",
+                  "--test",
+                  "modules",
+                  "--test",
+                  "index_assignment",
+                  "--test",
+                  "mutref_returns",
+                  "--test",
+                  "collections",
+                  "--test",
+                  "fix",
+                  "--test",
+                  "runtime_io_concurrency",
+                  "--test",
+                  "stdlib_io",
+                  "--",
+                  "--nocapture"
+               ],
+               "cwd" : "/Users/runner/work/yavo/yavo/compiler",
+               "exit_code" : 0,
+               "label" : "tests-debug",
+               "log" : "tests-debug.log",
+               "log_sha256" : "73cb41fdbe3195c7c3cf603bb66af44d710dac801092d0e6e969351e2c9cfa02",
+               "seconds" : 112.154923459,
+               "timed_out" : false
+            },
+            {
+               "argv" : [
+                  "cargo",
+                  "test",
+                  "--locked",
+                  "--offline",
+                  "--release",
+                  "--bin",
+                  "yavo",
+                  "--test",
+                  "p0",
+                  "--test",
+                  "alloc_check",
+                  "--test",
+                  "arena",
+                  "--test",
+                  "modules",
+                  "--test",
+                  "index_assignment",
+                  "--test",
+                  "mutref_returns",
+                  "--test",
+                  "collections",
+                  "--test",
+                  "fix",
+                  "--test",
+                  "runtime_io_concurrency",
+                  "--test",
+                  "stdlib_io",
+                  "--",
+                  "--nocapture"
+               ],
+               "cwd" : "/Users/runner/work/yavo/yavo/compiler",
+               "exit_code" : 0,
+               "label" : "tests-release",
+               "log" : "tests-release.log",
+               "log_sha256" : "a5cf1ef5b5793a1f4927ad95b075e1b4b127673c5dd89881943953cecf0ce37a",
+               "seconds" : 72.1367175829999,
+               "timed_out" : false
+            }
+         ],
+         "job" : {
+            "completed_at" : "2026-11-22T07:03:02Z",
+            "conclusion" : "success",
+            "html_url" : "https://github.com/msly/yavo/actions/runs/44996118634/job/137127420529",
+            "id" : 137127420529,
+            "labels" : [
+               "macos-15"
+            ],
+            "name" : "Native macOS arm64",
+            "runner_group_name" : "GitHub Actions",
+            "runner_name" : "GitHub Actions 1000000877",
+            "started_at" : "2026-11-22T06:58:53Z",
+            "status" : "completed"
+         },
+         "key" : "macos",
+         "native_report" : {
+            "cargo_lock_sha256" : "1855e4b98bba9e064b54ffdb43935981e5dc2f22d8c5561688cac88bcf73ad41",
+            "compiler_sha256" : "6503a6561651b16df36cd60409a9afe5a54c375b327db973de3fc48c62d24e94",
+            "host" : {
+               "machine" : "arm64",
+               "platform" : "macOS-15.8.2-arm64-arm-64bit-Mach-O"
+            },
+            "revision" : "0bad3d2bde99a0142e00b42ccc68fda9cd00512e",
+            "rust_toolchain" : "1.99.1",
+            "schema" : "yavo-ci/1",
+            "scope" : "Native compiler unit tests plus p0, alloc_check, arena, modules, index_assignment, mutref_returns, collections, fix, runtime_io_concurrency, stdlib_io; excludes platform-limited frozen conformance",
+            "setup_warmup" : {
+               "fixture" : "compiler/tests/p0/run_arith.yv",
+               "included_in_test_totals" : false,
+               "modes" : [
+                  "debug",
+                  "release"
+               ]
+            },
+            "status" : "passed",
+            "suites" : {
+               "debug" : {
+                  "exit_code" : 0,
+                  "passed" : true,
+                  "selection" : [
+                     "--bin",
+                     "yavo",
+                     "--test",
+                     "p0",
+                     "--test",
+                     "alloc_check",
+                     "--test",
+                     "arena",
+                     "--test",
+                     "modules",
+                     "--test",
+                     "index_assignment",
+                     "--test",
+                     "mutref_returns",
+                     "--test",
+                     "collections",
+                     "--test",
+                     "fix",
+                     "--test",
+                     "runtime_io_concurrency",
+                     "--test",
+                     "stdlib_io"
+                  ],
+                  "totals" : {
+                     "failed" : 0,
+                     "filtered_out" : 0,
+                     "ignored" : 1,
+                     "measured" : 0,
+                     "passed" : 74
+                  }
+               },
+               "release" : {
+                  "exit_code" : 0,
+                  "passed" : true,
+                  "selection" : [
+                     "--bin",
+                     "yavo",
+                     "--test",
+                     "p0",
+                     "--test",
+                     "alloc_check",
+                     "--test",
+                     "arena",
+                     "--test",
+                     "modules",
+                     "--test",
+                     "index_assignment",
+                     "--test",
+                     "mutref_returns",
+                     "--test",
+                     "collections",
+                     "--test",
+                     "fix",
+                     "--test",
+                     "runtime_io_concurrency",
+                     "--test",
+                     "stdlib_io"
+                  ],
+                  "totals" : {
+                     "failed" : 0,
+                     "filtered_out" : 0,
+                     "ignored" : 1,
+                     "measured" : 0,
+                     "passed" : 74
+                  }
+               }
+            },
+            "toolchain_lock_sha256" : "a9bbe83e644b0e1cee19c8dba8b5157eaed3e9ddc71b96d8aab2b2d2bb15f53c"
+         },
+         "report_identities" : {
+            "results.json" : {
+               "bytes" : 9337,
+               "sha256" : "4b948c6273157e4d603a03d91b26cd154549a58b0646a2a0e193b3d3932b88cf"
+            }
+         }
+      },
+      {
+         "artifact" : {
+            "created_at" : "2026-11-22T06:59:38Z",
+            "digest" : "sha256:e191c6132f67ceb2fc732c24303b1aa619769431b07a9b6da6c9e96115d72bce",
+            "downloaded_zip_sha256" : "e191c6132f67ceb2fc732c24303b1aa619769431b07a9b6da6c9e96115d72bce",
+            "expired" : false,
+            "expires_at" : "2026-12-06T06:59:37Z",
+            "id" : 14743637871,
+            "name" : "sanitizers-linux-0bad3d2bde99a0142e00b42ccc68fda9cd00512e",
+            "size_in_bytes" : 4004482,
+            "updated_at" : "2026-11-22T06:59:38Z",
+            "url" : "https://github.com/msly/yavo/actions/runs/44996118634/artifacts/14743637871"
+         },
+         "ci_scope" : "Independent Linux GCC ASan+UBSan of all exported P0 run/panic fixtures; pinned Zig conformance unchanged",
+         "job" : {
+            "completed_at" : "2026-11-22T06:59:40Z",
+            "conclusion" : "success",
+            "html_url" : "https://github.com/msly/yavo/actions/runs/44996118634/job/137127420220",
+            "id" : 137127420220,
+            "labels" : [
+               "ubuntu-24.04"
+            ],
+            "name" : "Independent Linux ASan and UBSan",
+            "runner_group_name" : "GitHub Actions",
+            "runner_name" : "GitHub Actions 1000000879",
+            "started_at" : "2026-11-22T06:58:52Z",
+            "status" : "completed"
+         },
+         "key" : "sanitizers",
+         "report_identities" : {
+            "results.json" : {
+               "bytes" : 11716,
+               "sha256" : "06ea824b40bc151e5fcf5fca619bc06a7cd333842252927ddbe910ffc4caa1e8"
+            },
+            "sanitizers-run/report.json" : {
+               "bytes" : 365634,
+               "sha256" : "495486221d158b3be0faf87a2ebe3ce497433e50e746ff51d035e9553970bc0a"
+            }
+         },
+         "sanitizer_report" : {
+            "c_compiler" : {
+               "bytes" : 1023032,
+               "path" : "/usr/bin/x86_64-linux-gnu-gcc-13",
+               "runtime_libraries" : {
+                  "libasan.so" : {
+                     "bytes" : 10924208,
+                     "path" : "/usr/lib/x86_64-linux-gnu/libasan.so.8.0.0",
+                     "sha256" : "8d5845bdf056b5db4cfb9fff40ad5eeea8f6da05a8ca6f5935a7d1c138ed2558"
+                  },
+                  "libc.so.6" : {
+                     "bytes" : 2129424,
+                     "path" : "/usr/lib/x86_64-linux-gnu/libc.so.6",
+                     "sha256" : "755a371e86cc9f564ab54f66140747700fb0a103f698f659f2060f707897e09a"
+                  },
+                  "libgcc_s.so.1" : {
+                     "bytes" : 183024,
+                     "path" : "/usr/lib/x86_64-linux-gnu/libgcc_s.so.1",
+                     "sha256" : "d93224d2b0dab4247598be683adca02f5cf00586f99c187579cd7e92058fb7cb"
+                  },
+                  "libubsan.so" : {
+                     "bytes" : 3423712,
+                     "path" : "/usr/lib/x86_64-linux-gnu/libubsan.so.1.0.0",
+                     "sha256" : "f4a999fcf8392a200e9d93fb066ddb9e89daab8cd94a62137f4506472240a2e8"
+                  }
+               },
+               "sha256" : "1b99826121ae6682a634e5efe09bd3e3df58ce58e0b28f849114ab5b89139c26",
+               "version" : "x86_64-linux-gnu-gcc-13 (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+               "version_receipt" : {
+                  "argv" : [
+                     "/usr/bin/x86_64-linux-gnu-gcc-13",
+                     "--version"
+                  ],
+                  "cwd" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run",
+                  "elapsed_seconds" : 0.00148475400000336,
+                  "exit_code" : 0,
+                  "stderr" : {
+                     "bytes" : 0,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler-version.stderr",
+                     "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                  },
+                  "stdout" : {
+                     "bytes" : 266,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler-version.stdout",
+                     "sha256" : "ae487f55927d605284a32711e4ecf6bc3be2bcd5a9de414ace0936264b741f85"
+                  },
+                  "timed_out" : false,
+                  "timeout_seconds" : 10
+               }
+            },
+            "capabilities" : {
+               "address" : {
+                  "execution" : {
+                     "argv" : [
+                        "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/capability",
+                        "a"
+                     ],
+                     "elapsed_seconds" : 0.0164387580000067,
+                     "exit_code" : 1,
+                     "stderr" : {
+                        "bytes" : 3785,
+                        "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/probe-address.stderr",
+                        "sha256" : "bd02d735c405542b1eb9e65f7b8b4bf6bd625106e3a7aacec7a2e4c0c151a891"
+                     },
+                     "stdout" : {
+                        "bytes" : 0,
+                        "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/probe-address.stdout",
+                        "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                     },
+                     "timed_out" : false
+                  },
+                  "passed" : true
+               },
+               "clean" : {
+                  "execution" : {
+                     "argv" : [
+                        "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/capability"
+                     ],
+                     "elapsed_seconds" : 0.0037612099999933,
+                     "exit_code" : 0,
+                     "stderr" : {
+                        "bytes" : 0,
+                        "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/probe-clean.stderr",
+                        "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                     },
+                     "stdout" : {
+                        "bytes" : 2,
+                        "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/probe-clean.stdout",
+                        "sha256" : "2e6d31a5983a91251bfae5aefa1c0a19d8ba3cf601d0e8a706b4cfa9661a6b8a"
+                     },
+                     "timed_out" : false
+                  },
+                  "passed" : true
+               },
+               "undefined" : {
+                  "execution" : {
+                     "argv" : [
+                        "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/capability",
+                        "u"
+                     ],
+                     "elapsed_seconds" : 0.0162891820000084,
+                     "exit_code" : 1,
+                     "stderr" : {
+                        "bytes" : 690,
+                        "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/probe-undefined.stderr",
+                        "sha256" : "91be691db5c86a7b7230a94ae984f15ce1e51b81384f70152fcd4e7c8760006d"
+                     },
+                     "stdout" : {
+                        "bytes" : 0,
+                        "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/probe-undefined.stdout",
+                        "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                     },
+                     "timed_out" : false
+                  },
+                  "passed" : true
+               }
+            },
+            "failed" : 0,
+            "finished_epoch" : 1795330776.67688,
+            "flags" : [
+               "-std=c17",
+               "-D_POSIX_C_SOURCE=200809L",
+               "-DYV_ALLOC_CHECK=1",
+               "-g",
+               "-O1",
+               "-fno-omit-frame-pointer",
+               "-fno-strict-aliasing",
+               "-fno-pie",
+               "-no-pie",
+               "-fsanitize=address",
+               "-fsanitize=undefined",
+               "-fno-sanitize-recover=all",
+               "-pthread"
+            ],
+            "host" : {
+               "libc" : [
+                  "glibc",
+                  "2.39"
+               ],
+               "machine" : "x86_64",
+               "platform" : "Linux-7.0.0-1014-aws-x86_64-with-glibc2.39",
+               "uname" : [
+                  "Linux",
+                  "ip-10-0-130-16",
+                  "7.0.0-1014-aws",
+                  "#14~24.04.1-Ubuntu SMP PREEMPT Fri Sep 18 21:24:59 UTC 2026",
+                  "x86_64",
+                  "x86_64"
+               ]
+            },
+            "limits" : [
+               "Independent GCC/Clang validation of generated C; pinned Zig conformance statuses are unchanged.",
+               "ASan and UBSan are enabled separately in one artifact; TSan is not part of this report.",
+               "LeakSanitizer is disabled in this ptrace-compatible profile; normal returns use YV_ALLOC_CHECK=1.",
+               "Only this Linux host is executed; this is not Windows, macOS, or cross-architecture validation."
+            ],
+            "passed" : 60,
+            "programs" : [
+               {
+                  "artifact_sha256" : "ea9a2527b6c7ad9497106e3b8cdee0157bc74034401efcdb844609b0af999a60",
+                  "id" : "compiler_tests_p0_panic_assert.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 265,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_panic_assert.yv/source.yv",
+                     "sha256" : "3f6ba6a4f70cef276d7b0f650bc6ac6b8b8f24840f79490cadc783ac2c076a81"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "98bee7d2b104acc65d81f0e1b5c10e4419bbbe6ff21781712748baa0b908db64",
+                  "id" : "compiler_tests_p0_panic_channel_cap.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 113,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_panic_channel_cap.yv/source.yv",
+                     "sha256" : "8315efbc1316a5bfe376724e6fb112aaaca4f6ebd5b65ef4a28990d9cfb5cc82"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "5eeab52daffa782bdc9e02ac8f2ea1c66cb8b088738bdb393fcee26c5db0afe2",
+                  "id" : "compiler_tests_p0_panic_convert.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 99,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_panic_convert.yv/source.yv",
+                     "sha256" : "08ed0326d7ffc9a3874e7456a81c704962c04f722eb10964977a15fe81a797a7"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "1e0d79f08a2805f77ae6e4edc6393f5b93e7615f14ed679f15826e2957e63165",
+                  "id" : "compiler_tests_p0_panic_div_overflow.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 105,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_panic_div_overflow.yv/source.yv",
+                     "sha256" : "a7049ee8fd6765bc37b5bbee2c92694f7b90a7d5166a09b5bb9e6d881e165cd5"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "82a0454c3d3b51d0eee309ad1763e443019fa044afbd80c75556f4916b5afa46",
+                  "id" : "compiler_tests_p0_panic_div_zero.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 81,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_panic_div_zero.yv/source.yv",
+                     "sha256" : "8971629b573cf347c2dcb7ff4e625895f3ee51120a67121ff87476733fe00214"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "f4b8d0717a39177dcd1d3ba1b833197e54a46c787a1fcdd639c0df454a949b03",
+                  "id" : "compiler_tests_p0_panic_float_convert.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 92,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_panic_float_convert.yv/source.yv",
+                     "sha256" : "835d03bd0c5cd1e3b5b6eb4007102fe2aa2fe8f03b0da0d3f5e0c4ce29757c1c"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "41d92ba6799c22c3b9a885eeccb3062f3cf6c156cb051fbded5e264de128e0bb",
+                  "id" : "compiler_tests_p0_panic_index_write.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 102,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_panic_index_write.yv/source.yv",
+                     "sha256" : "2a62a6c8b6437819acd8611f8fa96ed616ecc172329475216072b8ba1ca52916"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "7682f0f8ab9ddf36e5164dcbeb3b557ebd5eacd3e4998115ba1de00c752b6a15",
+                  "id" : "compiler_tests_p0_panic_interpolation_no_prefix.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 161,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_panic_interpolation_no_prefix.yv/source.yv",
+                     "sha256" : "c0312d28099e1a54a8cbda777571f6eda67583017802f7c33e009caff178fef3"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "d30fcacc1342ff89e43a91d4c0f8ad24fafc26c643f670d518d6a993216d3ded",
+                  "id" : "compiler_tests_p0_panic_neg.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 88,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_panic_neg.yv/source.yv",
+                     "sha256" : "d820e7e0cb668bfeefeff34656a5b7e063a7114987a5c0e85dd3f791d37dd0dc"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "bb6f0ed037ad70ff25ba09c16f49202fb724613d0b3278a26f30d0ebe5046915",
+                  "id" : "compiler_tests_p0_panic_overflow.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 152,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_panic_overflow.yv/source.yv",
+                     "sha256" : "4e607a7f6dc800f49d6b9f9b8302937e4ee7b3ec3b0da5936b4e3c1e804d1539"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "2466fbc3dee125945ee4b40760f20291043357366b177f01a4d32021d68f1a96",
+                  "id" : "compiler_tests_p0_panic_shift.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 103,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_panic_shift.yv/source.yv",
+                     "sha256" : "70c25d1b650bf83cd47982dcfa21a7536ee05f3a949e7b9b23f048bef0029f91"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "a6fe588d3b5c8b5a3092780ed8cabe31bcdd6e043bf4b125bd3507592239b8cb",
+                  "id" : "compiler_tests_p0_panic_slice_bounds.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 127,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_panic_slice_bounds.yv/source.yv",
+                     "sha256" : "6820a18419dea80876fad70f754c3723c794a38745b9eac98e48bad0aa04b09b"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "2d3135d687fa49ad5163c447a6d2efe52d2d9232c35e966d597188ed06b5919e",
+                  "id" : "compiler_tests_p0_panic_stack.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 162,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_panic_stack.yv/source.yv",
+                     "sha256" : "bd8f846de9fe537e9c6ed6968c0ba4b852accc9785b57f59b6466dad2219c0f9"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "437c9df3b5b33547735580064e1fd3186d7d756131cd4746afc54fec0528e234",
+                  "id" : "compiler_tests_p0_panic_str_boundary.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 100,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_panic_str_boundary.yv/source.yv",
+                     "sha256" : "a1d980ebc6150c50cf8c1ce5e1d8df2d9a877120bc746dd2616a212837278362"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "f472a1b75785f361fb7f6cad89d75a68a75f0e2a1e1d5b1dc8d68c03671ef284",
+                  "id" : "compiler_tests_p0_panic_user.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 251,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_panic_user.yv/source.yv",
+                     "sha256" : "961d2121c8605f09fab0b5181107b6e4ed9bba9b58bc2790c6b3ba3998f37e99"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "013c9a5359b4f87c708b64ce9f8d23376e8ba062dc6a2c1abb34187a4d8d3053",
+                  "id" : "compiler_tests_p0_run_arena.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 2711,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_run_arena.yv/source.yv",
+                     "sha256" : "766af13c580c9b3eb64e627a7fd32ac5a2357b3289f97041215b6f4f084088c5"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "dc534467d6deb2bd7fa36f02b504b2ca35ee218c44f7c27b5cbb3ca8b68ff659",
+                  "id" : "compiler_tests_p0_run_arena_drops.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 524,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_run_arena_drops.yv/source.yv",
+                     "sha256" : "01fe755212744a0ede0c5f295dad97d7b6b41b12b44aa50ea168577c6c46cce0"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "a2495c4fa1bb7ba6e011a7daf8428168e2c070d90c3be75e95773ae77db078cc",
+                  "id" : "compiler_tests_p0_run_arena_resources.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 900,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_run_arena_resources.yv/source.yv",
+                     "sha256" : "167142e5ef3fb708bf7675039f37398d725a96a34ac230a2355bc23b80091591"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "27a5cea5a9e968b082f80b4e4092496b6df5f9d99bc18c2ba0dbfcc626fa1f0f",
+                  "id" : "compiler_tests_p0_run_arena_sync.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 1923,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_run_arena_sync.yv/source.yv",
+                     "sha256" : "a9e6194c8877ed280c15a6ff7eaf892f17e6282dcc4398446d110d8e01733756"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "51c5e1fac1721fd1827a1c9d832da874b1c1d01b0c0e5d96652522b8324c9e9b",
+                  "id" : "compiler_tests_p0_run_arith.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 486,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_run_arith.yv/source.yv",
+                     "sha256" : "3b96b6b58dba6a26331b7dd4b7e309d05ca101664acbd013c7c930f02be008e8"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "28aca73eea3305e3ffab43a1c473747a824b4733082dec8c74ef01f3ceebdfcd",
+                  "id" : "compiler_tests_p0_run_box.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 2551,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_run_box.yv/source.yv",
+                     "sha256" : "b0a65737208a7f756f7e6a5665e51aa91bd0d514cffcb32d7e5c71b0a1449d83"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "3d7ad21c8b2cfe805da94363223825423e7de721412f4d082c6bd35549100d7c",
+                  "id" : "compiler_tests_p0_run_channels.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 879,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_run_channels.yv/source.yv",
+                     "sha256" : "d4cdd466cc62a099c67ec2103e4e57add68b139b362c2ce1d0d842e4a9fae71a"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "aa4d86da5ab7aaf3f511c81da3c59253fff90c3a44770cb931d69c71467d838e",
+                  "id" : "compiler_tests_p0_run_closures.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 1792,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_run_closures.yv/source.yv",
+                     "sha256" : "dd23746d3432fdd07333d78f8df39a22964c99f0f9e09614ddb44ee39e61e1c6"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "4a75e73169e7e14573ce354d3ed314e50c5010164514f677f39117757442b222",
+                  "id" : "compiler_tests_p0_run_collection_drops.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 1470,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_run_collection_drops.yv/source.yv",
+                     "sha256" : "8a31a3c84efc673fa73a2bb9ff18f11f30a83249145d8785f512e56b3a05ca7b"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "f4f467f5cf2b84c742fcd3f9972dd260fa91fc801a619e4f3bf1901010e2ec59",
+                  "id" : "compiler_tests_p0_run_collection_returns.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 1395,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_run_collection_returns.yv/source.yv",
+                     "sha256" : "a6cfd5e5d91405e3c29ee28c3416c4f32d0a6bf43d659ab5008c55ce01a1a384"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "9cc2e4b50a6275eaf10921ce6fa38289dce3a94931e4cc32d0ae1b7d55ae9b33",
+                  "id" : "compiler_tests_p0_run_collections.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 4074,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_run_collections.yv/source.yv",
+                     "sha256" : "24ee4bf3915de8634fea47bdeb96fc780c912bf14ba1739bf1f65e4f7ed37f0e"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "962ed67e2f83460ac5144fe6b48be266b7d28bacee8d786f75acf6dc4cffcb52",
+                  "id" : "compiler_tests_p0_run_control.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 1207,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_run_control.yv/source.yv",
+                     "sha256" : "97e40abb427d08f49568c1eb5626eea42246601540cfdffb3b8e739611af9ca2"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "881c9847114a81a897f67d1816491b42e5141bd79a8c98f880b52363ce0fafa8",
+                  "id" : "compiler_tests_p0_run_convert.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 300,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_run_convert.yv/source.yv",
+                     "sha256" : "e8d14ef73199b8d8aa5b26dfde8ba0218eb479b8a58622775aca9bb9a46c2c5e"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "cea682705237b284416a99bff389361a84aaef273c63230396ed696f0022d967",
+                  "id" : "compiler_tests_p0_run_deref.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 1603,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_run_deref.yv/source.yv",
+                     "sha256" : "d774c600ae27adf2fc5a12208c9d473f9d34b8b95878adb629b143c723fa297d"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "9745b211f9520d883b4ee044f953037be7bdc48a8ce074ed3d5161f095c07e4d",
+                  "id" : "compiler_tests_p0_run_discard.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 405,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_run_discard.yv/source.yv",
+                     "sha256" : "e8eea82fc13f4b84f47bf1ec11d4f2c8cba2aeac739a59b12b820f8999ed38c2"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "8d3d954bdfd707c2f61f65faee89ea0b53ce29424b79b9947df4d81ccdbad01b",
+                  "id" : "compiler_tests_p0_run_drop.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 1623,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_run_drop.yv/source.yv",
+                     "sha256" : "381c11bc832b74fce39c4f19c84a0b2d2a4f016d3776dca81eeec1f11ac1a18c"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "177e02374c2a63de026799d52e61311fe8936e60dbdf3cab0cce90746e00e5f2",
+                  "id" : "compiler_tests_p0_run_enums.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 1962,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_run_enums.yv/source.yv",
+                     "sha256" : "1045c9b5ea77d5059ac648c494893713ad33eb1ddfe24396ae49687b9cfcda5a"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "a6dfe93d8523e2425563c801752ac335d8e0b355a0ee2cb8f046befed91c8881",
+                  "id" : "compiler_tests_p0_run_fields.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 2376,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_run_fields.yv/source.yv",
+                     "sha256" : "318aeaf57652efd8ee24e98bb651545f84fb1cea5ccd0bdc2f18616a7b1f25c6"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "05e0c65de50036231eb82e0384824ea5918a722270ef21e88fc98ea84e57136d",
+                  "id" : "compiler_tests_p0_run_floats.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 2606,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_run_floats.yv/source.yv",
+                     "sha256" : "57b3be8d341a0cc981408e630797c9ff2023d8f8144a2515bc7881cd8a49946f"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "5af804a968a82f6b4582ecd1d3bf6ad090e9a3353c225403acebb49c393f8085",
+                  "id" : "compiler_tests_p0_run_format_fixed.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 702,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_run_format_fixed.yv/source.yv",
+                     "sha256" : "b09eaf205b096117bad41649d24bbcc0530e744b22dd44b51c8329bee7e5778e"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "9e7df953d28950444ec3de52fe9f2843fcfd01fda86419437927a30aeac67b0d",
+                  "id" : "compiler_tests_p0_run_from_utf8.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 1335,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_run_from_utf8.yv/source.yv",
+                     "sha256" : "5de110b6bacc41d337d591bcc541cacc80feffebafde34264066e55ccf3437e5"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "2479f0f3c81844d325e0c678b0ec599bf97ec30fb607898411b68ddcaa9477a9",
+                  "id" : "compiler_tests_p0_run_generics.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 3091,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_run_generics.yv/source.yv",
+                     "sha256" : "56f5b15368fbcbf89aaf7e4c8ffc8703275322de4a4d99b6e2cba10ede826d72"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "b42b297ee2ba098a756ac568b7271fb8f56f199241fa7434626ffafa740fee9c",
+                  "id" : "compiler_tests_p0_run_imports.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 401,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_run_imports.yv/source.yv",
+                     "sha256" : "235533ffc18d01ffea3ec99bb6f294ff35673f85cf6d6fcbd38a0146a436b0c8"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "ede10f430d4ca542b0fdea957edbb1ef34ef7a41e7230e85734466ec93bc9e4f",
+                  "id" : "compiler_tests_p0_run_index_methods.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 1462,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_run_index_methods.yv/source.yv",
+                     "sha256" : "2afb8211afdf689ca46ce63df0caf0c03f7544b99b54446dc818300178abf9ee"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "37be9ee12b8d2966f7e05ab59f378e76f339c035bfaa7a93be7aff5115fa1559",
+                  "id" : "compiler_tests_p0_run_index_two_phase_defaults.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 3061,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_run_index_two_phase_defaults.yv/source.yv",
+                     "sha256" : "0edb2ae7326385e67a77d6190967e5c402e04a8f5c14dd8e2f4bba87cca0181e"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "6835e9b497f79f8ab2ed67344a0d6b3a8f08500f168d593e27e8f1bcb4fa06b5",
+                  "id" : "compiler_tests_p0_run_interfaces.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 2583,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_run_interfaces.yv/source.yv",
+                     "sha256" : "12dbaf6e0a69be8f81e15133885458c020887475d3229866c66d46aa9d2a8f71"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "098daba56733e2aaf32a880aa0ee7c56c6436da9e5c652393750c0961b822832",
+                  "id" : "compiler_tests_p0_run_interpolation_order.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 441,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_run_interpolation_order.yv/source.yv",
+                     "sha256" : "8dffc566a50e145bc83003998622a5b46f04f56fe507ce62f406d8517a6bf9fb"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "6447621f367b9cd99d322bb25ddaa137c7b5e7aad17df37986bdd846880bfc56",
+                  "id" : "compiler_tests_p0_run_maps.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 3714,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_run_maps.yv/source.yv",
+                     "sha256" : "0aa3759624738027e64f3f1e8e6a80201a411b2ecd012889439fccf522612c98"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "6e3fd0c1db28b8e22c4f8d6e93e4b6be5a8b487cfbf03652dd5fba78f184d6c5",
+                  "id" : "compiler_tests_p0_run_methods.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 1392,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_run_methods.yv/source.yv",
+                     "sha256" : "550476df01178decf17499b272f94863a940eb30b8248ce0c21ea1dc1a9a6f87"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "dd0df5c3ab2acc3b742965fd5adfd2e8bb9da3af3ca123b2329a658251ea26bd",
+                  "id" : "compiler_tests_p0_run_optionals.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 5384,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_run_optionals.yv/source.yv",
+                     "sha256" : "4213141fc1f56e91bfbd7353daf0f567f9b2ec6db7adbec3e915b4fd5845829d"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "c7f09d2e2ec14eaf4f58ddfd0a060a862b9a25fb5207f51eec29557c9e8b4ca7",
+                  "id" : "compiler_tests_p0_run_order.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 669,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_run_order.yv/source.yv",
+                     "sha256" : "a921d70ca7dd6916ee6d88d9a02400dc16c2d61b656aab73a6e4fa1fc019bda1"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "cc6f1343e52f0ebb95c7d9911bfa38599d498fa7b8e1f3a7873cf953d1ea8482",
+                  "id" : "compiler_tests_p0_run_ownership.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 1936,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_run_ownership.yv/source.yv",
+                     "sha256" : "0eb23c2cd5dfb46dc0d7ab9b024520f46fc198a6de6ac89af5d5de568e9453d8"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "6d668b4530bcefa2af10f0d8d7653d570f3bb2b7c9c52d0bb6a0c84698dcb230",
+                  "id" : "compiler_tests_p0_run_protocols.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 1425,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_run_protocols.yv/source.yv",
+                     "sha256" : "584847a17d17e21d042a9630bb654beb7972ff10a89e351eb76bcfc9af579bb5"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "13f466d12ed591a4cbba4529e24db6dcedfeb7379a091627afd5127bbc833d9e",
+                  "id" : "compiler_tests_p0_run_refs.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 1402,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_run_refs.yv/source.yv",
+                     "sha256" : "878fda70dc8d2eac5ac6c1045b83d3f403bb7623fcee10b71de007eda8d84b94"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "79945f6688a6159f9a36296d03451ef81b86c962398485a2157c8ccfe354be6f",
+                  "id" : "compiler_tests_p0_run_results.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 2793,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_run_results.yv/source.yv",
+                     "sha256" : "1c6ca56564c72d064debe47a29b1918381dcb1619ed6d16da6ddaf173127a1c6"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "262790305d5d9fe787424ea3be29bd907fb99d0084c911910d230c12b0ed0c08",
+                  "id" : "compiler_tests_p0_run_safety_combinations.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 2119,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_run_safety_combinations.yv/source.yv",
+                     "sha256" : "67d7bcc2804e3d60b795a0b914536f89e652c7bf5bedd5b622a51ecb87a96240"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "cfccb5ca5dc610b6eacf7eab67a25749e3873f00a6fa595ad652efd2a299324f",
+                  "id" : "compiler_tests_p0_run_sets.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 991,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_run_sets.yv/source.yv",
+                     "sha256" : "27bbd7c96e36545d32876751cb1a92315835540c2c7ae9b693ea77b41a0cf26c"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "765d5db9c3494c22d8c7c3be213fe3031f96a283000ed26dad4bcdd962534045",
+                  "id" : "compiler_tests_p0_run_slices.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 1030,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_run_slices.yv/source.yv",
+                     "sha256" : "f38f7dff2ddc49bd9d979e9bf7220288a02f09517b529691aa1d72f2211d0ef8"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "fb560af779fbd754eef0e2e202c27edaa76f491beaa04f24905d1613abd8d618",
+                  "id" : "compiler_tests_p0_run_stdlib.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 2375,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_run_stdlib.yv/source.yv",
+                     "sha256" : "9e98efeca24a42fd409b26605576321d6e7c1648bcd0057c63c00f001d62d482"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "eb652dc0d931d2f43a673c7b28316869000b6d91dc7bf0fb0205f7610fb18876",
+                  "id" : "compiler_tests_p0_run_strings.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 442,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_run_strings.yv/source.yv",
+                     "sha256" : "d7013b9683f6a2e6642fad3825d4d156c2479647e21f64a788f443ac2d0de587"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "a945b54e61780f26db251c7ba1be28d0d04118f01f74fdb7e03589533f72955c",
+                  "id" : "compiler_tests_p0_run_structs.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 930,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_run_structs.yv/source.yv",
+                     "sha256" : "f5f168ef5550dabb6fdbbcea9b20e8141a80569edfdb54e12c113fda13f362bf"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "b4a8984b20593aef23a0088ea7c6d3c90f0ea1b0ca71c88d2609f1ebf081ca4a",
+                  "id" : "compiler_tests_p0_run_sync_local.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 966,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_run_sync_local.yv/source.yv",
+                     "sha256" : "1cd5c069b423f102e3f453680ee4cff3c578500cae5fd5524b49fa3d1b3c2512"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "3b393ee22d617d8e6a0dc136084c5d7a99aa89d244ad89bcf83bf2dbf1c66763",
+                  "id" : "compiler_tests_p0_run_threads.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 1503,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_run_threads.yv/source.yv",
+                     "sha256" : "8d5325f69d16b9ac878bd3ad68fdb4a45c7c814f3869504c50a1b05f3b5d0b32"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "42d62c53d8fc256c7c806b025a339c1f676e173a5608817160f8710cb69ccca6",
+                  "id" : "compiler_tests_p0_run_tuples.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 1181,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_run_tuples.yv/source.yv",
+                     "sha256" : "25be9f2424ed3db49bd4fd4a99357226059adb2386f64930b4d636b9601914ed"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               },
+               {
+                  "artifact_sha256" : "e31e884d2a9aebef4797b65ebada513b208b83a86418b881fd093b31c3dd7109",
+                  "id" : "compiler_tests_p0_run_views.yv",
+                  "passed" : true,
+                  "source" : {
+                     "bytes" : 926,
+                     "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/compiler_tests_p0_run_views.yv/source.yv",
+                     "sha256" : "579515dbc4bbc7f9fbd324f4e4e67b2a4b4c1ea80a47a758b71adaf72d77755d"
+                  },
+                  "stderr_match" : true,
+                  "stdout_match" : true
+               }
+            ],
+            "runtime" : {
+               "bytes" : 71352,
+               "path" : "/home/runner/work/yavo/yavo/compiler/target/ci/sanitizers-run/yavo_rt.h",
+               "sha256" : "92fe3880272f5f07c560a84e8e1cc82c5b87eb2b89724642d165b569c61c3caf"
+            },
+            "sanitizer_environment" : {
+               "ASAN_OPTIONS" : "detect_leaks=0:halt_on_error=1:abort_on_error=0",
+               "LC_ALL" : "C",
+               "UBSAN_OPTIONS" : "halt_on_error=1:print_stacktrace=1"
+            },
+            "source_git_status" : "",
+            "source_revision" : "0bad3d2bde99a0142e00b42ccc68fda9cd00512e",
+            "started_epoch" : 1795330763.07907,
+            "status" : "passed",
+            "validator" : {
+               "bytes" : 12331,
+               "path" : "/home/runner/work/yavo/yavo/tools/sanitizers/run.py",
+               "sha256" : "bfe9aa0fc4bf8890c1fd54e0f830d7e608fb71db1b5b0acd9c4d7a2f7ca76847"
+            },
+            "yavo_compiler" : {
+               "bytes" : 2784160,
+               "path" : "/home/runner/work/yavo/yavo/compiler/target/release/yavo",
+               "sha256" : "ac7116537b9f8deae2b1161922398f38c38f513c734a27c6ae31ebb6c87ced8b",
+               "version" : "yavo 0.0.1 (prototype, zig 0.17.1)\n"
+            }
+         }
+      },
+      {
+         "artifact" : {
+            "created_at" : "2026-11-22T06:59:03Z",
+            "digest" : "sha256:4b6f357b11fbf522b37f1c3fc11b4ed8630bc1c9415c0e7f847e9ca43adaf84d",
+            "downloaded_zip_sha256" : "4b6f357b11fbf522b37f1c3fc11b4ed8630bc1c9415c0e7f847e9ca43adaf84d",
+            "expired" : false,
+            "expires_at" : "2026-12-06T06:59:02Z",
+            "id" : 14744180419,
+            "name" : "experiment-evidence-0bad3d2bde99a0142e00b42ccc68fda9cd00512e",
+            "size_in_bytes" : 11931,
+            "updated_at" : "2026-11-22T06:59:03Z",
+            "url" : "https://github.com/msly/yavo/actions/runs/44996118634/artifacts/14744180419"
+         },
+         "experiment_receipt" : {
+            "checked_case_results" : 1344,
+            "elapsed_seconds" : 2.69009809899998,
+            "freeze_commit" : "8c200aae9a5901325da193d6d8167aa6900b79b2",
+            "frozen_file_count" : 43,
+            "frozen_manifest_sha256" : "aeb5c46db375e84c3d90257aec501161f29d4e4802f4a1a884b699753750bee3",
+            "gate_sha256" : "492f2c982cf793d670bdf1817c53691ec03f4d3c4ed43f6e9fa8e5a8603b8e08",
+            "github_sha" : "0bad3d2bde99a0142e00b42ccc68fda9cd00512e",
+            "judge_selftest" : {
+               "argv" : [
+                  "/usr/bin/python3",
+                  "/home/runner/work/yavo/yavo/experiments/coldstart-2026-11-22-r5/judge/selftest.py"
+               ],
+               "elapsed_seconds" : 2.372603575,
+               "exit_code" : 0,
+               "log_sha256" : "95343a5d9abf8b703d8cb423f304307877150b063385f62dd28ec8e4c69ee9fd"
+            },
+            "manual_review_count" : 16,
+            "packet_file_count" : 28,
+            "packet_regeneration" : {
+               "argv" : [
+                  "/usr/bin/python3",
+                  "/tmp/yavo-r5-packet-dir08n8a/judge/generate.py"
+               ],
+               "elapsed_seconds" : 0.0481447509999953,
+               "exit_code" : 0,
+               "log_sha256" : "59938caff5b062a1905d9ff64f17c4646d069d7f37d97c7832828349b44e7898"
+            },
+            "runs" : [
+               {
+                  "operation_count" : 69,
+                  "run_id" : "yavo-a",
+                  "snapshots" : 24,
+                  "token_usage_available" : false
+               },
+               {
+                  "operation_count" : 66,
+                  "run_id" : "rust-a",
+                  "snapshots" : 24,
+                  "token_usage_available" : false
+               },
+               {
+                  "operation_count" : 66,
+                  "run_id" : "rust-b",
+                  "snapshots" : 24,
+                  "token_usage_available" : false
+               },
+               {
+                  "operation_count" : 69,
+                  "run_id" : "yavo-b",
+                  "snapshots" : 24,
+                  "token_usage_available" : false
+               }
+            ],
+            "schema_version" : 1,
+            "scope" : "Archived experiment integrity and arithmetic; participant failures are measurements, not CI failures.",
+            "serialization_compatibility" : {
+               "compatibility_policy" : "Only operation=doc with three arguments: canonical positive decimal strings in original argv may remain identical strings or serialize as equal positive integers at indexes 1 and 2. All other arguments preserve both JSON type and value; booleans and floats are rejected.",
+               "frozen_recorder_sha256" : "90d71ba4c354011e038cfbc00ac2d15d05a014d320c7328c05f71fa07d72dd0d",
+               "mechanism" : "The frozen Perl recorder stores a reference to argv in each event. Its doc range comparison and arithmetic set numeric flags on the existing scalar values; JSON::PP subsequently emits those line numbers as JSON integers. The archived request and event represent the same document and line-number values. Neither archive is rewritten.",
+               "normalization_count" : 6,
+               "observations" : [
+                  {
+                     "event_arguments" : [
+                        "cheatsheet",
+                        1,
+                        180
+                     ],
+                     "event_path" : "runs/yavo-a/operations/0002/event.json",
+                     "event_sha256" : "8b0794d44e0d1b72fc6d1bbc710f983fe8cf05350e6eb464d626f4e6ccab62da",
+                     "normalized_positions" : [
+                        1,
+                        2
+                     ],
+                     "operation" : "doc",
+                     "request_arguments" : [
+                        "cheatsheet",
+                        "1",
+                        "180"
+                     ],
+                     "request_path" : "runs/yavo-a/operations/0002/request.json",
+                     "request_sha256" : "1068766560589d9faf7ec9e535c891fa816dcd9f7a1ea1d5ee466cc2e026052b",
+                     "run_id" : "yavo-a",
+                     "sequence" : 2
+                  },
+                  {
+                     "event_arguments" : [
+                        "cheatsheet",
+                        181,
+                        360
+                     ],
+                     "event_path" : "runs/yavo-a/operations/0003/event.json",
+                     "event_sha256" : "ed199b2fb31205690d74165806145013768276b51ea6e235e4949078e09ba6d9",
+                     "normalized_positions" : [
+                        1,
+                        2
+                     ],
+                     "operation" : "doc",
+                     "request_arguments" : [
+                        "cheatsheet",
+                        "181",
+                        "360"
+                     ],
+                     "request_path" : "runs/yavo-a/operations/0003/request.json",
+                     "request_sha256" : "cdd9b62e8ceaedb2cca56fa0363a011e559ea52fe8745acda1a9b9e867e1deaa",
+                     "run_id" : "yavo-a",
+                     "sequence" : 3
+                  },
+                  {
+                     "event_arguments" : [
+                        "cheatsheet",
+                        361,
+                        513
+                     ],
+                     "event_path" : "runs/yavo-a/operations/0004/event.json",
+                     "event_sha256" : "25858f9f6628e9f77e5940f0ecba534816a96731ca91d37be127fd6b7dfd7835",
+                     "normalized_positions" : [
+                        1,
+                        2
+                     ],
+                     "operation" : "doc",
+                     "request_arguments" : [
+                        "cheatsheet",
+                        "361",
+                        "513"
+                     ],
+                     "request_path" : "runs/yavo-a/operations/0004/request.json",
+                     "request_sha256" : "9b0f494444499f3ad0c5ae0caeee2ae5c1184f4fa1b0de8d3ccb19afad1deeab",
+                     "run_id" : "yavo-a",
+                     "sequence" : 4
+                  },
+                  {
+                     "event_arguments" : [
+                        "cheatsheet",
+                        1,
+                        180
+                     ],
+                     "event_path" : "runs/yavo-b/operations/0002/event.json",
+                     "event_sha256" : "132de12f82d7c8acf09d20474315649dae8f8744ec5dfcde28d4e5aa109beded",
+                     "normalized_positions" : [
+                        1,
+                        2
+                     ],
+                     "operation" : "doc",
+                     "request_arguments" : [
+                        "cheatsheet",
+                        "1",
+                        "180"
+                     ],
+                     "request_path" : "runs/yavo-b/operations/0002/request.json",
+                     "request_sha256" : "4af1aa287c9e77dd8571db4df89587823df523661edb9404a0f41de8055c9038",
+                     "run_id" : "yavo-b",
+                     "sequence" : 2
+                  },
+                  {
+                     "event_arguments" : [
+                        "cheatsheet",
+                        181,
+                        360
+                     ],
+                     "event_path" : "runs/yavo-b/operations/0003/event.json",
+                     "event_sha256" : "80adc903cdab1c3042388a294d15563589ddfc968e0b6e2cb932acc0572af477",
+                     "normalized_positions" : [
+                        1,
+                        2
+                     ],
+                     "operation" : "doc",
+                     "request_arguments" : [
+                        "cheatsheet",
+                        "181",
+                        "360"
+                     ],
+                     "request_path" : "runs/yavo-b/operations/0003/request.json",
+                     "request_sha256" : "28647ce23c197c0deb10728fe7334c1c0050cdb2343ef94c3c1243228268b5c1",
+                     "run_id" : "yavo-b",
+                     "sequence" : 3
+                  },
+                  {
+                     "event_arguments" : [
+                        "cheatsheet",
+                        361,
+                        513
+                     ],
+                     "event_path" : "runs/yavo-b/operations/0004/event.json",
+                     "event_sha256" : "c8eb1ab8bc3b4e8a4534a7a8311b054a34fc7cd420d07517124c60fe60baff58",
+                     "normalized_positions" : [
+                        1,
+                        2
+                     ],
+                     "operation" : "doc",
+                     "request_arguments" : [
+                        "cheatsheet",
+                        "361",
+                        "513"
+                     ],
+                     "request_path" : "runs/yavo-b/operations/0004/request.json",
+                     "request_sha256" : "f2ad856c5752d9f898c7710cbde5070dd267ca0d5ed11c6200b9fbbe4cc75cfb",
+                     "run_id" : "yavo-b",
+                     "sequence" : 4
+                  }
+               ],
+               "schema_version" : 1
+            },
+            "source_snapshot_count" : 96,
+            "started_utc" : "2026-11-22T06:58:59.509743+00:00",
+            "status" : "passed",
+            "telemetry_limitations" : [
+               "yavo-a: token usage is unavailable, not zero",
+               "yavo-a: exact model identifier is unavailable",
+               "rust-a: token usage is unavailable, not zero",
+               "rust-a: exact model identifier is unavailable",
+               "rust-b: token usage is unavailable, not zero",
+               "rust-b: exact model identifier is unavailable",
+               "yavo-b: token usage is unavailable, not zero",
+               "yavo-b: exact model identifier is unavailable"
+            ]
+         },
+         "independent_consistency_receipt" : {
+            "checked_case_results" : 1344,
+            "checked_runs" : 4,
+            "checked_source_snapshots" : 96,
+            "errors" : [],
+            "limitations" : [
+               "yavo-a: token usage is unavailable, not zero",
+               "yavo-a: exact model identifier is unavailable",
+               "rust-a: token usage is unavailable, not zero",
+               "rust-a: exact model identifier is unavailable",
+               "rust-b: token usage is unavailable, not zero",
+               "rust-b: exact model identifier is unavailable",
+               "yavo-b: token usage is unavailable, not zero",
+               "yavo-b: exact model identifier is unavailable"
+            ],
+            "passed" : true,
+            "schema" : "yavo-r5-evidence-check-v1",
+            "scope" : "evidence consistency; does not prove model independence or completeness of platform telemetry"
+         },
+         "job" : {
+            "completed_at" : "2026-11-22T06:59:06Z",
+            "conclusion" : "success",
+            "html_url" : "https://github.com/msly/yavo/actions/runs/44996118634/job/137127420425",
+            "id" : 137127420425,
+            "labels" : [
+               "ubuntu-24.04"
+            ],
+            "name" : "Round-five experiment evidence",
+            "runner_group_name" : "GitHub Actions",
+            "runner_name" : "GitHub Actions 1000000876",
+            "started_at" : "2026-11-22T06:58:53Z",
+            "status" : "completed"
+         },
+         "key" : "experiment",
+         "report_identities" : {
+            "experiment-evidence-consistency.json" : {
+               "bytes" : 716,
+               "sha256" : "95bb950e710d290084ed243cb258eee8ab96cece41b7c58857959044dc60f9fa"
+            },
+            "experiment-evidence.json" : {
+               "bytes" : 7202,
+               "sha256" : "8ff906bd2be0f122bfcaf26e78062bb949e3044820adb4b20b3f3a95d75e2d05"
+            }
+         }
+      }
+   ],
+   "project" : "msly/yavo",
+   "same_revision_jobs" : true,
+   "schema_version" : 1,
+   "scope_notes" : [
+      "Linux x86_64 runs the complete Debug and Release Cargo suites, frozen conformance and six-target cross-build checks.",
+      "Windows x86_64 and macOS arm64 run the explicitly selected native suite. Their 71/74 counts are not a claim of full Linux-equivalent conformance.",
+      "The single ignored Cargo test is the legacy exploratory p0::conformance_report; the active frozen conformance suite executes on Linux.",
+      "Independent GCC ASan+UBSan passes 60 exported P0 run/panic programs and clean/use-after-free/overflow capability probes. LeakSanitizer is disabled and YV_ALLOC_CHECK is enabled; pinned Zig ASan conformance remains unsupported.",
+      "The experiment gate validates the archive and arithmetic. The language submissions were executed on the server against frozen compiler inputs; CI does not rerun participant code using the current compiler.",
+      "Round-five model token usage, exact model/sampling provenance and total platform tool calls remain unavailable. Recorded lab requests are a separate observed metric.",
+      "All five jobs and artifacts refer to the same validation revision; no cross-revision successes are combined."
+   ],
+   "status" : "passed",
+   "user_date" : "2026-11-22",
+   "user_timezone" : "Asia/Shanghai",
+   "validation_revision" : "0bad3d2bde99a0142e00b42ccc68fda9cd00512e",
+   "verification_method" : "Fetched final run/jobs/artifacts from GitHub API; downloaded each artifact ZIP; matched bytes and SHA-256 against the API digest; parsed embedded native, sanitizer and experiment reports and independently checked their identities and exact totals.",
+   "verified_at_utc" : "2026-11-22T07:07:56Z",
+   "workflow" : {
+      "conclusion" : "success",
+      "created_at" : "2026-11-22T06:58:50Z",
+      "event" : "push",
+      "head_branch" : "main",
+      "head_sha" : "0bad3d2bde99a0142e00b42ccc68fda9cd00512e",
+      "html_url" : "https://github.com/msly/yavo/actions/runs/44996118634",
+      "id" : 44996118634,
+      "name" : "Yavo CI",
+      "path" : ".github/workflows/ci.yml",
+      "run_attempt" : 1,
+      "run_number" : 4,
+      "status" : "completed",
+      "updated_at" : "2026-11-22T07:07:28Z"
+   }
+}
