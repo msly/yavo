@@ -153,8 +153,10 @@ fn clean_environment(command: &mut Command) {
 }
 
 fn command_record(command: &Command) -> Value {
-    json!({"program":command.get_program().to_string_lossy(),
-        "args":command.get_args().map(|x| x.to_string_lossy().into_owned()).collect::<Vec<_>>()})
+    let mut record = json!({"program":command.get_program().to_string_lossy(),
+        "args":command.get_args().map(|x| x.to_string_lossy().into_owned()).collect::<Vec<_>>()});
+    if let Some(cwd) = command.get_current_dir() { record["cwd"] = json!(cwd); }
+    record
 }
 fn execution(cap: &process::Capture, command: &Command, elapsed: Duration) -> Value {
     #[cfg(unix)]
@@ -196,14 +198,36 @@ impl Artifact {
 
 struct Build { evidence: Value, artifact: Option<Artifact> }
 
+#[cfg(windows)]
+fn compiler_relative_path<'a>(path: &'a Path, directory: &Path) -> io::Result<&'a Path> {
+    let relative = path.strip_prefix(directory).map_err(|_| {
+        io::Error::new(io::ErrorKind::InvalidInput, "C compiler path is outside the verification directory")
+    })?;
+    if relative.as_os_str().is_empty()
+        || relative.components().any(|c| !matches!(c, std::path::Component::Normal(_)))
+    {
+        return Err(io::Error::new(io::ErrorKind::InvalidInput,
+            "C compiler path must stay beneath the verification directory"));
+    }
+    Ok(relative)
+}
+
 fn compile_artifact(
     tc: &toolchain::Toolchain, c_file: &Path, include: &Path, output: &Path,
     target: &str, sanitizer: Option<&str>, fresh_cache: Option<&Path>, timeout: Duration,
 ) -> Result<Build, Error> {
-    let mut cmd = Command::new(&tc.program);
+    #[cfg(windows)]
+    let program = std::path::absolute(&tc.program)?;
+    #[cfg(not(windows))]
+    let program = tc.program.clone();
+    let mut cmd = Command::new(&program);
+    // Keep canonical Win32/UNC paths for identity and filesystem access. Clang's
+    // include search rejects verbatim paths, so give it paths beneath this cwd.
+    #[cfg(windows)]
+    cmd.current_dir(include);
     clean_environment(&mut cmd);
     // Bind the installed library directory instead of accepting ZIG_LIB_DIR.
-    if let Some(dir) = tc.program.parent() { cmd.env("ZIG_LIB_DIR", dir.join("lib")); }
+    if let Some(dir) = program.parent() { cmd.env("ZIG_LIB_DIR", dir.join("lib")); }
     if let Some(cache) = fresh_cache {
         let local = cache.join("local");
         let global = cache.join("global");
@@ -211,6 +235,10 @@ fn compile_artifact(
         // create_dir, not create_dir_all: reproducibility must start from empty caches.
         fs::create_dir(&local)?;
         fs::create_dir(&global)?;
+        #[cfg(windows)]
+        cmd.env("ZIG_LOCAL_CACHE_DIR", compiler_relative_path(&local, include)?)
+            .env("ZIG_GLOBAL_CACHE_DIR", compiler_relative_path(&global, include)?);
+        #[cfg(not(windows))]
         cmd.env("ZIG_LOCAL_CACHE_DIR", &local).env("ZIG_GLOBAL_CACHE_DIR", &global);
     }
     cmd.args(&tc.prefix_args).args(["-std=c17", "-fno-strict-aliasing", "-target", target]);
@@ -223,7 +251,12 @@ fn compile_artifact(
     } else {
         cmd.args(["-O2", "-s"]);
     }
-    cmd.arg("-I").arg(include).arg(c_file).arg("-o").arg(output).stdin(Stdio::null());
+    #[cfg(windows)]
+    cmd.arg("-I").arg(".").arg(compiler_relative_path(c_file, include)?)
+        .arg("-o").arg(compiler_relative_path(output, include)?);
+    #[cfg(not(windows))]
+    cmd.arg("-I").arg(include).arg(c_file).arg("-o").arg(output);
+    cmd.stdin(Stdio::null());
     let start = Instant::now();
     let cap = match process::capture(&mut cmd, timeout) {
         Ok(cap) => cap,

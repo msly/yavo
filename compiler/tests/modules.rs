@@ -301,7 +301,7 @@ fn verify_records_and_replays_the_complete_immutable_project_snapshot() {
     let expected = scratch.0.join("expected.txt");
     fs::write(&expected, "7\n").unwrap();
     let (out, report) = json(yavo().arg("verify").arg(&entry).arg("--json")
-        .arg("--output-dir").arg(scratch.0.join("first"))
+        .arg("--output-dir").arg(scratch.0.join("first snapshot 雪"))
         .arg("--expect-stdout").arg(&expected).env_remove("YAVO_CC"));
     assert_eq!(out.status.code(), Some(5), "{report:#}; {out:?}");
     assert_eq!(report["overall"], "not_verified");
