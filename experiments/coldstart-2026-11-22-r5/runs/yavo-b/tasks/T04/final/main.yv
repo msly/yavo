@@ -1,0 +1,9 @@
+use std/io
+use conversion
+
+fn main() {
+    let text = io.readAll() catch _ { return }
+    for index, line in text.lines() {
+        println("${index + 1}: ${conversion.convert(line)}")
+    }
+}

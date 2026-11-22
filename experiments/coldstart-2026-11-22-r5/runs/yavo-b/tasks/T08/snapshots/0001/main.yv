@@ -1,0 +1,52 @@
+use std/io
+
+fn main() {
+    let text = io.readAll() catch _ { return }
+    var documents: Map[String, Set[String]] = [:]
+    for line in text.lines() {
+        let fields = line.fields()
+        if fields.len() == 0 { continue }
+        if fields[0] == "set" {
+            var tags: Set[String] = []
+            for i in 2..fields.len() { tags.add(fields[i].toString()) }
+            documents.set(fields[1].toString(), tags)
+        } else if fields[0] == "add" {
+            let doc = fields[1]
+            if !documents.has(doc) {
+                let empty: Set[String] = []
+                documents.set(doc.toString(), empty)
+            }
+            if let tags = documents.getMut(doc) { tags.add(fields[2].toString()) }
+        } else if fields[0] == "remove" {
+            if let tags = documents.getMut(fields[1]) { let _ = tags.remove(fields[2]) }
+        } else if fields[0] == "drop" {
+            let _ = documents.remove(fields[1])
+        } else if fields[0] == "tags" {
+            let doc = fields[1]
+            if let tags = documents.get(doc) {
+                var ordered: Vec[String] = []
+                for tag in tags { ordered.push(tag.clone()) }
+                ordered.sort()
+                if ordered.len() == 0 { println("${doc}: none") } else { println("${doc}: ${ordered.join(" ")}") }
+            } else {
+                println("${doc}: missing")
+            }
+        } else if fields[0] == "query" {
+            var found: Vec[String] = []
+            for doc, tags in documents {
+                var matches = true
+                for i in 1..fields.len() {
+                    if !tags.has(fields[i]) { matches = false }
+                }
+                if matches { found.push(doc.clone()) }
+            }
+            found.sort()
+            if found.len() == 0 { println("docs: none") } else { println("docs: ${found.join(" ")}") }
+        }
+    }
+    var allTags: Set[String] = []
+    for _doc, tags in documents {
+        for tag in tags { allTags.add(tag.clone()) }
+    }
+    println("total: docs=${documents.len()} tags=${allTags.len()}")
+}

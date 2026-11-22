@@ -1,0 +1,24 @@
+use std/io
+
+fn main() {
+    let text = io.readAll() catch _ { return }
+    let lines = text.lines()
+    var base: Vec[String] = []
+    for part in lines[0].split("/") {
+        if part.len() != 0 { base.push(part.toString()) }
+    }
+    for index in 1..lines.len() {
+        let path = lines[index]
+        var parts: Vec[String] = []
+        if !path.startsWith("/") { parts = base.clone() }
+        for part in path.split("/") {
+            if part.len() == 0 || part == "." { continue }
+            if part == ".." {
+                let _ = parts.pop()
+            } else {
+                parts.push(part.toString())
+            }
+        }
+        println("/${parts.join("/")}")
+    }
+}

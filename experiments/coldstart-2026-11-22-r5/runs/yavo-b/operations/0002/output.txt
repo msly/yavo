@@ -1,0 +1,180 @@
+# Yavo 速查卡（v0.5 冻结候选）
+
+这是给 agent 放进上下文的一页语言写法。命令是 `yavo`，源文件扩展名是 `.yv`。本卡只写当前编译器原型**已经实现**的写法；规范里有但尚未实现的功能在第 9 节列出，用到会得到 `U0001`（“not supported yet”）。精确的安全规则以“语义表”为准，库签名见《标准库契约》。
+
+## 1. 程序骨架和基本语法
+
+入口文件里写 `main`；程序可以只有这一个文件，也可以拆成多个文件（第 6 节）。语句以换行结束，不写分号，代码块必须用花括号。
+
+```
+// 导入写在文件开头，例如 use std/fs；没用到的导入会有警告
+
+pub fn add(a: int, b: int) -> int {    // pub：从包导出
+    return a + b                         // 必须写 return
+}
+
+fn main() {
+    let x = 3                            // let：不可变
+    var total = 0                        // var：可变
+    for i in 0..x {                      // 0, 1, 2
+        total += add(i, 1)
+    }
+    if total > 5 {
+        println("big: ${total}")         // 插值直接写到输出，不分配内存
+    } else {
+        println("small")
+    }
+}
+```
+
+- 循环：`for x in xs { }` 默认只读；`for x in &xs { }` 显式可变，Map 键始终只读。范围循环 `for i in 0..n { }`、`while cond { }`、`loop { }` 配合 `break`、`continue`。
+- 分支：`if`/`else` 是语句；要按情况取值，用 `match` 的 `=> 表达式` 分支（必须覆盖所有情况，`_` 兜底）。
+- 返回：有返回值的函数每条路径都写 `return`，没有返回值的函数可以自然结束。块体闭包也要写 `return`；单表达式闭包 `(a, b) => a < b` 不用。
+- 插值字符串 `"${expr}"` 只能直接传给 `println`、`print`、`eprintln`、`panic`、`assert` 和 `format`。前五个直接写输出，不分配内存；要得到 `String` 用 `format("${x}")`，会分配。`${...}` 里可以写任意表达式，包括函数调用和字符串字面量，如 `"${parts.join(", ")}"`。保留两位小数写 `"${x:.2}"`（只用于浮点数，整数先 `f64(n)`）。
+- 字符串转义：`\n`、`\t`、`\\`、`\"`。**每个字符串字面量里的 `${` 都开始插值**：要输出字面的 `${`（如 shell、模板、`"${HOME}"` 这类文本），必须写 `"\${"`，否则报 `E0020`；单独的 `$` 不用转义。
+- 注释只有 `//`。声明顺序无关，函数可以先用后定义；`pub` 标记从包导出的函数和类型。
+- 入口只能写成 `fn main()`：没有参数、没有返回值（否则 `E0016`）。所以 `main` 里不能用 `try`；可能失败的步骤放进返回 `T ! E` 的辅助函数，在 `main` 里用 `catch` 处理后 `os.exit(1)`，写法见第 5 节。
+- 整数溢出、除零、越界移位、超出范围的转换执行时 panic，包括常量可知的表达式。`let b: u8 = 256` 则是字面量类型错误。回绕写 `+%`、`-%`、`*%`；截断转换写 `i32.wrap(x)`，仅接受整数。整数边界写 `i64.min`、`i64.max`。
+- 集合字面量 `[1, 2, 3]`、`[:]` 会分配内存；除此之外，普通语法不分配。
+
+## 2. 类型
+
+| 类型 | 写法 | 说明 |
+| --- | --- | --- |
+| 整数 | `int`、`i8`…`i64`、`u8`…`u64`、`byte` | `int` 是 64 位有符号 |
+| 浮点、布尔 | `f64`、`f32`、`bool` |  |
+| 字符串 | `String`（拥有）、`str`（视图） | 始终是合法 UTF-8；字面量是 `str`，`s.toString()` 得到 `String` |
+| 动态数组 | `Vec[T]`，字面量 `[1, 2, 3]` | 切片视图是 `[]T` |
+| 映射、集合 | `Map[K, V]`（字面量 `[:]`）、`Set[T]`（`var s: Set[String] = []` 或 `Set[int]{}`） | 按插入顺序遍历 |
+| 元组 | `(int, String)` | 用 `.0`、`.1` 取，或 `let (a, b) = t` |
+| 借用 | `&T`（只读）、`&inout T`（可变） | `*p = v` 修改目标，`p = q` 重新绑定；构造时写如 `let p: &inout int = &n` |
+| 可选、结果 | `?T`、`T ! E` | 见第 3 节 |
+| 堆和共享 | `Box[T]`、`Rc[T]`、`Arc[T]`、`Arena[T]` 加 `Id[T]` | 见第 4 节 |
+
+```
+struct Point {
+    x: f64
+    y: f64 = 0.0                      // 字段默认值：只能是常量（数字、true/false、字符串字面量、none、[]、[:]）
+
+    fn norm(self) -> f64 {            // 方法写在结构体里
+        return math.sqrt(self.x * self.x + self.y * self.y)
+    }
+    fn shift(inout self, dx: f64) {   // 要修改自己时写 inout self
+        self.x += dx
+    }
+}
+
+enum Shape {
+    Circle(r: f64)
+    Rect(w: f64, h: f64)
+    Empty
+}
+
+fn area(s: Shape) -> f64 {
+    match s {
+        .Circle(r) => return 3.14159 * r * r
+        .Rect(w, h) => return w * h
+        .Empty => return 0.0
+    }
+}
+
+interface Named {
+    fn name(self) -> String
+}
+
+struct Dog: Named {                   // 实现接口要显式声明
+    fn name(self) -> String {
+        return "dog".toString()
+    }
+}
+
+fn largest[T: Ord + Copy](xs: []T) -> ?T of xs {   // 泛型和接口约束
+    if xs.len() == 0 {
+        return none
+    }
+    var best = xs[0]
+    for x in xs {
+        if x > best {
+            best = x
+        }
+    }
+    return best
+}
+```
+
+- 构造：`Point{x: 1.0}`、`Shape.Circle(r: 2.0)`；类型已知时可以简写成 `.Circle(r: 2.0)`。
+- 类型转换必须显式：`f64(n)`、`int(x)`。没有隐式转换，只有语义表第 8 节列出的几种自动操作。
+- 比较：`==` 需要类型实现 `Eq`，`<` 等需要实现 `Ord`；整数、`str`、`String`、可比较元素组成的元组自动实现。两边类型必须相同，例外是 `String` 和 `str` 可以直接比较（`name == "bob"`、`s < t`）。浮点数可以直接用 `==`、`<`（按 IEEE 754），但不满足 `Eq`、`Ord`：不能用 `v.sort()` 或 `largest[f64]`，排序写 `v.sortBy((a, b) => a.totalCmp(b) == .Less)`。自定义类型写 `struct Version: Ord` 并实现 `cmp` 方法。
+- 泛型函数的返回值可能携带借用时也写来源，例如上面的 `largest` 写 `-> ?T of xs`；用在 `int` 上时不会借住数组。
+- 泛型结构体同样用方括号；字面量要写出类型参数，方法里用 `T`、`Self`：
+
+```
+struct Stack[T] {
+    items: Vec[T]
+
+    fn push(inout self, x: sink T) {      // sink：把 x 移进栈
+        self.items.push(x)
+    }
+    fn pop(inout self) -> ?T {
+        return self.items.pop()
+    }
+}
+
+fn main() {
+    var s = Stack[int]{items: []}        // 写 Stack[int]{...}，不写 Stack{...}
+    s.push(1)
+    while let x = s.pop() {
+        println(x)
+    }
+}
+```
+
+- 接口值放进集合或字段时要显式装箱，不会在背后分配：`var all: Vec[Box[Named]] = []`，`all.push(Box(Dog{}))`。
+
+## 3. 可选值和错误
+
+没有 nil，也没有异常：可能缺失的值是 `?T`，可能失败的函数返回 `T ! E`，两者都必须处理后才能用。
+
+```
+enum ParseError {
+    Empty
+    BadNumber(text: String)
+}
+
+fn parsePort(s: str) -> int ! ParseError {
+    if s.len() == 0 {
+        return err(.Empty)
+    }
+    let n = s.parseInt() ?? return err(.BadNumber(text: s.toString()))
+    return n                              // 成功值直接返回
+}
+
+fn load(path: str) -> int ! ParseError {
+    let port = try parsePort(path)        // try：出错就把错误原样向上返回
+    return port + 1
+}
+
+fn main() {
+    let m: Map[String, int] = [:]
+    if let v = m.get("a") {               // 有值才进入；v 是只读借用 &int
+        println(v)
+    }
+    let n = m.getCopy("b") ?? 0               // getCopy 要求可复制；?? 只在缺失时计算右侧
+
+    match parsePort("80") {               // 分情况处理
+        ok(p) => println(p)
+        err(e) => eprintln("bad port: ${e}")
+    }
+    let p = parsePort("x") catch e {      // 块形式的 catch：处理错误后必须离开；要替代值写 catch e => 值
+        eprintln("${e}")
+        return
+    }
+    println(p + n)
+}
+```
+
+- `?T` 的模式是 `some(x)`、`none`；构造可以显式 `some(value)`，也保留有值自动包装。`if let` 是只处理有值分支的简写，`??` 只在缺失时计算右侧。
+- `if let`/`match` 对**临时值**（如 `if let x = v.pop()`）取得拥有的值；对**已有变量**（`let o = v.pop()` 之后 `if let x = o`）只借用，要拿走里面的值写 `match take(&o) { some(x) => … none => … }`。
+- `?T` 的方法：`o.isSome()`、`o.isNone()`（都返回 `bool`）；取值用 `if let`、`while let`、`??`、`match`（标准库契约里没有 `unwrap`）。`if let` 可以带 `else`：
+
+```

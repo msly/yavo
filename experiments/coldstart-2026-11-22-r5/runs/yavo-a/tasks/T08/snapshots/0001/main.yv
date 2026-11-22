@@ -1,0 +1,76 @@
+use std/io
+
+fn main() {
+    let input = io.readAll() catch _ { return }
+    var docs: Map[String, Set[String]] = [:]
+    for line in input.lines() {
+        let fields = line.fields()
+        if fields.len() == 0 {
+            continue
+        }
+        let op = fields[0]
+        if op == "set" {
+            var tags: Set[String] = []
+            for i in 2..fields.len() {
+                tags.add(fields[i].toString())
+            }
+            docs.set(fields[1].toString(), tags)
+        } else if op == "add" {
+            let name = fields[1]
+            if !docs.has(name) {
+                docs.set(name.toString(), Set[String]{})
+            }
+            if let tags = docs.getMut(name) {
+                tags.add(fields[2].toString())
+            }
+        } else if op == "remove" {
+            if let tags = docs.getMut(fields[1]) {
+                let _ = tags.remove(fields[2])
+            }
+        } else if op == "drop" {
+            let _ = docs.remove(fields[1])
+        } else if op == "tags" {
+            let name = fields[1]
+            if let tags = docs.get(name) {
+                var names: Vec[String] = []
+                for tag in tags {
+                    names.push(tag.clone())
+                }
+                names.sort()
+                if names.len() == 0 {
+                    println("${name}: none")
+                } else {
+                    println("${name}: ${names.join(" ")}")
+                }
+            } else {
+                println("${name}: missing")
+            }
+        } else if op == "query" {
+            var matches: Vec[String] = []
+            for name, tags in docs {
+                var matched = true
+                for i in 1..fields.len() {
+                    if !tags.has(fields[i]) {
+                        matched = false
+                    }
+                }
+                if matched {
+                    matches.push(name.clone())
+                }
+            }
+            matches.sort()
+            if matches.len() == 0 {
+                println("docs: none")
+            } else {
+                println("docs: ${matches.join(" ")}")
+            }
+        }
+    }
+    var all: Set[String] = []
+    for _name, tags in docs {
+        for tag in tags {
+            all.add(tag.clone())
+        }
+    }
+    println("total: docs=${docs.len()} tags=${all.len()}")
+}

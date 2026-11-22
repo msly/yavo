@@ -1,0 +1,2 @@
+use std::io::{self,Read};
+fn main(){let mut s=String::new();io::stdin().read_to_string(&mut s).unwrap();let mut fields=s.split_whitespace();let k:usize=fields.next().unwrap().parse().unwrap();let values:Vec<i64>=fields.map(|v|v.parse().unwrap()).collect();let mut out=String::new();let mut count=0;for (i,window) in values.windows(k).enumerate(){let mut ordered=window.to_vec();ordered.sort();let sum:i64=window.iter().sum();out.push_str(&format!("{}: median={} sum={}\n",i+k,ordered[(k-1)/2],sum));count+=1;}out.push_str(&format!("windows: {}\n",count));print!("{}",out);}

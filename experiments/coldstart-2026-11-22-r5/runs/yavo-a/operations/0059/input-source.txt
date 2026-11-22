@@ -1,0 +1,28 @@
+use std/io
+
+fn main() {
+    let input = io.readAll() catch _ { return }
+    let fields = input.fields()
+    let k = fields[0].parseInt() ?? 1
+    var numbers: Vec[int] = []
+    for i in 1..fields.len() {
+        numbers.push(fields[i].parseInt() ?? 0)
+    }
+    var count = 0
+    for end in 0..numbers.len() {
+        if end + 1 < k {
+            continue
+        }
+        var window: Vec[int] = []
+        var sum = 0
+        for i in end + 1 - k..end + 1 {
+            window.push(numbers[i])
+            sum += numbers[i]
+        }
+        window.sort()
+        let median = window[(k - 1) / 2]
+        println("${end + 1}: median=${median} sum=${sum}")
+        count += 1
+    }
+    println("windows: ${count}")
+}

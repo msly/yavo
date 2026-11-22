@@ -1,0 +1,3228 @@
+{
+  "comparability": {
+    "reason": "This round must record its own model/session/measurement provenance; prior incomplete telemetry is not interchangeable.",
+    "round4_direct_cost_comparison": false
+  },
+  "complete_requested_evidence": false,
+  "evidence_gaps": [
+    "yavo-a: tokens unavailable.",
+    "yavo-a: all_model_tool_calls unavailable.",
+    "yavo-a: exact model id and sampling provenance unavailable.",
+    "rust-a: tokens unavailable.",
+    "rust-a: all_model_tool_calls unavailable.",
+    "rust-a: exact model id and sampling provenance unavailable.",
+    "rust-b: tokens unavailable.",
+    "rust-b: all_model_tool_calls unavailable.",
+    "rust-b: exact model id and sampling provenance unavailable.",
+    "yavo-b: tokens unavailable.",
+    "yavo-b: all_model_tool_calls unavailable.",
+    "yavo-b: exact model id and sampling provenance unavailable."
+  ],
+  "languages": {
+    "rust": {
+      "final_behavior_correct": {
+        "failed": 0,
+        "passed": 24,
+        "total": 24,
+        "unmeasured": 0
+      },
+      "final_contract_correct": {
+        "failed": 0,
+        "passed": 24,
+        "total": 24,
+        "unmeasured": 0
+      },
+      "final_hidden_correct": {
+        "failed": 0,
+        "passed": 24,
+        "total": 24,
+        "unmeasured": 0
+      },
+      "final_public_correct": {
+        "failed": 0,
+        "passed": 24,
+        "total": 24,
+        "unmeasured": 0
+      },
+      "first_behavior_correct": {
+        "failed": 0,
+        "passed": 24,
+        "total": 24,
+        "unmeasured": 0
+      },
+      "first_contract_correct": {
+        "failed": 0,
+        "passed": 24,
+        "total": 24,
+        "unmeasured": 0
+      },
+      "first_hidden_correct": {
+        "failed": 0,
+        "passed": 24,
+        "total": 24,
+        "unmeasured": 0
+      },
+      "first_public_correct": {
+        "failed": 0,
+        "passed": 24,
+        "total": 24,
+        "unmeasured": 0
+      },
+      "first_source_replay_build_passed": {
+        "failed": 0,
+        "passed": 24,
+        "total": 24,
+        "unmeasured": 0
+      },
+      "historical_first_build_and_hidden_correct": {
+        "failed": 0,
+        "passed": 24,
+        "total": 24,
+        "unmeasured": 0
+      },
+      "historical_first_build_and_public_correct": {
+        "failed": 0,
+        "passed": 24,
+        "total": 24,
+        "unmeasured": 0
+      },
+      "historical_first_build_passed": {
+        "failed": 0,
+        "passed": 24,
+        "total": 24,
+        "unmeasured": 0
+      }
+    },
+    "yavo": {
+      "final_behavior_correct": {
+        "failed": 0,
+        "passed": 24,
+        "total": 24,
+        "unmeasured": 0
+      },
+      "final_contract_correct": {
+        "failed": 0,
+        "passed": 24,
+        "total": 24,
+        "unmeasured": 0
+      },
+      "final_hidden_correct": {
+        "failed": 0,
+        "passed": 24,
+        "total": 24,
+        "unmeasured": 0
+      },
+      "final_public_correct": {
+        "failed": 0,
+        "passed": 24,
+        "total": 24,
+        "unmeasured": 0
+      },
+      "first_behavior_correct": {
+        "failed": 0,
+        "passed": 24,
+        "total": 24,
+        "unmeasured": 0
+      },
+      "first_contract_correct": {
+        "failed": 0,
+        "passed": 24,
+        "total": 24,
+        "unmeasured": 0
+      },
+      "first_hidden_correct": {
+        "failed": 0,
+        "passed": 24,
+        "total": 24,
+        "unmeasured": 0
+      },
+      "first_public_correct": {
+        "failed": 0,
+        "passed": 24,
+        "total": 24,
+        "unmeasured": 0
+      },
+      "first_source_replay_build_passed": {
+        "failed": 0,
+        "passed": 24,
+        "total": 24,
+        "unmeasured": 0
+      },
+      "historical_first_build_and_hidden_correct": {
+        "failed": 0,
+        "passed": 24,
+        "total": 24,
+        "unmeasured": 0
+      },
+      "historical_first_build_and_public_correct": {
+        "failed": 0,
+        "passed": 24,
+        "total": 24,
+        "unmeasured": 0
+      },
+      "historical_first_build_passed": {
+        "failed": 0,
+        "passed": 24,
+        "total": 24,
+        "unmeasured": 0
+      }
+    }
+  },
+  "metric_definitions": {
+    "contract_correct": "All public and hidden cases pass AND any mandatory source-structure requirements have hash-bound manual review.",
+    "first_hidden_correct": "Hidden-case correctness of that first source snapshot, replayed after submission.",
+    "first_public_correct": "Public-case correctness of the source snapshot from the first compiler invocation, replayed after submission.",
+    "historical_first_build_and_public_correct": "Original first compiler invocation succeeded AND its frozen source passes every public replay case."
+  },
+  "paired_final_contract": {
+    "both_correct": 24,
+    "neither_correct": 0,
+    "rust_only": 0,
+    "unpaired_or_unjudged": 0,
+    "yavo_only": 0
+  },
+  "runs": [
+    {
+      "costs": {
+        "agent_wall_scope": "controller init through participant seal; includes dispatch and tool latency",
+        "agent_wall_seconds": 337.882339895703,
+        "all_model_tool_calls": null,
+        "build_operations": 12,
+        "compiler_process_invocations": 12,
+        "cost_metric_note": "Replay build/run time is not agent delivery time.",
+        "events_sha256": "3c09f7f82f44afe7f19ee41a48bcd7d52e400af73daab6840f958a32e37f1b2f",
+        "first_build_observations": {
+          "T01": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 7
+          },
+          "T02": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 12
+          },
+          "T03": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 17
+          },
+          "T04": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 23
+          },
+          "T05": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 29
+          },
+          "T06": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 34
+          },
+          "T07": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 40
+          },
+          "T08": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 45
+          },
+          "T09": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 50
+          },
+          "T10": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 55
+          },
+          "T11": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 60
+          },
+          "T12": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 65
+          }
+        },
+        "model": {
+          "exact_id": null,
+          "family_label": "inherited ChatGPT parent",
+          "sampling_parameters": null
+        },
+        "operation_categories": {
+          "compile": 12,
+          "read_documentation": 16,
+          "submit": 13,
+          "test_custom": 3,
+          "test_public": 12,
+          "write_code": 13
+        },
+        "recorded_lab_operations": 69,
+        "recorded_lab_operations_note": "One archived lab event; not automatically every model tool call.",
+        "run_metadata": {
+          "compiler_revision": "5cd916bbe7c8a85776b14e2295a681db88fb5c0a",
+          "elapsed_seconds": 337.882339895703,
+          "ended_at": "2026-11-22T06:44:21Z",
+          "ended_monotonic": 8029380.03460767,
+          "frozen_manifest_sha256": "aeb5c46db375e84c3d90257aec501161f29d4e4802f4a1a884b699753750bee3",
+          "language": "yavo",
+          "measurement": "instrumented operations; controller init/close excluded; not platform-wide tool calls",
+          "model": {
+            "exact_id": null,
+            "family_label": "inherited ChatGPT parent",
+            "sampling_parameters": null
+          },
+          "operations": 69,
+          "operations_by_category": {
+            "compile": 12,
+            "read_documentation": 16,
+            "submit": 13,
+            "test_custom": 3,
+            "test_public": 12,
+            "write_code": 13
+          },
+          "replicate": "a",
+          "run_id": "yavo-a",
+          "schema_version": 1,
+          "started_at": "2026-11-22T06:38:44Z",
+          "started_monotonic": 8029042.15226777,
+          "status": "sealed",
+          "tasks": {
+            "T01": {
+              "builds": 1,
+              "final_manifest": {
+                "main.yv": "30f8ba37916c54da0d1e50121db794a6493c25fa96be96becc90d854af24b79e"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "main.yv": "30f8ba37916c54da0d1e50121db794a6493c25fa96be96becc90d854af24b79e"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            },
+            "T02": {
+              "builds": 1,
+              "final_manifest": {
+                "main.yv": "0efc1ea3b4ccfd24c349ed01dcdfe1919373531611b6ca156b96988368751f10"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "main.yv": "0efc1ea3b4ccfd24c349ed01dcdfe1919373531611b6ca156b96988368751f10"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            },
+            "T03": {
+              "builds": 1,
+              "final_manifest": {
+                "main.yv": "89cac76f20d7183f2dd5c7381c2f77ee023ae462c02d424ddd87a92349fe9678"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "main.yv": "89cac76f20d7183f2dd5c7381c2f77ee023ae462c02d424ddd87a92349fe9678"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            },
+            "T04": {
+              "builds": 1,
+              "final_manifest": {
+                "convert.yv": "18e571e1377a144b226f7ac1abf9f6127ced4fee36c971e1fa8adb9811876f0c",
+                "main.yv": "0f5b85ae37a9c7547b3f6807ea69addef98e4292c94b4e3296f32777f38172d5"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "convert.yv": "18e571e1377a144b226f7ac1abf9f6127ced4fee36c971e1fa8adb9811876f0c",
+                "main.yv": "0f5b85ae37a9c7547b3f6807ea69addef98e4292c94b4e3296f32777f38172d5"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            },
+            "T05": {
+              "builds": 1,
+              "final_manifest": {
+                "main.yv": "abc5107de2c6b4248ac7a33e552bcce9dea8747d90580761503905e6f8047ad0"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "main.yv": "abc5107de2c6b4248ac7a33e552bcce9dea8747d90580761503905e6f8047ad0"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            },
+            "T06": {
+              "builds": 1,
+              "final_manifest": {
+                "main.yv": "ff7396ddda258b0677e912f54c5c6f5518b8ea64477bcdd6f92e5600effe7ecf"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "main.yv": "ff7396ddda258b0677e912f54c5c6f5518b8ea64477bcdd6f92e5600effe7ecf"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            },
+            "T07": {
+              "builds": 1,
+              "final_manifest": {
+                "main.yv": "262997edf90a110ef5c1ffc65887fb539c34c89f9d35d0bc9a0c24f54b8ad1b4"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "main.yv": "262997edf90a110ef5c1ffc65887fb539c34c89f9d35d0bc9a0c24f54b8ad1b4"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            },
+            "T08": {
+              "builds": 1,
+              "final_manifest": {
+                "main.yv": "80d2b5650f10ffe10757cb92dab444731087419f3f15d76d44b51420717bb90e"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "main.yv": "80d2b5650f10ffe10757cb92dab444731087419f3f15d76d44b51420717bb90e"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            },
+            "T09": {
+              "builds": 1,
+              "final_manifest": {
+                "main.yv": "d5c401a3e62d20423ffef5b90c5994f7c4063f2dd3f391501b23a5172a03f0e7"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "main.yv": "d5c401a3e62d20423ffef5b90c5994f7c4063f2dd3f391501b23a5172a03f0e7"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            },
+            "T10": {
+              "builds": 1,
+              "final_manifest": {
+                "main.yv": "f5c2f7fd7716dc981f2cc9520cd39144904ecb5144793b26a288141c8264664e"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "main.yv": "f5c2f7fd7716dc981f2cc9520cd39144904ecb5144793b26a288141c8264664e"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            },
+            "T11": {
+              "builds": 1,
+              "final_manifest": {
+                "main.yv": "6fa4684e167927281edd20422d3b5e2a635173394d8e1ea1a1e6ad58ad23e32b"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "main.yv": "6fa4684e167927281edd20422d3b5e2a635173394d8e1ea1a1e6ad58ad23e32b"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            },
+            "T12": {
+              "builds": 1,
+              "final_manifest": {
+                "main.yv": "f40fb3d5da019236775198ff19a6d18e43dd43140be407b0c9862127f1b59ea2"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "main.yv": "f40fb3d5da019236775198ff19a6d18e43dd43140be407b0c9862127f1b59ea2"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            }
+          },
+          "time_scope": "controller init through participant seal; includes dispatch and tool latency",
+          "usage": null,
+          "usage_status": "unavailable_platform_does_not_expose_usage"
+        },
+        "run_metadata_sha256": "f5a2e911238f30ec49d806ebda86150e41fc8519eea376808219cb50bd6c76d7",
+        "tokens": null
+      },
+      "evaluation_complete": true,
+      "language": "yavo",
+      "metrics": {
+        "final_behavior_correct": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        },
+        "final_contract_correct": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        },
+        "final_hidden_correct": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        },
+        "final_public_correct": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        },
+        "first_behavior_correct": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        },
+        "first_contract_correct": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        },
+        "first_hidden_correct": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        },
+        "first_public_correct": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        },
+        "first_source_replay_build_passed": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        },
+        "historical_first_build_and_hidden_correct": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        },
+        "historical_first_build_and_public_correct": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        },
+        "historical_first_build_passed": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        }
+      },
+      "replicate": "a",
+      "report": "judge-results/yavo-a/report.json",
+      "report_sha256": "db33d4d17a8be3b757f2f6a7ff58157b9f7724fe20ad4de1070d6ba151232429",
+      "run_id": "yavo-a"
+    },
+    {
+      "costs": {
+        "agent_wall_scope": "controller init through participant seal; includes dispatch and tool latency",
+        "agent_wall_seconds": 282.297785161994,
+        "all_model_tool_calls": null,
+        "build_operations": 12,
+        "compiler_process_invocations": 12,
+        "cost_metric_note": "Replay build/run time is not agent delivery time.",
+        "events_sha256": "5f6c2996987dc024e88218594b9b72c78443748f3592b2afc7c4860ad680c111",
+        "first_build_observations": {
+          "T01": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 4
+          },
+          "T02": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 9
+          },
+          "T03": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 14
+          },
+          "T04": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 20
+          },
+          "T05": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 26
+          },
+          "T06": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 31
+          },
+          "T07": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 37
+          },
+          "T08": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 42
+          },
+          "T09": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 47
+          },
+          "T10": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 52
+          },
+          "T11": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 57
+          },
+          "T12": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 62
+          }
+        },
+        "model": {
+          "exact_id": null,
+          "family_label": "inherited ChatGPT parent",
+          "sampling_parameters": null
+        },
+        "operation_categories": {
+          "compile": 12,
+          "read_documentation": 13,
+          "submit": 13,
+          "test_custom": 3,
+          "test_public": 12,
+          "write_code": 13
+        },
+        "recorded_lab_operations": 66,
+        "recorded_lab_operations_note": "One archived lab event; not automatically every model tool call.",
+        "run_metadata": {
+          "compiler_revision": "5cd916bbe7c8a85776b14e2295a681db88fb5c0a",
+          "elapsed_seconds": 282.297785161994,
+          "ended_at": "2026-11-22T06:43:36Z",
+          "ended_monotonic": 8029335.69157804,
+          "frozen_manifest_sha256": "aeb5c46db375e84c3d90257aec501161f29d4e4802f4a1a884b699753750bee3",
+          "language": "rust",
+          "measurement": "instrumented operations; controller init/close excluded; not platform-wide tool calls",
+          "model": {
+            "exact_id": null,
+            "family_label": "inherited ChatGPT parent",
+            "sampling_parameters": null
+          },
+          "operations": 66,
+          "operations_by_category": {
+            "compile": 12,
+            "read_documentation": 13,
+            "submit": 13,
+            "test_custom": 3,
+            "test_public": 12,
+            "write_code": 13
+          },
+          "replicate": "a",
+          "run_id": "rust-a",
+          "schema_version": 1,
+          "started_at": "2026-11-22T06:38:56Z",
+          "started_monotonic": 8029053.39379288,
+          "status": "sealed",
+          "tasks": {
+            "T01": {
+              "builds": 1,
+              "final_manifest": {
+                "main.rs": "efd04e74438750a59614541880746ca29ec88a5272172c363dbbbb631e4812c7"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "main.rs": "efd04e74438750a59614541880746ca29ec88a5272172c363dbbbb631e4812c7"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            },
+            "T02": {
+              "builds": 1,
+              "final_manifest": {
+                "main.rs": "ca2058b6329b1ff8db2a96be6b31e4f5cad63b89815173c7ca511625df14b927"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "main.rs": "ca2058b6329b1ff8db2a96be6b31e4f5cad63b89815173c7ca511625df14b927"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            },
+            "T03": {
+              "builds": 1,
+              "final_manifest": {
+                "main.rs": "4f0bfe9edf306f6a2a5105c65bb474d10def9140bf849cfcf1e9a7010f0e1a88"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "main.rs": "4f0bfe9edf306f6a2a5105c65bb474d10def9140bf849cfcf1e9a7010f0e1a88"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            },
+            "T04": {
+              "builds": 1,
+              "final_manifest": {
+                "convert.rs": "d895814f4863404d3e177846956d9ef41874d22ddcca1969223d97bde50455e6",
+                "main.rs": "4b1b8e4a51ea199e4f374c48566ff083ad843a0ae75fb76231792efb9496ecbe"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "convert.rs": "d895814f4863404d3e177846956d9ef41874d22ddcca1969223d97bde50455e6",
+                "main.rs": "4b1b8e4a51ea199e4f374c48566ff083ad843a0ae75fb76231792efb9496ecbe"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            },
+            "T05": {
+              "builds": 1,
+              "final_manifest": {
+                "main.rs": "13ea613f90dc64e86c46dcba6cf671c3ee4c76d78c44e31b2a87b125bbb76f9a"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "main.rs": "13ea613f90dc64e86c46dcba6cf671c3ee4c76d78c44e31b2a87b125bbb76f9a"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            },
+            "T06": {
+              "builds": 1,
+              "final_manifest": {
+                "main.rs": "237123e2b9c518f6146c29bc4c376e5b47e6edc1c0583b58376b681cc03243ae"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "main.rs": "237123e2b9c518f6146c29bc4c376e5b47e6edc1c0583b58376b681cc03243ae"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            },
+            "T07": {
+              "builds": 1,
+              "final_manifest": {
+                "main.rs": "64bacd86c5a0726e094eecf314cf416997e774a57bae6a25ec5d306c744c9c90"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "main.rs": "64bacd86c5a0726e094eecf314cf416997e774a57bae6a25ec5d306c744c9c90"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            },
+            "T08": {
+              "builds": 1,
+              "final_manifest": {
+                "main.rs": "a0d571e13b8227d8d44f05e64cf96a2a66b2892c0c4eeaaaca74247c8a7ee1cd"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "main.rs": "a0d571e13b8227d8d44f05e64cf96a2a66b2892c0c4eeaaaca74247c8a7ee1cd"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            },
+            "T09": {
+              "builds": 1,
+              "final_manifest": {
+                "main.rs": "7f58b5b43cd6916a7ed7044143924ae25240e1fe64211f8bb82f46f3fba89dee"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "main.rs": "7f58b5b43cd6916a7ed7044143924ae25240e1fe64211f8bb82f46f3fba89dee"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            },
+            "T10": {
+              "builds": 1,
+              "final_manifest": {
+                "main.rs": "2a52fe5f84422edd39ff9709c5da5a7848041481003dbda1e15c23c754d06b5a"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "main.rs": "2a52fe5f84422edd39ff9709c5da5a7848041481003dbda1e15c23c754d06b5a"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            },
+            "T11": {
+              "builds": 1,
+              "final_manifest": {
+                "main.rs": "7635027fd0b7a31b38a4272ae2470bf0430bb7b2ef20e70185903342e2d639ff"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "main.rs": "7635027fd0b7a31b38a4272ae2470bf0430bb7b2ef20e70185903342e2d639ff"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            },
+            "T12": {
+              "builds": 1,
+              "final_manifest": {
+                "main.rs": "cf76bccae7f56553889707ab08636bb8f10d7b6a04c2b05fb92449c31d0358bd"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "main.rs": "cf76bccae7f56553889707ab08636bb8f10d7b6a04c2b05fb92449c31d0358bd"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            }
+          },
+          "time_scope": "controller init through participant seal; includes dispatch and tool latency",
+          "usage": null,
+          "usage_status": "unavailable_platform_does_not_expose_usage"
+        },
+        "run_metadata_sha256": "c01b618592f2298f92ece89f84e891cc1b5ca8d958d6c6a3cba2e51d9a8dc090",
+        "tokens": null
+      },
+      "evaluation_complete": true,
+      "language": "rust",
+      "metrics": {
+        "final_behavior_correct": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        },
+        "final_contract_correct": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        },
+        "final_hidden_correct": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        },
+        "final_public_correct": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        },
+        "first_behavior_correct": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        },
+        "first_contract_correct": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        },
+        "first_hidden_correct": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        },
+        "first_public_correct": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        },
+        "first_source_replay_build_passed": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        },
+        "historical_first_build_and_hidden_correct": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        },
+        "historical_first_build_and_public_correct": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        },
+        "historical_first_build_passed": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        }
+      },
+      "replicate": "a",
+      "report": "judge-results/rust-a/report.json",
+      "report_sha256": "ac9dbdbb619c3d86c1912e023aa864eced4ff560194ce2844e03b959b87f532e",
+      "run_id": "rust-a"
+    },
+    {
+      "costs": {
+        "agent_wall_scope": "controller init through participant seal; includes dispatch and tool latency",
+        "agent_wall_seconds": 274.739520899951,
+        "all_model_tool_calls": null,
+        "build_operations": 12,
+        "compiler_process_invocations": 12,
+        "cost_metric_note": "Replay build/run time is not agent delivery time.",
+        "events_sha256": "9c50e284290e72a4c46ca8021760605af2de63d0a8f96f5fb4b153dfd2fe9e0f",
+        "first_build_observations": {
+          "T01": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 4
+          },
+          "T02": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 9
+          },
+          "T03": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 14
+          },
+          "T04": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 20
+          },
+          "T05": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 26
+          },
+          "T06": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 31
+          },
+          "T07": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 37
+          },
+          "T08": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 42
+          },
+          "T09": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 47
+          },
+          "T10": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 52
+          },
+          "T11": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 57
+          },
+          "T12": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 62
+          }
+        },
+        "model": {
+          "exact_id": null,
+          "family_label": "inherited ChatGPT parent",
+          "sampling_parameters": null
+        },
+        "operation_categories": {
+          "compile": 12,
+          "read_documentation": 13,
+          "submit": 13,
+          "test_custom": 3,
+          "test_public": 12,
+          "write_code": 13
+        },
+        "recorded_lab_operations": 66,
+        "recorded_lab_operations_note": "One archived lab event; not automatically every model tool call.",
+        "run_metadata": {
+          "compiler_revision": "5cd916bbe7c8a85776b14e2295a681db88fb5c0a",
+          "elapsed_seconds": 274.739520899951,
+          "ended_at": "2026-11-22T06:49:12Z",
+          "ended_monotonic": 8029670.93227506,
+          "frozen_manifest_sha256": "aeb5c46db375e84c3d90257aec501161f29d4e4802f4a1a884b699753750bee3",
+          "language": "rust",
+          "measurement": "instrumented operations; controller init/close excluded; not platform-wide tool calls",
+          "model": {
+            "exact_id": null,
+            "family_label": "inherited ChatGPT parent",
+            "sampling_parameters": null
+          },
+          "operations": 66,
+          "operations_by_category": {
+            "compile": 12,
+            "read_documentation": 13,
+            "submit": 13,
+            "test_custom": 3,
+            "test_public": 12,
+            "write_code": 13
+          },
+          "replicate": "b",
+          "run_id": "rust-b",
+          "schema_version": 1,
+          "started_at": "2026-11-22T06:44:39Z",
+          "started_monotonic": 8029396.19275416,
+          "status": "sealed",
+          "tasks": {
+            "T01": {
+              "builds": 1,
+              "final_manifest": {
+                "main.rs": "394e38994a0528175b662338c6c7164bedefeeef64518d1af0608dca5ff58029"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "main.rs": "394e38994a0528175b662338c6c7164bedefeeef64518d1af0608dca5ff58029"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            },
+            "T02": {
+              "builds": 1,
+              "final_manifest": {
+                "main.rs": "042f0ea65e20ea01b3ed24aabbe678c6997220d56513a3c103cbe0f9b801d941"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "main.rs": "042f0ea65e20ea01b3ed24aabbe678c6997220d56513a3c103cbe0f9b801d941"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            },
+            "T03": {
+              "builds": 1,
+              "final_manifest": {
+                "main.rs": "3cff26d1d22012166c13f15597065f321c21ba7dd9cd8dad5872fc99f39ab5e1"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "main.rs": "3cff26d1d22012166c13f15597065f321c21ba7dd9cd8dad5872fc99f39ab5e1"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            },
+            "T04": {
+              "builds": 1,
+              "final_manifest": {
+                "converter.rs": "5570beb06765251b826e532c62e579cb1544c1df9fca2f72b2cda6cd93758d75",
+                "main.rs": "7451bdb55b4a1aab1610a7347aa40b1ec468299bb69ab587d905678c3c04191f"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "converter.rs": "5570beb06765251b826e532c62e579cb1544c1df9fca2f72b2cda6cd93758d75",
+                "main.rs": "7451bdb55b4a1aab1610a7347aa40b1ec468299bb69ab587d905678c3c04191f"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            },
+            "T05": {
+              "builds": 1,
+              "final_manifest": {
+                "main.rs": "aa245d7cd3a5343baa163240e5bd4d6a31113639273d82beb8270b7e7b4d9f79"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "main.rs": "aa245d7cd3a5343baa163240e5bd4d6a31113639273d82beb8270b7e7b4d9f79"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            },
+            "T06": {
+              "builds": 1,
+              "final_manifest": {
+                "main.rs": "496d3e66ce6398f11bd704c4e6a8cf365c0e3d336e07a2cb17f162f577af11b9"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "main.rs": "496d3e66ce6398f11bd704c4e6a8cf365c0e3d336e07a2cb17f162f577af11b9"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            },
+            "T07": {
+              "builds": 1,
+              "final_manifest": {
+                "main.rs": "2c68dc6c36ec7a6db65d6b703dc19d5ca54399346f52ddb181a409e0af1a172d"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "main.rs": "2c68dc6c36ec7a6db65d6b703dc19d5ca54399346f52ddb181a409e0af1a172d"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            },
+            "T08": {
+              "builds": 1,
+              "final_manifest": {
+                "main.rs": "f84eebaf511a2ff3a4f9203f03800f2048fdfd39a27bebbfeb0923272cfefe64"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "main.rs": "f84eebaf511a2ff3a4f9203f03800f2048fdfd39a27bebbfeb0923272cfefe64"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            },
+            "T09": {
+              "builds": 1,
+              "final_manifest": {
+                "main.rs": "188053a74772d671473146b67fd1c550ae6f961a852db167fa9e3f194ac260c3"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "main.rs": "188053a74772d671473146b67fd1c550ae6f961a852db167fa9e3f194ac260c3"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            },
+            "T10": {
+              "builds": 1,
+              "final_manifest": {
+                "main.rs": "f42b5b581906a881aa5482feff97c2d59204d792c323db278450ea0562bc1500"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "main.rs": "f42b5b581906a881aa5482feff97c2d59204d792c323db278450ea0562bc1500"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            },
+            "T11": {
+              "builds": 1,
+              "final_manifest": {
+                "main.rs": "44b238983daa954b7937e061c3ac6f2f0093823684f5cdd5b452862797aba888"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "main.rs": "44b238983daa954b7937e061c3ac6f2f0093823684f5cdd5b452862797aba888"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            },
+            "T12": {
+              "builds": 1,
+              "final_manifest": {
+                "main.rs": "5d0af28e7960f9425d99876b3996e870684b629df2baaf27dff62b8a2adbfba7"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "main.rs": "5d0af28e7960f9425d99876b3996e870684b629df2baaf27dff62b8a2adbfba7"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            }
+          },
+          "time_scope": "controller init through participant seal; includes dispatch and tool latency",
+          "usage": null,
+          "usage_status": "unavailable_platform_does_not_expose_usage"
+        },
+        "run_metadata_sha256": "f3c9c9daad5f1057e25eb3a98eba35762858bf621831a84fd8ad3084e8428035",
+        "tokens": null
+      },
+      "evaluation_complete": true,
+      "language": "rust",
+      "metrics": {
+        "final_behavior_correct": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        },
+        "final_contract_correct": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        },
+        "final_hidden_correct": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        },
+        "final_public_correct": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        },
+        "first_behavior_correct": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        },
+        "first_contract_correct": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        },
+        "first_hidden_correct": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        },
+        "first_public_correct": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        },
+        "first_source_replay_build_passed": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        },
+        "historical_first_build_and_hidden_correct": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        },
+        "historical_first_build_and_public_correct": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        },
+        "historical_first_build_passed": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        }
+      },
+      "replicate": "b",
+      "report": "judge-results/rust-b/report.json",
+      "report_sha256": "f85e2972f9c802ea99f69f1195310240efae5edef1edd1ca26d70bcb65b3a1a6",
+      "run_id": "rust-b"
+    },
+    {
+      "costs": {
+        "agent_wall_scope": "controller init through participant seal; includes dispatch and tool latency",
+        "agent_wall_seconds": 333.405290951952,
+        "all_model_tool_calls": null,
+        "build_operations": 12,
+        "compiler_process_invocations": 12,
+        "cost_metric_note": "Replay build/run time is not agent delivery time.",
+        "events_sha256": "c01f255bf5df6464df64e424c14d2034dde8f8fec14b23df8f3dac0e5153658c",
+        "first_build_observations": {
+          "T01": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 7
+          },
+          "T02": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 12
+          },
+          "T03": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 17
+          },
+          "T04": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 23
+          },
+          "T05": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 29
+          },
+          "T06": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 34
+          },
+          "T07": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 40
+          },
+          "T08": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 45
+          },
+          "T09": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 50
+          },
+          "T10": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 55
+          },
+          "T11": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 60
+          },
+          "T12": {
+            "classification": "compiler_command",
+            "error": null,
+            "exit_code": 0,
+            "passed": true,
+            "sequence": 65
+          }
+        },
+        "model": {
+          "exact_id": null,
+          "family_label": "inherited ChatGPT parent",
+          "sampling_parameters": null
+        },
+        "operation_categories": {
+          "compile": 12,
+          "read_documentation": 16,
+          "submit": 13,
+          "test_custom": 3,
+          "test_public": 12,
+          "write_code": 13
+        },
+        "recorded_lab_operations": 69,
+        "recorded_lab_operations_note": "One archived lab event; not automatically every model tool call.",
+        "run_metadata": {
+          "compiler_revision": "5cd916bbe7c8a85776b14e2295a681db88fb5c0a",
+          "elapsed_seconds": 333.405290951952,
+          "ended_at": "2026-11-22T06:50:22Z",
+          "ended_monotonic": 8029741.61096504,
+          "frozen_manifest_sha256": "aeb5c46db375e84c3d90257aec501161f29d4e4802f4a1a884b699753750bee3",
+          "language": "yavo",
+          "measurement": "instrumented operations; controller init/close excluded; not platform-wide tool calls",
+          "model": {
+            "exact_id": null,
+            "family_label": "inherited ChatGPT parent",
+            "sampling_parameters": null
+          },
+          "operations": 69,
+          "operations_by_category": {
+            "compile": 12,
+            "read_documentation": 16,
+            "submit": 13,
+            "test_custom": 3,
+            "test_public": 12,
+            "write_code": 13
+          },
+          "replicate": "b",
+          "run_id": "yavo-b",
+          "schema_version": 1,
+          "started_at": "2026-11-22T06:44:51Z",
+          "started_monotonic": 8029408.20567409,
+          "status": "sealed",
+          "tasks": {
+            "T01": {
+              "builds": 1,
+              "final_manifest": {
+                "main.yv": "8a8403e63b51d427f57da3c052f9ea50c5e9c4f8a039123d707ab36976a0d4d9"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "main.yv": "8a8403e63b51d427f57da3c052f9ea50c5e9c4f8a039123d707ab36976a0d4d9"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            },
+            "T02": {
+              "builds": 1,
+              "final_manifest": {
+                "main.yv": "8e03caaec0bf7d2b8ccef92b9ab485035fc91cd88d8e8c159f224df178c470f7"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "main.yv": "8e03caaec0bf7d2b8ccef92b9ab485035fc91cd88d8e8c159f224df178c470f7"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            },
+            "T03": {
+              "builds": 1,
+              "final_manifest": {
+                "main.yv": "aa0d0518d5254e3eab29fa6af9c7f7d7df3178ac7528c39ca3a54c25235cf009"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "main.yv": "aa0d0518d5254e3eab29fa6af9c7f7d7df3178ac7528c39ca3a54c25235cf009"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            },
+            "T04": {
+              "builds": 1,
+              "final_manifest": {
+                "conversion.yv": "162fea991ec55945b120288141e6b453968aa221aa83752d8c17eadc7741eb89",
+                "main.yv": "beb85b017433598ead7e1a1651d7bc76d43a965e26ce0645e5363a4d33283e1b"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "conversion.yv": "162fea991ec55945b120288141e6b453968aa221aa83752d8c17eadc7741eb89",
+                "main.yv": "beb85b017433598ead7e1a1651d7bc76d43a965e26ce0645e5363a4d33283e1b"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            },
+            "T05": {
+              "builds": 1,
+              "final_manifest": {
+                "main.yv": "88dd618f2f543c5327a4c3981eab2822b78d1690f8203556ca4c91b8aa6adba9"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "main.yv": "88dd618f2f543c5327a4c3981eab2822b78d1690f8203556ca4c91b8aa6adba9"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            },
+            "T06": {
+              "builds": 1,
+              "final_manifest": {
+                "main.yv": "9b4769be31bd0752a79ca91d5127d8d18730218963ccbd85eb8b8801c278708a"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "main.yv": "9b4769be31bd0752a79ca91d5127d8d18730218963ccbd85eb8b8801c278708a"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            },
+            "T07": {
+              "builds": 1,
+              "final_manifest": {
+                "main.yv": "555cd4da2621b4d677b0b4bd493f61b6151695ad841fad32fd5a2ef9011ad0f7"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "main.yv": "555cd4da2621b4d677b0b4bd493f61b6151695ad841fad32fd5a2ef9011ad0f7"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            },
+            "T08": {
+              "builds": 1,
+              "final_manifest": {
+                "main.yv": "4389fe7a30e4d9ee66e58383a0739eccfdaaba64e1dc9d01c9f2bf59936d6997"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "main.yv": "4389fe7a30e4d9ee66e58383a0739eccfdaaba64e1dc9d01c9f2bf59936d6997"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            },
+            "T09": {
+              "builds": 1,
+              "final_manifest": {
+                "main.yv": "eab1819f8d1de7d15654a7f76f46e46128043dc57198897cb4c0e9bbfdb67477"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "main.yv": "eab1819f8d1de7d15654a7f76f46e46128043dc57198897cb4c0e9bbfdb67477"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            },
+            "T10": {
+              "builds": 1,
+              "final_manifest": {
+                "main.yv": "32c88bb0000cd8fbbc44e3de6075bc667aeef26c3e0b524d826f429776828c9b"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "main.yv": "32c88bb0000cd8fbbc44e3de6075bc667aeef26c3e0b524d826f429776828c9b"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            },
+            "T11": {
+              "builds": 1,
+              "final_manifest": {
+                "main.yv": "e4d211582198c47570790de1791bba37e3907d6524736e1b3ee73c97e6206828"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "main.yv": "e4d211582198c47570790de1791bba37e3907d6524736e1b3ee73c97e6206828"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            },
+            "T12": {
+              "builds": 1,
+              "final_manifest": {
+                "main.yv": "f8771ce552dfe8de5be255c872e9ce8952e7f45b08a222c2946c225e1b01d53e"
+              },
+              "first_build_exit_code": 0,
+              "first_build_passed": true,
+              "last_build_failed": false,
+              "last_public_failed": false,
+              "latest_build": "0001",
+              "latest_build_manifest": {
+                "main.yv": "f8771ce552dfe8de5be255c872e9ce8952e7f45b08a222c2946c225e1b01d53e"
+              },
+              "public_build": "0001",
+              "source_changed": false,
+              "submitted": true
+            }
+          },
+          "time_scope": "controller init through participant seal; includes dispatch and tool latency",
+          "usage": null,
+          "usage_status": "unavailable_platform_does_not_expose_usage"
+        },
+        "run_metadata_sha256": "63ab14b8677ad1d0346f55fe3f37ff980454bc8001753e0551bf8891d4fbcd9b",
+        "tokens": null
+      },
+      "evaluation_complete": true,
+      "language": "yavo",
+      "metrics": {
+        "final_behavior_correct": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        },
+        "final_contract_correct": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        },
+        "final_hidden_correct": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        },
+        "final_public_correct": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        },
+        "first_behavior_correct": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        },
+        "first_contract_correct": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        },
+        "first_hidden_correct": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        },
+        "first_public_correct": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        },
+        "first_source_replay_build_passed": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        },
+        "historical_first_build_and_hidden_correct": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        },
+        "historical_first_build_and_public_correct": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        },
+        "historical_first_build_passed": {
+          "failed": 0,
+          "passed": 12,
+          "total": 12,
+          "unmeasured": 0
+        }
+      },
+      "replicate": "b",
+      "report": "judge-results/yavo-b/report.json",
+      "report_sha256": "43accff1d5132f7181f1c85581cc656dc259e8d3ec8eace65ab72f3817e82787",
+      "run_id": "yavo-b"
+    }
+  ],
+  "schema": "yavo-r5-summary-v1",
+  "scope": {
+    "case_pack_sha256": "2cf5d0c505d65b52b85a8264dd647ffce6d2f49979da22338341035e45402ec1",
+    "is_formal_v1_acceptance": false,
+    "run_count": 4,
+    "submission_count": 48,
+    "task_count": 12
+  },
+  "task_results": [
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "a1fa1d90941233334f0ebb249f4e0cfb13ae43b2dea6840ffdbff92d0e6d0119",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "a1fa1d90941233334f0ebb249f4e0cfb13ae43b2dea6840ffdbff92d0e6d0119",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 7
+      },
+      "historical_first_build_passed": true,
+      "language": "yavo",
+      "replicate": "a",
+      "run_id": "yavo-a",
+      "task_id": "T01"
+    },
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "eafa892ee57f0f4981d9e2c64269bb0ecbddc34274de4309b90c44519a37fc24",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "eafa892ee57f0f4981d9e2c64269bb0ecbddc34274de4309b90c44519a37fc24",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 12
+      },
+      "historical_first_build_passed": true,
+      "language": "yavo",
+      "replicate": "a",
+      "run_id": "yavo-a",
+      "task_id": "T02"
+    },
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "18129db0baaef0a85e83f84fb193cbf64924451b76e5765c1e551e5b8a2224db",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "18129db0baaef0a85e83f84fb193cbf64924451b76e5765c1e551e5b8a2224db",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 17
+      },
+      "historical_first_build_passed": true,
+      "language": "yavo",
+      "replicate": "a",
+      "run_id": "yavo-a",
+      "task_id": "T03"
+    },
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "a045311af61cb7ecf05401145373a3b0c53e13bef246df74b776590c572768a3",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "a045311af61cb7ecf05401145373a3b0c53e13bef246df74b776590c572768a3",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 23
+      },
+      "historical_first_build_passed": true,
+      "language": "yavo",
+      "replicate": "a",
+      "run_id": "yavo-a",
+      "task_id": "T04"
+    },
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "e0d91f3297d380167e11148a26772a24ba351b6b744d8da43cc893fe955035c4",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "e0d91f3297d380167e11148a26772a24ba351b6b744d8da43cc893fe955035c4",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 29
+      },
+      "historical_first_build_passed": true,
+      "language": "yavo",
+      "replicate": "a",
+      "run_id": "yavo-a",
+      "task_id": "T05"
+    },
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "355cd788337adb52dc350bc58cc2a8059438848187d89121ad7c7ca08f21b385",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "355cd788337adb52dc350bc58cc2a8059438848187d89121ad7c7ca08f21b385",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 34
+      },
+      "historical_first_build_passed": true,
+      "language": "yavo",
+      "replicate": "a",
+      "run_id": "yavo-a",
+      "task_id": "T06"
+    },
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "abc8c78985781a53eaead3874e05dba604c80bcc0aad7c9ff983d1d83617470f",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "abc8c78985781a53eaead3874e05dba604c80bcc0aad7c9ff983d1d83617470f",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 40
+      },
+      "historical_first_build_passed": true,
+      "language": "yavo",
+      "replicate": "a",
+      "run_id": "yavo-a",
+      "task_id": "T07"
+    },
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "56c91274d398c53be6ef9f00c1b6074eb04e982f20bfe6462253e375a0adc3c9",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "56c91274d398c53be6ef9f00c1b6074eb04e982f20bfe6462253e375a0adc3c9",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 45
+      },
+      "historical_first_build_passed": true,
+      "language": "yavo",
+      "replicate": "a",
+      "run_id": "yavo-a",
+      "task_id": "T08"
+    },
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "e70032c236b4b2206a82846906032b6285eeec0ee71814537918f1522c382929",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "e70032c236b4b2206a82846906032b6285eeec0ee71814537918f1522c382929",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 50
+      },
+      "historical_first_build_passed": true,
+      "language": "yavo",
+      "replicate": "a",
+      "run_id": "yavo-a",
+      "task_id": "T09"
+    },
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "9d5fc91f4a9c7394b7c530267cba3ae406bb4fa302343c76a670d9aeb084d6fa",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "9d5fc91f4a9c7394b7c530267cba3ae406bb4fa302343c76a670d9aeb084d6fa",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 55
+      },
+      "historical_first_build_passed": true,
+      "language": "yavo",
+      "replicate": "a",
+      "run_id": "yavo-a",
+      "task_id": "T10"
+    },
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "0f92fd43ce285aa7def90e42b0bcef642016625b6d19c0f6b02ae55efd497114",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "0f92fd43ce285aa7def90e42b0bcef642016625b6d19c0f6b02ae55efd497114",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 60
+      },
+      "historical_first_build_passed": true,
+      "language": "yavo",
+      "replicate": "a",
+      "run_id": "yavo-a",
+      "task_id": "T11"
+    },
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "be34fb5dd4f2e39514aade0aaca98955244fb57a56a5ce5fad015e6b1a6c0a7d",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "be34fb5dd4f2e39514aade0aaca98955244fb57a56a5ce5fad015e6b1a6c0a7d",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 65
+      },
+      "historical_first_build_passed": true,
+      "language": "yavo",
+      "replicate": "a",
+      "run_id": "yavo-a",
+      "task_id": "T12"
+    },
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "c55f7e1f74b43e039989ac789d8d90dcf8252d2d639ccce6663401ec41331327",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "c55f7e1f74b43e039989ac789d8d90dcf8252d2d639ccce6663401ec41331327",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 4
+      },
+      "historical_first_build_passed": true,
+      "language": "rust",
+      "replicate": "a",
+      "run_id": "rust-a",
+      "task_id": "T01"
+    },
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "42512546861fc351a2bd7350f80619c84405ca367c5fa0e082713ffbf979559f",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "42512546861fc351a2bd7350f80619c84405ca367c5fa0e082713ffbf979559f",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 9
+      },
+      "historical_first_build_passed": true,
+      "language": "rust",
+      "replicate": "a",
+      "run_id": "rust-a",
+      "task_id": "T02"
+    },
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "ca6174f6f841d904d6e0df82de1601766c5a6d9ac48fa675b430c2825937f6bf",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "ca6174f6f841d904d6e0df82de1601766c5a6d9ac48fa675b430c2825937f6bf",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 14
+      },
+      "historical_first_build_passed": true,
+      "language": "rust",
+      "replicate": "a",
+      "run_id": "rust-a",
+      "task_id": "T03"
+    },
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "cc524874802822a188fbeba30b835b7f9f611b79f896d8bca9db38490390b677",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "cc524874802822a188fbeba30b835b7f9f611b79f896d8bca9db38490390b677",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 20
+      },
+      "historical_first_build_passed": true,
+      "language": "rust",
+      "replicate": "a",
+      "run_id": "rust-a",
+      "task_id": "T04"
+    },
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "93f40a8bf9aa1b622a28a2555bfc2363fabe48136c75fca6df925758d1655428",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "93f40a8bf9aa1b622a28a2555bfc2363fabe48136c75fca6df925758d1655428",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 26
+      },
+      "historical_first_build_passed": true,
+      "language": "rust",
+      "replicate": "a",
+      "run_id": "rust-a",
+      "task_id": "T05"
+    },
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "cd58bda231c365c9ef355a9e8cc4674506e25bc52fbd86bd33bbc9c1b53ebfc1",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "cd58bda231c365c9ef355a9e8cc4674506e25bc52fbd86bd33bbc9c1b53ebfc1",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 31
+      },
+      "historical_first_build_passed": true,
+      "language": "rust",
+      "replicate": "a",
+      "run_id": "rust-a",
+      "task_id": "T06"
+    },
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "2963c438d6a6a4cb8f016fd21345aca94cac0ea872f95dd240a08997025da6e7",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "2963c438d6a6a4cb8f016fd21345aca94cac0ea872f95dd240a08997025da6e7",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 37
+      },
+      "historical_first_build_passed": true,
+      "language": "rust",
+      "replicate": "a",
+      "run_id": "rust-a",
+      "task_id": "T07"
+    },
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "597b2e9b0de227b1cc65c6a3efad5133fb505b43a02afd23849254d84d11360b",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "597b2e9b0de227b1cc65c6a3efad5133fb505b43a02afd23849254d84d11360b",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 42
+      },
+      "historical_first_build_passed": true,
+      "language": "rust",
+      "replicate": "a",
+      "run_id": "rust-a",
+      "task_id": "T08"
+    },
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "15204dc0cb75475cdac2e728789eedbd67f0d4e5f9c1fdc13cb13002d0a6d3ab",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "15204dc0cb75475cdac2e728789eedbd67f0d4e5f9c1fdc13cb13002d0a6d3ab",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 47
+      },
+      "historical_first_build_passed": true,
+      "language": "rust",
+      "replicate": "a",
+      "run_id": "rust-a",
+      "task_id": "T09"
+    },
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "4002f02cc55ab1d6b982d794cd3f362415c729b4544dca7ca2303e0fa9bc9f53",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "4002f02cc55ab1d6b982d794cd3f362415c729b4544dca7ca2303e0fa9bc9f53",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 52
+      },
+      "historical_first_build_passed": true,
+      "language": "rust",
+      "replicate": "a",
+      "run_id": "rust-a",
+      "task_id": "T10"
+    },
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "56ec501817c63b25fb01c104d87e005749d0e5903f552931f34a099ad1f371ce",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "56ec501817c63b25fb01c104d87e005749d0e5903f552931f34a099ad1f371ce",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 57
+      },
+      "historical_first_build_passed": true,
+      "language": "rust",
+      "replicate": "a",
+      "run_id": "rust-a",
+      "task_id": "T11"
+    },
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "cc3680187938468a55edd37b926e08ab006ad1cce848594264226e436336f5b3",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "cc3680187938468a55edd37b926e08ab006ad1cce848594264226e436336f5b3",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 62
+      },
+      "historical_first_build_passed": true,
+      "language": "rust",
+      "replicate": "a",
+      "run_id": "rust-a",
+      "task_id": "T12"
+    },
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "8b6c759f9111f37aa3688033dc2a9e20cd17a42e01bd6b7a3d621b435060c50d",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "8b6c759f9111f37aa3688033dc2a9e20cd17a42e01bd6b7a3d621b435060c50d",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 4
+      },
+      "historical_first_build_passed": true,
+      "language": "rust",
+      "replicate": "b",
+      "run_id": "rust-b",
+      "task_id": "T01"
+    },
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "8e1d18eb1424a13a63cecd5aa9b892a8fe1ce8df3b1688eefecadc4fc33addbf",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "8e1d18eb1424a13a63cecd5aa9b892a8fe1ce8df3b1688eefecadc4fc33addbf",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 9
+      },
+      "historical_first_build_passed": true,
+      "language": "rust",
+      "replicate": "b",
+      "run_id": "rust-b",
+      "task_id": "T02"
+    },
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "21f7daa4328127e5b0be0e9bb290b4aba8e132f613568a7fb3a3858e218d8565",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "21f7daa4328127e5b0be0e9bb290b4aba8e132f613568a7fb3a3858e218d8565",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 14
+      },
+      "historical_first_build_passed": true,
+      "language": "rust",
+      "replicate": "b",
+      "run_id": "rust-b",
+      "task_id": "T03"
+    },
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "275981ec68b29244977bfa646235f3cddd4d9624161699fe4e42f615f7f630c8",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "275981ec68b29244977bfa646235f3cddd4d9624161699fe4e42f615f7f630c8",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 20
+      },
+      "historical_first_build_passed": true,
+      "language": "rust",
+      "replicate": "b",
+      "run_id": "rust-b",
+      "task_id": "T04"
+    },
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "fcbc1a73c003384561cf1283e667464cbe0cda5f406d7a18497af5926fdacec7",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "fcbc1a73c003384561cf1283e667464cbe0cda5f406d7a18497af5926fdacec7",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 26
+      },
+      "historical_first_build_passed": true,
+      "language": "rust",
+      "replicate": "b",
+      "run_id": "rust-b",
+      "task_id": "T05"
+    },
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "c6a9bf8d4ef09d64938d5fed2db2e8a40a09fdf5f24eaf32f9a1147133f9b315",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "c6a9bf8d4ef09d64938d5fed2db2e8a40a09fdf5f24eaf32f9a1147133f9b315",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 31
+      },
+      "historical_first_build_passed": true,
+      "language": "rust",
+      "replicate": "b",
+      "run_id": "rust-b",
+      "task_id": "T06"
+    },
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "7ec3e096eae7bd225fca9fdfbe87dd957d52b0e81cc5ef4bea1d5d70e9f555bb",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "7ec3e096eae7bd225fca9fdfbe87dd957d52b0e81cc5ef4bea1d5d70e9f555bb",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 37
+      },
+      "historical_first_build_passed": true,
+      "language": "rust",
+      "replicate": "b",
+      "run_id": "rust-b",
+      "task_id": "T07"
+    },
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "ac6b87f66a834f9098e413c1894b9c9233b76317afd7d89e596c98aa07e2315d",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "ac6b87f66a834f9098e413c1894b9c9233b76317afd7d89e596c98aa07e2315d",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 42
+      },
+      "historical_first_build_passed": true,
+      "language": "rust",
+      "replicate": "b",
+      "run_id": "rust-b",
+      "task_id": "T08"
+    },
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "371c1cf18cb5c9fccded85de8f3b433878456472ff52d1a44e71923f6292dc2e",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "371c1cf18cb5c9fccded85de8f3b433878456472ff52d1a44e71923f6292dc2e",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 47
+      },
+      "historical_first_build_passed": true,
+      "language": "rust",
+      "replicate": "b",
+      "run_id": "rust-b",
+      "task_id": "T09"
+    },
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "35b7c64999ba37c9da6b6c43b28f12f67c8fb751c16b526906421cc82fe4c8ef",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "35b7c64999ba37c9da6b6c43b28f12f67c8fb751c16b526906421cc82fe4c8ef",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 52
+      },
+      "historical_first_build_passed": true,
+      "language": "rust",
+      "replicate": "b",
+      "run_id": "rust-b",
+      "task_id": "T10"
+    },
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "aebcd597bae08f60cba8b142c35c8de012ef90ec349c330d26b33948e1e17a91",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "aebcd597bae08f60cba8b142c35c8de012ef90ec349c330d26b33948e1e17a91",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 57
+      },
+      "historical_first_build_passed": true,
+      "language": "rust",
+      "replicate": "b",
+      "run_id": "rust-b",
+      "task_id": "T11"
+    },
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "3bb2e042f298894ead0becce0a22003c477f881bc09fee64173e973ccc3c4781",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "3bb2e042f298894ead0becce0a22003c477f881bc09fee64173e973ccc3c4781",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 62
+      },
+      "historical_first_build_passed": true,
+      "language": "rust",
+      "replicate": "b",
+      "run_id": "rust-b",
+      "task_id": "T12"
+    },
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "ccf70d8808c3438ba9ee360590822ba1873e8dde75fc5bf11e76e47bb174b7d4",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "ccf70d8808c3438ba9ee360590822ba1873e8dde75fc5bf11e76e47bb174b7d4",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 7
+      },
+      "historical_first_build_passed": true,
+      "language": "yavo",
+      "replicate": "b",
+      "run_id": "yavo-b",
+      "task_id": "T01"
+    },
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "83a7e9908cd701c04ad477bdc0378a327a51474c51e4f9254a8ed96f424aa121",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "83a7e9908cd701c04ad477bdc0378a327a51474c51e4f9254a8ed96f424aa121",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 12
+      },
+      "historical_first_build_passed": true,
+      "language": "yavo",
+      "replicate": "b",
+      "run_id": "yavo-b",
+      "task_id": "T02"
+    },
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "23b4af0a802e54d1fd45611631a1c3df6abeeda4d44c719e22b98897f33b872e",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "23b4af0a802e54d1fd45611631a1c3df6abeeda4d44c719e22b98897f33b872e",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 17
+      },
+      "historical_first_build_passed": true,
+      "language": "yavo",
+      "replicate": "b",
+      "run_id": "yavo-b",
+      "task_id": "T03"
+    },
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "8be2e63d7ef26c99d1dd73e6933de92ce759fb97fa2b6c628e4c28dae1aba9fb",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "8be2e63d7ef26c99d1dd73e6933de92ce759fb97fa2b6c628e4c28dae1aba9fb",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 23
+      },
+      "historical_first_build_passed": true,
+      "language": "yavo",
+      "replicate": "b",
+      "run_id": "yavo-b",
+      "task_id": "T04"
+    },
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "0f64fb1f3f97a331b824ece57acc1d7b3003b130616732741d6ed195b90d1308",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "0f64fb1f3f97a331b824ece57acc1d7b3003b130616732741d6ed195b90d1308",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 29
+      },
+      "historical_first_build_passed": true,
+      "language": "yavo",
+      "replicate": "b",
+      "run_id": "yavo-b",
+      "task_id": "T05"
+    },
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "339743091d155d1c6c6b7835780c17354dfada01f24c016b45a1669fb08f0e9b",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "339743091d155d1c6c6b7835780c17354dfada01f24c016b45a1669fb08f0e9b",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 34
+      },
+      "historical_first_build_passed": true,
+      "language": "yavo",
+      "replicate": "b",
+      "run_id": "yavo-b",
+      "task_id": "T06"
+    },
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "280e3976b967e9ea5512742cbe37e13bcaced521c51ab775cfb9522d890864eb",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "280e3976b967e9ea5512742cbe37e13bcaced521c51ab775cfb9522d890864eb",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 40
+      },
+      "historical_first_build_passed": true,
+      "language": "yavo",
+      "replicate": "b",
+      "run_id": "yavo-b",
+      "task_id": "T07"
+    },
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "ba56ff800133b41e7bac9a57d4aae301d29bdbb809769b8a91518b5b96492424",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "ba56ff800133b41e7bac9a57d4aae301d29bdbb809769b8a91518b5b96492424",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 45
+      },
+      "historical_first_build_passed": true,
+      "language": "yavo",
+      "replicate": "b",
+      "run_id": "yavo-b",
+      "task_id": "T08"
+    },
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "b795bf53c752340f6c46cca6a27b6e3776fc4e1ae3cdaf63a16581dff6713153",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "b795bf53c752340f6c46cca6a27b6e3776fc4e1ae3cdaf63a16581dff6713153",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 50
+      },
+      "historical_first_build_passed": true,
+      "language": "yavo",
+      "replicate": "b",
+      "run_id": "yavo-b",
+      "task_id": "T09"
+    },
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "ce58c2f21d1d233619540dced17f0324c97f95bfb3f7d4e1757e7159fbdc1940",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "ce58c2f21d1d233619540dced17f0324c97f95bfb3f7d4e1757e7159fbdc1940",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 55
+      },
+      "historical_first_build_passed": true,
+      "language": "yavo",
+      "replicate": "b",
+      "run_id": "yavo-b",
+      "task_id": "T10"
+    },
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "50a90acecb89cb0b39851cae04b052772a40cfe56a4c3e500eb332cd13cd2265",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "50a90acecb89cb0b39851cae04b052772a40cfe56a4c3e500eb332cd13cd2265",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 60
+      },
+      "historical_first_build_passed": true,
+      "language": "yavo",
+      "replicate": "b",
+      "run_id": "yavo-b",
+      "task_id": "T11"
+    },
+    {
+      "final_behavior_correct": true,
+      "final_contract_correct": true,
+      "final_hidden_correct": true,
+      "final_public_correct": true,
+      "final_source_sha256": "69c340433563b3f505aa99c7a86c7544a4e8b2fa44a8f36c67024b51db3aaad3",
+      "first_behavior_correct": true,
+      "first_contract_correct": true,
+      "first_hidden_correct": true,
+      "first_public_correct": true,
+      "first_source_replay_build_passed": true,
+      "first_source_sha256": "69c340433563b3f505aa99c7a86c7544a4e8b2fa44a8f36c67024b51db3aaad3",
+      "historical_first_build_and_hidden_correct": true,
+      "historical_first_build_and_public_correct": true,
+      "historical_first_build_observation": {
+        "classification": "compiler_command",
+        "error": null,
+        "exit_code": 0,
+        "passed": true,
+        "sequence": 65
+      },
+      "historical_first_build_passed": true,
+      "language": "yavo",
+      "replicate": "b",
+      "run_id": "yavo-b",
+      "task_id": "T12"
+    }
+  ]
+}

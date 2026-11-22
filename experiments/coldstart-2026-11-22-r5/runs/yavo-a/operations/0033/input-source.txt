@@ -1,0 +1,64 @@
+use std/io
+
+fn encode(text: str) -> Vec[(int, int)] {
+    var runs: Vec[(int, int)] = []
+    for i in 0..text.len() {
+        let value = int(text[i])
+        let last = runs.len() - 1
+        if last >= 0 && runs[last].0 == value {
+            runs[last] = (value, runs[last].1 + 1)
+        } else {
+            runs.push((value, 1))
+        }
+    }
+    return runs
+}
+
+fn append(runs: inout Vec[(int, int)], part: Vec[(int, int)]) {
+    for run in part {
+        let last = runs.len() - 1
+        if last >= 0 && runs[last].0 == run.0 {
+            runs[last] = (run.0, runs[last].1 + run.1)
+        } else {
+            runs.push(run)
+        }
+    }
+}
+
+fn main() {
+    let input = io.readAll() catch _ { return }
+    let n = input.len() - 1
+    let base = n / 3
+    let extra = n % 3
+    var endFirst = base
+    var endSecond = base * 2
+    if extra > 0 {
+        endFirst += 1
+        endSecond += 1
+    }
+    if extra > 1 {
+        endSecond += 1
+    }
+    let first = input[0..endFirst]
+    let second = input[endFirst..endSecond]
+    let third = input[endSecond..n]
+    var a: Vec[(int, int)] = []
+    var b: Vec[(int, int)] = []
+    var c: Vec[(int, int)] = []
+    scope {
+        let workerA = spawn encode(first)
+        let workerB = spawn encode(second)
+        let workerC = spawn encode(third)
+        a = workerA.join()
+        b = workerB.join()
+        c = workerC.join()
+    }
+    var runs: Vec[(int, int)] = []
+    append(&runs, a)
+    append(&runs, b)
+    append(&runs, c)
+    for run in runs {
+        println("${run.0} ${run.1}")
+    }
+    println("runs: ${runs.len()} chars: ${n}")
+}

@@ -1,0 +1,73 @@
+# 第五轮新题 T01–T12
+
+这 12 题全部为新写程序，不含修复题。每题由标准输入读取，标准输出逐字节匹配，标准错误为空，退出码为 0；隐藏用例只在交卷后运行，不提供修复反馈。
+
+- 每题使用独立目录，入口统一为该题目录内的 `main.yv` 或 `main.rs`；T04 的其他模块也放在该题目录中。
+- 输入只含 ASCII；不存在 NUL 或 CR。所有非空输入以 LF 换行结束；“一行”不包含 LF。除本题特别说明，字段以一个或多个空格/制表符分隔，行首尾可有这些空白。
+- 输出的每一行以 LF 结束。所有排序中的字符串顺序均为 ASCII 字节序。数字输出为普通十进制，不保留输入的前导零、正号或负零。
+- 没有要求处理题目有效输入范围之外的数据；明确要求判定无效行的题除外。每题上限覆盖全部测试；算术运算的值均在有符号 64 位范围内。T12 只用于比较的纯数字 PRE 标识符按该题规则处理，不受 64 位范围限制。
+- 不得调用其他语言、执行外部程序或使用第三方依赖。可以任选符合题意的数据结构，不要求某个具体容器。
+- T04 的模块结构和 T06 的真实线程要求属于验收条件；仅输出正确仍不足以通过这两题。
+
+每题下方有两个公开样例，`public/cases.json` 保存同样的输入、精确输出和退出码。不要读取任何裁判或其他受试者文件。
+
+## T01 原子转账账本
+
+维护若干账户，开始为空。账户名匹配 `[A-Za-z][A-Za-z0-9_]{0,15}`。输入中的初始余额和转账金额为 0..10^9 的十进制整数，允许前导零；转账后的余额可以超过 10^9。所有命令和 batch 内行的语法有效；最多 200 条命令，空行跳过。
+
+- `account NAME BALANCE`：创建账户；已存在则输出 `error: duplicate NAME`，保持原余额。
+- `pay FROM TO AMOUNT`：先检查 FROM 存在，再检查 TO 存在，再检查 FROM 余额不少于 AMOUNT；失败输出 `error: unknown NAME` 或 `error: funds FROM`。成功完成转账并输出 `paid`。同名账户转账也先检查余额，成功后余额不变。
+- `batch K`：紧跟 K 行 `FROM TO AMOUNT`，0 ≤ K ≤ 100；这些行不是命令且不会为空。按顺序在临时账本上转账，第一条失败时整个 batch 的任何变更都不保留，输出 `batch: row J unknown NAME` 或 `batch: row J funds NAME`，J 从 1 开始。剩余 batch 行仍须读完，但不再执行。全部成功则一次提交，输出 `batch: ok`。batch 内不能创建账户。
+- `balance NAME`：输出 `NAME: BALANCE`，不存在则输出 `error: unknown NAME`。
+
+输入结束时，按账户名排序逐个输出 `NAME=当前余额`，最后输出 `total: 所有账户余额之和`。空文件只输出 `total: 0`。
+
+### 公开样例 1
+
+输入：
+
+```text
+account bob 20
+account ann 10
+pay bob ann 3
+balance ann
+batch 2
+ann bob 4
+bob ann 100
+balance ann
+```
+
+输出：
+
+```text
+paid
+ann: 13
+batch: row 2 funds bob
+ann: 13
+ann=13
+bob=17
+total: 30
+```
+
+### 公开样例 2
+
+输入：
+
+```text
+account a 0007
+account a 99
+pay a a 7
+batch 0
+pay ghost absent 0
+```
+
+输出：
+
+```text
+error: duplicate a
+paid
+batch: ok
+error: unknown ghost
+a=7
+total: 7
+```

@@ -1,0 +1,22 @@
+You are an independent participant in a coding experiment. Your assigned run is rust-b and your assigned language is Rust. Complete all twelve tasks T01–T12, in order, and seal the run. Start from the public documents; you have no prior solution context.
+
+Use only the instrumented lab interface. Do not inspect any repository file, hidden test, reference algorithm, other participant, prior experiment or runner implementation. Do not delegate, browse the web, install dependencies, alter the toolchain or request help with solutions. Every remote execution call must contain exactly one permitted lab operation. Source contents may be passed via a single-quoted here-document; do not combine operations with shell separators.
+
+First read participant instructions with:
+perl experiments/coldstart-2026-11-22-r5/tools/lab.pl rust-b doc instructions
+
+The remote execution tool is available through functions.exec as:
+const r = await tools.mcp__codex_apps__mcp_3_exec_command({
+  command: "the single lab command",
+  cwd: "workspace/yavo",
+  description: "short description",
+  timeout: 180000,
+  wait: true
+});
+text(r.structuredContent || r);
+
+This API is already provided; no tool registry discovery or alternate file access is needed. You may use functions.exec solely as the envelope for one such remote tool call. If the remote process is still running, use its reported continuation interface, count the extra poll in your final message, and wait rather than issuing competing lab operations.
+
+Then read the public task documents with doc T01 ... doc T12. Yavo also has doc cheatsheet with inclusive line ranges. Implement entry main.yv or main.rs in the isolated directory for each task; all writes/builds/tests/submissions must go through the lab commands described in the instructions. You have at most eight build attempts per task. Use public tests after a successful build. Correct your own code from visible diagnostics and public/custom tests. Submit every task even if unsuccessful within its budget; never change an already submitted task. Once all twelve are submitted, run seal.
+
+Do not estimate usage or timing. The external recorder captures observable evidence. Your final message should only state that the run was sealed, any unresolved tasks, and any polling or protocol deviations. Do not contact the coordinator with proposed solutions. Report only genuine infrastructure blockers if they prevent any further work.

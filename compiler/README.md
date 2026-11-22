@@ -50,6 +50,10 @@ at the `b3c27a6` language-feature baseline. See [CI scope](../tools/ci/README.md
 and [the source-bound receipt](validation/github-ci-2026-11-22.json) for all
 three runs, actual artifacts and the earlier failures.
 
+The round-five experiment adds an evidence-validation job to CI. Its first
+remote result is **pending the final commit/push and CI run**; the recorded
+four-job compiler/platform result above remains bound to `8a65228`.
+
 ### Earlier measurements and their source scope
 
 The Arena/module validation at `0a69e75` on 2026-11-21 recorded 113 Cargo
@@ -76,16 +80,50 @@ Records: [Arena/module validation](validation/arena-modules-2026-11-21.json),
 
 ### Agent efficiency
 
-[Round four](../experiments/coldstart-2026-11-21-r4/README.md) reused the previous
-packet with `1af1f69`: first compilation plus existing-sample correctness was
-Yavo 8/11 versus Rust 11/11; token/tool/time ratios were 1.27/1.58/1.63.
-Both passed 18 frozen examples, but the later T10 boundary check exposed the
-Yavo solution's rejection of valid `000000001`. The subsequent `b3c27a6` fixes
-have not been measured on new tasks. With native CI passing, the next experiment is
-12 new tasks with hidden edges, at least two runs per language and direct
-archival of first source, commands, outcomes and complete costs. Formal goals
-remain at least 20% lower cost per successful delivery and paired success-rate
-noninferiority, as specified in [the plan](../docs/plan.md).
+[Round five](../experiments/coldstart-2026-11-22-r5/README.md) ran four independent
+empty-context sessions, two per language, each solving the same 12 new task
+specifications. Both languages achieved **24/24 first compiler requests and
+complete task passes**, including all public/hidden cases and the required
+module/thread structure. All 48 first sources equal the final sources; there
+were no repairs. The 96 first/final snapshot replays passed all 1,344 cases
+(192 public, 1,152 hidden); these repetitions do not increase the independent
+task count beyond 12 or the session count beyond four.
+
+| Language | Session A operations / seconds | Session B operations / seconds | Combined operations / seconds |
+| --- | ---: | ---: | ---: |
+| Yavo | 69 / 337.8823 | 69 / 333.4053 | 138 / 671.2876 |
+| Rust | 66 / 282.2978 | 66 / 274.7395 | 132 / 557.0373 |
+
+The controlled-operation ratio is **1.0455** and elapsed-time ratio **1.2051**.
+All six additional operations are Yavo cheatsheet reads: three per session for
+the frozen 32,889-byte document. Other operation-category counts are equal.
+Compiler subprocess totals are 5.3451 seconds for Yavo and 3.8910 for Rust;
+their 1.4541-second difference cannot explain the 114.2503-second total gap.
+These are recorded session timings, not a compiler-performance benchmark.
+
+The experiment packet is frozen at `8c200aa`, using language/compiler baseline
+`5cd916b` (last compiler code change `8a65228`). Compiler, runtime and frozen
+specification sources are unchanged. Source graphs, first compiler requests,
+operations and monotonic boundaries are archived in
+[results](../experiments/coldstart-2026-11-22-r5/results.json),
+[cost analysis](../experiments/coldstart-2026-11-22-r5/evidence/cost-analysis.json),
+[behavior audit](../experiments/coldstart-2026-11-22-r5/evidence/behavior-review.json)
+and [structure audit](../experiments/coldstart-2026-11-22-r5/evidence/manual-review.json).
+
+Token usage, exact serving-model ID and sampling remain `null`; collaboration
+does not expose verifiable usage and the read-only CLI initialization probe
+failed. Three specifications extend earlier task families and nine use other
+new specifications. Different tasks and the change from the historical Sonnet
+setup prevent attributing the cross-round success change to compiler fixes.
+The controlled lab-operation metric is not the old rounds' platform-wide tool
+call metric.
+
+Next: a metered executor, a full-versus-minimal-cheatsheet comparison under the
+same model, then the planned 60-task pilot before the formal design of at least
+400 tasks. No new failure in this packet calls for a semantic expansion.
+Formal goals remain at least 20% lower cost per successful delivery and paired
+success-rate noninferiority, as specified in [the plan](../docs/plan.md); the
+token-dependent cost gate remains blocked.
 
 ## Language decisions after the third agent experiment (2026-11-21)
 

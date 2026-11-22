@@ -1,0 +1,153 @@
+```
+
+### 析构
+
+```text
+struct Resource: Drop {
+    label: String
+    fn drop(inout self) {
+        println("close ${self.label}")
+    }
+}
+```
+
+只能编译器调用 `drop`，不能手动 `.drop()`；要提前释放已有拥有值，写 `let _ = resource`。完整对象先执行用户 drop，再按字段声明逆序清理；未完成构造不执行整体 drop。带析构的类型不是 Copy。普通退出有清理，panic 和 os.exit 不展开栈。
+
+## 6. 多文件、并发和命令行
+
+### 多个源文件
+
+入口文件所在目录是项目根。一个 `.yv` 文件就是一个模块：`use geom` 加载同目录的 `geom.yv`，`use util/text` 加载 `util/text.yv`，`use util/{a, b}` 同时加载两个。只需要构建入口文件：`yavo build main.yv -o app` 会自动找到所有被 `use` 的文件。
+
+```
+// geom.yv
+pub struct Rect {                     // 顶层的函数和类型要写 pub 才能被别的文件用
+    w: int
+    h: int
+}
+pub fn area(r: Rect) -> int {
+    return r.w * r.h
+}
+fn helper() -> int {                  // 不写 pub：只在本文件可见
+    return 0
+}
+```
+
+```
+// main.yv
+use geom
+
+fn main() {
+    let r = Rect{w: 2, h: 3}          // 公开类型可以直接用短名，也可以写 geom.Rect
+    println(geom.area(r))             // 函数必须写模块名限定
+}
+```
+
+- 公开类型的字段和方法都可以访问（还没有字段级私有）。导入只对写它的文件有效，不会传递；每个文件各自写 `use std/...`。互相导入是允许的。
+- 两个模块有同名类型时必须写 `a.Point`、`b.Point`。找不到或未导出的名字报 `E0010`。
+- `yavo fix` 目前只处理单文件程序；多文件项目报 `U0001` 并且不改文件。
+
+### 并发
+
+并发只有 OS 线程：`scope` 块里用 `spawn` 启动线程，块结束时等待所有线程。`use std/sync` 引入 `Mutex`、`Guard`、`Channel`、`SendError`、`Join`。`Rc/Arc` 已在 prelude 中。底层数据必须在 scope 外已存在；复制临时切片描述符合法，借用临时拥有数组不合法。
+
+```
+fn sum(xs: []int) -> int {
+    var s = 0
+    for x in xs {
+        s += x
+    }
+    return s
+}
+
+fn parallelSum(nums: Vec[int]) -> int {
+    let mid = nums.len() / 2
+    let left = nums[0..mid]               // 局部命名只是可读性选择；spawn sum(nums[0..mid]) 也合法
+    let right = nums[mid..nums.len()]
+    var total = 0
+    scope {
+        let a = spawn sum(left)
+        let b = spawn sum(right)
+        total = a.join() + b.join()
+    }
+    return total
+}
+```
+
+- 线程借用保守持续到 scope 结束；`join()` 消耗句柄取得返回值，但不提前缩短借用。丢弃句柄不会分离线程。中途 `return` 或 `try` 也先等待。v1 线程返回值必须不携带借用且满足 Send。
+- 线程之间传值用 channel：`let ch = Channel[Job]{cap: 8}`，传给线程函数时写 `spawn worker(&ch)`，参数类型 `&Channel[Job]`，多个线程可以共用一个 channel 收发。`ch.send(v)` 移动值，关闭后返回 `err(.Closed(v))` 把值还回来；`ch.recv()` 返回拥有的 `?Job`，关闭后先取完缓冲区，再返回 `none`，所以工作线程写 `while let job = ch.recv() { }`；`ch.close()` 关闭。channel 只传拥有值，不传 `str`、`Vec[str]` 这类携带借用的值。
+- `Channel[T]{cap: n}` 要求 `n > 0`；关闭幂等并唤醒等待者。`Mutex(T)` 接收拥有值，`m.lock() -> Guard[T] of self`，`m.tryLock() -> ?Guard[T] of self`；竞争时 tryLock 返回 none。
+- 共享可变状态用 `Arc[Mutex[T]]`，要求 `T` 可以交给别的线程（`Send`）：`with g = m.lock() { g.count += 1 }`。从 `g` 借出的引用不能带出 `with` 块；锁守卫也不能交给别的线程。
+- 通过 `Rc`、`Arc` 只能读里面的值，把句柄放进 `var` 也一样；要修改就用 `Mutex`。
+- `Arc[T]` 跨线程要求 `T` 同时满足 `Send` 和 `Sync`；`Rc` 永远不能跨线程，所以 `Arc[Mutex[Rc[T]]]` 也不行。接口值默认不能跨线程；`Box[Named + Send]` 只能转交给另一个线程，要被多个线程共享还需要 `+ Sync`。
+- panic 直接终止整个进程，不展开栈，也不会只结束一个线程；可能失败的操作要用 `T ! E`。
+
+### 命令行
+
+`test` 块和 `yavo test` 还没有实现（写 `test "..." { }` 是语法错误）；要自测就写一个小程序或在 `main` 里用 `assert`。
+
+| 命令 | 作用 |
+| --- | --- |
+| `yavo run main.yv` | 编译并运行 |
+| `yavo build main.yv -o app` | 编译；`--release` 开优化，`--target x86_64-windows-gnu` 交叉编译 |
+| `yavo check main.yv [--json]` | 只检查，不生成程序；`--json` 输出结构化诊断 |
+| `yavo fix main.yv [--dry-run]` | 只自动应用不改变语义的修复（如未用变量改名 `_x`、补上缺的导入），其余只列候选；`--dry-run` 只预览 |
+| `yavo allocations 函数名 --file main.yv` | 每个操作给出“不分配、可能分配、未知”之一 |
+| `yavo verify main.yv [--stdin f] [--expect-stdout f]` | 构建、运行并输出验证报告；审计尚未实现，所以总体结论是 `not_verified`（退出码 5） |
+| `yavo toolchain status` | 查看交叉编译工具链 |
+
+退出码：`yavo` 自身 0 成功、1 编译失败、2 用法错误；`yavo run` 返回程序自己的退出码，panic 是 101，被信号杀死是 128+N；递归太深时程序以 `yavo panic [P-STACK]` 终止（退出码 101），没有源码位置（写作 `0:0`）。
+
+## 7. 常见错误和修法
+
+表中同时包含试点中的失败和后续规范新增诊断；每个修复必须满足当前规则，不能把“能编译”当成“意图相同”。
+
+| 编译器说 | 原因 | 修法 |
+| --- | --- | --- |
+| 不能从字段或 `Box` 的内容里移出 | 规则 8 | 按意图选：要取走用 `take(&x.field)`，要保留原值用 `.clone()`，只读就改成借用；三者语义不同，`yavo fix` 只列候选 |
+| 借用期间不能修改 | 规则 7 | 先把需要的值取到局部变量里，等借用结束后再修改 |
+| 线程借用的数据活得不够久 | 数据在 `scope` 内部声明，比 `scope` 更短命 | 把数据放到 `scope` 外面声明；切片可以直接传，如 `spawn f(v[a..b])` |
+| 变量或导入未使用（警告） | 多写了 | 改名为 `_name`，对象照常活到作用域结束；`yavo fix` 会这样改。注意 `_` 会立即丢弃对象 |
+| 实参修改或移动了接收者，如 `v.push(v.pop() ?? 0)`；或实参的值还指着接收者，如 `t.push(t)` | 规则 7 | 先 `let x = v.pop() ?? 0`，再 `v.push(x)`；`t.push(t.clone())`。只读接收者的实参（`v.push(v.len())`）是合法的 |
+| `let t = v[i]` 后修改 `v` 报“still points into it” | 规则 7：非 Copy 元素读出来是借用 | 需要独立的值就 `v[i].clone()`；或者把对 `t` 的最后一次使用挪到修改之前 |
+| 字符串里的插值没有闭合（E0020 unterminated ... in string） | 字符串里的 `${` 总是插值开头 | 字面的 `${` 写 `\${` |
+| 使用了已移动的值 | 规则 1 | 改成借用传参；确实需要两份时写 `.clone()` |
+| 只读借用不能写入 | 规则 3 | 改用 `getMut`，或从可写的来源借用；`var` 不能让 `&T` 变成可写 |
+| 视图不能存进字段、`Box` 或接口值 | 规则 4 | `.toString()`、逐个转成 `String`，或只存下标区间 |
+| 函数返回借用，没写来源（包括泛型函数） | 规则 5 | 在返回类型后加 `of <参数名>`；`yavo fix` 只给候选，不自动加 |
+| `of` 指向了 `sink` 参数 | 规则 5 | 改成借用参数，或者返回拥有的 `String` |
+| 不能把借用写进 `inout` 参数 | 规则 6 | 改为返回 `Vec[str] of text` 这类带来源的结果 |
+| 这个类型没有默认值，不能 `take` | 规则 8 | `replace(&x, 新值)` 或 `swap(&a, &b)` |
+| 不能从已有的可选变量里移出值 | 规则 8 | `match take(&opt)` |
+| 接口值不能直接放进集合 | 需要显式装箱 | `all.push(Box(x))`，集合类型写 `Vec[Box[Named]]` |
+| `f64` 不满足 `Ord` | 浮点数没有全序 | 排序用 `sortBy` 加 `totalCmp` |
+| 这个值不能交给别的线程 | 缺少 `Send` 或 `Sync` | 把 `Rc` 换成 `Arc`；`Arc[Mutex[T]]` 只在 `T: Send` 时成立，包住 `Rc` 也不行；接口值写 `Box[Named + Send]` |
+| 锁内借出的引用离开了 `with` 块，或锁守卫被交给别的线程 | 访问只在持锁期间、持锁的线程里受保护 | 在块内用完，或在块内 `.clone()` 出拥有值 |
+| `?T` 不能当 `T` 用 | 可选值没有处理 | `if let`、`??`，或 `match` 的 `some(x)` / `none` |
+| 结果没有处理 | 调用了返回 `T ! E` 的函数 | `try`、`catch`、`match` |
+| 块形式的 `catch` 能走到结尾 | 块里必须离开 | 需要替代值时改用 `catch e => 替代值` |
+| `match` 没有覆盖所有情况 | 少了分支 | 补上分支或 `_ =>` |
+| 类型不匹配：`int` 和 `f64` | 没有隐式转换 | `f64(n)`、`int(x)` |
+| 函数缺少 `return` | 没有尾表达式返回 | 在每条路径末尾写 `return` |
+| 运行时 panic：Id 属于另一个 Arena | 把一个 Arena 的 Id 用在了另一个上 | 检查 Id 是从哪个 Arena 的 `add` 得到的 |
+| 运行时 panic：字符串切在字符中间 | `s[a..b]` 两端要落在字符边界 | 用 `s.find` 等返回的下标 |
+
+## 8. v1 已定设计
+
+下面七项已经定下，不再保留两种并行写法。
+
+| 项目 | 决定 | 理由 |
+| --- | --- | --- |
+| 函数返回值 | 有返回值的具名函数、方法和块体闭包必须写 `return`；没有返回值的函数可以自然结束；保留单表达式闭包 `=> 表达式` | 不让代码块的最后一个表达式隐式成为结果 |
+| 接口实现 | 显式声明，如 `struct Dog: Named` | 在声明处检查接口是否完整，不因碰巧有同名方法就算实现 |
+| 借用类型 | 公开 `&T` 和 `&inout T`；没有 `&mut`、`ref` 等同义写法 | 权限在签名、变量类型和诊断里都看得见 |
+| 视图来源 | 所有具名函数（包括私有函数）都写 `of` | 修改函数体不会悄悄改变调用方看到的借用关系 |
+| 可复制值的读取 | `m.getCopy(k)` 返回 `?V`，要求可复制；默认值写 `??`；不提供 `getOr` | 复制操作明确，保留“键不存在”的信息 |
+| 泛型括号 | 统一用方括号：`Vec[T]`、`Map[K, V]` | 不同时支持尖括号 |
+| 参数求值顺序 | 先处理接收者，再从左到右处理实参，每个实参立即完成复制、移动或借用；接收者在实参求值期间只是预留，实参可以读它（两阶段，2026-11-21 修订） | 消除移动时点的歧义，C 后端按同样的顺序生成代码 |
+
+本轮补定：标量写入 `*p`；可选模式 `some/none`；视图形参接受 `Vec → []`；析构 `Drop.drop(inout self)`；标准库接口见《标准库契约》；不允许部分移动；常量可知的有效表达式失败仍是运行时 panic；`catch _` 与 `_e` 有不同丢弃时点；修复临时名为 `vLen`，冲突加 `2/3/...`；`for` 默认只读、`in &xs` 才可写。
+
+## 9. 尚未实现（用了会报 `U0001` 或语法错误）
+
+`test` 块与 `yavo test`、`yavo fmt/doc/explain/audit`；`std/time`、`std/rand`；`Vec` 的 `remove`、`insert`、`clear`；开放切片 `x[a..]`、`x[..b]`（写 `x[a..x.len()]`）；遍历 `Arena`；元组做 `Map` 键、元组比较和打印；泛型枚举；带载荷枚举的 `==`；`match` 里的字面量模式（`.Num(0)`、`1 =>`）；一般闭包值和把闭包当参数传给自己的函数（`sortBy`、`update`、`Heap.by` 可以）；`spawn` 之外的线程写法，`spawn` 的实参不能是 `&inout`；包依赖、`unsafe`、C 互操作。

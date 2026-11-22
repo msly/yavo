@@ -1,0 +1,62 @@
+use std/io
+
+fn parse(line: str) -> ?Vec[String] {
+    var fields: Vec[String] = []
+    var pos = 0
+    loop {
+        var value = String{}
+        if pos < line.len() && line[pos] == '"' {
+            pos += 1
+            var closed = false
+            while pos < line.len() {
+                if line[pos] == '"' {
+                    if pos + 1 < line.len() && line[pos + 1] == '"' {
+                        value.push("\"")
+                        pos += 2
+                    } else {
+                        pos += 1
+                        closed = true
+                        break
+                    }
+                } else {
+                    value.push(line[pos..pos + 1])
+                    pos += 1
+                }
+            }
+            if !closed {
+                return none
+            }
+            if pos < line.len() && line[pos] != ',' {
+                return none
+            }
+        } else {
+            while pos < line.len() && line[pos] != ',' {
+                if line[pos] == '"' {
+                    return none
+                }
+                value.push(line[pos..pos + 1])
+                pos += 1
+            }
+        }
+        fields.push(value)
+        if pos == line.len() {
+            break
+        }
+        pos += 1
+    }
+    return fields
+}
+
+fn main() {
+    let input = io.readAll() catch _ { return }
+    for row, line in input.lines() {
+        if let fields = parse(line) {
+            println("${row + 1}: ${fields.len()}")
+            for field in fields {
+                println("${field.len()}:${field}")
+            }
+        } else {
+            println("${row + 1}: invalid")
+        }
+    }
+}

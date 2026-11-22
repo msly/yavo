@@ -51,6 +51,10 @@ success does not change the pinned Zig ASan exceptions.
 
 [CI scope](tools/ci/README.md) · [source-bound receipt and earlier run history](compiler/validation/github-ci-2026-11-22.json)
 
+A fifth job now validates the archived round-five experiment evidence. Its first
+remote result is **pending the final commit/push and CI run**; the four passing
+results above remain the recorded `8a65228` run.
+
 ### Measurements tied to earlier snapshots
 
 | Evidence | Result | Source scope |
@@ -66,20 +70,54 @@ The [implemented-cache measurements](benchmarks/small-c-v1/results/build-cache.j
 
 ## Latest agent experiment
 
-[Round four](experiments/coldstart-2026-11-21-r4/README.md) reused the round-three task packet with compiler `1af1f69`. First compilation plus existing-sample correctness rose from 3/11 to 8/11 for Yavo; Rust remained 11/11. The repair task is excluded from that denominator.
+[Round five](experiments/coldstart-2026-11-22-r5/README.md) completed four independent
+empty-context sessions on 12 new task specifications, two sessions per language.
+**Yavo and Rust each achieved 24/24 successful first compiler requests, public and
+hidden correctness, and required module/thread structure.** All 48 deliveries
+retained the first source unchanged; neither language needed a repair.
 
-| Metric | Yavo | Rust | Yavo / Rust |
+| Session | First-build complete task success | Controlled lab operations | Elapsed time |
 | --- | ---: | ---: | ---: |
-| Tokens | 162,464 | 127,801 | 1.27 |
-| Tool calls | 38 | 24 | 1.58 |
-| Time | 276.8 s | 170 s | 1.63 |
+| Yavo A | 12/12 | 69 | 337.8823 s |
+| Yavo B | 12/12 | 69 | 333.4053 s |
+| Rust A | 12/12 | 66 | 282.2978 s |
+| Rust B | 12/12 | 66 | 274.7395 s |
 
-Both languages passed the frozen 18 runtime examples. A later independent T10 boundary check found that the Yavo solution wrongly rejected the valid input `000000001`; Rust accepted it. The archived solution and original statistics are unchanged. Costs were recovered from orchestration records; full interaction transcripts and first-source snapshots were not archived. Same-task improvement does not establish generalization, and the three subsequent fixes in `b3c27a6` have not yet been evaluated on new tasks.
+Yavo used **138 versus 132 controlled operations (1.0455×)** and
+**671.2876 versus 557.0373 seconds (1.2051×)**. The six extra operations are exactly
+three reads of the 32,889-byte Yavo cheatsheet in each session; every other
+operation category has equal counts. Compiler processes consumed 5.3451 versus
+3.8910 seconds, accounting for only 1.4541 seconds of the 114.2503-second total
+gap. The timing also includes model processing and waiting; this packet does
+not identify which of those caused the remaining gap.
+
+The frozen packet contains 24 public and 144 hidden cases. Replaying first and
+final snapshots produced **1,344/1,344 passes** (192 public, 1,152 hidden), with
+Yavo heap-block checking enabled. This is 96 snapshot evaluations of 48
+deliveries, not additional independent problem samples. The packet was frozen
+at `8c200aa`; the language/compiler baseline is `5cd916b` with last compiler
+code change `8a65228`. No compiler, runtime or specification changes were made.
+
+Tokens, exact serving-model ID and sampling parameters remain **`null`**: the
+collaboration interface exposes no verifiable usage, and the read-only CLI
+initialization probe failed. The formal delivery-cost gate remains blocked.
+Three tasks reuse earlier task families with new rules; nine have other new
+specifications, so this is not a strict task-family holdout. The sessions also
+differ from the historical Sonnet setup, preventing causal attribution of
+cross-round success changes. [Round four](experiments/coldstart-2026-11-21-r4/README.md)
+retains its original same-packet results and leading-zero failure.
+
+Evidence: [results](experiments/coldstart-2026-11-22-r5/results.json),
+[operation/time analysis](experiments/coldstart-2026-11-22-r5/evidence/cost-analysis.json),
+[behavior replay audit](experiments/coldstart-2026-11-22-r5/evidence/behavior-review.json)
+and [module/thread audit](experiments/coldstart-2026-11-22-r5/evidence/manual-review.json).
 
 ## Next work and acceptance gates
 
-1. Run a fifth round with 12 new tasks, independent hidden edge cases and at least two independent runs per language. Save first-source snapshots, commands, outcomes, token/tool counts and monotonic timings directly in the experiment directory; separate reading documentation, writing code and repair costs.
-2. Use those results to choose further language/tool changes. Remaining v1 functionality includes user test blocks and `yavo test`, local/Git dependencies and a lockfile, FFI/unsafe/audit, general closures/higher-order parameters, public movable Join and `spawn inout`. Precompiled runtime objects address the observed edit-build latency.
+1. Establish an executor that archives real per-request token usage, exact model identity and sampling configuration together with source snapshots and operation events. Keep missing measurements explicit until that path works.
+2. Compare the full cheatsheet with a minimal first-write reference under the same metered model and fresh tasks. Round five isolates six extra documentation requests but provides no new failure requiring a language-semantic change.
+3. Run the planned 60-task pilot to estimate variance and task-family coverage before the formal study, whose initial design has at least 400 tasks.
+4. Remaining v1 functionality includes user test blocks and `yavo test`, local/Git dependencies and a lockfile, FFI/unsafe/audit, general closures/higher-order parameters, public movable Join and `spawn inout`. Precompiled runtime objects address the observed edit-build latency.
 
 The [frozen goals](docs/plan.md) require success-rate noninferiority to Rust (paired one-sided 95% lower bound at least −5 percentage points), at least **20% lower cost per successful delivery** with independent replication, and runtime geometric mean at most **1.5× C** on a frozen representative benchmark set. Engineering targets include small-program build P50 **≤200 ms**, stripped Linux binaries **≤250 KB**, native Windows tests and reproducible output hashes. Neither frozen-fixture coverage nor the small C pilot closes full v1 acceptance.
 

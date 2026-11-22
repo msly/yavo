@@ -1,0 +1,2 @@
+use std::io::{self,Read};
+fn main(){let mut s=String::new();io::stdin().read_to_string(&mut s).unwrap();let mut lines=s.lines();let base:Vec<&str>=lines.next().unwrap().split('/').filter(|p|!p.is_empty()).collect();let mut out=String::new();for path in lines{let mut parts=if path.starts_with('/'){Vec::new()}else{base.clone()};for p in path.split('/'){match p{""|"."=>{},".."=>{parts.pop();},_=>parts.push(p)}}out.push('/');out.push_str(&parts.join("/"));out.push('\n');}print!("{}",out);}

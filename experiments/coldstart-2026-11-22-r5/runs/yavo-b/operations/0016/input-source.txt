@@ -1,0 +1,61 @@
+use std/io
+
+fn main() {
+    let text = io.readAll() catch _ { return }
+    var intervals: Vec[(int, int)] = []
+    for line in text.lines() {
+        let fields = line.fields()
+        if fields.len() == 0 { continue }
+        if fields[0] == "add" {
+            let left = fields[1].parseInt() ?? 0
+            let right = fields[2].parseInt() ?? 0
+            intervals.push((left, right))
+            intervals.sortBy((a, b) => a.0 < b.0)
+            var merged: Vec[(int, int)] = []
+            var start = intervals[0].0
+            var end = intervals[0].1
+            for span in intervals {
+                if span.0 <= end + 1 {
+                    end = max(end, span.1)
+                } else {
+                    merged.push((start, end))
+                    start = span.0
+                    end = span.1
+                }
+            }
+            merged.push((start, end))
+            intervals = merged
+        } else if fields[0] == "del" {
+            let left = fields[1].parseInt() ?? 0
+            let right = fields[2].parseInt() ?? 0
+            var remaining: Vec[(int, int)] = []
+            for span in intervals {
+                if span.1 < left || span.0 > right {
+                    remaining.push(span)
+                } else {
+                    if span.0 < left { remaining.push((span.0, left - 1)) }
+                    if span.1 > right { remaining.push((right + 1, span.1)) }
+                }
+            }
+            intervals = remaining
+        } else if fields[0] == "has" {
+            let value = fields[1].parseInt() ?? 0
+            var found = false
+            for span in intervals {
+                if span.0 <= value && value <= span.1 { found = true }
+            }
+            if found { println("yes") } else { println("no") }
+        } else if fields[0] == "show" {
+            if intervals.len() == 0 {
+                println("empty")
+            } else {
+                var parts: Vec[String] = []
+                for span in intervals { parts.push(format("${span.0}:${span.1}")) }
+                println(parts.join(" "))
+            }
+        }
+    }
+    var count = 0
+    for span in intervals { count += span.1 - span.0 + 1 }
+    println("count: ${count}")
+}

@@ -1,0 +1,79 @@
+use std/io
+
+fn transfer(accounts: inout Map[String, int], from: str, dest: str, amount: int) -> String {
+    if !accounts.has(from) {
+        return format("unknown ${from}")
+    }
+    if !accounts.has(dest) {
+        return format("unknown ${dest}")
+    }
+    let available = accounts.getCopy(from) ?? 0
+    if available < amount {
+        return format("funds ${from}")
+    }
+    if from != dest {
+        let other = accounts.getCopy(dest) ?? 0
+        accounts.set(from.toString(), available - amount)
+        accounts.set(dest.toString(), other + amount)
+    }
+    return "".toString()
+}
+
+fn main() {
+    let text = io.readAll() catch _ { return }
+    let lines = text.lines()
+    var accounts: Map[String, int] = [:]
+    var i = 0
+    while i < lines.len() {
+        let fields = lines[i].fields()
+        i += 1
+        if fields.len() == 0 { continue }
+        if fields[0] == "account" {
+            let name = fields[1]
+            if accounts.has(name) {
+                println("error: duplicate ${name}")
+            } else {
+                accounts.set(name.toString(), fields[2].parseInt() ?? 0)
+            }
+        } else if fields[0] == "pay" {
+            let problem = transfer(&accounts, fields[1], fields[2], fields[3].parseInt() ?? 0)
+            if problem.len() == 0 { println("paid") } else { println("error: ${problem}") }
+        } else if fields[0] == "balance" {
+            let name = fields[1]
+            if let value = accounts.getCopy(name) {
+                println("${name}: ${value}")
+            } else {
+                println("error: unknown ${name}")
+            }
+        } else if fields[0] == "batch" {
+            let count = fields[1].parseInt() ?? 0
+            var trial = accounts.clone()
+            var failed = false
+            for row in 0..count {
+                let payment = lines[i].fields()
+                i += 1
+                if !failed {
+                    let problem = transfer(&trial, payment[0], payment[1], payment[2].parseInt() ?? 0)
+                    if problem.len() != 0 {
+                        println("batch: row ${row + 1} ${problem}")
+                        failed = true
+                    }
+                }
+            }
+            if !failed {
+                accounts = trial
+                println("batch: ok")
+            }
+        }
+    }
+    var names: Vec[String] = []
+    for name, _value in accounts { names.push(name.clone()) }
+    names.sort()
+    var total = 0
+    for name in names {
+        let value = accounts.getCopy(name) ?? 0
+        println("${name}=${value}")
+        total += value
+    }
+    println("total: ${total}")
+}

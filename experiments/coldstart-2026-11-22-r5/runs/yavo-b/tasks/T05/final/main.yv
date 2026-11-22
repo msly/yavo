@@ -1,0 +1,67 @@
+use std/io
+
+struct Component {
+    area: int
+    perimeter: int
+    r0: int
+    c0: int
+    r1: int
+    c1: int
+}
+
+fn main() {
+    let text = io.readAll() catch _ { return }
+    let lines = text.lines()
+    let shape = lines[0].fields()
+    let height = shape[0].parseInt() ?? 0
+    let width = shape[1].parseInt() ?? 0
+    var seen: Vec[bool] = []
+    for _i in 0..height * width { seen.push(false) }
+    var components: Vec[Component] = []
+    let steps: Vec[(int, int)] = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+    for row in 0..height {
+        for col in 0..width {
+            let cell = row * width + col
+            if seen[cell] || lines[row + 1][col] != '#' { continue }
+            var component = Component{area: 0, perimeter: 0, r0: row, c0: col, r1: row, c1: col}
+            var stack: Vec[int] = [cell]
+            seen[cell] = true
+            while let current = stack.pop() {
+                let r = current / width
+                let c = current % width
+                component.area += 1
+                component.r0 = min(component.r0, r)
+                component.c0 = min(component.c0, c)
+                component.r1 = max(component.r1, r)
+                component.c1 = max(component.c1, c)
+                for step in steps {
+                    let nr = r + step.0
+                    let nc = c + step.1
+                    if nr < 0 || nr >= height || nc < 0 || nc >= width {
+                        component.perimeter += 1
+                    } else if lines[nr + 1][nc] != '#' {
+                        component.perimeter += 1
+                    } else {
+                        let next = nr * width + nc
+                        if !seen[next] {
+                            seen[next] = true
+                            stack.push(next)
+                        }
+                    }
+                }
+            }
+            components.push(component)
+        }
+    }
+    println("components: ${components.len()}")
+    var largest = 0
+    var largestArea = 0
+    for index, component in components {
+        println("${index + 1}: area=${component.area} perimeter=${component.perimeter} box=${component.r0},${component.c0}:${component.r1},${component.c1}")
+        if component.area > largestArea {
+            largestArea = component.area
+            largest = index + 1
+        }
+    }
+    if largest == 0 { println("largest: none") } else { println("largest: ${largest}") }
+}

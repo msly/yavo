@@ -1,0 +1,25 @@
+use std/io
+
+fn main() {
+    let text = io.readAll() catch _ { return }
+    let fields = text.fields()
+    let size = fields[0].parseInt() ?? 1
+    var values: Vec[int] = []
+    for i in 1..fields.len() { values.push(fields[i].parseInt() ?? 0) }
+    var windows = 0
+    for i in 0..values.len() {
+        let end = i + 1
+        if end < size { continue }
+        var sorted: Vec[int] = []
+        var sum = 0
+        for j in end - size..end {
+            sorted.push(values[j])
+            sum += values[j]
+        }
+        sorted.sort()
+        let median = sorted[(size - 1) / 2]
+        println("${end}: median=${median} sum=${sum}")
+        windows += 1
+    }
+    println("windows: ${windows}")
+}

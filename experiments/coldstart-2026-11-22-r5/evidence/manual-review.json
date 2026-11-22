@@ -1,0 +1,136 @@
+{
+  "schema_version": 1,
+  "review_scope": "Mandatory T04 modular decomposition and T06 real threaded-work structure; behavioral correctness is judged separately.",
+  "method": "Read each complete first source graph, trace executed functions and spawn/join/control-flow order, compare its individual file hashes to the judge report, and reuse for final only where both aggregate and per-file hashes are identical. Aggregate source_sha256 values are copied exactly from judge-results/<run>/report.json, not recomputed with a different serialization.",
+  "reviews": [
+    {
+      "run_id": "yavo-a",
+      "task_id": "T04",
+      "stage": "first",
+      "source_sha256": "a045311af61cb7ecf05401145373a3b0c53e13bef246df74b776590c572768a3",
+      "passed": true,
+      "evidence": "main.yv main reads stdin, iterates input lines and prints the row number plus convert.record(line); it contains no amount parsing, unit validation, conversion or reduction. The imported convert.yv defines amount (length/grammar/bounds/sign and decimal numerator/denominator), unit (mm/cm/m/km validation and integer scale), gcd, and public record (field count, unit and amount calls, exact numerator/denominator multiplication, gcd reduction and formatting). Thus both source files participate in the executable and all required conversion logic is in the non-entry module. First-stage judgment is based on the original snapshots/0001 source graph, whose individual file hashes match the evaluation report."
+    },
+    {
+      "run_id": "yavo-a",
+      "task_id": "T04",
+      "stage": "final",
+      "source_sha256": "a045311af61cb7ecf05401145373a3b0c53e13bef246df74b776590c572768a3",
+      "passed": true,
+      "evidence": "main.yv main reads stdin, iterates input lines and prints the row number plus convert.record(line); it contains no amount parsing, unit validation, conversion or reduction. The imported convert.yv defines amount (length/grammar/bounds/sign and decimal numerator/denominator), unit (mm/cm/m/km validation and integer scale), gcd, and public record (field count, unit and amount calls, exact numerator/denominator multiplication, gcd reduction and formatting). Thus both source files participate in the executable and all required conversion logic is in the non-entry module. Final-stage judgment reuses the first-stage source review only after confirming identical aggregate source.sha256 and every source-file SHA-256 between snapshots/0001 and final."
+    },
+    {
+      "run_id": "yavo-a",
+      "task_id": "T06",
+      "stage": "first",
+      "source_sha256": "355cd788337adb52dc350bc58cc2a8059438848187d89121ad7c7ca08f21b385",
+      "passed": true,
+      "evidence": "main.yv encode(text) alone scans source bytes and builds local (byte,count) runs. main removes only the trailing LF from the logical length, computes base=n/3 and extra=n%3, constructs consecutive slices [0,endFirst), [endFirst,endSecond), [endSecond,n), and adjusts the first extra slices by one. Inside scope, workerA=spawn encode(first), workerB=spawn encode(second), workerC=spawn encode(third) all occur before workerA.join(); these three unconditional Yavo OS-thread spawns also execute for empty slices. Joins retrieve A/B/C in slice order. main then calls append on a,b,c in that order; append iterates encoded runs and merges equal boundary bytes by adding counts. main never calls encode synchronously or rescans the complete text to reconstruct RLE. First-stage judgment is based on the original snapshots/0001 source graph, whose individual file hashes match the evaluation report."
+    },
+    {
+      "run_id": "yavo-a",
+      "task_id": "T06",
+      "stage": "final",
+      "source_sha256": "355cd788337adb52dc350bc58cc2a8059438848187d89121ad7c7ca08f21b385",
+      "passed": true,
+      "evidence": "main.yv encode(text) alone scans source bytes and builds local (byte,count) runs. main removes only the trailing LF from the logical length, computes base=n/3 and extra=n%3, constructs consecutive slices [0,endFirst), [endFirst,endSecond), [endSecond,n), and adjusts the first extra slices by one. Inside scope, workerA=spawn encode(first), workerB=spawn encode(second), workerC=spawn encode(third) all occur before workerA.join(); these three unconditional Yavo OS-thread spawns also execute for empty slices. Joins retrieve A/B/C in slice order. main then calls append on a,b,c in that order; append iterates encoded runs and merges equal boundary bytes by adding counts. main never calls encode synchronously or rescans the complete text to reconstruct RLE. Final-stage judgment reuses the first-stage source review only after confirming identical aggregate source.sha256 and every source-file SHA-256 between snapshots/0001 and final."
+    },
+    {
+      "run_id": "rust-a",
+      "task_id": "T04",
+      "stage": "first",
+      "source_sha256": "cc524874802822a188fbeba30b835b7f9f611b79f896d8bca9db38490390b677",
+      "passed": true,
+      "evidence": "main.rs declares mod convert and main only reads stdin into a String, invokes convert::process, and prints its returned text. In convert.rs, amount handles sign, length, decimal grammar, leading zeros, fractional scale and numeric bounds; unit validates each supported unit and returns an exact integer scale; gcd performs Euclidean reduction; convert validates three fields and builds/reduces the rational conversion. Public process enumerates lines and formats valid/invalid results. All required parsing, validation, conversion and reduction therefore reside in the non-entry convert module. First-stage judgment is based on the original snapshots/0001 source graph, whose individual file hashes match the evaluation report."
+    },
+    {
+      "run_id": "rust-a",
+      "task_id": "T04",
+      "stage": "final",
+      "source_sha256": "cc524874802822a188fbeba30b835b7f9f611b79f896d8bca9db38490390b677",
+      "passed": true,
+      "evidence": "main.rs declares mod convert and main only reads stdin into a String, invokes convert::process, and prints its returned text. In convert.rs, amount handles sign, length, decimal grammar, leading zeros, fractional scale and numeric bounds; unit validates each supported unit and returns an exact integer scale; gcd performs Euclidean reduction; convert validates three fields and builds/reduces the rational conversion. Public process enumerates lines and formats valid/invalid results. All required parsing, validation, conversion and reduction therefore reside in the non-entry convert module. Final-stage judgment reuses the first-stage source review only after confirming identical aggregate source.sha256 and every source-file SHA-256 between snapshots/0001 and final."
+    },
+    {
+      "run_id": "rust-a",
+      "task_id": "T06",
+      "stage": "first",
+      "source_sha256": "cd58bda231c365c9ef355a9e8cc4674506e25bc52fbd86bd33bbc9c1b53ebfc1",
+      "passed": true,
+      "evidence": "main.rs imports std::thread. encode(segment: Vec<u8>) scans only its owned segment and produces run tuples. main removes the LF, then the complete for i in 0..3 loop computes len=n/3+(i<n%3), copies the next contiguous slice, and pushes thread::spawn(move || encode(segment)) into handles. No join occurs in that loop, so all three OS workers are started before the subsequent handles iteration; empty segments still spawn. Handles retain segment order. The later handle.join loop merges returned run tuples into combined, summing adjacent equal bytes; it never reruns encode on the original input. First-stage judgment is based on the original snapshots/0001 source graph, whose individual file hashes match the evaluation report."
+    },
+    {
+      "run_id": "rust-a",
+      "task_id": "T06",
+      "stage": "final",
+      "source_sha256": "cd58bda231c365c9ef355a9e8cc4674506e25bc52fbd86bd33bbc9c1b53ebfc1",
+      "passed": true,
+      "evidence": "main.rs imports std::thread. encode(segment: Vec<u8>) scans only its owned segment and produces run tuples. main removes the LF, then the complete for i in 0..3 loop computes len=n/3+(i<n%3), copies the next contiguous slice, and pushes thread::spawn(move || encode(segment)) into handles. No join occurs in that loop, so all three OS workers are started before the subsequent handles iteration; empty segments still spawn. Handles retain segment order. The later handle.join loop merges returned run tuples into combined, summing adjacent equal bytes; it never reruns encode on the original input. Final-stage judgment reuses the first-stage source review only after confirming identical aggregate source.sha256 and every source-file SHA-256 between snapshots/0001 and final."
+    },
+    {
+      "run_id": "rust-b",
+      "task_id": "T04",
+      "stage": "first",
+      "source_sha256": "275981ec68b29244977bfa646235f3cddd4d9624161699fe4e42f615f7f630c8",
+      "passed": true,
+      "evidence": "main.rs declares mod converter; main only reads stdin, calls converter::convert_input, and prints the result. converter.rs contains unit for unit validation/scaling, number for length/sign/decimal syntax and bounded exact numerator/denominator parsing, gcd for reduction, convert_line for field count and all rational arithmetic, and convert_input for line enumeration/result formatting. The non-entry module performs every required amount/units/precision operation; main contains none of them. First-stage judgment is based on the original snapshots/0001 source graph, whose individual file hashes match the evaluation report."
+    },
+    {
+      "run_id": "rust-b",
+      "task_id": "T04",
+      "stage": "final",
+      "source_sha256": "275981ec68b29244977bfa646235f3cddd4d9624161699fe4e42f615f7f630c8",
+      "passed": true,
+      "evidence": "main.rs declares mod converter; main only reads stdin, calls converter::convert_input, and prints the result. converter.rs contains unit for unit validation/scaling, number for length/sign/decimal syntax and bounded exact numerator/denominator parsing, gcd for reduction, convert_line for field count and all rational arithmetic, and convert_input for line enumeration/result formatting. The non-entry module performs every required amount/units/precision operation; main contains none of them. Final-stage judgment reuses the first-stage source review only after confirming identical aggregate source.sha256 and every source-file SHA-256 between snapshots/0001 and final."
+    },
+    {
+      "run_id": "rust-b",
+      "task_id": "T06",
+      "stage": "first",
+      "source_sha256": "c6a9bf8d4ef09d64938d5fed2db2e8a40a09fdf5f24eaf32f9a1147133f9b315",
+      "passed": true,
+      "evidence": "main.rs encode(segment: Vec<u8>) creates each segment's local RLE. main strips the LF and executes for part in 0..3, taking consecutive owned slices with len=n/3+(part<n%3) and starting thread::spawn(move || encode(segment)) for each. The loop ends before any join call; all three actual OS workers are launched even when segment length is zero. The following for worker in workers preserves slice order, joins each worker and merges only its run tuples into merged, adding counts for equal adjacent boundary bytes. No full-input re-encoding occurs on the main thread. First-stage judgment is based on the original snapshots/0001 source graph, whose individual file hashes match the evaluation report."
+    },
+    {
+      "run_id": "rust-b",
+      "task_id": "T06",
+      "stage": "final",
+      "source_sha256": "c6a9bf8d4ef09d64938d5fed2db2e8a40a09fdf5f24eaf32f9a1147133f9b315",
+      "passed": true,
+      "evidence": "main.rs encode(segment: Vec<u8>) creates each segment's local RLE. main strips the LF and executes for part in 0..3, taking consecutive owned slices with len=n/3+(part<n%3) and starting thread::spawn(move || encode(segment)) for each. The loop ends before any join call; all three actual OS workers are launched even when segment length is zero. The following for worker in workers preserves slice order, joins each worker and merges only its run tuples into merged, adding counts for equal adjacent boundary bytes. No full-input re-encoding occurs on the main thread. Final-stage judgment reuses the first-stage source review only after confirming identical aggregate source.sha256 and every source-file SHA-256 between snapshots/0001 and final."
+    },
+    {
+      "run_id": "yavo-b",
+      "task_id": "T04",
+      "stage": "first",
+      "source_sha256": "8be2e63d7ef26c99d1dd73e6933de92ce759fb97fa2b6c628e4c28dae1aba9fb",
+      "passed": true,
+      "evidence": "main.yv imports conversion; main reads text, enumerates lines and prints the index plus conversion.convert(line). conversion.yv contains scale (unit validation and integer scale), number (length, sign, digit grammar, fractional precision and exact bounded numerator/denominator), gcd, and public convert (three-field validation, exact unit multiplication, fraction reduction and formatting). All required domain parsing and arithmetic are in the non-entry module; main performs only I/O, line numbering and the module call. First-stage judgment is based on the original snapshots/0001 source graph, whose individual file hashes match the evaluation report."
+    },
+    {
+      "run_id": "yavo-b",
+      "task_id": "T04",
+      "stage": "final",
+      "source_sha256": "8be2e63d7ef26c99d1dd73e6933de92ce759fb97fa2b6c628e4c28dae1aba9fb",
+      "passed": true,
+      "evidence": "main.yv imports conversion; main reads text, enumerates lines and prints the index plus conversion.convert(line). conversion.yv contains scale (unit validation and integer scale), number (length, sign, digit grammar, fractional precision and exact bounded numerator/denominator), gcd, and public convert (three-field validation, exact unit multiplication, fraction reduction and formatting). All required domain parsing and arithmetic are in the non-entry module; main performs only I/O, line numbering and the module call. Final-stage judgment reuses the first-stage source review only after confirming identical aggregate source.sha256 and every source-file SHA-256 between snapshots/0001 and final."
+    },
+    {
+      "run_id": "yavo-b",
+      "task_id": "T06",
+      "stage": "first",
+      "source_sha256": "339743091d155d1c6c6b7835780c17354dfada01f24c016b45a1669fb08f0e9b",
+      "passed": true,
+      "evidence": "main.yv encode(segment) scans only the passed segment and produces local run tuples. main uses length=text.len()-1, computes firstSize=floor(n/3)+(n%3>0), secondSize=floor(n/3)+(n%3>1), and secondEnd=firstSize+secondSize. Its scope unconditionally performs first=spawn encode(text[0..firstSize]), second=spawn encode(text[firstSize..secondEnd]), third=spawn encode(text[secondEnd..length]) before first.join(), giving three actual Yavo OS workers including empty segments. It obtains a,b,c in segment order and calls merge on each in order. merge iterates run tuples and adds counts at equal boundaries; no main-thread loop encodes the complete text. First-stage judgment is based on the original snapshots/0001 source graph, whose individual file hashes match the evaluation report."
+    },
+    {
+      "run_id": "yavo-b",
+      "task_id": "T06",
+      "stage": "final",
+      "source_sha256": "339743091d155d1c6c6b7835780c17354dfada01f24c016b45a1669fb08f0e9b",
+      "passed": true,
+      "evidence": "main.yv encode(segment) scans only the passed segment and produces local run tuples. main uses length=text.len()-1, computes firstSize=floor(n/3)+(n%3>0), secondSize=floor(n/3)+(n%3>1), and secondEnd=firstSize+secondSize. Its scope unconditionally performs first=spawn encode(text[0..firstSize]), second=spawn encode(text[firstSize..secondEnd]), third=spawn encode(text[secondEnd..length]) before first.join(), giving three actual Yavo OS workers including empty segments. It obtains a,b,c in segment order and calls merge on each in order. merge iterates run tuples and adds counts at equal boundaries; no main-thread loop encodes the complete text. Final-stage judgment reuses the first-stage source review only after confirming identical aggregate source.sha256 and every source-file SHA-256 between snapshots/0001 and final."
+    }
+  ]
+}
+

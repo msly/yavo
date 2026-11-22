@@ -95,3 +95,26 @@ jobs:
           path: compiler/target/ci/
           if-no-files-found: error
           retention-days: 14
+
+  experiment-evidence:
+    name: Round-five experiment evidence
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Preserve frozen experiment bytes on checkout
+        run: git config --global core.autocrlf false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Validate the evidence gate
+        run: python3 tools/ci/experiment_evidence.py --self-test
+      - name: Verify frozen inputs, archived runs and experiment totals
+        run: python3 tools/ci/experiment_evidence.py
+      - name: Preserve experiment integrity receipt and verification logs
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: experiment-evidence-${{ github.sha }}
+          path: compiler/target/ci/
+          if-no-files-found: error
+          retention-days: 14

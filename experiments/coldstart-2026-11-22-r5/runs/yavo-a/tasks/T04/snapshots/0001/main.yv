@@ -1,0 +1,9 @@
+use std/io
+use convert
+
+fn main() {
+    let input = io.readAll() catch _ { return }
+    for row, line in input.lines() {
+        println("${row + 1}: ${convert.record(line)}")
+    }
+}

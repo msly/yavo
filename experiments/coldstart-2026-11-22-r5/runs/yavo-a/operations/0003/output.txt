@@ -1,0 +1,180 @@
+if let v = m.get("a") {
+    println(v)
+} else {
+    println("missing")
+}
+```
+
+
+```text
+match take(&opt) {
+    some(value) => useOwned(value)
+    none => println("empty")
+}
+```
+
+- 不使用错误时允许 `catch _ => 0` 或 `catch _ { return }`：错误在处理体开始前释放；`catch _e` 则保留到处理体结束。自动修复只改为 `_e`，不改为 `_`。
+- `T ! E` 的四种用法：`try f()`、`f() catch e => 替代值`、`f() catch e { … }`（块里必须离开：`return`、`break`、`continue` 或 `panic`）、`match f() { ok(v) => … err(e) => … }`。
+- `try` 只能用在返回 `… ! E` 的函数里，而且错误类型要一致。
+- 不处理就使用是编译错误。越界、溢出、除零是 panic，不是错误值。
+
+## 4. 所有权：九条规则
+
+没有 GC，也没有生命周期标注。写代码时记住下面九条；完整规则和边界情况见语义表。
+
+1. **移动与复制。** 按值赋值、放进集合、传给 `sink` 参数时，拥有值（`String`、`Vec`、`Box` 等）被移动，之后原变量不能再用。标量及无析构、有效载荷递归满足 Copy 的类型自动复制；`str`、`&T` 复制的只是描述符；`&inout T` 不能复制。要第二份拥有值时写 `.clone()`。
+2. **参数默认是只读借用。** 要修改调用者的值，参数写 `inout`，调用处写 `&x`；要拿走所有权，参数写 `sink`。
+3. **权限看借用类型，不看 `var`。** `let`/`var` 只管能否重新赋值；`&T` 只读，`&inout T` 可写；把 `&T` 放进 `var` 也不能写。`if let`、`match` 对已有位置继承访问权限。`for` 默认只读；写 `for k, v in &m` 才取得 `&inout V`，循环体此时不能再直接访问 `m`。`Map` 键永远只读。标量借用通过 `*p = value` 写入。
+4. **视图不能逃逸。** 视图（`str`、`[]T`、`&T`、`&inout T`）和携带视图的值（如 `Vec[str]`）可以做局部变量、参数和返回值，不能进入普通字段、`Box`、接口值、channel 或被保存的闭包。`.toVec()` 不会消除元素里的借用；要长期保存，逐个 `.toString()`，或者只存下标区间。v1 没有可变切片。
+5. **每个具名函数返回借用时都写来源**，私有函数和泛型函数也一样：`-> str of s`、`-> str of (a, b)`、`-> str of self`、`-> str of static`、`-> ?T of xs`。`of` 只能指向借用参数：`fn bad(text: sink String) -> str of text` 会被拒绝，因为 `text` 在函数结束时就被释放了。
+6. **不能通过参数写入新借用。** 函数不能把来自其他参数的借用写进 `inout` 参数（如 `out: inout Vec[str]`），要改为返回 `Vec[str] of text`。
+7. **借用持续到最后一次使用；实参从左到右，每个立即完成移动或借用。** 修改接收者的调用（`v.push(x)`、`m.set(k, v)`、`inout self` 方法）和 `v[i] = x` 里，实参可以**读**接收者：`v.push(v.len())`、`v.push(v[i] + v[j])`、`dp[i] = dp[i - 1] + dp[i - 2]`、`c.add(c.n)` 都合法；但实参不能**修改或移动**接收者（`v.push(v.pop() ?? 0)` 报 `E0403`），实参的值也不能还指着它（`t.push(t)` 报 `E0403`）——这种情况先 `let x = …` 算好再调用。元素也可以做修改方法的接收者：`groups[i].push(x)`、`ms[i].set(k, v)`、`ps[i].tags.push(s)`、`ps[i].moveBy(1)`；这时先定位元素（求下标、检查越界）并可变借用它，再求实参，所以实参不能再用这个容器（`groups[i].push(groups.len())` 报 `E0403`，先 `let n = groups.len()`）。**读出非 Copy 的元素是借用**：`let t = v[i]`（元素是 `String`、`Vec` 等）得到 `&T`，之后只要还会用 `t`，就不能修改 `v`（`E0102`）；要独立的值写 `let t = v[i].clone()`。（字段不同：`let q = s.name` 是移出，按规则 8 报错。）
+8. **不允许部分移动。** 非 Copy 字段、`Box` 内容或集合元素都不能直接移出，即使外层由本函数拥有。 有默认值的类型用 `take(&x)` 取走并留下默认值（可选值留下 `none`，数字留下 0，`String`、`Vec`、`Map` 留下空值）；其他类型用 `replace(&x, 新值)` 或 `swap(&a, &b)`。例外：匹配拥有的临时值（如 `match ch.recv()`）可以移出其中的值；要消费已有的可选变量，写 `match take(&opt)`。
+9. **结构的选择。** 递归结构用 `?Box[T]`；单线程共享用 `Rc[T]`；跨线程共享用 `Arc[T]`，条件见第 6 节；互相引用的图用 `Arena[T]` 加 `Id[T]`。
+
+```
+struct Node {
+    key: int
+    left: ?Box[Node]
+    right: ?Box[Node]
+}
+
+fn insert(t: inout ?Box[Node], k: int) {
+    if let n = t {                        // 规则 3：t 是 inout，n 可写
+        if k < n.key {
+            insert(&n.left, k)            // 规则 2：再借用子字段，调用处写 &
+        } else if k > n.key {
+            insert(&n.right, k)
+        }
+        return
+    }
+    t = Box(Node{key: k})                 // 未写的可选字段默认是 none
+}
+
+fn removeRoot(t: inout ?Box[Node]) {      // 假设根最多只有一个孩子
+    var child: ?Box[Node] = none
+    if let n = t {
+        if n.left.isSome() {
+            child = take(&n.left)         // 规则 8：取走子树，原处留下 none
+        } else {
+            child = take(&n.right)
+        }
+    }                                     // n 的最后一次使用已过，借用结束
+    t = child
+}
+
+fn firstWord(s: str) -> str of s {        // 规则 5：私有函数也写来源
+    return s.fields()[0]                  // 复制出的 str 指向 s，不指向临时的 Vec
+}
+
+fn words(text: str) -> Vec[str] of text { // 规则 4、6：返回带来源的视图集合，不复制字符串
+    var out: Vec[str] = []
+    for w in text.fields() {
+        out.push(w)                       // 局部容器可以写入借用
+    }
+    return out
+}
+
+fn countWords(text: str) -> int {
+    let ws = words(text)
+    let n = ws.len()                      // 规则 7：先算出来，再作为实参
+    return n
+}
+
+struct Doc {
+    words: Vec[String]                    // 规则 4：字段里存 String，不存 str
+}
+```
+
+图结构的写法：节点放在 `Arena[T]` 里，用 `Id[T]` 互相指向；读取返回借用。
+
+```
+struct Person {
+    name: String
+    friends: Vec[Id[Person]]
+}
+
+fn main() {
+    var people = Arena[Person]{}
+    let a = people.add(Person{name: "Ann".toString(), friends: []})
+    let b = people.add(Person{name: "Bo".toString(), friends: [a]})
+    if let p = people.getMut(a) {         // p 是 &inout Person
+        p.friends.push(b)                 // 互相引用没有问题
+    }
+    if let p = people.get(b) {            // 条目被删除后得到 none
+        println(p.name)
+    }
+    // 把 a 用在另一个 Arena 上会 panic：Id 里带着它所属 Arena 的身份
+}
+```
+
+## 5. 标准库速查
+
+`println`、`print`、`eprintln`、`format`、`min`、`max`、`abs`、`take`、`replace`、`swap`、`assert`、`panic` 不用导入。基础类型 `Vec/Map/Set/Box/Rc/Arc/Arena/Id`、`Ordering`、`Utf8Error`、`Copy/Eq/Ord/Drop/Send/Sync` 在 prelude 中。其余按模块 `use std/<模块>` 导入，多个模块写 `use std/{io, fs}`；模块名和其公开类型进入当前文件，普通函数仍用 `fs.readText` 之类的限定名。类型重名时不能猜测来源，改用模块限定名。第三列标明操作是否可能堆分配，`yavo doc` 和 `yavo allocations` 给出同样的信息。
+
+| 要做的事 | 写法 | 可能分配 |
+| --- | --- | --- |
+| 读入全部标准输入 | `let text = try io.readAll()`，返回 `String ! io.Error`；内容不是合法 UTF-8 时得到编码错误 | 是 |
+| 逐行读标准输入 | `while let line = try io.readLine() { }`，返回 `?String ! io.Error`，不含换行符 | 是 |
+| 读写文件 | `try fs.readText(path)`、`try fs.writeText(path, s)`；编码错误为 `fs.Error.Utf8(offset)`，从 0 开始计字节 | 都可能，包括平台路径转换 |
+| 命令行参数、退出 | `os.args()` 返回 `[]str of static`，第 0 个是程序名，用户参数从 `args[1]` 开始（启动时已转换，参数不是合法 UTF-8 时程序启动即报错退出）；`os.exit(1)` | 否 |
+| 按行、按空白、按分隔符切分 | `s.lines()`、`s.fields()`、`s.split(",")`，结果是 `Vec[str]`，不复制字符串 | 只分配集合本身 |
+| 字符串长度、字节、子串 | `s.len()`、`s[i]`（`byte`）按字节；`s[a..b]` 是视图，两端必须落在字符边界上。`byte` 是整数，`"${s[i]}"` 打印数字（`'a'` 打印 `97`）；要打印一个字符写 `s[i..i+1]` | 否 |
+| 修剪、大小写、查找 | `s.trim()`（视图）、`s.toLower()`、`s.toUpper()`（新 `String`）、`s.contains(t)`、`s.startsWith(t)`、`s.find(t)`（`?int`） | 只有大小写转换 |
+| 解析数字 | `s.parseInt()`（`?int`）、`s.parseFloat()`（`?f64`） | 否 |
+| 拼接字符串 | `var out = String{}`，`out.push("text")`；`push` 接受 `str` 或 `String`，只读取实参，不消费；或 `format("${a}-${b}")` | 是 |
+| 字节转字符串 | `String.fromUtf8(bytes)` 消费字节数组；成功得 `String`，失败得 `Utf8Error{offset: ...}`，输入被释放 | 契约为可能；允许复用原缓冲区 |
+| 字节字面量 | `'a'`、`'\n'`；判断：`c >= '0' && c <= '9'` | 否 |
+| `Vec` 基本操作 | `v.push(x)`、`v.pop()`（`?T`，拥有的值）、`v.len()`、`v[i]`、`v[i] = x`、`v[i] += x`、`v[a..b]`、`v.contains(x)`、`v.join(", ")`（元素必须是 `str` 或 `String`，数字先 `format` 成 `String`）；v1 没有 `remove`、`insert`、`clear`，要删除或插入中间元素就构造新的 `Vec` | `push` 扩容和 `join` 时会 |
+| 排序 | `v.sort()`（要求 `Ord`）；`v.sortBy((a, b) => a.1 > b.1)`；浮点数用 `sortBy` 加 `totalCmp`；两者都是稳定排序 | 是（临时缓冲区） |
+| `Map` 读取 | `m.get(k)`（`?&V`）、`m.getMut(k)`（`?&inout V`）、`m.getCopy(k)`（`?V`，要求可复制）、`m.has(k)`、`m.len()`；`Map[String, V]` 的 `get`、`getMut`、`getCopy`、`has`、`remove` 直接收 `str` 键，如 `m.get("a")`；`set`、`update` 要拥有的 `String` 键；默认值写 `m.getCopy(k) ?? 0`；值不可复制（如 `String`）时没有 `getCopy`，用 `if let s = m.get(k)` 再 `s.clone()` | 否 |
+| `Map` 写入和计数 | `set(k, v)` 消费键和值；`remove(k) -> ?V` 返回拥有值；`update(k, initial, f)` 消费拥有键，v1 限不携带借用的 Copy 值，f 恰好执行一次 | 插入可能；remove 本身不分配 |
+| 遍历 | `for x in v`、`for i, x in v`、`for k, v in m` 默认只读；`in &v`、`in &m` 显式可变；Map 键始终只读 | 否 |
+| 优先队列 | `use std/collections`；`var h = Heap[(int, int)].by((a, b) => a.0 < b.0)`，`h.push(x)`、`h.pop()`（`?T`）；比较闭包会被保存，不能捕获借用 | `push` 扩容时会 |
+| 双端队列、集合 | `use std/collections`；`var d = Deque[T]{}`：`pushBack`、`pushFront`、`popFront`、`popBack`（`?T`）、`len`，没有下标和遍历；`Set[T]`（prelude）：`s.add(x)`（消费元素，已有则不变）、`s.has(x)`（`Set[String]` 用 `str` 查询）、`s.remove(x)`（返回 `bool`）、`s.len()`，`for x in s` 按插入顺序只读遍历 | 插入时会 |
+| Arena | `var a = Arena[T]{}`；`a.add(x)` 返回 `Id[T]`；`a.get(id)`（`?&T`）、`a.getMut(id)`（`?&inout T`）、`a.getCopy(id)`、`a.remove(id)`（`?T`，拥有的值）、`a.has(id)`、`a.len()`。Arena **不能遍历**：需要按顺序访问时，自己另存一个 `Vec[Id[T]]`。`Id` 可复制，可比较、排序，可做 `Map`/`Set` 键 | `add` 时会 |
+| 数学 | `use std/math`；`math.sqrt(x)`、`math.pow(x, y)`、`math.floor(x)`、`math.pi` | 否 |
+
+读入并处理输入的标准写法：
+
+```
+use std/{io, os}
+
+fn main() {
+    let text = io.readAll() catch e {
+        eprintln("read error: ${e}")
+        os.exit(1)
+    }
+    var counts: Map[String, int] = [:]
+    for w in text.fields() {
+        let key = w.toLower()                 // toLower 返回新的 String
+        counts.update(key, 0, (n) => n + 1)   // 键不存在时先放入 0，再用函数更新
+    }
+    var items: Vec[(String, int)] = []
+    for k, n in counts {
+        items.push((k.clone(), n))
+    }
+    items.sortBy((a, b) => a.1 > b.1 || (a.1 == b.1 && a.0 < b.0))
+    for it in items[0..min(5, items.len())] {
+        println("${it.0} ${it.1}")
+    }
+}
+```
+
+`main` 不能用 `try`，所以把会失败的步骤放进辅助函数，`main` 只负责报告并退出：
+
+```
+use std/{io, os}
+
+fn countLines() -> int ! io.Error {
+    let text = try io.readAll()
+    return text.lines().len()
+}
+
+fn main() {
+    let n = countLines() catch e {
+        eprintln("error: ${e}")
+        os.exit(1)
+    }
+    println(n)
+}

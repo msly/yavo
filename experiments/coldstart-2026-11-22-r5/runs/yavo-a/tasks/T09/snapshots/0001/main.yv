@@ -1,0 +1,52 @@
+use std/io
+
+fn matches(pattern: str, text: str) -> str of static {
+    var previous: Vec[bool] = []
+    for i in 0..text.len() + 1 {
+        previous.push(i == 0)
+    }
+    var pos = 0
+    while pos < pattern.len() {
+        var value = pattern[pos]
+        var kind = 0
+        if value == '\\' {
+            pos += 1
+            if pos == pattern.len() {
+                return "invalid"
+            }
+            value = pattern[pos]
+        } else if value == '*' {
+            kind = 2
+        } else if value == '?' {
+            kind = 1
+        }
+        pos += 1
+        var next: Vec[bool] = []
+        for _i in 0..text.len() + 1 {
+            next.push(false)
+        }
+        if kind == 2 {
+            next[0] = previous[0]
+            for j in 1..text.len() + 1 {
+                next[j] = previous[j] || next[j - 1]
+            }
+        } else {
+            for j in 1..text.len() + 1 {
+                next[j] = previous[j - 1] && (kind == 1 || text[j - 1] == value)
+            }
+        }
+        previous = next
+    }
+    if previous[text.len()] {
+        return "yes"
+    }
+    return "no"
+}
+
+fn main() {
+    let input = io.readAll() catch _ { return }
+    let lines = input.lines()
+    for group in 0..lines.len() / 2 {
+        println("${group + 1}: ${matches(lines[group * 2], lines[group * 2 + 1])}")
+    }
+}
