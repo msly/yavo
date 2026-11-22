@@ -76,6 +76,32 @@ fn main() {
     assert(crlf[1].kind == .Newline && crlf[1].column == 3)
     assert(crlf[2].text == "b" && crlf[2].line == 2 && crlf[2].column == 1)
 
+    // Literal capacity is separate from the eventual int64 contextual range.
+    let integerMaximum = "340282366920938463463374607431768211455"
+    let integerOverflow = "340282366920938463463374607431768211456"
+    let maximum = good(integerMaximum)
+    assert(maximum[0].kind == .Number && maximum[0].text == integerMaximum)
+    let intOverflow = good("9223372036854775808")
+    assert(intOverflow[0].kind == .Number)
+    var leading = String{}
+    for _i in 0..512 { leading.push("0") }
+    let zeroes = good(leading)
+    assert(zeroes[0].kind == .Number && zeroes[0].text == leading)
+    var paddedMaximum = leading.clone()
+    paddedMaximum.push(integerMaximum)
+    let padded = good(paddedMaximum)
+    assert(padded[0].kind == .Number && padded[0].text == paddedMaximum)
+    bad(integerOverflow, "E0003", 0, 1, 1)
+    var paddedOverflow = leading.clone()
+    paddedOverflow.push(integerOverflow)
+    bad(paddedOverflow, "E0003", 0, 1, 1)
+    bad("1000000000000000000000000000000000000000", "E0003", 0, 1, 1)
+    let unused = good("struct Unused { value: int = 340282366920938463463374607431768211455 }\nfn main() {}")
+    assert(unused[7].kind == .Number && unused[7].text == integerMaximum)
+    bad("struct Unused { value: int = 340282366920938463463374607431768211456 }\nfn main() {}",
+        "E0003", 29, 1, 30)
+    bad("\n  340282366920938463463374607431768211456", "E0003", 3, 2, 3)
+
     bad("@", "E0020", 0, 1, 1)
     bad("/* comment */", "E0020", 0, 1, 1)
     bad("\"oops", "E0020", 0, 1, 1)

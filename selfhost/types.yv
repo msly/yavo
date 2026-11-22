@@ -1,0 +1,242 @@
+// Resolved Copy aggregates for the bootstrap compiler. Type identity is a
+// registry index; source names remain lexer token indices throughout checking.
+use diagnostic
+use lexer
+use model
+
+pub struct Type {
+    kind: BasicType
+    decl: int = -1
+}
+
+pub struct Field {
+    name: int
+    ty: Type
+    initial: int = -1
+}
+
+pub struct Info {
+    kind: AggregateKind
+    name: int
+    fields: Vec[Field] = []
+    variants: Vec[int] = []
+}
+
+pub struct Registry {
+    entries: Vec[Info] = []
+    order: Vec[int] = []
+}
+
+fn problem(ts: Vec[Token], token: int, code: str, message: str) -> Failure {
+    let t = ts[token]
+    return diagnostic.make(code, message, t.start, t.line, t.column)
+}
+
+pub fn primitive(kind: BasicType) -> Type {
+    return Type{kind: kind}
+}
+
+pub fn same(a: Type, b: Type) -> bool {
+    return a.kind == b.kind && (a.kind != .Named || a.decl == b.decl)
+}
+
+pub fn cType(t: Type) -> String {
+    if t.kind == .Int { return "int64_t".toString() }
+    if t.kind == .Bool { return "bool".toString() }
+    if t.kind == .Str { return "yv_str".toString() }
+    if t.kind == .Named { return format("sh_type_${t.decl}") }
+    return "void".toString()
+}
+
+pub fn describe(reg: Registry, ts: Vec[Token], t: Type) -> String {
+    if t.kind == .Int { return "int".toString() }
+    if t.kind == .Bool { return "bool".toString() }
+    if t.kind == .Str { return "str".toString() }
+    if t.kind == .Unit { return "()".toString() }
+    if t.kind == .Named { return ts[reg.entries[t.decl].name].text.clone() }
+    return "<unknown>".toString()
+}
+
+pub fn lookup(reg: Registry, ts: Vec[Token], nameToken: int) -> int {
+    var i = 0
+    while i < reg.entries.len() {
+        if ts[reg.entries[i].name].text == ts[nameToken].text { return i }
+        i += 1
+    }
+    return -1
+}
+
+pub fn field(reg: Registry, ts: Vec[Token], decl: int, nameToken: int) -> int {
+    var i = 0
+    while i < reg.entries[decl].fields.len() {
+        if ts[reg.entries[decl].fields[i].name].text == ts[nameToken].text { return i }
+        i += 1
+    }
+    return -1
+}
+
+pub fn variant(reg: Registry, ts: Vec[Token], decl: int, nameToken: int) -> int {
+    var i = 0
+    while i < reg.entries[decl].variants.len() {
+        if ts[reg.entries[decl].variants[i]].text == ts[nameToken].text { return i }
+        i += 1
+    }
+    return -1
+}
+
+// Keep this list aligned with check_declaration_names in the Rust checker.
+// Some collection names are special only in annotations, not declarations.
+fn reserved(name: str) -> bool {
+    return name == "int" || name == "i8" || name == "i16" || name == "i32" ||
+        name == "i64" || name == "u8" || name == "byte" || name == "u16" ||
+        name == "u32" || name == "u64" || name == "f32" || name == "f64" ||
+        name == "bool" || name == "str" || name == "String" || name == "Vec" ||
+        name == "Box" || name == "Set" || name == "Arena" || name == "Id" ||
+        name == "Atomic" || name == "SendError" || name == "Join" ||
+        name == "Ordering" || name == "Utf8Error"
+}
+
+fn unsupported(name: str) -> bool {
+    return reserved(name) || name == "Map" || name == "Rc" || name == "Arc" ||
+        name == "Mutex" || name == "Guard" || name == "Channel" ||
+        name == "Heap" || name == "Deque"
+}
+
+pub fn resolve(reg: Registry, ts: Vec[Token], syn: TypeRef) -> Type ! Failure {
+    if syn.kind != .Named { return primitive(syn.kind) }
+    let name = ts[syn.name].text.clone()
+    if unsupported(name) {
+        return err(problem(ts, syn.name, "U0001", format("type '${name}' is outside the selfhost subset")))
+    }
+    let decl = lookup(reg, ts, syn.name)
+    if decl < 0 {
+        return err(problem(ts, syn.name, "E0010", format("unknown type '${name}'")))
+    }
+    return Type{kind: .Named, decl: decl}
+}
+
+fn checkDefault(p: Program, reg: Registry, ts: Vec[Token], value: Field) -> () ! Failure {
+    if value.initial < 0 { return }
+    var id = value.initial
+    while p.expressions[id].kind == .Paren { id = p.expressions[id].left }
+    let e = p.expressions[id]
+    var actual = primitive(.Unknown)
+    if e.kind == .Number {
+        actual = primitive(.Int)
+    } else if e.kind == .Boolean {
+        actual = primitive(.Bool)
+    } else if e.kind == .Text {
+        actual = primitive(.Str)
+    } else if e.kind == .Unary && ts[e.token].text == "-" && p.expressions[e.left].kind == .Number {
+        // FieldDefault::of accepts a directly negated numeric token only.
+        // Integer range is checked when a constructor instantiates the default.
+        actual = primitive(.Int)
+    } else {
+        return err(problem(ts, p.expressions[value.initial].token, "E0001",
+            "a field default must be a constant literal"))
+    }
+    if !same(value.ty, actual) {
+        let name = ts[value.name].text.clone()
+        let expected = describe(reg, ts, value.ty)
+        return err(problem(ts, p.expressions[value.initial].token, "E0001",
+            format("default for field '${name}' does not have type '${expected}'")))
+    }
+}
+
+pub fn collect(p: Program, ts: Vec[Token]) -> Registry ! Failure {
+    var reg = Registry{}
+    var i = 0
+    // Register all names before resolving fields to support forward references.
+    while i < p.types.len() {
+        let d = p.types[i]
+        let name = ts[d.name].text.clone()
+        if reserved(name) {
+            return err(problem(ts, d.name, "E0011", format("'${name}' is a built-in name and cannot be redefined")))
+        }
+        if lookup(reg, ts, d.name) >= 0 {
+            return err(problem(ts, d.name, "E0011", format("type '${name}' is already declared")))
+        }
+        reg.entries.push(Info{kind: d.kind, name: d.name})
+        i += 1
+    }
+    i = 0
+    while i < p.types.len() {
+        var fields: Vec[Field] = []
+        var j = 0
+        while j < p.types[i].fields.len() {
+            let f = p.types[i].fields[j]
+            var k = 0
+            while k < fields.len() {
+                if ts[fields[k].name].text == ts[f.name].text {
+                    return err(problem(ts, f.name, "E0011", format("field '${ts[f.name].text}' is already declared")))
+                }
+                k += 1
+            }
+            let ty = try resolve(reg, ts, f.ty)
+            if ty.kind == .Str {
+                return err(problem(ts, f.name, "E0301", "a struct field cannot store a borrowed str; use an owned value"))
+            }
+            if ty.kind == .Unit {
+                return err(problem(ts, f.name, "U0001", "unit fields are outside the selfhost subset"))
+            }
+            let value = Field{name: f.name, ty: ty, initial: f.initial}
+            try checkDefault(p, reg, ts, value)
+            fields.push(value)
+            j += 1
+        }
+        reg.entries[i].fields = fields
+        var variants: Vec[int] = []
+        j = 0
+        while j < p.types[i].variants.len() {
+            let name = p.types[i].variants[j]
+            var k = 0
+            while k < variants.len() {
+                if ts[variants[k]].text == ts[name].text {
+                    return err(problem(ts, name, "E0011", format("enum case '${ts[name].text}' is already declared")))
+                }
+                k += 1
+            }
+            variants.push(name)
+            j += 1
+        }
+        reg.entries[i].variants = variants
+        i += 1
+    }
+
+    // A stable topological order gives C complete by-value field definitions.
+    // With no indirections in this subset, a blocked pass proves a value cycle.
+    var done: Vec[bool] = []
+    i = 0
+    while i < reg.entries.len() {
+        done.push(false)
+        i += 1
+    }
+    while reg.order.len() < reg.entries.len() {
+        var progressed = false
+        i = 0
+        while i < reg.entries.len() {
+            if !done[i] {
+                var ready = true
+                var j = 0
+                while j < reg.entries[i].fields.len() {
+                    let ty = reg.entries[i].fields[j].ty
+                    if ty.kind == .Named && !done[ty.decl] { ready = false }
+                    j += 1
+                }
+                if ready {
+                    done[i] = true
+                    reg.order.push(i)
+                    progressed = true
+                }
+            }
+            i += 1
+        }
+        if !progressed {
+            i = 0
+            while done[i] { i += 1 }
+            let name = reg.entries[i].name
+            return err(problem(ts, name, "E0017", format("type '${ts[name].text}' has a recursive by-value dependency")))
+        }
+    }
+    return reg
+}

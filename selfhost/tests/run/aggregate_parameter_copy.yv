@@ -1,0 +1,13 @@
+struct Count { value: int }
+fn increment(c: Count) -> Count {
+    var changed = c
+    changed.value += 1
+    return changed
+}
+fn main() {
+    var count = Count{value: 4}
+    let result = increment(count)
+    count.value = 6
+    println(result.value)
+    println(count.value)
+}

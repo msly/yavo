@@ -1,0 +1,12 @@
+enum Kind { Word, Number, End }
+fn main() {
+    var current: Kind = .Word
+    let saved = current
+    current = .Number
+    println(saved)
+    println(current)
+    print(Kind.End)
+    eprintln(saved)
+    println(saved == .Word)
+    println(current != saved)
+}

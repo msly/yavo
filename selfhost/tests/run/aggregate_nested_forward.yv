@@ -1,0 +1,11 @@
+struct Token { span: SourceSpan, kind: TokenKind }
+enum TokenKind { Word, Number, End }
+struct SourceSpan { first: int, last: int }
+fn width(span: SourceSpan) -> int { return span.last - span.first }
+fn main() {
+    var token = Token{kind: .Word, span: SourceSpan{last: 8, first: 3}}
+    token.span.last += 2
+    token.kind = .Number
+    println(width(token.span))
+    println(token.kind == TokenKind.Number)
+}

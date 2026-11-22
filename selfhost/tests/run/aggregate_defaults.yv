@@ -1,0 +1,20 @@
+struct Options {
+    limit: int = (12)
+    delta: int = (-3)
+    enabled: bool = true
+    lower: int = -9223372036854775808
+}
+struct Reserved { value: int = 9223372036854775808 }
+fn main() {
+    let defaults = Options{}
+    let changed = Options{enabled: false, limit: 4}
+    println(defaults.limit)
+    println(defaults.delta)
+    println(defaults.enabled)
+    println(defaults.lower)
+    println(changed.limit)
+    println(changed.delta)
+    println(changed.enabled)
+    let overridden = Reserved{value: 7}
+    println(overridden.value)
+}

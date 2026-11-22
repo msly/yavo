@@ -1,6 +1,6 @@
 {
   "schema": "yavo-selfhost-cases/1",
-  "description": "Independent semantic probes for the initial subset compiler; not the frozen full-language conformance suite.",
+  "description": "Independent fixed-oracle probes for the Yavo-written scalar and Copy-aggregate subset; not the frozen full-language conformance suite.",
   "cases": [
     {
       "id": "arithmetic",
@@ -263,10 +263,10 @@
       "file": "reject/missing_newline.yv"
     },
     {
-      "id": "unsupported_struct",
-      "kind": "unsupported",
-      "diagnostic": "U0001",
-      "file": "unsupported/unsupported_struct.yv"
+      "id": "struct_basic",
+      "kind": "run",
+      "file": "run/struct_basic.yv",
+      "stdout": ""
     },
     {
       "id": "unsupported_module",
@@ -413,6 +413,488 @@
       "id": "unit_explicit_value",
       "kind": "reject",
       "file": "reject/unit_explicit_value.yv"
+    },
+    {
+      "id": "aggregate_copy",
+      "kind": "run",
+      "file": "run/aggregate_copy.yv",
+      "batch": "copy-aggregates",
+      "stdout": "1\n3\n9\n2\n"
+    },
+    {
+      "id": "aggregate_nested_forward",
+      "kind": "run",
+      "file": "run/aggregate_nested_forward.yv",
+      "batch": "copy-aggregates",
+      "stdout": "7\ntrue\n"
+    },
+    {
+      "id": "aggregate_functions",
+      "kind": "run",
+      "file": "run/aggregate_functions.yv",
+      "batch": "copy-aggregates",
+      "stdout": "4\n7\n5\n5\n8\n"
+    },
+    {
+      "id": "aggregate_field_order",
+      "kind": "run",
+      "file": "run/aggregate_field_order.yv",
+      "batch": "copy-aggregates",
+      "stdout": "2112\n122\n"
+    },
+    {
+      "id": "enum_context",
+      "kind": "run",
+      "file": "run/enum_context.yv",
+      "batch": "copy-aggregates",
+      "stdout": "10\n0\n20\ntrue\n"
+    },
+    {
+      "id": "enum_copy_print",
+      "kind": "run",
+      "file": "run/enum_copy_print.yv",
+      "batch": "copy-aggregates",
+      "stdout": "Word\nNumber\nEndtrue\ntrue\n",
+      "stderr": "Word\n"
+    },
+    {
+      "id": "aggregate_defaults",
+      "kind": "run",
+      "file": "run/aggregate_defaults.yv",
+      "batch": "copy-aggregates",
+      "stdout": "12\n-3\ntrue\n-9223372036854775808\n4\n-3\nfalse\n7\n"
+    },
+    {
+      "id": "aggregate_empty",
+      "kind": "run",
+      "file": "run/aggregate_empty.yv",
+      "batch": "copy-aggregates",
+      "stdout": "5\n"
+    },
+    {
+      "id": "aggregate_parameter_copy",
+      "kind": "run",
+      "file": "run/aggregate_parameter_copy.yv",
+      "batch": "copy-aggregates",
+      "stdout": "5\n6\n"
+    },
+    {
+      "id": "aggregate_namespaces",
+      "kind": "run",
+      "file": "run/aggregate_namespaces.yv",
+      "batch": "copy-aggregates",
+      "stdout": "3\n7\ntrue\n9\n"
+    },
+    {
+      "id": "enum_nominal_context",
+      "kind": "run",
+      "file": "run/enum_nominal_context.yv",
+      "batch": "copy-aggregates",
+      "stdout": "true\ntrue\nOther\n"
+    },
+    {
+      "id": "aggregate_self_assignment",
+      "kind": "run",
+      "file": "run/aggregate_self_assignment.yv",
+      "batch": "copy-aggregates",
+      "stdout": "6\n2\n30\n2\n30\n40\n"
+    },
+    {
+      "id": "aggregate_overflow",
+      "kind": "panic",
+      "file": "panic/aggregate_overflow.yv",
+      "batch": "copy-aggregates",
+      "stdout": "",
+      "panic": "P-OVERFLOW"
+    },
+    {
+      "id": "duplicate_type",
+      "kind": "reject",
+      "file": "reject/duplicate_type.yv",
+      "batch": "copy-aggregates",
+      "diagnostic": "E0011"
+    },
+    {
+      "id": "duplicate_field",
+      "kind": "reject",
+      "file": "reject/duplicate_field.yv",
+      "batch": "copy-aggregates",
+      "diagnostic": "E0011"
+    },
+    {
+      "id": "duplicate_variant",
+      "kind": "reject",
+      "file": "reject/duplicate_variant.yv",
+      "batch": "copy-aggregates",
+      "diagnostic": "E0011"
+    },
+    {
+      "id": "unknown_field_type",
+      "kind": "reject",
+      "file": "reject/unknown_field_type.yv",
+      "batch": "copy-aggregates",
+      "diagnostic": "E0010"
+    },
+    {
+      "id": "unknown_annotation_type",
+      "kind": "reject",
+      "file": "reject/unknown_annotation_type.yv",
+      "batch": "copy-aggregates",
+      "diagnostic": "E0010"
+    },
+    {
+      "id": "recursive_struct_direct",
+      "kind": "reject",
+      "file": "reject/recursive_struct_direct.yv",
+      "batch": "copy-aggregates",
+      "diagnostic": "E0017"
+    },
+    {
+      "id": "recursive_struct_indirect",
+      "kind": "reject",
+      "file": "reject/recursive_struct_indirect.yv",
+      "batch": "copy-aggregates",
+      "diagnostic": "E0017"
+    },
+    {
+      "id": "constructor_missing_field",
+      "kind": "reject",
+      "file": "reject/constructor_missing_field.yv",
+      "batch": "copy-aggregates",
+      "diagnostic": "E0018"
+    },
+    {
+      "id": "constructor_duplicate_field",
+      "kind": "reject",
+      "file": "reject/constructor_duplicate_field.yv",
+      "batch": "copy-aggregates",
+      "diagnostic": "E0011"
+    },
+    {
+      "id": "constructor_unknown_field",
+      "kind": "reject",
+      "file": "reject/constructor_unknown_field.yv",
+      "batch": "copy-aggregates",
+      "diagnostic": "E0010"
+    },
+    {
+      "id": "constructor_wrong_type",
+      "kind": "reject",
+      "file": "reject/constructor_wrong_type.yv",
+      "batch": "copy-aggregates",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "constructor_wrong_nominal",
+      "kind": "reject",
+      "file": "reject/constructor_wrong_nominal.yv",
+      "batch": "copy-aggregates",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "unknown_struct_constructor",
+      "kind": "reject",
+      "file": "reject/unknown_struct_constructor.yv",
+      "batch": "copy-aggregates",
+      "diagnostic": "E0010"
+    },
+    {
+      "id": "unknown_field_read",
+      "kind": "reject",
+      "file": "reject/unknown_field_read.yv",
+      "batch": "copy-aggregates",
+      "diagnostic": "E0010"
+    },
+    {
+      "id": "unknown_field_write",
+      "kind": "reject",
+      "file": "reject/unknown_field_write.yv",
+      "batch": "copy-aggregates",
+      "diagnostic": "E0010"
+    },
+    {
+      "id": "readonly_field_write",
+      "kind": "reject",
+      "file": "reject/readonly_field_write.yv",
+      "batch": "copy-aggregates",
+      "diagnostic": "E0014"
+    },
+    {
+      "id": "readonly_parameter_field",
+      "kind": "reject",
+      "file": "reject/readonly_parameter_field.yv",
+      "batch": "copy-aggregates",
+      "diagnostic": "E0014"
+    },
+    {
+      "id": "wrong_field_assignment",
+      "kind": "reject",
+      "file": "reject/wrong_field_assignment.yv",
+      "batch": "copy-aggregates",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "wrong_aggregate_argument",
+      "kind": "reject",
+      "file": "reject/wrong_aggregate_argument.yv",
+      "batch": "copy-aggregates",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "wrong_aggregate_return",
+      "kind": "reject",
+      "file": "reject/wrong_aggregate_return.yv",
+      "batch": "copy-aggregates",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "enum_unknown_case",
+      "kind": "reject",
+      "file": "reject/enum_unknown_case.yv",
+      "batch": "copy-aggregates",
+      "diagnostic": "E0010"
+    },
+    {
+      "id": "enum_unknown_context_case",
+      "kind": "reject",
+      "file": "reject/enum_unknown_context_case.yv",
+      "batch": "copy-aggregates",
+      "diagnostic": "E0010"
+    },
+    {
+      "id": "enum_wrong_nominal",
+      "kind": "reject",
+      "file": "reject/enum_wrong_nominal.yv",
+      "batch": "copy-aggregates",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "enum_no_context",
+      "kind": "reject",
+      "file": "reject/enum_no_context.yv",
+      "batch": "copy-aggregates",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "enum_left_no_context",
+      "kind": "reject",
+      "file": "reject/enum_left_no_context.yv",
+      "batch": "copy-aggregates",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "enum_default_not_constant",
+      "kind": "reject",
+      "file": "reject/enum_default_not_constant.yv",
+      "batch": "copy-aggregates",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "field_default_computed",
+      "kind": "reject",
+      "file": "reject/field_default_computed.yv",
+      "batch": "copy-aggregates",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "field_default_call",
+      "kind": "reject",
+      "file": "reject/field_default_call.yv",
+      "batch": "copy-aggregates",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "field_default_wrong_type",
+      "kind": "reject",
+      "file": "reject/field_default_wrong_type.yv",
+      "batch": "copy-aggregates",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "field_default_range",
+      "kind": "reject",
+      "file": "reject/field_default_range.yv",
+      "batch": "copy-aggregates",
+      "diagnostic": "E0003"
+    },
+    {
+      "id": "field_borrowed_str",
+      "kind": "reject",
+      "file": "reject/field_borrowed_str.yv",
+      "batch": "copy-aggregates",
+      "diagnostic": "E0301"
+    },
+    {
+      "id": "field_compound_bool",
+      "kind": "reject",
+      "file": "reject/field_compound_bool.yv",
+      "batch": "copy-aggregates",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "enum_order",
+      "kind": "reject",
+      "file": "reject/enum_order.yv",
+      "batch": "copy-aggregates",
+      "diagnostic": "E0501"
+    },
+    {
+      "id": "struct_equality",
+      "kind": "reject",
+      "file": "reject/struct_equality.yv",
+      "batch": "copy-aggregates",
+      "diagnostic": "E0501"
+    },
+    {
+      "id": "struct_print",
+      "kind": "reject",
+      "file": "reject/struct_print.yv",
+      "batch": "copy-aggregates",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "field_default_neg_parenthesized",
+      "kind": "reject",
+      "file": "reject/field_default_neg_parenthesized.yv",
+      "batch": "copy-aggregates",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "type_redefines_builtin",
+      "kind": "reject",
+      "file": "reject/type_redefines_builtin.yv",
+      "batch": "copy-aggregates",
+      "diagnostic": "E0011"
+    },
+    {
+      "id": "unsupported_generic_struct",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_generic_struct.yv",
+      "batch": "copy-aggregates",
+      "diagnostic": "U0001"
+    },
+    {
+      "id": "unsupported_enum_payload",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_enum_payload.yv",
+      "batch": "copy-aggregates",
+      "diagnostic": "U0001"
+    },
+    {
+      "id": "unsupported_struct_method",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_struct_method.yv",
+      "batch": "copy-aggregates",
+      "diagnostic": "U0001"
+    },
+    {
+      "id": "unsupported_owned_field",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_owned_field.yv",
+      "batch": "copy-aggregates",
+      "diagnostic": "U0001"
+    },
+    {
+      "id": "unsupported_unit_field",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_unit_field.yv",
+      "batch": "copy-aggregates",
+      "diagnostic": "U0001"
+    },
+    {
+      "id": "unsupported_scalar_member",
+      "kind": "shared_unsupported",
+      "file": "unsupported/unsupported_scalar_member.yv",
+      "batch": "copy-aggregates",
+      "diagnostic": "U0001",
+      "reason": "A scalar local shadows the enum name; stage0 and the subset compiler both report the member operation as U0001."
+    },
+    {
+      "id": "token_metadata",
+      "kind": "run",
+      "file": "run/token_metadata.yv",
+      "example": "token_metadata.yv",
+      "batch": "copy-aggregates",
+      "stdout": "6\n1\n5\n6\n215\ntrue\n0\nPush\n42\n12\n"
+    },
+    {
+      "id": "struct_name_as_value",
+      "kind": "reject",
+      "file": "reject/struct_name_as_value.yv",
+      "diagnostic": "E0001",
+      "batch": "copy-aggregates-review"
+    },
+    {
+      "id": "enum_name_as_value",
+      "kind": "reject",
+      "file": "reject/enum_name_as_value.yv",
+      "diagnostic": "E0001",
+      "batch": "copy-aggregates-review"
+    },
+    {
+      "id": "unsupported_constructor_field_write",
+      "kind": "shared_unsupported",
+      "file": "unsupported/unsupported_constructor_field_write.yv",
+      "diagnostic": "U0001",
+      "batch": "copy-aggregates-review"
+    },
+    {
+      "id": "unsupported_call_field_write",
+      "kind": "shared_unsupported",
+      "file": "unsupported/unsupported_call_field_write.yv",
+      "diagnostic": "U0001",
+      "batch": "copy-aggregates-review"
+    },
+    {
+      "id": "unsupported_expression_assignment",
+      "kind": "shared_unsupported",
+      "file": "unsupported/unsupported_expression_assignment.yv",
+      "diagnostic": "U0001",
+      "batch": "copy-aggregates-review"
+    },
+    {
+      "id": "field_default_literal_above_u128",
+      "kind": "reject",
+      "file": "reject/field_default_literal_above_u128.yv",
+      "diagnostic": "E0003",
+      "batch": "copy-aggregates-review"
+    },
+    {
+      "id": "loop_unreachable_break_after_continue",
+      "kind": "reject",
+      "file": "reject/loop_unreachable_break_after_continue.yv",
+      "batch": "control-flow-review",
+      "diagnostic": "E0013",
+      "reason": "Stage0 conservatively counts syntactic breaks in the same loop, including unreachable breaks, when checking function completion."
+    },
+    {
+      "id": "loop_unreachable_break_after_return",
+      "kind": "reject",
+      "file": "reject/loop_unreachable_break_after_return.yv",
+      "batch": "control-flow-review",
+      "diagnostic": "E0013",
+      "reason": "Stage0 conservatively counts syntactic breaks in the same loop, including unreachable breaks, when checking function completion."
+    },
+    {
+      "id": "loop_nested_break_boundary",
+      "kind": "run",
+      "file": "run/loop_nested_break_boundary.yv",
+      "batch": "control-flow-review",
+      "stdout": "1\n",
+      "reason": "An inner loop break does not make the outer loop complete; the non-terminating function is typechecked but not called."
+    }
+  ],
+  "promotions": [
+    {
+      "previous_id": "unsupported_struct",
+      "previous_file": "unsupported/unsupported_struct.yv",
+      "previous_kind": "unsupported",
+      "baseline_commit": "d367797",
+      "id": "struct_basic",
+      "file": "run/struct_basic.yv",
+      "kind": "run",
+      "source_sha256": "a991a5b8ff8c28df533838a6b81461c35f63565c3a6e3f22f6b3273829164d23",
+      "reason": "Copy aggregate declarations are now in the accepted input subset; source bytes are unchanged."
     }
   ]
 }

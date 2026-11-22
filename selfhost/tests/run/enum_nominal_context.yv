@@ -1,0 +1,10 @@
+enum First { Same, Other }
+enum Second { Same, Other }
+struct Pair { a: First, b: Second }
+fn choose() -> Second { return .Other }
+fn main() {
+    let pair = Pair{b: .Same, a: .Other}
+    println(pair.a == First.Other)
+    println(pair.b == Second.Same)
+    println(choose())
+}

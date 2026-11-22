@@ -1,0 +1,18 @@
+struct Inner { x: int }
+struct Outer { inner: Inner, count: int }
+fn main() {
+    var value = Outer{inner: Inner{x: 4}, count: 2}
+    var duplicate = value
+    duplicate.inner.x = 30
+    value.inner = value.inner
+    (value.inner).x += value.count
+    value = value
+    println(value.inner.x)
+    println(value.count)
+    println(duplicate.inner.x)
+    println(duplicate.count)
+    value.inner = duplicate.inner
+    duplicate.inner.x = 40
+    println(value.inner.x)
+    println(duplicate.inner.x)
+}

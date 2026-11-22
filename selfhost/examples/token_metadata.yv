@@ -1,0 +1,68 @@
+// Fixed token metadata exercises a small compiler lowering pass.
+struct SourceSpan { first: int, last: int }
+enum TokenKind { Name, Integer, Plus, End }
+enum OperationKind { Push, Add, Finish }
+struct TokenMetadata { span: SourceSpan, kind: TokenKind, number: int = 0 }
+struct Operation { span: SourceSpan, kind: OperationKind, operand: int = 0 }
+struct Statistics {
+    tokens: int = 0
+    names: int = 0
+    operations: int = 0
+    total_width: int = 0
+    checksum: int = 0
+    finished: bool = false
+}
+
+fn lower(token: TokenMetadata) -> Operation {
+    if token.kind == .Integer {
+        return Operation{span: token.span, kind: .Push, operand: token.number}
+    }
+    if token.kind == .Plus {
+        return Operation{span: token.span, kind: .Add}
+    }
+    return Operation{span: token.span, kind: .Finish}
+}
+
+fn record(stats: Statistics, token: TokenMetadata) -> Statistics {
+    var next = stats
+    next.tokens += 1
+    next.total_width += token.span.last - token.span.first
+    if token.kind == .Name {
+        next.names += 1
+    } else {
+        let operation = lower(token)
+        next.operations += 1
+        if operation.kind == .Push {
+            next.checksum += operation.operand
+        } else {
+            if operation.kind == .Add {
+                next.checksum += 100
+            } else {
+                next.finished = true
+            }
+        }
+    }
+    return next
+}
+
+fn main() {
+    let seed = Statistics{}
+    var stats = seed
+    stats = record(stats, TokenMetadata{kind: .Name, span: SourceSpan{first: 0, last: 1}})
+    stats = record(stats, TokenMetadata{kind: .Plus, span: SourceSpan{first: 2, last: 3}})
+    stats = record(stats, TokenMetadata{kind: .Integer, span: SourceSpan{first: 4, last: 6}, number: 12})
+    stats = record(stats, TokenMetadata{kind: .Plus, span: SourceSpan{first: 7, last: 8}})
+    stats = record(stats, TokenMetadata{kind: .Integer, span: SourceSpan{first: 9, last: 10}, number: 3})
+    stats = record(stats, TokenMetadata{kind: .End, span: SourceSpan{first: 10, last: 10}})
+    println(stats.tokens)
+    println(stats.names)
+    println(stats.operations)
+    println(stats.total_width)
+    println(stats.checksum)
+    println(stats.finished)
+    println(seed.tokens)
+    let preview = lower(TokenMetadata{kind: .Integer, number: 42, span: SourceSpan{first: 12, last: 14}})
+    println(preview.kind)
+    println(preview.operand)
+    println(preview.span.first)
+}

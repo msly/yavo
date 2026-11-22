@@ -1,4 +1,4 @@
-# Yavo-written compiler: SH-1
+# Yavo-written compiler: Copy aggregate subset
 
 This directory starts the [self-hosting roadmap](../docs/self-hosting.md).
 It contains a real subset compiler written in Yavo: source is tokenized,
@@ -7,8 +7,9 @@ compiler and as a separate test reference. The Yavo frontend never delegates
 an input program back to the Rust frontend.
 
 **Current status: subset compiler; self-compilation is not implemented.**
-Its own implementation uses modules, owned strings, vectors, structs, enums,
-results and mutable borrows that its accepted input subset does not yet cover.
+The input subset now includes Copy structs and payload-free enums. Its own
+implementation still needs modules, owned strings and vectors, results, mutable
+borrows and other forms that the input subset does not yet cover.
 The validation receipt explicitly records `self_hosted: false` and tests that
 checking its own entry point reports `U0001`.
 
@@ -32,7 +33,10 @@ panic cases are compiled through both frontends and executed in Debug and
 Release; each result must match its fixed expected output/exit/panic category.
 Each successful input is emitted twice to check deterministic C. Invalid inputs
 must fail before creating or changing output, and supported-language constructs
-outside SH-1 must report `U0001`.
+outside the subset must report `U0001`. Boundaries that stage0 also rejects as
+unimplemented are counted separately as `shared_unsupported`; these must report
+only `U0001` in both frontends. Each published example is byte-identical to its
+executable fixture and included in the receipt hashes.
 
 The runner clears `PATH` when executing the Yavo frontend, retains complete
 commands/stdout/stderr, records source/runtime/compiler/toolchain hashes, and
@@ -42,16 +46,33 @@ Windows and macOS; a configured job is not itself a passing result.
 
 ## Validation snapshot (2026-11-22)
 
-The [source-bound local summary](../compiler/validation/selfhost-sh1-2026-11-22.json)
-records **72/72 cases and 10/10 auxiliary checks**, with no skipped checks:
-14 normal programs, 9 panic programs, 39 rejected programs and 10 unsupported
-programs. The 23 executable cases pass both build modes and repeat-C checks.
-Stage0 complete Debug/Release suites each pass 142 tests, fail 0 and ignore 1.
-The separate lexer runner has 11 positive groups and 24 rejected/unsupported inputs.
-[CI run 45019581088](https://github.com/msly/yavo/actions/runs/45019581088)
-passed all six jobs at `353523a`, including this frontend gate on Linux x86-64,
-Windows x86-64 and macOS arm64. These are validation counts for SH-1, not a
-self-hosting completion percentage.
+The [Copy aggregate summary](../compiler/validation/selfhost-aggregates-2026-11-22.json)
+records **138/138 cases and 10/10 auxiliary checks**, with no skipped checks:
+29 normal programs, 10 panic programs, 81 rejected programs, 14 stage0-accepted
+but subset-unsupported programs, and 4 boundaries unsupported by both frontends.
+All 39 executable inputs pass Debug and Release fixed oracles and Rust
+differential checks; their repeated C output is byte-identical.
+
+All 72 original fixture sources are retained byte-for-byte. The former
+`unsupported_struct` declaration is now a supported run case; 66 cases were
+added. Review regressions cover nominal values, temporary assignment targets,
+literal capacity and conservative loop-return checking. The lexer separately
+checks the `u128` token limit, including leading zeroes; used `int` expressions
+still require the signed 64-bit range. A same-loop syntactic `break` counts
+even after unreachable `continue` or `return`, matching stage0's conservative
+return check; nested-loop breaks stay within their loop.
+
+This increment changes only the Yavo frontend, its tests/harness and documents.
+The Rust frontend, C runtime, locked toolchain and frozen specification are
+unchanged. The previous complete local stage0 Debug/Release suites each passed
+142 tests, failed 0 and ignored 1; those local suites were not rerun for this
+increment. Current native CI results are recorded with the implementation
+commit in the aggregate summary.
+
+The [preceding SH-1 summary](../compiler/validation/selfhost-sh1-2026-11-22.json)
+retains its 72-case baseline and
+[CI run 45019581088](https://github.com/msly/yavo/actions/runs/45019581088).
+The counts measure tested behavior, not a self-hosting completion percentage.
 
 ## CLI
 
@@ -79,10 +100,12 @@ JSON diagnostics, suggestions and recovery remain future work.
 
 | Area | Implemented |
 | --- | --- |
-| Files | One source file; `fn` and `pub fn`; required `fn main()` |
-| Types | `int` (signed 64-bit), `bool`, borrowed `str`, unit return |
+| Files | One source file; function and aggregate declarations, including `pub`; required `fn main()` |
+| Types | `int` (signed 64-bit), `bool`, borrowed `str`, unit return; nominal Copy structs and payload-free enums |
+| Aggregates | Forward and nested struct fields, construction, reads and mutable field assignment, value copies, scalar literal field defaults, empty structs/enums; by-value cycles rejected |
+| Enums | Qualified and context-inferred cases, nominal type checks, equality/inequality, case-name output |
 | Literals | Decimal integers including negative `INT64_MIN`, booleans, unit, non-interpolated UTF-8 strings with supported escapes and NUL |
-| Functions | Typed parameters, int/bool/unit returns, forward calls, recursion, local/global name resolution |
+| Functions | Typed parameters, scalar/Copy aggregate/unit returns, forward calls, recursion, local/global name resolution; default parameters are read-only |
 | Locals | `let`/`var`, inferred or explicit types, assignment and arithmetic compound assignment; active locals cannot be shadowed |
 | Control flow | `if`/`else if`/`else`, `while`, `loop`, `break`, `continue`, explicit return and return-path checks |
 | Expressions | Parentheses, unary minus/not, checked integer arithmetic, wrapping arithmetic, bit operations/shifts, equality/order, short-circuit boolean operators |
@@ -94,7 +117,15 @@ as an expression statement, and unit-returning functions allow `return` or
 `return ()`, matching the existing language. The parser bounds syntactic nesting
 at 128 and expression lowering at 256; exceeding either returns `U0001`.
 
-Unsupported input includes source imports, structs/enums, owned `String`,
+Aggregate fields currently hold `int`, `bool`, payload-free enums, or other Copy
+structs. Borrowed `str` fields are rejected with `E0301`; owned fields and unit
+fields are outside this subset. Struct equality/printing and enum ordering are
+rejected consistently with stage0. Explicit constructor fields are evaluated in
+source order, independently of declaration order. Enum names are resolved from
+annotations, parameters, return types, fields, assignments and the left operand
+of comparisons; a bare case on the left of a comparison has no inferred context.
+
+Unsupported input includes source imports, enum payloads, owned `String`,
 collections, general references/ownership, results/options, methods, generics,
 interpolation, byte/float/nondecimal literals, integer separators, `for`,
 closures and concurrency. This list describes the **new frontend's** input,
@@ -106,18 +137,24 @@ not limitations of the existing Rust compiler.
 | --- | --- |
 | `lexer.yv` | UTF-8-aware tokens, escapes, source spans, newline termination |
 | `model.yv` | Owned AST nodes; graph edges and spellings use indices |
-| `parser.yv` | Function/statement/expression grammar, precedence, unsupported boundaries |
-| `codegen.yv` | Types, symbols, return paths and ordered C lowering |
+| `parser.yv` | Aggregate/function/statement/expression grammar, precedence, unsupported boundaries |
+| `types.yv` | Nominal type registry, field/default checks, duplicate/cycle detection, stable layout order |
+| `codegen.yv` | Symbols, expected types, mutable places, return paths and ordered C lowering |
 | `diagnostic.yv` | Shared diagnostic data |
 | `main.yv` | CLI, input and exclusive output creation |
 | `lexer_test.yv` | Lexer boundary assertions |
 | `tests/` and `bootstrap.py` | Independent behavior/rejection oracles and reproducible execution |
 
-The next milestone is to compile the data structures this compiler actually
-uses. That requires struct/enum declarations and field access first, then
-owned String/Vec values, borrow/inout/sink rules and destruction, results with
-try/catch, module loading, and the remaining literal/builtin forms used by the
-implementation. Each addition must have positive and negative external tests.
+The [token metadata example](examples/token_metadata.yv) exercises `SourceSpan`,
+`TokenKind`, `TokenMetadata`, `Operation` and `Statistics` through construction, function
+calls, branches and nested field updates. It represents source positions and
+compiler state; owned lexemes and dynamic AST storage are still pending.
+
+The next dependency is owned `String` and `Vec` values in locals and fields,
+together with move/borrow/inout/sink checking and deterministic destruction.
+Then add results with try/catch, module loading and the remaining literal/builtin
+forms used by the implementation. Each addition requires positive and negative
+external tests before attempting the full compiler sources.
 
 After the input subset covers all compiler sources, build stage2 using stage1,
 then stage3 using stage2 in fresh directories; compare their generated C and

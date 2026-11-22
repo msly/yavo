@@ -4,8 +4,8 @@ Yavo is a systems-language prototype for coding agents: ownership and determinis
 
 **Current development goal (2026-11-22): self-hosting.** The new
 [Yavo-written subset compiler](selfhost/README.md) implements parsing, checking
-and C generation for small independent programs. It does not yet compile its
-own sources. The [roadmap](docs/self-hosting.md) separates the first subset,
+and C generation for independent programs, now including Copy structs, nested
+fields and payload-free enums. It does not yet compile its own sources. The [roadmap](docs/self-hosting.md) separates the first subset,
 stage0 → stage1 → stage2 → stage3 bootstrap, replacement of the Rust frontend,
 and practical acceptance using non-compiler applications.
 
@@ -42,6 +42,14 @@ The ignored Cargo test is the old exploratory P0 conformance report; the current
 Source modules support top-level exports, per-file imports, cyclic imports and original-file diagnostics. Package dependencies and a program lockfile remain open. Multi-file `fix` returns `U0001` without writing; symlink module aliases are unsupported.
 
 ### GitHub CI
+
+The Copy aggregate increment passes **138/138 local selfhost cases and 10/10
+auxiliary checks**: 39 executable inputs in both modes, 81 rejection cases,
+14 stage0-supported features pending in selfhost and 4 shared unsupported
+boundaries. The original 72 input sources are preserved. Rust/runtime sources
+are unchanged; complete local Rust suites retain the preceding baseline below.
+[Current aggregate receipt](compiler/validation/selfhost-aggregates-2026-11-22.json)
+records source identities and the new implementation's native CI status.
 
 The self-hosting implementation [`353523a`](https://github.com/msly/yavo/commit/353523a62fc57d5249544c9f5df7083051d4cd78) passed [CI run 45019581088](https://github.com/msly/yavo/actions/runs/45019581088): **six of six jobs succeeded**. The local SH-1 gate passed **72/72 cases and 10/10 auxiliary checks**; complete local Debug/Release suites each passed **142/0/1**. [Source-bound local summary](compiler/validation/selfhost-sh1-2026-11-22.json). The selfhost gate passed on **Linux x86-64, Windows x86-64 and macOS arm64**. This batch verifies job/step results and artifact metadata; it does not claim independent archive download/hash verification.
 

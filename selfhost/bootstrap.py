@@ -133,7 +133,7 @@ def validate_cases():
         if not re.fullmatch(r"[a-z][a-z0-9_]*", case["id"]) or case["id"] in ids:
             raise ValueError("invalid or duplicate fixture ID")
         ids.add(case["id"])
-        if case["kind"] not in ("run", "panic", "reject", "unsupported"):
+        if case["kind"] not in ("run", "panic", "reject", "unsupported", "shared_unsupported"):
             raise ValueError("invalid fixture kind")
         file = Path(case["file"])
         source = (SELFHOST / "tests" / file).resolve()
@@ -141,6 +141,14 @@ def validate_cases():
             raise ValueError("fixture path escapes selfhost/tests")
         if not source.is_file():
             raise ValueError("missing fixture source: " + str(source))
+        if case["kind"] == "shared_unsupported" and case.get("diagnostic") != "U0001":
+            raise ValueError("shared unsupported fixtures must require U0001 on both compilers")
+        if "example" in case:
+            example = (SELFHOST / "examples" / case["example"]).resolve()
+            if not example.is_relative_to((SELFHOST / "examples").resolve()):
+                raise ValueError("example path escapes selfhost/examples")
+            if example.read_bytes() != source.read_bytes():
+                raise ValueError("example differs from its executable fixture: " + str(example))
     return manifest["cases"]
 
 
@@ -197,6 +205,8 @@ def main():
             "yavo_sources": {str(path.relative_to(ROOT)): digest(path)
                              for path in sorted(SELFHOST.glob("*.yv"))},
             "fixtures": {case["file"]: digest(SELFHOST / "tests" / case["file"]) for case in cases},
+            "examples": {case["example"]: digest(SELFHOST / "examples" / case["example"])
+                         for case in cases if "example" in case},
         }
         version_result = command("zig-version", [zig, "version"])
         check("locked_zig", succeeded(version_result) and
@@ -230,7 +240,7 @@ def main():
             oracle = command(name + "-reference-check", [stage0, "check", source, "--json"])
             checked = command(name + "-subset-check", [binary, "check", source], frontend=True, timeout=15)
             item.update(reference_check=oracle["record"], subset_check=checked["record"])
-            if kind in ("reject", "unsupported"):
+            if kind in ("reject", "unsupported", "shared_unsupported"):
                 diagnostic_codes = codes(checked)
                 expected_code = case.get("diagnostic")
                 wanted_code = expected_code in diagnostic_codes if expected_code else (
@@ -245,7 +255,13 @@ def main():
                                     frontend=True, timeout=15)
                 rejected = lambda result: result["record"]["exit_code"] == 1 and not result["record"]["timed_out"]
                 oracle_matches = succeeded(oracle) if kind == "unsupported" else rejected(oracle)
+                if kind == "shared_unsupported":
+                    # Keep stage0's own unsupported boundaries distinct from legal inputs
+                    # that only the subset compiler has yet to implement.
+                    oracle_matches = rejected(oracle) and codes(oracle) == ["U0001"]
+                    wanted_code = diagnostic_codes == ["U0001"]
                 item.update(observed_diagnostics=diagnostic_codes,
+                            reference_diagnostics=codes(oracle),
                             emit_rejected_new=emitted["record"], emit_rejected_existing=preserved["record"],
                             no_output_created=no_new_file, existing_output_preserved=target.read_bytes() == sentinel)
                 item["passed"] = (oracle_matches and rejected(checked) and wanted_code
@@ -364,6 +380,7 @@ def main():
             str(SELFHOST / "tests/cases.json"): report["inputs"]["manifest_sha256"],
             **{str(ROOT / name): value for name, value in report["inputs"]["yavo_sources"].items()},
             **{str(SELFHOST / "tests" / name): value for name, value in report["inputs"]["fixtures"].items()},
+            **{str(SELFHOST / "examples" / name): value for name, value in report["inputs"]["examples"].items()},
         }
         changed = [name for name, expected in bound_paths.items()
                    if not Path(name).is_file() or digest(Path(name)) != expected]

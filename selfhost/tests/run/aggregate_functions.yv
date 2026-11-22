@@ -1,0 +1,16 @@
+fn shift(p: Point, n: int) -> Point {
+    var next = p
+    next.x += n
+    return next
+}
+fn make() -> Point { return Point{x: 4, y: 5} }
+struct Point { x: int, y: int }
+fn main() {
+    let source = make()
+    let shifted = shift(source, 3)
+    println(source.x)
+    println(shifted.x)
+    println(shifted.y)
+    println(make().y)
+    println((Point{x: 8, y: 9}).x)
+}

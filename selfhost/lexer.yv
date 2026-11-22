@@ -42,6 +42,18 @@ fn exponentAhead(source: str, pos: int) -> bool {
         pos + 2 < source.len() && digit(source[pos + 2])
 }
 
+fn integerLiteralFits(text: str) -> bool {
+    // Rust tokens store a u128 magnitude even when contextual int checking is
+    // deferred, as for unused field defaults. Leading zeroes do not consume it.
+    let maximum = "340282366920938463463374607431768211455"
+    var first = 0
+    while first + 1 < text.len() && text[first] == '0' { first += 1 }
+    let length = text.len() - first
+    if length < maximum.len() { return true }
+    if length > maximum.len() { return false }
+    return text[first..text.len()] <= maximum
+}
+
 fn scalarWidth(c: byte) -> int {
     if c < 128 { return 1 }
     if c < 224 { return 2 }
@@ -258,6 +270,9 @@ pub fn lex(source: str) -> Vec[Token] ! Failure {
             }
             kind = .Number
             text = source[start..cursor.pos].toString()
+            if !integerLiteralFits(text) {
+                return err(diagnostic.make("E0003", "integer literal is too large for any integer type", start, line, column))
+            }
         } else if c == '"' {
             kind = .Text
             text = try stringToken(&cursor, source)

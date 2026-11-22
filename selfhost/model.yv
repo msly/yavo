@@ -5,6 +5,30 @@ pub enum BasicType {
     Int
     Bool
     Str
+    Named
+}
+
+pub struct TypeRef {
+    kind: BasicType
+    name: int = -1
+}
+
+pub enum AggregateKind {
+    Struct
+    Enum
+}
+
+pub struct FieldDecl {
+    name: int
+    ty: TypeRef
+    initial: int = -1
+}
+
+pub struct TypeDecl {
+    kind: AggregateKind
+    name: int
+    fields: Vec[FieldDecl] = []
+    variants: Vec[int] = []
 }
 
 pub enum ExprKind {
@@ -17,6 +41,9 @@ pub enum ExprKind {
     Unary
     Binary
     Call
+    Construct
+    Field
+    Variant
 }
 
 pub struct Expression {
@@ -25,6 +52,7 @@ pub struct Expression {
     left: int = -1
     right: int = -1
     args: Vec[int] = []
+    names: Vec[int] = []
 }
 
 pub enum StmtKind {
@@ -43,7 +71,8 @@ pub struct Statement {
     kind: StmtKind
     token: int
     name: int = -1
-    annotation: BasicType
+    target: int = -1
+    annotation: TypeRef
     mutable: bool = false
     expr: int = -1
     body: Vec[int] = []
@@ -52,12 +81,12 @@ pub struct Statement {
 
 pub struct Parameter {
     name: int
-    ty: BasicType
+    ty: TypeRef
 }
 
 pub struct Function {
     name: int
-    result: BasicType
+    result: TypeRef
     params: Vec[Parameter]
     body: Vec[int]
 }
@@ -66,4 +95,5 @@ pub struct Program {
     expressions: Vec[Expression] = []
     statements: Vec[Statement] = []
     functions: Vec[Function] = []
+    types: Vec[TypeDecl] = []
 }

@@ -1,0 +1,17 @@
+enum Kind { Word, Number, End }
+fn classify(n: int) -> Kind {
+    if n == 0 { return .Word } else { return .Number }
+}
+fn score(k: Kind) -> int {
+    if k == .Word { return 10 }
+    if k == .Number { return 20 }
+    return 0
+}
+fn main() {
+    var current: Kind = .Word
+    println(score(current))
+    current = .End
+    println(score(current))
+    println(score(.Number))
+    println(classify(1) == Kind.Number)
+}
