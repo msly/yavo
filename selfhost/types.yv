@@ -1,4 +1,4 @@
-// Resolved Copy aggregates for the bootstrap compiler. Type identity is a
+// Resolved aggregates for the bootstrap compiler. Type identity is a
 // registry index; source names remain lexer token indices throughout checking.
 use diagnostic
 use lexer
@@ -20,6 +20,7 @@ pub struct Info {
     name: int
     fields: Vec[Field] = []
     variants: Vec[int] = []
+    owned: bool = false
 }
 
 pub struct Registry {
@@ -40,10 +41,16 @@ pub fn same(a: Type, b: Type) -> bool {
     return a.kind == b.kind && (a.kind != .Named || a.decl == b.decl)
 }
 
+pub fn owned(reg: Registry, ty: Type) -> bool {
+    if ty.kind == .String { return true }
+    return ty.kind == .Named && reg.entries[ty.decl].owned
+}
+
 pub fn cType(t: Type) -> String {
     if t.kind == .Int { return "int64_t".toString() }
     if t.kind == .Bool { return "bool".toString() }
     if t.kind == .Str { return "yv_str".toString() }
+    if t.kind == .String { return "yv_string".toString() }
     if t.kind == .Named { return format("sh_type_${t.decl}") }
     return "void".toString()
 }
@@ -52,6 +59,7 @@ pub fn describe(reg: Registry, ts: Vec[Token], t: Type) -> String {
     if t.kind == .Int { return "int".toString() }
     if t.kind == .Bool { return "bool".toString() }
     if t.kind == .Str { return "str".toString() }
+    if t.kind == .String { return "String".toString() }
     if t.kind == .Unit { return "()".toString() }
     if t.kind == .Named { return ts[reg.entries[t.decl].name].text.clone() }
     return "<unknown>".toString()
@@ -105,6 +113,7 @@ fn unsupported(name: str) -> bool {
 pub fn resolve(reg: Registry, ts: Vec[Token], syn: TypeRef) -> Type ! Failure {
     if syn.kind != .Named { return primitive(syn.kind) }
     let name = ts[syn.name].text.clone()
+    if name == "String" { return primitive(.String) }
     if unsupported(name) {
         return err(problem(ts, syn.name, "U0001", format("type '${name}' is outside the selfhost subset")))
     }
@@ -126,7 +135,9 @@ fn checkDefault(p: Program, reg: Registry, ts: Vec[Token], value: Field) -> () !
     } else if e.kind == .Boolean {
         actual = primitive(.Bool)
     } else if e.kind == .Text {
-        actual = primitive(.Str)
+        if value.ty.kind == .String { actual = primitive(.String) } else {
+            actual = primitive(.Str)
+        }
     } else if e.kind == .Unary && ts[e.token].text == "-" && p.expressions[e.left].kind == .Number {
         // FieldDefault::of accepts a directly negated numeric token only.
         // Integer range is checked when a constructor instantiates the default.
@@ -237,6 +248,18 @@ pub fn collect(p: Program, ts: Vec[Token]) -> Registry ! Failure {
             let name = reg.entries[i].name
             return err(problem(ts, name, "E0017", format("type '${ts[name].text}' has a recursive by-value dependency")))
         }
+    }
+    // Layout order is also dependency order for deterministic destruction.
+    // By-value cycles were rejected above, so each nested owned flag is final.
+    i = 0
+    while i < reg.order.len() {
+        let index = reg.order[i]
+        var hasOwned = false
+        for field in reg.entries[index].fields {
+            if owned(reg, field.ty) { hasOwned = true }
+        }
+        reg.entries[index].owned = hasOwned
+        i += 1
     }
     return reg
 }

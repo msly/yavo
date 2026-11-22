@@ -1,0 +1,24 @@
+fn condition(n: int) -> String {
+    if n < 4 { return "go".toString() }
+    return "stop".toString()
+}
+fn main() {
+    var i = 0
+    while condition(i).len() == 2 {
+        let outer = "outer".toString()
+        i += 1
+        loop {
+            let inner = "inner".toString()
+            if i == 2 { break }
+            println(inner)
+            break
+        }
+        if i == 2 { continue }
+        println(outer)
+        if i == 3 { break }
+    }
+    println(i)
+    var j = 0
+    while condition(j).len() == 2 { j += 1 }
+    println(j)
+}

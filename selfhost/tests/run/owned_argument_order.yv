@@ -1,0 +1,15 @@
+fn mark(tag: str) -> String {
+    println(tag)
+    return tag.toString()
+}
+fn show(first: String, second: String) {
+    println(first)
+    println(second)
+}
+fn duplicate(value: String) -> String { return value.clone() }
+fn main() {
+    show(mark("first"), mark("second"))
+    var text = "x".toString()
+    text.push(duplicate(text))
+    println(text)
+}

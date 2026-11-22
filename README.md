@@ -4,8 +4,9 @@ Yavo is a systems-language prototype for coding agents: ownership and determinis
 
 **Current development goal (2026-11-22): self-hosting.** The new
 [Yavo-written subset compiler](selfhost/README.md) implements parsing, checking
-and C generation for independent programs, now including Copy structs, nested
-fields and payload-free enums. It does not yet compile its own sources. The [roadmap](docs/self-hosting.md) separates the first subset,
+and C generation for independent programs, including owned String values,
+nested structs and payload-free enums. It compiles the original diagnostic
+component with an appended test entry point; full self-compilation is pending. The [roadmap](docs/self-hosting.md) separates the first subset,
 stage0 → stage1 → stage2 → stage3 bootstrap, replacement of the Rust frontend,
 and practical acceptance using non-compiler applications.
 
@@ -42,6 +43,14 @@ The ignored Cargo test is the old exploratory P0 conformance report; the current
 Source modules support top-level exports, per-file imports, cyclic imports and original-file diagnostics. Package dependencies and a program lockfile remain open. Multi-file `fix` returns `U0001` without writing; symlink module aliases are unsupported.
 
 ### GitHub CI
+
+The String ownership increment passes **181/181 local selfhost cases and
+10/10 auxiliary checks**. All 55 executable inputs pass Debug/Release fixed
+oracles and Rust differential checks with allocation checking; the original
+438-byte diagnostic component is preserved and executed. A Linux CI step now
+runs GCC ASan/UBSan on the Yavo frontend's actual generated C.
+[Current String receipt](compiler/validation/selfhost-string-2026-11-22.json)
+records the source commit, original-component proof and CI execution results.
 
 The Copy aggregate increment passes **138/138 local selfhost cases and 10/10
 auxiliary checks**: 39 executable inputs in both modes, 81 rejection cases,

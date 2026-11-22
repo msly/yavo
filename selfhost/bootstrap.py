@@ -123,6 +123,16 @@ def locked_zig(explicit):
     return home / "toolchains" / ("zig-" + arch + "-" + host + "-" + version) / ("zig" + EXE), version
 
 
+def prefix_path(case):
+    relative = Path(case["source_prefix"])
+    source = (SELFHOST / relative).resolve()
+    if relative.is_absolute() or not source.is_relative_to(SELFHOST.resolve()) or source.suffix != ".yv":
+        raise ValueError("source prefix must be a Yavo source within selfhost")
+    if not source.is_file():
+        raise ValueError("missing source prefix: " + str(source))
+    return source
+
+
 def validate_cases():
     path = SELFHOST / "tests/cases.json"
     manifest = json.loads(path.read_text(encoding="utf-8"))
@@ -143,6 +153,10 @@ def validate_cases():
             raise ValueError("missing fixture source: " + str(source))
         if case["kind"] == "shared_unsupported" and case.get("diagnostic") != "U0001":
             raise ValueError("shared unsupported fixtures must require U0001 on both compilers")
+        if "source_prefix" in case:
+            if case["kind"] != "run" or "example" in case:
+                raise ValueError("source-prefix cases must be standalone run fixtures")
+            prefix_path(case)
         if "example" in case:
             example = (SELFHOST / "examples" / case["example"]).resolve()
             if not example.is_relative_to((SELFHOST / "examples").resolve()):
@@ -207,6 +221,9 @@ def main():
             "fixtures": {case["file"]: digest(SELFHOST / "tests" / case["file"]) for case in cases},
             "examples": {case["example"]: digest(SELFHOST / "examples" / case["example"])
                          for case in cases if "example" in case},
+            "source_prefixes": {case["source_prefix"]: digest(prefix_path(case))
+                                for case in cases if "source_prefix" in case},
+            "assembled_sources": {},
         }
         version_result = command("zig-version", [zig, "version"])
         check("locked_zig", succeeded(version_result) and
@@ -232,11 +249,27 @@ def main():
 
         for case in cases:
             name, kind = case["id"], case["kind"]
-            source = SELFHOST / "tests" / case["file"]
+            fixture = SELFHOST / "tests" / case["file"]
+            source = fixture
             directory = work / "programs" / name
             directory.mkdir(parents=True)
+            prefix_record = None
+            if "source_prefix" in case:
+                prefix = prefix_path(case)
+                original = prefix.read_bytes()
+                source = directory / "input.yv"
+                source.write_bytes(original + fixture.read_bytes())
+                preserved = source.read_bytes()[:len(original)] == original
+                if not preserved:
+                    raise RuntimeError("source prefix changed during assembly")
+                prefix_record = {"file": case["source_prefix"], "bytes": len(original),
+                                 "sha256": digest(prefix), "preserved": preserved,
+                                 "fixture_sha256": digest(fixture)}
+                report["inputs"]["assembled_sources"][str(source)] = digest(source)
             item = {"id": name, "kind": kind, "passed": False,
                     "file": case["file"], "source_sha256": digest(source)}
+            if prefix_record is not None:
+                item["source_prefix"] = prefix_record
             oracle = command(name + "-reference-check", [stage0, "check", source, "--json"])
             checked = command(name + "-subset-check", [binary, "check", source], frontend=True, timeout=15)
             item.update(reference_check=oracle["record"], subset_check=checked["record"])
@@ -381,6 +414,8 @@ def main():
             **{str(ROOT / name): value for name, value in report["inputs"]["yavo_sources"].items()},
             **{str(SELFHOST / "tests" / name): value for name, value in report["inputs"]["fixtures"].items()},
             **{str(SELFHOST / "examples" / name): value for name, value in report["inputs"]["examples"].items()},
+            **{str(SELFHOST / name): value for name, value in report["inputs"]["source_prefixes"].items()},
+            **report["inputs"]["assembled_sources"],
         }
         changed = [name for name, expected in bound_paths.items()
                    if not Path(name).is_file() or digest(Path(name)) != expected]

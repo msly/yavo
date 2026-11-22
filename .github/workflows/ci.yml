@@ -77,6 +77,9 @@ jobs:
           YAVO_HOME: ${{ runner.temp }}/yavo-home
           YAVO_CACHE_DIR: ${{ runner.temp }}/yavo-cache
         run: ${{ matrix.python }} selfhost/bootstrap.py
+      - name: Check Yavo-frontend C with independent ASan and UBSan
+        if: runner.os == 'Linux'
+        run: python3 tools/ci/selfhost_sanitize.py
       - name: Preserve logs and per-platform receipts
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

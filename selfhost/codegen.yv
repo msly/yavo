@@ -1,25 +1,47 @@
 // Typed C lowering. Every value is materialized in source order.
-// Copy aggregates use value layout; owned fields remain explicitly unsupported.
+// Owned values have one owner; borrowed reads and statement temporaries are explicit.
 use diagnostic
 use lexer
 use model
 use types
 
+
 struct Local {
     token: int
     ty: Type
     mutable: bool
+    borrowed: bool = false
+    moved: bool = false
 }
 
 struct Value {
     ty: Type
     name: String
+    local: int = -1
+    root: int = -1
+    field: bool = false
+    temporary: bool = false
 }
 
 struct Place {
     ty: Type
     name: String
     mutable: bool
+    root: int
+    whole: bool = true
+}
+
+struct Temporary {
+    ty: Type
+    name: String
+}
+
+struct LoopState {
+    localCount: int
+    tempCount: int
+    breaks: Vec[bool] = []
+    continues: Vec[bool] = []
+    hasBreak: bool = false
 }
 
 struct Flow {
@@ -31,10 +53,16 @@ struct Generator {
     out: String = ""
     counter: int = 0
     locals: Vec[Local] = []
+    temps: Vec[Temporary] = []
+    locks: Vec[int] = []
+    binaryLocks: Vec[int] = []
+    reservations: Vec[int] = []
+    loopStates: Vec[LoopState] = []
     result: Type
     loops: int = 0
     nesting: int = 0
     outputRoot: int = -1
+    loopCondition: bool = false
 }
 
 fn problem(ts: Vec[Token], token: int, code: str, message: str) -> Failure {
@@ -69,16 +97,142 @@ fn line(g: inout Generator, text: str) {
     g.out.push("\n")
 }
 
-fn typedValue(g: inout Generator, ty: Type, expression: str) -> Value {
+fn typedValue(g: inout Generator, reg: Registry, ty: Type, expression: str) -> Value {
     let n = g.counter
     g.counter += 1
     let name = format("t_${n}")
     line(&g, format("${types.cType(ty)} ${name} = ${expression};"))
-    return Value{ty: ty, name: name}
+    let owner = types.owned(reg, ty)
+    if owner { g.temps.push(Temporary{ty: ty, name: name.clone()}) }
+    return Value{ty: ty, name: name, temporary: owner}
 }
 
 fn value(g: inout Generator, ty: BasicType, expression: str) -> Value {
-    return typedValue(&g, types.primitive(ty), expression)
+    let n = g.counter
+    g.counter += 1
+    let name = format("t_${n}")
+    let resolved = types.primitive(ty)
+    line(&g, format("${types.cType(resolved)} ${name} = ${expression};"))
+    return Value{ty: resolved, name: name}
+}
+
+fn dropName(ty: Type) -> String {
+    if ty.kind == .String { return "yv_string_drop".toString() }
+    return format("sh_drop_${ty.decl}")
+}
+
+fn dropValue(g: inout Generator, reg: Registry, ty: Type, name: str) {
+    if types.owned(reg, ty) { line(&g, format("${dropName(ty)}(&(${name}));")) }
+}
+
+fn zeroValue(g: inout Generator, reg: Registry, v: Value) {
+    if types.owned(reg, v.ty) {
+        line(&g, format("${v.name} = (${types.cType(v.ty)}){0};"))
+    }
+}
+
+fn cleanTemps(g: inout Generator, reg: Registry, start: int) {
+    var i = g.temps.len()
+    while i > start {
+        i -= 1
+        let ty = g.temps[i].ty
+        let name = g.temps[i].name.clone()
+        dropValue(&g, reg, ty, name)
+    }
+}
+
+fn discardTemps(g: inout Generator, reg: Registry, start: int) {
+    cleanTemps(&g, reg, start)
+    while g.temps.len() > start { let _removed = g.temps.pop() }
+}
+
+fn cleanLocals(g: inout Generator, reg: Registry, start: int) {
+    var i = g.locals.len()
+    while i > start {
+        i -= 1
+        let local = g.locals[i]
+        if !local.borrowed {
+            let name = format("v_${local.token}")
+            dropValue(&g, reg, local.ty, name)
+        }
+    }
+}
+
+fn movedState(g: Generator) -> Vec[bool] {
+    var state: Vec[bool] = []
+    for local in g.locals { state.push(local.moved) }
+    return state
+}
+
+fn restoreState(g: inout Generator, state: Vec[bool]) {
+    for i in 0..state.len() { g.locals[i].moved = state[i] }
+}
+
+fn joinStates(a: Vec[bool], b: Vec[bool]) -> Vec[bool] {
+    var out = a.clone()
+    for i in 0..out.len() { if i < b.len() { out[i] = out[i] || b[i] } }
+    return out
+}
+
+fn readable(g: Generator, ts: Vec[Token], root: int, token: int) -> () ! Failure {
+    if root >= 0 && g.locals[root].moved {
+        return err(problem(ts, token, "E0402", "use of a moved value"))
+    }
+}
+
+fn writable(g: Generator, ts: Vec[Token], root: int, token: int) -> () ! Failure {
+    for reserved in g.reservations {
+        if reserved == root { return err(problem(ts, token, "E0403", "mutation conflicts with a reserved receiver")) }
+    }
+    for locked in g.locks {
+        if locked == root { return err(problem(ts, token, "E0102", "an earlier expression still borrows this value")) }
+    }
+    for locked in g.binaryLocks {
+        if locked == root {
+            return err(problem(ts, token, "U0001", "transferring a comparison operand while it is borrowed is outside this subset"))
+        }
+    }
+}
+
+fn copyValue(v: Value) -> Value {
+    return Value{ty: v.ty, name: v.name.clone(), local: v.local,
+        root: v.root, field: v.field, temporary: v.temporary}
+}
+
+fn takeValue(g: inout Generator, reg: Registry, ts: Vec[Token], token: int, v: Value) -> Value ! Failure {
+    if !types.owned(reg, v.ty) { return copyValue(v) }
+    if v.field {
+        return err(problem(ts, token, "E0401", "cannot move an owned value out of a field; clone it"))
+    }
+    if v.local >= 0 {
+        try readable(g, ts, v.local, token)
+        if g.locals[v.local].borrowed {
+            return err(problem(ts, token, "E0401", "cannot move out of a read-only parameter; clone it"))
+        }
+        try writable(g, ts, v.local, token)
+        if g.loopCondition {
+            return err(problem(ts, token, "U0001", "moving an existing owned value in a loop condition is outside this subset"))
+        }
+        let taken = typedValue(&g, reg, v.ty, v.name)
+        zeroValue(&g, reg, v)
+        g.locals[v.local].moved = true
+        return taken
+    }
+    if !v.temporary {
+        return err(problem(ts, token, "E0401", "cannot move an owned borrowed value"))
+    }
+    return copyValue(v)
+}
+
+fn stringLike(ty: Type) -> bool { return ty.kind == .Str || ty.kind == .String }
+
+fn view(v: Value) -> String {
+    if v.ty.kind == .String { return format("yv_string_view(&(${v.name}))") }
+    return v.name.clone()
+}
+
+fn releaseLocks(g: inout Generator, start: int) {
+    while g.locks.len() > start { let _removed = g.locks.pop() }
 }
 
 fn localIndex(g: Generator, ts: Vec[Token], token: int) -> int {
@@ -90,14 +244,14 @@ fn localIndex(g: Generator, ts: Vec[Token], token: int) -> int {
     return -1
 }
 
-fn declare(g: inout Generator, ts: Vec[Token], token: int, ty: Type, mutable: bool) -> () ! Failure {
+fn declare(g: inout Generator, ts: Vec[Token], token: int, ty: Type, mutable: bool, borrowed: bool) -> () ! Failure {
     if localIndex(g, ts, token) >= 0 {
         return err(problem(ts, token, "E0011", "Yavo does not allow shadowing an active local"))
     }
     if ty.kind == .Unit || ty.kind == .Unknown {
         return err(problem(ts, token, "U0001", "unit-valued bindings are outside the selfhost subset"))
     }
-    g.locals.push(Local{token: token, ty: ty, mutable: mutable})
+    g.locals.push(Local{token: token, ty: ty, mutable: mutable, borrowed: borrowed})
 }
 
 fn functionIndex(p: Program, ts: Vec[Token], token: int) -> int {
@@ -143,7 +297,7 @@ fn integerOperation(ts: Vec[Token], token: int, op: str, left: str, right: str) 
 fn printValue(g: inout Generator, reg: Registry, ts: Vec[Token], token: int, arg: Value, output: int) -> () ! Failure {
     if arg.ty.kind == .Int { line(&g, format("yv_out_i64(&o_${output}, ${arg.name});"))
     } else if arg.ty.kind == .Bool { line(&g, format("yv_out_bool(&o_${output}, ${arg.name});"))
-    } else if arg.ty.kind == .Str { line(&g, format("yv_out_str(&o_${output}, ${arg.name});"))
+    } else if stringLike(arg.ty) { line(&g, format("yv_out_str(&o_${output}, ${view(arg)});"))
     } else if arg.ty.kind == .Named && reg.entries[arg.ty.decl].kind == .Enum {
         line(&g, format("switch (${arg.name}) {"))
         let variants = reg.entries[arg.ty.decl].variants.clone()
@@ -201,20 +355,76 @@ fn call(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expres
     if f.params.len() != e.args.len() {
         return err(problem(ts, e.token, "E0012", "wrong number of function arguments"))
     }
+    let locks = g.locks.len()
     var args: Vec[String] = []
     for i in 0..e.args.len() {
         let expected = try types.resolve(reg, ts, f.params[i].ty)
         let arg = try emitExpected(&g, p, ts, reg, e.args[i], expected)
-        try require(reg, ts, p.expressions[e.args[i]].token, arg.ty, expected)
-        args.push(arg.name.clone())
+        if expected.kind == .Str && arg.ty.kind == .String {
+            args.push(view(arg))
+        } else {
+            try require(reg, ts, p.expressions[e.args[i]].token, arg.ty, expected)
+            args.push(arg.name.clone())
+        }
+        if arg.root >= 0 { g.locks.push(arg.root) }
     }
     let expression = format("sh_fn_${index}(${args.join(", ")})")
     let result = try types.resolve(reg, ts, f.result)
+    releaseLocks(&g, locks)
     if result.kind == .Unit {
         line(&g, format("${expression};"))
         return Value{ty: result, name: "".toString()}
     }
-    return typedValue(&g, result, expression)
+    return typedValue(&g, reg, result, expression)
+}
+
+fn method(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression) -> Value ! Failure {
+    let name = ts[e.token].text.clone()
+    let receiver = p.expressions[e.left]
+    if receiver.kind == .Name && localIndex(g, ts, receiver.token) < 0 {
+        let declared = types.lookup(reg, ts, receiver.token)
+        if declared >= 0 && reg.entries[declared].kind == .Enum {
+            return err(problem(ts, e.token, "U0001", "enum payload construction is outside this subset"))
+        }
+    }
+    if name == "push" {
+        let target = try place(g, p, ts, reg, e.left, 0)
+        try readable(g, ts, target.root, e.token)
+        if target.ty.kind != .String {
+            return err(problem(ts, e.token, "U0001", "this modifying method is outside the selfhost subset"))
+        }
+        if !target.mutable { return err(problem(ts, e.token, "E0014", "cannot modify a read-only value")) }
+        if e.args.len() != 1 { return err(problem(ts, e.token, "E0012", "String.push requires one argument")) }
+        try writable(g, ts, target.root, e.token)
+        g.reservations.push(target.root)
+        let arg = try emitExpr(&g, p, ts, reg, e.args[0])
+        if !stringLike(arg.ty) { return err(problem(ts, e.token, "E0001", "String.push requires str or String")) }
+        if arg.root == target.root {
+            return err(problem(ts, e.token, "E0403", "push argument still borrows the receiver's root"))
+        }
+        let _removed = g.reservations.pop()
+        let t = ts[e.token]
+        line(&g, format("yv_string_push(&(${target.name}), ${view(arg)}, ${t.line}, ${t.column});"))
+        return Value{ty: types.primitive(.Unit), name: "".toString()}
+    }
+    let base = try emitExpr(&g, p, ts, reg, e.left)
+    if stringLike(base.ty) {
+        if name == "len" || (name == "toString" && base.ty.kind == .Str) ||
+            (name == "clone" && base.ty.kind == .String) {
+            if e.args.len() != 0 { return err(problem(ts, e.token, "E0012", "this string method takes no arguments")) }
+            if name == "len" {
+                return value(&g, .Int, format("(${view(base)}).len"))
+            }
+            let t = ts[e.token]
+            return typedValue(&g, reg, types.primitive(.String),
+                format("yv_string_from(${view(base)}, ${t.line}, ${t.column})"))
+        }
+        return err(problem(ts, e.token, "U0001", "string method is outside the selfhost subset"))
+    }
+    if base.ty.kind == .Named && reg.entries[base.ty.decl].kind == .Struct {
+        return err(problem(ts, e.token, "E0010", "unknown struct method"))
+    }
+    return err(problem(ts, e.token, "U0001", "method is outside the selfhost subset"))
 }
 
 fn binary(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression) -> Value ! Failure {
@@ -223,28 +433,37 @@ fn binary(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expr
     if op == "&&" || op == "||" {
         try basic(reg, ts, e.token, lhs.ty, .Bool)
         let output = value(&g, .Bool, lhs.name)
+        let before = movedState(g)
+        let temps = g.temps.len()
         if op == "&&" { line(&g, format("if (${output.name}) {")) } else {
             line(&g, format("if (!${output.name}) {"))
         }
         let rhs = try emitExpected(&g, p, ts, reg, e.right, types.primitive(.Bool))
         try basic(reg, ts, e.token, rhs.ty, .Bool)
         line(&g, format("${output.name} = ${rhs.name};"))
+        discardTemps(&g, reg, temps)
+        let after = movedState(g)
+        let joined = joinStates(before, after)
+        restoreState(&g, joined)
         line(&g, "}")
         return output
     }
+    let locks = g.binaryLocks.len()
+    if lhs.root >= 0 { g.binaryLocks.push(lhs.root) }
     let rhs = try emitExpected(&g, p, ts, reg, e.right, lhs.ty)
-    try require(reg, ts, e.token, rhs.ty, lhs.ty)
+    while g.binaryLocks.len() > locks { let _removed = g.binaryLocks.pop() }
     let equality = op == "==" || op == "!="
     let comparison = equality || op == "<" || op == "<=" || op == ">" || op == ">="
+    if comparison && stringLike(lhs.ty) && stringLike(rhs.ty) {
+        return value(&g, .Bool, format("(yv_str_cmp(${view(lhs)}, ${view(rhs)}) ${op} 0)"))
+    }
+    try require(reg, ts, e.token, rhs.ty, lhs.ty)
     if comparison {
         if lhs.ty.kind == .Unit || (lhs.ty.kind == .Bool && !equality) {
             return err(problem(ts, e.token, "E0001", "operator is not defined for this type"))
         }
         if lhs.ty.kind == .Named && (reg.entries[lhs.ty.decl].kind == .Struct || !equality) {
             return err(problem(ts, e.token, "E0501", "this aggregate does not implement the required comparison"))
-        }
-        if lhs.ty.kind == .Str {
-            return value(&g, .Bool, format("(yv_str_cmp(${lhs.name}, ${rhs.name}) ${op} 0)"))
         }
         return value(&g, .Bool, format("(${lhs.name} ${op} ${rhs.name})"))
     }
@@ -285,45 +504,53 @@ fn enumValue(g: inout Generator, reg: Registry, ts: Vec[Token], token: int, expe
     }
     let which = types.variant(reg, ts, expected.decl, token)
     if which < 0 { return err(problem(ts, token, "E0010", "unknown enum case")) }
-    return typedValue(&g, expected, format("${which}"))
+    return typedValue(&g, reg, expected, format("${which}"))
 }
 
 fn construct(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression) -> Value ! Failure {
+    if ts[e.token].text == "String" {
+        if e.names.len() > 0 { return err(problem(ts, e.names[0], "E0010", "String has no constructor fields")) }
+        return typedValue(&g, reg, types.primitive(.String), "(yv_string){0}")
+    }
     let index = types.lookup(reg, ts, e.token)
     if index < 0 {
-        if ts[e.token].text == "String" || ts[e.token].text == "Vec" ||
-            ts[e.token].text == "Map" || ts[e.token].text == "Set" {
-            return err(problem(ts, e.token, "U0001", "owned construction is outside the selfhost subset"))
+        if ts[e.token].text == "Vec" || ts[e.token].text == "Map" || ts[e.token].text == "Set" {
+            return err(problem(ts, e.token, "U0001", "collection construction is outside the selfhost subset"))
         }
         return err(problem(ts, e.token, "E0010", "unknown struct type"))
     }
     let info = reg.entries[index]
     if info.kind != .Struct { return err(problem(ts, e.token, "E0001", "struct construction requires a struct type")) }
-    var values: Vec[String] = []
-    for _i in 0..info.fields.len() { values.push(String{}) }
-    // Validate and evaluate explicit fields in source order, independently of layout.
+    var values: Vec[Value] = []
+    for _i in 0..info.fields.len() { values.push(Value{ty: types.primitive(.Unknown), name: String{}}) }
     for i in 0..e.names.len() {
         let f = types.field(reg, ts, index, e.names[i])
         if f < 0 { return err(problem(ts, e.names[i], "E0010", "unknown struct field")) }
-        if values[f].len() > 0 { return err(problem(ts, e.names[i], "E0011", "duplicate constructor field")) }
+        if values[f].name.len() > 0 { return err(problem(ts, e.names[i], "E0011", "duplicate constructor field")) }
         let result = try emitExpected(&g, p, ts, reg, e.args[i], info.fields[f].ty)
         try require(reg, ts, p.expressions[e.args[i]].token, result.ty, info.fields[f].ty)
-        values[f] = result.name.clone()
+        values[f] = try takeValue(&g, reg, ts, p.expressions[e.args[i]].token, result)
     }
     for i in 0..info.fields.len() {
-        if values[i].len() == 0 {
+        if values[i].name.len() == 0 {
             let f = info.fields[i]
             if f.initial < 0 { return err(problem(ts, e.token, "E0018", "missing struct field without a default")) }
-            let initial = try emitExpected(&g, p, ts, reg, f.initial, f.ty)
+            var initial = try emitExpected(&g, p, ts, reg, f.initial, f.ty)
+            if f.ty.kind == .String && initial.ty.kind == .Str {
+                let t = ts[p.expressions[f.initial].token]
+                initial = typedValue(&g, reg, f.ty, format("yv_string_from(${initial.name}, ${t.line}, ${t.column})"))
+            }
             try require(reg, ts, p.expressions[f.initial].token, initial.ty, f.ty)
-            values[i] = initial.name.clone()
+            values[i] = try takeValue(&g, reg, ts, p.expressions[f.initial].token, initial)
         }
     }
     var fields: Vec[String] = []
-    for i in 0..values.len() { fields.push(format(".f_${i} = ${values[i]}")) }
+    for i in 0..values.len() { fields.push(format(".f_${i} = ${values[i].name}")) }
     if values.len() == 0 { fields.push(".sh_empty = 0".toString()) }
     let ty = Type{kind: .Named, decl: index}
-    return typedValue(&g, ty, format("(${types.cType(ty)}){${fields.join(", ")}}"))
+    let result = typedValue(&g, reg, ty, format("(${types.cType(ty)}){${fields.join(", ")}}"))
+    for item in values { zeroValue(&g, reg, item) }
+    return result
 }
 
 fn fieldValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression) -> Value ! Failure {
@@ -341,7 +568,9 @@ fn fieldValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: 
     let fieldIndex = types.field(reg, ts, base.ty.decl, e.token)
     if fieldIndex < 0 { return err(problem(ts, e.token, "E0010", "unknown struct field")) }
     let ty = reg.entries[base.ty.decl].fields[fieldIndex].ty
-    return typedValue(&g, ty, format("${base.name}.f_${fieldIndex}"))
+    let name = format("(${base.name}).f_${fieldIndex}")
+    if types.owned(reg, ty) { return Value{ty: ty, name: name, root: base.root, field: true} }
+    return typedValue(&g, reg, ty, name)
 }
 
 fn expression(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, id: int, expected: Type) -> Value ! Failure {
@@ -366,8 +595,11 @@ fn expression(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, id:
             }
             return err(problem(ts, e.token, "E0010", format("unknown local '${t.text}'")))
         }
+        try readable(g, ts, index, e.token)
         let local = g.locals[index]
-        return typedValue(&g, local.ty, format("v_${local.token}"))
+        let name = format("v_${local.token}")
+        if types.owned(reg, local.ty) { return Value{ty: local.ty, name: name, local: index, root: index} }
+        return typedValue(&g, reg, local.ty, name)
     }
     if e.kind == .Unary {
         let child = p.expressions[unparenthesized(p, e.left)]
@@ -386,6 +618,7 @@ fn expression(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, id:
     if e.kind == .Variant { return enumValue(&g, reg, ts, e.token, expected) }
     if e.kind == .Construct { return construct(&g, p, ts, reg, e) }
     if e.kind == .Field { return fieldValue(&g, p, ts, reg, e) }
+    if e.kind == .Method { return method(&g, p, ts, reg, e) }
     return call(&g, p, ts, reg, e, id)
 }
 
@@ -397,19 +630,33 @@ fn place(g: Generator, p: Program, ts: Vec[Token], reg: Registry, id: int, depth
         let index = localIndex(g, ts, e.token)
         if index < 0 { return err(problem(ts, e.token, "E0010", "assignment to an unknown local")) }
         let local = g.locals[index]
-        return Place{ty: local.ty, name: format("v_${local.token}"), mutable: local.mutable}
+        return Place{ty: local.ty, name: format("v_${local.token}"), mutable: local.mutable, root: index}
     }
     if e.kind == .Field {
         let base = try place(g, p, ts, reg, e.left, depth + 1)
+        try readable(g, ts, base.root, e.token)
         if base.ty.kind != .Named || reg.entries[base.ty.decl].kind != .Struct {
             return err(problem(ts, e.token, "E0001", "field assignment requires a struct"))
         }
         let fieldIndex = types.field(reg, ts, base.ty.decl, e.token)
         if fieldIndex < 0 { return err(problem(ts, e.token, "E0010", "unknown struct field")) }
         let ty = reg.entries[base.ty.decl].fields[fieldIndex].ty
-        return Place{ty: ty, name: format("${base.name}.f_${fieldIndex}"), mutable: base.mutable}
+        return Place{ty: ty, name: format("${base.name}.f_${fieldIndex}"), mutable: base.mutable, root: base.root, whole: false}
     }
     return err(problem(ts, e.token, "U0001", "assignment to this form is outside the supported place syntax"))
+}
+
+
+fn popLoop(g: inout Generator) -> LoopState {
+    assert(g.loopStates.len() > 0)
+    let i = g.loopStates.len() - 1
+    let frame = LoopState{localCount: g.loopStates[i].localCount,
+        tempCount: g.loopStates[i].tempCount,
+        breaks: g.loopStates[i].breaks.clone(),
+        continues: g.loopStates[i].continues.clone(),
+        hasBreak: g.loopStates[i].hasBreak}
+    let _removed = g.loopStates.pop()
+    return frame
 }
 
 fn block(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, body: Vec[int]) -> Flow ! Failure {
@@ -417,16 +664,104 @@ fn block(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, body: Ve
     var flow = Flow{}
     line(&g, "{")
     for id in body {
+        let tempCount = g.temps.len()
         let next = try statement(&g, p, ts, reg, id)
-        // Match stage0's syntactic loop-exit check, including unreachable breaks.
+        discardTemps(&g, reg, tempCount)
+        // Stage0 counts syntactic breaks, including after a terminating statement.
         flow.breaks = flow.breaks || next.breaks
-        if flow.falls {
-            flow.falls = next.falls
-        }
+        if flow.falls { flow.falls = next.falls }
     }
+    cleanLocals(&g, reg, localCount)
     while g.locals.len() > localCount { let _removed = g.locals.pop() }
     line(&g, "}")
     return flow
+}
+
+fn recordExit(g: inout Generator, breaking: bool) {
+    let index = g.loopStates.len() - 1
+    let count = g.loopStates[index].localCount
+    var state: Vec[bool] = []
+    for i in 0..count { state.push(g.locals[i].moved) }
+    if breaking {
+        if g.loopStates[index].hasBreak {
+            let previous = g.loopStates[index].breaks.clone()
+            state = joinStates(previous, state)
+        }
+        g.loopStates[index].breaks = state
+        g.loopStates[index].hasBreak = true
+    } else {
+        let previous = g.loopStates[index].continues.clone()
+        if previous.len() > 0 { state = joinStates(previous, state) }
+        g.loopStates[index].continues = state
+    }
+}
+
+// Recheck only the body, as stage0 does. Only newly exposed move errors escape;
+// generated C and transient analysis state belong to this disposable generator.
+fn replayBody(parent: Generator, p: Program, ts: Vec[Token], reg: Registry, s: Statement, next: Vec[bool]) -> Vec[bool] ! Failure {
+    var probe = Generator{
+        counter: parent.counter,
+        locals: parent.locals.clone(),
+        temps: parent.temps.clone(),
+        locks: parent.locks.clone(),
+        binaryLocks: parent.binaryLocks.clone(),
+        reservations: parent.reservations.clone(),
+        loopStates: parent.loopStates.clone(),
+        result: parent.result,
+        loops: parent.loops + 1
+    }
+    restoreState(&probe, next)
+    let count = probe.locals.len()
+    let tempCount = probe.temps.len()
+    probe.loopStates.push(LoopState{localCount: count, tempCount: tempCount})
+    let _flow = block(&probe, p, ts, reg, s.body) catch failure {
+        if failure.code == "E0402" { return err(failure) }
+        let empty: Vec[bool] = []
+        return empty
+    }
+    let frame = popLoop(&probe)
+    return frame.breaks.clone()
+}
+
+fn loopStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, s: Statement) -> Flow ! Failure {
+    line(&g, "for (;;) {")
+    if s.kind == .While {
+        let tempCount = g.temps.len()
+        g.loopCondition = true
+        let condition = try emitExpected(&g, p, ts, reg, s.expr, types.primitive(.Bool))
+        g.loopCondition = false
+        try basic(reg, ts, s.token, condition.ty, .Bool)
+        discardTemps(&g, reg, tempCount)
+        line(&g, format("if (!${condition.name}) break;"))
+    }
+    let before = movedState(g)
+    let count = g.locals.len()
+    let tempCount = g.temps.len()
+    g.loopStates.push(LoopState{localCount: count, tempCount: tempCount})
+    g.loops += 1
+    let inner = try block(&g, p, ts, reg, s.body)
+    g.loops -= 1
+    let frame = popLoop(&g)
+    let ended = movedState(g)
+    let end = joinStates(ended, frame.continues)
+    let next = joinStates(before, end)
+    var exits = frame.breaks.clone()
+    var grew = false
+    for i in 0..before.len() {
+        if next[i] && !before[i] { grew = true }
+    }
+    if grew {
+        let repeated = try replayBody(g, p, ts, reg, s, next)
+        if exits.len() == 0 { exits = repeated } else { exits = joinStates(exits, repeated) }
+    }
+    if s.kind == .Loop && frame.hasBreak {
+        restoreState(&g, exits)
+    } else {
+        let after = joinStates(next, exits)
+        restoreState(&g, after)
+    }
+    line(&g, "}")
+    return Flow{falls: s.kind == .While || inner.breaks}
 }
 
 fn statement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, id: int) -> Flow ! Failure {
@@ -436,19 +771,29 @@ fn statement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, id: 
         let initial = try emitExpected(&g, p, ts, reg, s.expr, ty)
         if ty.kind == .Unknown { ty = initial.ty }
         try require(reg, ts, s.token, initial.ty, ty)
-        try declare(&g, ts, s.name, ty, s.mutable)
-        line(&g, format("${types.cType(ty)} v_${s.name} = ${initial.name};"))
+        let taken = try takeValue(&g, reg, ts, s.token, initial)
+        if ts[s.name].text != "_" {
+            try declare(&g, ts, s.name, ty, s.mutable, false)
+            line(&g, format("${types.cType(ty)} v_${s.name} = ${taken.name};"))
+            zeroValue(&g, reg, taken)
+        }
         return Flow{}
     }
     if s.kind == .Assign {
-        // Resolve the static target type without evaluating or copying its value.
         let target = try place(g, p, ts, reg, s.target, 0)
         if !target.mutable { return err(problem(ts, s.token, "E0014", "cannot assign through an immutable local or parameter")) }
+        try writable(g, ts, target.root, s.token)
         let rhs = try emitExpected(&g, p, ts, reg, s.expr, target.ty)
         try require(reg, ts, s.token, rhs.ty, target.ty)
         if ts[s.token].text == "=" {
-            line(&g, format("${target.name} = ${rhs.name};"))
+            let taken = try takeValue(&g, reg, ts, s.token, rhs)
+            if !target.whole { try readable(g, ts, target.root, s.token) }
+            dropValue(&g, reg, target.ty, target.name)
+            line(&g, format("${target.name} = ${taken.name};"))
+            zeroValue(&g, reg, taken)
+            if target.whole { g.locals[target.root].moved = false }
         } else {
+            try readable(g, ts, target.root, s.token)
             try basic(reg, ts, s.token, target.ty, .Int)
             let code = integerOperation(ts, s.token, ts[s.token].text, target.name, rhs.name)
             line(&g, format("${target.name} = ${code};"))
@@ -456,7 +801,8 @@ fn statement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, id: 
         return Flow{}
     }
     if s.kind == .Expr {
-        if p.expressions[s.expr].kind != .Call {
+        let kind = p.expressions[s.expr].kind
+        if kind != .Call && kind != .Method {
             return err(problem(ts, s.token, "E0001", "only a direct call may stand alone as a statement"))
         }
         g.outputRoot = s.expr
@@ -467,6 +813,8 @@ fn statement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, id: 
     if s.kind == .Return {
         if s.expr < 0 {
             try require(reg, ts, s.token, types.primitive(.Unit), g.result)
+            cleanTemps(&g, reg, 0)
+            cleanLocals(&g, reg, 0)
             line(&g, "return;")
         } else {
             if g.result.kind == .Unit && p.expressions[s.expr].kind != .Unit {
@@ -474,39 +822,56 @@ fn statement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, id: 
             }
             let resultType = g.result
             let returned = try emitExpected(&g, p, ts, reg, s.expr, resultType)
-            try require(reg, ts, s.token, returned.ty, g.result)
-            if returned.ty.kind == .Unit { line(&g, "return;") } else {
-                line(&g, format("return ${returned.name};"))
+            try require(reg, ts, s.token, returned.ty, resultType)
+            if returned.ty.kind == .Unit {
+                cleanTemps(&g, reg, 0)
+                cleanLocals(&g, reg, 0)
+                line(&g, "return;")
+            } else {
+                let taken = try takeValue(&g, reg, ts, s.token, returned)
+                let n = g.counter
+                g.counter += 1
+                line(&g, format("${types.cType(taken.ty)} return_${n} = ${taken.name};"))
+                zeroValue(&g, reg, taken)
+                cleanTemps(&g, reg, 0)
+                cleanLocals(&g, reg, 0)
+                line(&g, format("return return_${n};"))
             }
         }
         return Flow{falls: false}
     }
     if s.kind == .If {
+        let tempCount = g.temps.len()
         let condition = try emitExpected(&g, p, ts, reg, s.expr, types.primitive(.Bool))
         try basic(reg, ts, s.token, condition.ty, .Bool)
+        discardTemps(&g, reg, tempCount)
+        let before = movedState(g)
         line(&g, format("if (${condition.name})"))
         let yes = try block(&g, p, ts, reg, s.body)
+        let yesState = movedState(g)
+        restoreState(&g, before)
         var no = Flow{}
         if s.otherwise.len() > 0 {
             line(&g, "else")
             no = try block(&g, p, ts, reg, s.otherwise)
         }
+        let noState = movedState(g)
+        if yes.falls && !no.falls { restoreState(&g, yesState)
+        } else if !yes.falls && no.falls { restoreState(&g, noState)
+        } else {
+            let merged = joinStates(yesState, noState)
+            restoreState(&g, merged)
+        }
         return Flow{falls: yes.falls || no.falls, breaks: yes.breaks || no.breaks}
     }
-    if s.kind == .While || s.kind == .Loop {
-        line(&g, "for (;;) {")
-        if s.kind == .While {
-            let condition = try emitExpected(&g, p, ts, reg, s.expr, types.primitive(.Bool))
-            try basic(reg, ts, s.token, condition.ty, .Bool)
-            line(&g, format("if (!${condition.name}) break;"))
-        }
-        g.loops += 1
-        let inner = try block(&g, p, ts, reg, s.body)
-        g.loops -= 1
-        line(&g, "}")
-        return Flow{falls: s.kind == .While || inner.breaks}
-    }
+    if s.kind == .While || s.kind == .Loop { return loopStatement(&g, p, ts, reg, s) }
     if g.loops == 0 { return err(problem(ts, s.token, "E0015", "break/continue requires an enclosing loop")) }
+    let index = g.loopStates.len() - 1
+    let localCount = g.loopStates[index].localCount
+    let tempCount = g.loopStates[index].tempCount
+    recordExit(&g, s.kind == .Break)
+    cleanTemps(&g, reg, tempCount)
+    cleanLocals(&g, reg, localCount)
     if s.kind == .Break {
         line(&g, "break;")
         return Flow{falls: false, breaks: true}
@@ -542,6 +907,20 @@ fn declarations(g: inout Generator, reg: Registry) {
             line(&g, format("} sh_type_${i};"))
         }
     }
+    for i in reg.order {
+        if reg.entries[i].owned {
+            line(&g, format("static void sh_drop_${i}(sh_type_${i} *p) {"))
+            let item = reg.entries[i]
+            var j = item.fields.len()
+            while j > 0 {
+                j -= 1
+                let ty = item.fields[j].ty
+                if types.owned(reg, ty) { line(&g, format("${dropName(ty)}(&p->f_${j});")) }
+            }
+            line(&g, format("*p = (sh_type_${i}){0};"))
+            line(&g, "}")
+        }
+    }
 }
 
 pub fn generate(p: Program, ts: Vec[Token], filename: str) -> String ! Failure {
@@ -565,7 +944,7 @@ pub fn generate(p: Program, ts: Vec[Token], filename: str) -> String ! Failure {
     }
     if entry < 0 { return err(problem(ts, 0, "E0016", "no fn main() entry point")) }
     var g = Generator{result: types.primitive(.Unit)}
-    line(&g, "/* Generated by Yavo selfhost (Copy aggregate subset). */")
+    line(&g, "/* Generated by Yavo selfhost (String ownership subset). */")
     line(&g, "#include \"yavo_rt.h\"")
     declarations(&g, reg)
     for i in 0..p.functions.len() {
@@ -577,7 +956,7 @@ pub fn generate(p: Program, ts: Vec[Token], filename: str) -> String ! Failure {
         g.result = try types.resolve(reg, ts, f.result)
         for param in f.params {
             let ty = try types.resolve(reg, ts, param.ty)
-            try declare(&g, ts, param.name, ty, false)
+            try declare(&g, ts, param.name, ty, false, types.owned(reg, ty))
         }
         let header = try signature(p, ts, reg, i)
         line(&g, header)

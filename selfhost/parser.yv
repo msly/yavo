@@ -67,6 +67,7 @@ fn typeName(s: inout State, ts: Vec[Token]) -> TypeRef ! Failure {
     if eat(&s, ts, "int") { result = TypeRef{kind: .Int}
     } else if eat(&s, ts, "bool") { result = TypeRef{kind: .Bool}
     } else if eat(&s, ts, "str") { result = TypeRef{kind: .Str}
+    } else if eat(&s, ts, "String") { result = TypeRef{kind: .String}
     } else if eat(&s, ts, "(") {
         if !at(s, ts, ")") {
             return err(problem(s, ts, "U0001", "tuple types are outside the selfhost subset"))
@@ -195,8 +196,10 @@ fn postfix(s: inout State, ts: Vec[Token]) -> int ! Failure {
             current = pushExpr(&s, Expression{kind: .Field, token: field, left: current})
         } else if at(s, ts, "(") {
             let target = s.expressions[current].token
-            if s.expressions[current].kind != .Name {
-                return err(problem(s, ts, "U0001", "methods and payload constructors are outside the selfhost subset"))
+            let targetKind = s.expressions[current].kind
+            let receiver = s.expressions[current].left
+            if targetKind != .Name && targetKind != .Field {
+                return err(problem(s, ts, "U0001", "this call target is outside the selfhost subset"))
             }
             s.pos += 1
             var args: Vec[int] = []
@@ -206,7 +209,11 @@ fn postfix(s: inout State, ts: Vec[Token]) -> int ! Failure {
                 if !eat(&s, ts, ",") { break }
             }
             try expect(&s, ts, ")")
-            current = pushExpr(&s, Expression{kind: .Call, token: target, args: args})
+            if targetKind == .Field {
+                current = pushExpr(&s, Expression{kind: .Method, token: target, left: receiver, args: args})
+            } else {
+                current = pushExpr(&s, Expression{kind: .Call, token: target, args: args})
+            }
         } else if at(s, ts, "{") && s.expressions[current].kind == .Name {
             let name = s.expressions[current].token
             if ts[s.pos].start != ts[name].end || ts[name].text[0] < 'A' || ts[name].text[0] > 'Z' {

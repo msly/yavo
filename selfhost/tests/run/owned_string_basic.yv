@@ -1,0 +1,14 @@
+fn main() {
+    var text = String{}
+    println(text.len())
+    text.push("ab")
+    let copy = text.clone()
+    text.push("c")
+    println(text)
+    println(copy)
+    println(copy == "ab")
+    println("abc" == text)
+    println(copy < text)
+    text.push(text.clone())
+    println(text)
+}

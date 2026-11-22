@@ -1,0 +1,255 @@
+#!/usr/bin/env python3
+"""Run independent Linux ASan/UBSan on the Yavo frontend's verified C output.
+
+A successful bootstrap receipt and unchanged inputs are mandatory. The existing
+independent sanitizer runner supplies clean/UAF/overflow capability probes,
+isolated builds, exact program oracles and full execution logs. No frontend is
+invoked and no generated C is regenerated or replaced by the Rust implementation.
+"""
+from __future__ import annotations
+
+import argparse
+import hashlib
+import importlib.util
+import json
+import os
+from pathlib import Path
+import platform
+import shutil
+import sys
+import tempfile
+
+sys.dont_write_bytecode = True
+ROOT = Path(__file__).resolve().parents[2]
+SELFHOST = ROOT / "selfhost"
+COMPILER = ROOT / "compiler"
+RUNNER = ROOT / "tools/sanitizers/run.py"
+SPEC = importlib.util.spec_from_file_location("yavo_selfhost_bootstrap", SELFHOST / "bootstrap.py")
+BOOTSTRAP = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(BOOTSTRAP)
+
+
+def contained(path, directory):
+    result = path.resolve()
+    if not result.is_relative_to(directory.resolve()):
+        raise ValueError("input path escapes its declared directory: " + str(path))
+    return result
+
+
+def load_inputs(receipt_path):
+    """Validate provenance and construct only the successful candidate programs."""
+    receipt_path = receipt_path.resolve()
+    raw = receipt_path.read_bytes()
+    receipt = json.loads(raw)
+    if (receipt.get("schema") != "yavo-selfhost-bootstrap/1"
+            or receipt.get("status") != "passed" or receipt.get("failed") != 0
+            or receipt.get("checks_failed") != 0):
+        raise ValueError("a successful complete selfhost bootstrap receipt is required")
+    checks = {row["id"]: row for row in receipt["checks"]}
+    if checks.get("inputs_unchanged_during_run", {}).get("passed") is not True:
+        raise ValueError("bootstrap did not verify stable inputs")
+    cases = BOOTSTRAP.validate_cases()
+    rows = {row["id"]: row for row in receipt["cases"]}
+    if (len(rows) != len(receipt["cases"]) or set(rows) != {case["id"] for case in cases}
+            or receipt["total"] != len(cases) or receipt["passed"] != len(cases)
+            or not all(row.get("passed") is True for row in rows.values())):
+        raise ValueError("bootstrap case identities or complete results do not match the manifest")
+    inputs = receipt["inputs"]
+    work = contained(Path(receipt["work"]), COMPILER / "target")
+    bound = {}
+
+    def bind(path, wanted, label):
+        path = path.resolve()
+        actual = BOOTSTRAP.digest(path)
+        if actual != wanted:
+            raise ValueError(label + ": input digest mismatch")
+        bound[str(path)] = actual
+        return path
+
+    bind(receipt_path, hashlib.sha256(raw).hexdigest(), "bootstrap receipt")
+    bind(Path(__file__), BOOTSTRAP.digest(Path(__file__)), "adapter")
+    bind(RUNNER, BOOTSTRAP.digest(RUNNER), "sanitizer runner")
+    bind(SELFHOST / "bootstrap.py", inputs["harness_sha256"], "bootstrap harness")
+    bind(SELFHOST / "tests/cases.json", inputs["manifest_sha256"], "fixture manifest")
+    runtime = bind(COMPILER / "runtime/yavo_rt.h", inputs["runtime_sha256"], "runtime")
+    bind(COMPILER / "toolchain.lock", inputs["toolchain_lock_sha256"], "toolchain lock")
+    for key in ("stage0", "zig", "subset_compiler"):
+        item = inputs[key]
+        path = Path(item["path"])
+        if key == "subset_compiler":
+            contained(path, work)
+        bind(path, item["sha256"], key)
+    current_sources = {str(path.relative_to(ROOT)) for path in SELFHOST.glob("*.yv")}
+    if set(inputs["yavo_sources"]) != current_sources:
+        raise ValueError("the bootstrap source list is incomplete or stale")
+    for name, wanted in inputs["yavo_sources"].items():
+        bind(contained(ROOT / name, SELFHOST), wanted, "Yavo source " + name)
+    if set(inputs["fixtures"]) != {case["file"] for case in cases}:
+        raise ValueError("the bootstrap fixture list does not match the manifest")
+    for name, wanted in inputs["fixtures"].items():
+        bind(contained(SELFHOST / "tests" / name, SELFHOST / "tests"), wanted, "fixture " + name)
+    for key, directory, manifest_key in (
+            ("examples", SELFHOST / "examples", "example"),
+            ("source_prefixes", SELFHOST, "source_prefix")):
+        expected = {case[manifest_key] for case in cases if manifest_key in case}
+        if set(inputs[key]) != expected:
+            raise ValueError("the bootstrap " + key + " list does not match the manifest")
+        for name, wanted in inputs[key].items():
+            bind(contained(directory / name, SELFHOST), wanted, key + " " + name)
+    assembled = {}
+    programs = []
+    for case in cases:
+        row = rows[case["id"]]
+        if row["kind"] != case["kind"] or row["file"] != case["file"]:
+            raise ValueError("bootstrap case metadata mismatch: " + case["id"])
+        fixture = SELFHOST / "tests" / case["file"]
+        directory = contained(work / "programs" / case["id"], work)
+        source = fixture
+        if "source_prefix" in case:
+            source = contained(directory / "input.yv", work)
+            prefix = BOOTSTRAP.prefix_path(case)
+            if source.read_bytes() != prefix.read_bytes() + fixture.read_bytes():
+                raise ValueError("assembled source does not preserve the original prefix")
+            prefix_row = row.get("source_prefix", {})
+            if (prefix_row.get("preserved") is not True
+                    or prefix_row.get("file") != case["source_prefix"]
+                    or prefix_row.get("sha256") != BOOTSTRAP.digest(prefix)
+                    or prefix_row.get("fixture_sha256") != BOOTSTRAP.digest(fixture)):
+                raise ValueError("bootstrap source-prefix identity mismatch")
+            assembled[str(source)] = row["source_sha256"]
+        bind(source, row["source_sha256"], case["id"] + " source")
+        if case["kind"] not in ("run", "panic"):
+            continue
+        if row.get("deterministic_c") is not True:
+            raise ValueError("candidate C was not verified deterministic")
+        for command_key, filename in (("emit", "program.c"), ("emit_repeat", "repeat.c")):
+            path = contained(directory / filename, work)
+            command = row[command_key]
+            expected = [inputs["subset_compiler"]["path"], "emit-c", str(source), "-o", str(path)]
+            if (command["argv"] != expected or command["exit_code"] != 0
+                    or command["timed_out"]):
+                raise ValueError("C output was not emitted by the recorded Yavo frontend")
+            bind(path, row["generated_c_sha256"], case["id"] + " candidate C")
+        c_file = directory / "program.c"
+        expected = {"stdout": case["stdout"], "stderr": case.get("stderr", ""),
+                    "exit_code": 101 if case["kind"] == "panic" else 0}
+        if case["kind"] == "panic":
+            expected["panic"] = {"category": case["panic"]}
+        programs.append({"id": case["id"], "entry": str(source.relative_to(ROOT)),
+                         "source": source.read_text(encoding="utf-8"),
+                         "source_sha256": row["source_sha256"],
+                         "c": c_file.read_text(encoding="utf-8"),
+                         "c_sha256": row["generated_c_sha256"], "expected": expected})
+    if assembled != inputs["assembled_sources"]:
+        raise ValueError("assembled source list does not match the bootstrap receipt")
+    if not programs:
+        raise ValueError("the manifest contains no executable cases")
+    return receipt, programs, bound, runtime
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--bootstrap-receipt", type=Path,
+                        default=COMPILER / "target/ci/selfhost/receipt.json")
+    parser.add_argument("--output", type=Path,
+                        default=COMPILER / "target/ci/selfhost-sanitizers")
+    args = parser.parse_args()
+    output = args.output.resolve()
+    output.mkdir(parents=True, exist_ok=True)
+    work = Path(tempfile.mkdtemp(prefix="run-", dir=output))
+    report = {"schema": "yavo-selfhost-sanitizer-validation/1", "status": "running",
+              "scope": "independent GCC ASan/UBSan on verified Yavo-frontend C",
+              "host": {"platform": platform.platform(), "machine": platform.machine()},
+              "work": str(work), "self_hosted": False, "passed": 0, "failed": 0, "not_run": 0,
+              "limits": ["Linux only; no TSan.",
+                         "LeakSanitizer is disabled by the reusable runner; normal exits use YV_ALLOC_CHECK."]}
+
+    def save():
+        BOOTSTRAP.save(work / "receipt.json", report)
+        BOOTSTRAP.save(output / "receipt.json", report)
+
+    save()
+    environment = dict(os.environ, YAVO_ALLOC_CHECK="1", YAVO_NO_CACHE="1")
+
+    def command(label, argv, timeout=30):
+        return BOOTSTRAP.run(argv, work / "commands" / label, environment, timeout)
+
+    try:
+        if sys.platform != "linux":
+            raise RuntimeError("this independent sanitizer gate requires Linux")
+        bootstrap, programs, bound, runtime = load_inputs(args.bootstrap_receipt)
+        report.update(total=len(programs), not_run=len(programs), inputs={"bootstrap_receipt": {
+            "path": str(args.bootstrap_receipt.resolve()),
+            "sha256": BOOTSTRAP.digest(args.bootstrap_receipt)},
+            "bound_files": bound, "frontend": bootstrap["inputs"]["subset_compiler"],
+            "stage0": bootstrap["inputs"]["stage0"], "runtime_sha256": BOOTSTRAP.digest(runtime)},
+            input_identity_verified=True)
+        save()
+        cc = shutil.which("gcc")
+        if cc is None:
+            raise RuntimeError("system GCC is required; this gate cannot be skipped")
+        cc = str(Path(cc).resolve())
+        bound[cc] = BOOTSTRAP.digest(Path(cc))
+        head = command("git-head", ["git", "rev-parse", "HEAD"])
+        status = command("git-status", ["git", "status", "--porcelain"])
+        if not BOOTSTRAP.succeeded(head) or not BOOTSTRAP.succeeded(status):
+            raise RuntimeError("cannot record the source revision")
+        report["git"] = {"head": head["record"], "status": status["record"]}
+        bundle = {"schema": "yavo-independent-sanitizer-bundle/1",
+                  "source_revision": head["stdout"].decode("utf-8").strip(),
+                  "git_status": status["stdout"].decode("utf-8"),
+                  "repository_inputs": bound,
+                  "compiler": bootstrap["inputs"]["subset_compiler"],
+                  "runtime": {"content": runtime.read_text(encoding="utf-8"),
+                              "sha256": BOOTSTRAP.digest(runtime)},
+                  "programs": programs}
+        bundle_path = work / "bundle.json"
+        BOOTSTRAP.save(bundle_path, bundle)
+        report["bundle"] = {"path": str(bundle_path), "sha256": BOOTSTRAP.digest(bundle_path)}
+        run_dir = work / "sanitizer"
+        execution = command("sanitize", [sys.executable, RUNNER, bundle_path,
+                                        "--cc", cc, "--jobs", "2", "--out", run_dir], timeout=900)
+        report["execution"] = execution["record"]
+        detail_path = run_dir / "report.json"
+        if not detail_path.is_file():
+            raise RuntimeError("sanitizer runner did not produce its required report")
+        detail = json.loads(detail_path.read_bytes())
+        identity = detail.get("c_compiler", {})
+        if identity.get("path") != cc or identity.get("sha256") != bound[cc]:
+            raise RuntimeError("sanitizer compiler identity changed")
+        report.update(capabilities=detail.get("capabilities", {}),
+                      c_compiler=detail.get("c_compiler"),
+                      flags=detail.get("flags"),
+                      sanitizer_environment=detail.get("sanitizer_environment"),
+                      results=detail.get("results", []),
+                      detail={"path": str(detail_path), "sha256": BOOTSTRAP.digest(detail_path)})
+        changed = [name for name, wanted in bound.items()
+                   if not Path(name).is_file() or BOOTSTRAP.digest(Path(name)) != wanted]
+        report["changed_inputs"] = changed
+        report["inputs_unchanged_during_run"] = not changed
+        report["passed"] = sum(row.get("passed") is True for row in report["results"])
+        report["failed"] = len(report["results"]) - report["passed"]
+        report["not_run"] = len(programs) - len(report["results"])
+        capabilities = report["capabilities"]
+        good = (BOOTSTRAP.succeeded(execution) and detail.get("status") == "passed"
+                and {row["id"] for row in report["results"]} == {p["id"] for p in programs}
+                and len(report["results"]) == len(programs) and report["failed"] == 0
+                and report["not_run"] == 0
+                and set(capabilities) == {"clean", "address", "undefined"}
+                and all(row.get("passed") is True for row in capabilities.values())
+                and not changed)
+        report["status"] = "passed" if good else "failed"
+    except Exception as error:
+        report["status"] = "failed"
+        report["error"] = str(error)
+        if "total" in report:
+            report["not_run"] = report["total"] - len(report.get("results", []))
+    save()
+    print("Selfhost sanitizers: " + report["status"] + "; " + str(work / "receipt.json"))
+    if "error" in report:
+        print(report["error"], file=sys.stderr)
+    return 0 if report["status"] == "passed" else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

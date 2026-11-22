@@ -1,0 +1,12 @@
+struct Inner { text: String, number: int }
+struct Outer { inner: Inner, suffix: String }
+fn main() {
+    var source = Outer{inner: Inner{text: "base".toString(), number: 7}, suffix: "!".toString()}
+    var copy = Inner{text: source.inner.text.clone(), number: source.inner.number}
+    copy.text.push(source.suffix.clone())
+    println(source.inner.text)
+    println(copy.text)
+    source.inner.text.push(source.suffix.clone())
+    println(source.inner.text)
+    println(source.suffix)
+}

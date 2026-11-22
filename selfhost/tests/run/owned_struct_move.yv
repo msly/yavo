@@ -1,0 +1,12 @@
+struct Label { text: String, number: int }
+fn build() -> Label { return Label{text: "hello".toString(), number: 3} }
+fn inspect(value: Label) -> int {
+    println(value.text)
+    return value.number
+}
+fn main() {
+    let initial = build()
+    let moved = initial
+    println(inspect(moved))
+    println(moved.text)
+}

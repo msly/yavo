@@ -1,0 +1,11 @@
+struct Text { value: String = "seed", count: int = 2 }
+fn main() {
+    var first = Text{}
+    let second = Text{}
+    first.value.push("!")
+    println(first.value)
+    println(second.value)
+    let replacement = Text{value: "override".toString()}
+    println(replacement.value)
+    println(replacement.count)
+}

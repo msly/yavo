@@ -281,10 +281,11 @@
       "file": "unsupported/unsupported_vector.yv"
     },
     {
-      "id": "unsupported_owned_string",
-      "kind": "unsupported",
-      "diagnostic": "U0001",
-      "file": "unsupported/unsupported_owned_string.yv"
+      "id": "owned_string_empty",
+      "kind": "run",
+      "file": "run/owned_string_empty.yv",
+      "stdout": "",
+      "batch": "string-ownership"
     },
     {
       "id": "unsupported_borrow",
@@ -788,11 +789,11 @@
       "diagnostic": "U0001"
     },
     {
-      "id": "unsupported_owned_field",
-      "kind": "unsupported",
-      "file": "unsupported/unsupported_owned_field.yv",
-      "batch": "copy-aggregates",
-      "diagnostic": "U0001"
+      "id": "owned_field_declaration",
+      "kind": "run",
+      "file": "run/owned_field_declaration.yv",
+      "stdout": "",
+      "batch": "string-ownership"
     },
     {
       "id": "unsupported_unit_field",
@@ -882,6 +883,313 @@
       "batch": "control-flow-review",
       "stdout": "1\n",
       "reason": "An inner loop break does not make the outer loop complete; the non-terminating function is typechecked but not called."
+    },
+    {
+      "id": "owned_string_basic",
+      "kind": "run",
+      "file": "run/owned_string_basic.yv",
+      "batch": "string-ownership",
+      "stdout": "0\nabc\nab\ntrue\ntrue\ntrue\nabcabc\n"
+    },
+    {
+      "id": "owned_string_returns",
+      "kind": "run",
+      "file": "run/owned_string_returns.yv",
+      "batch": "string-ownership",
+      "stdout": "second\nreturn\n3\nsecond\n"
+    },
+    {
+      "id": "owned_string_utf8_nul",
+      "kind": "run",
+      "file": "run/owned_string_utf8_nul.yv",
+      "batch": "string-ownership",
+      "stdout": "5\n9\n雨\u0000a🙂\ntrue\n"
+    },
+    {
+      "id": "owned_struct_move",
+      "kind": "run",
+      "file": "run/owned_struct_move.yv",
+      "batch": "string-ownership",
+      "stdout": "hello\n3\nhello\n"
+    },
+    {
+      "id": "owned_nested_fields",
+      "kind": "run",
+      "file": "run/owned_nested_fields.yv",
+      "batch": "string-ownership",
+      "stdout": "base\nbase!\nbase!\n!\n"
+    },
+    {
+      "id": "owned_field_defaults",
+      "kind": "run",
+      "file": "run/owned_field_defaults.yv",
+      "batch": "string-ownership",
+      "stdout": "seed!\nseed\noverride\n2\n"
+    },
+    {
+      "id": "owned_reassignment",
+      "kind": "run",
+      "file": "run/owned_reassignment.yv",
+      "batch": "string-ownership",
+      "stdout": "second\nfield\n"
+    },
+    {
+      "id": "owned_return_cleanup",
+      "kind": "run",
+      "file": "run/owned_return_cleanup.yv",
+      "batch": "string-ownership",
+      "stdout": "selected\nselected\n"
+    },
+    {
+      "id": "owned_loop_cleanup",
+      "kind": "run",
+      "file": "run/owned_loop_cleanup.yv",
+      "batch": "string-ownership",
+      "stdout": "inner\nouter\ninner\nouter\n3\n4\n"
+    },
+    {
+      "id": "owned_branch_cleanup",
+      "kind": "run",
+      "file": "run/owned_branch_cleanup.yv",
+      "batch": "string-ownership",
+      "stdout": "branch\nother\ninside\n"
+    },
+    {
+      "id": "owned_temporary_borrows",
+      "kind": "run",
+      "file": "run/owned_temporary_borrows.yv",
+      "batch": "string-ownership",
+      "stdout": "3\ntrue\ncopy\nfield\n"
+    },
+    {
+      "id": "owned_argument_order",
+      "kind": "run",
+      "file": "run/owned_argument_order.yv",
+      "batch": "string-ownership",
+      "stdout": "first\nsecond\nfirst\nsecond\nxx\n"
+    },
+    {
+      "id": "diagnostic_original_source",
+      "kind": "run",
+      "file": "run/diagnostic_original_source.yv",
+      "batch": "string-ownership",
+      "stdout": "E0001\nbad token\n7\n2\n4\nE0001\n",
+      "source_prefix": "diagnostic.yv"
+    },
+    {
+      "id": "owned_use_after_move",
+      "kind": "reject",
+      "file": "reject/owned_use_after_move.yv",
+      "batch": "string-ownership",
+      "diagnostic": "E0402"
+    },
+    {
+      "id": "owned_struct_use_after_move",
+      "kind": "reject",
+      "file": "reject/owned_struct_use_after_move.yv",
+      "batch": "string-ownership",
+      "diagnostic": "E0402"
+    },
+    {
+      "id": "owned_field_move",
+      "kind": "reject",
+      "file": "reject/owned_field_move.yv",
+      "batch": "string-ownership",
+      "diagnostic": "E0401"
+    },
+    {
+      "id": "owned_parameter_move",
+      "kind": "reject",
+      "file": "reject/owned_parameter_move.yv",
+      "batch": "string-ownership",
+      "diagnostic": "E0401"
+    },
+    {
+      "id": "owned_struct_parameter_move",
+      "kind": "reject",
+      "file": "reject/owned_struct_parameter_move.yv",
+      "batch": "string-ownership",
+      "diagnostic": "E0401"
+    },
+    {
+      "id": "owned_readonly_local",
+      "kind": "reject",
+      "file": "reject/owned_readonly_local.yv",
+      "batch": "string-ownership",
+      "diagnostic": "E0014"
+    },
+    {
+      "id": "owned_readonly_parameter",
+      "kind": "reject",
+      "file": "reject/owned_readonly_parameter.yv",
+      "batch": "string-ownership",
+      "diagnostic": "E0014"
+    },
+    {
+      "id": "owned_readonly_field",
+      "kind": "reject",
+      "file": "reject/owned_readonly_field.yv",
+      "batch": "string-ownership",
+      "diagnostic": "E0014"
+    },
+    {
+      "id": "owned_push_alias",
+      "kind": "reject",
+      "file": "reject/owned_push_alias.yv",
+      "batch": "string-ownership",
+      "diagnostic": "E0403"
+    },
+    {
+      "id": "owned_push_field_alias",
+      "kind": "reject",
+      "file": "reject/owned_push_field_alias.yv",
+      "batch": "string-ownership",
+      "diagnostic": "E0403"
+    },
+    {
+      "id": "owned_argument_borrow_move",
+      "kind": "reject",
+      "file": "reject/owned_argument_borrow_move.yv",
+      "batch": "string-ownership",
+      "diagnostic": "E0102"
+    },
+    {
+      "id": "owned_argument_move_use",
+      "kind": "reject",
+      "file": "reject/owned_argument_move_use.yv",
+      "batch": "string-ownership",
+      "diagnostic": "E0402"
+    },
+    {
+      "id": "owned_branch_move_use",
+      "kind": "reject",
+      "file": "reject/owned_branch_move_use.yv",
+      "batch": "string-ownership",
+      "diagnostic": "E0402"
+    },
+    {
+      "id": "owned_loop_move",
+      "kind": "reject",
+      "file": "reject/owned_loop_move.yv",
+      "batch": "string-ownership",
+      "diagnostic": "E0402"
+    },
+    {
+      "id": "owned_literal_binding",
+      "kind": "reject",
+      "file": "reject/owned_literal_binding.yv",
+      "batch": "string-ownership",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "owned_literal_return",
+      "kind": "reject",
+      "file": "reject/owned_literal_return.yv",
+      "batch": "string-ownership",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "owned_literal_argument",
+      "kind": "reject",
+      "file": "reject/owned_literal_argument.yv",
+      "batch": "string-ownership",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "owned_literal_field",
+      "kind": "reject",
+      "file": "reject/owned_literal_field.yv",
+      "batch": "string-ownership",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "owned_str_binding",
+      "kind": "reject",
+      "file": "reject/owned_str_binding.yv",
+      "batch": "string-ownership",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "owned_constructor_field",
+      "kind": "reject",
+      "file": "reject/owned_constructor_field.yv",
+      "batch": "string-ownership",
+      "diagnostic": "E0010"
+    },
+    {
+      "id": "owned_push_argument_type",
+      "kind": "reject",
+      "file": "reject/owned_push_argument_type.yv",
+      "batch": "string-ownership",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "owned_method_arity",
+      "kind": "reject",
+      "file": "reject/owned_method_arity.yv",
+      "batch": "string-ownership",
+      "diagnostic": "E0012"
+    },
+    {
+      "id": "unsupported_string_to_string",
+      "kind": "shared_unsupported",
+      "file": "unsupported/unsupported_string_to_string.yv",
+      "batch": "string-ownership",
+      "diagnostic": "U0001"
+    },
+    {
+      "id": "unsupported_str_clone",
+      "kind": "shared_unsupported",
+      "file": "unsupported/unsupported_str_clone.yv",
+      "batch": "string-ownership",
+      "diagnostic": "U0001"
+    },
+    {
+      "id": "unsupported_temporary_string_push",
+      "kind": "shared_unsupported",
+      "file": "unsupported/unsupported_temporary_string_push.yv",
+      "batch": "string-ownership",
+      "diagnostic": "U0001"
+    },
+    {
+      "id": "owned_loop_break_move",
+      "kind": "reject",
+      "file": "reject/owned_loop_break_move.yv",
+      "batch": "string-ownership",
+      "diagnostic": "E0402",
+      "reason": "Stage0 conservatively rechecks an outer owned move across loop iterations, including a trailing break."
+    },
+    {
+      "id": "owned_loop_reinitialization",
+      "kind": "run",
+      "file": "run/owned_loop_reinitialization.yv",
+      "batch": "string-ownership",
+      "stdout": "seed\nnext\nnext\nnext\n"
+    },
+    {
+      "id": "owned_struct_clone_method",
+      "kind": "reject",
+      "file": "reject/owned_struct_clone_method.yv",
+      "batch": "string-ownership-review",
+      "diagnostic": "E0010"
+    },
+    {
+      "id": "unsupported_loop_condition_move",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_loop_condition_move.yv",
+      "batch": "string-ownership-review",
+      "diagnostic": "U0001",
+      "known_gap": "stage0-repeated-condition-consumes-owner",
+      "reason": "Stage0 accepts consuming an outer owned local in a repeatedly evaluated while condition; a later condition evaluation can read the cleared owner. The subset explicitly rejects this boundary, and no stage0 runtime output is used as a correctness oracle."
+    },
+    {
+      "id": "unsupported_comparison_borrow_move",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_comparison_borrow_move.yv",
+      "batch": "string-ownership-review",
+      "diagnostic": "U0001",
+      "known_gap": "stage0-comparison-borrow-then-consume",
+      "reason": "Stage0 accepts borrowing a String for the left comparison operand and consuming its owner while evaluating the right operand. The subset rejects this ownership boundary; the observed stage0 false result is not adopted as a positive oracle."
     }
   ],
   "promotions": [
@@ -895,6 +1203,28 @@
       "kind": "run",
       "source_sha256": "a991a5b8ff8c28df533838a6b81461c35f63565c3a6e3f22f6b3273829164d23",
       "reason": "Copy aggregate declarations are now in the accepted input subset; source bytes are unchanged."
+    },
+    {
+      "previous_id": "unsupported_owned_string",
+      "previous_file": "unsupported/unsupported_owned_string.yv",
+      "previous_kind": "unsupported",
+      "baseline_commit": "f08c38f",
+      "id": "owned_string_empty",
+      "file": "run/owned_string_empty.yv",
+      "kind": "run",
+      "source_sha256": "7a77377064aa3d38343df0fd8e41c495200d1448180a1aa762326c9568194ddb",
+      "reason": "Owned String values and fields are now in the accepted input subset; source bytes are unchanged."
+    },
+    {
+      "previous_id": "unsupported_owned_field",
+      "previous_file": "unsupported/unsupported_owned_field.yv",
+      "previous_kind": "unsupported",
+      "baseline_commit": "f08c38f",
+      "id": "owned_field_declaration",
+      "file": "run/owned_field_declaration.yv",
+      "kind": "run",
+      "source_sha256": "52078819944f290f410a6575869c1fa732c2da17dbddbbcfe5181eea2795645b",
+      "reason": "Owned String values and fields are now in the accepted input subset; source bytes are unchanged."
     }
   ]
 }

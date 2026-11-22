@@ -1,0 +1,11 @@
+struct Text { value: String }
+fn main() {
+    var text = "first".toString()
+    text = "second".toString()
+    text = text
+    println(text)
+    var box = Text{value: "old".toString()}
+    box = Text{value: "new".toString()}
+    box.value = "field".toString()
+    println(box.value)
+}

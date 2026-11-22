@@ -1,4 +1,4 @@
-# Yavo-written compiler: Copy aggregate subset
+# Yavo-written compiler: String ownership subset
 
 This directory starts the [self-hosting roadmap](../docs/self-hosting.md).
 It contains a real subset compiler written in Yavo: source is tokenized,
@@ -7,9 +7,11 @@ compiler and as a separate test reference. The Yavo frontend never delegates
 an input program back to the Rust frontend.
 
 **Current status: subset compiler; self-compilation is not implemented.**
-The input subset now includes Copy structs and payload-free enums. Its own
-implementation still needs modules, owned strings and vectors, results, mutable
-borrows and other forms that the input subset does not yet cover.
+The input subset includes Copy aggregates, payload-free enums, owned String
+values and structs containing String fields. The complete original
+`diagnostic.yv` is compiled with an appended test entry point. Full compiler
+sources still require vectors, explicit parameter modes, options/results,
+modules and other forms outside the accepted input subset.
 The validation receipt explicitly records `self_hosted: false` and tests that
 checking its own entry point reports `U0001`.
 
@@ -46,36 +48,35 @@ Windows and macOS; a configured job is not itself a passing result.
 
 ## Validation snapshot (2026-11-22)
 
-The [Copy aggregate summary](../compiler/validation/selfhost-aggregates-2026-11-22.json)
-records **138/138 cases and 10/10 auxiliary checks**, with no skipped checks:
-29 normal programs, 10 panic programs, 81 rejected programs, 14 stage0-accepted
-but subset-unsupported programs, and 4 boundaries unsupported by both frontends.
-All 39 executable inputs pass Debug and Release fixed oracles and Rust
-differential checks; their repeated C output is byte-identical.
+The [String ownership summary](../compiler/validation/selfhost-string-2026-11-22.json)
+records **181/181 cases and 10/10 auxiliary checks**, with no skipped checks:
+45 normal programs, 10 panic programs, 105 rejected programs, 14 inputs accepted
+by stage0 but outside this subset, and 7 boundaries unsupported by both
+frontends. All 55 executable inputs pass Debug and Release fixed oracles,
+Rust differential checks and repeated-C byte comparisons, with allocation
+checking enabled.
 
-All 72 original fixture sources are retained byte-for-byte. The former
-`unsupported_struct` declaration is now a supported run case; 66 cases were
-added. Review regressions cover nominal values, temporary assignment targets,
-literal capacity and conservative loop-return checking. The lexer separately
-checks the `u128` token limit, including leading zeroes; used `int` expressions
-still require the signed 64-bit range. A same-loop syntactic `break` counts
-even after unreachable `continue` or `return`, matching stage0's conservative
-return check; nested-loop breaks stay within their loop.
+All 138 preceding fixture sources are retained byte-for-byte. Two owned-value
+declarations moved from unsupported to run without changing their source;
+43 cases were added. The original 438 bytes of `diagnostic.yv` are a verified
+prefix of a fresh test source with only a standalone main appended. The receipt
+binds the original, suffix and assembled source separately; the component
+executes correctly in both modes.
 
-This increment changes only the Yavo frontend, its tests/harness and documents.
 The Rust frontend, C runtime, locked toolchain and frozen specification are
-unchanged. The previous complete local stage0 Debug/Release suites each passed
-142 tests, failed 0 and ignored 1; those local suites were not rerun for this
-increment. [CI run 45025445954](https://github.com/msly/yavo/actions/runs/45025445954)
-passed all six jobs at `fbb322e`, including this frontend gate on Linux x86-64,
-Windows x86-64 and macOS arm64. The aggregate summary binds the implementation
-commit, successful job/step results and artifact metadata. Archive contents were
-not separately downloaded or rehashed in this increment.
+unchanged. Complete local Rust suites retain their preceding 142/0/1 baseline;
+they were not rerun locally in this increment. Three native CI jobs execute
+the new selfhost gate. A separate Linux step recompiles the actual Yavo
+frontend's generated C with GCC ASan/UBSan; source and capability checks are
+required. Current execution results and their source commit are recorded in
+the String summary.
 
-The [preceding SH-1 summary](../compiler/validation/selfhost-sh1-2026-11-22.json)
-retains its 72-case baseline and
-[CI run 45019581088](https://github.com/msly/yavo/actions/runs/45019581088).
-The counts measure tested behavior, not a self-hosting completion percentage.
+The [Copy aggregate summary](../compiler/validation/selfhost-aggregates-2026-11-22.json)
+retains its 138-case baseline and
+[CI run 45025445954](https://github.com/msly/yavo/actions/runs/45025445954).
+The earlier [SH-1 summary](../compiler/validation/selfhost-sh1-2026-11-22.json)
+retains the 72-case baseline. These counts are tested behaviors, not a
+self-hosting completion percentage.
 
 ## CLI
 
@@ -104,35 +105,63 @@ JSON diagnostics, suggestions and recovery remain future work.
 | Area | Implemented |
 | --- | --- |
 | Files | One source file; function and aggregate declarations, including `pub`; required `fn main()` |
-| Types | `int` (signed 64-bit), `bool`, borrowed `str`, unit return; nominal Copy structs and payload-free enums |
-| Aggregates | Forward and nested struct fields, construction, reads and mutable field assignment, value copies, scalar literal field defaults, empty structs/enums; by-value cycles rejected |
+| Types | `int` (signed 64-bit), `bool`, borrowed `str`, owned `String`, unit return; nominal structs and payload-free enums |
+| String | Empty construction, str.toString, len, clone, push, output, String/str equality and ordering, UTF-8/NUL |
+| Aggregates | Forward/nested fields, construction, reads and mutable fields; Copy values or owned String/nested struct fields; constant defaults and empty aggregates; by-value cycles rejected |
 | Enums | Qualified and context-inferred cases, nominal type checks, equality/inequality, case-name output |
 | Literals | Decimal integers including negative `INT64_MIN`, booleans, unit, non-interpolated UTF-8 strings with supported escapes and NUL |
-| Functions | Typed parameters, int/bool/Copy aggregate/unit returns, forward calls, recursion, local/global name resolution; default parameters are read-only |
+| Functions | Typed parameters, scalar/String/struct/unit returns, forward calls and recursion; owned ordinary parameters borrow read-only; str returns remain outside the subset |
 | Locals | `let`/`var`, inferred or explicit types, assignment and arithmetic compound assignment; active locals cannot be shadowed |
 | Control flow | `if`/`else if`/`else`, `while`, `loop`, `break`, `continue`, explicit return and return-path checks |
 | Expressions | Parentheses, unary minus/not, checked integer arithmetic, wrapping arithmetic, bit operations/shifts, equality/order, short-circuit boolean operators |
 | Builtins | Single-argument `print`/`println`/`eprintln` as direct statements, `assert(bool)`; user functions take precedence over the assert prelude |
-| Runtime behavior | Existing checked arithmetic/panic/UTF-8/output runtime; left-to-right evaluation into C temporaries |
+| Ownership | Consuming bindings/assignment/construction/returns; moved-value checking, read-only parameters, root-based argument/receiver protection |
+| Runtime behavior | Checked arithmetic/panic/output, ordered evaluation, moved-source zeroing and cleanup on scope/statement/control-flow exits |
 
-Non-unit values require an explicit return. Only a direct call may stand alone
+Non-unit values require an explicit return. Only a direct function/method call may stand alone
 as an expression statement, and unit-returning functions allow `return` or
 `return ()`, matching the existing language. The parser bounds syntactic nesting
 at 128 and expression lowering at 256; exceeding either returns `U0001`.
 
-Aggregate fields currently hold `int`, `bool`, payload-free enums, or other Copy
-structs. Borrowed `str` fields are rejected with `E0301`; owned fields and unit
-fields are outside this subset. Struct equality/printing and enum ordering are
-rejected consistently with stage0. Explicit constructor fields are evaluated in
-source order, independently of declaration order. Enum names are resolved from
-annotations, parameters, return types, fields, assignments and the left operand
-of comparisons; a bare case on the left of a comparison has no inferred context.
+Aggregate fields may hold int, bool, String, payload-free enums or nested
+structs. Borrowed `str` fields are rejected with E0301; unit fields remain
+outside this subset. Struct equality/printing/clone and enum ordering are
+rejected consistently with stage0. Explicit constructor fields are evaluated
+in source order. Bare enum cases use annotation/parameter/return/field/
+assignment/RHS comparison context.
 
-Unsupported input includes source imports, enum payloads, owned `String`,
-collections, general references/ownership, results/options, methods, generics,
-interpolation, byte/float/nondecimal literals, integer separators, `for`,
-closures and concurrency. This list describes the **new frontend's** input,
-not limitations of the existing Rust compiler.
+### String ownership boundaries
+
+Ordinary string literals are `str`. Binding, assigning, returning or explicitly
+initializing a String field from a literal requires `.toString()`; only a
+String field's constant default has a special literal conversion. String
+arguments may borrow a str view for a call, but persistent String-to-str
+bindings and borrowed return values are not introduced by this increment.
+
+Owned locals move into bindings, assignments, constructors and returns.
+Ordinary parameters, output, comparison, len and clone borrow. Moving out of
+a field or a read-only parameter is E0401; moved-value reuse is E0402.
+Modification through a read-only place is E0014; a conflicting push receiver
+is E0403, including sibling fields of the same root. Earlier call arguments
+retain their borrows until the call and conflicting later moves are E0102.
+String temporaries remain alive through the statement; short-circuit branch
+temporaries are cleaned inside their branch. Locals are cleaned on return,
+break/continue and scope exit; moved sources are zeroed before later cleanup.
+
+Loop move checks reproduce stage0's conservative second body pass, including
+moves before a syntactic break/return. Reinitialization restores availability.
+Two accepted stage0 boundaries remain explicitly U0001 here: consuming an
+existing owner in a while condition, and transferring the root of a borrowed
+comparison operand while evaluating the other operand. Their minimal sources
+and the unresolved stage0 behavior are recorded in the manifest; stage0's
+observed output is not used to redefine a correctness oracle.
+
+Unsupported input includes vectors/other collections, imports, enum payloads,
+explicit user inout/sink/references/take, options/results, user-defined methods,
+generics, interpolation, byte/float/nondecimal literals, integer separators,
+for loops, closures and concurrency. String temporary receivers cannot be
+modified. This list describes the new frontend's input, not the broader Rust
+frontend.
 
 ## Implementation and next dependency chain
 
@@ -141,8 +170,8 @@ not limitations of the existing Rust compiler.
 | `lexer.yv` | UTF-8-aware tokens, escapes, source spans, newline termination |
 | `model.yv` | Owned AST nodes; graph edges and spellings use indices |
 | `parser.yv` | Aggregate/function/statement/expression grammar, precedence, unsupported boundaries |
-| `types.yv` | Nominal type registry, field/default checks, duplicate/cycle detection, stable layout order |
-| `codegen.yv` | Symbols, expected types, mutable places, return paths and ordered C lowering |
+| `types.yv` | Nominal types, field/default checks, cycles/layout order, transitive ownership |
+| `codegen.yv` | Places, borrowed/consuming values, move-state joins, cleanup, loop replay and ordered C |
 | `diagnostic.yv` | Shared diagnostic data |
 | `main.yv` | CLI, input and exclusive output creation |
 | `lexer_test.yv` | Lexer boundary assertions |
@@ -151,26 +180,18 @@ not limitations of the existing Rust compiler.
 The [token metadata example](examples/token_metadata.yv) exercises `SourceSpan`,
 `TokenKind`, `TokenMetadata`, `Operation` and `Statistics` through construction, function
 calls, branches and nested field updates. It represents source positions and
-compiler state; owned lexemes and dynamic AST storage are still pending.
+compiler state; the full lexer and dynamic AST storage still require the next dependencies.
 
-The next increment is the `String`/`Failure` ownership path. Preserve the
-complete original bytes of `diagnostic.yv` as a fixture prefix and append a
-standalone test entry point; its existing `Failure` fields and `make` function
-require owned string construction, borrowed reads, ownership transfer and
-cleanup, without needing vectors or source imports.
+The String/Failure component path is implemented. The next increment is
+`Vec` with Copy elements: typed empty construction, push/len/indexing, checked
+bounds, value reads, owned-container moves and cleanup. A vector itself owns
+its buffer even when its elements are Copy. After that, String/Token elements
+need element destruction and borrowed indexing; blanket deep copying of index
+results cannot replace stage0's semantics.
 
-That increment must distinguish borrowed reads from consuming bindings,
-assignments, constructors and returns; generate cleanup on every supported
-scope/control-flow exit; and reject moved-value reuse, moves out of borrowed
-places and conflicting modification. Builtin string methods need receiver-aware
-parsing, while user-defined methods remain a later feature. Normal completion
-must pass allocation checks in both build modes.
-
-Next add `Vec` with Copy elements, then owned String/Token elements with
-borrowed indexing and element destruction. Explicit inout/sink/take, options,
-results with try/catch, modules and the remaining literal/builtin forms follow
-their actual source dependencies. Each increment needs external positive and
-negative tests before attempting all compiler sources.
+Explicit inout/sink/take, options, results with try/catch, modules and remaining
+literal/builtin forms follow actual compiler-source dependencies. Each
+increment requires independent positive/negative and resource checks.
 
 After the input subset covers all compiler sources, build stage2 using stage1,
 then stage3 using stage2 in fresh directories; compare their generated C and
