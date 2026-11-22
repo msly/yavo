@@ -1,18 +1,18 @@
-# Yavo 交接文档（2026-11-22，第十五批：元素上的修改方法、诊断提示与第四轮收尾）
+# Yavo 交接文档（2026-11-22，第十六批：GitHub 发布与 CI 接入）
 
-给下一个会话：先读第 1、2、10、20 节再开工。第 20 节是第十四、十五批（四项语言决定、下标赋值、第四轮复测，以及之后的元素修改方法和诊断）；第 19 节是第三轮实验；第 18 节是第十二批（构建缓存）。第六到第十一批的原始记录与“完整 v1 目标”清单在 `history/handoff-batches-2026-11-19-to-21.md`，保留当时的日期与数值，不代表当前源码的重新验证。
+给下一个会话：先读第 1、2、10、21 节再开工。第 20 节是第十四、十五批（四项语言决定、下标赋值、第四轮复测，以及之后的元素修改方法和诊断）；第 19 节是第三轮实验；第 18 节是第十二批（构建缓存）。第六到第十一批的原始记录与“完整 v1 目标”清单在 `history/handoff-batches-2026-11-19-to-21.md`，保留当时的日期与数值，不代表当前源码的重新验证。
 
 ## 1. 一句话状态
 
-规范以 v0.5 冻结版为基础，2026-11-21 按第三轮实验修订了 V2（两阶段借用）、K1（`String`/`str` 比较），新增 V6a（字段默认值）、V14（P-STACK），见 `docs/decisions.md` 第六节；冻结测试包 `yavo-tests/` 不改。Rust 编译器与 C 运行时覆盖 P0 链路及 P1—P3 的主要功能：结构体、枚举、`T ! E`、`match`、`String`/`Vec`/`Map`/`Set`、切片、移动与析构、视图与 `of`、`&T`/`&inout T`、`?T`、方法、`Drop`、元组、不逃逸闭包、`Eq`/`Ord`、`Box`、接口、泛型、浮点；并发（`Rc`/`Arc`/`Mutex`/`with`/`scope`/`spawn`/`Channel`/`Send`/`Sync`）；Heap/Deque、`Arena[T]`/`Id[T]`、源文件模块；`yavo fix`/`allocations`/`verify`；后端构建缓存；六个目标的交叉编译。各批次细节见第 4 节和 `history/`。
+规范以 v0.5 冻结版为基础，2026-11-21 按第三轮实验修订了 V2（两阶段借用）、K1（`String`/`str` 比较），新增 V6a（字段默认值）、V14（P-STACK），见 `docs/decisions.md` 第六节；冻结测试包 `yavo-tests/` 不改。Rust 编译器与 C 运行时覆盖 P0 链路及 P1—P3 的主要功能：结构体、枚举、`T ! E`、`match`、`String`/`Vec`/`Map`/`Set`、切片、移动与析构、视图与 `of`、`&T`/`&inout T`、`?T`、方法、`Drop`、元组、不逃逸闭包、`Eq`/`Ord`、`Box`、接口、泛型、浮点；并发（`Rc`/`Arc`/`Mutex`/`with`/`scope`/`spawn`/`Channel`/`Send`/`Sync`）；Heap/Deque、`Arena[T]`/`Id[T]`、源文件模块；`yavo fix`/`allocations`/`verify`；后端构建缓存；六个目标的交叉编译。第十五批补入 V2a（元素上的修改方法），见 `docs/decisions.md` 第七节。**P0—P3 主体功能已实现，完整 v1 尚未验收，P4 仍为小规模试验。** 三平台实际执行、剩余工具与功能、Agent 成本和正式性能门尚未闭合。各批次细节见第 4 节和 `history/`。
 规范一致性：**129 项中通过 124、判错 0、不支持 3、未运行 0、被新决定取代 2**（T-V1、T-GF2 断言旧 V2，登记在 `compiler/tests/conformance_superseded.txt`；不支持的 3 项需要锁定工具链无法链接的 ASan 运行时）。该统计只表示既有用例覆盖，不是完整 v1 完成比例。
-全部提交只在本地，**按用户决定暂不推远端**。
-测试基准：第十五批单条命令 Release **129/0/1**、Debug **129/0/1**（第十四批 `1af1f69` 为 123/0/1，新增 6 项是 `index_assignment.rs`）；六个交叉目标均可构建含 P-STACK 运行时的程序。
-**最新 agent 实验（第四轮，第 20.2 节）**：沿用第三轮题包，首编正确 Yavo 8/11（第三轮 3/11）、Rust 11/11；Yavo 与 Rust 的 token 比 1.27、工具调用比 1.58、用时比 1.63。剩下 3 次失败（元素修改方法、非 Copy 元素读出即借用、`${` 未转义）已在第十五批分别实现或改进诊断。同题复测不能说明泛化，下一步是新题第五轮（第 10 节）。第三轮数据见第 19 节。
+**2026-11-22 用户已授权推送 `msly/yavo` 并使用 GitHub CI；已有历史已推送，远端 `main` 为 `b3c27a6`。** CI 接入结果见第 21 节；旧“暂不推送”约定已被本次授权取代。
+本地测试基准 `b3c27a6`：第十五批完整单条命令 Release **129 通过 / 0 失败 / 1 忽略**、Debug **129/0/1**；这是 Cargo 测试函数数，和上面的 129 项规范用例是不同计数单位。忽略的是旧 P0 探索性报告，当前 conformance 套件会执行。第十四批 `1af1f69` 为 123/0/1，新增 6 项为 `index_assignment.rs`；六个交叉目标能构建含 P-STACK 运行时的程序，既有原生执行证据为 Linux x86-64。
+**最新 agent 实验（第四轮，第 20.2 节）**：沿用第三轮题包，首编正确 Yavo 8/11（第三轮 3/11）、Rust 11/11；Yavo 与 Rust 的 token 比 1.27、工具调用比 1.58、用时比 1.63。剩下 3 次失败（元素修改方法、非 Copy 元素读出即借用、`${` 未转义）已在第十五批分别实现或改进诊断。交卷后 T10 边界抽查发现 Yavo 解答错拒合法前导零 `000000001`，Rust 接受；18/18 仅为既有样例通过。成本由编排记录补回，完整逐次转录和首稿尚未归档。最新改动尚未经新题评测；先接通原生 CI，再做第五轮（第 10 节）。第三轮数据见第 19 节。
 
 ## 2. 仓库与环境
 
-- 仓库：`/data1/workspace/github/workspace/yavo`（通过 mcp-3 访问，工作区根是 `/data1/workspace/github`）。
+- 仓库：`/data1/workspace/github/workspace/yavo`（通过 mcp-3 访问，工作区根是 `/data1/workspace/github`）；远端 [msly/yavo](https://github.com/msly/yavo)，发布与 CI 已获用户授权。
 - 构建前必须设置（否则找不到 cargo 或链接失败）：
 
 ```sh
@@ -66,7 +66,10 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 
 | 提交 | 内容 |
 | --- | --- |
-| 第十三批（本批） | 速查卡与编译器对齐；第三轮冷启动实验（见第 19 节） |
+| `b3c27a6` | 元素上的修改方法、下标赋值求值与借用顺序、诊断提示（第十五批） |
+| `6716b47` | 第四轮同题实验与成本、T10 边界失败归档 |
+| `1af1f69` | 下标赋值、两阶段接收者、String/str 比较、字段默认值、P-STACK |
+| `20b84a6` `7cc377c` `642e8be` | 速查卡与编译器对齐；第三轮冷启动实验（第十三批） |
 | `a9fbefc` | 后端内容寻址构建缓存；`yavo run` 报告信号（第 18 节） |
 | `68024e2` `0a69e75` `bec0ed1` `12531c3` | Arena/Id、源文件模块、Arena 跨模块与线程组合回归 |
 | `cd1e7ed` `78ee9d5` `2b994fb` | 独立 ASan/UBSan 工作流；小规模 C 性能对照 |
@@ -121,7 +124,7 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - `tests/p0/errors_*.yv` 开头是 `// expect-error: CODE 行:列`。头部每多一行，正文行号整体加一；做法是先写无头文件，用 `yavo check` 取位置，再按头部行数加偏移生成头部。
   现在用 `tools/expect_header.sh compiler/tests/p0/errors_x.yv` 自动完成（去掉旧头部、重跑 `yavo check`、按头部行数加偏移写回）；它记录的是编译器当前的输出，生成后要逐条核对。
 - 解析阶段的 `U0001`（parser 报的）会让整个文件不再进入检查器，所以它们只能和别的解析期 `U0001` 放在一起（`errors_unsupported.yv`），不能和检查器的错误混在一个测试文件里。
-- 一个特性做完：补 `run_*` 和 `errors_*` 两类测试；跑全部测试（debug、release）；跑堆块检查；交叉编译抽查；刷新一致性基线；更新 `compiler/README.md` 对应小节和根 `README.md` 的数字；本地提交。
+- 一个特性做完：补 `run_*` 和 `errors_*` 两类测试；跑全部测试（debug、release）；跑堆块检查；交叉编译抽查；刷新一致性基线；更新 `compiler/README.md` 对应小节和根 `README.md` 的数字；提交并按已授权的远端/CI 流程验证。
 - 已解锁的旧写法可能让旧测试失效（例如某行不再报 `U0001`），改测试时保持行列不变，换成仍然成立的用例。
 - `tools/expect_header.sh` 默认用 **debug** 版 `yavo`；只构建了 release 时要写 `YAVO=$PWD/target/release/yavo bash ../tools/expect_header.sh ...`，否则会拿旧二进制的输出生成头部。
 - 历史批次曾在 `yavo-tests/ERRORS.md` 登记前端通用错误（如 `E0019`）；当前该测试包已冻结，新工作优先复用既有码，不回写历史快照或冻结输入来适配实现。
@@ -157,7 +160,7 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 
 ## 8. 一致性测试里的卡点
 
-当前 **3 项不支持、0 项未运行**；全部冻结 P1 用例已通过，但完整阶段承诺仍需“完整 v1 目标”清单（原第 16 节，现在 history 文件中）的功能与证据。
+当前 **124 通过、0 判错、3 不支持、0 未运行、2 被后续决定取代**。P1 为 81 通过、2 superseded；P2 为 20 通过、1 不支持；P3 为 23 通过、2 不支持。完整阶段承诺仍需 history 中“完整 v1 目标”清单的功能与证据。
 
 | 卡点 | 测试与状态 |
 | --- | --- |
@@ -171,19 +174,19 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 | 序号 | 任务 | 状态 |
 | --- | --- | --- |
 | 1–10 | 可选值、Map、导入、枚举与结果、方法/Drop/接口/Box、`*p`/`&inout T`、浮点、切片、泛型 | 已完成（第一至第四批） |
-| 11 | `yavo fix` | 已实现；只自动拆 `v.push(v.len())` 一类固定写法（第 19 节：`c.push(c[0] + c[1])` 不拆） |
+| 11 | `yavo fix` | 已实现保守修复与候选补丁；V2 修订后 `v.push(v.len())` 本身合法；多文件 fix 仍报 U0001 |
 | 12 | P3 并发 | 已实现主要路径；公开 Join / spawn inout 仍缺 |
 | 13 | `yavo verify` | 已实现；审计未实现，总体 `not_verified` |
 | 14–15 | Arena/Id；多文件源模块 | 已实现；包依赖与程序锁文件待做 |
-| 冷启动实验 | 三轮 | 第一轮 10/10（题目点名特性）；第二轮首编 7/10 对 Rust 9/10、token +29%；**第三轮首编正确 3/11 对 11/11、token +32%**（第 19 节） |
-| 待定 | 三平台 CI | 需要远端仓库，用户暂不推 |
+| 冷启动实验 | 四轮 | 第四轮同题首编且既有样例正确 8/11 对 Rust 11/11；token/调用/时间为 1.27/1.58/1.63 倍；T10 新边界 Yavo 失败（第 20 节） |
+| 当前优先 | 三平台 CI | 用户已授权，历史已推送 `msly/yavo`；原生 CI 结果待完成（第 21 节） |
 
 批次与用户约定的历史（“可用”三批、第四到第六批）见 `history/handoff-batches-2026-11-19-to-21.md`。
 
 ## 10. 下一个会话的第一步
 
-1. 先检查 Git 状态和最新提交；环境见第 2 节。冻结用例基线见第 1 节。代码修改按风险加回归，明确记录 Debug/Release 实际完成范围。**不要同时跑两条 `cargo test`**：它们共用临时目录，会出现 `CurrentDirUnlinked` 之类的假失败。
-2. **第五轮实验（第一优先）**：第三、四轮复用同一题包，已无法区分“语言变好”和“题目被针对”。按第四轮报告第 92–93 行的要求：
+1. 先检查 Git 状态和最新提交；环境见第 2 节。冻结用例基线见第 1 节。代码修改按风险加回归，明确记录 Debug/Release 实际完成范围。**不要同时跑两条 `cargo test`**：它们共用临时目录，会出现 `CurrentDirUnlinked` 之类的假失败。本轮先完成 GitHub 原生 CI，按 [CI 说明](tools/ci/README.md) 分别记录平台、工具链和实际测试范围；cargo 退出 0 之外还须核对 conformance 的 wrong/not_run。
+2. **原生 CI 后做第五轮实验**：第三、四轮复用同一题包，已无法区分“语言变好”和“题目被针对”。按第四轮报告第 92–93 行的要求：
    - 换 12 道同难度新题，每题加独立的隐藏边界用例（第四轮 T10 前导零就是旧题包漏掉的合法输入）；
    - 每种语言至少 2 次独立运行；
    - 编排会话逐次保存编译命令、退出状态、首次源码，以及 token、工具调用和单调时钟计时，**直接写进实验目录**（第四轮 Yavo 的成本就是因为没落盘，写稿时才“缺失”）。
@@ -191,8 +194,10 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 3. 成本差距是现在的主要问题：第四轮首编 8/11，但 token 仍是 Rust 的 1.27 倍、工具调用 1.58 倍、用时 1.63 倍。第五轮要能拆出原因，所以记录里要区分“读速查卡/文档”“写代码”“编译失败后修改”三类调用。若主要花在读卡上，考虑给速查卡加一页“首次写对清单”并压缩其余篇幅。
 4. 可选的语言决定（目前没有新失败支持，等第五轮数据）：非 Copy 值的取法（如 `m.getClone(k)`）；`[]T` 可变切片。
 5. 预编译运行时目标文件：编辑后重建 Release 仍 214–247 ms，超过 200 ms 目标；约 50–60 ms 用于重编 `yavo_rt.h`（第 18 节）。
-6. 用户测试块与 `yavo test`；依赖与程序锁文件；FFI/unsafe 与 audit；Windows/macOS 真机与 CI；固定工具链的 ASan 能力。
+6. 待排的完整 v1 缺口：用户测试块与 `yavo test`；依赖与程序锁文件；FFI/unsafe 与 audit；固定工具链的 ASan 能力。本轮不扩展语言功能。
 7. 一般闭包值/高阶参数、公开 Join、spawn inout、callable 类型、Atomic API 等；完整清单见 history 文件中的“完整 v1 目标”。
+
+正式门槛仍按 `docs/plan.md`：配对通过率差的单侧 95% 下界至少 −5 个百分点，单位成功交付成本较 Rust 低至少 20% 并独立复现；冻结基准的运行耗时几何均值不超过 C 的 1.5 倍。工程目标包括小程序编译 P50 ≤200 ms、Linux strip 后 ≤250 KB、Windows 真机测试及可复现产物。12 道新题用于下一轮诊断；正式题量按 60 题 pilot 估计、起点不少于 400 题的既定设计。
 
 ## 11–17. 历史批次（已移出）
 
@@ -303,3 +308,11 @@ Yavo 8 次失败：实现缺口 2（字段默认值、`v[i] = x`）；与直觉�
 ### 20.4 结论
 
 首编差距大幅缩小（3/11 → 8/11，第四轮的三处障碍本批已处理），但成本差距仍在，同题复测也不能说明泛化。下一步是用新题、多次独立运行、完整计时的第五轮（第 10 节第 2、3 项），而不是继续扩功能。
+
+## 21. 第十六批：GitHub 发布与 CI 接入（2026-11-22，进行中）
+
+- 用户已授权向 `msly/yavo` 推送并使用 GitHub CI，取代早期仅本地 Git 的限制。
+- 远端为 [https://github.com/msly/yavo](https://github.com/msly/yavo)。2026-11-22 已推送既有历史，`origin/main` 为 `b3c27a6`；工作分支设置为跟踪 `origin/main`。
+- CI 配置与实际覆盖范围见 [tools/ci/README.md](tools/ci/README.md) 和 [.github/workflows/ci.yml](.github/workflows/ci.yml)。首次执行结果待记录，当前原生平台证据仍为 Linux x86-64。
+- 本轮分别完整复跑 Release、Debug，均为 **129/0/1**（各 17 个测试组）；新生成的 conformance 报告为 **124 pass / 0 wrong / 3 unsupported / 0 not_run / 2 superseded**。首个合并驱动在 Debug 阶段遭执行时限终止，随后 Debug 以独立后台命令完整通过；完整日志在 `compiler/target/ci-baseline-20261122/`。
+- 本轮同步根 README、compiler README 与本文件的当前状态；`0a69e75` 的 ASan 58/58、四项 C pilot 及可复现证据继续保留原版本/日期，不能当作最新源码的重跑。

@@ -17,7 +17,7 @@ fn scratch(name: &str) -> PathBuf {
 fn build(dir: &PathBuf, src: &str) -> PathBuf {
     let file = dir.join("main.yv");
     std::fs::write(&file, src).unwrap();
-    let exe = dir.join("main");
+    let exe = dir.join(format!("main{}", std::env::consts::EXE_SUFFIX));
     let out = Command::new(env!("CARGO_BIN_EXE_yavo"))
         .arg("build")
         .arg(&file)

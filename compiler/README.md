@@ -6,46 +6,64 @@ The implementation includes ownership, views, containers, generics, interfaces a
 scoped OS threads. Native validation is on Linux x86-64; complete phase acceptance
 still requires the remaining tools, features and real-platform execution.
 
-## Current validation (2026-11-21)
+## Current local validation (2026-11-22)
 
-The Arena/module code snapshot is `0a69e75`; all 141 compiler/runtime/test input
-hashes were rechecked after validation. Debug and Release each complete 15 Cargo
-test groups: **113 passed, 0 failed, 1 ignored**, with no compiler warnings.
-The initial Debug driver hit the command lifetime limit during its last group;
-its 14 completed groups contribute 98 passes, and a separately completed verify
-group contributes 15. Release ran in four bounded batches after a successful
-prebuild. Partial results from the interrupted group are not counted.
+The latest language-feature baseline is `b3c27a6`. Complete single-command Debug
+and Release suites each pass **129 tests, 0 failed, 1 ignored**. The ignored test
+is the legacy exploratory P0 `conformance_report`; the current conformance suite
+runs independently. Cargo functions and embedded specification fixtures are
+different counting units.
 
-The suites include 95 P0 fixture files under each C optimization mode, 17 module
-tests, six Arena tests and six target tests. Cargo function totals and embedded
-fixture totals are different counting units. Frozen conformance remains
-**126 pass / 0 wrong / 3 unsupported / 0 not_run** in both modes. These three
-unsupported cases still require an ASan runtime unavailable in the pinned Zig.
+The frozen 129-case specification package records **124 pass, 0 wrong,
+3 unsupported, 0 not_run, 2 superseded**. T-GR9, T-P3 and T-R2 require an
+ASan runtime unavailable in the pinned Zig on the project host. T-V1 and T-GF2
+are superseded by the revised V2 two-phase receiver rule, with dated reasons in
+`tests/conformance_superseded.txt`. The conformance test enforces a regression
+baseline; read its complete report as well as the Cargo exit status.
 
-Independent GCC 14.2 ASan+UBSan validation passes **58/58** generated programs,
-including four Arena fixtures and two module entry programs. A clean probe and
-intentional address/overflow faults verify actual sanitizer operation; 426 local
-artifact references were independently rehashed. LeakSanitizer is disabled in
-this ptrace-compatible profile; normal exits also require balanced Yavo heap
-blocks. This independent profile does not change pinned-toolchain conformance.
+The main P0–P3 language paths are implemented, but full v1 remains unaccepted.
+Six target formats/architectures cross-compile; the recorded native execution
+baseline is Linux x86-64. Overall `verify` remains `not_verified` (exit 5),
+because required audit is unimplemented. Remote history was published to
+[msly/yavo](https://github.com/msly/yavo) on 2026-11-22 with user authorization;
+native-platform CI bring-up is the next verification step.
 
-The Arena/module/thread program also passes exact-output execution and two
-independent source-to-binary builds using the complete two-file source snapshot
-and separate empty Zig caches. Generated C and binary hashes agree between the
-two builds. Overall `verify` remains `not_verified` (exit 5), because its required
-audit is still `not_run`. Six target formats/architectures compile; execution is
-validated only on available Linux x86-64 hosts.
+### Earlier measurements and their source scope
 
-Four paired small-C workloads give a current runtime ratio geometric mean of
-0.949 and a worst ratio of 1.069, with safety checks retained. Hot Yavo builds have
-P50 of about 242–249 ms, above the proposed 200 ms target. Stable versus fresh C
-input paths take 36.292 versus 225.525 ms in the cache probe. This bounded workload
-set and a shared host do not establish the formal v1 performance gate.
+The Arena/module validation at `0a69e75` on 2026-11-21 recorded 113 Cargo
+passes, 95 compile/run fixtures, 58/58 independent GCC 14.2 ASan+UBSan programs
+and matching generated-C/binary hashes for the two-file Arena/module project.
+The ASan clean/allocation, deliberate use-after-free and signed-overflow probes
+demonstrated capability; 426 referenced artifacts were rehashed. LeakSanitizer
+was disabled in that ptrace-compatible profile; normal exits also required
+balanced Yavo heap blocks. These are measurements of the recorded source
+snapshot, not a new sanitizer or reproducibility run of `b3c27a6`.
 
-Records: [batch validation](validation/arena-modules-2026-11-21.json),
+The same four-case C pilot gave a runtime ratio geometric mean of 0.949 and
+worst ratio of 1.069 with safety checks retained. Its build P50 was 242–249 ms;
+the stable/fresh C-path probe was 36.292/225.525 ms. The later implemented-cache
+batch (`a9fbefc`, 2026-11-21) measured unchanged-source Release builds at 2–3 ms,
+edited-source misses at 214–247 ms and frontend checks at 3 ms. Thus edits still
+exceed the 200 ms Release target. Neither pilot closes the formal performance gate.
+
+Records: [Arena/module validation](validation/arena-modules-2026-11-21.json),
 [independent sanitizers](validation/asan-arena-modules-2026-11-21.json),
-[module reproducibility](validation/arena-modules-repro-2026-11-21.json), and
-[small-C benchmark method/results](../benchmarks/small-c-v1/README.md).
+[module reproducibility](validation/arena-modules-repro-2026-11-21.json),
+[small-C method/results](../benchmarks/small-c-v1/README.md) and
+[implemented-cache samples](../benchmarks/small-c-v1/results/build-cache.json).
+
+### Agent efficiency
+
+[Round four](../experiments/coldstart-2026-11-21-r4/README.md) reused the previous
+packet with `1af1f69`: first compilation plus existing-sample correctness was
+Yavo 8/11 versus Rust 11/11; token/tool/time ratios were 1.27/1.58/1.63.
+Both passed 18 frozen examples, but the later T10 boundary check exposed the
+Yavo solution's rejection of valid `000000001`. The subsequent `b3c27a6` fixes
+have not been measured on new tasks. After CI bring-up, the next experiment is
+12 new tasks with hidden edges, at least two runs per language and direct
+archival of first source, commands, outcomes and complete costs. Formal goals
+remain at least 20% lower cost per successful delivery and paired success-rate
+noninferiority, as specified in [the plan](../docs/plan.md).
 
 ## Language decisions after the third agent experiment (2026-11-21)
 
@@ -76,6 +94,24 @@ Tests: `tests/p0/run_index_two_phase_defaults.yv`, `errors_two_phase_defaults.yv
 `panic_index_write.yv`, `panic_stack.yv`, and `tests/build_cache.rs` (P-STACK keeps buffered
 output; signal reporting via a CPU limit). Frozen conformance cases T-V1 and T-GF2 expect the old
 V2 and are listed in `tests/conformance_superseded.txt`.
+
+## Indexed modifying methods and diagnostics (2026-11-22)
+
+`v[i].push(x)`, `ms[i].set(k, v)`, `ps[i].tags.push(s)`, user `inout self`
+methods and nested indexed receivers are implemented. The element address and
+exclusive borrow are obtained before the arguments, so an argument that uses
+the same container is E0403 (`v[i].push(v.len())`). This V2a rule is distinct
+from two-phase borrowing of a variable or field receiver.
+
+Index assignment still evaluates the new value first. Its borrows remain locked
+while the target address is evaluated; modifying or moving a borrowed source
+there reports E0102. Target type discovery itself executes no side effects.
+The six `tests/index_assignment.rs` cases cover these ordering and borrow rules;
+`tests/p0/run_index_methods.yv` and `errors_index_methods.yv` cover methods.
+
+Reading a non-Copy element still borrows it; E0102 now suggests `.clone()` where
+an owned copy is appropriate. Literal `${` still requires `\${`; the lexer now
+includes that escape in its diagnostic. See decisions 17–19 and the cheatsheet.
 
 ## Arena and typed IDs (2026-11-21)
 
@@ -1139,30 +1175,30 @@ Keeping the bytes needs an explicit `.clone()`; using them after the call is `E0
 cargo test --locked --offline --test conformance -- --nocapture
 ```
 
-runs all 129 cases in `yavo-tests/MANIFEST.json`, after checking each fixture against its
-`source_sha256`, and classifies every case:
+runs all 129 cases in `yavo-tests/MANIFEST.json`, after checking each fixture
+against its `source_sha256`, and classifies every case:
 
 | Status | Meaning |
 | --- | --- |
-| pass | the compiler does what the spec case expects (exact error codes and lines for check-fail; exact stdout or panic category in every listed build mode for run cases) |
-| wrong | the compiler disagrees with the spec case: a bug, or a spec gap |
-| unsupported | an explicitly unsupported compiler feature or a requested sanitizer capability unavailable on the actual host |
-| not_run | needs specialized runner support, sanitizers or other platforms |
+| pass | exact expected diagnostics, output, panic or allowed outcome in every requested build mode |
+| wrong | compiler behavior disagrees with the applicable frozen expectation |
+| unsupported | an explicitly unsupported feature or requested sanitizer capability unavailable on the host |
+| not_run | required execution environment or harness support is unavailable |
+| superseded | a dated language decision replaces the old expectation; recorded in `tests/conformance_superseded.txt` |
 
-Current results: **126 pass, 0 wrong, 3 unsupported, 0 not_run**.
+At `b3c27a6`: **124 pass, 0 wrong, 3 unsupported, 0 not_run, 2 superseded**.
 
-| Phase | Pass | Wrong | Unsupported | Not run |
-| --- | ---: | ---: | ---: | ---: |
-| P1 | 83 | 0 | 0 | 0 |
-| P2 | 20 | 0 | 1 | 0 |
-| P3 | 23 | 0 | 2 | 0 |
+| Phase | Pass | Wrong | Unsupported | Not run | Superseded |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| P1 | 81 | 0 | 0 | 0 | 2 |
+| P2 | 20 | 0 | 1 | 0 | 0 |
+| P3 | 23 | 0 | 2 | 0 | 0 |
 
-The completion batch adds T-O5 (saved-capture rejection), T-V3 (candidate-only
-complex-receiver repair), T-GR8 (allocation-failure injection) and T-S3 (raw invalid
-UTF-8 arguments). All seven frozen repair cases pass. T-GR9, T-P3 and T-R2 remain
-unsupported because their ASan+UBSan profile cannot link the ASan runtime on this
-host. Their scenarios are now actually attempted; requested TSan checks execute
-independently and unavailable ASan never masks a TSan failure.
+T-V1 and T-GF2 are the two former automatic-repair expectations for
+`v.push(v.len())`; the revised V2 permits that program, so no repair is needed.
+The other five frozen repair cases pass. T-GR9, T-P3 and T-R2 remain unsupported
+because their ASan+UBSan profile cannot link the ASan runtime on this host.
+Their scenarios are attempted, and requested TSan checks execute independently.
 
 The runner validates fixture source hashes, build-mode metadata, complete allowed
 outcomes, exact output and required preceding stderr. It uses a test-only C
@@ -1171,11 +1207,13 @@ startup rejection. Sanitizer scenarios reuse verify's real artifact and negative
 capability evidence. Reports are written to `target/tmp/conformance-report.json`;
 sanitizer receipts are retained under `target/tmp/conformance-sanitizers/`.
 
-These 129 fixtures do not cover every v1 commitment. Full remaining functionality
-and acceptance evidence are tracked in [../HANDOFF.md](../HANDOFF.md), section 16.
+These fixtures do not cover every v1 commitment. Current priorities are in
+[HANDOFF section 10](../HANDOFF.md); the complete goal inventory is retained in
+[the historical handoff, section 16](../history/handoff-batches-2026-11-19-to-21.md).
 
-The test is a ratchet, not a gate: it fails only when a case listed in
-`tests/conformance_baseline.txt` stops passing. After real progress, refresh the baseline with
+The test is a ratchet: it fails when a baseline case stops passing (excluding
+explicitly superseded cases). CI must also inspect the full status report for
+wrong or not_run results. After genuine progress, update the passing baseline with
 `YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance`.
 
 ## Cross-compilation

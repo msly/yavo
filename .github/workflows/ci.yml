@@ -1,0 +1,91 @@
+name: Yavo CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: yavo-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  RUSTUP_TOOLCHAIN: 1.99.1
+  CARGO_TERM_COLOR: never
+  RUST_BACKTRACE: 1
+
+jobs:
+  native:
+    name: Native ${{ matrix.platform }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: Linux x86_64
+            runner: ubuntu-24.04
+            python: python3
+            suite: full
+            machine: x86_64
+          - platform: Windows x86_64
+            runner: windows-2025
+            python: python
+            suite: native
+            machine: AMD64
+          - platform: macOS arm64
+            runner: macos-15
+            python: python3
+            suite: native
+            machine: arm64
+    env:
+      YAVO_CI_MACHINE: ${{ matrix.machine }}
+    steps:
+      - name: Preserve frozen input bytes on checkout
+        run: git config --global core.autocrlf false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build compiler and install the locked Zig toolchain
+        env:
+          YAVO_HOME: ${{ runner.temp }}/yavo-home
+          YAVO_CACHE_DIR: ${{ runner.temp }}/yavo-cache
+        run: ${{ matrix.python }} tools/ci/run.py setup
+      - name: Run Debug and Release sequentially
+        env:
+          YAVO_HOME: ${{ runner.temp }}/yavo-home
+          YAVO_CACHE_DIR: ${{ runner.temp }}/yavo-cache
+        run: ${{ matrix.python }} tools/ci/run.py native --suite ${{ matrix.suite }}
+      - name: Preserve logs and per-platform receipts
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: native-${{ matrix.runner }}-${{ github.sha }}
+          path: compiler/target/ci/
+          if-no-files-found: error
+          retention-days: 14
+
+  sanitizers:
+    name: Independent Linux ASan and UBSan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build the exporter compiler
+        run: python3 tools/ci/run.py setup --without-zig
+      - name: Export current sources and validate generated C
+        run: python3 tools/ci/run.py sanitize
+      - name: Preserve sanitizer probes, programs, and receipts
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: sanitizers-linux-${{ github.sha }}
+          path: compiler/target/ci/
+          if-no-files-found: error
+          retention-days: 14
