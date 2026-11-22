@@ -35,7 +35,7 @@ Source modules support top-level exports, per-file imports, cyclic imports and o
 
 ### GitHub CI
 
-The runtime-PCH implementation is pushed at [`7877015`](https://github.com/msly/yavo/commit/7877015ae5df2dda02ca22d1f2b621f3c3611fe8); its independent six-job [CI run 45015772252](https://github.com/msly/yavo/actions/runs/45015772252) must be checked separately from the following historical, completed run. The latest local complete Debug and Release totals are 133/0/1.
+The runtime-PCH implementation was pushed at [`7877015`](https://github.com/msly/yavo/commit/7877015ae5df2dda02ca22d1f2b621f3c3611fe8); its independent [CI run 45015772252](https://github.com/msly/yavo/actions/runs/45015772252) finished **completed/success, six of six jobs** (three native platforms, independent sanitizer, experiment evidence, agent-evaluation preparation). The latest local complete Debug and Release totals are 133/0/1 each. The following table is preserved as the preceding historical CI snapshot, not as the PCH run's counts.
 
 **[Run 45002067581](https://github.com/msly/yavo/actions/runs/45002067581) passed all six jobs
 at `073003d` on 2026-11-22.** The language-feature baseline remains `b3c27a6`;

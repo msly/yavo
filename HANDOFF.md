@@ -433,6 +433,6 @@ token、精确服务模型 ID 和 sampling 无可核验来源，均为 `null`；
 
 ### 24.3 接手与剩余门
 
-本轮代码提交 [`7877015`](https://github.com/msly/yavo/commit/7877015ae5df2dda02ca22d1f2b621f3c3611fe8) 已推送至 `origin/main`；跨平台新 CI 运行 [45015772252](https://github.com/msly/yavo/actions/runs/45015772252)，必须用该运行的最终结论核验新代码，不能直接沿用第十八批六项全绿的结论。随后追加的基准数据与交接文档不改变编译器实现。
+本轮代码提交 [`7877015`](https://github.com/msly/yavo/commit/7877015ae5df2dda02ca22d1f2b621f3c3611fe8) 已推送至 `origin/main`；独立 [GitHub CI 运行 45015772252](https://github.com/msly/yavo/actions/runs/45015772252) **最终 `completed/success`、六项全部通过**：Linux x86-64、Windows x86-64、macOS arm64 原生套件、独立 ASan+UBSan、第五轮实验归档核验及第六轮计量准备。此处已验证的是 GitHub job 级最终结果，尚未按上一批方式独立下载、重算六项工件 SHA-256。随后追加的基准数据与交接文档不改变编译器实现。
 
 新优化不改变冻结 129 项规范输入或 agent 实验题包；旧第 17/18 批 CI 回执继续作为对应提交的历史证据，不能移用为本次改动的 CI 通过证明。第六轮真实计量仍因模型凭据与 CLI 状态数据库问题 blocked，0 真实模型请求、0 会话、0 交付。优先执行获授权的 runtime freeze 和真实 provider usage 资格检查，之后才能做 8 题短卡 A/B，接 60 题 pilot；`yavo test`、审核/包/FFI 等完整 v1 缺口不变。
