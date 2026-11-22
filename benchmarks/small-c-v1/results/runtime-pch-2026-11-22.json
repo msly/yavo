@@ -1,106 +1,113 @@
 {
   "schema": "yavo-runtime-pch-latency/1",
-  "date": "2026-11-22",
+  "measured_at_utc": "2026-11-22T11:09:54.897194+00:00",
   "host": "Linux-6.1.0-50-cloud-amd64-x86_64-with-glibc2.36",
   "sample_count_per_arm_per_case": 7,
   "mode": "release, edited sources, independent backend caches, alternating execution order",
-  "compiler_sha256": "6b556b7bd01d959e0e215bde72cf8475a31878e4a5c21876566532b7b914e30b",
+  "script_sha256": "c314028c8c17752095cf8182efc10605b17138bb0da1c757f7d737e5c81dafc4",
+  "compiler_sha256": "bcb35696b8c0d6205c974bb2798108e612c9f0ffe361e0c6ad727e1f4dad2412",
   "runtime_header_sha256": "92fe3880272f5f07c560a84e8e1cc82c5b87eb2b89724642d165b569c61c3caf",
+  "benchmark_input_sha256": {
+    "integer_recurrence": "a28b5a0809f78ca35efa42c0ca7bc8bd1d611661625208b91809f071014d0e77",
+    "vec_transform": "3f9312b939aec5a69f324b4caa871b3e31d2f6006ca75ac5d6a4f31254fe58a3",
+    "mutref_scatter": "919c079186f9f2250452018c6d0021bf96de59c1d8e55f17df39a964c438b8ea",
+    "deque_ring": "fe67ff3f3064c1f224b85c5ecf83bb7764fd879576433eecb2d77b24bcf4ccab"
+  },
   "results": {
     "integer_recurrence": {
       "pch_ms": [
-        212.824,
-        181.198,
-        178.674,
-        175.545,
-        198.686,
-        179.827,
-        178.527
+        187.941,
+        225.534,
+        191.865,
+        179.553,
+        173.179,
+        178.21,
+        180.798
       ],
       "direct_ms": [
-        265.755,
-        253.817,
-        258.11,
-        244.294,
-        243.075,
-        256.257,
-        251.297
+        241.484,
+        278.162,
+        249.03,
+        252.542,
+        303.735,
+        256.547,
+        226.598
       ],
-      "pch_p50_ms": 179.827,
-      "direct_p50_ms": 253.817,
-      "speedup_direct_over_pch": 1.4115,
+      "pch_p50_ms": 180.798,
+      "direct_p50_ms": 252.542,
+      "speedup_direct_over_pch": 1.3968,
       "binary_sha256_equal_on_all_samples": true
     },
     "vec_transform": {
       "pch_ms": [
-        191.866,
-        214.955,
-        200.87,
-        190.941,
-        207.671,
-        204.074,
-        208.374
+        178.153,
+        192.656,
+        190.473,
+        201.213,
+        190.602,
+        208.781,
+        186.722
       ],
       "direct_ms": [
-        265.131,
-        272.736,
-        294.866,
-        260.341,
-        251.36,
-        246.3,
-        255.882
+        247.191,
+        262.977,
+        256.13,
+        243.569,
+        262.146,
+        254.087,
+        347.412
       ],
-      "pch_p50_ms": 204.074,
-      "direct_p50_ms": 260.341,
-      "speedup_direct_over_pch": 1.2757,
+      "pch_p50_ms": 190.602,
+      "direct_p50_ms": 256.13,
+      "speedup_direct_over_pch": 1.3438,
       "binary_sha256_equal_on_all_samples": true
     },
     "mutref_scatter": {
       "pch_ms": [
-        196.883,
-        226.233,
-        201.182,
-        193.674,
-        188.054,
-        196.944,
-        198.856
+        186.941,
+        193.003,
+        184.069,
+        185.875,
+        210.541,
+        195.506,
+        199.849
       ],
       "direct_ms": [
-        256.881,
-        245.055,
-        251.686,
-        274.557,
-        275.888,
-        264.826,
-        327.2
+        251.482,
+        263.481,
+        276.849,
+        271.033,
+        312.974,
+        257.397,
+        272.524
       ],
-      "pch_p50_ms": 196.944,
-      "direct_p50_ms": 264.826,
-      "speedup_direct_over_pch": 1.3447,
+      "pch_p50_ms": 193.003,
+      "direct_p50_ms": 271.033,
+      "speedup_direct_over_pch": 1.4043,
       "binary_sha256_equal_on_all_samples": true
     },
     "deque_ring": {
       "pch_ms": [
-        189.454,
-        195.254,
-        195.238,
-        210.094,
-        192.44,
-        205.515,
-        201.798
+        228.679,
+        205.833,
+        213.825,
+        203.285,
+        199.039,
+        222.21,
+        224.831
       ],
       "direct_ms": [
-        283.845,
-        250.724,
-        310.204,
-        296.536,
-        332.911,
-        272.722,
-        280.683
+        305.14,
+        277.239,
+        271.471,
+        271.229,
+        267.594,
+        261.551,
+        264.551
       ],
-      "pch_p50_ms": 195.254,
-      "direct_p50_ms": 283.845,
-      "speedup_direct_over_pch": 1.4537,
+      "pch_p50_ms": 213.825,
+      "direct_p50_ms": 271.229,
+      "speedup_direct_over_pch": 1.2685,
       "binary_sha256_equal_on_all_samples": true
     }
   }

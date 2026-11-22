@@ -11,24 +11,26 @@ each pair compiles **the same source bytes** using the cached Zig runtime PCH or
 direct header compilation (`YAVO_NO_PCH=1`). Both arms have independent Yavo
 cache roots; every new source prepends one more comment line to force a true
 backend cache miss. The order alternates, and PCH cache hits and equal binary
-SHA-256 digests are asserted. Seven paired samples per program, P50 below:
+SHA-256 digests are asserted. Each pilot uses seven paired samples per program:
 
-| Program | Direct C | Runtime PCH | Direct/PCH |
+| Program | First direct/PCH P50 | Final-compiler direct/PCH P50 | Final speedup |
 | --- | ---: | ---: | ---: |
-| integer_recurrence | 253.8 ms | 179.8 ms | 1.41x |
-| vec_transform | 260.3 ms | 204.1 ms | 1.28x |
-| mutref_scatter | 264.8 ms | 196.9 ms | 1.34x |
-| deque_ring | 283.8 ms | 195.3 ms | 1.45x |
+| integer_recurrence | 253.8 / 179.8 ms | 252.5 / 180.8 ms | 1.40x |
+| vec_transform | 260.3 / 204.1 ms | 256.1 / 190.6 ms | 1.34x |
+| mutref_scatter | 264.8 / 196.9 ms | 271.0 / 193.0 ms | 1.40x |
+| deque_ring | 283.8 / 195.3 ms | 271.2 / 213.8 ms | 1.27x |
 
 Reproduce from the repository root using the server's Python 3.13 environment:
 
     python3 benchmarks/small-c-v1/pch_probe.py --samples 7 --output benchmarks/small-c-v1/results/runtime-pch-current.json
 
-Raw paired timings and compiler/runtime SHA-256 identities are in
-[`results/runtime-pch-2026-11-22.json`](results/runtime-pch-2026-11-22.json).
-This is **build latency**, not runtime performance. The `vec_transform` P50
-remains above the 200 ms build target, and a single server pilot is not a
-cross-platform acceptance measurement.
+Raw timings and compiler/runtime SHA-256 identities are in the
+[first measurement](results/runtime-pch-2026-11-22-initial.json) and the
+[final-compiler measurement](results/runtime-pch-2026-11-22.json). The latter
+also records its script SHA-256. This is **build latency**, not program runtime.
+In both pilots three of four PCH P50s were under 200 ms, but the case exceeding
+the target changed (`vec_transform` first, `deque_ring` second). The 200 ms gate
+is not consistently met and this is not cross-platform acceptance evidence.
 
 ## Cases and comparability
 

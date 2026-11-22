@@ -23,15 +23,17 @@ load failures fall back to the original path; `YAVO_CACHE_TRACE=1` reports cache
 hits, misses and fallback reasons. `YAVO_NO_CACHE=1`, `YAVO_CC` overrides and
 `yavo verify` bypass runtime PCH entirely. `verify` therefore keeps its isolated
 compiler/sanitizer evidence semantics. The generated C and runtime ABI are
-unchanged. A seven-pair, four-program Linux pilot measured edited-source Release
-P50 reductions from 253.8–283.8 ms (direct) to 179.8–204.1 ms (PCH), with
-matching output SHA-256. Details and reproduction script:
+unchanged. Two independent seven-pair, four-program Linux pilots measured
+edited-source Release P50 of **252.5–283.8 ms** (direct) versus **179.8–213.8 ms**
+(PCH), with matching output SHA-256 in every pair. Three of four cases met the
+200 ms target per run, but the outlier changed between runs. Details and script:
 [`benchmarks/small-c-v1/`](../benchmarks/small-c-v1/README.md).
 
 ## Current validation (2026-11-22)
 
-The latest language-feature baseline is `b3c27a6`. Complete single-command Debug
-and Release suites each pass **129 tests, 0 failed, 1 ignored**. The ignored test
+The latest language-feature baseline is `b3c27a6`. After the PCH-cache changes,
+complete Debug and Release suites each pass **133 tests, 0 failed, 1 ignored**
+(17 groups); the earlier language-feature baseline was 129/0/1. The ignored test
 is the legacy exploratory P0 `conformance_report`; the current conformance suite
 runs independently. Cargo functions and embedded specification fixtures are
 different counting units.

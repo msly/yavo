@@ -1,0 +1,107 @@
+{
+  "schema": "yavo-runtime-pch-latency/1",
+  "date": "2026-11-22",
+  "host": "Linux-6.1.0-50-cloud-amd64-x86_64-with-glibc2.36",
+  "sample_count_per_arm_per_case": 7,
+  "mode": "release, edited sources, independent backend caches, alternating execution order",
+  "compiler_sha256": "6b556b7bd01d959e0e215bde72cf8475a31878e4a5c21876566532b7b914e30b",
+  "runtime_header_sha256": "92fe3880272f5f07c560a84e8e1cc82c5b87eb2b89724642d165b569c61c3caf",
+  "results": {
+    "integer_recurrence": {
+      "pch_ms": [
+        212.824,
+        181.198,
+        178.674,
+        175.545,
+        198.686,
+        179.827,
+        178.527
+      ],
+      "direct_ms": [
+        265.755,
+        253.817,
+        258.11,
+        244.294,
+        243.075,
+        256.257,
+        251.297
+      ],
+      "pch_p50_ms": 179.827,
+      "direct_p50_ms": 253.817,
+      "speedup_direct_over_pch": 1.4115,
+      "binary_sha256_equal_on_all_samples": true
+    },
+    "vec_transform": {
+      "pch_ms": [
+        191.866,
+        214.955,
+        200.87,
+        190.941,
+        207.671,
+        204.074,
+        208.374
+      ],
+      "direct_ms": [
+        265.131,
+        272.736,
+        294.866,
+        260.341,
+        251.36,
+        246.3,
+        255.882
+      ],
+      "pch_p50_ms": 204.074,
+      "direct_p50_ms": 260.341,
+      "speedup_direct_over_pch": 1.2757,
+      "binary_sha256_equal_on_all_samples": true
+    },
+    "mutref_scatter": {
+      "pch_ms": [
+        196.883,
+        226.233,
+        201.182,
+        193.674,
+        188.054,
+        196.944,
+        198.856
+      ],
+      "direct_ms": [
+        256.881,
+        245.055,
+        251.686,
+        274.557,
+        275.888,
+        264.826,
+        327.2
+      ],
+      "pch_p50_ms": 196.944,
+      "direct_p50_ms": 264.826,
+      "speedup_direct_over_pch": 1.3447,
+      "binary_sha256_equal_on_all_samples": true
+    },
+    "deque_ring": {
+      "pch_ms": [
+        189.454,
+        195.254,
+        195.238,
+        210.094,
+        192.44,
+        205.515,
+        201.798
+      ],
+      "direct_ms": [
+        283.845,
+        250.724,
+        310.204,
+        296.536,
+        332.911,
+        272.722,
+        280.683
+      ],
+      "pch_p50_ms": 195.254,
+      "direct_p50_ms": 283.845,
+      "speedup_direct_over_pch": 1.4537,
+      "binary_sha256_equal_on_all_samples": true
+    }
+  }
+}

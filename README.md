@@ -23,8 +23,8 @@ Recent changes implement index assignment, two-phase variable/field receivers, S
 
 | Check | Recorded local result | Scope |
 | --- | --- | --- |
-| Release suite | **129 passed, 0 failed, 1 ignored** | Complete single-command run for the language-feature baseline |
-| Debug suite | **129 passed, 0 failed, 1 ignored** | Complete single-command run for the same baseline |
+| Release suite | **133 passed, 0 failed, 1 ignored** | Current PCH implementation, all 17 Cargo test groups; previous language-feature baseline was 129/0/1 |
+| Debug suite | **133 passed, 0 failed, 1 ignored** | Current PCH implementation, all 17 groups, independent completed local log |
 | Frozen specification | **124 pass, 0 wrong, 3 unsupported, 0 not_run, 2 superseded** | 129 frozen cases; a different counting unit from Cargo test functions |
 | Cross-compilation | Six target formats/architectures build | Linux (static musl), Windows and macOS on x86-64/aarch64; native CI now covers Linux x86-64 plus the Windows x86-64/macOS arm64 selections below |
 | Overall `verify` | **`not_verified`** | Required audit remains unimplemented |
@@ -34,6 +34,8 @@ The ignored Cargo test is the old exploratory P0 conformance report; the current
 Source modules support top-level exports, per-file imports, cyclic imports and original-file diagnostics. Package dependencies and a program lockfile remain open. Multi-file `fix` returns `U0001` without writing; symlink module aliases are unsupported.
 
 ### GitHub CI
+
+The runtime-PCH implementation is pushed at [`7877015`](https://github.com/msly/yavo/commit/7877015ae5df2dda02ca22d1f2b621f3c3611fe8); its independent six-job [CI run 45015772252](https://github.com/msly/yavo/actions/runs/45015772252) must be checked separately from the following historical, completed run. The latest local complete Debug and Release totals are 133/0/1.
 
 **[Run 45002067581](https://github.com/msly/yavo/actions/runs/45002067581) passed all six jobs
 at `073003d` on 2026-11-22.** The language-feature baseline remains `b3c27a6`;
@@ -79,7 +81,7 @@ The [original binary-cache measurements](benchmarks/small-c-v1/results/build-cac
 
 ### New runtime PCH optimization (2026-11-22)
 
-Normal pinned-Zig `build`/`run` now cache a **precompiled runtime header** independently of program source. Repeated code edits can share the header's parsed AST; `verify` and uncached builds remain on the existing direct C path. `YAVO_NO_PCH=1` disables the optimization, `YAVO_CACHE_TRACE=1` exposes cache behavior, and entries are SHA-256 verified with a 32-entry LRU. A four-program, seven-pair edited-source Release measurement recorded direct/PCH P50 (ms) of **253.8/179.8**, **260.3/204.1**, **264.8/196.9**, **283.8/195.3**. The binaries matched byte-for-byte on every pair; three of four PCH P50s met the 200 ms engineering goal. This is a build-time pilot, not the formal runtime/C or Agent-cost gate. [Method and raw timings](benchmarks/small-c-v1/results/runtime-pch-2026-11-22.json) · [reproducer](benchmarks/small-c-v1/pch_probe.py).
+Normal pinned-Zig `build`/`run` now cache a **precompiled runtime header** independently of program source. Repeated code edits can share the header's parsed AST; `verify` and uncached builds remain on the existing direct C path. `YAVO_NO_PCH=1` disables the optimization, `YAVO_CACHE_TRACE=1` exposes cache behavior, and entries are SHA-256 verified with a 32-entry LRU. Two four-program, seven-pair edited-source Release pilots showed 1.27–1.45x PCH speedups, with byte-identical binaries in every pair. Three of four PCH P50s were below 200 ms in each pilot; different cases missed the limit. **This is build-time evidence, not the formal runtime/C or Agent-cost gate.** [First-run raw timings](benchmarks/small-c-v1/results/runtime-pch-2026-11-22-initial.json) · [final-compiler raw timings](benchmarks/small-c-v1/results/runtime-pch-2026-11-22.json) · [reproducer](benchmarks/small-c-v1/pch_probe.py).
 
 ## Latest agent experiment
 
