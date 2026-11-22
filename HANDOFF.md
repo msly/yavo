@@ -4,11 +4,11 @@
 
 ## 1. 一句话状态
 
-规范以 v0.5 冻结版为基础，2026-11-21 按第三轮实验修订了 V2（两阶段借用）、K1（`String`/`str` 比较），新增 V6a（字段默认值）、V14（P-STACK），见 `docs/decisions.md` 第六节；冻结测试包 `yavo-tests/` 不改。Rust 编译器与 C 运行时覆盖 P0 链路及 P1—P3 的主要功能：结构体、枚举、`T ! E`、`match`、`String`/`Vec`/`Map`/`Set`、切片、移动与析构、视图与 `of`、`&T`/`&inout T`、`?T`、方法、`Drop`、元组、不逃逸闭包、`Eq`/`Ord`、`Box`、接口、泛型、浮点；并发（`Rc`/`Arc`/`Mutex`/`with`/`scope`/`spawn`/`Channel`/`Send`/`Sync`）；Heap/Deque、`Arena[T]`/`Id[T]`、源文件模块；`yavo fix`/`allocations`/`verify`；后端构建缓存；六个目标的交叉编译。第十五批补入 V2a（元素上的修改方法），见 `docs/decisions.md` 第七节。**P0—P3 主体功能已实现，完整 v1 尚未验收，P4 仍为小规模试验。** 三平台实际执行、剩余工具与功能、Agent 成本和正式性能门尚未闭合。各批次细节见第 4 节和 `history/`。
+规范以 v0.5 冻结版为基础，2026-11-21 按第三轮实验修订了 V2（两阶段借用）、K1（`String`/`str` 比较），新增 V6a（字段默认值）、V14（P-STACK），见 `docs/decisions.md` 第六节；冻结测试包 `yavo-tests/` 不改。Rust 编译器与 C 运行时覆盖 P0 链路及 P1—P3 的主要功能：结构体、枚举、`T ! E`、`match`、`String`/`Vec`/`Map`/`Set`、切片、移动与析构、视图与 `of`、`&T`/`&inout T`、`?T`、方法、`Drop`、元组、不逃逸闭包、`Eq`/`Ord`、`Box`、接口、泛型、浮点；并发（`Rc`/`Arc`/`Mutex`/`with`/`scope`/`spawn`/`Channel`/`Send`/`Sync`）；Heap/Deque、`Arena[T]`/`Id[T]`、源文件模块；`yavo fix`/`allocations`/`verify`；后端构建缓存；六个目标的交叉编译。第十五批补入 V2a（元素上的修改方法），见 `docs/decisions.md` 第七节。**P0—P3 主体功能已实现，完整 v1 尚未验收，P4 仍为小规模试验。** 三平台 CI 已落地；Windows/macOS 为明确选定的原生套件。完整 v1 的工具/语言缺口、Agent 成本和正式性能门尚未闭合。各批次细节见第 4 节和 `history/`。
 规范一致性：**129 项中通过 124、判错 0、不支持 3、未运行 0、被新决定取代 2**（T-V1、T-GF2 断言旧 V2，登记在 `compiler/tests/conformance_superseded.txt`；不支持的 3 项需要锁定工具链无法链接的 ASan 运行时）。该统计只表示既有用例覆盖，不是完整 v1 完成比例。
-**2026-11-22 用户已授权推送 `msly/yavo` 并使用 GitHub CI；已有历史已推送，远端 `main` 为 `b3c27a6`。** CI 接入结果见第 21 节；旧“暂不推送”约定已被本次授权取代。
-本地测试基准 `b3c27a6`：第十五批完整单条命令 Release **129 通过 / 0 失败 / 1 忽略**、Debug **129/0/1**；这是 Cargo 测试函数数，和上面的 129 项规范用例是不同计数单位。忽略的是旧 P0 探索性报告，当前 conformance 套件会执行。第十四批 `1af1f69` 为 123/0/1，新增 6 项为 `index_assignment.rs`；六个交叉目标能构建含 P-STACK 运行时的程序，既有原生执行证据为 Linux x86-64。
-**最新 agent 实验（第四轮，第 20.2 节）**：沿用第三轮题包，首编正确 Yavo 8/11（第三轮 3/11）、Rust 11/11；Yavo 与 Rust 的 token 比 1.27、工具调用比 1.58、用时比 1.63。剩下 3 次失败（元素修改方法、非 Copy 元素读出即借用、`${` 未转义）已在第十五批分别实现或改进诊断。交卷后 T10 边界抽查发现 Yavo 解答错拒合法前导零 `000000001`，Rust 接受；18/18 仅为既有样例通过。成本由编排记录补回，完整逐次转录和首稿尚未归档。最新改动尚未经新题评测；先接通原生 CI，再做第五轮（第 10 节）。第三轮数据见第 19 节。
+**2026-11-22 用户已授权推送 `msly/yavo` 并使用 GitHub CI；已有历史和 CI 已推送，`8a65228` 的四项 CI 任务全部通过。** CI 接入结果见第 21 节；旧“暂不推送”约定已被本次授权取代。
+本地测试基准 `b3c27a6`：第十五批完整单条命令 Release **129 通过 / 0 失败 / 1 忽略**、Debug **129/0/1**；这是 Cargo 测试函数数，和上面的 129 项规范用例是不同计数单位。忽略的是旧 P0 探索性报告，当前 conformance 套件会执行。第十四批 `1af1f69` 为 123/0/1，新增 6 项为 `index_assignment.rs`；六个交叉目标能构建含 P-STACK 运行时的程序，最新原生 CI 覆盖 Linux x86-64 全套与 Windows x86-64/macOS arm64 选定套件。
+**最新 agent 实验（第四轮，第 20.2 节）**：沿用第三轮题包，首编正确 Yavo 8/11（第三轮 3/11）、Rust 11/11；Yavo 与 Rust 的 token 比 1.27、工具调用比 1.58、用时比 1.63。剩下 3 次失败（元素修改方法、非 Copy 元素读出即借用、`${` 未转义）已在第十五批分别实现或改进诊断。交卷后 T10 边界抽查发现 Yavo 解答错拒合法前导零 `000000001`，Rust 接受；18/18 仅为既有样例通过。成本由编排记录补回，完整逐次转录和首稿尚未归档。最新改动尚未经新题评测；CI 已通过，下一步做第五轮（第 10 节）。第三轮数据见第 19 节。
 
 ## 2. 仓库与环境
 
@@ -145,14 +145,14 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - 接口：已支持 `+ Send`/`+ Sync`；接口作泛型约束只做检查（单态化后直接调用具体方法），没有接口继承、`Self`、默认方法；`struct S[T]: I` 报 `U0001`。
 - 泛型：**单态化，函数体只在实例化时检查**——从没被调用的泛型函数完全不检查，同一错误可能在每个实例报一次；结构体字面量要写类型参数（结构体自己的方法里除外）；
   没有泛型枚举、方法自己的类型参数、`Stack[int].make()` 这类在实例上的静态调用。
-- 浮点：`%` 和位运算不支持；`1 + 1.5`（两个字面量）报类型不符；Windows/macOS 上的浮点打印未在真机验证（依赖各自 libc 的 `snprintf`/`strtod`）。
+- 浮点：`%` 和位运算不支持；`1 + 1.5`（两个字面量）报类型不符；浮点打印与解析已由 Windows/macOS 原生 P0 fixtures 执行验证（依赖各自 libc 的 `snprintf`/`strtod`）。
 - 切片：没有 `x[a..]`、`x[..b]`；v1 本来就没有可变切片。
 - 闭包：支持 `sortBy`/`update` 的不逃逸借用回调和 `Heap.by` 保存的拥有比较器；一般闭包值、用户高阶参数和闭包字段仍未实现。Heap 的 clone 与隐藏捕获跨线程能力暂报 U0001；Deque 未提供索引、切片或迭代接口。
 - 元组：不能给元素赋值、不能比较、不能整体打印、不能做 `Map` 键、没有元组模式。
 - 格式说明只支持浮点的 `:.N`；`String` 与 `str` 已可直接比较（K1 修订）。
 - `Set`：没有集合运算（并、交）、没有 `Set` 字面量里的元素（`[1, 2]` 不能直接当 `Set`）。
-- 堆块检查发现不了释放后使用；项目服务器的固定 Zig 仍缺少 ASan 运行时。独立 ASan+UBSan 工作流已建立，当前源码运行结果与第七批的 TSan 历史证据见 `history/handoff-batches-2026-11-19-to-21.md`（原第 12、17 节）。Windows、macOS、aarch64 产物只验证了编译与文件格式。
-- **栈溢出（V14）**：P-STACK 依赖信号备用栈（Linux/macOS）或向量化异常（Windows，只验证了能编译）。故障地址判定用线程栈顶与最大长度（主线程取 `RLIMIT_STACK`）；含用户 `Drop` 或接口值的深层 `Box` 结构仍递归析构，极深时会以 P-STACK 结束。
+- 堆块检查发现不了释放后使用；项目服务器的固定 Zig 仍缺少 ASan 运行时。独立 ASan+UBSan 工作流已建立，当前源码运行结果与第七批的 TSan 历史证据见 `history/handoff-batches-2026-11-19-to-21.md`（原第 12、17 节）。原生 CI 新增 Windows x86-64/macOS arm64 选定套件；Linux aarch64、Windows aarch64、macOS x86-64 仍只有交叉编译与文件格式证据。
+- **栈溢出（V14）**：P-STACK 依赖信号备用栈（Linux/macOS）或向量化异常（Windows，已执行原生 P0 panic fixture）。故障地址判定用线程栈顶与最大长度（主线程取 `RLIMIT_STACK`）；含用户 `Drop` 或接口值的深层 `Box` 结构仍递归析构，极深时会以 P-STACK 结束。
 - 并发：`spawn` 只接受具名函数调用，可变借用（包括泛型元组中嵌套的 `&inout`）暂报 `U0001`；`Join` 不能写出类型名或移动（`U0001`）。规范已定义 inout 线程参数与公开 Join，属于实现缺口。
   容器递归克隆遇到不可克隆资源现已在检查期拒绝；用户 `Drop` 类型的自动逐字段克隆报 `U0001`，须显式构建资源或逐元素调用用户方法。
   当前接口集合的克隆检查遍历本编译单元所有具体实现；未来分离编译需要显式传递该保证。`&b` 不会把 `Rc[T]` 转成 `&T`（规范只对字段、方法、下标投影）。
@@ -179,14 +179,14 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 | 13 | `yavo verify` | 已实现；审计未实现，总体 `not_verified` |
 | 14–15 | Arena/Id；多文件源模块 | 已实现；包依赖与程序锁文件待做 |
 | 冷启动实验 | 四轮 | 第四轮同题首编且既有样例正确 8/11 对 Rust 11/11；token/调用/时间为 1.27/1.58/1.63 倍；T10 新边界 Yavo 失败（第 20 节） |
-| 当前优先 | 三平台 CI | 用户已授权，历史已推送 `msly/yavo`；原生 CI 结果待完成（第 21 节） |
+| 已落地 | 三平台 CI | `8a65228` 同一提交四项任务全通过：Linux 全量、Windows/macOS 选定原生套件、独立 ASan+UBSan（第 21 节） |
 
 批次与用户约定的历史（“可用”三批、第四到第六批）见 `history/handoff-batches-2026-11-19-to-21.md`。
 
 ## 10. 下一个会话的第一步
 
-1. 先检查 Git 状态和最新提交；环境见第 2 节。冻结用例基线见第 1 节。代码修改按风险加回归，明确记录 Debug/Release 实际完成范围。**不要同时跑两条 `cargo test`**：它们共用临时目录，会出现 `CurrentDirUnlinked` 之类的假失败。本轮先完成 GitHub 原生 CI，按 [CI 说明](tools/ci/README.md) 分别记录平台、工具链和实际测试范围；cargo 退出 0 之外还须核对 conformance 的 wrong/not_run。
-2. **原生 CI 后做第五轮实验**：第三、四轮复用同一题包，已无法区分“语言变好”和“题目被针对”。按第四轮报告第 92–93 行的要求：
+1. 先检查 Git 状态和最新提交；环境见第 2 节。冻结用例基线见第 1 节。代码修改按风险加回归，明确记录 Debug/Release 实际完成范围。**不要同时跑两条 `cargo test`**：它们共用临时目录，会出现 `CurrentDirUnlinked` 之类的假失败。GitHub 原生 CI 已通过，后续提交沿用 [CI 说明](tools/ci/README.md) 的平台、工具链和范围；cargo 退出 0 之外还须核对 conformance 的 wrong/not_run。
+2. **下一步：第五轮新题实验**：第三、四轮复用同一题包，已无法区分“语言变好”和“题目被针对”。按第四轮报告第 92–93 行的要求：
    - 换 12 道同难度新题，每题加独立的隐藏边界用例（第四轮 T10 前导零就是旧题包漏掉的合法输入）；
    - 每种语言至少 2 次独立运行；
    - 编排会话逐次保存编译命令、退出状态、首次源码，以及 token、工具调用和单调时钟计时，**直接写进实验目录**（第四轮 Yavo 的成本就是因为没落盘，写稿时才“缺失”）。
@@ -309,10 +309,34 @@ Yavo 8 次失败：实现缺口 2（字段默认值、`v[i] = x`）；与直觉�
 
 首编差距大幅缩小（3/11 → 8/11，第四轮的三处障碍本批已处理），但成本差距仍在，同题复测也不能说明泛化。下一步是用新题、多次独立运行、完整计时的第五轮（第 10 节第 2、3 项），而不是继续扩功能。
 
-## 21. 第十六批：GitHub 发布与 CI 接入（2026-11-22，进行中）
+## 21. 第十六批：GitHub 发布与 CI 接入（2026-11-22）
 
-- 用户已授权向 `msly/yavo` 推送并使用 GitHub CI，取代早期仅本地 Git 的限制。
-- 远端为 [https://github.com/msly/yavo](https://github.com/msly/yavo)。2026-11-22 已推送既有历史，`origin/main` 为 `b3c27a6`；工作分支设置为跟踪 `origin/main`。
-- CI 配置与实际覆盖范围见 [tools/ci/README.md](tools/ci/README.md) 和 [.github/workflows/ci.yml](.github/workflows/ci.yml)。首次执行结果待记录，当前原生平台证据仍为 Linux x86-64。
-- 本轮分别完整复跑 Release、Debug，均为 **129/0/1**（各 17 个测试组）；新生成的 conformance 报告为 **124 pass / 0 wrong / 3 unsupported / 0 not_run / 2 superseded**。首个合并驱动在 Debug 阶段遭执行时限终止，随后 Debug 以独立后台命令完整通过；完整日志在 `compiler/target/ci-baseline-20261122/`。
-- 本轮同步根 README、compiler README 与本文件的当前状态；`0a69e75` 的 ASan 58/58、四项 C pilot 及可复现证据继续保留原版本/日期，不能当作最新源码的重跑。
+**[第三次 CI 44991523612](https://github.com/msly/yavo/actions/runs/44991523612) 的四项任务全部通过，统一验证提交为 `8a65228f31139a4b07e256fec70ccd6aaff06176`。** GitHub 仓库为 [msly/yavo](https://github.com/msly/yavo)。语言功能基准仍是 `b3c27a6`：解析、类型/借用检查、代码生成、运行时与冻结测试未改；本批修改了 Windows `verify` 构建驱动、CI、平台测试、sanitizer 导出与文档。
+
+### 21.1 当前验证结果
+
+| 平台/范围 | Debug | Release | 证据 |
+| --- | --- | --- | --- |
+| Linux x86-64 完整 Cargo 套件 | **129/0/1** | **129/0/1** | [工件](https://github.com/msly/yavo/actions/runs/44991523612/artifacts/14742107791)；含六目标构建与冻结规范 |
+| Windows x86-64 选定原生套件 | **71/0/1** | **71/0/1** | [工件](https://github.com/msly/yavo/actions/runs/44991523612/artifacts/14741324499)；空格/Unicode 模块快照与重放通过 |
+| macOS arm64 选定原生套件 | **74/0/1** | **74/0/1** | [工件](https://github.com/msly/yavo/actions/runs/44991523612/artifacts/14741947108) |
+| 独立 Linux ASan+UBSan | **60 通过 / 0 失败** | — | [工件](https://github.com/msly/yavo/actions/runs/44991523612/artifacts/14742196791)；GCC 13.3，全部导出的 P0 run/panic fixtures |
+
+原生套件数字为通过/失败/忽略。Windows 比 macOS 少 3 项是 `cfg` 排除了 2 个 Unix 进程单元测试和 1 个 Unix symlink 模块测试；各平台均无运行时过滤。Linux 的 Debug/Release 规范报告均为 **124 pass / 0 wrong / 3 unsupported / 0 not_run / 2 superseded**；P0 在 C `-O0` 与 `-O2` 各执行 101 个 fixtures。
+
+Windows/macOS 执行 [CI 说明](tools/ci/README.md) 列出的 `NATIVE_TESTS` 与编译器单元测试，其范围小于 Linux 全量。独立 GCC 的 clean、故意 UAF、带符号溢出能力探针均通过；该配置启用 Yavo 堆块检查、关闭 LeakSanitizer，不改变固定 Zig 的 3 个 ASan unsupported 项。
+
+项目服务器此前也分别完整复跑 Release、Debug，均 **129/0/1**、各 17 组；首个合并驱动在 Debug 遭执行时限终止后，已独立完整重跑。各次 CI 的版本、范围、计数、工件与关键哈希已固化到 [验证收据](compiler/validation/github-ci-2026-11-22.json)。
+
+### 21.2 首跑、复跑与修复
+
+[首次运行 44989988675](https://github.com/msly/yavo/actions/runs/44989988675) 绑定 `47b5880`，Linux 全量通过，其他三项失败。[第二次运行 44990668032](https://github.com/msly/yavo/actions/runs/44990668032) 绑定 `8b49e61`，Linux、macOS、独立 sanitizer 通过，Windows 在模块验证构建中失败。第三次同一提交的四项任务全部通过后，才记录本批 CI 接入完成。
+
+| 提交 | 修复与验证范围 |
+| --- | --- |
+| `c8f06ff` | 修正 clean checkout 下 Perl 读取空 Git 状态时的空值上下文，恢复 sanitizer bundle；实际导出 60 个程序并核对哈希 |
+| `26378ba` | Darwin 故障注入 C fixture 的 feature macro 移到系统头之前；Markdown/验证 JSON 单独变化不重复触发 CI |
+| `8b49e61` | Windows panic 路径期望兼容分隔符；全新 C 工具链顺序预热 Debug/Release，每 fixture 120 秒时限不变 |
+| `8a65228` | Windows `verify` 使用经边界校验的工件目录相对路径，避免 Zig 无法识别扩展格式绝对路径；记录 cwd，现有模块快照回归加入空格/Unicode；本地 verify 15/0、模块回归 1/0，随后三平台 CI 通过 |
+
+历史 `0a69e75` 的 58 例 sanitizer（含当时额外的 Arena/模块程序）、四项 C pilot 与可复现结果保持原版本/日期；它们与本次 60 个 P0 fixtures 的范围不同。本批未重测运行性能或 Agent 编程成本，下一步是第 10 节的新题第五轮。

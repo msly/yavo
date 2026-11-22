@@ -3,10 +3,11 @@
 The prototype compiles a limited `.yv` subset to C17, then uses the pinned
 `zig cc` toolchain (or the explicit `YAVO_CC` development override).
 The implementation includes ownership, views, containers, generics, interfaces and
-scoped OS threads. Native validation is on Linux x86-64; complete phase acceptance
-still requires the remaining tools, features and real-platform execution.
+scoped OS threads. Native CI runs complete Linux x86-64 suites and selected
+Windows x86-64/macOS arm64 suites. Complete phase acceptance still requires the
+remaining tools, features and full target-platform acceptance coverage.
 
-## Current local validation (2026-11-22)
+## Current validation (2026-11-22)
 
 The latest language-feature baseline is `b3c27a6`. Complete single-command Debug
 and Release suites each pass **129 tests, 0 failed, 1 ignored**. The ignored test
@@ -22,11 +23,32 @@ are superseded by the revised V2 two-phase receiver rule, with dated reasons in
 baseline; read its complete report as well as the Cargo exit status.
 
 The main P0–P3 language paths are implemented, but full v1 remains unaccepted.
-Six target formats/architectures cross-compile; the recorded native execution
-baseline is Linux x86-64. Overall `verify` remains `not_verified` (exit 5),
-because required audit is unimplemented. Remote history was published to
-[msly/yavo](https://github.com/msly/yavo) on 2026-11-22 with user authorization;
-native-platform CI bring-up is the next verification step.
+Six target formats/architectures cross-compile. Overall `verify` remains
+`not_verified` (exit 5), because required audit is unimplemented.
+
+History and CI are published at [msly/yavo](https://github.com/msly/yavo).
+**[CI run 44991523612](https://github.com/msly/yavo/actions/runs/44991523612) passed all four
+jobs at `8a65228` on 2026-11-22:**
+
+| Platform/job | Debug | Release | Scope |
+| --- | --- | --- | --- |
+| Linux x86-64 | 129/0/1 | 129/0/1 | Complete Cargo suites, frozen conformance and six-target compilation |
+| Windows x86-64 | 71/0/1 | 71/0/1 | Selected native suites and compiler unit tests |
+| macOS arm64 | 74/0/1 | 74/0/1 | Same selection, including Unix-only cases |
+| Independent GCC 13.3 ASan+UBSan | 60 passed, 0 failed | — | All exported P0 run/panic fixtures; all capability probes passed |
+
+Native counts are passed/failed/ignored. Two Unix process unit tests and one
+Unix symlink-module test are compiled out on Windows; there are no runtime
+filters. Windows/macOS do not execute the Linux-specific frozen report scenarios.
+Linux's Debug/Release conformance reports both satisfy the exact 124/0/3/0/2
+contract. Independent GCC evidence does not reclassify pinned Zig ASan cases.
+
+The `8a65228` verification driver uses validated artifact-relative paths on
+Windows and records its working directory. The module snapshot regression
+covers spaces and Unicode. Parser, type/borrow rules, codegen and runtime remain
+at the `b3c27a6` language-feature baseline. See [CI scope](../tools/ci/README.md)
+and [the source-bound receipt](validation/github-ci-2026-11-22.json) for all
+three runs, actual artifacts and the earlier failures.
 
 ### Earlier measurements and their source scope
 
@@ -59,7 +81,7 @@ packet with `1af1f69`: first compilation plus existing-sample correctness was
 Yavo 8/11 versus Rust 11/11; token/tool/time ratios were 1.27/1.58/1.63.
 Both passed 18 frozen examples, but the later T10 boundary check exposed the
 Yavo solution's rejection of valid `000000001`. The subsequent `b3c27a6` fixes
-have not been measured on new tasks. After CI bring-up, the next experiment is
+have not been measured on new tasks. With native CI passing, the next experiment is
 12 new tasks with hidden edges, at least two runs per language and direct
 archival of first source, commands, outcomes and complete costs. Formal goals
 remain at least 20% lower cost per successful delivery and paired success-rate
@@ -1239,8 +1261,9 @@ programs for all six targets, 84 builds, no failures):
 - Linux outputs are statically linked;
 - the `x86_64-linux-musl` output runs here and matches the expected stdout.
 
-Not verified: running the Windows, macOS and aarch64 outputs (no such machines or emulators
-here).
+Native CI now executes the documented Windows x86-64 and macOS arm64 selections.
+Linux aarch64, Windows aarch64 and macOS x86-64 remain cross-compiled only; the
+Windows/macOS selections do not establish complete frozen-report acceptance.
 
 Release builds are stripped (`-O2 -s`, decided 2026-11-16): `run_arith.yv` for
 `x86_64-linux-musl` went from 1.3 MB to 12 KB, for `x86_64-windows-gnu` from 222 KB to 76 KB,

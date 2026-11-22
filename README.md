@@ -23,12 +23,33 @@ Recent changes implement index assignment, two-phase variable/field receivers, S
 | Release suite | **129 passed, 0 failed, 1 ignored** | Complete single-command run for the language-feature baseline |
 | Debug suite | **129 passed, 0 failed, 1 ignored** | Complete single-command run for the same baseline |
 | Frozen specification | **124 pass, 0 wrong, 3 unsupported, 0 not_run, 2 superseded** | 129 frozen cases; a different counting unit from Cargo test functions |
-| Cross-compilation | Six target formats/architectures build | Linux (static musl), Windows and macOS on x86-64/aarch64; recorded native execution is Linux x86-64 |
+| Cross-compilation | Six target formats/architectures build | Linux (static musl), Windows and macOS on x86-64/aarch64; native CI now covers Linux x86-64 plus the Windows x86-64/macOS arm64 selections below |
 | Overall `verify` | **`not_verified`** | Required audit remains unimplemented |
 
 The ignored Cargo test is the old exploratory P0 conformance report; the current specification runner executes separately. T-GR9, T-P3 and T-R2 need an ASan runtime unavailable in the pinned toolchain on the project host. T-V1 and T-GF2 are superseded by the revised two-phase receiver rule, with reasons in `compiler/tests/conformance_superseded.txt`. The runner enforces its passing-case baseline; a green Cargo run must still be read together with the full status report.
 
 Source modules support top-level exports, per-file imports, cyclic imports and original-file diagnostics. Package dependencies and a program lockfile remain open. Multi-file `fix` returns `U0001` without writing; symlink module aliases are unsupported.
+
+### GitHub CI
+
+**[Run 44991523612](https://github.com/msly/yavo/actions/runs/44991523612) passed all four jobs
+at `8a65228` on 2026-11-22.** The language-feature baseline remains `b3c27a6`;
+the latest code change fixes Windows paths in the verification build driver.
+
+| Job | Result | Scope |
+| --- | --- | --- |
+| Linux x86-64 | Debug **129/0/1**, Release **129/0/1** | Complete Cargo suites, frozen conformance and six-target builds |
+| Windows x86-64 | Debug **71/0/1**, Release **71/0/1** | Selected native suites and compiler unit tests |
+| macOS arm64 | Debug **74/0/1**, Release **74/0/1** | The same selection, including its Unix-only cases |
+| Independent Linux ASan+UBSan | **60 passed, 0 failed** | GCC 13.3; all exported P0 run/panic fixtures and clean/UAF/signed-overflow capability probes |
+
+Counts are passed/failed/ignored. Three Unix-only tests are compiled out on
+Windows; no selected tests were filtered at runtime. Windows/macOS selection
+is narrower than the full Linux suite. Linux conformance remains **124 pass,
+0 wrong, 3 unsupported, 0 not_run, 2 superseded** in both modes; independent GCC
+success does not change the pinned Zig ASan exceptions.
+
+[CI scope](tools/ci/README.md) · [source-bound receipt and earlier run history](compiler/validation/github-ci-2026-11-22.json)
 
 ### Measurements tied to earlier snapshots
 
@@ -57,9 +78,8 @@ Both languages passed the frozen 18 runtime examples. A later independent T10 bo
 
 ## Next work and acceptance gates
 
-1. Complete native CI bring-up. Existing history was pushed to [msly/yavo](https://github.com/msly/yavo) on 2026-11-22 with user authorization (`origin/main`: `b3c27a6`). The first CI execution is pending; see [CI scope and commands](tools/ci/README.md) and [the workflow](.github/workflows/ci.yml).
-2. Run a fifth round with 12 new tasks, independent hidden edge cases and at least two independent runs per language. Save first-source snapshots, commands, outcomes, token/tool counts and monotonic timings directly in the experiment directory; separate reading documentation, writing code and repair costs.
-3. Use those results to choose further language/tool changes. Remaining v1 functionality includes user test blocks and `yavo test`, local/Git dependencies and a lockfile, FFI/unsafe/audit, general closures/higher-order parameters, public movable Join and `spawn inout`. Precompiled runtime objects address the observed edit-build latency.
+1. Run a fifth round with 12 new tasks, independent hidden edge cases and at least two independent runs per language. Save first-source snapshots, commands, outcomes, token/tool counts and monotonic timings directly in the experiment directory; separate reading documentation, writing code and repair costs.
+2. Use those results to choose further language/tool changes. Remaining v1 functionality includes user test blocks and `yavo test`, local/Git dependencies and a lockfile, FFI/unsafe/audit, general closures/higher-order parameters, public movable Join and `spawn inout`. Precompiled runtime objects address the observed edit-build latency.
 
 The [frozen goals](docs/plan.md) require success-rate noninferiority to Rust (paired one-sided 95% lower bound at least −5 percentage points), at least **20% lower cost per successful delivery** with independent replication, and runtime geometric mean at most **1.5× C** on a frozen representative benchmark set. Engineering targets include small-program build P50 **≤200 ms**, stripped Linux binaries **≤250 KB**, native Windows tests and reproducible output hashes. Neither frozen-fixture coverage nor the small C pilot closes full v1 acceptance.
 
