@@ -1,0 +1,124 @@
+use parse
+
+pub fn schedule(courses: Vec[Course], cap: int) -> String ! String {
+    let n = courses.len()
+    var index: Map[String, int] = [:]
+    var i = 0
+    while i < n {
+        index.set(courses[i].name.clone(), i)
+        i += 1
+    }
+    var indeg: Vec[int] = []
+    var edges: Vec[(int, int)] = []
+    i = 0
+    while i < n {
+        indeg.push(0)
+        i += 1
+    }
+    i = 0
+    while i < n {
+        for p in courses[i].pre {
+            let pi = index.getCopy(p) ?? 0
+            edges.push((pi, i))
+            indeg[i] += 1
+        }
+        i += 1
+    }
+    var stack: Vec[int] = []
+    i = 0
+    while i < n {
+        if indeg[i] == 0 {
+            stack.push(i)
+        }
+        i += 1
+    }
+    var order: Vec[int] = []
+    while let u = stack.pop() {
+        order.push(u)
+        for e in edges {
+            if e.0 == u {
+                indeg[e.1] -= 1
+                if indeg[e.1] == 0 {
+                    stack.push(e.1)
+                }
+            }
+        }
+    }
+    if order.len() < n {
+        var left: Vec[String] = []
+        i = 0
+        while i < n {
+            if indeg[i] > 0 {
+                left.push(courses[i].name.clone())
+            }
+            i += 1
+        }
+        left.sort()
+        return err(format("cycle: ${left.join(" ")}"))
+    }
+    var chain: Vec[int] = []
+    i = 0
+    while i < n {
+        chain.push(1)
+        i += 1
+    }
+    var k = n
+    while k > 0 {
+        k -= 1
+        let u = order[k]
+        var best = 1
+        for e in edges {
+            if e.0 == u {
+                best = max(best, chain[e.1] + 1)
+            }
+        }
+        chain[u] = best
+    }
+    var done: Vec[bool] = []
+    i = 0
+    while i < n {
+        done.push(false)
+        i += 1
+    }
+    var count = 0
+    var term = 0
+    var out = String{}
+    while count < n {
+        term += 1
+        var avail: Vec[(int, String, int)] = []
+        i = 0
+        while i < n {
+            if !done[i] {
+                var ready = true
+                for e in edges {
+                    if e.1 == i && !done[e.0] {
+                        ready = false
+                    }
+                }
+                if ready {
+                    avail.push((chain[i], courses[i].name.clone(), i))
+                }
+            }
+            i += 1
+        }
+        avail.sortBy((a, b) => a.0 > b.0 || (a.0 == b.0 && a.1 < b.1))
+        var total = 0
+        var names: Vec[String] = []
+        var added: Vec[int] = []
+        for a in avail {
+            let cr = courses[a.2].credits
+            if total + cr <= cap {
+                total += cr
+                names.push(a.1.clone())
+                added.push(a.2)
+            }
+        }
+        for j in added {
+            done[j] = true
+            count += 1
+        }
+        out.push(format("term ${term}: ${names.join(" ")} (${total})\n"))
+    }
+    out.push(format("terms: ${term}\n"))
+    return out
+}

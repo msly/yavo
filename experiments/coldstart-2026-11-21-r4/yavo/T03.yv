@@ -1,0 +1,160 @@
+use std/{io, os}
+
+struct Tok {
+    kind: int
+    text: String
+    col: int
+}
+
+struct Val {
+    s: String
+    v: int
+}
+
+fn tokenize(line: str) -> Vec[Tok] {
+    var out: Vec[Tok] = []
+    var i = 0
+    let n = line.len()
+    while i < n {
+        let c = line[i]
+        if c == ' ' || c == '\t' {
+            i += 1
+        } else if c >= '0' && c <= '9' {
+            var j = i
+            while j < n && line[j] >= '0' && line[j] <= '9' {
+                j += 1
+            }
+            out.push(Tok{kind: 1, text: line[i..j].toString(), col: i + 1})
+            i = j
+        } else {
+            var k = 5
+            if c == '+' || c == '-' || c == '*' || c == '/' || c == '%' {
+                k = 2
+            } else if c == '(' {
+                k = 3
+            } else if c == ')' {
+                k = 4
+            }
+            out.push(Tok{kind: k, text: line[i..i + 1].toString(), col: i + 1})
+            i += 1
+        }
+    }
+    out.push(Tok{kind: 0, text: "".toString(), col: n + 1})
+    return out
+}
+
+struct Parser {
+    toks: Vec[Tok]
+    i: int
+    divz: bool
+
+    fn unexpected(self) -> String {
+        let t = self.toks[self.i]
+        if t.kind == 0 {
+            return "error: unexpected end".toString()
+        }
+        return format("error at col ${t.col}: unexpected '${t.text}'")
+    }
+
+    fn expr(inout self) -> Val ! String {
+        var l = try self.term()
+        while self.toks[self.i].kind == 2 && (self.toks[self.i].text == "+" || self.toks[self.i].text == "-") {
+            let op = self.toks[self.i].text.clone()
+            self.i += 1
+            let r = try self.term()
+            let s = format("(${l.s} ${op} ${r.s})")
+            var v = 0
+            if !self.divz {
+                if op == "+" {
+                    v = l.v + r.v
+                } else {
+                    v = l.v - r.v
+                }
+            }
+            l = Val{s: s, v: v}
+        }
+        return l
+    }
+
+    fn term(inout self) -> Val ! String {
+        var l = try self.unary()
+        while self.toks[self.i].kind == 2 && (self.toks[self.i].text == "*" || self.toks[self.i].text == "/" || self.toks[self.i].text == "%") {
+            let op = self.toks[self.i].text.clone()
+            self.i += 1
+            let r = try self.unary()
+            let s = format("(${l.s} ${op} ${r.s})")
+            var v = 0
+            if !self.divz {
+                if op == "*" {
+                    v = l.v * r.v
+                } else if r.v == 0 {
+                    self.divz = true
+                } else if op == "/" {
+                    v = l.v / r.v
+                } else {
+                    v = l.v % r.v
+                }
+            }
+            l = Val{s: s, v: v}
+        }
+        return l
+    }
+
+    fn unary(inout self) -> Val ! String {
+        if self.toks[self.i].kind == 2 && self.toks[self.i].text == "-" {
+            self.i += 1
+            let x = try self.unary()
+            var v = 0
+            if !self.divz {
+                v = 0 - x.v
+            }
+            return Val{s: format("(-${x.s})"), v: v}
+        }
+        return try self.primary()
+    }
+
+    fn primary(inout self) -> Val ! String {
+        let kind = self.toks[self.i].kind
+        let text = self.toks[self.i].text.clone()
+        if kind == 1 {
+            self.i += 1
+            return Val{s: text.clone(), v: text.parseInt() ?? 0}
+        }
+        if kind == 3 {
+            self.i += 1
+            let e = try self.expr()
+            if self.toks[self.i].kind != 4 {
+                return err(self.unexpected())
+            }
+            self.i += 1
+            return e
+        }
+        return err(self.unexpected())
+    }
+}
+
+fn run(p: inout Parser) -> String ! String {
+    let r = try p.expr()
+    if p.toks[p.i].kind != 0 {
+        return err(p.unexpected())
+    }
+    if p.divz {
+        return format("${r.s} = error: division by zero")
+    }
+    return format("${r.s} = ${r.v}")
+}
+
+fn evalLine(line: str) -> String {
+    var p = Parser{toks: tokenize(line), i: 0, divz: false}
+    return run(&p) catch e => e.clone()
+}
+
+fn main() {
+    let all = io.readAll() catch e {
+        eprintln("read error: ${e}")
+        os.exit(1)
+    }
+    for line in all.lines() {
+        println(evalLine(line))
+    }
+}

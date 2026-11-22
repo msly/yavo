@@ -1,0 +1,131 @@
+use std/{io, os}
+
+struct Stat {
+    lines: int
+    valid: int
+    sum: int
+    primes: int
+    has: bool
+    lo: int
+    hi: int
+}
+
+fn isPrime(n: int) -> bool {
+    if n < 2 {
+        return false
+    }
+    var d = 2
+    while d * d <= n {
+        if n % d == 0 {
+            return false
+        }
+        d += 1
+    }
+    return true
+}
+
+fn parseLine(s: str) -> ?int {
+    var i = 0
+    var neg = false
+    if s.len() > 0 && s[0] == '-' {
+        neg = true
+        i = 1
+    }
+    if i >= s.len() {
+        return none
+    }
+    var v = 0
+    while i < s.len() {
+        let c = s[i]
+        if c < '0' || c > '9' {
+            return none
+        }
+        v = v * 10 + int(c - '0')
+        i += 1
+    }
+    if neg {
+        return 0 - v
+    }
+    return v
+}
+
+fn work(xs: []str) -> Stat {
+    var st = Stat{lines: xs.len(), valid: 0, sum: 0, primes: 0, has: false, lo: 0, hi: 0}
+    for s in xs {
+        if let v = parseLine(s) {
+            st.valid += 1
+            st.sum += v
+            if isPrime(v) {
+                st.primes += 1
+            }
+            if !st.has {
+                st.has = true
+                st.lo = v
+                st.hi = v
+            } else {
+                st.lo = min(st.lo, v)
+                st.hi = max(st.hi, v)
+            }
+        }
+    }
+    return st
+}
+
+fn main() {
+    let text = io.readAll() catch e {
+        eprintln("read error: ${e}")
+        os.exit(1)
+    }
+    let lines = text.lines()
+    let n = lines.len()
+    let base = n / 4
+    let extra = n % 4
+    var bounds: Vec[int] = [0]
+    var k = 0
+    while k < 4 {
+        var sz = base
+        if k < extra {
+            sz += 1
+        }
+        bounds.push(bounds[k] + sz)
+        k += 1
+    }
+    var res: Vec[Stat] = []
+    scope {
+        let h0 = spawn work(lines[bounds[0]..bounds[1]])
+        let h1 = spawn work(lines[bounds[1]..bounds[2]])
+        let h2 = spawn work(lines[bounds[2]..bounds[3]])
+        let h3 = spawn work(lines[bounds[3]..bounds[4]])
+        res.push(h0.join())
+        res.push(h1.join())
+        res.push(h2.join())
+        res.push(h3.join())
+    }
+    var tot = Stat{lines: 0, valid: 0, sum: 0, primes: 0, has: false, lo: 0, hi: 0}
+    var idx = 0
+    for r in res {
+        idx += 1
+        println("chunk ${idx}: lines=${r.lines} valid=${r.valid} sum=${r.sum} primes=${r.primes}")
+        tot.lines += r.lines
+        tot.valid += r.valid
+        tot.sum += r.sum
+        tot.primes += r.primes
+        if r.has {
+            if !tot.has {
+                tot.has = true
+                tot.lo = r.lo
+                tot.hi = r.hi
+            } else {
+                tot.lo = min(tot.lo, r.lo)
+                tot.hi = max(tot.hi, r.hi)
+            }
+        }
+    }
+    var lo = "none".toString()
+    var hi = "none".toString()
+    if tot.has {
+        lo = format("${tot.lo}")
+        hi = format("${tot.hi}")
+    }
+    println("total: lines=${tot.lines} valid=${tot.valid} invalid=${tot.lines - tot.valid} sum=${tot.sum} min=${lo} max=${hi} primes=${tot.primes}")
+}

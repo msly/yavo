@@ -1,0 +1,17 @@
+use std/{io, os}
+use config
+
+fn main() {
+    let text = io.readAll() catch e {
+        eprintln("read error: ${e}")
+        os.exit(1)
+    }
+    let cfg = config.parse(text) catch n {
+        eprintln("line ${n}: syntax error")
+        os.exit(2)
+    }
+    let args = os.args()
+    for a in args[1..args.len()] {
+        println(config.query(cfg, a))
+    }
+}

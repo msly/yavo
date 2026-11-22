@@ -1,0 +1,24 @@
+use std/{io, os}
+use parse
+use plan
+
+fn main() {
+    let text = io.readAll() catch e {
+        eprintln("read error: ${e}")
+        os.exit(1)
+    }
+    let args = os.args()
+    var cap = 0
+    if args.len() > 1 {
+        cap = args[1].parseInt() ?? 0
+    }
+    let courses = parse.load(text, cap) catch m {
+        eprintln(m)
+        os.exit(1)
+    }
+    let out = plan.schedule(courses, cap) catch m {
+        eprintln(m)
+        os.exit(1)
+    }
+    print(out)
+}

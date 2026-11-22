@@ -1,0 +1,95 @@
+pub struct Config {
+    map: Map[String, String]
+}
+
+pub enum Fail {
+    Missing(r: String)
+    Cycle
+}
+
+pub fn parse(text: str) -> Config ! int {
+    var cfg = Config{map: [:]}
+    var section = String{}
+    var n = 0
+    for raw in text.lines() {
+        n += 1
+        let line = raw.trim()
+        if line.len() == 0 || line[0] == '#' || line[0] == ';' {
+            continue
+        }
+        if line[0] == '[' && line[line.len() - 1] == ']' {
+            let name = line[1..line.len() - 1].trim()
+            if name.len() == 0 {
+                return err(n)
+            }
+            section = name.toString()
+            continue
+        }
+        if let p = line.find("=") {
+            let k = line[0..p].trim()
+            let v = line[p + 1..line.len()].trim()
+            if k.len() == 0 {
+                return err(n)
+            }
+            var full = String{}
+            if section.len() > 0 {
+                full.push(section)
+                full.push(".")
+            }
+            full.push(k)
+            cfg.map.set(full, v.toString())
+            continue
+        }
+        return err(n)
+    }
+    return cfg
+}
+
+fn expand(cfg: Config, key: str, stack: inout Vec[String]) -> String ! Fail {
+    for s in stack {
+        if s == key {
+            return err(.Cycle)
+        }
+    }
+    if !cfg.map.has(key) {
+        return err(.Missing(r: key.toString()))
+    }
+    stack.push(key.toString())
+    var out = String{}
+    if let v = cfg.map.get(key) {
+        var rest = v[0..v.len()]
+        loop {
+            if let p = rest.find("\${") {
+                let after = rest[p + 2..rest.len()]
+                if let q = after.find("}") {
+                    out.push(rest[0..p])
+                    let sub = try expand(cfg, after[0..q], &stack)
+                    out.push(sub)
+                    rest = after[q + 1..after.len()]
+                } else {
+                    out.push(rest)
+                    break
+                }
+            } else {
+                out.push(rest)
+                break
+            }
+        }
+    }
+    let _p = stack.pop()
+    return out
+}
+
+pub fn query(cfg: Config, q: str) -> String {
+    if !cfg.map.has(q) {
+        return format("${q}: not found")
+    }
+    var stack: Vec[String] = []
+    let r = expand(cfg, q, &stack) catch e {
+        match e {
+            .Missing(m) => return format("${q}: missing ${m}")
+            .Cycle => return format("${q}: cycle")
+        }
+    }
+    return format("${q} = ${r}")
+}

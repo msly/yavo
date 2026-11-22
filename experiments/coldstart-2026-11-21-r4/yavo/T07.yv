@@ -1,0 +1,101 @@
+use std/{io, os}
+
+struct Job {
+    name: String
+    arr: int
+    dur: int
+    pri: int
+    done: bool
+}
+
+fn num(s: str) -> ?int {
+    if s.len() == 0 {
+        return none
+    }
+    var i = 0
+    while i < s.len() {
+        if s[i] < '0' || s[i] > '9' {
+            return none
+        }
+        i += 1
+    }
+    return s.parseInt()
+}
+
+fn main() {
+    let text = io.readAll() catch e {
+        eprintln("read error: ${e}")
+        os.exit(1)
+    }
+    var jobs: Vec[Job] = []
+    var n = 0
+    for line in text.lines() {
+        n += 1
+        let f = line.fields()
+        var ok = false
+        if f.len() == 4 {
+            if let a = num(f[1]) {
+                if let d = num(f[2]) {
+                    if let p = num(f[3]) {
+                        if d > 0 {
+                            ok = true
+                            jobs.push(Job{name: f[0].toString(), arr: a, dur: d, pri: p, done: false})
+                        }
+                    }
+                }
+            }
+        }
+        if !ok {
+            eprintln("line ${n}: invalid")
+        }
+    }
+    let total = jobs.len()
+    var left = total
+    var t = 0
+    var idle = 0
+    var waitSum = 0
+    while left > 0 {
+        var best = -1
+        var i = 0
+        while i < total {
+            if !jobs[i].done && jobs[i].arr <= t {
+                if best < 0 {
+                    best = i
+                } else {
+                    let b = jobs[best].pri
+                    let c = jobs[i].pri
+                    if c > b || (c == b && (jobs[i].arr < jobs[best].arr || (jobs[i].arr == jobs[best].arr && jobs[i].name < jobs[best].name))) {
+                        best = i
+                    }
+                }
+            }
+            i += 1
+        }
+        if best < 0 {
+            var nxt = -1
+            i = 0
+            while i < total {
+                if !jobs[i].done && (nxt < 0 || jobs[i].arr < nxt) {
+                    nxt = jobs[i].arr
+                }
+                i += 1
+            }
+            idle += nxt - t
+            t = nxt
+            continue
+        }
+        let w = t - jobs[best].arr
+        println("t=${t} ${jobs[best].name} (waited ${w})")
+        waitSum += w
+        t += jobs[best].dur
+        jobs[best].done = true
+        left -= 1
+    }
+    var avg = 0.0
+    if total > 0 {
+        avg = f64(waitSum) / f64(total)
+    }
+    println("avg wait: ${avg:.2}")
+    println("idle: ${idle}")
+    println("end: ${t}")
+}

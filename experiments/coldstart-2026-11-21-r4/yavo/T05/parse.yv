@@ -1,0 +1,51 @@
+pub struct Course {
+    name: String
+    credits: int
+    pre: Vec[String]
+}
+
+pub fn load(text: str, cap: int) -> Vec[Course] ! String {
+    var courses: Vec[Course] = []
+    var n = 0
+    for raw in text.lines() {
+        n += 1
+        let f = raw.fields()
+        if f.len() == 0 {
+            continue
+        }
+        if f.len() < 2 {
+            return err(format("line ${n}: invalid"))
+        }
+        let cr = f[1].parseInt() ?? 0
+        if cr <= 0 {
+            return err(format("line ${n}: invalid"))
+        }
+        var pre: Vec[String] = []
+        var i = 2
+        while i < f.len() {
+            pre.push(f[i].toString())
+            i += 1
+        }
+        courses.push(Course{name: f[0].toString(), credits: cr, pre: pre})
+    }
+    var seen: Set[String] = []
+    for c in courses {
+        if seen.has(c.name) {
+            return err(format("duplicate ${c.name}"))
+        }
+        seen.add(c.name.clone())
+    }
+    for c in courses {
+        for p in c.pre {
+            if !seen.has(p) {
+                return err(format("unknown ${p}"))
+            }
+        }
+    }
+    for c in courses {
+        if c.credits > cap {
+            return err(format("too big ${c.name}"))
+        }
+    }
+    return courses
+}

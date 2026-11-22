@@ -1,0 +1,285 @@
+use std/{io, os}
+
+fn parentOf(p: str) -> str of p {
+    var i = p.len()
+    while i > 0 {
+        i -= 1
+        if p[i] == '/' {
+            if i == 0 {
+                return p[0..1]
+            }
+            return p[0..i]
+        }
+    }
+    return p[0..1]
+}
+
+fn baseName(p: str) -> str of p {
+    var i = p.len()
+    while i > 0 {
+        i -= 1
+        if p[i] == '/' {
+            return p[i + 1..p.len()]
+        }
+    }
+    return p
+}
+
+fn join(dir: str, name: str) -> String {
+    var out = String{}
+    out.push(dir)
+    if dir != "/" {
+        out.push("/")
+    }
+    out.push(name)
+    return out
+}
+
+fn under(k: str, s: str) -> bool {
+    if s == "/" || k == s {
+        return true
+    }
+    return k.startsWith(format("${s}/"))
+}
+
+fn isNum(s: str) -> bool {
+    if s.len() == 0 {
+        return false
+    }
+    var i = 0
+    while i < s.len() {
+        if s[i] < '0' || s[i] > '9' {
+            return false
+        }
+        i += 1
+    }
+    return true
+}
+
+struct Fs {
+    m: Map[String, int]
+
+    fn exists(self, p: str) -> bool {
+        return self.m.has(p)
+    }
+
+    fn isDir(self, p: str) -> bool {
+        return (self.m.getCopy(p) ?? 0) == -1
+    }
+
+    fn du(self, p: str) -> int {
+        var total = 0
+        for k, v in self.m {
+            if v >= 0 && under(k, p) {
+                total += v
+            }
+        }
+        return total
+    }
+
+    fn children(self, p: str) -> Vec[String] {
+        var out: Vec[String] = []
+        for k, _v in self.m {
+            if k != "/" && parentOf(k) == p {
+                out.push(baseName(k).toString())
+            }
+        }
+        out.sort()
+        return out
+    }
+
+    fn mkdir(inout self, p: str) {
+        var cur = String{}
+        for comp in p.split("/") {
+            if comp.len() == 0 {
+                continue
+            }
+            cur.push("/")
+            cur.push(comp)
+            if self.exists(cur) {
+                if !self.isDir(cur) {
+                    println("error: not a directory ${cur}")
+                    return
+                }
+            } else {
+                self.m.set(cur.clone(), -1)
+            }
+        }
+    }
+
+    fn touch(inout self, p: str, size: int) {
+        if p == "/" {
+            println("error: is a directory /")
+            return
+        }
+        let par = parentOf(p)
+        if !self.exists(par) || !self.isDir(par) {
+            println("error: no such directory ${par}")
+            return
+        }
+        if self.isDir(p) {
+            println("error: is a directory ${p}")
+            return
+        }
+        self.m.set(p.toString(), size)
+    }
+
+    fn keysUnder(self, p: str) -> Vec[String] {
+        var out: Vec[String] = []
+        for k, _v in self.m {
+            if under(k, p) {
+                out.push(k.clone())
+            }
+        }
+        return out
+    }
+
+    fn rm(inout self, p: str) {
+        if !self.exists(p) {
+            println("error: no such path ${p}")
+            return
+        }
+        if p == "/" {
+            println("error: cannot remove root")
+            return
+        }
+        let ks = self.keysUnder(p)
+        for k in ks {
+            let _o = self.m.remove(k)
+        }
+    }
+
+    fn mv(inout self, s: str, d: str) {
+        if !self.exists(s) {
+            println("error: no such path ${s}")
+            return
+        }
+        if s == "/" {
+            println("error: cannot move root")
+            return
+        }
+        var target = String{}
+        if self.exists(d) {
+            if !self.isDir(d) {
+                println("error: exists ${d}")
+                return
+            }
+            target = join(d, baseName(s))
+        } else {
+            let par = parentOf(d)
+            if !self.exists(par) || !self.isDir(par) {
+                println("error: no such directory ${par}")
+                return
+            }
+            target = d.toString()
+        }
+        if under(target, s) {
+            println("error: cannot move into itself")
+            return
+        }
+        if self.exists(target) {
+            println("error: exists ${target}")
+            return
+        }
+        let ks = self.keysUnder(s)
+        var moved: Vec[(String, int)] = []
+        for k in ks {
+            let v = self.m.getCopy(k) ?? 0
+            var nk = String{}
+            nk.push(target)
+            nk.push(k[s.len()..k.len()])
+            moved.push((nk, v))
+            let _o = self.m.remove(k)
+        }
+        for it in moved {
+            self.m.set(it.0.clone(), it.1)
+        }
+    }
+
+    fn ls(self, p: str) {
+        if !self.exists(p) {
+            println("error: no such path ${p}")
+            return
+        }
+        if !self.isDir(p) {
+            println(p)
+            return
+        }
+        let cs = self.children(p)
+        if cs.len() == 0 {
+            println("${p}: (empty)")
+            return
+        }
+        var parts: Vec[String] = []
+        for c in cs {
+            if self.isDir(join(p, c)) {
+                parts.push(format("${c}/"))
+            } else {
+                parts.push(c.clone())
+            }
+        }
+        println("${p}: ${parts.join(" ")}")
+    }
+
+    fn dump(self, dir: str, depth: int) {
+        let cs = self.children(dir)
+        for c in cs {
+            let path = join(dir, c)
+            var ind = String{}
+            var i = 0
+            while i < depth {
+                ind.push("  ")
+                i += 1
+            }
+            if self.isDir(path) {
+                println("${ind}${c}/ ${self.du(path)}")
+                self.dump(path, depth + 1)
+            } else {
+                println("${ind}${c} ${self.du(path)}")
+            }
+        }
+    }
+
+    fn exec(inout self, f: []str) {
+        let c = f[0]
+        if (c == "mkdir" || c == "rm" || c == "du" || c == "ls") && f.len() == 2 {
+            if c == "mkdir" {
+                self.mkdir(f[1])
+            } else if c == "rm" {
+                self.rm(f[1])
+            } else if c == "du" {
+                if self.exists(f[1]) {
+                    println("${f[1]} ${self.du(f[1])}")
+                } else {
+                    println("error: no such path ${f[1]}")
+                }
+            } else {
+                self.ls(f[1])
+            }
+        } else if c == "touch" && f.len() == 3 && isNum(f[2]) {
+            self.touch(f[1], f[2].parseInt() ?? 0)
+        } else if c == "mv" && f.len() == 3 {
+            self.mv(f[1], f[2])
+        } else {
+            println("error: bad command")
+        }
+    }
+}
+
+fn main() {
+    let text = io.readAll() catch e {
+        eprintln("read error: ${e}")
+        os.exit(1)
+    }
+    var fs = Fs{m: [:]}
+    fs.m.set("/".toString(), -1)
+    for line in text.lines() {
+        let f = line.fields()
+        if f.len() == 0 {
+            continue
+        }
+        fs.exec(f)
+    }
+    println("/ ${fs.du("/")}")
+    fs.dump("/", 1)
+}

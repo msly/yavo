@@ -1,0 +1,128 @@
+use std/{io, os}
+
+struct Node {
+    count: int
+    minb: int
+    left: int
+    right: int
+    byte: int
+}
+
+fn less(nodes: Vec[Node], a: int, b: int) -> bool {
+    if nodes[a].count != nodes[b].count {
+        return nodes[a].count < nodes[b].count
+    }
+    return nodes[a].minb < nodes[b].minb
+}
+
+fn assign(nodes: Vec[Node], idx: int, prefix: str, codes: inout Vec[String]) {
+    if nodes[idx].left < 0 {
+        codes[nodes[idx].byte] = prefix.toString()
+        return
+    }
+    assign(nodes, nodes[idx].left, format("${prefix}0"), &codes)
+    assign(nodes, nodes[idx].right, format("${prefix}1"), &codes)
+}
+
+fn label(b: int) -> String {
+    let chars = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
+    if b >= 33 && b <= 126 {
+        return chars[b - 33..b - 32].toString()
+    }
+    let hex = "0123456789ABCDEF"
+    let h = b / 16
+    let l = b % 16
+    return format("\\x${hex[h..h + 1]}${hex[l..l + 1]}")
+}
+
+fn main() {
+    let text = io.readAll() catch e {
+        eprintln("read error: ${e}")
+        os.exit(1)
+    }
+    var counts: Vec[int] = []
+    var codes: Vec[String] = []
+    var z = 0
+    while z < 256 {
+        counts.push(0)
+        codes.push(String{})
+        z += 1
+    }
+    var i = 0
+    while i < text.len() {
+        let b = int(text[i])
+        counts[b] += 1
+        i += 1
+    }
+    var nodes: Vec[Node] = []
+    var active: Vec[int] = []
+    z = 0
+    while z < 256 {
+        if counts[z] > 0 {
+            active.push(nodes.len())
+            nodes.push(Node{count: counts[z], minb: z, left: -1, right: -1, byte: z})
+        }
+        z += 1
+    }
+    if active.len() == 0 {
+        println("bits: 0")
+        return
+    }
+    while active.len() > 1 {
+        var x = active[0]
+        var xi = 0
+        var k = 1
+        while k < active.len() {
+            if less(nodes, active[k], x) {
+                x = active[k]
+                xi = k
+            }
+            k += 1
+        }
+        var y = -1
+        var yi = -1
+        k = 0
+        while k < active.len() {
+            if k != xi {
+                if y < 0 || less(nodes, active[k], y) {
+                    y = active[k]
+                    yi = k
+                }
+            }
+            k += 1
+        }
+        let cnt = nodes[x].count + nodes[y].count
+        let mb = min(nodes[x].minb, nodes[y].minb)
+        let id = nodes.len()
+        nodes.push(Node{count: cnt, minb: mb, left: x, right: y, byte: -1})
+        var next: Vec[int] = []
+        k = 0
+        while k < active.len() {
+            if k != xi && k != yi {
+                next.push(active[k])
+            }
+            k += 1
+        }
+        next.push(id)
+        active = next
+    }
+    let root = active[0]
+    if nodes[root].left < 0 {
+        codes[nodes[root].byte] = "0".toString()
+    } else {
+        assign(nodes, root, "", &codes)
+    }
+    var bits = 0
+    var depth = 0
+    z = 0
+    while z < 256 {
+        if counts[z] > 0 {
+            println("${label(z)} ${counts[z]} ${codes[z]}")
+            bits += counts[z] * codes[z].len()
+            depth = max(depth, codes[z].len())
+        }
+        z += 1
+    }
+    println("bits: ${bits}")
+    println("depth: ${depth}")
+}

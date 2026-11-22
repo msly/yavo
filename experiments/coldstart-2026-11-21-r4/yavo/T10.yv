@@ -1,0 +1,113 @@
+use std/{io, os, sync}
+
+struct Job {
+    idx: int
+    n: int
+}
+
+struct Res {
+    idx: int
+    n: int
+    steps: int
+    peak: int
+    valid: bool
+}
+
+fn parseN(s: str) -> ?int {
+    if s.len() == 0 || s.len() > 8 {
+        return none
+    }
+    var i = 0
+    while i < s.len() {
+        if s[i] < '0' || s[i] > '9' {
+            return none
+        }
+        i += 1
+    }
+    let v = s.parseInt() ?? return none
+    if v < 1 || v > 10000000 {
+        return none
+    }
+    return v
+}
+
+fn worker(jobs: &Channel[Job], out: &Channel[Res]) {
+    while let j = jobs.recv() {
+        var x = j.n
+        var steps = 0
+        var peak = x
+        while x != 1 {
+            if x % 2 == 0 {
+                x = x / 2
+            } else {
+                x = 3 * x + 1
+            }
+            steps += 1
+            if x > peak {
+                peak = x
+            }
+        }
+        out.send(Res{idx: j.idx, n: j.n, steps: steps, peak: peak, valid: true}) catch _ {
+            return
+        }
+    }
+}
+
+fn main() {
+    let text = io.readAll() catch e {
+        eprintln("read error: ${e}")
+        os.exit(1)
+    }
+    var res: Vec[Res] = []
+    var todo: Vec[Job] = []
+    var k = 0
+    for line in text.lines() {
+        res.push(Res{idx: k, n: 0, steps: 0, peak: 0, valid: false})
+        if let n = parseN(line) {
+            todo.push(Job{idx: k, n: n})
+        }
+        k += 1
+    }
+    let cnt = todo.len()
+    let jobs = Channel[Job]{cap: cnt + 1}
+    let outc = Channel[Res]{cap: cnt + 1}
+    scope {
+        let w0 = spawn worker(&jobs, &outc)
+        let w1 = spawn worker(&jobs, &outc)
+        let w2 = spawn worker(&jobs, &outc)
+        for j in todo {
+            jobs.send(Job{idx: j.idx, n: j.n}) catch _ {
+                break
+            }
+        }
+        jobs.close()
+        var got = 0
+        while got < cnt {
+            let r = outc.recv() ?? break
+            let ix = r.idx
+            res[ix] = r
+            got += 1
+        }
+        w0.join()
+        w1.join()
+        w2.join()
+    }
+    var bestN = 0
+    var bestS = -1
+    for r in res {
+        if r.valid {
+            println("${r.n}: steps=${r.steps} peak=${r.peak}")
+            if r.steps > bestS {
+                bestS = r.steps
+                bestN = r.n
+            }
+        } else {
+            println("line ${r.idx + 1}: invalid")
+        }
+    }
+    if bestS < 0 {
+        println("longest: none")
+    } else {
+        println("longest: ${bestN} (${bestS} steps)")
+    }
+}

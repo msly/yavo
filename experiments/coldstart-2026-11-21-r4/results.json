@@ -1,0 +1,195 @@
+{
+  "schema": "yavo-coldstart-results/1",
+  "experiment_id": "coldstart-2026-11-21-r4",
+  "report_date": "2026-11-21",
+  "timezone": "Asia/Shanghai",
+  "compiler": {
+    "commit": "1af1f695a256c54d7ceebe73765187797a456d14",
+    "binary_sha256": "0b1fbfc83be0bbe8b8d03a0fa7291bc6875dff9c75edf427139eebf8ec39d40c",
+    "rustc_version_evidence": "evidence/rustc-version.txt"
+  },
+  "inputs": {
+    "previous_experiment": "../coldstart-2026-11-21",
+    "tasks_reused_byte_identical": true,
+    "runtime_fixtures_reused_byte_identical": true,
+    "task_sha256": "4375cd68d1658a25165e16c6a8f19edc6a7b9b9c8b7f2b7d7070ed8b34fe8c17",
+    "cheatsheet_sha256": "2c6c9cd8a129b0a3bd0a0dca0821be750ebec315703aab9b19e83dac3a9abf29",
+    "source_manifest": "evidence/source-manifest.json"
+  },
+  "first_attempt_scope": {
+    "excluded_tasks": [
+      "T08"
+    ],
+    "denominator": 11,
+    "source": "subject-authored LOG.md; first source versions and complete tool transcripts unavailable",
+    "independently_replayed": false,
+    "correctness_scope": "original provided fixtures only"
+  },
+  "arms": {
+    "yavo": {
+      "original_fixture_verification": {
+        "passed": 18,
+        "failed": 0,
+        "skipped": 0,
+        "process_exit_code": 0,
+        "evidence": "evidence/yavo-verification.log",
+        "allocation_check": true
+      },
+      "automatic_structure_checks": {
+        "passed": 4,
+        "failed": 0
+      },
+      "first_code_compile_passed": 8,
+      "first_compile_and_original_fixtures_passed": 8,
+      "nonrepair_effective_compile_failures": 3,
+      "logged_compiler_invocations": {
+        "total": 16,
+        "build": 15,
+        "check": 1
+      },
+      "repair_task": {
+        "task": "T08",
+        "logged_invocations": 2,
+        "initial_check_diagnostics": 7,
+        "successful_builds_after_edit": 1,
+        "original_fixture_passed": true
+      },
+      "telemetry": {
+        "tokens": 162464,
+        "tool_calls": 38,
+        "elapsed_seconds": 276.8,
+        "provenance": "orchestrator record of subject-agent completion report, added 2026-11-22",
+        "independently_verified": false
+      },
+      "subject_log": "yavo/LOG.md"
+    },
+    "rust": {
+      "original_fixture_verification": {
+        "passed": 18,
+        "failed": 0,
+        "skipped": 0,
+        "process_exit_code": 0,
+        "evidence": "evidence/rust-verification.log"
+      },
+      "automatic_structure_checks": {
+        "passed": 4,
+        "failed": 0
+      },
+      "first_code_compile_passed": 11,
+      "first_compile_and_original_fixtures_passed": 11,
+      "nonrepair_effective_compile_failures": 0,
+      "logged_compiler_invocations": {
+        "total": 12,
+        "build": 12,
+        "check": 0
+      },
+      "repair_task": {
+        "task": "T08",
+        "logged_invocations": 1,
+        "initial_check_diagnostics": null,
+        "successful_builds_after_edit": 1,
+        "original_fixture_passed": true
+      },
+      "telemetry": {
+        "tokens": 127801,
+        "tool_calls": 24,
+        "elapsed_seconds": 170,
+        "provenance": "user-provided excerpt of predecessor report; raw telemetry unavailable",
+        "independently_verified": false
+      },
+      "subject_log": "rust/LOG.md"
+    }
+  },
+  "failures": [
+    {
+      "arm": "yavo",
+      "task": "T03",
+      "code": "E0102",
+      "category": "borrow-conflict",
+      "description": "let-bound borrow of self.toks[self.i] still used while self is modified",
+      "source": "yavo/LOG.md"
+    },
+    {
+      "arm": "yavo",
+      "task": "T04",
+      "code": "E0020",
+      "category": "documented-string-escape",
+      "description": "unescaped literal interpolation opener",
+      "source": "yavo/LOG.md"
+    },
+    {
+      "arm": "yavo",
+      "task": "T05",
+      "code": "U0001",
+      "category": "unsupported-mutable-indexed-receiver",
+      "description": "dependents[pi].push(i) requires an indexed mutable receiver",
+      "source": "yavo/LOG.md"
+    }
+  ],
+  "manual_structure_audit": "evidence/structure-audit.md",
+  "post_submission_boundary_audits": [
+    {
+      "task": "T10",
+      "id": "leading-zero",
+      "post_hoc": true,
+      "included_in_original_fixture_denominator": false,
+      "input": "evidence/t10-leading-zero.in",
+      "expected_stdout": "evidence/t10-leading-zero.expected.stdout",
+      "expected_stderr": "",
+      "expected_exit_code": 0,
+      "oracle": "TASKS.md permits decimal integers by numeric range without a leading-zero ban; 000000001 equals 1, requiring zero Collatz transformations and peak 1.",
+      "reproduction": "evidence/run-t10-leading-zero.sh",
+      "yavo": {
+        "passed": false,
+        "exit_code": 0,
+        "stderr_empty": true,
+        "stdout": "evidence/t10-leading-zero.yavo.stdout",
+        "source_unchanged": true
+      },
+      "rust": {
+        "passed": true,
+        "exit_code": 0,
+        "stderr_empty": true,
+        "stdout": "evidence/t10-leading-zero.rust.stdout",
+        "source_unchanged": true
+      },
+      "diagnosis": "Yavo subject program adds an unsupported input-length limit s.len() > 8; this is a submitted-program bug, not a demonstrated compiler defect."
+    }
+  ],
+  "historical_comparison": {
+    "source": "../coldstart-2026-11-21/README.md",
+    "independently_rerun_in_this_audit": false,
+    "yavo": {
+      "first_code_compile_passed": 4,
+      "first_compile_and_original_fixtures_passed": 3,
+      "denominator": 11,
+      "nonrepair_effective_compile_failures": 8,
+      "compiler_invocations": 23,
+      "tokens": 165176,
+      "tool_calls": 52,
+      "elapsed_seconds": 308
+    },
+    "rust": {
+      "first_code_compile_passed": 11,
+      "first_actual_command_passed": 10,
+      "first_compile_and_original_fixtures_passed": 11,
+      "denominator": 11,
+      "nonrepair_effective_compile_failures": 0,
+      "compiler_invocations": 14,
+      "tokens": 124860,
+      "tool_calls": 22,
+      "elapsed_seconds": 167
+    },
+    "caveat": "Round-3 Rust code-first-compile metric excludes the T04 output-path configuration failure."
+  },
+  "limitations": [
+    "One subject execution per arm; tasks share an agent context and are not independent model runs.",
+    "The same task packet was reused; this is not evidence of generalization to unseen tasks.",
+    "Compiler, cheatsheet, and subject execution changed together; individual treatment effects are not identified.",
+    "First-attempt and invocation counts depend on subject-authored logs, without full transcripts or initial source snapshots.",
+    "Round-4 Yavo cost comes from the orchestrating session record, added after the report was drafted; Yavo to Rust ratios: tokens 1.27, tool calls 1.58, elapsed 1.63.",
+    "Similar Rust metrics across two runs do not estimate general model variance.",
+    "Passing 18 original fixtures does not prove complete specification conformance; a separate legitimate-input failure was reproduced."
+  ],
+  "conclusion": "Yavo improved on the reused packet, but evidence does not establish greater agent efficiency than Rust."
+}

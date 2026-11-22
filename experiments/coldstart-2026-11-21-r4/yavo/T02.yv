@@ -1,0 +1,103 @@
+use std/{io, os}
+
+struct Snap {
+    text: String
+    pos: int
+}
+
+struct Buf {
+    text: String
+    pos: int
+    undo: Vec[Snap]
+
+    fn save(inout self) {
+        let s = Snap{text: self.text.clone(), pos: self.pos}
+        self.undo.push(s)
+    }
+
+    fn splice(inout self, from: int, to: int, ins: str) {
+        var t = String{}
+        t.push(self.text[0..from])
+        t.push(ins)
+        t.push(self.text[to..self.text.len()])
+        self.text = t
+    }
+}
+
+fn parseN(s: str) -> ?int {
+    let n = s.parseInt() ?? return none
+    if n <= 0 {
+        return none
+    }
+    return n
+}
+
+fn main() {
+    let all = io.readAll() catch e {
+        eprintln("read error: ${e}")
+        os.exit(1)
+    }
+    var b = Buf{text: String{}, pos: 0, undo: []}
+    var k = 0
+    for line in all.lines() {
+        k += 1
+        if k == 1 {
+            b.text = line.toString()
+            b.pos = line.len()
+            continue
+        }
+        let f = line.fields()
+        var ok = false
+        if f.len() >= 1 {
+            let c = f[0]
+            let len = b.text.len()
+            if c == "I" {
+                if line.len() >= 3 && line[0..2] == "I " {
+                    ok = true
+                    b.save()
+                    let ins = line[2..line.len()]
+                    b.splice(b.pos, b.pos, ins)
+                    b.pos += ins.len()
+                }
+            } else if c == "P" && f.len() == 1 {
+                ok = true
+                var out = String{}
+                out.push(b.text[0..b.pos])
+                out.push("|")
+                out.push(b.text[b.pos..len])
+                println(out)
+            } else if c == "U" && f.len() == 1 {
+                ok = true
+                if let s = b.undo.pop() {
+                    b.text = s.text.clone()
+                    b.pos = s.pos
+                } else {
+                    println("nothing to undo")
+                }
+            } else if f.len() == 2 && (c == "L" || c == "R" || c == "D" || c == "B") {
+                if let n = parseN(f[1]) {
+                    ok = true
+                    if c == "L" {
+                        b.pos = max(0, b.pos - n)
+                    } else if c == "R" {
+                        b.pos = min(len, b.pos + n)
+                    } else if c == "D" {
+                        b.save()
+                        let e = min(len, b.pos + n)
+                        b.splice(b.pos, e, "")
+                    } else {
+                        b.save()
+                        let s = max(0, b.pos - n)
+                        b.splice(s, b.pos, "")
+                        b.pos = s
+                    }
+                }
+            }
+        }
+        if !ok {
+            println("bad command at line ${k}")
+        }
+    }
+    println("final: ${b.text}")
+    println("length: ${b.text.len()}")
+}
