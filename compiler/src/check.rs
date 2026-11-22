@@ -487,6 +487,7 @@ enum LocalKind {
     BindOwned,
 }
 
+#[derive(Clone)]
 struct LocalState {
     name: String,
     ty: Ty,
@@ -827,6 +828,11 @@ struct FnCx {
     /// call starts. These also cover returned references with no named local.
     call_shared: Vec<LocalId>,
     call_mut: Vec<LocalId>,
+    /// Values already computed for an indexed assignment survive until the target
+    /// address and its indices have been evaluated. These are value loans, not
+    /// loans of an owning container's descriptor (unlike read-only call arguments).
+    assignment_shared: Vec<LocalId>,
+    assignment_mut: Vec<LocalId>,
     /// Receivers reserved by an enclosing modifying call while its arguments run (V2,
     /// two-phase): the arguments may read them, but not modify or move them, and the
     /// argument values must not keep pointing into them. With a description of the call.
@@ -855,6 +861,8 @@ impl FnCx {
             captures: Vec::new(),
             call_shared: Vec::new(),
             call_mut: Vec::new(),
+            assignment_shared: Vec::new(),
+            assignment_mut: Vec::new(),
             call_reserved: Vec::new(),
         }
     }
@@ -2486,6 +2494,20 @@ impl Checker<'_> {
     /// A call of generic function `di`: explicit type arguments, or inferred from the
     /// arguments' types.
     fn generic_call(&mut self, di: usize, targs: Option<&[TypeExpr]>, args: &[Expr], span: Span, at: Span, cx: &mut FnCx) -> HExpr {
+        let name = self.prog.fns[di].name.clone();
+        let Some(fi) = self.prepare_generic_fn(di, targs, args, at, cx) else {
+            for a in args {
+                self.expr(a, None, cx);
+            }
+            return err_expr(span);
+        };
+        self.call_fn(fi, &name, None, args, span, at, cx)
+    }
+
+    /// Resolve a generic signature without evaluating or borrowing its arguments.
+    /// Address type preparation uses this before the assignment's right side; the
+    /// normal call later checks the arguments exactly once, in execution order.
+    fn prepare_generic_fn(&mut self, di: usize, targs: Option<&[TypeExpr]>, args: &[Expr], at: Span, cx: &FnCx) -> Option<usize> {
         let decl = &self.prog.fns[di];
         let name = decl.name.clone();
         let tys = match targs {
@@ -2506,20 +2528,9 @@ impl Checker<'_> {
             }
             None => self.infer(di, args, at, cx),
         };
-        let Some(tys) = tys else {
-            for a in args {
-                self.expr(a, None, cx);
-            }
-            return err_expr(span);
-        };
+        let tys = tys?;
         let fi = self.instantiate_fn(di, tys, None, at);
-        if fi == NO_FN {
-            for a in args {
-                self.expr(a, None, cx);
-            }
-            return err_expr(span);
-        }
-        self.call_fn(fi, &name, None, args, span, at, cx)
+        (fi != NO_FN).then_some(fi)
     }
 
     /// Infers the type arguments of generic function `di` from its arguments' types.
@@ -4297,6 +4308,19 @@ impl Checker<'_> {
     /// Moving or modifying `s` while a view into it is still used later is an error (A3).
     fn check_not_borrowed(&mut self, cx: &FnCx, s: LocalId, span: Span, what: &str) {
         let p = cx.cur;
+        // An assignment value is already materialized while the target runs.
+        // Changing an owning Vec[str] descriptor does not change the strings it
+        // points into; only writable aliases carry this conflict transitively.
+        let alias = matches!(cx.locals[s].ty, Ty::Ref(_) | Ty::RefMut(_))
+            || cx.locals[s].ty.contains_ref_mut()
+            || matches!(cx.locals[s].ty, Ty::Sync(id) if sync_parts(id).0 == SyncKind::Guard);
+        if cx.assignment_shared.contains(&s) || cx.assignment_mut.contains(&s)
+            || alias && cx.locals[s].loans.iter().any(|l| matches!(l, Loan::Local(id)
+                if cx.assignment_shared.contains(id) || cx.assignment_mut.contains(id)))
+        {
+            self.diags.error("E0102", span, format!("cannot {what} `{}`: the pending assignment value still borrows it", cx.locals[s].name));
+            return;
+        }
         if let Some((_, call)) = cx.call_reserved.iter().find(|(r, _)| *r == s) {
             let name = cx.locals[s].name.clone();
             self.diags
@@ -4323,9 +4347,15 @@ impl Checker<'_> {
             }
             if let Some(line) = cx.pre.live_after(lv, p) {
                 let (sn, vn) = (cx.locals[s].name.clone(), lv.name.clone());
-                self.diags
+                let d = self.diags
                     .error("E0102", span, format!("cannot {what} `{sn}` while `{vn}` still points into it"))
                     .note(format!("`{vn}` is used again on line {line}"));
+                if !vn.starts_with('$') && matches!(lv.ty, Ty::Ref(_)) {
+                    d.note(format!(
+                        "`{vn}` is a `{}` borrow: reading a non-copyable element (`let {vn} = {sn}[i]`) borrows it; if `{vn}` should not depend on `{sn}`, copy it with `.clone()` where it is created",
+                        lv.ty
+                    ));
+                }
                 return;
             }
             // Threads of an enclosing `scope` keep their borrows until the scope ends (P3).
@@ -4343,6 +4373,12 @@ impl Checker<'_> {
     /// reference has exclusive access.
     fn check_exclusive(&mut self, cx: &FnCx, s: LocalId, span: Span) {
         let name = cx.locals[s].name.clone();
+        if cx.assignment_mut.contains(&s)
+            || cx.locals[s].loans.iter().any(|l| matches!(l, Loan::Local(id) if cx.assignment_mut.contains(id)))
+        {
+            self.diags.error("E0102", span, format!("cannot use `{name}`: the pending assignment value has exclusive access to it"));
+            return;
+        }
         if cx.call_mut.contains(&s)
             || cx.locals[s].loans.iter().any(|l| matches!(l, Loan::Local(id) if cx.call_mut.contains(id)))
         {
@@ -4520,6 +4556,132 @@ impl Checker<'_> {
         stmts.iter().filter_map(|s| self.stmt(s, cx)).collect()
     }
 
+    /// The type behind the transparent projections used by fields and indices.
+    /// Permissions and moved-state checks are deliberately left to the real address check.
+    fn address_projection_ty(mut ty: Ty) -> Ty {
+        loop {
+            ty = match ty {
+                Ty::Ref(r) => ref_inner(r),
+                Ty::RefMut(r) => ref_mut_inner(r),
+                t => match ptr_inner(t) { Some(inner) => inner, None => return t },
+            };
+        }
+    }
+
+    /// Add only a pattern's names and types to a disposable type environment.
+    /// The real pattern check still owns all diagnostics, permissions and loans.
+    fn assignment_pattern_types(&self, pat: &Pattern, ty: Ty, cx: &mut FnCx) {
+        match (pat, ty) {
+            (Pattern::Bind { name, span }, ty) => {
+                let id = cx.locals.len();
+                cx.locals.push(LocalState { name: name.clone(), ty, kind: LocalKind::Let,
+                    used: true, span: *span, decl: 0, scope_end: 0, depth: cx.scopes.len(),
+                    loans: Vec::new(), map_key: false, guard: false, pinned: false });
+                cx.scopes.last_mut().unwrap().push(id);
+            }
+            (Pattern::Some(inner), Ty::Opt(o)) => self.assignment_pattern_types(inner, opt_inner(o), cx),
+            (Pattern::Ok(inner), Ty::Res(r)) => self.assignment_pattern_types(inner, res_parts(r).0, cx),
+            (Pattern::Err(inner), Ty::Res(r)) => self.assignment_pattern_types(inner, res_parts(r).1, cx),
+            (Pattern::Case { name, args, .. }, Ty::Enum(id)) => {
+                if let Some(case) = self.structs[id as usize].variants.iter().find(|v| v.name == *name) {
+                    for (p, (_, ty, _)) in args.iter().zip(&case.fields) { self.assignment_pattern_types(p, *ty, cx); }
+                }
+            }
+            _ => {}
+        }
+    }
+
+    /// Prepare the contextual type of an assignment target without evaluating it.
+    /// Unlike `peek_ty`, this may instantiate a function signature, preserving all
+    /// diagnostics, but cannot change locals, loans or move state (`cx` is read-only).
+    fn assignment_target_ty(&mut self, e: &Expr, cx: &FnCx) -> Option<Ty> {
+        match &e.kind {
+            ExprKind::Paren(inner) => self.assignment_target_ty(inner, cx),
+            ExprKind::Field { base, name } => {
+                let ty = Self::address_projection_ty(self.assignment_target_ty(base, cx)?);
+                self.struct_field(ty, name).map(|(_, ty)| ty)
+            }
+            ExprKind::Index { base, .. } => {
+                let ty = Self::address_projection_ty(self.assignment_target_ty(base, cx)?);
+                seq_elem(ty)
+            }
+            ExprKind::Unary { op: UnOp::Deref, expr, .. } => match self.assignment_target_ty(expr, cx)? {
+                Ty::Ref(r) => Some(ref_inner(r)),
+                Ty::RefMut(r) => Some(ref_mut_inner(r)),
+                _ => None,
+            },
+            ExprKind::Coalesce { lhs, .. } => {
+                let ty = self.assignment_target_ty(lhs, cx)?;
+                let ty = match ty { Ty::Ref(r) => ref_inner(r), Ty::RefMut(r) => ref_mut_inner(r), t => t };
+                match ty { Ty::Opt(o) => Some(opt_inner(o)), _ => None }
+            }
+            ExprKind::Try(value) | ExprKind::Catch { value, .. } => match self.assignment_target_ty(value, cx)? {
+                Ty::Res(r) => Some(res_parts(r).0),
+                _ => None,
+            },
+            ExprKind::Match { value, arms } => {
+                let ty = self.assignment_target_ty(value, cx)?;
+                let ty = match ty { Ty::Ref(r) => ref_inner(r), t => t };
+                for arm in arms {
+                    // This environment is used only by type/signature resolution,
+                    // never by expr(), mutable_address() or a speculative check.
+                    let mut types = FnCx::new(cx.ret, Pre::default());
+                    types.locals = cx.locals.clone();
+                    types.scopes = cx.scopes.clone();
+                    types.scopes.push(Vec::new());
+                    self.assignment_pattern_types(&arm.pat, ty, &mut types);
+                    if let Some(t) = self.assignment_target_ty(&arm.body, &types) { return Some(t); }
+                }
+                None
+            }
+            ExprKind::Call { callee, args } => {
+                match &callee.kind {
+                    ExprKind::Ident(name) if self.lookup(cx, name).is_none() => {
+                        if let Some(&di) = self.gen_fns.get(name) {
+                            return Some(match self.prepare_generic_fn(di, None, args, callee.span, cx) {
+                                Some(fi) => self.sig(fi).ret,
+                                None => Ty::Error,
+                            });
+                        }
+                        if let Some(&fi) = self.index.get(name) { return Some(self.sig(fi).ret); }
+                    }
+                    ExprKind::Generic { name, targs } if self.lookup(cx, name).is_none() => {
+                        if let Some(&di) = self.gen_fns.get(name) {
+                            return Some(match self.prepare_generic_fn(di, Some(targs), args, callee.span, cx) {
+                                Some(fi) => self.sig(fi).ret,
+                                None => Ty::Error,
+                            });
+                        }
+                    }
+                    ExprKind::Field { base, name } => {
+                        if let ExprKind::Ident(owner) = &base.kind {
+                            if self.lookup(cx, owner).is_none() {
+                                if let Some(&fi) = self.index.get(&format!("{owner}.{name}")) {
+                                    return Some(self.sig(fi).ret);
+                                }
+                            }
+                        }
+                        let ty = Self::address_projection_ty(self.assignment_target_ty(base, cx)?);
+                        if let Some((fi, _)) = self.user_method(ty, name, callee.span) {
+                            return Some(if fi == NO_FN { Ty::Error } else { self.sig(fi).ret });
+                        }
+                        if name == "getMut" {
+                            let elem = match ty {
+                                Ty::Map(m) => map_parts(m).1,
+                                Ty::Arena(a) => vec_elem(a),
+                                _ => return None,
+                            };
+                            return Some(Ty::Opt(opt_of(Ty::RefMut(ref_mut_of(elem)))));
+                        }
+                    }
+                    _ => {}
+                }
+                self.peek_ty(e, cx)
+            }
+            _ => self.peek_ty(e, cx),
+        }
+    }
+
     /// `place[i](.field)* (op)= value` (C2, V5). The new value is computed first, so it may
     /// read the container (`dp[i] = dp[i - 1] + dp[i - 2]`); then the element is located and
     /// bounds-checked, the old value is dropped and the new one written, through a temporary
@@ -4536,14 +4698,40 @@ impl Checker<'_> {
         span: Span,
         cx: &mut FnCx,
     ) -> Option<HStmt> {
-        let expected = self.peek_ty(target, cx);
+        let errors = self.diags.count(crate::diag::Severity::Error);
+        let Some(expected) = self.assignment_target_ty(target, cx) else {
+            // Retain normal diagnostics for invalid targets. For an as-yet
+            // uninferrable complex target, reject rather than reorder its effects.
+            self.expr(value, None, cx);
+            self.mutable_address(place, cx);
+            if self.diags.count(crate::diag::Severity::Error) == errors {
+                self.diags.error("U0001", target.span, "cannot determine this indexed assignment's target type before evaluating it")
+                    .note("bind the container reference to a variable, then assign through that variable");
+            }
+            return None;
+        };
         cx.scopes.push(Vec::new());
         if op.is_none() {
             cx.diverge_ok = Some(value.span);
         }
-        let v = self.expr(value, expected, cx);
+        let v = self.expr(value, Some(expected), cx);
         cx.diverge_ok = None;
+        if expected == Ty::Error {
+            self.pop_scope(cx);
+            return None;
+        }
+        let v = if op.is_none() { self.fit(v, expected, cx) } else { self.coerce(v, expected, cx) };
+        let v = self.consume(v, cx);
+        let vloans = if v.ty.carries_borrow() { self.loans_of(&v, cx) } else { Vec::new() };
+        let shared_mark = cx.assignment_shared.len();
+        let mutable_mark = cx.assignment_mut.len();
+        let held = if v.ty.contains_ref_mut() { &mut cx.assignment_mut } else { &mut cx.assignment_shared };
+        for loan in &vloans {
+            if let Loan::Local(id) = *loan { held.push(id); }
+        }
         let slot_h = self.mutable_address(place, cx);
+        cx.assignment_shared.truncate(shared_mark);
+        cx.assignment_mut.truncate(mutable_mark);
         let Ty::RefMut(r) = slot_h.ty else {
             self.pop_scope(cx);
             return None;
@@ -4553,9 +4741,13 @@ impl Checker<'_> {
             return None;
         };
         path.insert(0, DEREF_STEP);
-        let v = if op.is_none() { self.fit(v, lty, cx) } else { self.coerce(v, lty, cx) };
-        let v = self.consume(v, cx);
-        let vloans = if v.ty.carries_borrow() { self.loans_of(&v, cx) } else { Vec::new() };
+        // The full address check validates the type prepared without effects above.
+        // No conversions may be postponed until this point: they can move or borrow.
+        if lty != expected {
+            self.diags.error("U0001", target.span, "the indexed assignment's contextual type could not be resolved consistently");
+            self.pop_scope(cx);
+            return None;
+        }
         if lty.carries_borrow() && !vloans.is_empty() && !self.index_store_loans(place, &vloans, v.span, cx) {
             self.pop_scope(cx);
             return None;
@@ -6726,6 +6918,32 @@ impl Checker<'_> {
                 return HExpr { kind: HExprKind::HeapNew { tramp, caps }, ty, span, at };
             }
         }
+        // `v[i].push(x)`, `grid[r][c].f.set(k, x)`, `pts[i].moveBy(1)`: a modifying method
+        // on an element. The element is located (index evaluated, bounds checked) and
+        // borrowed mutably first, then the arguments run (V2): they may not use `v`.
+        if Self::indexed_receiver(base) && self.mutating_method(base, name, cx) {
+            let init = self.mutable_address(base, cx);
+            if !matches!(init.ty, Ty::RefMut(_)) {
+                for a in args {
+                    self.expr(a, None, cx);
+                }
+                return err_expr(span);
+            }
+            let loans = self.loans_of(&init, cx);
+            if self.borrowed_argument_conflict(args, &loans, cx, name) {
+                return err_expr(span);
+            }
+            cx.scopes.push(Vec::new());
+            let temp_name = format!("$receiver{}", cx.locals.len());
+            let local = self.declare(cx, &temp_name, base.span, init.ty, LocalKind::Let);
+            cx.locals[local].used = true;
+            cx.locals[local].loans = loans;
+            let receiver = Expr { kind: ExprKind::Ident(temp_name), span: base.span };
+            let value = self.method_call_inner(&receiver, name, args, span, at, cx, None);
+            self.pop_scope(cx);
+            let ty = value.ty;
+            return HExpr { kind: HExprKind::LetTemp { local, init: Box::new(init), value: Box::new(value) }, ty, span, at };
+        }
         // Calls returning an exclusive descriptor can be receivers directly. Bind
         // the descriptor once; the callee's declared sources remain pinned while
         // the method arguments run. Owned temporary receivers keep the old rules.
@@ -6772,6 +6990,59 @@ impl Checker<'_> {
             }
         }
         self.method_call_inner(base, name, args, span, at, cx, None)
+    }
+
+    /// `v[i]`, `v[i].f`, `(g[r][c]).f`: a receiver whose field chain passes through an index.
+    fn indexed_receiver(base: &Expr) -> bool {
+        let mut e = base;
+        loop {
+            match &e.kind {
+                ExprKind::Field { base, .. } | ExprKind::Paren(base) => e = base,
+                ExprKind::Index { .. } => return true,
+                _ => return false,
+            }
+        }
+    }
+
+    /// Whether `base.name(...)` modifies its receiver: a built-in modifying method of the
+    /// receiver's collection type, or a user method declared with `inout self`. Decided
+    /// from types alone, without diagnostics or effects.
+    fn mutating_method(&mut self, base: &Expr, name: &str, cx: &FnCx) -> bool {
+        let Some(mut ty) = self.peek_ty(base, cx) else { return false };
+        loop {
+            ty = match ty {
+                Ty::Ref(r) => ref_inner(r),
+                Ty::RefMut(r) => ref_mut_inner(r),
+                t => match ptr_inner(t) {
+                    Some(inner) => inner,
+                    None => break,
+                },
+            };
+        }
+        match ty {
+            Ty::Vec(_) => matches!(name, "push" | "pop" | "reserve" | "sort" | "sortBy"),
+            Ty::String => name == "push",
+            Ty::Deque(_) => matches!(name, "pushBack" | "pushFront" | "popBack" | "popFront"),
+            Ty::Heap(_) => matches!(name, "push" | "pop"),
+            Ty::Map(_) => matches!(name, "set" | "remove" | "getMut" | "update"),
+            Ty::Set(_) => matches!(name, "add" | "remove"),
+            Ty::Arena(_) => matches!(name, "add" | "remove" | "getMut"),
+            Ty::Struct(_) | Ty::Enum(_) => {
+                if let Some((sdi, _)) = self.inst_of.get(&ty) {
+                    let full = format!("{}.{name}", self.prog.structs[*sdi].name);
+                    return self.prog.fns.iter().find(|f| f.name == full)
+                        .and_then(|f| f.params.first())
+                        .is_some_and(|p| p.name == "self" && p.inout);
+                }
+                let Some(s) = self.structs.iter().find(|s| s.ty == ty) else { return false };
+                let full = format!("{}.{name}", s.name);
+                self.index.get(&full).is_some_and(|&fi| {
+                    let sig = self.sig(fi);
+                    sig.has_self && sig.inouts.first().copied().unwrap_or(false)
+                })
+            }
+            _ => false,
+        }
     }
 
     #[allow(clippy::too_many_arguments)]

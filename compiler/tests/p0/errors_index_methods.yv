@@ -1,0 +1,25 @@
+// expect-error: E0403 15:20
+// expect-error: E0014 17:5
+// expect-error: E0403 19:15
+// expect-error: E0102 23:5
+struct C {
+    n: int
+
+    fn add(inout self, k: int) {
+        self.n += k
+    }
+}
+
+fn main() {
+    var groups: Vec[Vec[int]] = [[], [1]]
+    groups[1].push(groups.len())
+    let fixed = [[1]]
+    fixed[0].push(2)
+    var cs = [C{n: 1}]
+    cs[0].add(cs[0].n)
+    var m0: Map[String, int] = [:]
+    var ms = [m0]
+    let r = ms[0].getMut("a")
+    ms.push([:])
+    println(r.isSome())
+}

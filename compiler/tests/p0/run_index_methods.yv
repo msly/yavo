@@ -1,0 +1,53 @@
+// expect-stdout:
+// | 5 1 2 1 11 5 a!
+// | 0 9 5 b
+struct P {
+    x: int
+    tags: Vec[String]
+
+    fn moveBy(inout self, d: int) {
+        self.x += d
+    }
+}
+
+struct Bucket {
+    items: Vec[int]
+}
+
+fn main() {
+    // A modifying method on an element: the element is borrowed, then the arguments run (V2).
+    var groups: Vec[Vec[int]] = [[], [1]]
+    groups[0].push(5)
+    let k = groups.len()
+    groups[1].push(k)
+    var m0: Map[String, int] = [:]
+    var ms = [m0]
+    ms[0].set("a".toString(), 1)
+    if let r = ms[0].getMut("a") {
+        *r += 10
+    }
+    var ps = [P{x: 1, tags: []}]
+    ps[0].tags.push("t".toString())
+    ps[0].moveBy(4)
+    let n = groups[1].pop() ?? 0
+    groups[1].sort()
+    var words = ["a".toString()]
+    words[0].push("!")
+    println("${groups[0][0]} ${groups[1].len()} ${n} ${ps[0].tags.len()} ${ms[0].getCopy("a") ?? 0} ${ps[0].x} ${words[0]}")
+    // Nested indexes, fields of elements and sets in elements.
+    var grid: Vec[Vec[Vec[String]]] = [[[], []], [[]]]
+    grid[0][1].push("a".toString())
+    grid[1][0].push("b".toString())
+    var bs = [Bucket{items: [3, 1]}, Bucket{items: []}]
+    bs[0].items.sort()
+    bs[1].items.push(9)
+    var sets: Vec[Set[int]] = [[]]
+    sets[0].add(1)
+    sets[0].add(2)
+    sets[0].add(1)
+    var removed = 0
+    if sets[0].remove(2) {
+        removed = 1
+    }
+    println("${grid[0][0].len()} ${bs[1].items[0]} ${bs[0].items[1] + sets[0].len() + removed} ${grid[1][0][0]}")
+}

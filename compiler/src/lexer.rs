@@ -500,7 +500,9 @@ impl Lexer<'_, '_> {
                     }
                     if !closed {
                         let span = Span { start: cs, end: self.pos, line: cl, col: cc };
-                        self.diags.error("E0020", span, "unterminated `${` in string; close it with `}`");
+                        self.diags
+                            .error("E0020", span, "unterminated `${` in string; close it with `}`")
+                            .note("to write a literal `${` in a string, escape it as `\\${`");
                         continue;
                     }
                     let iend = self.pos;
