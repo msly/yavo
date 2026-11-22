@@ -9,12 +9,16 @@ artifact actions are pinned to reviewed full commits; workflow permissions are
 read-only. Debug and Release are sequential within each job because the existing
 test runners share temporary paths.
 
-The current verified run is [45002067581](https://github.com/msly/yavo/actions/runs/45002067581)
-at `073003dff72de36dfb9fd7b33afb774dea24eebc`: **all six jobs passed**.
-The [source-bound receipt](../../compiler/validation/github-ci-agent-eval-2026-11-22.json)
-records actual test reports and checks all six downloaded artifacts against the
-GitHub API's byte counts and SHA-256 digests. Round-six live qualification remains
-blocked with zero participant sessions and deliveries.
+The current String/PCH validation is
+[45044246299](https://github.com/msly/yavo/actions/runs/45044246299) at
+`81614a95bd24bef83afa2e0e654b8e55739f5f7f`: **all six jobs passed**.
+The [String receipt](../../compiler/validation/selfhost-string-2026-11-22.json)
+records both CI attempts, all job/step results, the downloaded native Linux
+archive's verified size/SHA-256, and actual selfhost/sanitizer receipt contents.
+The other five artifacts have metadata checks only. The historical
+[45002067581 receipt](../../compiler/validation/github-ci-agent-eval-2026-11-22.json)
+retains its separate six-archive download verification. Round-six live
+qualification remains blocked with zero participant sessions and deliveries.
 
 Setup first builds and executes one small native program in C Debug and Release,
 sequentially, to initialize the new C toolchain before concurrent fixture tests.
@@ -23,21 +27,36 @@ test totals; the existing 120-second per-fixture build deadline is unchanged.
 
 | Job | Executed gate |
 | --- | --- |
-| Ubuntu 24.04, x86_64 | All Cargo tests in Debug and Release, including six-target cross-compilation and frozen conformance |
-| Windows 2025, x86_64 | Native compiler unit tests and the explicitly listed portable integration suites, in Debug and Release |
-| macOS 15, arm64 | The same native selection, in Debug and Release |
+| Ubuntu 24.04, x86_64 | All Cargo tests in Debug and Release, six-target cross-compilation, frozen conformance, selfhost gate and independent sanitizer validation of its generated C |
+| Windows 2025, x86_64 | Native compiler unit tests and the explicitly listed portable integration suites in Debug/Release, then the selfhost gate |
+| macOS 15, arm64 | The same native selection in Debug/Release, then the selfhost gate |
 | Independent Linux ASan+UBSan | Export the current generated C and runtime, validate sanitizer positive/negative probes, then execute every exported P0 run/panic fixture with strict output and exit expectations |
 | Round-five experiment evidence | Recreate the frozen task packet, verify archived source/output identities, recompute all 1,344 judgments and summary values, and check 16 hash-bound module/thread reviews |
 | Agent evaluation preparation | Test per-request usage and launch contracts, deterministic R6 task/document reconstruction, independent oracles and refusal to initialize an unqualified participant; no model requests |
 
 The native selection is declared in `NATIVE_TESTS` in `run.py`: P0 fixtures,
 allocation checks, Arena, modules, indexed assignment/methods, mutable-reference
-returns, collections, fixes, concurrent runtime I/O, and standard-library I/O.
+returns, collections, fixes, concurrent runtime I/O, standard-library I/O,
+exclusive output-file creation, and self-hosting stage0 blockers.
 P0 and heap checks build/run their programs with C `-O0` and `-O2`; they include
 floats, threads, channels, and the stack-panic fixture. Windows/macOS numbers are
 reported as this selection, not as the complete Linux suite. Their frozen report
 scenarios remain excluded because the current conformance runner explicitly
 requires Linux x86_64 for those scenarios.
+
+All native jobs run `selfhost/bootstrap.py`: the Yavo-written frontend is built
+by stage0, then independently checks/emits C for 181 fixed cases. The 55 executable
+inputs run in both C modes against fixed oracles and a Rust differential
+reference. The original diagnostic source is verified as an unchanged prefix
+of an executable component test. This remains a subset gate, not stage2/stage3
+self-compilation.
+
+The Linux native job additionally runs `selfhost_sanitize.py`. It verifies the
+bootstrap receipt, manifest, source identities and the candidate frontend's
+actual repeated C outputs before reusing the independent GCC sanitizer runner.
+All 55 programs and clean/UAF/signed-overflow capability probes are mandatory.
+C is not regenerated through the Rust frontend. This step is separate from
+the existing P0 sanitizer job. LSan is disabled; normal exits use YV_ALLOC_CHECK.
 
 Linux conformance is checked twice: the compiler's existing monotonic ratchet and
 a CI contract matching all 129 manifest case identities. The current contract is
@@ -50,7 +69,10 @@ not ignored. This gate does not measure v1 completeness.
 Each job uploads `compiler/target/ci/` for 14 days, even after failure. Native artifacts contain
 the source revision, host, exact command/exit/time records, toolchain and Cargo
 lock hashes, compiler hash, full logs, actual test totals, and (on Linux) separate
-Debug/Release conformance JSON. The sanitizer artifact additionally retains the
+Debug/Release conformance JSON. Native artifacts also contain
+`selfhost/receipt.json` and per-case generated C, executables and logs; the Linux
+native archive includes `selfhost-sanitizers/receipt.json` and its source-bound
+GCC sanitizer bundle and detailed logs. The separate sanitizer artifact retains the
 source/C/runtime bundle, capability probes, executables, and detailed validator
 receipts. Independent GCC results do not turn the pinned Zig ASan exceptions
 into conformance passes.
@@ -79,7 +101,9 @@ For local reproduction in a fresh checkout with Rustup and Python available:
 python3 tools/ci/run.py setup
 python3 tools/ci/run.py native --suite full   # Linux x86_64
 python3 tools/ci/run.py native --suite native # Windows/macOS selection
-python3 tools/ci/run.py sanitize             # Linux with Perl and GCC
+python3 selfhost/bootstrap.py               # All native platforms
+python3 tools/ci/selfhost_sanitize.py        # Linux with GCC; consumes bootstrap output
+python3 tools/ci/run.py sanitize             # Separate Rust/P0 gate: Linux with Perl and GCC
 python3 tools/ci/experiment_evidence.py       # Archived round-five evidence
 python3 tools/ci/agent_docs.py                # Current starter examples and diagnostics
 python3 tools/ci/agent_eval.py                # Offline R6 preparation and launch refusal

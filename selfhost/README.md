@@ -68,11 +68,20 @@ specification are unchanged. The first CI run exposed a concurrent PCH cache
 publication bug: rewriting identical runtime-header bytes changed their
 mtime and invalidated another producer's PCH. The cache fix publishes the
 header once, preserves its identity, and versions the PCH cache namespace.
-Complete local Rust suites and the selfhost gate are rerun after this fix.
+Complete local Rust suites were rerun after this fix: Debug and Release each
+passed 144 tests, with no failures and one existing ignored test. Rebuilding
+stage0 and rerunning the selfhost gate again passed all 181 cases and 10 checks.
 Three native CI jobs execute the new selfhost gate. A separate Linux step
 recompiles the actual Yavo frontend's generated C with GCC ASan/UBSan; source
-and capability checks are required. Results, source commits and the first
-failed CI attempt are recorded in the String summary.
+and capability checks are required.
+[CI run 45044246299](https://github.com/msly/yavo/actions/runs/45044246299)
+passed all six jobs at `81614a9`; the selfhost gate succeeded on all three
+platforms. The new Linux sanitizer step passed 55/55 programs and all three
+capability probes. Its native archive's size and SHA-256, actual source/C
+identities, and program output bytes were independently checked. LSan is
+disabled; normal exits retain allocation checks. Other artifact checks cover
+metadata only. The String summary retains both CI attempts and all source
+identities, including the first failed run and the cache fix.
 
 The [Copy aggregate summary](../compiler/validation/selfhost-aggregates-2026-11-22.json)
 retains its 138-case baseline and

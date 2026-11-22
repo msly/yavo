@@ -32,8 +32,8 @@ Recent changes implement index assignment, two-phase variable/field receivers, S
 
 | Check | Recorded local result | Scope |
 | --- | --- | --- |
-| Release suite | **142 passed, 0 failed, 1 ignored** | Self-hosting stage0 changes, all 19 Cargo test groups; preceding PCH batch was 133/0/1 |
-| Debug suite | **142 passed, 0 failed, 1 ignored** | Same source, all 19 groups, independent completed local log |
+| Release suite | **144 passed, 0 failed, 1 ignored** | Current PCH concurrency fix, all 19 Cargo test groups; includes two deterministic cache regressions |
+| Debug suite | **144 passed, 0 failed, 1 ignored** | Same source, all 19 groups, independent completed local log |
 | Frozen specification | **124 pass, 0 wrong, 3 unsupported, 0 not_run, 2 superseded** | 129 frozen cases; a different counting unit from Cargo test functions |
 | Cross-compilation | Six target formats/architectures build | Linux (static musl), Windows and macOS on x86-64/aarch64; native CI now covers Linux x86-64 plus the Windows x86-64/macOS arm64 selections below |
 | Overall `verify` | **`not_verified`** | Required audit remains unimplemented |
@@ -47,10 +47,17 @@ Source modules support top-level exports, per-file imports, cyclic imports and o
 The String ownership increment passes **181/181 local selfhost cases and
 10/10 auxiliary checks**. All 55 executable inputs pass Debug/Release fixed
 oracles and Rust differential checks with allocation checking; the original
-438-byte diagnostic component is preserved and executed. A Linux CI step now
-runs GCC ASan/UBSan on the Yavo frontend's actual generated C.
-[Current String receipt](compiler/validation/selfhost-string-2026-11-22.json)
-records the source commit, original-component proof and CI execution results.
+438-byte diagnostic component is preserved and executed.
+[CI run 45044246299](https://github.com/msly/yavo/actions/runs/45044246299)
+passed **six of six jobs** at `81614a9`, including the selfhost gate on Linux,
+Windows and macOS. The new Linux gate passed **55/55 Yavo-generated C programs**
+with GCC 13.3 ASan/UBSan, plus all three sanitizer capability probes.
+The native Linux archive was downloaded and verified against its GitHub size
+and SHA-256; source/C/output bytes were checked against the bootstrap receipt
+and fixed program oracles. LSan is disabled; normal exits use YV_ALLOC_CHECK.
+The [String receipt](compiler/validation/selfhost-string-2026-11-22.json)
+retains the first CI failure, the PCH concurrency fix, complete local Rust
+rechecks and final CI evidence. Other artifacts were verified as metadata only.
 
 The Copy aggregate increment passes **138/138 local selfhost cases and 10/10
 auxiliary checks**: 39 executable inputs in both modes, 81 rejection cases,
@@ -87,7 +94,7 @@ is narrower than the full Linux suite. Linux conformance remains **124 pass,
 0 wrong, 3 unsupported, 0 not_run, 2 superseded** in both modes; independent GCC
 success does not change the pinned Zig ASan exceptions.
 
-[CI scope](tools/ci/README.md) · [current source-bound receipt](compiler/validation/github-ci-agent-eval-2026-11-22.json) · [round-five CI receipt](compiler/validation/github-ci-round5-2026-11-22.json) · [earlier run history](compiler/validation/github-ci-2026-11-22.json)
+[CI scope](tools/ci/README.md) · [archived source-bound receipt](compiler/validation/github-ci-agent-eval-2026-11-22.json) · [round-five CI receipt](compiler/validation/github-ci-round5-2026-11-22.json) · [earlier run history](compiler/validation/github-ci-2026-11-22.json)
 
 The fifth job validates archived round-five records, source identities and
 recomputed summaries, without rerunning participant programs. The sixth validates

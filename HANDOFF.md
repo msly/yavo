@@ -4,7 +4,7 @@
 
 ## 1. 一句话状态
 
-**第二十二批完成 String / Failure 所有权闭环。** 自举前端支持 String 与拥有字符串的嵌套结构、移动/借用读取、内建字符串方法、语句临时值与控制流析构；现有 diagnostic.yv 的 **438 原始字节未改**，追加独立 main 后由新前端编译并执行。最终本机 **181/181 cases、10/10 checks、0 skip**，55 个可执行输入的 Debug/Release 固定输出、Rust 差分及重复 C 全部通过。两项 stage0 接受但存在行为缺口的转移边界明确 U0001；尚未产出 stage2/stage3。新增 Linux selfhost C 的 GCC ASan/UBSan 门，执行结果绑定第 27 节与摘要。下一步为 Vec 的 Copy 元素，再拥有元素及参数模式。
+**第二十二批完成 String / Failure 所有权闭环。** 自举前端支持 String 与拥有字符串的嵌套结构、移动/借用读取、内建字符串方法、语句临时值与控制流析构；现有 diagnostic.yv 的 **438 原始字节未改**，追加独立 main 后由新前端编译并执行。最终本机 **181/181 cases、10/10 checks、0 skip**，55 个可执行输入的 Debug/Release 固定输出、Rust 差分及重复 C 全部通过。两项 stage0 接受但存在行为缺口的转移边界明确 U0001；尚未产出 stage2/stage3。本批 [CI 45044246299](https://github.com/msly/yavo/actions/runs/45044246299) 6/6 jobs 通过，三平台 selfhost gate 与新 Linux selfhost C 的 GCC ASan/UBSan 门均成功；详细结果与首轮失败记录见第 27 节。下一步为 Vec 的 Copy 元素，再拥有元素及参数模式。
 
 **第二十一批完成自举前端的 Copy 聚合类型。** 新前端支持名义结构体、无载荷枚举、前向/嵌套字段、构造与默认值、只读/可变字段访问、按值参数与返回、枚举上下文推断和输出。最终本机 **138/138 cases、10/10 checks、0 skip**，39 个可运行输入在 Debug/Release 与固定预期、Rust 参照一致，重复 C 一致。原 72 条输入源码字节保留，新增 66 条；旧 unsupported_struct 原样转为正例。Rust/运行时/冻结规格未改。[本批 CI 45025445954](https://github.com/msly/yavo/actions/runs/45025445954) 在实现提交 `fbb322e` 上 6/6 jobs 通过，三平台 selfhost gate 全部成功。**仍是子集编译器，`self_hosted=false`；下一步先闭合 String / Failure 所有权，再推进 Vec。** 详见第 26 节。
 
@@ -521,8 +521,10 @@ token、精确服务模型 ID 和 sampling 无可核验来源，均为 `null`；
 - [本机逐例摘要](compiler/validation/selfhost-string-2026-11-22.json)：**181/181 cases、10/10 checks、0 skip**；45 run、10 panic、105 reject、14 stage0 接受而新前端未实现、7 两侧均 U0001。55 个可执行输入各执行 Debug/Release，固定输出/退出/panic、Rust 差分与重复 C 均通过；分配检查开启。
 - 原 138 条输入字节全部保留，136 条 manifest 项完全相同；两个 owned String/field 用例原样迁为 run，新增 43 条。冻结 yavo-tests 未改。source_prefix 验收同时检查原文件和组装文件的结束时哈希稳定性。
 - 独立审查另比较 23 个循环移动检查、20 组两模式循环执行；临时值/借用路径的 14 个正例在两编译器两模式共执行 56 次，固定输出、exit0、stderr 空。探针位于 ignored selfhost-string-types / selfhost-string-review；已将发现的边界纳入正式集。
-- 首轮 CI 暴露 Rust stage0 的 PCH 缓存并发发布问题：两个 miss 生产者覆盖同字节运行时头文件，mtime 改变，使另一生产者的 PCH 失效。修复改为完整临时文件原子 no-replace 发布、已有头文件只读复用，并升级 PCH key 版本。Rust 语言语义、C 运行时、Cargo 配置/锁、工具链锁与冻结规格未改；修复后重新执行完整 Debug/Release 与 selfhost 门禁。原有 ASan job 只覆盖旧 Rust 生成路径；此批新增 Linux native 后的 selfhost C sanitizer 步骤，绑定本次实际生成 C，并使用独立 GCC ASan/UBSan 和能力探针。
-- 本机没有可用独立 GCC/ASan 运行时；新 sanitizer 步骤的实际执行结果以及三平台 CI 在完成后写入本节和摘要。不能把步骤配置成功当执行通过。
+- 首轮 CI 暴露 Rust stage0 的 PCH 缓存并发发布问题：两个 miss 生产者覆盖同字节运行时头文件，mtime 改变，使另一生产者的 PCH 失效。修复改为完整临时文件原子 no-replace 发布、已有头文件只读复用，并升级 PCH key 版本。Rust 语言语义、C 运行时、Cargo 配置/锁、工具链锁与冻结规格未改；两条确定性回归在旧实现均失败，修复后缓存 16/16 与空缓存跨目标 6/6 通过。完整 Debug/Release 各 144/0/1，重建 stage0 后 selfhost 再次 181/181 + 10/10；源码哈希在整个验证期间稳定。原有 ASan job 只覆盖旧 Rust 生成路径；此批新增 Linux native 后的 selfhost C sanitizer 步骤，绑定本次实际生成 C，并使用独立 GCC ASan/UBSan 和能力探针。
+- String 实现提交 `44e1895` 的[首轮 CI 45042371720](https://github.com/msly/yavo/actions/runs/45042371720) 为 5/6 jobs；Windows/macOS selfhost 已通过，Linux 在原生回归的 PCH mtime 错误处失败，后续 selfhost/sanitizer 被跳过。失败日志、哈希、测试名及当轮元数据保留在摘要，未覆盖为成功。
+- 缓存修复提交 `81614a95bd24bef83afa2e0e654b8e55739f5f7f` 的[第二轮 CI 45044246299](https://github.com/msly/yavo/actions/runs/45044246299) 为 **6/6 jobs 成功**；三平台 selfhost gate 均成功，Linux 新增 Yavo-frontend GCC 13.3 ASan/UBSan 为 **55/55 程序、3/3 能力探针、0 failed/not_run**。两项故障探针分别实际捕获 heap-use-after-free 和 signed integer overflow。该结果来自 CI；本机仍无独立 GCC/ASan 环境。
+- 原生 Linux 归档 ID 14762829369，149,837,923 字节，SHA-256 `ad833c57c7587a402ccc0c0840a437a2a9fdbc74bfc18dcd60935f69fa9ff854`；下载后与 GitHub 大小/哈希一致。已读取 Rust、selfhost、selfhost-sanitizers 三份原始 receipt，并重算 55 份源码/C/stdout/stderr 及能力探针日志哈希；C 逐例匹配 Yavo bootstrap 的生成结果。LSan 关闭，正常退出使用 YV_ALLOC_CHECK；未运行 TSan。其余五份归档只验证元数据，未下载重算。
 
 ### 27.3 保留的边界与下一步
 
