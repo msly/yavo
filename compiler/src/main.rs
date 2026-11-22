@@ -251,8 +251,41 @@ fn build_cached(
     }
     if trace { eprintln!("yavo: build cache miss {key}"); }
     entry.stage(c_code, codegen::RUNTIME_HEADER)?;
+    // Parse the large runtime header only once per toolchain/target/mode rather than on every
+    // source edit. The PCH is a best-effort accelerator: failure must not affect correctness.
+    let pch = if std::env::var_os("YAVO_NO_PCH").is_some_and(|v| !v.is_empty() && v != "0") {
+        None
+    } else {
+        let pch_key = cache::key(&cache::Inputs {
+            c_code: "yavo-runtime-pch-v1",
+            runtime_header: codegen::RUNTIME_HEADER,
+            toolchain_lock: toolchain::lock_contents(),
+            compiler: &tc.program,
+            args: &flags,
+            native: opts.target.is_none(),
+        });
+        match cache::runtime_pch(root, &pch_key, codegen::RUNTIME_HEADER, |header, out| {
+            tc.precompile_header(header, out, opts.release, opts.target)
+        }) {
+            Ok((path, hit)) => {
+                if trace { eprintln!("yavo: runtime pch {} {pch_key}", if hit { "hit" } else { "miss" }); }
+                Some(path)
+            }
+            Err(e) => {
+                if trace { eprintln!("yavo: runtime pch unavailable ({e}); using direct C compilation"); }
+                None
+            }
+        }
+    };
     let built = entry.scratch_output();
-    let result = tc.compile(&entry.c_file(), &entry.dir, &built, opts.release, opts.target);
+    let mut result = tc.compile_with_pch(&entry.c_file(), &entry.dir, &built, opts.release, opts.target, pch.as_deref());
+    if result.is_err() && pch.is_some() {
+        // Even a PCH that passed the checksum can become incompatible with local SDK state.
+        // Do not fail an otherwise valid source build for a cache optimization.
+        if trace { eprintln!("yavo: runtime pch rejected; retrying direct C compilation"); }
+        let _ = fs::remove_file(&built);
+        result = tc.compile(&entry.c_file(), &entry.dir, &built, opts.release, opts.target);
+    }
     if let Err(e) = result {
         let _ = fs::remove_file(&built);
         return Err(CacheError::Compile(e));

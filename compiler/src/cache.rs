@@ -11,6 +11,7 @@
 //! per-key path so that zig's own cache also hits after a Yavo cache eviction. Publishing is atomic
 //! (write to a unique temporary, then rename); a hit is only trusted when the stored SHA-256
 //! matches the binary's bytes, so a torn or corrupted entry is rebuilt rather than used.
+//! Runtime PCHs have a separate content-addressed cache under `<root>/pch/<key>`.
 //!
 //! The cache is used only with the pinned zig toolchain (a `YAVO_CC` override has no identity we
 //! can hash). `YAVO_NO_CACHE=1` disables it; `YAVO_CACHE_DIR` relocates it. `yavo verify` builds
@@ -27,6 +28,7 @@ use sha2::{Digest, Sha256};
 const SCHEMA: &str = "yavo-build-cache/1";
 /// Entries kept after a publish; older ones (by last use) are removed.
 const MAX_ENTRIES: usize = 256;
+const MAX_PCH_ENTRIES: usize = 32;
 
 pub struct Inputs<'a> {
     pub c_code: &'a str,
@@ -113,6 +115,77 @@ pub fn sha256_file(path: &Path) -> io::Result<String> {
         h.update(&buf[..n]);
     }
     Ok(format!("{:x}", h.finalize()))
+}
+
+/// Prepare a reusable runtime precompiled header. Its key is independent of user code,
+/// but includes runtime bytes, target, compiler, optimization and instrumentation settings.
+/// Unique temporary outputs and atomic renames prevent readers opening a partial PCH.
+pub fn runtime_pch(
+    root: &Path, key: &str, header: &str,
+    compile: impl FnOnce(&Path, &Path) -> Result<(), String>,
+) -> io::Result<(PathBuf, bool)> {
+    let dir = root.join("pch").join(key);
+    fs::create_dir_all(&dir)?;
+    // The PCH can embed its header's absolute path; it must be stable across builds.
+    let dir = fs::canonicalize(dir)?;
+    let header_path = dir.join("yavo_rt.h");
+    let pch = dir.join("yavo_rt.pch");
+    let sum_path = dir.join("yavo_rt.pch.sha256");
+    let valid = || -> bool {
+        let Ok(expected) = fs::read_to_string(&sum_path) else { return false };
+        sha256_file(&pch).is_ok_and(|actual| actual == expected.trim())
+    };
+    if valid() {
+        touch_file(&sum_path);
+        return Ok((pch, true));
+    }
+
+    write_atomic(&header_path, header.as_bytes())?;
+    let temp = dir.join(format!(".yavo_rt.pch.tmp-{}", unique_suffix()));
+    if let Err(e) = compile(&header_path, &temp) {
+        let _ = fs::remove_file(&temp);
+        return Err(io::Error::other(e));
+    }
+    let built_sum = match sha256_file(&temp) {
+        Ok(sum) => sum,
+        Err(e) => { let _ = fs::remove_file(&temp); return Err(e); }
+    };
+    if let Err(e) = fs::rename(&temp, &pch) {
+        let _ = fs::remove_file(&temp);
+        // Windows cannot replace an existing PCH. Another writer may have published first.
+        if valid() { return Ok((pch, true)); }
+        return Err(e);
+    }
+    write_atomic(&sum_path, built_sum.as_bytes())?;
+    evict_pch(root, key);
+    Ok((pch, false))
+}
+
+fn touch_file(path: &Path) {
+    if let Ok(file) = fs::File::open(path) { let _ = file.set_modified(SystemTime::now()); }
+}
+
+/// Keep only recent runtime-header objects. A runtime version typically needs at most 24
+/// target/mode/instrumentation combinations; avoid unbounded growth across compiler upgrades.
+fn evict_pch(root: &Path, keep: &str) {
+    let limit = std::env::var("YAVO_PCH_MAX_ENTRIES").ok()
+        .and_then(|v| v.parse::<usize>().ok()).unwrap_or(MAX_PCH_ENTRIES).max(1);
+    let Ok(read) = fs::read_dir(root.join("pch")) else { return };
+    let mut entries: Vec<(SystemTime, PathBuf)> = read.filter_map(Result::ok)
+        .filter(|e| e.file_type().map(|t| t.is_dir()).unwrap_or(false))
+        .filter(|e| e.file_name().to_string_lossy() != keep)
+        .map(|e| {
+            let modified = fs::metadata(e.path().join("yavo_rt.pch.sha256"))
+                .and_then(|m| m.modified()).unwrap_or(UNIX_EPOCH);
+            (modified, e.path())
+        })
+        .collect();
+    if entries.len() < limit { return; }
+    entries.sort();
+    let excess = entries.len() + 1 - limit;
+    for (_, path) in entries.into_iter().take(excess) {
+        let _ = fs::remove_dir_all(path);
+    }
 }
 
 fn unique_suffix() -> String {

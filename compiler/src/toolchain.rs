@@ -193,8 +193,25 @@ impl Toolchain {
         release: bool,
         target: Option<&Target>,
     ) -> Result<(), String> {
+        self.compile_with_pch(c_file, include_dir, output, release, target, None)
+    }
+
+    /// A PCH is only used by the normal build cache. Verification and uncached builds retain
+    /// the standalone C path, so neither their inputs nor their evidence depend on a cache.
+    pub fn compile_with_pch(
+        &self,
+        c_file: &Path,
+        include_dir: &Path,
+        output: &Path,
+        release: bool,
+        target: Option<&Target>,
+        pch: Option<&Path>,
+    ) -> Result<(), String> {
         let mut cmd = Command::new(&self.program);
         cmd.args(self.flags(release, target));
+        if let Some(pch) = pch {
+            cmd.arg("-include-pch").arg(pch);
+        }
         cmd.arg("-I").arg(include_dir).arg(c_file).arg("-o").arg(output);
         let out = cmd.output().map_err(|e| format!("cannot run {}: {e}", self.description))?;
         // A successful compiler may still emit warnings. Preserve both streams on
@@ -212,6 +229,23 @@ impl Toolchain {
                 self.description,
                 out.status
             ))
+        }
+    }
+
+    /// Compile the runtime header under exactly the target, optimization and instrumentation
+    /// settings used by the consumer. The caller verifies and publishes the resulting PCH.
+    pub fn precompile_header(
+        &self, header: &Path, output: &Path, release: bool, target: Option<&Target>,
+    ) -> Result<(), String> {
+        let mut cmd = Command::new(&self.program);
+        cmd.args(self.flags(release, target));
+        cmd.arg("-x").arg("c-header").arg(header).arg("-o").arg(output);
+        let out = cmd.output().map_err(|e| format!("cannot run {}: {e}", self.description))?;
+        if out.status.success() {
+            Ok(())
+        } else {
+            Err(format!("cannot precompile the runtime header (status: {}): {}{}",
+                out.status, String::from_utf8_lossy(&out.stdout), String::from_utf8_lossy(&out.stderr)))
         }
     }
 }

@@ -54,6 +54,97 @@ fn entries(cache: &Path) -> usize {
     fs::read_dir(cache.join("build")).map(|r| r.count()).unwrap_or(0)
 }
 
+fn pch_entries(cache: &Path) -> Vec<PathBuf> {
+    fs::read_dir(cache.join("pch")).map(|r| r.map(|e| e.unwrap().path()).collect()).unwrap_or_default()
+}
+
+#[test]
+fn runtime_pch_is_reused_across_code_edits_and_matches_direct_build() {
+    let s = Scratch::new("runtime-pch-reuse").unwrap();
+    let cache = s.0.join("cache");
+    let src = write(&s.0, "main.yv", PROGRAM);
+    let pch_out = s.exe("pch");
+    let plain_out = s.exe("plain");
+    let (_, first) = build(&cache, &src, &pch_out, &["--release"]);
+    assert!(String::from_utf8_lossy(&first.stderr).contains("runtime pch miss"));
+    write(&s.0, "main.yv", &format!("// moved\n{PROGRAM}"));
+    let (_, second) = build(&cache, &src, &pch_out, &["--release"]);
+    assert!(String::from_utf8_lossy(&second.stderr).contains("runtime pch hit"));
+    assert!(!String::from_utf8_lossy(&second.stderr).contains("runtime pch rejected"));
+    assert_eq!(pch_entries(&cache).len(), 1);
+    let plain = run(yavo(&s.0.join("plain-cache")).env("YAVO_NO_PCH", "1")
+        .arg("build").arg(&src).arg("-o").arg(&plain_out).arg("--release"));
+    assert!(plain.status.success(), "{}", String::from_utf8_lossy(&plain.stderr));
+    assert_eq!(fs::read(&pch_out).unwrap(), fs::read(&plain_out).unwrap());
+    assert_eq!(stdout_of(&pch_out), "one\n");
+}
+
+#[test]
+fn runtime_pch_separates_target_mode_and_instrumentation() {
+    let s = Scratch::new("runtime-pch-keys").unwrap();
+    let cache = s.0.join("cache");
+    let src = write(&s.0, "main.yv", PROGRAM);
+    let out = s.exe("p");
+    assert!(String::from_utf8_lossy(&build(&cache, &src, &out, &["--release"]).1.stderr)
+        .contains("runtime pch miss"));
+    assert!(String::from_utf8_lossy(&build(&cache, &src, &out, &[]).1.stderr)
+        .contains("runtime pch miss"));
+    assert!(String::from_utf8_lossy(&build(&cache, &src, &s.0.join("cross"),
+        &["--target", "aarch64-linux-musl", "--release"]).1.stderr).contains("runtime pch miss"));
+    let alloc = run(yavo(&cache).env("YAVO_ALLOC_CHECK", "1")
+        .arg("build").arg(&src).arg("-o").arg(&out).arg("--release"));
+    assert!(alloc.status.success(), "{}", String::from_utf8_lossy(&alloc.stderr));
+    assert!(String::from_utf8_lossy(&alloc.stderr).contains("runtime pch miss"));
+    assert_eq!(pch_entries(&cache).len(), 4);
+    let src2 = write(&s.0, "other.yv", "fn main() {\n    println(\"other\")\n}\n");
+    let disabled = run(yavo(&cache).env("YAVO_NO_PCH", "1")
+        .arg("build").arg(&src2).arg("-o").arg(&out).arg("--release"));
+    assert!(disabled.status.success());
+    assert!(!String::from_utf8_lossy(&disabled.stderr).contains("runtime pch"));
+    assert_eq!(pch_entries(&cache).len(), 4);
+    assert_eq!(stdout_of(&out), "other\n");
+}
+
+#[test]
+fn corrupted_runtime_pch_is_rebuilt_before_use() {
+    let s = Scratch::new("runtime-pch-corrupt").unwrap();
+    let cache = s.0.join("cache");
+    let src = write(&s.0, "main.yv", PROGRAM);
+    let out = s.exe("p");
+    build(&cache, &src, &out, &["--release"]);
+    let entries = pch_entries(&cache);
+    assert_eq!(entries.len(), 1);
+    let pch = entries[0].join("yavo_rt.pch");
+    let mut bytes = fs::read(&pch).unwrap();
+    let mid = bytes.len() / 2;
+    bytes[mid] ^= 0xff;
+    fs::write(&pch, bytes).unwrap();
+    write(&s.0, "main.yv", &format!("// changed\n{PROGRAM}"));
+    let (_, rebuilt) = build(&cache, &src, &out, &["--release"]);
+    assert!(String::from_utf8_lossy(&rebuilt.stderr).contains("runtime pch miss"));
+    assert!(!String::from_utf8_lossy(&rebuilt.stderr).contains("runtime pch rejected"));
+    assert_eq!(stdout_of(&out), "one\n");
+    write(&s.0, "main.yv", &format!("// changed again\n// another line\n{PROGRAM}"));
+    let (_, reused) = build(&cache, &src, &out, &["--release"]);
+    assert!(String::from_utf8_lossy(&reused.stderr).contains("runtime pch hit"));
+    assert!(!String::from_utf8_lossy(&reused.stderr).contains("runtime pch rejected"));
+}
+
+#[test]
+fn runtime_pch_cache_has_bounded_lru_entries() {
+    let s = Scratch::new("runtime-pch-lru").unwrap();
+    let cache = s.0.join("cache");
+    let src = write(&s.0, "main.yv", PROGRAM);
+    let out = s.exe("p");
+    for extra in [vec!["--release"], vec![], vec!["--release", "--target", "aarch64-linux-musl"]] {
+        let o = run(yavo(&cache).env("YAVO_PCH_MAX_ENTRIES", "2")
+            .arg("build").arg(&src).arg("-o").arg(&out).args(&extra));
+        assert!(o.status.success(), "{}", String::from_utf8_lossy(&o.stderr));
+        assert!(String::from_utf8_lossy(&o.stderr).contains("runtime pch miss"));
+        assert!(pch_entries(&cache).len() <= 2);
+    }
+}
+
 #[test]
 fn second_build_hits_and_produces_identical_binary() {
     let s = Scratch::new("cache-hit").unwrap();
@@ -172,6 +263,11 @@ fn concurrent_builds_publish_one_consistent_entry() {
         assert_eq!(stdout_of(out), "one\n");
     }
     assert_eq!(entries(&cache), 1);
+    assert_eq!(pch_entries(&cache).len(), 1);
+    let pch_leftovers: Vec<_> = fs::read_dir(&pch_entries(&cache)[0]).unwrap()
+        .filter_map(Result::ok).map(|e| e.file_name().to_string_lossy().into_owned())
+        .filter(|n| n.contains(".tmp-")).collect();
+    assert!(pch_leftovers.is_empty(), "runtime PCH temporary files left behind: {pch_leftovers:?}");
     let leftovers: Vec<_> = fs::read_dir(fs::read_dir(cache.join("build")).unwrap().next().unwrap().unwrap().path())
         .unwrap().filter_map(Result::ok).map(|e| e.file_name().to_string_lossy().into_owned())
         .filter(|n| n.contains(".tmp-")).collect();

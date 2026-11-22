@@ -1,8 +1,10 @@
-# Yavo 交接文档（2026-11-22，第十八批：计量执行器、短版文档与第六轮准备）
+# Yavo 交接文档（2026-11-22，第十九批：运行时 PCH 缓存与编译延迟验证）
 
-给下一个会话：先读第 1、2、10、23 节再开工。第 23 节是第十八批第六轮准备，真实计量资格未通过、受试会话为 0；第 22 节保留已完成的第五轮实验。第 21 节是第十六批三平台 CI；第 20 节是第十四、十五批语言修订与第四轮；第 19 节是第三轮；第 18 节是构建缓存。第六到第十一批原始记录与完整 v1 清单在 `history/handoff-batches-2026-11-19-to-21.md`。
+给下一个会话：先读第 1、2、10、24 节再开工。第 24 节是第十九批运行时 PCH 构建优化；第 23 节是第十八批第六轮准备，真实计量资格仍未通过、受试会话为 0；第 22 节保留已完成的第五轮实验。第 21 节是第十六批三平台 CI；第 20 节是第十四、十五批语言修订与第四轮；第 19 节是第三轮；第 18 节是构建缓存。第六到第十一批原始记录与完整 v1 清单在 `history/handoff-batches-2026-11-19-to-21.md`。
 
 ## 1. 一句话状态
+
+**第十九批新增后端优化，不修改任何 Yavo 语言语义。** 在已有完整二进制内容寻址缓存之外，正常 `build`/`run` 的 pinned Zig 路径可把 1931 行运行时头文件缓存为按目标/模式/插桩划分的 SHA-256 校验 PCH，源文件改动后也复用。四组各 7 次配对 Release 构建基准：直接编译 P50 为 253.8/260.3/264.8/283.8 ms，PCH 为 179.8/204.1/196.9/195.3 ms；四组程序的配对输出二进制 SHA-256 均一致。三组满足 ≤200 ms，一组 204.1 ms；这不是完整性能门或 Agent 成本门验收。命令与测试见第 24 节。
 
 规范以 v0.5 冻结版为基础，2026-11-21 按第三轮实验修订了 V2（两阶段借用）、K1（`String`/`str` 比较），新增 V6a（字段默认值）、V14（P-STACK），见 `docs/decisions.md` 第六节；冻结测试包 `yavo-tests/` 不改。Rust 编译器与 C 运行时覆盖 P0 链路及 P1—P3 的主要功能：结构体、枚举、`T ! E`、`match`、`String`/`Vec`/`Map`/`Set`、切片、移动与析构、视图与 `of`、`&T`/`&inout T`、`?T`、方法、`Drop`、元组、不逃逸闭包、`Eq`/`Ord`、`Box`、接口、泛型、浮点；并发（`Rc`/`Arc`/`Mutex`/`with`/`scope`/`spawn`/`Channel`/`Send`/`Sync`）；Heap/Deque、`Arena[T]`/`Id[T]`、源文件模块；`yavo fix`/`allocations`/`verify`；后端构建缓存；六个目标的交叉编译。第十五批补入 V2a（元素上的修改方法），见 `docs/decisions.md` 第七节。**P0—P3 主体功能已实现，完整 v1 尚未验收，P4 仍为小规模试验。** 三平台 CI 已落地；Windows/macOS 为明确选定的原生套件。完整 v1 的工具/语言缺口、Agent 成本和正式性能门尚未闭合。各批次细节见第 4 节和 `history/`。
 规范一致性：**129 项中通过 124、判错 0、不支持 3、未运行 0、被新决定取代 2**（T-V1、T-GF2 断言旧 V2，登记在 `compiler/tests/conformance_superseded.txt`；不支持的 3 项需要锁定工具链无法链接的 ASan 运行时）。该统计只表示既有用例覆盖，不是完整 v1 完成比例。
@@ -55,7 +57,7 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 | `tests/mutref_returns.rs` | 6 个集成测试：返回来源、索引/字段、转交/重绑定、12 类拒绝、Guard 边界、准确求值顺序、候选修复 |
 | `tests/arena.rs`、`tests/arena_runtime.c` | 6 个集成测试：身份/代际、所有权与借用、计数耗尽、8×4096 个线程身份、外来 Id 精确 panic、Guard 权限及分配效果 |
 | `tests/modules.rs` | 17 个集成测试：导出与逐文件导入、循环、同名类型、真实文件位置、项目快照/verify/allocations、Arena 与模块/线程组合 |
-| `tests/build_cache.rs` | 9 个集成测试：命中且产物逐字节相同、键覆盖代码/模式/目标/`YAVO_ALLOC_CHECK`、行号移动必须重建（panic 位置正确）、模块文件变化失效、产物损坏与校验和缺失时重建并自愈、6 路并发构建只发布一个一致条目且无临时文件残留、条目数上限淘汰、`YAVO_NO_CACHE` 与不可用缓存目录回退、`yavo run` 报告被信号终止的程序 |
+| `tests/build_cache.rs` | 14 个集成测试：原有的内容缓存、错误路径、并发、回退和 LRU；新增 PCH 跨源码变更复用/二进制一致、目标/模式/插桩隔离、损坏自愈、PCH 独立 LRU，6 路并发增查 PCH 临时文件清理 |
 | `tools/sanitizers/` | 独立源码导出与 ASan+UBSan 执行；能力负例先通过，再检查精确输出、退出状态、源码/工具链/工件哈希 |
 | `benchmarks/small-c-v1/` | 固定四项 C 对照、独立正确性参考、两次预热与七次计时；编译延迟与源码路径缓存诊断单独记录 |
 
@@ -404,3 +406,31 @@ token、精确服务模型 ID 和 sampling 无可核验来源，均为 `null`；
 新增 Agent evaluation preparation 检查通过 33 项执行器测试、25 项 lab/audit/freeze 测试、11 项裁判/汇总场景，核对 94 个准备文件及 112/112 个独立 oracle 输入；第五轮 1,344 条判定、96 个源码阶段、16 项结构审查继续通过。六份产物的下载字节数和 SHA-256 均匹配 GitHub API，实际报告、来源提交与范围见 [CI 回执](compiler/validation/github-ci-agent-eval-2026-11-22.json)。这些检查没有发起真实模型请求；第六轮仍为 0 会话、0 交付。
 
 最后的文档与回执提交仅记录上述已验证实现。编译器、运行时、语言语义和 R5 冻结输入均未修改；完整 v1、Agent 正式成本门和正式 C 性能门继续未验收。
+
+## 24. 第十九批：运行时 PCH 内容缓存与构建性能（2026-11-22）
+
+### 24.1 实现范围
+
+- `compiler/src/toolchain.rs`：保持原 `compile` 接口；新增 `precompile_header`（以真实的 target/Release/Debug/`YV_ALLOC_CHECK` 参数执行 `zig cc -x c-header`）和 `compile_with_pch`。保留原 `verify` 编译路径；PCH 不更改运行时 C 代码、ABI 或 Yavo 语言规则。
+- `compiler/src/cache.rs`：独立 `<root>/pch/<key>/`，PCH key 包括整个运行时头、完整工具链锁、Zig 程序路径、C flags、目标和原生 CPU 指纹，不包括用户代码。PCH 与 checksum 原子发布，使用前检查 SHA-256，损坏或缺失时重建；并发构建用独立临时文件。默认只保留最近 32 个 PCH 条目，`YAVO_PCH_MAX_ENTRIES` 可覆盖。
+- `compiler/src/main.rs`：仅在固定 Zig、已启用构建缓存且二进制缓存未命中时尝试运行时 PCH；`YAVO_NO_PCH=1` 可关闭。创建或加载 PCH 失败，以及使用 PCH 编译失败，均回退到完整直接 C 编译；`YAVO_CACHE_TRACE=1` 输出 PCH 命中/缺失/回退。`YAVO_NO_CACHE=1`、`YAVO_CC`、`verify` 不走 PCH。
+- `compiler/tests/build_cache.rs`：缓存复用、跨模式/跨目标/插桩隔离、损坏恢复、PCH LRU；6 路并发检验增查 PCH 临时文件。缓存套件从 10 个测试增加到 14 个。
+
+### 24.2 证据与界限
+
+- 本轮工作树的完整 Release 套件已执行，17 个测试组共 **133 通过、0 失败、1 忽略**；Debug 全量测试采用服务器端落盘的独立执行，待完成后必须以退出码与完整 17 组日志为准，不得沿用旧 `129/0/1` 作为本轮结果。已完成的中断尝试不计为完整通过。
+- 初步 pinned Zig 0.17.1 实探 6 个目标（Linux x86-64/aarch64，Windows x86-64/aarch64，macOS x86-64/aarch64）全部可进行 `-x c-header`/`-include-pch` 的交叉编译；该探针在项目 Linux 主机执行，不等于原生 Windows/macOS PCH 测速。
+- `benchmarks/small-c-v1/pch_probe.py`：独立二进制缓存，每次修改增加源文件前置注释的**行数**使生成 C 变化，两个编译路径使用完全相同的源码文件，顺序交替；每程序 7 个配对 Release 样本，校验每次二进制 SHA-256 相同。`results/runtime-pch-2026-11-22.json` 保留原始毫秒数组、每组 P50、工具/运行时哈希。
+
+| 题目 | 直接 C P50 | PCH P50 | 加速比 |
+| --- | ---: | ---: | ---: |
+| integer_recurrence | 253.8 ms | 179.8 ms | 1.41x |
+| vec_transform | 260.3 ms | 204.1 ms | 1.28x |
+| mutref_scatter | 264.8 ms | 196.9 ms | 1.34x |
+| deque_ring | 283.8 ms | 195.3 ms | 1.45x |
+
+上述是构建时间，不是生成程序的执行时间。四项中三项满足 200 ms 门，`vec_transform` 仍差 4.1 ms。PCH 免去重复解析运行时头，但不能避免每次重新编译用户生成 C 和链接；继续优化若要覆盖所有代表性程序，应先拆解余下的 Zig 启动、C 优化与链接耗时，而不是增加语言特性。
+
+### 24.3 接手与剩余门
+
+新优化不改变冻结 129 项规范输入或 agent 实验题包；旧第 17/18 批 CI 回执继续作为对应提交的历史证据，不能移用为本次改动的 CI 通过证明。第六轮真实计量仍因模型凭据与 CLI 状态数据库问题 blocked，0 真实模型请求、0 会话、0 交付。优先执行获授权的 runtime freeze 和真实 provider usage 资格检查，之后才能做 8 题短卡 A/B，接 60 题 pilot；`yavo test`、审核/包/FFI 等完整 v1 缺口不变。

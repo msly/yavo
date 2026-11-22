@@ -7,6 +7,27 @@ scoped OS threads. Native CI runs complete Linux x86-64 suites and selected
 Windows x86-64/macOS arm64 suites. Complete phase acceptance still requires the
 remaining tools, features and full target-platform acceptance coverage.
 
+### Runtime header PCH cache (2026-11-22)
+
+Normal `build`/`run` commands with the pinned Zig toolchain and an enabled build
+cache now reuse a runtime **precompiled header** across different Yavo programs
+and source edits. PCH identities cover the exact runtime header, toolchain lock,
+compiler path, target, debug/release flags, allocation instrumentation and native
+CPU fingerprint. The PCH bytes have a SHA-256 sidecar and are atomically published;
+corruption is rebuilt. Publication and reuse work under concurrent builds. The
+runtime cache has a separate LRU limit of 32 entries (overridable with
+`YAVO_PCH_MAX_ENTRIES`).
+
+Set `YAVO_NO_PCH=1` to use the original direct C compilation path. PCH build or
+load failures fall back to the original path; `YAVO_CACHE_TRACE=1` reports cache
+hits, misses and fallback reasons. `YAVO_NO_CACHE=1`, `YAVO_CC` overrides and
+`yavo verify` bypass runtime PCH entirely. `verify` therefore keeps its isolated
+compiler/sanitizer evidence semantics. The generated C and runtime ABI are
+unchanged. A seven-pair, four-program Linux pilot measured edited-source Release
+P50 reductions from 253.8–283.8 ms (direct) to 179.8–204.1 ms (PCH), with
+matching output SHA-256. Details and reproduction script:
+[`benchmarks/small-c-v1/`](../benchmarks/small-c-v1/README.md).
+
 ## Current validation (2026-11-22)
 
 The latest language-feature baseline is `b3c27a6`. Complete single-command Debug
