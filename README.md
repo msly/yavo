@@ -48,8 +48,12 @@ auxiliary checks**: 39 executable inputs in both modes, 81 rejection cases,
 14 stage0-supported features pending in selfhost and 4 shared unsupported
 boundaries. The original 72 input sources are preserved. Rust/runtime sources
 are unchanged; complete local Rust suites retain the preceding baseline below.
-[Current aggregate receipt](compiler/validation/selfhost-aggregates-2026-11-22.json)
-records source identities and the new implementation's native CI status.
+[CI run 45025445954](https://github.com/msly/yavo/actions/runs/45025445954)
+passed **six of six jobs** at [`fbb322e`](https://github.com/msly/yavo/commit/fbb322e7f1eb7342f69fb19c6a6f76d01a8ee76f);
+the selfhost gate passed on Linux x86-64, Windows x86-64 and macOS arm64.
+The [aggregate receipt](compiler/validation/selfhost-aggregates-2026-11-22.json)
+binds source identities, successful job/step results and artifact metadata;
+archive contents were not independently downloaded or rehashed.
 
 The self-hosting implementation [`353523a`](https://github.com/msly/yavo/commit/353523a62fc57d5249544c9f5df7083051d4cd78) passed [CI run 45019581088](https://github.com/msly/yavo/actions/runs/45019581088): **six of six jobs succeeded**. The local SH-1 gate passed **72/72 cases and 10/10 auxiliary checks**; complete local Debug/Release suites each passed **142/0/1**. [Source-bound local summary](compiler/validation/selfhost-sh1-2026-11-22.json). The selfhost gate passed on **Linux x86-64, Windows x86-64 and macOS arm64**. This batch verifies job/step results and artifact metadata; it does not claim independent archive download/hash verification.
 

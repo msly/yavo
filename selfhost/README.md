@@ -66,8 +66,11 @@ This increment changes only the Yavo frontend, its tests/harness and documents.
 The Rust frontend, C runtime, locked toolchain and frozen specification are
 unchanged. The previous complete local stage0 Debug/Release suites each passed
 142 tests, failed 0 and ignored 1; those local suites were not rerun for this
-increment. Current native CI results are recorded with the implementation
-commit in the aggregate summary.
+increment. [CI run 45025445954](https://github.com/msly/yavo/actions/runs/45025445954)
+passed all six jobs at `fbb322e`, including this frontend gate on Linux x86-64,
+Windows x86-64 and macOS arm64. The aggregate summary binds the implementation
+commit, successful job/step results and artifact metadata. Archive contents were
+not separately downloaded or rehashed in this increment.
 
 The [preceding SH-1 summary](../compiler/validation/selfhost-sh1-2026-11-22.json)
 retains its 72-case baseline and
@@ -105,7 +108,7 @@ JSON diagnostics, suggestions and recovery remain future work.
 | Aggregates | Forward and nested struct fields, construction, reads and mutable field assignment, value copies, scalar literal field defaults, empty structs/enums; by-value cycles rejected |
 | Enums | Qualified and context-inferred cases, nominal type checks, equality/inequality, case-name output |
 | Literals | Decimal integers including negative `INT64_MIN`, booleans, unit, non-interpolated UTF-8 strings with supported escapes and NUL |
-| Functions | Typed parameters, scalar/Copy aggregate/unit returns, forward calls, recursion, local/global name resolution; default parameters are read-only |
+| Functions | Typed parameters, int/bool/Copy aggregate/unit returns, forward calls, recursion, local/global name resolution; default parameters are read-only |
 | Locals | `let`/`var`, inferred or explicit types, assignment and arithmetic compound assignment; active locals cannot be shadowed |
 | Control flow | `if`/`else if`/`else`, `while`, `loop`, `break`, `continue`, explicit return and return-path checks |
 | Expressions | Parentheses, unary minus/not, checked integer arithmetic, wrapping arithmetic, bit operations/shifts, equality/order, short-circuit boolean operators |
@@ -150,11 +153,24 @@ The [token metadata example](examples/token_metadata.yv) exercises `SourceSpan`,
 calls, branches and nested field updates. It represents source positions and
 compiler state; owned lexemes and dynamic AST storage are still pending.
 
-The next dependency is owned `String` and `Vec` values in locals and fields,
-together with move/borrow/inout/sink checking and deterministic destruction.
-Then add results with try/catch, module loading and the remaining literal/builtin
-forms used by the implementation. Each addition requires positive and negative
-external tests before attempting the full compiler sources.
+The next increment is the `String`/`Failure` ownership path. Preserve the
+complete original bytes of `diagnostic.yv` as a fixture prefix and append a
+standalone test entry point; its existing `Failure` fields and `make` function
+require owned string construction, borrowed reads, ownership transfer and
+cleanup, without needing vectors or source imports.
+
+That increment must distinguish borrowed reads from consuming bindings,
+assignments, constructors and returns; generate cleanup on every supported
+scope/control-flow exit; and reject moved-value reuse, moves out of borrowed
+places and conflicting modification. Builtin string methods need receiver-aware
+parsing, while user-defined methods remain a later feature. Normal completion
+must pass allocation checks in both build modes.
+
+Next add `Vec` with Copy elements, then owned String/Token elements with
+borrowed indexing and element destruction. Explicit inout/sink/take, options,
+results with try/catch, modules and the remaining literal/builtin forms follow
+their actual source dependencies. Each increment needs external positive and
+negative tests before attempting all compiler sources.
 
 After the input subset covers all compiler sources, build stage2 using stage1,
 then stage3 using stage2 in fresh directories; compare their generated C and

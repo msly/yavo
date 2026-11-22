@@ -4,7 +4,7 @@
 
 ## 1. 一句话状态
 
-**第二十一批完成自举前端的 Copy 聚合类型。** 新前端支持名义结构体、无载荷枚举、前向/嵌套字段、构造与默认值、只读/可变字段访问、按值参数与返回、枚举上下文推断和输出。最终本机 **138/138 cases、10/10 checks、0 skip**，39 个可运行输入在 Debug/Release 与固定预期、Rust 参照一致，重复 C 一致。原 72 条输入源码字节保留，新增 66 条；旧 unsupported_struct 原样转为正例。Rust/运行时/冻结规格未改。**仍是子集编译器，`self_hosted=false`；下一步是拥有 String/Vec 与移动、借用、析构。** 详见第 26 节。
+**第二十一批完成自举前端的 Copy 聚合类型。** 新前端支持名义结构体、无载荷枚举、前向/嵌套字段、构造与默认值、只读/可变字段访问、按值参数与返回、枚举上下文推断和输出。最终本机 **138/138 cases、10/10 checks、0 skip**，39 个可运行输入在 Debug/Release 与固定预期、Rust 参照一致，重复 C 一致。原 72 条输入源码字节保留，新增 66 条；旧 unsupported_struct 原样转为正例。Rust/运行时/冻结规格未改。[本批 CI 45025445954](https://github.com/msly/yavo/actions/runs/45025445954) 在实现提交 `fbb322e` 上 6/6 jobs 通过，三平台 selfhost gate 全部成功。**仍是子集编译器，`self_hosted=false`；下一步先闭合 String / Failure 所有权，再推进 Vec。** 详见第 26 节。
 
 **第二十批按用户授权把近期主目标调整为自举。** `selfhost/` 已有用 Yavo 编写的词法器、AST/parser、基础类型/名字/返回检查及 C 生成；72 个外部用例通过（14 正常、9 panic、39 拒绝、10 明确 unsupported），23 个可运行输入在 Debug/Release 均与固定预期和 Rust 参照一致，重复生成 C 字节一致。10 项辅助检查通过，含源码输出别名保护和输入哈希稳定性。**当前是 SH-1 子集编译器，不能编译自己的源码，`self_hosted=false`。** 同批修复 stage0 对用户 `panic` 的退出路径误判，新增 `fs.writeNewText` 原子独占创建文件；细节见第 25 节。
 
@@ -483,9 +483,21 @@ token、精确服务模型 ID 和 sampling 无可核验来源，均为 `null`；
 - [本机源身份与逐例摘要](compiler/validation/selfhost-aggregates-2026-11-22.json)：**138/138 cases、10/10 checks、0 skip**。29 run、10 panic、81 reject、14 stage0 支持但 selfhost 未实现、4 两侧均 U0001。39 个可执行输入各运行 Debug/Release，检查固定 stdout/退出码/panic 类别、Rust 差分与重复 C 字节。
 - 72 条原 fixture 源码字节全部保留；71 条 manifest 记录不变；原 unsupported_struct 因支持范围扩大原样迁为 run/struct_basic，manifest 保存原因和原始哈希。新增 66 条外部用例，没有修改冻结的 `yavo-tests/`。
 - 最终 gate 独立目录 `compiler/target/ci/selfhost-aggregates-final/run-pwpweo43`，实际路径、完整回执字节数/SHA、所有源/runtime/stage0/Zig/manifest/harness/example 哈希见摘要；退出码文件为 0。完整原始回执保留在本机产物目录，公开入口 `python3 selfhost/bootstrap.py` 可重放。
-- Rust 源码、C 运行时、Cargo 配置/锁、工具链锁、CI workflow 和冻结规格与 `d367797` 相同；本机未重复全套 Rust suite。前批本机 Debug/Release 各 142/0/1 的历史结果见第 25 节。当前实现的三平台 CI 结果在完成后写入本节和摘要。
+- Rust 源码、C 运行时、Cargo 配置/锁、工具链锁、CI workflow 和冻结规格与 `d367797` 相同；本机未重复全套 Rust suite。前批本机 Debug/Release 各 142/0/1 的历史结果见第 25 节。实现提交 [`fbb322e`](https://github.com/msly/yavo/commit/fbb322e7f1eb7342f69fb19c6a6f76d01a8ee76f) 的 [CI run 45025445954](https://github.com/msly/yavo/actions/runs/45025445954) 已 completed/success，6/6 jobs 成功，Linux x86-64、Windows x86-64、macOS arm64 的 selfhost 步骤均 completed/success。root 独立重查 run/jobs/artifacts 并绑定摘要；此批核验六份 artifact 元数据，未下载归档/重算哈希。
 - 验收仍明确 `achieved=subset-compiler`、`self_hosted=false`，自身输入仍 U0001；没有产出 stage2/stage3。
 
 ### 26.3 下一步
 
-按 Token/AST/Generator 的实际所有权需求实现拥有型 String/Vec、字段移动与只读/可变借用、inout/sink 和退出路径析构，先覆盖构造、传参与返回、嵌套字段和集合元素。需要独立验证移动后使用、借用冲突、重复释放和作用域退出资源回收。然后补 results/try/catch、模块加载及自身使用的其他字面量/内建形式，直到全部编译器源文件能作为输入，再执行 stage1 → stage2 → stage3。
+**下一增量先闭合 String / Failure，Vec 随后实现。** 真实验收入口是 `selfhost/diagnostic.yv`：复制该文件完整原始字节作为临时测试文件前缀，只追加独立 main，断言前缀字节一致。它没有 use、Vec 或 result 依赖；原有 Failure.code/message 和 make 已要求 str.toString、拥有字段构造、结构返回和调用方字段读取。
+
+| 退出条件 | 必须覆盖的机制 |
+| --- | --- |
+| 原样诊断源码执行 | make 构造的 String/整数成员输出正确，整个 Failure 转移后仍可用；stage0 和新前端 Debug/Release 固定输出一致 |
+| String 最小操作 | String{}、toString、len、clone、push、打印/比较；UTF-8 与 NUL；独立副本修改不影响原值 |
+| 读与消费分开 | 绑定/赋值/构造/返回转移 owned 值，普通参数/打印/比较/len/clone 借用；禁止移动后使用，以及从只读参数或字段直接移出拥有值 |
+| 控制流清理 | 作用域退出、return、break/continue、分支和重赋值正确析构；返回值不提前释放，借用临时值活至语句结束；分配检查无泄漏/重复释放 |
+| 修改边界 | 内建方法保留 receiver 和参数，push 只接受可写 place，按 stage0 拒绝冲突别名；未实现的持久/返回借用继续 U0001 |
+
+类型系统需推导包含 String 的结构为非 Copy，不能继续用当前 Name/Field 的无条件 C 值复制产生多个 owner。运行时已有 String from/view/push/drop；主工作在所有权检查与清理生成。无需为这一切片提前实现用户自定义方法、完整模块或通用泛型。
+
+随后 Vec 先 Copy 元素，再 String/Token 等拥有元素，同时处理元素析构/clone、索引借用及失效借用；不能以所有索引结果深复制代替语言语义。再接入 inout/sink/take、optional、result/try/catch、模块与 std 文件/进程接口，以及自身使用的其他字面量/内建形式。全部编译器源文件进入支持子集后，执行 stage1 → stage2 → stage3。
