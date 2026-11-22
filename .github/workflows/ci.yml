@@ -3,7 +3,13 @@ name: Yavo CI
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - '**/*.md'
+      - 'compiler/validation/*.json'
   pull_request:
+    paths-ignore:
+      - '**/*.md'
+      - 'compiler/validation/*.json'
   workflow_dispatch:
 
 permissions:

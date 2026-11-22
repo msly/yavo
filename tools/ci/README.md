@@ -1,6 +1,9 @@
 # GitHub CI
 
-`Yavo CI` runs on pushes to `main`, pull requests, and manual dispatches. It uses
+`Yavo CI` runs on pushes to `main`, pull requests, and manual dispatches. Changes
+limited to Markdown or archived validation JSON do not rerun it; compiler,
+runtime, fixtures, scripts, locks and workflow changes still trigger every job.
+It uses
 Rust 1.99.1 and the existing SHA-256-locked Zig 0.17.1 archives. The checkout and
 artifact actions are pinned to reviewed full commits; workflow permissions are
 read-only. Debug and Release are sequential within each job because the existing

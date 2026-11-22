@@ -1,5 +1,8 @@
 #define _DEFAULT_SOURCE 1
 #define _XOPEN_SOURCE 700
+#if defined(__APPLE__) && !defined(_DARWIN_C_SOURCE)
+#define _DARWIN_C_SOURCE 1
+#endif
 #include <stdlib.h>
 static _Thread_local int fail_alloc;
 static void *controlled_malloc(size_t n) { return fail_alloc ? NULL : malloc(n); }
