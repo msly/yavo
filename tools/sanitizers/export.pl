@@ -27,7 +27,8 @@ sub read_bytes {
     my ($p) = @_;
     open my $f, '<:raw', $p or die "$p: $!\n";
     local $/;
-    return <$f>;
+    my $bytes = <$f>;
+    return defined($bytes) ? $bytes : '';
 }
 sub file_record {
     my ($p) = @_;
