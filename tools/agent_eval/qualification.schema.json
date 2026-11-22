@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/msly/yavo/tools/agent_eval/qualification.schema.json",
+  "title": "Yavo provider-backed executor qualification",
+  "type": "object",
+  "required": ["schema_version", "kind", "status", "experiment_id", "freeze_sha256", "model_settings_sha256", "executor_sha256", "qualified_at_utc", "recorded_at_utc", "observed", "blockers", "evidence"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "yavo.executor.qualification"},
+    "status": {"enum": ["qualified", "blocked", "fixture_only"]},
+    "experiment_id": {"type": ["string", "null"]},
+    "freeze_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
+    "model_settings_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "executor_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "qualified_at_utc": {"type": ["string", "null"]},
+    "recorded_at_utc": {"type": "string"},
+    "blockers": {"type": "array", "items": {"type": "string"}},
+    "observed": {
+      "type": "object",
+      "required": ["provider_requests", "provider_responses", "qualifying_tool_calls", "reported_models", "usage_complete", "tool_accounting_complete", "per_request_evidence", "requested_model", "reported_settings"],
+      "properties": {
+        "provider_requests": {"type": "integer", "minimum": 0},
+        "provider_responses": {"type": "integer", "minimum": 0},
+        "qualifying_tool_calls": {"type": "integer", "minimum": 0},
+        "reported_models": {"type": "array", "items": {"type": "string"}},
+        "usage_complete": {"type": "boolean"},
+        "tool_accounting_complete": {"type": "boolean"},
+        "per_request_evidence": {"type": "boolean"},
+        "requested_model": {"type": ["string", "null"]},
+        "reported_settings": {"type": "object"},
+        "usage": {"type": ["object", "null"]},
+        "tool_accounting_scope": {"const": "declared Responses function tools"}
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "required": ["request_captures", "tool_capture"],
+      "properties": {
+        "request_captures": {"type": "array", "items": {
+          "type": "object", "required": ["directory", "capture_sha256"],
+          "properties": {"directory": {"type": "string"}, "capture_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+        }},
+        "tool_capture": {"type": ["object", "null"], "required": ["directory", "operation_sha256"],
+          "properties": {"directory": {"type": "string"}, "operation_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}}
+      }
+    },
+    "money_cost": {"type": "null"}
+  },
+  "allOf": [{
+    "if": {"properties": {"status": {"const": "qualified"}}},
+    "then": {
+      "properties": {
+        "experiment_id": {"type": "string", "minLength": 1},
+        "freeze_sha256": {"type": "string"},
+        "qualified_at_utc": {"type": "string"},
+        "blockers": {"maxItems": 0},
+        "observed": {"properties": {
+          "provider_requests": {"minimum": 2},
+          "provider_responses": {"minimum": 2},
+          "qualifying_tool_calls": {"minimum": 1},
+          "reported_models": {"minItems": 1, "maxItems": 1},
+          "usage_complete": {"const": true},
+          "tool_accounting_complete": {"const": true},
+          "per_request_evidence": {"const": true},
+          "requested_model": {"type": "string", "minLength": 1},
+          "usage": {"type": "object"}
+        }},
+        "evidence": {"properties": {
+          "request_captures": {"minItems": 2, "maxItems": 2},
+          "tool_capture": {"type": "object"}
+        }}
+      }
+    }
+  }]
+}

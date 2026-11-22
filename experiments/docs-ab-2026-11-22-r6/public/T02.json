@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "tasks": [
+    {
+      "id": "T02",
+      "kind": "program",
+      "title": "严格百分号编解码",
+      "structural": [],
+      "cases": [
+        {
+          "id": "T02-public-01",
+          "visibility": "public",
+          "stdin": "enc a+b c\ndec a%2Bb%20c\nenc -._~\n",
+          "stdout": "1: len=9 text=a%2Bb%20c\n2: len=5 text=a+b c\n3: len=4 text=-._~\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T02-public-02",
+          "visibility": "public",
+          "stdin": "enc \ndec %25%32%30\ndec %0A\ndec x%2\n",
+          "stdout": "1: len=0 text=\n2: len=3 text=%20\n3: invalid\n4: invalid\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        }
+      ]
+    }
+  ]
+}

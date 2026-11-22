@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "tasks": [
+    {
+      "id": "T06",
+      "kind": "program",
+      "title": "双线程质因数分解",
+      "structural": [
+        "Two real OS worker threads are both started before any join, including empty partitions; worker 0 factors original even-index values and worker 1 factors odd-index values; main only distributes, collects and prints in original order and does not factor values."
+      ],
+      "cases": [
+        {
+          "id": "T06-public-01",
+          "visibility": "public",
+          "stdin": "5\n1 12 17 36 100\n",
+          "stdout": "1: 1=1\n2: 12=2^2*3^1\n3: 17=17^1\n4: 36=2^2*3^2\n5: 100=2^2*5^2\ncount: 5\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T06-public-02",
+          "visibility": "public",
+          "stdin": "0\n",
+          "stdout": "count: 0\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        }
+      ]
+    }
+  ]
+}

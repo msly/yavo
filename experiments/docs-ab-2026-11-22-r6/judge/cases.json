@@ -1,0 +1,1290 @@
+{
+  "schema_version": 1,
+  "seed": 2026112206,
+  "tasks": [
+    {
+      "id": "T01",
+      "kind": "program",
+      "title": "环形淘汰",
+      "structural": [],
+      "cases": [
+        {
+          "id": "T01-public-01",
+          "visibility": "public",
+          "stdin": "5 2\na\nb\nc\nd\ne\n",
+          "stdout": "out: b\nout: d\nout: a\nout: e\nwinner: c\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T01-public-02",
+          "visibility": "public",
+          "stdin": "0 1000000000\n",
+          "stdout": "winner: none\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T01-hidden-01",
+          "visibility": "hidden",
+          "purpose": "single-person",
+          "stdin": "1 1000000000\nsolo\n",
+          "stdout": "winner: solo\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T01-hidden-02",
+          "visibility": "hidden",
+          "purpose": "step-one",
+          "stdin": "4 1\nz\na\nm\nx\n",
+          "stdout": "out: z\nout: a\nout: m\nwinner: x\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T01-hidden-03",
+          "visibility": "hidden",
+          "purpose": "huge-step",
+          "stdin": "7 999999937\na\nb\nc\nd\ne\nf\ng\n",
+          "stdout": "out: f\nout: g\nout: b\nout: c\nout: d\nout: e\nwinner: a\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T01-hidden-04",
+          "visibility": "hidden",
+          "purpose": "two-parity",
+          "stdin": "2 999999999\nleft\nright\n",
+          "stdout": "out: left\nwinner: right\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T01-hidden-05",
+          "visibility": "hidden",
+          "purpose": "wrap-last-removal",
+          "stdin": "6 6\na\nb\nc\nd\ne\nf\n",
+          "stdout": "out: f\nout: a\nout: c\nout: b\nout: e\nwinner: d\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T01-hidden-06",
+          "visibility": "hidden",
+          "purpose": "name-prefixes",
+          "stdin": "5 3\na\naa\na1\na_\nz0\n",
+          "stdout": "out: a1\nout: a\nout: z0\nout: aa\nwinner: a_\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T01-hidden-07",
+          "visibility": "hidden",
+          "purpose": "maximum-population",
+          "stdin": "60 1000000000\np0\np1\np2\np3\np4\np5\np6\np7\np8\np9\np10\np11\np12\np13\np14\np15\np16\np17\np18\np19\np20\np21\np22\np23\np24\np25\np26\np27\np28\np29\np30\np31\np32\np33\np34\np35\np36\np37\np38\np39\np40\np41\np42\np43\np44\np45\np46\np47\np48\np49\np50\np51\np52\np53\np54\np55\np56\np57\np58\np59\n",
+          "stdout": "out: p39\nout: p11\nout: p29\nout: p7\nout: p58\nout: p9\nout: p40\nout: p12\nout: p24\nout: p32\nout: p31\nout: p47\nout: p4\nout: p50\nout: p16\nout: p27\nout: p10\nout: p5\nout: p54\nout: p48\nout: p46\nout: p25\nout: p53\nout: p55\nout: p38\nout: p15\nout: p56\nout: p14\nout: p13\nout: p41\nout: p0\nout: p35\nout: p20\nout: p21\nout: p44\nout: p43\nout: p23\nout: p17\nout: p37\nout: p18\nout: p8\nout: p3\nout: p42\nout: p1\nout: p59\nout: p36\nout: p2\nout: p52\nout: p22\nout: p6\nout: p57\nout: p19\nout: p51\nout: p45\nout: p30\nout: p28\nout: p26\nout: p33\nout: p49\nwinner: p34\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T01-hidden-08",
+          "visibility": "hidden",
+          "purpose": "zero-population",
+          "stdin": "0 1\n",
+          "stdout": "winner: none\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T01-hidden-09",
+          "visibility": "hidden",
+          "purpose": "seed-2026112206",
+          "stdin": "28 202093485\nname9\nname17\nname22\nname18\nname1\nname8\nname2\nname19\nname13\nname15\nname4\nname11\nname3\nname5\nname21\nname23\nname12\nname14\nname20\nname6\nname16\nname24\nname26\nname0\nname7\nname25\nname27\nname10\n",
+          "stdout": "out: name3\nout: name13\nout: name20\nout: name9\nout: name7\nout: name18\nout: name12\nout: name0\nout: name22\nout: name19\nout: name17\nout: name1\nout: name26\nout: name24\nout: name6\nout: name11\nout: name8\nout: name10\nout: name21\nout: name2\nout: name14\nout: name5\nout: name25\nout: name16\nout: name27\nout: name23\nout: name15\nwinner: name4\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T01-hidden-10",
+          "visibility": "hidden",
+          "purpose": "seed-2026112207",
+          "stdin": "12 368130120\nname9\nname3\nname8\nname6\nname4\nname11\nname10\nname7\nname2\nname0\nname1\nname5\n",
+          "stdout": "out: name5\nout: name11\nout: name4\nout: name9\nout: name1\nout: name3\nout: name0\nout: name2\nout: name7\nout: name10\nout: name6\nwinner: name8\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T01-hidden-11",
+          "visibility": "hidden",
+          "purpose": "seed-2026112208",
+          "stdin": "19 500483322\nname12\nname17\nname1\nname4\nname7\nname9\nname13\nname3\nname8\nname2\nname6\nname11\nname15\nname18\nname10\nname5\nname16\nname0\nname14\n",
+          "stdout": "out: name8\nout: name3\nout: name5\nout: name13\nout: name1\nout: name16\nout: name0\nout: name9\nout: name17\nout: name7\nout: name4\nout: name6\nout: name18\nout: name15\nout: name14\nout: name2\nout: name12\nout: name10\nwinner: name11\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T01-hidden-12",
+          "visibility": "hidden",
+          "purpose": "seed-2026112209",
+          "stdin": "18 596648058\nname2\nname15\nname13\nname6\nname3\nname7\nname14\nname5\nname8\nname4\nname12\nname1\nname10\nname9\nname17\nname0\nname16\nname11\n",
+          "stdout": "out: name7\nout: name0\nout: name8\nout: name1\nout: name2\nout: name5\nout: name16\nout: name14\nout: name13\nout: name9\nout: name11\nout: name10\nout: name12\nout: name6\nout: name4\nout: name3\nout: name15\nwinner: name17\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        }
+      ]
+    },
+    {
+      "id": "T02",
+      "kind": "program",
+      "title": "严格百分号编解码",
+      "structural": [],
+      "cases": [
+        {
+          "id": "T02-public-01",
+          "visibility": "public",
+          "stdin": "enc a+b c\ndec a%2Bb%20c\nenc -._~\n",
+          "stdout": "1: len=9 text=a%2Bb%20c\n2: len=5 text=a+b c\n3: len=4 text=-._~\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T02-public-02",
+          "visibility": "public",
+          "stdin": "enc \ndec %25%32%30\ndec %0A\ndec x%2\n",
+          "stdout": "1: len=0 text=\n2: len=3 text=%20\n3: invalid\n4: invalid\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T02-hidden-01",
+          "visibility": "hidden",
+          "purpose": "empty-file",
+          "stdin": "",
+          "stdout": "",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T02-hidden-02",
+          "visibility": "hidden",
+          "purpose": "space-plus-and-empty",
+          "stdin": "enc \ndec \nenc   \ndec +++\ndec %20%2b%2B\n",
+          "stdout": "1: len=0 text=\n2: len=0 text=\n3: len=6 text=%20%20\n4: len=3 text=+++\n5: len=3 text= ++\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T02-hidden-03",
+          "visibility": "hidden",
+          "purpose": "safe-ascii",
+          "stdin": "enc AZaz09-._~\ndec AZaz09-._~\n",
+          "stdout": "1: len=10 text=AZaz09-._~\n2: len=10 text=AZaz09-._~\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T02-hidden-04",
+          "visibility": "hidden",
+          "purpose": "invalid-escapes",
+          "stdin": "dec %\ndec %0\ndec %GG\ndec %1z\ndec x%20y%\n",
+          "stdout": "1: invalid\n2: invalid\n3: invalid\n4: invalid\n5: invalid\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T02-hidden-05",
+          "visibility": "hidden",
+          "purpose": "nonprintable-results",
+          "stdin": "dec %00\ndec %1F\ndec %7f\ndec %80\ndec %ff\ndec %20%7E\n",
+          "stdout": "1: invalid\n2: invalid\n3: invalid\n4: invalid\n5: invalid\n6: len=2 text= ~\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T02-hidden-06",
+          "visibility": "hidden",
+          "purpose": "single-pass",
+          "stdin": "dec %2520\ndec %2541\ndec %25%2b\n",
+          "stdout": "1: len=3 text=%20\n2: len=3 text=%41\n3: len=2 text=%+\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T02-hidden-07",
+          "visibility": "hidden",
+          "purpose": "syntax-and-line-count",
+          "stdin": "\nENC a\nenc\n enc a\nenc  a \ndec a b\n",
+          "stdout": "1: invalid\n2: invalid\n3: invalid\n4: invalid\n5: len=7 text=%20a%20\n6: len=3 text=a b\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T02-hidden-08",
+          "visibility": "hidden",
+          "purpose": "punctuation-and-interpolation-text",
+          "stdin": "enc ${x} \\ \"%&?/\ndec %24%7Bx%7D\n",
+          "stdout": "1: len=34 text=%24%7Bx%7D%20%5C%20%22%25%26%3F%2F\n2: len=4 text=${x}\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T02-hidden-09",
+          "visibility": "hidden",
+          "purpose": "seed-2026112206",
+          "stdin": "enc a&?y^j;6xLy\ndec a%26%3Fy%5Ej%3B6xLy\nenc r]#38.7pk\ndec r%5D%2338.7pk\nenc Vm$@@\ndec Vm%24%40%40\nenc \ndec \nenc Ie\ndec Ie\nenc a9x]w!Is3mA/BI#y9\ndec a9x%5Dw%21Is3mA%2FBI%23y9\nenc `SK@>r<N_lMh\ndec %60SK%40%3Er%3CN_lMh\nenc =%!R$o.=\ndec %3D%25%21R%24o.%3D\nenc Lrtv$\ndec Lrtv%24\nenc ]o]#gvzHd\ndec %5Do%5D%23gvzHd\nenc A7GS\ndec A7GS\nenc P~NflQDm+A+DTu]=9\ndec P~NflQDm%2BA%2BDTu%5D%3D9\nenc cJd$p,C-b'cXQDHDOj^lI?\ndec cJd%24p%2CC-b%27cXQDHDOj%5ElI%3F\nenc p_JrS;YeWkB=rb7,^YE7n#AF\ndec p_JrS%3BYeWkB%3Drb7%2C%5EYE7n%23AF\nenc g^b.nppJnJM<]p{[+_7~PP\ndec g%5Eb.nppJnJM%3C%5Dp%7B%5B%2B_7~PP\nenc \ndec \nenc Tg@BtJr?zr%\ndec Tg%40BtJr%3Fzr%25\nenc >]UV`?kPLV]XN/7Q#WMad\ndec %3E%5DUV%60%3FkPLV%5DXN%2F7Q%23WMad\nenc ]*je5 k&@ C&\ndec %5D%2Aje5%20k%26%40%20C%26\nenc ]gGwe>(L\ndec %5DgGwe%3E%28L\n",
+          "stdout": "1: len=19 text=a%26%3Fy%5Ej%3B6xLy\n2: len=11 text=a&?y^j;6xLy\n3: len=13 text=r%5D%2338.7pk\n4: len=9 text=r]#38.7pk\n5: len=11 text=Vm%24%40%40\n6: len=5 text=Vm$@@\n7: len=0 text=\n8: len=0 text=\n9: len=2 text=Ie\n10: len=2 text=Ie\n11: len=25 text=a9x%5Dw%21Is3mA%2FBI%23y9\n12: len=17 text=a9x]w!Is3mA/BI#y9\n13: len=20 text=%60SK%40%3Er%3CN_lMh\n14: len=12 text=`SK@>r<N_lMh\n15: len=18 text=%3D%25%21R%24o.%3D\n16: len=8 text==%!R$o.=\n17: len=7 text=Lrtv%24\n18: len=5 text=Lrtv$\n19: len=15 text=%5Do%5D%23gvzHd\n20: len=9 text=]o]#gvzHd\n21: len=4 text=A7GS\n22: len=4 text=A7GS\n23: len=25 text=P~NflQDm%2BA%2BDTu%5D%3D9\n24: len=17 text=P~NflQDm+A+DTu]=9\n25: len=32 text=cJd%24p%2CC-b%27cXQDHDOj%5ElI%3F\n26: len=22 text=cJd$p,C-b'cXQDHDOj^lI?\n27: len=34 text=p_JrS%3BYeWkB%3Drb7%2C%5EYE7n%23AF\n28: len=24 text=p_JrS;YeWkB=rb7,^YE7n#AF\n29: len=34 text=g%5Eb.nppJnJM%3C%5Dp%7B%5B%2B_7~PP\n30: len=22 text=g^b.nppJnJM<]p{[+_7~PP\n31: len=0 text=\n32: len=0 text=\n33: len=17 text=Tg%40BtJr%3Fzr%25\n34: len=11 text=Tg@BtJr?zr%\n35: len=35 text=%3E%5DUV%60%3FkPLV%5DXN%2F7Q%23WMad\n36: len=21 text=>]UV`?kPLV]XN/7Q#WMad\n37: len=26 text=%5D%2Aje5%20k%26%40%20C%26\n38: len=12 text=]*je5 k&@ C&\n39: len=14 text=%5DgGwe%3E%28L\n40: len=8 text=]gGwe>(L\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T02-hidden-10",
+          "visibility": "hidden",
+          "purpose": "seed-2026112207",
+          "stdin": "enc X%J/>13\"v\"3~-\ndec X%25J%2F%3E13%22v%223~-\nenc X6Kb.Z* )]g&Xj'lLW\ndec X6Kb.Z%2A%20%29%5Dg%26Xj%27lLW\nenc WsjN>\ndec WsjN%3E\nenc >3lS\ndec %3E3lS\nenc ;]mQg$O29%aZ=V>(ad`jb}v/\ndec %3B%5DmQg%24O29%25aZ%3DV%3E%28ad%60jb%7Dv%2F\nenc X/c\ndec X%2Fc\nenc 0m]!=',^y<*H@!\ndec 0m%5D%21%3D%27%2C%5Ey%3C%2AH%40%21\nenc }DPtFa~O*jH1Ah+F<\ndec %7DDPtFa~O%2AjH1Ah%2BF%3C\nenc e9*(DPx,RN\ndec e9%2A%28DPx%2CRN\nenc =ENj5@z)\ndec %3DENj5%40z%29\nenc _ =0qIHeo:9gL\ndec _%20%3D0qIHeo%3A9gL\nenc u5B`9~tH3SX)\ndec u5B%609~tH3SX%29\nenc \"9j0lG#2MXE\ndec %229j0lG%232MXE\nenc h]z%EO&~-6\ndec h%5Dz%25EO%26~-6\nenc k&:62CKcA23ge;0]!\ndec k%26%3A62CKcA23ge%3B0%5D%21\nenc d\ndec d\nenc FYQ1S&_{\ndec FYQ1S%26_%7B\nenc G\ndec G\nenc jX.lKaX\ndec jX.lKaX\nenc yc7w._@qq52.E /g -E\ndec yc7w._%40qq52.E%20%2Fg%20-E\n",
+          "stdout": "1: len=23 text=X%25J%2F%3E13%22v%223~-\n2: len=13 text=X%J/>13\"v\"3~-\n3: len=30 text=X6Kb.Z%2A%20%29%5Dg%26Xj%27lLW\n4: len=18 text=X6Kb.Z* )]g&Xj'lLW\n5: len=7 text=WsjN%3E\n6: len=5 text=WsjN>\n7: len=6 text=%3E3lS\n8: len=4 text=>3lS\n9: len=44 text=%3B%5DmQg%24O29%25aZ%3DV%3E%28ad%60jb%7Dv%2F\n10: len=24 text=;]mQg$O29%aZ=V>(ad`jb}v/\n11: len=5 text=X%2Fc\n12: len=3 text=X/c\n13: len=34 text=0m%5D%21%3D%27%2C%5Ey%3C%2AH%40%21\n14: len=14 text=0m]!=',^y<*H@!\n15: len=25 text=%7DDPtFa~O%2AjH1Ah%2BF%3C\n16: len=17 text=}DPtFa~O*jH1Ah+F<\n17: len=16 text=e9%2A%28DPx%2CRN\n18: len=10 text=e9*(DPx,RN\n19: len=14 text=%3DENj5%40z%29\n20: len=8 text==ENj5@z)\n21: len=19 text=_%20%3D0qIHeo%3A9gL\n22: len=13 text=_ =0qIHeo:9gL\n23: len=16 text=u5B%609~tH3SX%29\n24: len=12 text=u5B`9~tH3SX)\n25: len=15 text=%229j0lG%232MXE\n26: len=11 text=\"9j0lG#2MXE\n27: len=16 text=h%5Dz%25EO%26~-6\n28: len=10 text=h]z%EO&~-6\n29: len=27 text=k%26%3A62CKcA23ge%3B0%5D%21\n30: len=17 text=k&:62CKcA23ge;0]!\n31: len=1 text=d\n32: len=1 text=d\n33: len=12 text=FYQ1S%26_%7B\n34: len=8 text=FYQ1S&_{\n35: len=1 text=G\n36: len=1 text=G\n37: len=7 text=jX.lKaX\n38: len=7 text=jX.lKaX\n39: len=27 text=yc7w._%40qq52.E%20%2Fg%20-E\n40: len=19 text=yc7w._@qq52.E /g -E\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T02-hidden-11",
+          "visibility": "hidden",
+          "purpose": "seed-2026112208",
+          "stdin": "enc Vi5NX}HJCO`.)r|JP\ndec Vi5NX%7DHJCO%60.%29r%7CJP\nenc t\\AhV _>q^Y82`Y_E_Ii8\ndec t%5CAhV%20_%3Eq%5EY82%60Y_E_Ii8\nenc 7p-$Oo>S40`tsb7\ndec 7p-%24Oo%3ES40%60tsb7\nenc Y^03`X:KQI]+t]K$z\ndec Y%5E03%60X%3AKQI%5D%2Bt%5DK%24z\nenc CF(niq}5p9(y\ndec CF%28niq%7D5p9%28y\nenc l\ndec l\nenc NoDlp7cPv&Q|NFKS\ndec NoDlp7cPv%26Q%7CNFKS\nenc eY\"0\ndec eY%220\nenc f0%f)@>g\ndec f0%25f%29%40%3Eg\nenc or]~a$t{;f;KE\ndec or%5D~a%24t%7B%3Bf%3BKE\nenc =(#*i!eL_4\ndec %3D%28%23%2Ai%21eL_4\nenc /pcS#B~Zp&4KQS\ndec %2FpcS%23B~Zp%264KQS\nenc zn?fPRXU p%NYds9F)`\ndec zn%3FfPRXU%20p%25NYds9F%29%60\nenc = IU$buA)-jSTf\\USpLftCZ\ndec %3D%20IU%24buA%29-jSTf%5CUSpLftCZ\nenc 6x:6b9e\ndec 6x%3A6b9e\nenc F*KF=4xnI\ndec F%2AKF%3D4xnI\nenc BM`K,%k<n[AYyulh(bH3N(\ndec BM%60K%2C%25k%3Cn%5BAYyulh%28bH3N%28\nenc 's$Ba9Q]BM\ndec %27s%24Ba9Q%5DBM\nenc u.>tc3'nb`XhuswD,^\ndec u.%3Etc3%27nb%60XhuswD%2C%5E\nenc \ndec \n",
+          "stdout": "1: len=25 text=Vi5NX%7DHJCO%60.%29r%7CJP\n2: len=17 text=Vi5NX}HJCO`.)r|JP\n3: len=31 text=t%5CAhV%20_%3Eq%5EY82%60Y_E_Ii8\n4: len=21 text=t\\AhV _>q^Y82`Y_E_Ii8\n5: len=21 text=7p-%24Oo%3ES40%60tsb7\n6: len=15 text=7p-$Oo>S40`tsb7\n7: len=31 text=Y%5E03%60X%3AKQI%5D%2Bt%5DK%24z\n8: len=17 text=Y^03`X:KQI]+t]K$z\n9: len=18 text=CF%28niq%7D5p9%28y\n10: len=12 text=CF(niq}5p9(y\n11: len=1 text=l\n12: len=1 text=l\n13: len=20 text=NoDlp7cPv%26Q%7CNFKS\n14: len=16 text=NoDlp7cPv&Q|NFKS\n15: len=6 text=eY%220\n16: len=4 text=eY\"0\n17: len=16 text=f0%25f%29%40%3Eg\n18: len=8 text=f0%f)@>g\n19: len=23 text=or%5D~a%24t%7B%3Bf%3BKE\n20: len=13 text=or]~a$t{;f;KE\n21: len=20 text=%3D%28%23%2Ai%21eL_4\n22: len=10 text==(#*i!eL_4\n23: len=20 text=%2FpcS%23B~Zp%264KQS\n24: len=14 text=/pcS#B~Zp&4KQS\n25: len=29 text=zn%3FfPRXU%20p%25NYds9F%29%60\n26: len=19 text=zn?fPRXU p%NYds9F)`\n27: len=33 text=%3D%20IU%24buA%29-jSTf%5CUSpLftCZ\n28: len=23 text== IU$buA)-jSTf\\USpLftCZ\n29: len=9 text=6x%3A6b9e\n30: len=7 text=6x:6b9e\n31: len=13 text=F%2AKF%3D4xnI\n32: len=9 text=F*KF=4xnI\n33: len=36 text=BM%60K%2C%25k%3Cn%5BAYyulh%28bH3N%28\n34: len=22 text=BM`K,%k<n[AYyulh(bH3N(\n35: len=16 text=%27s%24Ba9Q%5DBM\n36: len=10 text='s$Ba9Q]BM\n37: len=28 text=u.%3Etc3%27nb%60XhuswD%2C%5E\n38: len=18 text=u.>tc3'nb`XhuswD,^\n39: len=0 text=\n40: len=0 text=\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T02-hidden-12",
+          "visibility": "hidden",
+          "purpose": "seed-2026112209",
+          "stdin": "enc Z\ndec Z\nenc `v5VgYH\ndec %60v5VgYH\nenc |+\ndec %7C%2B\nenc 0j|BR5-8chd\"?U?OnV'Z\ndec 0j%7CBR5-8chd%22%3FU%3FOnV%27Z\nenc >.M)%HyF60e`Ki-U*[C\ndec %3E.M%29%25HyF60e%60Ki-U%2A%5BC\nenc 66#)hV|%T]g~{m7N^,Zm&>\ndec 66%23%29hV%7C%25T%5Dg~%7Bm7N%5E%2CZm%26%3E\nenc 1W]#]W'M]V[eoV)K^?%r^X\ndec 1W%5D%23%5DW%27M%5DV%5BeoV%29K%5E%3F%25r%5EX\nenc ExkM]JKAsisb}G_ lU&l\ndec ExkM%5DJKAsisb%7DG_%20lU%26l\nenc 7<3]f?E)9K&\ndec 7%3C3%5Df%3FE%299K%26\nenc /<J)'6jdnQ\ndec %2F%3CJ%29%276jdnQ\nenc L##;D?RYU\ndec L%23%23%3BD%3FRYU\nenc Y6p\ndec Y6p\nenc pk)X'Mt;'B$\ndec pk%29X%27Mt%3B%27B%24\nenc T5\ndec T5\nenc qGjR58ZNB~lp\ndec qGjR58ZNB~lp\nenc y0CQT1XlE=+\ndec y0CQT1XlE%3D%2B\nenc d5SI8\ndec d5SI8\nenc Tjfg4[Q4d\ndec Tjfg4%5BQ4d\nenc A{)xto(ZJunfeP\"4F\ndec A%7B%29xto%28ZJunfeP%224F\nenc O1\ndec O1\n",
+          "stdout": "1: len=1 text=Z\n2: len=1 text=Z\n3: len=9 text=%60v5VgYH\n4: len=7 text=`v5VgYH\n5: len=6 text=%7C%2B\n6: len=2 text=|+\n7: len=30 text=0j%7CBR5-8chd%22%3FU%3FOnV%27Z\n8: len=20 text=0j|BR5-8chd\"?U?OnV'Z\n9: len=31 text=%3E.M%29%25HyF60e%60Ki-U%2A%5BC\n10: len=19 text=>.M)%HyF60e`Ki-U*[C\n11: len=42 text=66%23%29hV%7C%25T%5Dg~%7Bm7N%5E%2CZm%26%3E\n12: len=22 text=66#)hV|%T]g~{m7N^,Zm&>\n13: len=44 text=1W%5D%23%5DW%27M%5DV%5BeoV%29K%5E%3F%25r%5EX\n14: len=22 text=1W]#]W'M]V[eoV)K^?%r^X\n15: len=28 text=ExkM%5DJKAsisb%7DG_%20lU%26l\n16: len=20 text=ExkM]JKAsisb}G_ lU&l\n17: len=21 text=7%3C3%5Df%3FE%299K%26\n18: len=11 text=7<3]f?E)9K&\n19: len=18 text=%2F%3CJ%29%276jdnQ\n20: len=10 text=/<J)'6jdnQ\n21: len=17 text=L%23%23%3BD%3FRYU\n22: len=9 text=L##;D?RYU\n23: len=3 text=Y6p\n24: len=3 text=Y6p\n25: len=21 text=pk%29X%27Mt%3B%27B%24\n26: len=11 text=pk)X'Mt;'B$\n27: len=2 text=T5\n28: len=2 text=T5\n29: len=12 text=qGjR58ZNB~lp\n30: len=12 text=qGjR58ZNB~lp\n31: len=15 text=y0CQT1XlE%3D%2B\n32: len=11 text=y0CQT1XlE=+\n33: len=5 text=d5SI8\n34: len=5 text=d5SI8\n35: len=11 text=Tjfg4%5BQ4d\n36: len=9 text=Tjfg4[Q4d\n37: len=25 text=A%7B%29xto%28ZJunfeP%224F\n38: len=17 text=A{)xto(ZJunfeP\"4F\n39: len=2 text=O1\n40: len=2 text=O1\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        }
+      ]
+    },
+    {
+      "id": "T03",
+      "kind": "program",
+      "title": "稀疏多项式",
+      "structural": [],
+      "cases": [
+        {
+          "id": "T03-public-01",
+          "visibility": "public",
+          "stdin": "3 2\n2 2\n-2 2\n3 0\n1 1\n-3 0\n",
+          "stdout": "sum: 1:1\nproduct: 1:3 0:-9\nderivative: 0\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T03-public-02",
+          "visibility": "public",
+          "stdin": "0 1\n5 0\n",
+          "stdout": "sum: 0:5\nproduct: 0\nderivative: 0\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T03-hidden-01",
+          "visibility": "hidden",
+          "purpose": "both-empty",
+          "stdin": "0 0\n",
+          "stdout": "sum: 0\nproduct: 0\nderivative: 0\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T03-hidden-02",
+          "visibility": "hidden",
+          "purpose": "zero-terms",
+          "stdin": "2 2\n0 0\n0 30\n0 5\n0 5\n",
+          "stdout": "sum: 0\nproduct: 0\nderivative: 0\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T03-hidden-03",
+          "visibility": "hidden",
+          "purpose": "full-cancellation",
+          "stdin": "3 2\n2 7\n-1 7\n-1 7\n4 3\n-4 3\n",
+          "stdout": "sum: 0\nproduct: 0\nderivative: 0\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T03-hidden-04",
+          "visibility": "hidden",
+          "purpose": "constant-derivative",
+          "stdin": "2 1\n-5 0\n2 0\n3 0\n",
+          "stdout": "sum: 0\nproduct: 0:-9\nderivative: 0\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T03-hidden-05",
+          "visibility": "hidden",
+          "purpose": "product-middle-cancel",
+          "stdin": "2 2\n1 1\n1 0\n1 1\n-1 0\n",
+          "stdout": "sum: 1:2\nproduct: 2:1 0:-1\nderivative: 0:1\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T03-hidden-06",
+          "visibility": "hidden",
+          "purpose": "maximum-exponents",
+          "stdin": "2 2\n1000000 30\n1000000 30\n-1000000 30\n-1000000 0\n",
+          "stdout": "sum: 30:1000000 0:-1000000\nproduct: 60:-2000000000000 30:-2000000000000\nderivative: 29:60000000\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T03-hidden-07",
+          "visibility": "hidden",
+          "purpose": "unordered-and-repeated",
+          "stdin": "4 4\n5 1\n2 3\n-2 1\n7 2\n-7 2\n3 0\n-2 3\n1 0\n",
+          "stdout": "sum: 1:3 0:4\nproduct: 6:-4 5:-28 4:-55 3:-13 2:28 1:12\nderivative: 2:6 1:14 0:3\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T03-hidden-08",
+          "visibility": "hidden",
+          "purpose": "maximum-term-count",
+          "stdin": "40 40\n1000000 30\n1000000 30\n1000000 30\n1000000 30\n1000000 30\n1000000 30\n1000000 30\n1000000 30\n1000000 30\n1000000 30\n1000000 30\n1000000 30\n1000000 30\n1000000 30\n1000000 30\n1000000 30\n1000000 30\n1000000 30\n1000000 30\n1000000 30\n1000000 30\n1000000 30\n1000000 30\n1000000 30\n1000000 30\n1000000 30\n1000000 30\n1000000 30\n1000000 30\n1000000 30\n1000000 30\n1000000 30\n1000000 30\n1000000 30\n1000000 30\n1000000 30\n1000000 30\n1000000 30\n1000000 30\n1000000 30\n-1000000 30\n-1000000 30\n-1000000 30\n-1000000 30\n-1000000 30\n-1000000 30\n-1000000 30\n-1000000 30\n-1000000 30\n-1000000 30\n-1000000 30\n-1000000 30\n-1000000 30\n-1000000 30\n-1000000 30\n-1000000 30\n-1000000 30\n-1000000 30\n-1000000 30\n-1000000 30\n-1000000 30\n-1000000 30\n-1000000 30\n-1000000 30\n-1000000 30\n-1000000 30\n-1000000 30\n-1000000 30\n-1000000 30\n-1000000 30\n-1000000 30\n-1000000 30\n-1000000 30\n-1000000 30\n-1000000 30\n-1000000 30\n-1000000 30\n-1000000 30\n-1000000 30\n-1000000 30\n",
+          "stdout": "sum: 0\nproduct: 60:-1600000000000000\nderivative: 29:1200000000\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T03-hidden-09",
+          "visibility": "hidden",
+          "purpose": "seed-2026112206",
+          "stdin": "10 12\n7 5\n10 1\n-1 4\n5 2\n-2 6\n2 4\n9 3\n10 1\n3 3\n5 2\n7 5\n3 3\n6 5\n-7 0\n7 2\n4 6\n-4 1\n-10 5\n-4 6\n-4 2\n0 2\n-10 4\n",
+          "stdout": "sum: 6:-2 5:10 4:-9 3:15 2:13 1:16 0:-7\nproduct: 11:-6 10:41 9:-73 8:41 7:-58 6:-15 5:-187 4:35 3:-64 2:-150 1:-140\nderivative: 5:-12 4:35 3:4 2:36 1:20 0:20\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T03-hidden-10",
+          "visibility": "hidden",
+          "purpose": "seed-2026112207",
+          "stdin": "11 13\n-9 2\n0 3\n6 4\n-10 6\n8 0\n3 5\n-7 6\n8 0\n-4 0\n8 4\n-10 2\n4 1\n2 3\n-10 4\n-8 2\n-6 3\n5 0\n-10 3\n0 6\n-2 4\n-3 4\n9 0\n9 5\n9 3\n",
+          "stdout": "sum: 6:-17 5:12 4:-1 3:-5 2:-27 1:4 0:26\nproduct: 11:-153 10:282 9:166 8:-89 7:-333 6:-53 5:301 4:168 3:-136 2:-362 1:48 0:168\nderivative: 5:-102 4:15 3:56 1:-38\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T03-hidden-11",
+          "visibility": "hidden",
+          "purpose": "seed-2026112208",
+          "stdin": "12 14\n3 6\n5 2\n7 3\n-7 0\n0 3\n-5 5\n-10 3\n4 4\n9 0\n8 5\n1 1\n-10 2\n10 0\n5 2\n3 4\n10 5\n-6 2\n6 1\n-8 5\n10 1\n7 0\n8 4\n5 4\n8 3\n2 2\n8 1\n",
+          "stdout": "sum: 6:3 5:5 4:20 3:5 2:-4 1:25 0:19\nproduct: 11:6 10:54 9:80 8:85 7:49 6:25 5:124 4:31 3:-154 2:-59 1:65 0:34\nderivative: 5:18 4:15 3:16 2:-9 1:-10 0:1\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T03-hidden-12",
+          "visibility": "hidden",
+          "purpose": "seed-2026112209",
+          "stdin": "13 15\n9 2\n10 1\n-2 3\n2 1\n-8 2\n-8 2\n-5 5\n-10 2\n-10 2\n6 4\n6 6\n3 6\n4 0\n-8 3\n-4 6\n6 5\n8 0\n-9 6\n-10 0\n1 3\n-10 3\n3 2\n-1 2\n-6 6\n1 5\n0 6\n9 4\n3 3\n",
+          "stdout": "sum: 6:-10 5:2 4:15 3:-16 2:-25 1:12 0:2\nproduct: 12:-171 11:158 10:-68 9:-91 8:641 7:-529 6:-213 5:520 4:-198 3:-28 2:62 1:-24 0:-8\nderivative: 5:54 4:-25 3:24 2:-6 1:-54 0:12\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        }
+      ]
+    },
+    {
+      "id": "T04",
+      "kind": "program",
+      "title": "公历日期运算（多文件）",
+      "structural": [
+        "At least two source files; command field parsing, calendar validation, date arithmetic and day differences occur in a non-entry module; entry only performs I/O and calls that module."
+      ],
+      "cases": [
+        {
+          "id": "T04-public-01",
+          "visibility": "public",
+          "stdin": "add 2000-02-28 1\nadd 1900-02-28 1\ndiff 2000-03-01 2000-02-28\n",
+          "stdout": "1: 2000-02-29\n2: 1900-03-01\n3: -2\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T04-public-02",
+          "visibility": "public",
+          "stdin": "add 1600-01-01 -1\nadd 2024-02-30 0\nadd 2024-01-01 -000\n",
+          "stdout": "1: invalid\n2: invalid\n3: 2024-01-01\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T04-hidden-01",
+          "visibility": "hidden",
+          "purpose": "empty-file",
+          "stdin": "",
+          "stdout": "",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T04-hidden-02",
+          "visibility": "hidden",
+          "purpose": "century-leap-rules",
+          "stdin": "add 1600-02-28 1\nadd 1700-02-28 1\nadd 1900-02-28 1\nadd 2000-02-28 1\nadd 2100-02-28 1\nadd 2400-02-28 1\n",
+          "stdout": "1: 1600-02-29\n2: 1700-03-01\n3: 1900-03-01\n4: 2000-02-29\n5: 2100-03-01\n6: 2400-02-29\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T04-hidden-03",
+          "visibility": "hidden",
+          "purpose": "range-ends",
+          "stdin": "add 1600-01-01 0\nadd 1600-01-01 -1\nadd 2400-12-31 0\nadd 2400-12-31 1\ndiff 1600-01-01 2400-12-31\n",
+          "stdout": "1: 1600-01-01\n2: invalid\n3: 2400-12-31\n4: invalid\n5: 292559\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T04-hidden-04",
+          "visibility": "hidden",
+          "purpose": "reverse-difference",
+          "stdin": "diff 2024-03-01 2024-02-28\ndiff 2023-03-01 2023-02-28\ndiff 2020-01-01 2020-01-01\n",
+          "stdout": "1: -2\n2: -1\n3: 0\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T04-hidden-05",
+          "visibility": "hidden",
+          "purpose": "invalid-dates",
+          "stdin": "add 2000-00-01 1\nadd 2000-13-01 1\nadd 2000-04-31 1\nadd 1900-02-29 0\nadd 1599-12-31 1\nadd 2401-01-01 -1\n",
+          "stdout": "1: invalid\n2: invalid\n3: invalid\n4: invalid\n5: invalid\n6: invalid\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T04-hidden-06",
+          "visibility": "hidden",
+          "purpose": "strict-grammar",
+          "stdin": "\nadd 2000-1-01 0\nadd 2000-01-1 0\nadd 2000/01/01 0\nadd 2000-01-01 +1\nadd 2000-01-01 1.0\ndiff 2000-01-01\nfoo 2000-01-01 0\n",
+          "stdout": "1: invalid\n2: invalid\n3: invalid\n4: invalid\n5: invalid\n6: invalid\n7: invalid\n8: invalid\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T04-hidden-07",
+          "visibility": "hidden",
+          "purpose": "delta-bounds-and-zeroes",
+          "stdin": "add 2000-01-01 0000000000000000\nadd 2000-01-01 -000000000000000\nadd 2000-01-01 00000000000000000\nadd 2000-01-01 1000001\nadd 2000-01-01 1000000\n",
+          "stdout": "1: 2000-01-01\n2: 2000-01-01\n3: invalid\n4: invalid\n5: invalid\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T04-hidden-08",
+          "visibility": "hidden",
+          "purpose": "month-year-crossing-whitespace",
+          "stdin": " add\t1999-12-31\t1 \nadd 2000-03-01 -1\nadd 2001-03-01 -1\ndiff 1999-12-31 2001-01-01\n",
+          "stdout": "1: 2000-01-01\n2: 2000-02-29\n3: 2001-02-28\n4: 367\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T04-hidden-09",
+          "visibility": "hidden",
+          "purpose": "seed-2026112206",
+          "stdin": "diff 1810-01-14 2291-02-05\nadd 1881-11-25 -58539\nadd 1988-02-16 -60651\ndiff 1798-04-06 1752-10-23\nadd 1881-09-19 -63668\nadd 2115-03-11 69742\ndiff 2227-04-19 1871-01-05\ndiff 1746-04-08 1606-07-06\nadd 2374-05-26 1233\nadd 2006-10-05 47208\ndiff 1931-01-17 2304-07-05\nadd 1963-09-06 -18762\ndiff 2060-11-24 1924-12-02\nadd 1833-08-26 32431\ndiff 1656-09-07 1941-07-24\nadd 2135-10-13 35222\nadd 1925-01-25 40653\ndiff 2164-05-04 1709-07-06\ndiff 1800-07-23 2146-12-13\nadd 1678-11-01 62337\ndiff 1957-06-04 1618-02-18\ndiff 2026-06-04 2386-10-29\ndiff 2049-03-31 1906-10-31\nadd 2243-09-01 89068\nadd 2033-04-20 -79414\n",
+          "stdout": "1: 175704\n2: 1721-08-17\n3: 1822-01-26\n4: -16601\n5: 1707-05-27\n6: 2306-02-20\n7: -130130\n8: -51045\n9: 2377-10-10\n10: 2136-01-05\n11: 136405\n12: 1912-04-24\n13: -49666\n14: 1922-06-12\n15: 104048\n16: 2232-03-20\n17: 2036-05-15\n18: -166123\n19: 126517\n20: 1849-07-05\n21: -123923\n22: 131634\n23: -52017\n24: invalid\n25: 1815-11-16\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T04-hidden-10",
+          "visibility": "hidden",
+          "purpose": "seed-2026112207",
+          "stdin": "add 1902-11-19 30254\ndiff 1641-01-19 1692-08-11\ndiff 2189-09-01 2312-08-09\ndiff 2392-10-02 1920-05-27\ndiff 1605-09-13 2130-12-06\ndiff 1996-04-21 1785-09-06\nadd 2252-08-04 -14470\ndiff 2308-09-22 1774-06-10\nadd 2091-10-04 -69338\ndiff 1668-11-12 2329-11-30\nadd 2139-12-20 -26806\nadd 2349-03-03 -68426\ndiff 1919-09-18 2283-11-05\nadd 1832-03-18 9461\ndiff 2058-01-26 1650-09-30\nadd 1650-02-20 -61480\ndiff 2305-10-14 1833-11-19\ndiff 1657-09-29 1719-08-01\ndiff 1813-10-09 1623-01-03\ndiff 1737-07-04 2311-09-16\ndiff 2143-09-26 1659-03-11\ndiff 1612-11-17 2097-02-14\nadd 1730-06-17 -85596\ndiff 2189-03-11 1633-10-11\ndiff 1759-01-05 1897-06-20\n",
+          "stdout": "1: 1985-09-18\n2: 18832\n3: 44901\n4: -172523\n5: 191836\n6: -76928\n7: 2212-12-22\n8: -195143\n9: 1901-12-02\n10: 241442\n11: 2066-07-29\n12: 2161-10-28\n13: 132997\n14: 1858-02-11\n15: -148772\n16: invalid\n17: -172358\n18: 22585\n19: -69675\n20: 209722\n21: -176976\n22: 176867\n23: invalid\n24: -202861\n25: 50570\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T04-hidden-11",
+          "visibility": "hidden",
+          "purpose": "seed-2026112208",
+          "stdin": "diff 2176-01-23 2140-02-27\ndiff 1949-10-15 2178-09-01\ndiff 1978-09-02 2189-06-23\nadd 1995-08-01 -42144\ndiff 1927-06-28 1634-09-13\nadd 2134-08-17 16806\ndiff 1665-05-27 2322-04-25\nadd 2354-07-23 9719\ndiff 1832-06-07 1684-09-28\ndiff 1861-10-28 1907-03-06\nadd 2273-07-08 -29959\nadd 2019-11-30 89301\ndiff 1913-10-02 2211-09-26\nadd 2308-08-09 58260\ndiff 1691-10-01 2141-07-10\nadd 1650-01-03 9302\ndiff 1849-06-08 2285-02-24\nadd 2063-07-24 39582\nadd 1710-04-09 56468\nadd 2059-01-26 -14381\ndiff 2369-09-12 2146-07-23\ndiff 1691-07-15 2150-08-03\nadd 2360-04-30 -78884\nadd 2135-10-23 -10510\ndiff 1802-12-22 2241-09-08\n",
+          "stdout": "1: -13114\n2: 83597\n3: 76996\n4: 1880-03-12\n5: -106938\n6: 2180-08-21\n7: 239931\n8: 2381-03-02\n9: -53942\n10: 16564\n11: 2191-06-29\n12: 2264-05-30\n13: 108836\n14: invalid\n15: 164276\n16: 1675-06-23\n17: 159142\n18: 2171-12-07\n19: 1864-11-15\n20: 2019-09-12\n21: -81500\n22: 167665\n23: 2144-05-08\n24: 2107-01-13\n25: 160237\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T04-hidden-12",
+          "visibility": "hidden",
+          "purpose": "seed-2026112209",
+          "stdin": "diff 2031-12-09 1946-12-02\nadd 2199-04-12 21140\nadd 2299-04-11 -22173\nadd 1737-06-28 41751\nadd 1714-05-20 86301\ndiff 2219-10-07 1706-07-01\ndiff 1820-09-02 2265-03-06\ndiff 1631-05-28 1757-09-17\ndiff 1996-04-11 2162-04-10\nadd 2231-06-14 -50678\nadd 1672-06-29 -58809\ndiff 2180-01-31 1610-09-16\ndiff 1999-11-27 1996-05-07\nadd 1652-12-18 44753\nadd 1695-01-17 -15283\nadd 1966-01-01 73721\ndiff 1725-11-13 2273-08-03\ndiff 1640-01-20 2382-12-27\ndiff 1729-02-24 1607-06-15\nadd 2118-11-15 43264\nadd 2311-08-06 35766\nadd 2177-02-08 -63501\ndiff 1676-04-08 1726-11-14\nadd 2258-10-19 -18532\ndiff 1991-08-30 2145-06-14\n",
+          "stdout": "1: -31053\n2: 2257-02-27\n3: 2238-07-27\n4: 1851-10-20\n5: 1950-09-01\n6: -187467\n7: 162353\n8: 46133\n9: 60629\n10: 2092-09-11\n11: invalid\n12: -207960\n13: -1299\n14: 1775-06-30\n15: 1653-03-15\n16: 2167-11-04\n17: 200051\n18: 271351\n19: -44449\n20: 2237-04-29\n21: invalid\n22: 2003-04-01\n23: 18481\n24: 2208-01-23\n25: 56171\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        }
+      ]
+    },
+    {
+      "id": "T05",
+      "kind": "program",
+      "title": "有界找零",
+      "structural": [],
+      "cases": [
+        {
+          "id": "T05-public-01",
+          "visibility": "public",
+          "stdin": "6 3\n1 2\n2 3\n5 1\n",
+          "stdout": "ways: 3\nmin: 2\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T05-public-02",
+          "visibility": "public",
+          "stdin": "3 2\n2 1\n4 5\n",
+          "stdout": "ways: 0\nmin: none\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T05-hidden-01",
+          "visibility": "hidden",
+          "purpose": "empty-coins-zero-target",
+          "stdin": "0 0\n",
+          "stdout": "ways: 1\nmin: 0\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T05-hidden-02",
+          "visibility": "hidden",
+          "purpose": "empty-coins-positive-target",
+          "stdin": "1 0\n",
+          "stdout": "ways: 0\nmin: none\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T05-hidden-03",
+          "visibility": "hidden",
+          "purpose": "all-unavailable",
+          "stdin": "3 3\n1 0\n2 0\n3 0\n",
+          "stdout": "ways: 0\nmin: none\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T05-hidden-04",
+          "visibility": "hidden",
+          "purpose": "bounded-not-unbounded",
+          "stdin": "10 2\n2 2\n3 1\n",
+          "stdout": "ways: 0\nmin: none\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T05-hidden-05",
+          "visibility": "hidden",
+          "purpose": "combination-not-permutation",
+          "stdin": "4 2\n1 4\n2 2\n",
+          "stdout": "ways: 3\nmin: 2\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T05-hidden-06",
+          "visibility": "hidden",
+          "purpose": "minimum-not-greedy",
+          "stdin": "6 3\n4 1\n3 2\n1 2\n",
+          "stdout": "ways: 2\nmin: 2\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T05-hidden-07",
+          "visibility": "hidden",
+          "purpose": "unsorted-values",
+          "stdin": "12 4\n7 1\n1 5\n5 2\n3 4\n",
+          "stdout": "ways: 8\nmin: 2\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T05-hidden-08",
+          "visibility": "hidden",
+          "purpose": "target-and-count-limits",
+          "stdin": "400 8\n1 10\n2 10\n3 10\n4 10\n5 10\n50 10\n99 10\n100 10\n",
+          "stdout": "ways: 32461\nmin: 4\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T05-hidden-09",
+          "visibility": "hidden",
+          "purpose": "seed-2026112206",
+          "stdin": "149 6\n8 5\n18 1\n3 4\n19 3\n10 3\n15 2\n",
+          "stdout": "ways: 10\nmin: 11\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T05-hidden-10",
+          "visibility": "hidden",
+          "purpose": "seed-2026112207",
+          "stdin": "134 6\n4 0\n17 1\n6 1\n15 5\n12 2\n2 5\n",
+          "stdout": "ways: 0\nmin: none\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T05-hidden-11",
+          "visibility": "hidden",
+          "purpose": "seed-2026112208",
+          "stdin": "65 6\n18 4\n2 5\n6 3\n4 0\n1 2\n9 1\n",
+          "stdout": "ways: 9\nmin: 5\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T05-hidden-12",
+          "visibility": "hidden",
+          "purpose": "seed-2026112209",
+          "stdin": "42 6\n19 1\n15 5\n3 5\n4 3\n8 4\n10 4\n",
+          "stdout": "ways: 29\nmin: 3\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        }
+      ]
+    },
+    {
+      "id": "T06",
+      "kind": "program",
+      "title": "双线程质因数分解",
+      "structural": [
+        "Two real OS worker threads are both started before any join, including empty partitions; worker 0 factors original even-index values and worker 1 factors odd-index values; main only distributes, collects and prints in original order and does not factor values."
+      ],
+      "cases": [
+        {
+          "id": "T06-public-01",
+          "visibility": "public",
+          "stdin": "5\n1 12 17 36 100\n",
+          "stdout": "1: 1=1\n2: 12=2^2*3^1\n3: 17=17^1\n4: 36=2^2*3^2\n5: 100=2^2*5^2\ncount: 5\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T06-public-02",
+          "visibility": "public",
+          "stdin": "0\n",
+          "stdout": "count: 0\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T06-hidden-01",
+          "visibility": "hidden",
+          "purpose": "one-item-empty-second-worker",
+          "stdin": "1\n1\n",
+          "stdout": "1: 1=1\ncount: 1\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T06-hidden-02",
+          "visibility": "hidden",
+          "purpose": "two-items",
+          "stdin": "2\n2 3\n",
+          "stdout": "1: 2=2^1\n2: 3=3^1\ncount: 2\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T06-hidden-03",
+          "visibility": "hidden",
+          "purpose": "prime-powers",
+          "stdin": "6\n1024 59049 390625 823543 214358881 1000000000\n",
+          "stdout": "1: 1024=2^10\n2: 59049=3^10\n3: 390625=5^8\n4: 823543=7^7\n5: 214358881=11^8\n6: 1000000000=2^9*5^9\ncount: 6\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T06-hidden-04",
+          "visibility": "hidden",
+          "purpose": "large-primes-and-square",
+          "stdin": "4\n999999937 999999929 999950884 999999999\n",
+          "stdout": "1: 999999937=999999937^1\n2: 999999929=999999929^1\n3: 999950884=2^2*97^2*163^2\n4: 999999999=3^4*37^1*333667^1\ncount: 4\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T06-hidden-05",
+          "visibility": "hidden",
+          "purpose": "repeated-values-preserve-index",
+          "stdin": "7\n12 12 1 12 1 12 12\n",
+          "stdout": "1: 12=2^2*3^1\n2: 12=2^2*3^1\n3: 1=1\n4: 12=2^2*3^1\n5: 1=1\n6: 12=2^2*3^1\n7: 12=2^2*3^1\ncount: 7\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T06-hidden-06",
+          "visibility": "hidden",
+          "purpose": "odd-split-whitespace",
+          "stdin": "5\n 6\t35\n77 143\n221\n",
+          "stdout": "1: 6=2^1*3^1\n2: 35=5^1*7^1\n3: 77=7^1*11^1\n4: 143=11^1*13^1\n5: 221=13^1*17^1\ncount: 5\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T06-hidden-07",
+          "visibility": "hidden",
+          "purpose": "many-distinct-primes",
+          "stdin": "8\n2 3 5 7 11 13 17 19\n",
+          "stdout": "1: 2=2^1\n2: 3=3^1\n3: 5=5^1\n4: 7=7^1\n5: 11=11^1\n6: 13=13^1\n7: 17=17^1\n8: 19=19^1\ncount: 8\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T06-hidden-08",
+          "visibility": "hidden",
+          "purpose": "maximum-length",
+          "stdin": "100\n1 100004 200007 300010 400013 500016 600019 700022 800025 900028 1000031 1100034 1200037 1300040 1400043 1500046 1600049 1700052 1800055 1900058 2000061 2100064 2200067 2300070 2400073 2500076 2600079 2700082 2800085 2900088 3000091 3100094 3200097 3300100 3400103 3500106 3600109 3700112 3800115 3900118 4000121 4100124 4200127 4300130 4400133 4500136 4600139 4700142 4800145 4900148 5000151 5100154 5200157 5300160 5400163 5500166 5600169 5700172 5800175 5900178 6000181 6100184 6200187 6300190 6400193 6500196 6600199 6700202 6800205 6900208 7000211 7100214 7200217 7300220 7400223 7500226 7600229 7700232 7800235 7900238 8000241 8100244 8200247 8300250 8400253 8500256 8600259 8700262 8800265 8900268 9000271 9100274 9200277 9300280 9400283 9500286 9600289 9700292 9800295 9900298\n",
+          "stdout": "1: 1=1\n2: 100004=2^2*23^1*1087^1\n3: 200007=3^2*71^1*313^1\n4: 300010=2^1*5^1*19^1*1579^1\n5: 400013=607^1*659^1\n6: 500016=2^4*3^1*11^1*947^1\n7: 600019=7^1*85717^1\n8: 700022=2^1*83^1*4217^1\n9: 800025=3^1*5^2*10667^1\n10: 900028=2^2*223^1*1009^1\n11: 1000031=41^1*24391^1\n12: 1100034=2^1*3^3*13^1*1567^1\n13: 1200037=67^1*17911^1\n14: 1300040=2^3*5^1*7^1*4643^1\n15: 1400043=3^1*37^1*12613^1\n16: 1500046=2^1*17^1*44119^1\n17: 1600049=11^1*145459^1\n18: 1700052=2^2*3^1*141671^1\n19: 1800055=5^1*521^1*691^1\n20: 1900058=2^1*950029^1\n21: 2000061=3^2*7^1*53^1*599^1\n22: 2100064=2^5*29^1*31^1*73^1\n23: 2200067=19^1*115793^1\n24: 2300070=2^1*3^1*5^1*43^1*1783^1\n25: 2400073=13^1*23^2*349^1\n26: 2500076=2^2*359^1*1741^1\n27: 2600079=3^1*866693^1\n28: 2700082=2^1*7^1*11^1*89^1*197^1\n29: 2800085=5^1*560017^1\n30: 2900088=2^3*3^2*47^1*857^1\n31: 3000091=59^1*50849^1\n32: 3100094=2^1*101^1*103^1*149^1\n33: 3200097=3^1*17^2*3691^1\n34: 3300100=2^2*5^2*61^1*541^1\n35: 3400103=7^1*485729^1\n36: 3500106=2^1*3^1*583351^1\n37: 3600109=79^1*199^1*229^1\n38: 3700112=2^4*13^1*17789^1\n39: 3800115=3^4*5^1*11^1*853^1\n40: 3900118=2^1*167^1*11677^1\n41: 4000121=457^1*8753^1\n42: 4100124=2^2*3^1*7^2*19^1*367^1\n43: 4200127=4200127^1\n44: 4300130=2^1*5^1*430013^1\n45: 4400133=3^1*1466711^1\n46: 4500136=2^3*562517^1\n47: 4600139=277^1*16607^1\n48: 4700142=2^1*3^2*23^1*11353^1\n49: 4800145=5^1*7^1*137147^1\n50: 4900148=2^2*11^1*17^1*6551^1\n51: 5000151=3^1*13^1*29^1*4421^1\n52: 5100154=2^1*37^1*41^3\n53: 5200157=31^1*167747^1\n54: 5300160=2^6*3^1*5^1*5521^1\n55: 5400163=1657^1*3259^1\n56: 5500166=2^1*7^1*131^1*2999^1\n57: 5600169=3^2*622241^1\n58: 5700172=2^2*113^1*12611^1\n59: 5800175=5^2*232007^1\n60: 5900178=2^1*3^1*983363^1\n61: 6000181=11^1*19^2*1511^1\n62: 6100184=2^3*491^1*1553^1\n63: 6200187=3^1*7^1*295247^1\n64: 6300190=2^1*5^1*13^1*48463^1\n65: 6400193=6400193^1\n66: 6500196=2^2*3^3*139^1*433^1\n67: 6600199=17^1*43^1*9029^1\n68: 6700202=2^1*383^1*8747^1\n69: 6800205=3^1*5^1*453347^1\n70: 6900208=2^4*7^1*61609^1\n71: 7000211=23^1*304357^1\n72: 7100214=2^1*3^1*11^1*179^1*601^1\n73: 7200217=7200217^1\n74: 7300220=2^2*5^1*53^1*71^1*97^1\n75: 7400223=3^2*439^1*1873^1\n76: 7500226=2^1*3750113^1\n77: 7600229=7^1*13^1*47^1*1777^1\n78: 7700232=2^3*3^1*320843^1\n79: 7800235=5^1*1560047^1\n80: 7900238=2^1*19^1*29^1*67^1*107^1\n81: 8000241=3^1*2666747^1\n82: 8100244=2^2*151^1*13411^1\n83: 8200247=11^1*745477^1\n84: 8300250=2^1*3^2*5^3*7^1*17^1*31^1\n85: 8400253=8400253^1\n86: 8500256=2^5*109^1*2437^1\n87: 8600259=3^1*2866753^1\n88: 8700262=2^1*127^1*34253^1\n89: 8800265=5^1*37^1*47569^1\n90: 8900268=2^2*3^1*13^1*59^1*967^1\n91: 9000271=7^2*83^1*2213^1\n92: 9100274=2^1*4550137^1\n93: 9200277=3^3*41^1*8311^1\n94: 9300280=2^3*5^1*11^1*23^1*919^1\n95: 9400283=61^1*73^1*2111^1\n96: 9500286=2^1*3^1*421^1*3761^1\n97: 9600289=173^1*211^1*263^1\n98: 9700292=2^2*7^1*346439^1\n99: 9800295=3^1*5^1*19^1*137^1*251^1\n100: 9900298=2^1*1697^1*2917^1\ncount: 100\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T06-hidden-09",
+          "visibility": "hidden",
+          "purpose": "seed-2026112206",
+          "stdin": "20\n19892842 104884709 589739463 43027650 788883321 802359953 452570058 386999625 822279970 540143883 136704911 938000605 774059489 454408873 617818164 83289788 660737062 946508170 55302325 278162352\n",
+          "stdout": "1: 19892842=2^1*157^1*63353^1\n2: 104884709=104884709^1\n3: 589739463=3^2*853^1*76819^1\n4: 43027650=2^1*3^2*5^2*95617^1\n5: 788883321=3^1*509^1*516623^1\n6: 802359953=802359953^1\n7: 452570058=2^1*3^3*8380927^1\n8: 386999625=3^1*5^3*1031999^1\n9: 822279970=2^1*5^1*17^1*43^1*197^1*571^1\n10: 540143883=3^4*67^1*99529^1\n11: 136704911=7^1*2393^1*8161^1\n12: 938000605=5^1*23^1*8156527^1\n13: 774059489=7^1*110579927^1\n14: 454408873=454408873^1\n15: 617818164=2^2*3^1*1163^1*44269^1\n16: 83289788=2^2*73^1*151^1*1889^1\n17: 660737062=2^1*17^1*877^1*22159^1\n18: 946508170=2^1*5^1*197^1*480461^1\n19: 55302325=5^2*13^1*263^1*647^1\n20: 278162352=2^4*3^2*13^1*139^1*1069^1\ncount: 20\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T06-hidden-10",
+          "visibility": "hidden",
+          "purpose": "seed-2026112207",
+          "stdin": "21\n551706055 903390803 486464317 226101762 171142599 915084639 440676773 840633874 8233077 92467761 652158586 968793711 135123172 420703415 169585902 460406201 945085041 715739406 367385998 20866469 500766815\n",
+          "stdout": "1: 551706055=5^1*110341211^1\n2: 903390803=7^2*23^1*29^1*131^1*211^1\n3: 486464317=11149^1*43633^1\n4: 226101762=2^1*3^2*97^1*129497^1\n5: 171142599=3^1*31^1*953^1*1931^1\n6: 915084639=3^2*7^1*863^1*16831^1\n7: 440676773=79^1*5578187^1\n8: 840633874=2^1*420316937^1\n9: 8233077=3^1*2744359^1\n10: 92467761=3^1*31^1*149^1*6673^1\n11: 652158586=2^1*326079293^1\n12: 968793711=3^1*322931237^1\n13: 135123172=2^2*31^1*1089703^1\n14: 420703415=5^1*11^1*19^1*402587^1\n15: 169585902=2^1*3^2*53^1*177763^1\n16: 460406201=199^1*2313599^1\n17: 945085041=3^2*105009449^1\n18: 715739406=2^1*3^1*17^1*47^1*173^1*863^1\n19: 367385998=2^1*7^1*107^1*245251^1\n20: 20866469=13^1*563^1*2851^1\n21: 500766815=5^1*100153363^1\ncount: 21\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T06-hidden-11",
+          "visibility": "hidden",
+          "purpose": "seed-2026112208",
+          "stdin": "22\n637240922 983823972 72473164 796890230 960551569 379323189 738127832 690335579 60237596 522298727 232397484 263430067 877556278 506277975 370295932 493041346 729171640 211839530 724621789 284413865 890694827 379535073\n",
+          "stdout": "1: 637240922=2^1*14779^1*21559^1\n2: 983823972=2^2*3^1*79^1*109^1*9521^1\n3: 72473164=2^2*31^1*409^1*1429^1\n4: 796890230=2^1*5^1*229^1*347987^1\n5: 960551569=293^1*3278333^1\n6: 379323189=3^3*7^1*2007001^1\n7: 738127832=2^3*13^1*7097383^1\n8: 690335579=690335579^1\n9: 60237596=2^2*17^1*139^1*6373^1\n10: 522298727=522298727^1\n11: 232397484=2^2*3^1*11^1*71^1*137^1*181^1\n12: 263430067=263430067^1\n13: 877556278=2^1*809^1*542371^1\n14: 506277975=3^1*5^2*7^1*964339^1\n15: 370295932=2^2*127^1*728929^1\n16: 493041346=2^1*7^1*35217239^1\n17: 729171640=2^3*5^1*43^2*9859^1\n18: 211839530=2^1*5^1*7^1*3026279^1\n19: 724621789=83^1*103^1*84761^1\n20: 284413865=5^1*353^1*161141^1\n21: 890694827=11^1*73^1*521^1*2129^1\n22: 379535073=3^1*41^1*101^1*137^1*223^1\ncount: 22\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T06-hidden-12",
+          "visibility": "hidden",
+          "purpose": "seed-2026112209",
+          "stdin": "23\n261139523 84925827 180367452 834305562 576739646 137344601 565424044 864555866 720308604 820712874 782873455 641650021 726705547 740675702 56521913 30545931 351970719 259439619 749247408 964526531 505924598 672767250 610492380\n",
+          "stdout": "1: 261139523=2153^1*121291^1\n2: 84925827=3^5*7^1*49927^1\n3: 180367452=2^2*3^3*37^1*45137^1\n4: 834305562=2^1*3^3*103^1*150001^1\n5: 576739646=2^1*7^1*29^1*37^1*38393^1\n6: 137344601=31^1*71^1*62401^1\n7: 565424044=2^2*823^1*171757^1\n8: 864555866=2^1*432277933^1\n9: 720308604=2^2*3^1*60025717^1\n10: 820712874=2^1*3^1*463^1*295433^1\n11: 782873455=5^1*7^1*13^1*167^1*10303^1\n12: 641650021=23^2*941^1*1289^1\n13: 726705547=43^1*863^1*19583^1\n14: 740675702=2^1*13^1*28487527^1\n15: 56521913=7^1*8074559^1\n16: 30545931=3^1*13^1*137^1*5717^1\n17: 351970719=3^1*117323573^1\n18: 259439619=3^1*3079^1*28087^1\n19: 749247408=2^4*3^4*7^1*13^1*6353^1\n20: 964526531=964526531^1\n21: 505924598=2^1*252962299^1\n22: 672767250=2^1*3^1*5^3*23^1*43^1*907^1\n23: 610492380=2^2*3^1*5^1*10174873^1\ncount: 23\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        }
+      ]
+    },
+    {
+      "id": "T07",
+      "kind": "program",
+      "title": "矩形并集面积与周长",
+      "structural": [],
+      "cases": [
+        {
+          "id": "T07-public-01",
+          "visibility": "public",
+          "stdin": "2\n0 0 2 2\n1 0 3 2\n",
+          "stdout": "area: 6\nperimeter: 10\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T07-public-02",
+          "visibility": "public",
+          "stdin": "3\n0 0 1 1\n1 1 2 2\n0 0 1 1\n",
+          "stdout": "area: 2\nperimeter: 8\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T07-hidden-01",
+          "visibility": "hidden",
+          "purpose": "empty",
+          "stdin": "0\n",
+          "stdout": "area: 0\nperimeter: 0\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T07-hidden-02",
+          "visibility": "hidden",
+          "purpose": "degenerate-only",
+          "stdin": "3\n0 0 0 5\n0 0 5 0\n-1 -1 -1 -1\n",
+          "stdout": "area: 0\nperimeter: 0\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T07-hidden-03",
+          "visibility": "hidden",
+          "purpose": "shared-full-edge",
+          "stdin": "2\n0 0 2 2\n2 0 4 2\n",
+          "stdout": "area: 8\nperimeter: 12\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T07-hidden-04",
+          "visibility": "hidden",
+          "purpose": "contained-and-duplicate",
+          "stdin": "3\n-5 -5 5 5\n-1 -1 1 1\n-5 -5 5 5\n",
+          "stdout": "area: 100\nperimeter: 40\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T07-hidden-05",
+          "visibility": "hidden",
+          "purpose": "partial-edge",
+          "stdin": "2\n0 0 2 4\n2 1 4 3\n",
+          "stdout": "area: 12\nperimeter: 16\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T07-hidden-06",
+          "visibility": "hidden",
+          "purpose": "hole-boundary",
+          "stdin": "4\n0 0 4 1\n0 3 4 4\n0 1 1 3\n3 1 4 3\n",
+          "stdout": "area: 12\nperimeter: 24\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T07-hidden-07",
+          "visibility": "hidden",
+          "purpose": "negative-and-limit-coordinates",
+          "stdin": "2\n-1000 -1000 0 1000\n0 -1000 1000 1000\n",
+          "stdout": "area: 4000000\nperimeter: 8000\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T07-hidden-08",
+          "visibility": "hidden",
+          "purpose": "maximum-count-disjoint-strips",
+          "stdin": "60\n0 0 2 1\n3 0 5 2\n6 0 8 3\n9 0 11 4\n12 0 14 1\n15 0 17 2\n18 0 20 3\n21 0 23 4\n24 0 26 1\n27 0 29 2\n30 0 32 3\n33 0 35 4\n36 0 38 1\n39 0 41 2\n42 0 44 3\n45 0 47 4\n48 0 50 1\n51 0 53 2\n54 0 56 3\n57 0 59 4\n60 0 62 1\n63 0 65 2\n66 0 68 3\n69 0 71 4\n72 0 74 1\n75 0 77 2\n78 0 80 3\n81 0 83 4\n84 0 86 1\n87 0 89 2\n90 0 92 3\n93 0 95 4\n96 0 98 1\n99 0 101 2\n102 0 104 3\n105 0 107 4\n108 0 110 1\n111 0 113 2\n114 0 116 3\n117 0 119 4\n120 0 122 1\n123 0 125 2\n126 0 128 3\n129 0 131 4\n132 0 134 1\n135 0 137 2\n138 0 140 3\n141 0 143 4\n144 0 146 1\n147 0 149 2\n150 0 152 3\n153 0 155 4\n156 0 158 1\n159 0 161 2\n162 0 164 3\n165 0 167 4\n168 0 170 1\n171 0 173 2\n174 0 176 3\n177 0 179 4\n",
+          "stdout": "area: 300\nperimeter: 540\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T07-hidden-09",
+          "visibility": "hidden",
+          "purpose": "seed-2026112206",
+          "stdin": "18\n-1 1 1 7\n-8 -6 19 19\n3 -1 7 10\n4 5 5 14\n8 -14 13 10\n-12 14 7 18\n-11 -16 -2 -3\n-11 -7 -7 -3\n-15 1 13 15\n-14 -17 13 -12\n-17 -8 3 -5\n1 -11 20 10\n-10 13 9 18\n9 -4 9 7\n-5 0 16 2\n-2 14 5 15\n-14 -3 14 6\n-14 -15 -2 -10\n",
+          "stdout": "area: 1153\nperimeter: 188\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T07-hidden-10",
+          "visibility": "hidden",
+          "purpose": "seed-2026112207",
+          "stdin": "19\n-4 -12 3 16\n0 -8 6 11\n6 -8 14 19\n-10 0 13 7\n11 7 20 9\n-2 -19 19 -12\n6 -8 19 -3\n-1 8 6 20\n-16 -7 -15 13\n-19 -7 7 19\n-14 7 -8 17\n-18 8 -7 19\n-1 -3 3 -3\n11 -3 11 -3\n-10 5 13 14\n-10 10 11 17\n-20 -19 -9 7\n-19 -12 0 16\n6 -7 15 9\n",
+          "stdout": "area: 1276\nperimeter: 212\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T07-hidden-11",
+          "visibility": "hidden",
+          "purpose": "seed-2026112208",
+          "stdin": "20\n-9 -12 17 14\n4 -5 5 14\n-12 -10 0 -8\n1 9 1 16\n-17 15 -10 19\n-4 -16 12 -8\n-8 -7 10 -3\n-1 11 2 17\n-18 -15 -7 16\n-15 -5 -11 -2\n-11 5 -1 13\n-20 -1 19 9\n-11 -18 -5 -2\n-9 7 6 11\n-10 -19 1 -7\n-10 -13 9 -12\n-6 -5 -2 7\n-17 4 13 18\n-15 -17 -8 8\n-19 -5 4 16\n",
+          "stdout": "area: 1246\nperimeter: 154\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T07-hidden-12",
+          "visibility": "hidden",
+          "purpose": "seed-2026112209",
+          "stdin": "21\n-6 -3 8 1\n-12 -2 -8 12\n-5 -3 -4 13\n-7 -18 12 1\n-18 -11 12 19\n-8 3 13 13\n-9 -10 3 6\n12 -15 14 7\n-1 -14 6 8\n-13 -13 -3 -10\n18 -7 18 12\n12 -7 16 20\n2 -18 11 10\n-9 4 -4 11\n-9 -6 4 -3\n0 -15 9 -5\n0 -17 17 6\n-11 -20 10 -1\n-10 -15 5 4\n-15 0 3 1\n-16 -2 10 2\n",
+          "stdout": "area: 1278\nperimeter: 150\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        }
+      ]
+    },
+    {
+      "id": "T08",
+      "kind": "program",
+      "title": "井字棋最优一步",
+      "structural": [],
+      "cases": [
+        {
+          "id": "T08-public-01",
+          "visibility": "public",
+          "stdin": ".........\nXX.OO....\nXXXOO....\n",
+          "stdout": "1: play X 1 draw\n2: play X 3 win\n3: terminal X\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T08-public-02",
+          "visibility": "public",
+          "stdin": "OOOXX.X..\nXXXOOO...\nXOXOOXXXO\n",
+          "stdout": "1: terminal O\n2: invalid\n3: terminal draw\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T08-hidden-01",
+          "visibility": "hidden",
+          "purpose": "empty-file",
+          "stdin": "",
+          "stdout": "",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T08-hidden-02",
+          "visibility": "hidden",
+          "purpose": "empty-and-opening",
+          "stdin": ".........\nX........\n....X....\n........X\n",
+          "stdout": "1: play X 1 draw\n2: play O 5 draw\n3: play O 1 draw\n4: play O 5 draw\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T08-hidden-03",
+          "visibility": "hidden",
+          "purpose": "winning-and-blocking",
+          "stdin": "XX.OO....\nOO.XX.X..\nX...O...X\nXO.XO....\n",
+          "stdout": "1: play X 3 win\n2: play O 3 win\n3: play O 2 draw\n4: play X 7 win\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T08-hidden-04",
+          "visibility": "hidden",
+          "purpose": "terminal-boards",
+          "stdin": "XXXOO....\nOOOXX.X..\nXOXOOXXXO\nXOXOXOXOX\n",
+          "stdout": "1: terminal X\n2: terminal O\n3: terminal draw\n4: terminal X\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T08-hidden-05",
+          "visibility": "hidden",
+          "purpose": "invalid-counts-and-dual-wins",
+          "stdin": "O........\nXX.......\nXXXOOO...\nOOOXX....\nXXXOO.O..\n",
+          "stdout": "1: invalid\n2: invalid\n3: invalid\n4: invalid\n5: invalid\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T08-hidden-06",
+          "visibility": "hidden",
+          "purpose": "invalid-text",
+          "stdin": "\n........\n..........\nXOXOXOxo.\n X.......\n......... \n....................\n",
+          "stdout": "1: invalid\n2: invalid\n3: invalid\n4: invalid\n5: invalid\n6: invalid\n7: invalid\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T08-hidden-07",
+          "visibility": "hidden",
+          "purpose": "late-forced-draws",
+          "stdin": "XOXOXO.OX\nXOXXOOOX.\nOXOXOX.X.\n",
+          "stdout": "1: invalid\n2: play X 9 draw\n3: play O 7 win\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T08-hidden-08",
+          "visibility": "hidden",
+          "purpose": "tie-break-symmetric",
+          "stdin": "....X....\nX...O....\n..X.O....\n....O...X\n",
+          "stdout": "1: play O 1 draw\n2: play X 2 draw\n3: play X 1 draw\n4: play X 1 draw\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T08-hidden-09",
+          "visibility": "hidden",
+          "purpose": "seed-2026112206",
+          "stdin": "XO..O..XX\n.O.O.XXOX\n.XOX.OO.X\n..OO.XXX.\n..X....O.\n.XOXOXX.O\nO.X.XX.O.\n.OOO.X.XX\n.OOX..OXX\nX.OOO.XX.\n.XOOX..OX\n.OX.XXOOX\n...O..XXO\n..OOOX.XX\n.O.O...OX\n.O......X\nO.O.O.XXO\nOOOO...X.\nXO.O..XXX\nX...OOO..\n",
+          "stdout": "1: play O 7 draw\n2: play X 3 win\n3: play X 5 win\n4: play O 9 draw\n5: play X 1 win\n6: play O 1 win\n7: play O 2 lose\n8: play X 1 win\n9: play X 1 lose\n10: play X 9 win\n11: play X 1 win\n12: terminal X\n13: play X 5 win\n14: play X 7 win\n15: invalid\n16: play X 3 win\n17: invalid\n18: invalid\n19: invalid\n20: invalid\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T08-hidden-10",
+          "visibility": "hidden",
+          "purpose": "seed-2026112207",
+          "stdin": "OXOX.X.OX\nOXXX.X.OO\nXXO..X.O.\n..XO...XO\nXO.O...XX\nXXXOXOXOO\n....XXXOO\n.X.OXXXOO\nO.X....XO\nX..XOO...\nOOX..OXX.\nOXO.XXOX.\nX.XO.XXOX\nXOX.XXXXO\n..X.OX.OO\nX..XO.XXX\nXXOXOOOXX\n.XXO..XX.\n.OOX.OO..\nOXXX..X..\n",
+          "stdout": "1: play O 5 draw\n2: play O 5 win\n3: play O 7 win\n4: play X 2 win\n5: play O 3 lose\n6: terminal X\n7: play O 1 lose\n8: play O 3 draw\n9: play X 5 win\n10: play X 2 win\n11: play X 4 win\n12: terminal X\n13: invalid\n14: invalid\n15: invalid\n16: invalid\n17: invalid\n18: invalid\n19: invalid\n20: invalid\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T08-hidden-11",
+          "visibility": "hidden",
+          "purpose": "seed-2026112208",
+          "stdin": "OXXX.X.OO\nX..OXOXOX\nXO.XOXOX.\n...X...XO\nO......X.\n.OXXXOXO.\nOXO..XXOX\n.XOXXO...\nXO.OX..X.\n..OX.X.OX\nX..OXX.O.\nOX.XXOO.X\nXXOOX..OX\nXXX.OO.X.\nXX.OOXX.X\nO.O.O..OX\n.OOXXX.O.\nOOXXOXOOX\nOOXXOO..X\n.O...XX.X\n",
+          "stdout": "1: play O 5 win\n2: terminal X\n3: play O 3 win\n4: play O 3 win\n5: play X 7 win\n6: terminal X\n7: play O 4 draw\n8: play O 9 win\n9: play O 9 draw\n10: play O 5 win\n11: play O 9 draw\n12: play O 8 draw\n13: terminal X\n14: invalid\n15: invalid\n16: invalid\n17: invalid\n18: invalid\n19: invalid\n20: invalid\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T08-hidden-12",
+          "visibility": "hidden",
+          "purpose": "seed-2026112209",
+          "stdin": "..OXX.X.O\nXX.OOXXOO\n.XOOXXOX.\nX.XO.X.O.\nOXXO..XXO\nOXOO.XOXX\nOXO..X.X.\nXO.OXXOX.\nXOXX..O.O\n.....O.X.\nOXOXOXXOX\n..XXOX..O\nOX.OXXOX.\n..XXXXX..\n.OX.OXOOX\nOOX...XXX\nOXOO.XXX.\nOO.XOXOOO\nX...X.O..\nXX.OO..OX\n",
+          "stdout": "1: play O 6 win\n2: play X 3 win\n3: terminal X\n4: play O 2 lose\n5: play O 5 win\n6: terminal O\n7: play O 5 win\n8: play O 9 draw\n9: play X 8 draw\n10: play X 5 win\n11: terminal draw\n12: play O 1 win\n13: invalid\n14: invalid\n15: invalid\n16: invalid\n17: play O 5 lose\n18: invalid\n19: play O 9 draw\n20: play X 3 win\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        }
+      ]
+    }
+  ]
+}

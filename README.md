@@ -12,6 +12,9 @@ The specification starts from **v0.5**, with dated revisions in [docs/decisions.
 - `experiments/`: archived agent task sets, solutions, verification and cost records.
 - [HANDOFF.md](HANDOFF.md): current status, environment, constraints and next actions.
 
+For an agent's first program, start with the [compact writing guide](docs/agent-start.md)
+and [on-demand API index](docs/agent-api-index.md). The complete cheatsheet remains available.
+
 ## Implementation and local validation
 
 The latest language-feature baseline is **`b3c27a6` (2026-11-22)**. It includes ownership, views, deterministic destruction, String/Vec/Map/Set/Heap/Deque/Arena, typed generational IDs, generics, interfaces, source modules and scoped OS threads. Agent tools include `check`, `fix`, `allocations` and evidence-bound `verify`; the backend has a content-addressed build cache.
@@ -116,8 +119,8 @@ and [module/thread audit](experiments/coldstart-2026-11-22-r5/evidence/manual-re
 
 ## Next work and acceptance gates
 
-1. Establish an executor that archives real per-request token usage, exact model identity and sampling configuration together with source snapshots and operation events. Keep missing measurements explicit until that path works.
-2. Compare the full cheatsheet with a minimal first-write reference under the same metered model and fresh tasks. Round five isolates six extra documentation requests but provides no new failure requiring a language-semantic change.
+1. Qualify the implemented [per-request executor](tools/agent_eval/README.md) on an authorized API environment. It archives raw requests, response IDs, actual usage/model/settings and controlled tool results. The current CLI state-path failure and absent API credentials leave live qualification **blocked**; offline tests do not authorize a trial.
+2. Run the prepared [eight-task full-vs-compact document experiment](experiments/docs-ab-2026-11-22-r6/README.md) after qualification. The 134-line starter plus API index is 12,543 bytes versus the old 32,889-byte full guide; 12 program/diagnostic checks pass. Both arms will receive the same API index/topics. **Participant sessions: 0; no round-six correctness or cost result yet.**
 3. Run the planned 60-task pilot to estimate variance and task-family coverage before the formal study, whose initial design has at least 400 tasks.
 4. Remaining v1 functionality includes user test blocks and `yavo test`, local/Git dependencies and a lockfile, FFI/unsafe/audit, general closures/higher-order parameters, public movable Join and `spawn inout`. Precompiled runtime objects address the observed edit-build latency.
 

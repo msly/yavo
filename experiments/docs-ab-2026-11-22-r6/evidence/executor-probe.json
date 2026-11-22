@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "kind": "yavo.executor.feasibility",
+  "recorded_at_utc": "2026-11-22T08:00:10.431239+00:00",
+  "status": "blocked",
+  "model_requests_sent": 0,
+  "provider_usage_observed": null,
+  "exact_serving_model_observed": null,
+  "prior_probe_reference": "experiments/coldstart-2026-11-22-r5/evidence/executor-probe.json",
+  "prior_failed_exec_probes_repeated": false,
+  "local_cli_version": "0.172.0-alpha.2",
+  "credential_availability": {
+    "OPENAI_API_KEY_present": false,
+    "CODEX_API_KEY_present": false,
+    "raw_credentials_read": false,
+    "credential_values_logged": false
+  },
+  "new_probe": {
+    "route": "documented stdio app-server initialize",
+    "argv": [
+      "codex",
+      "app-server",
+      "--listen",
+      "stdio://"
+    ],
+    "exit_code": 1,
+    "response_received": false,
+    "model_request_sent": false,
+    "failure": "Cannot open /home/agent/.codex/state_5.sqlite (SQLite code 14 unable to open database file)",
+    "evidence_directory": "executor-probe",
+    "artifacts": {
+      "stdio-initialize.stderr": {
+        "bytes": 377,
+        "sha256": "8138561ae85666e124e28d2dec7606ac68e7ec871db777508e72f0f00443f928"
+      },
+      "stdio-initialize.stdout": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stdio-initialize.json": {
+        "bytes": 835,
+        "sha256": "a3cf40f3caddac0835fa0a61458c9ee7ea951622bf07d2172147f2bc54d74328"
+      },
+      "stdio-initialize.request.jsonl": {
+        "bytes": 110,
+        "sha256": "0d53bceb6de044d087bacb8b3b386d8b751a58508feb531b44414294ba878d2f"
+      }
+    }
+  },
+  "redacted_doctor_observations": {
+    "capture_scope": "Selected observations from streamed codex doctor --json output; not presented as a complete raw log",
+    "auth_configured": true,
+    "stored_auth_mode": "chatgpt",
+    "stored_api_key": false,
+    "background_app_server_running": false,
+    "responses_websocket_handshake": "HTTP 101 Switching Protocols",
+    "server_model_present": false,
+    "sqlite_home": "/home/agent/.codex",
+    "state_db": "missing",
+    "managed_filesystem_source": "system",
+    "filesystem_sandbox": "restricted",
+    "network_sandbox": "restricted"
+  },
+  "daemon_version_observation": {
+    "argv": [
+      "codex",
+      "app-server",
+      "daemon",
+      "version"
+    ],
+    "exit_code": 1,
+    "failure": "failed to connect to /home/agent/.codex/app-server-control/app-server-control.sock; Operation not permitted (os error 1)",
+    "no_followup_socket_probe": true
+  },
+  "protocol_capability": {
+    "generated_schema_available": true,
+    "observation": "executor-probe/installed-protocol-observation.json",
+    "codex_exec_json_usage_scope": "turn aggregate",
+    "app_server_usage_scope": "thread cumulative plus last usage, with threadId and turnId",
+    "per_provider_request_id_and_response_id_in_usage_event": false,
+    "satisfies_round6_per_request_contract": false
+  },
+  "restrictions_preserved": {
+    "HOME_unchanged": true,
+    "CODEX_HOME_unchanged": true,
+    "permissions_unchanged": true,
+    "immutable_mounts_unchanged": true,
+    "credential_copying": false
+  },
+  "qualification_status": "blocked",
+  "participant_runs_started": 0,
+  "next_usable_route": "An explicitly configured and authorized Responses API execution host with Python3, Perl/lab/compiler toolchains; freeze model/settings and pass the real provider -> read-only probe -> provider chain before any participant init.",
+  "official_references": [
+    "https://learn.chatgpt.com/docs/app-server",
+    "https://learn.chatgpt.com/docs/non-interactive-mode",
+    "https://developers.openai.com/api/reference/resources/responses/methods/create",
+    "https://developers.openai.com/api/docs/guides/token-counting"
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "experiment_id": "docs-ab-2026-11-22-r6",
+  "freeze": {"path": "evidence/frozen.json", "sha256": null},
+  "provider": {
+    "endpoint": "https://api.openai.com/v1/responses",
+    "requested_model": null,
+    "expected_reported_model": null,
+    "parameters": {"max_output_tokens": 16384}
+  },
+  "lab": {
+    "program": "perl",
+    "script": "tools/lab.pl",
+    "timeout_seconds": 180,
+    "output_bytes": 1048576
+  },
+  "limits": {
+    "max_provider_requests": 128,
+    "provider_timeout_seconds": 120,
+    "max_response_bytes": 16777216
+  }
+}

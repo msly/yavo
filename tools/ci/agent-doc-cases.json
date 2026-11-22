@@ -1,0 +1,90 @@
+[
+  {
+    "id": "numbers",
+    "entry": "numbers/main.yv",
+    "stdin": "3 1 2\n",
+    "stdout": "6 3\n",
+    "kind": "guide_program"
+  },
+  {
+    "id": "ownership",
+    "entry": "ownership/main.yv",
+    "stdin": "",
+    "stdout": "ann items 7 1\n${HOME}\n",
+    "kind": "guide_program"
+  },
+  {
+    "id": "modules",
+    "entry": "modules/main.yv",
+    "stdin": "",
+    "stdout": "6\n",
+    "kind": "guide_program"
+  },
+  {
+    "id": "threads",
+    "entry": "threads/main.yv",
+    "stdin": "",
+    "stdout": "10\n",
+    "kind": "guide_program"
+  },
+  {
+    "id": "collections",
+    "entry": "collections/main.yv",
+    "stdin": "",
+    "stdout": "5\n5 0\n1 true true 0\n1.0\nxa|b\n1 ok\n",
+    "kind": "inline_rule_check",
+    "source": "fn main() {\n    var m: Map[String, int] = [:]\n    m.set(\"a\".toString(), 1)\n    m.update(\"a\".toString(), 0, (n) => n + 1)\n    if let p = m.getMut(\"a\") { *p += 3 }\n    println(m.getCopy(\"a\") ?? 0)\n    let removed = m.remove(\"a\") ?? 0\n    println(\"${removed} ${m.len()}\")\n    var s = Set[int]{}\n    s.add(1)\n    s.add(1)\n    let before = s.len()\n    let found = s.has(1)\n    let erased = s.remove(1)\n    println(\"${before} ${found} ${erased} ${s.len()}\")\n    var fs: Vec[f64] = [2.0, 1.0]\n    fs.sortBy((a, b) => a.totalCmp(b) == .Less)\n    println(\"${fs[0]:.1}\")\n    var out = String{}\n    out.push(\"x\")\n    let parts = \"a,b\".split(\",\")\n    out.push(parts.join(\"|\"))\n    println(out)\n    let pair = (1, \"ok\".toString())\n    println(\"${pair.0} ${pair.1}\")\n}\n"
+  },
+  {
+    "id": "errors",
+    "entry": "errors/main.yv",
+    "stdin": "",
+    "stdout": "42\n0\nowned\ntrue\n",
+    "kind": "inline_rule_check",
+    "source": "enum Issue { Bad }\nfn parse(s: str) -> int ! Issue {\n    let n = s.parseInt() ?? return err(.Bad)\n    return n\n}\nfn load(s: str) -> int ! Issue {\n    let n = try parse(s)\n    return n + 1\n}\nfn main() {\n    match load(\"41\") {\n        ok(n) => println(n)\n        err(_e) => println(\"bad\")\n    }\n    let fallback = parse(\"x\") catch _ => 0\n    println(fallback)\n    var opt: ?String = some(\"owned\".toString())\n    match take(&opt) {\n        some(value) => println(value)\n        none => println(\"missing\")\n    }\n    println(opt.isNone())\n}\n"
+  },
+  {
+    "id": "index_order",
+    "entry": "index_order/main.yv",
+    "stdin": "",
+    "stdout": "value\nindex\nvalue+\nindex+\n11\n",
+    "kind": "inline_rule_check",
+    "source": "fn mark(label: str, value: int) -> int {\n    println(label)\n    return value\n}\nfn main() {\n    var v = [0]\n    v[mark(\"index\", 0)] = mark(\"value\", 9)\n    v[mark(\"index+\", 0)] += mark(\"value+\", 2)\n    println(v[0])\n}\n"
+  },
+  {
+    "id": "two_phase",
+    "entry": "two_phase/main.yv",
+    "stdin": "",
+    "stdout": "2 1\n",
+    "kind": "inline_rule_check",
+    "source": "fn main() {\n    var v = [7]\n    v.push(v.len())\n    println(\"${v.len()} ${v[1]}\")\n}\n"
+  },
+  {
+    "id": "noncopy_borrow",
+    "entry": "noncopy_borrow/main.yv",
+    "error": "E0102",
+    "kind": "reject_check",
+    "source": "fn main() {\n    var names: Vec[String] = [\"ann\".toString()]\n    let first = names[0]\n    names.push(\"bo\".toString())\n    println(first)\n}\n"
+  },
+  {
+    "id": "indexed_receiver",
+    "entry": "indexed_receiver/main.yv",
+    "error": "E0403",
+    "kind": "reject_check",
+    "source": "fn main() {\n    var grid: Vec[Vec[int]] = [[1]]\n    grid[0].push(grid.len())\n}\n"
+  },
+  {
+    "id": "rhs_borrow",
+    "entry": "rhs_borrow/main.yv",
+    "error": "E0102",
+    "kind": "reject_check",
+    "source": "fn index(text: inout String) -> int {\n    text = \"replacement\".toString()\n    return 0\n}\nfn main() {\n    var text = \"hello\".toString()\n    var views: Vec[str] = [\"\"]\n    views[index(&text)] = text.trim()\n    println(views[0])\n}\n"
+  },
+  {
+    "id": "literal_interpolation",
+    "entry": "literal_interpolation/main.yv",
+    "error": "E0020",
+    "kind": "reject_check",
+    "source": "fn main() {\n    println(\"${\")\n}\n"
+  }
+]

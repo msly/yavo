@@ -21,6 +21,7 @@ test totals; the existing 120-second per-fixture build deadline is unchanged.
 | macOS 15, arm64 | The same native selection, in Debug and Release |
 | Independent Linux ASan+UBSan | Export the current generated C and runtime, validate sanitizer positive/negative probes, then execute every exported P0 run/panic fixture with strict output and exit expectations |
 | Round-five experiment evidence | Recreate the frozen task packet, verify archived source/output identities, recompute all 1,344 judgments and summary values, and check 16 hash-bound module/thread reviews |
+| Agent evaluation preparation | Test per-request usage and launch contracts, deterministic R6 task/document reconstruction, independent oracles and refusal to initialize an unqualified participant; no model requests |
 
 The native selection is declared in `NATIVE_TESTS` in `run.py`: P0 fixtures,
 allocation checks, Arena, modules, indexed assignment/methods, mutable-reference
@@ -58,6 +59,13 @@ receipt. The six recorded string-to-integer conversions of documentation line
 numbers are checked under the narrow policy documented in the receipt; original
 request and event logs are preserved.
 
+The Linux full-suite job also runs `agent_docs.py`: it extracts the starter guide's
+five source blocks, builds four complete projects and checks eight focused rules,
+including four expected diagnostic failures. Its 12-case receipt is separate from
+the Cargo and frozen-specification counts. The new preparation job archives
+`launch_status: blocked`, with zero participants; a passing infrastructure check
+must not be reported as a completed document experiment.
+
 For local reproduction in a fresh checkout with Rustup and Python available:
 
 ```sh
@@ -66,6 +74,8 @@ python3 tools/ci/run.py native --suite full   # Linux x86_64
 python3 tools/ci/run.py native --suite native # Windows/macOS selection
 python3 tools/ci/run.py sanitize             # Linux with Perl and GCC
 python3 tools/ci/experiment_evidence.py       # Archived round-five evidence
+python3 tools/ci/agent_docs.py                # Current starter examples and diagnostics
+python3 tools/ci/agent_eval.py                # Offline R6 preparation and launch refusal
 ```
 
 Use `python` on Windows. A setup/download failure is a failing job, never a skip.

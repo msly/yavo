@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "tasks": [
+    {
+      "id": "T04",
+      "kind": "program",
+      "title": "公历日期运算（多文件）",
+      "structural": [
+        "At least two source files; command field parsing, calendar validation, date arithmetic and day differences occur in a non-entry module; entry only performs I/O and calls that module."
+      ],
+      "cases": [
+        {
+          "id": "T04-public-01",
+          "visibility": "public",
+          "stdin": "add 2000-02-28 1\nadd 1900-02-28 1\ndiff 2000-03-01 2000-02-28\n",
+          "stdout": "1: 2000-02-29\n2: 1900-03-01\n3: -2\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T04-public-02",
+          "visibility": "public",
+          "stdin": "add 1600-01-01 -1\nadd 2024-02-30 0\nadd 2024-01-01 -000\n",
+          "stdout": "1: invalid\n2: invalid\n3: 2024-01-01\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,908 @@
+{
+   "case_manifest" : {
+      "bytes" : 4052,
+      "path" : "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/cases.json",
+      "sha256" : "4a0ea1b74883ca4d89c0ff63d98c2b0b017f755430ede53c3657ccc0e78c7f21"
+   },
+   "cases" : [
+      {
+         "binary" : {
+            "bytes" : 4106080,
+            "path" : "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/bin/numbers",
+            "sha256" : "86891efa831f9d2e2004058719e59be7c1ccc66f05378654470333268d627486"
+         },
+         "build" : {
+            "argv" : [
+               "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+               "build",
+               "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/sources/numbers/main.yv",
+               "-o",
+               "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/bin/numbers"
+            ],
+            "cwd" : "/data1/workspace/github/workspace/yavo",
+            "environment_overrides" : {
+               "YAVO_ALLOC_CHECK" : "1"
+            },
+            "exit_code" : 0,
+            "seconds" : 0.203415933065116,
+            "signal" : 0,
+            "stderr" : {
+               "bytes" : 0,
+               "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "text" : ""
+            },
+            "stdin" : {
+               "bytes" : 0,
+               "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "text" : ""
+            },
+            "stdout" : {
+               "bytes" : 0,
+               "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "text" : ""
+            },
+            "timeout" : false
+         },
+         "expected_stdout" : "6 3\n",
+         "id" : "numbers",
+         "kind" : "guide_program",
+         "passed" : true,
+         "run" : {
+            "argv" : [
+               "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/bin/numbers"
+            ],
+            "cwd" : "/data1/workspace/github/workspace/yavo",
+            "environment_overrides" : {
+               "YAVO_ALLOC_CHECK" : "1"
+            },
+            "exit_code" : 0,
+            "seconds" : 0.0107538551092148,
+            "signal" : 0,
+            "stderr" : {
+               "bytes" : 0,
+               "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "text" : ""
+            },
+            "stdin" : {
+               "bytes" : 6,
+               "sha256" : "e5d904b0be02b8bb4050ac75683df3b835a3b2686ceb22d257127e600c95dcfc",
+               "text" : "3 1 2\n"
+            },
+            "stdout" : {
+               "bytes" : 4,
+               "sha256" : "bc1c9f8b0ca159e09fd22b8c5efdb431c082e645cd9faa50d04cd20c90f6835a",
+               "text" : "6 3\n"
+            },
+            "timeout" : false
+         },
+         "source" : {
+            "bytes" : 348,
+            "path" : "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/sources/numbers/main.yv",
+            "sha256" : "4cbc3f20ba6977db4fb3d0a1e9c240a9f5084cad9228cd8e83188a7d2b2e92cc"
+         },
+         "source_text" : "use std/{io, os}\n\nfn main() {\n    let text = io.readAll() catch e {\n        eprintln(\"${e}\")\n        os.exit(1)\n    }\n    var nums: Vec[int] = []\n    for word in text.fields() {\n        let n = word.parseInt() ?? return\n        nums.push(n)\n    }\n    nums.sort()\n    var sum = 0\n    for n in nums { sum += n }\n    println(\"${sum} ${nums.len()}\")\n}\n"
+      },
+      {
+         "binary" : {
+            "bytes" : 4091808,
+            "path" : "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/bin/ownership",
+            "sha256" : "e738e75e6f85db0ff6b2c1091ca4c682f81cfbf6a679259d6b44d349bf5c73b3"
+         },
+         "build" : {
+            "argv" : [
+               "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+               "build",
+               "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/sources/ownership/main.yv",
+               "-o",
+               "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/bin/ownership"
+            ],
+            "cwd" : "/data1/workspace/github/workspace/yavo",
+            "environment_overrides" : {
+               "YAVO_ALLOC_CHECK" : "1"
+            },
+            "exit_code" : 0,
+            "seconds" : 0.194231687113643,
+            "signal" : 0,
+            "stderr" : {
+               "bytes" : 0,
+               "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "text" : ""
+            },
+            "stdin" : {
+               "bytes" : 0,
+               "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "text" : ""
+            },
+            "stdout" : {
+               "bytes" : 0,
+               "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "text" : ""
+            },
+            "timeout" : false
+         },
+         "expected_stdout" : "ann items 7 1\n${HOME}\n",
+         "id" : "ownership",
+         "kind" : "guide_program",
+         "passed" : true,
+         "run" : {
+            "argv" : [
+               "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/bin/ownership"
+            ],
+            "cwd" : "/data1/workspace/github/workspace/yavo",
+            "environment_overrides" : {
+               "YAVO_ALLOC_CHECK" : "1"
+            },
+            "exit_code" : 0,
+            "seconds" : 0.0107758678495884,
+            "signal" : 0,
+            "stderr" : {
+               "bytes" : 0,
+               "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "text" : ""
+            },
+            "stdin" : {
+               "bytes" : 0,
+               "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "text" : ""
+            },
+            "stdout" : {
+               "bytes" : 22,
+               "sha256" : "4b56b0449849a00be2e1dbecab38e7320522d6aee51a072d6cc3d2aa3caa24f6",
+               "text" : "ann items 7 1\n${HOME}\n"
+            },
+            "timeout" : false
+         },
+         "source" : {
+            "bytes" : 536,
+            "path" : "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/sources/ownership/main.yv",
+            "sha256" : "4b4933f24fb43d999da5f864d01914dc4f003b156befee2551ef732df30a4e79"
+         },
+         "source_text" : "struct Bag {\n    name: String = \"items\"\n    values: Vec[int] = []\n    fn add(inout self, n: int) { self.values.push(n) }\n}\nfn first(s: str) -> str of s { return s.fields()[0] }\nfn main() {\n    var b = Bag{}\n    b.add(7)\n    var names: Vec[String] = [\"ann\".toString()]\n    let saved = names[0].clone()\n    names.push(\"bo\".toString())\n    var grid: Vec[Vec[int]] = [[1]]\n    let n = grid.len()\n    grid[0].push(n)\n    grid[0][0] = b.values[0]\n    println(\"${saved} ${first(b.name)} ${grid[0][0]} ${grid[0][1]}\")\n    println(\"\\${HOME}\")\n}\n"
+      },
+      {
+         "binary" : {
+            "bytes" : 4075096,
+            "path" : "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/bin/modules",
+            "sha256" : "873087b8a2fe75ca12137ff0bb43d9f74052a66c4d6360d7dadc16f3072fb9b0"
+         },
+         "build" : {
+            "argv" : [
+               "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+               "build",
+               "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/sources/modules/main.yv",
+               "-o",
+               "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/bin/modules"
+            ],
+            "cwd" : "/data1/workspace/github/workspace/yavo",
+            "environment_overrides" : {
+               "YAVO_ALLOC_CHECK" : "1"
+            },
+            "exit_code" : 0,
+            "seconds" : 0.223325178958476,
+            "signal" : 0,
+            "stderr" : {
+               "bytes" : 0,
+               "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "text" : ""
+            },
+            "stdin" : {
+               "bytes" : 0,
+               "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "text" : ""
+            },
+            "stdout" : {
+               "bytes" : 0,
+               "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "text" : ""
+            },
+            "timeout" : false
+         },
+         "expected_stdout" : "6\n",
+         "id" : "modules",
+         "kind" : "guide_program",
+         "passed" : true,
+         "run" : {
+            "argv" : [
+               "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/bin/modules"
+            ],
+            "cwd" : "/data1/workspace/github/workspace/yavo",
+            "environment_overrides" : {
+               "YAVO_ALLOC_CHECK" : "1"
+            },
+            "exit_code" : 0,
+            "seconds" : 0.0109764141961932,
+            "signal" : 0,
+            "stderr" : {
+               "bytes" : 0,
+               "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "text" : ""
+            },
+            "stdin" : {
+               "bytes" : 0,
+               "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "text" : ""
+            },
+            "stdout" : {
+               "bytes" : 2,
+               "sha256" : "06e9d52c1720fca412803e3b07c4b228ff113e303f4c7ab94665319d832bbfb7",
+               "text" : "6\n"
+            },
+            "timeout" : false
+         },
+         "source" : {
+            "bytes" : 60,
+            "path" : "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/sources/modules/main.yv",
+            "sha256" : "a92a811339311d978d41f2c18fcb32e7d279a125dddc2ce3b83c8dab63e1e8ac"
+         },
+         "source_text" : "use geom\nfn main() { println(geom.area(Rect{w: 2, h: 3})) }\n"
+      },
+      {
+         "binary" : {
+            "bytes" : 4099928,
+            "path" : "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/bin/threads",
+            "sha256" : "44086ecc10a010a4d44605be3e6fd559f8acd57f40763c41a692741c09eaea81"
+         },
+         "build" : {
+            "argv" : [
+               "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+               "build",
+               "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/sources/threads/main.yv",
+               "-o",
+               "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/bin/threads"
+            ],
+            "cwd" : "/data1/workspace/github/workspace/yavo",
+            "environment_overrides" : {
+               "YAVO_ALLOC_CHECK" : "1"
+            },
+            "exit_code" : 0,
+            "seconds" : 0.193184139207006,
+            "signal" : 0,
+            "stderr" : {
+               "bytes" : 0,
+               "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "text" : ""
+            },
+            "stdin" : {
+               "bytes" : 0,
+               "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "text" : ""
+            },
+            "stdout" : {
+               "bytes" : 0,
+               "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "text" : ""
+            },
+            "timeout" : false
+         },
+         "expected_stdout" : "10\n",
+         "id" : "threads",
+         "kind" : "guide_program",
+         "passed" : true,
+         "run" : {
+            "argv" : [
+               "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/bin/threads"
+            ],
+            "cwd" : "/data1/workspace/github/workspace/yavo",
+            "environment_overrides" : {
+               "YAVO_ALLOC_CHECK" : "1"
+            },
+            "exit_code" : 0,
+            "seconds" : 0.0106037724763155,
+            "signal" : 0,
+            "stderr" : {
+               "bytes" : 0,
+               "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "text" : ""
+            },
+            "stdin" : {
+               "bytes" : 0,
+               "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "text" : ""
+            },
+            "stdout" : {
+               "bytes" : 3,
+               "sha256" : "917df3320d778ddbaa5c5c7742bc4046bf803c36ed2b050f30844ed206783469",
+               "text" : "10\n"
+            },
+            "timeout" : false
+         },
+         "source" : {
+            "bytes" : 250,
+            "path" : "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/sources/threads/main.yv",
+            "sha256" : "f54e623220ac0b9561d4b1b0b5d4678864ae05f9e628bb448cebcc127887f222"
+         },
+         "source_text" : "fn sum(xs: []int) -> int {\n    var n = 0\n    for x in xs { n += x }\n    return n\n}\nfn main() {\n    let xs = [1, 2, 3, 4]\n    scope {\n        let a = spawn sum(xs[0..2])\n        let b = spawn sum(xs[2..4])\n        println(a.join() + b.join())\n    }\n}\n"
+      },
+      {
+         "binary" : {
+            "bytes" : 4144808,
+            "path" : "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/bin/collections",
+            "sha256" : "81d3810dd6aa9c867143c83de3cfa9a925f86159cad758175214b7328976e841"
+         },
+         "build" : {
+            "argv" : [
+               "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+               "build",
+               "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/sources/collections/main.yv",
+               "-o",
+               "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/bin/collections"
+            ],
+            "cwd" : "/data1/workspace/github/workspace/yavo",
+            "environment_overrides" : {
+               "YAVO_ALLOC_CHECK" : "1"
+            },
+            "exit_code" : 0,
+            "seconds" : 0.274074126034975,
+            "signal" : 0,
+            "stderr" : {
+               "bytes" : 0,
+               "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "text" : ""
+            },
+            "stdin" : {
+               "bytes" : 0,
+               "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "text" : ""
+            },
+            "stdout" : {
+               "bytes" : 0,
+               "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "text" : ""
+            },
+            "timeout" : false
+         },
+         "expected_stdout" : "5\n5 0\n1 true true 0\n1.0\nxa|b\n1 ok\n",
+         "id" : "collections",
+         "kind" : "inline_rule_check",
+         "passed" : true,
+         "run" : {
+            "argv" : [
+               "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/bin/collections"
+            ],
+            "cwd" : "/data1/workspace/github/workspace/yavo",
+            "environment_overrides" : {
+               "YAVO_ALLOC_CHECK" : "1"
+            },
+            "exit_code" : 0,
+            "seconds" : 0.0107244001701474,
+            "signal" : 0,
+            "stderr" : {
+               "bytes" : 0,
+               "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "text" : ""
+            },
+            "stdin" : {
+               "bytes" : 0,
+               "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "text" : ""
+            },
+            "stdout" : {
+               "bytes" : 34,
+               "sha256" : "37fc02ea50fb0fb596d669b40aa60eaed02389b327e0899ebfedced05c71a247",
+               "text" : "5\n5 0\n1 true true 0\n1.0\nxa|b\n1 ok\n"
+            },
+            "timeout" : false
+         },
+         "source" : {
+            "bytes" : 755,
+            "path" : "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/sources/collections/main.yv",
+            "sha256" : "7c9b3da1829c16a7bc4eacb71deb23f0e4fb6fa507fd5a73282d53402832a81b"
+         },
+         "source_text" : "fn main() {\n    var m: Map[String, int] = [:]\n    m.set(\"a\".toString(), 1)\n    m.update(\"a\".toString(), 0, (n) => n + 1)\n    if let p = m.getMut(\"a\") { *p += 3 }\n    println(m.getCopy(\"a\") ?? 0)\n    let removed = m.remove(\"a\") ?? 0\n    println(\"${removed} ${m.len()}\")\n    var s = Set[int]{}\n    s.add(1)\n    s.add(1)\n    let before = s.len()\n    let found = s.has(1)\n    let erased = s.remove(1)\n    println(\"${before} ${found} ${erased} ${s.len()}\")\n    var fs: Vec[f64] = [2.0, 1.0]\n    fs.sortBy((a, b) => a.totalCmp(b) == .Less)\n    println(\"${fs[0]:.1}\")\n    var out = String{}\n    out.push(\"x\")\n    let parts = \"a,b\".split(\",\")\n    out.push(parts.join(\"|\"))\n    println(out)\n    let pair = (1, \"ok\".toString())\n    println(\"${pair.0} ${pair.1}\")\n}\n"
+      },
+      {
+         "binary" : {
+            "bytes" : 4086544,
+            "path" : "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/bin/errors",
+            "sha256" : "7d5be6b33b6e686fb9520223e9f03a17c362ff4db88374b0f4533259e58c2286"
+         },
+         "build" : {
+            "argv" : [
+               "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+               "build",
+               "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/sources/errors/main.yv",
+               "-o",
+               "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/bin/errors"
+            ],
+            "cwd" : "/data1/workspace/github/workspace/yavo",
+            "environment_overrides" : {
+               "YAVO_ALLOC_CHECK" : "1"
+            },
+            "exit_code" : 0,
+            "seconds" : 0.162557847797871,
+            "signal" : 0,
+            "stderr" : {
+               "bytes" : 0,
+               "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "text" : ""
+            },
+            "stdin" : {
+               "bytes" : 0,
+               "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "text" : ""
+            },
+            "stdout" : {
+               "bytes" : 0,
+               "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "text" : ""
+            },
+            "timeout" : false
+         },
+         "expected_stdout" : "42\n0\nowned\ntrue\n",
+         "id" : "errors",
+         "kind" : "inline_rule_check",
+         "passed" : true,
+         "run" : {
+            "argv" : [
+               "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/bin/errors"
+            ],
+            "cwd" : "/data1/workspace/github/workspace/yavo",
+            "environment_overrides" : {
+               "YAVO_ALLOC_CHECK" : "1"
+            },
+            "exit_code" : 0,
+            "seconds" : 0.0105084553360939,
+            "signal" : 0,
+            "stderr" : {
+               "bytes" : 0,
+               "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "text" : ""
+            },
+            "stdin" : {
+               "bytes" : 0,
+               "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "text" : ""
+            },
+            "stdout" : {
+               "bytes" : 16,
+               "sha256" : "f19b55b08df5fceba1e1a56f1c9726375e2d69315b3802e2b18772bcffa7744c",
+               "text" : "42\n0\nowned\ntrue\n"
+            },
+            "timeout" : false
+         },
+         "source" : {
+            "bytes" : 536,
+            "path" : "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/sources/errors/main.yv",
+            "sha256" : "90d56edb7b7df923610df30efb213a85c8b67844d99c0b335864db43cced9268"
+         },
+         "source_text" : "enum Issue { Bad }\nfn parse(s: str) -> int ! Issue {\n    let n = s.parseInt() ?? return err(.Bad)\n    return n\n}\nfn load(s: str) -> int ! Issue {\n    let n = try parse(s)\n    return n + 1\n}\nfn main() {\n    match load(\"41\") {\n        ok(n) => println(n)\n        err(_e) => println(\"bad\")\n    }\n    let fallback = parse(\"x\") catch _ => 0\n    println(fallback)\n    var opt: ?String = some(\"owned\".toString())\n    match take(&opt) {\n        some(value) => println(value)\n        none => println(\"missing\")\n    }\n    println(opt.isNone())\n}\n"
+      },
+      {
+         "binary" : {
+            "bytes" : 4081520,
+            "path" : "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/bin/index_order",
+            "sha256" : "afd42c413bffb30e53c67eaebca89b1fbfbf0d2aa922c49bac01b5ac477049e6"
+         },
+         "build" : {
+            "argv" : [
+               "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+               "build",
+               "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/sources/index_order/main.yv",
+               "-o",
+               "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/bin/index_order"
+            ],
+            "cwd" : "/data1/workspace/github/workspace/yavo",
+            "environment_overrides" : {
+               "YAVO_ALLOC_CHECK" : "1"
+            },
+            "exit_code" : 0,
+            "seconds" : 0.173218848183751,
+            "signal" : 0,
+            "stderr" : {
+               "bytes" : 0,
+               "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "text" : ""
+            },
+            "stdin" : {
+               "bytes" : 0,
+               "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "text" : ""
+            },
+            "stdout" : {
+               "bytes" : 0,
+               "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "text" : ""
+            },
+            "timeout" : false
+         },
+         "expected_stdout" : "value\nindex\nvalue+\nindex+\n11\n",
+         "id" : "index_order",
+         "kind" : "inline_rule_check",
+         "passed" : true,
+         "run" : {
+            "argv" : [
+               "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/bin/index_order"
+            ],
+            "cwd" : "/data1/workspace/github/workspace/yavo",
+            "environment_overrides" : {
+               "YAVO_ALLOC_CHECK" : "1"
+            },
+            "exit_code" : 0,
+            "seconds" : 0.010774964466691,
+            "signal" : 0,
+            "stderr" : {
+               "bytes" : 0,
+               "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "text" : ""
+            },
+            "stdin" : {
+               "bytes" : 0,
+               "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "text" : ""
+            },
+            "stdout" : {
+               "bytes" : 29,
+               "sha256" : "c79dc8efcec5647d52e7225ebeb2644df1563de44a9880504401f68fadb74b5b",
+               "text" : "value\nindex\nvalue+\nindex+\n11\n"
+            },
+            "timeout" : false
+         },
+         "source" : {
+            "bytes" : 216,
+            "path" : "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/sources/index_order/main.yv",
+            "sha256" : "ded184df5a316719ce591d4d40c293db0f6b9f56da3fb8bf04458b6f3e867305"
+         },
+         "source_text" : "fn mark(label: str, value: int) -> int {\n    println(label)\n    return value\n}\nfn main() {\n    var v = [0]\n    v[mark(\"index\", 0)] = mark(\"value\", 9)\n    v[mark(\"index+\", 0)] += mark(\"value+\", 2)\n    println(v[0])\n}\n"
+      },
+      {
+         "binary" : {
+            "bytes" : 4079584,
+            "path" : "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/bin/two_phase",
+            "sha256" : "297c1790c7594752c56b7605cbad078a325a0e1191392928e5dd74a266650fd1"
+         },
+         "build" : {
+            "argv" : [
+               "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+               "build",
+               "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/sources/two_phase/main.yv",
+               "-o",
+               "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/bin/two_phase"
+            ],
+            "cwd" : "/data1/workspace/github/workspace/yavo",
+            "environment_overrides" : {
+               "YAVO_ALLOC_CHECK" : "1"
+            },
+            "exit_code" : 0,
+            "seconds" : 0.183185183443129,
+            "signal" : 0,
+            "stderr" : {
+               "bytes" : 0,
+               "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "text" : ""
+            },
+            "stdin" : {
+               "bytes" : 0,
+               "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "text" : ""
+            },
+            "stdout" : {
+               "bytes" : 0,
+               "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "text" : ""
+            },
+            "timeout" : false
+         },
+         "expected_stdout" : "2 1\n",
+         "id" : "two_phase",
+         "kind" : "inline_rule_check",
+         "passed" : true,
+         "run" : {
+            "argv" : [
+               "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/bin/two_phase"
+            ],
+            "cwd" : "/data1/workspace/github/workspace/yavo",
+            "environment_overrides" : {
+               "YAVO_ALLOC_CHECK" : "1"
+            },
+            "exit_code" : 0,
+            "seconds" : 0.0107251014560461,
+            "signal" : 0,
+            "stderr" : {
+               "bytes" : 0,
+               "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "text" : ""
+            },
+            "stdin" : {
+               "bytes" : 0,
+               "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "text" : ""
+            },
+            "stdout" : {
+               "bytes" : 4,
+               "sha256" : "dfac347cb71ae693ba8a54687f7112aff24ec67f88a3c66f69a7bf968fa2ac16",
+               "text" : "2 1\n"
+            },
+            "timeout" : false
+         },
+         "source" : {
+            "bytes" : 84,
+            "path" : "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/sources/two_phase/main.yv",
+            "sha256" : "e7107418885a29958fe030b5be15963d500141dda235ae284a4fc9502936161c"
+         },
+         "source_text" : "fn main() {\n    var v = [7]\n    v.push(v.len())\n    println(\"${v.len()} ${v[1]}\")\n}\n"
+      },
+      {
+         "check" : {
+            "argv" : [
+               "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+               "check",
+               "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/sources/noncopy_borrow/main.yv",
+               "--json"
+            ],
+            "cwd" : "/data1/workspace/github/workspace/yavo",
+            "environment_overrides" : {
+               "YAVO_ALLOC_CHECK" : "1"
+            },
+            "exit_code" : 1,
+            "seconds" : 0.0107467519119382,
+            "signal" : 0,
+            "stderr" : {
+               "bytes" : 0,
+               "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "text" : ""
+            },
+            "stdin" : {
+               "bytes" : 0,
+               "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "text" : ""
+            },
+            "stdout" : {
+               "bytes" : 1023,
+               "sha256" : "15025f0c71b64b60080984dafec115d0f8a1b87555aa9996030ce0fbe27ea57b",
+               "text" : "{\"diagnostics\":[{\"code\":\"E0102\",\"column\":5,\"end_column\":10,\"end_line\":4,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/sources/noncopy_borrow/main.yv\",\"fixes\":[],\"line\":4,\"message\":\"cannot modify `names` while `first` still points into it\",\"notes\":[\"`first` is used again on line 5\",\"`first` is a `&String` borrow: reading a non-copyable element (`let first = names[i]`) borrows it; if `first` should not depend on `names`, copy it with `.clone()` where it is created\"],\"primary\":{\"column\":5,\"end\":94,\"end_column\":10,\"end_line\":4,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/sources/noncopy_borrow/main.yv\",\"line\":4,\"start\":89},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/sources/noncopy_borrow/main.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"d37d16e51e9397f233e945b891300af2801919aa95be5dbe3b1f79c4d4236c23\",\"warning_count\":0}\n"
+            },
+            "timeout" : false
+         },
+         "expected_diagnostic" : "E0102",
+         "id" : "noncopy_borrow",
+         "kind" : "reject_check",
+         "passed" : true,
+         "source" : {
+            "bytes" : 138,
+            "path" : "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/sources/noncopy_borrow/main.yv",
+            "sha256" : "d37d16e51e9397f233e945b891300af2801919aa95be5dbe3b1f79c4d4236c23"
+         },
+         "source_text" : "fn main() {\n    var names: Vec[String] = [\"ann\".toString()]\n    let first = names[0]\n    names.push(\"bo\".toString())\n    println(first)\n}\n"
+      },
+      {
+         "check" : {
+            "argv" : [
+               "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+               "check",
+               "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/sources/indexed_receiver/main.yv",
+               "--json"
+            ],
+            "cwd" : "/data1/workspace/github/workspace/yavo",
+            "environment_overrides" : {
+               "YAVO_ALLOC_CHECK" : "1"
+            },
+            "exit_code" : 1,
+            "seconds" : 0.0109263304620981,
+            "signal" : 0,
+            "stderr" : {
+               "bytes" : 0,
+               "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "text" : ""
+            },
+            "stdin" : {
+               "bytes" : 0,
+               "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "text" : ""
+            },
+            "stdout" : {
+               "bytes" : 1668,
+               "sha256" : "861791bbb853c1bbd948c41247d30942d9b6614a75f929ebe31e74f29785c23f",
+               "text" : "{\"diagnostics\":[{\"code\":\"E0403\",\"column\":18,\"end_column\":28,\"end_line\":3,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/sources/indexed_receiver/main.yv\",\"fixes\":[{\"applicability\":\"candidate\",\"edits\":[{\"end\":52,\"replacement\":\"let argument = grid.len()\\n    \",\"start\":52},{\"end\":75,\"replacement\":\"argument\",\"start\":65}],\"id\":\"hoist-argument\",\"impact\":\"Moves this argument's evaluation before the receiver and any preceding arguments; their side effects, panic order and resource lifetimes can change.\",\"patch_id\":\"hoist-argument:e8db342059d89272e6e5a6191606f0f8884ae13bd21554751e313f905df9a8f3\",\"preconditions\":[\"Choose only when evaluating this argument first matches the intended behavior.\",\"The call remains in its original statement block; the entire patched file must recheck.\"],\"recheck\":\"passed\",\"recheck_scope\":\"single-candidate\",\"title\":\"Evaluate the argument before acquiring the mutable receiver\"}],\"line\":3,\"message\":\"`grid` is already borrowed by the receiver of `push`, so the argument cannot use it\",\"notes\":[\"evaluate the argument in a separate statement before acquiring the mutable receiver\"],\"primary\":{\"column\":18,\"end\":75,\"end_column\":28,\"end_line\":3,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/sources/indexed_receiver/main.yv\",\"line\":3,\"start\":65},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/sources/indexed_receiver/main.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"9876b1fe931ac347a2b67615b31e13e872342125e10013678c96df2ba3572d01\",\"warning_count\":0}\n"
+            },
+            "timeout" : false
+         },
+         "expected_diagnostic" : "E0403",
+         "id" : "indexed_receiver",
+         "kind" : "reject_check",
+         "passed" : true,
+         "source" : {
+            "bytes" : 79,
+            "path" : "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/sources/indexed_receiver/main.yv",
+            "sha256" : "9876b1fe931ac347a2b67615b31e13e872342125e10013678c96df2ba3572d01"
+         },
+         "source_text" : "fn main() {\n    var grid: Vec[Vec[int]] = [[1]]\n    grid[0].push(grid.len())\n}\n"
+      },
+      {
+         "check" : {
+            "argv" : [
+               "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+               "check",
+               "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/sources/rhs_borrow/main.yv",
+               "--json"
+            ],
+            "cwd" : "/data1/workspace/github/workspace/yavo",
+            "environment_overrides" : {
+               "YAVO_ALLOC_CHECK" : "1"
+            },
+            "exit_code" : 1,
+            "seconds" : 0.0109953889623284,
+            "signal" : 0,
+            "stderr" : {
+               "bytes" : 0,
+               "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "text" : ""
+            },
+            "stdin" : {
+               "bytes" : 0,
+               "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "text" : ""
+            },
+            "stdout" : {
+               "bytes" : 815,
+               "sha256" : "3b229d945997e81c3b6210e5c24da548b9311d62006281843df0a1e9d1d5bd27",
+               "text" : "{\"diagnostics\":[{\"code\":\"E0102\",\"column\":18,\"end_column\":22,\"end_line\":8,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/sources/rhs_borrow/main.yv\",\"fixes\":[],\"line\":8,\"message\":\"cannot borrow mutably `text`: the pending assignment value still borrows it\",\"notes\":[],\"primary\":{\"column\":18,\"end\":187,\"end_column\":22,\"end_line\":8,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/sources/rhs_borrow/main.yv\",\"line\":8,\"start\":183},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/sources/rhs_borrow/main.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"26f202d99ae25fbc8a46a5c8606dfeefdd407059c1e57101f2c26222c8ed7752\",\"warning_count\":0}\n"
+            },
+            "timeout" : false
+         },
+         "expected_diagnostic" : "E0102",
+         "id" : "rhs_borrow",
+         "kind" : "reject_check",
+         "passed" : true,
+         "source" : {
+            "bytes" : 228,
+            "path" : "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/sources/rhs_borrow/main.yv",
+            "sha256" : "26f202d99ae25fbc8a46a5c8606dfeefdd407059c1e57101f2c26222c8ed7752"
+         },
+         "source_text" : "fn index(text: inout String) -> int {\n    text = \"replacement\".toString()\n    return 0\n}\nfn main() {\n    var text = \"hello\".toString()\n    var views: Vec[str] = [\"\"]\n    views[index(&text)] = text.trim()\n    println(views[0])\n}\n"
+      },
+      {
+         "check" : {
+            "argv" : [
+               "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+               "check",
+               "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/sources/literal_interpolation/main.yv",
+               "--json"
+            ],
+            "cwd" : "/data1/workspace/github/workspace/yavo",
+            "environment_overrides" : {
+               "YAVO_ALLOC_CHECK" : "1"
+            },
+            "exit_code" : 1,
+            "seconds" : 0.0109774647280574,
+            "signal" : 0,
+            "stderr" : {
+               "bytes" : 0,
+               "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "text" : ""
+            },
+            "stdin" : {
+               "bytes" : 0,
+               "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+               "text" : ""
+            },
+            "stdout" : {
+               "bytes" : 1870,
+               "sha256" : "e9787f07ca079da07feb41a1872c1af165d30f355394a3a620d3f5e6e2fbdaa8",
+               "text" : "{\"diagnostics\":[{\"code\":\"E0020\",\"column\":13,\"end_column\":18,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/sources/literal_interpolation/main.yv\",\"fixes\":[],\"line\":2,\"message\":\"unterminated string literal\",\"notes\":[],\"primary\":{\"column\":13,\"end\":29,\"end_column\":18,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/sources/literal_interpolation/main.yv\",\"line\":2,\"start\":24},\"severity\":\"ERROR\"},{\"code\":\"E0020\",\"column\":14,\"end_column\":18,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/sources/literal_interpolation/main.yv\",\"fixes\":[],\"line\":2,\"message\":\"unterminated `${` in string; close it with `}`\",\"notes\":[\"to write a literal `${` in a string, escape it as `\\\\${`\"],\"primary\":{\"column\":14,\"end\":29,\"end_column\":18,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/sources/literal_interpolation/main.yv\",\"line\":2,\"start\":25},\"severity\":\"ERROR\"},{\"code\":\"E0020\",\"column\":1,\"end_column\":2,\"end_line\":3,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/sources/literal_interpolation/main.yv\",\"fixes\":[],\"line\":3,\"message\":\"expected `,` or `)`, found `}`\",\"notes\":[],\"primary\":{\"column\":1,\"end\":31,\"end_column\":2,\"end_line\":3,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/sources/literal_interpolation/main.yv\",\"line\":3,\"start\":30},\"severity\":\"ERROR\"}],\"error_count\":3,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/sources/literal_interpolation/main.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"229f6ad2ab5a2a2623baa0be2ba88583e2500fa3468f6f0fcf7d9e72e4b6b6ed\",\"warning_count\":0}\n"
+            },
+            "timeout" : false
+         },
+         "expected_diagnostic" : "E0020",
+         "id" : "literal_interpolation",
+         "kind" : "reject_check",
+         "passed" : true,
+         "source" : {
+            "bytes" : 32,
+            "path" : "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/sources/literal_interpolation/main.yv",
+            "sha256" : "229f6ad2ab5a2a2623baa0be2ba88583e2500fa3468f6f0fcf7d9e72e4b6b6ed"
+         },
+         "source_text" : "fn main() {\n    println(\"${\")\n}\n"
+      }
+   ],
+   "compiler" : {
+      "bytes" : 2807440,
+      "path" : "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+      "sha256" : "9621b61d2ab23da70a1170ba9b5f9493237bc1c2d98f17360479fe2e7a55bae5"
+   },
+   "date" : "2026-11-22",
+   "documents" : [
+      {
+         "bytes" : 8936,
+         "path" : "docs/agent-start.md",
+         "sha256" : "ad9d097d56d624539122bc694907a3cdb8485fd87581806a5aecb6407308577a"
+      },
+      {
+         "bytes" : 3607,
+         "path" : "docs/agent-api-index.md",
+         "sha256" : "45fd3f36409abf2dfdeb4055e55bf24c7a29cc94f446ffd5e314bcdbf9c5c6b3"
+      },
+      {
+         "bytes" : 32889,
+         "path" : "docs/cheatsheet.md",
+         "sha256" : "428392a40e92cb2470a630b87c0c383a9a8d7de34bad9739c0b24cbf7740071a"
+      },
+      {
+         "bytes" : 34259,
+         "path" : "docs/semantics.md",
+         "sha256" : "33c33e8a8a8c951bb983c1908e6843e6a3d91d240edc53f889367a3e55b0b94d"
+      },
+      {
+         "bytes" : 11212,
+         "path" : "docs/stdlib_contract.md",
+         "sha256" : "d1ac014d4ce1d39c76cddc6a5a3f3b68d37a497eaec6c334f91106e922bd4b58"
+      },
+      {
+         "bytes" : 9396,
+         "path" : "docs/decisions.md",
+         "sha256" : "5a0a9e8e5a6cf683ac02c21c04af5d50a874c53b2d202c7a023a556b68219db7"
+      }
+   ],
+   "extracted_source_blocks" : [
+      {
+         "bytes" : 348,
+         "path" : "numbers/main.yv",
+         "sha256" : "4cbc3f20ba6977db4fb3d0a1e9c240a9f5084cad9228cd8e83188a7d2b2e92cc"
+      },
+      {
+         "bytes" : 536,
+         "path" : "ownership/main.yv",
+         "sha256" : "4b4933f24fb43d999da5f864d01914dc4f003b156befee2551ef732df30a4e79"
+      },
+      {
+         "bytes" : 91,
+         "path" : "modules/geom.yv",
+         "sha256" : "54cc63e3d7be2bc64af243dc0eda944a63d5a2391007b3bc16be8fb30337bd85"
+      },
+      {
+         "bytes" : 60,
+         "path" : "modules/main.yv",
+         "sha256" : "a92a811339311d978d41f2c18fcb32e7d279a125dddc2ce3b83c8dab63e1e8ac"
+      },
+      {
+         "bytes" : 250,
+         "path" : "threads/main.yv",
+         "sha256" : "f54e623220ac0b9561d4b1b0b5d4678864ae05f9e628bb448cebcc127887f222"
+      }
+   ],
+   "passed" : 12,
+   "runner" : {
+      "bytes" : 5462,
+      "path" : "/data1/workspace/github/workspace/yavo/compiler/target/agent-start-validation-20261122/validate.pl",
+      "sha256" : "7b01bcdb0e52b5d5cb8e771009587152c9b74ebf52ede3d95d59f878292029fa"
+   },
+   "schema" : "yavo-agent-start-validation-v1",
+   "scope" : "Four programs extracted from the new starter guide plus eight focused rule checks; no full compiler suite rerun.",
+   "source_revision" : "f54b5fb21cba425bc5026bf16e97c8b642ba8803",
+   "status" : "passed",
+   "toolchain_lock" : {
+      "bytes" : 1096,
+      "path" : "compiler/toolchain.lock",
+      "sha256" : "a9bbe83e644b0e1cee19c8dba8b5157eaed3e9ddc71b96d8aab2b2d2bb15f53c"
+   },
+   "toolchain_status" : {
+      "argv" : [
+         "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+         "toolchain",
+         "status"
+      ],
+      "cwd" : "/data1/workspace/github/workspace/yavo",
+      "environment_overrides" : {
+         "YAVO_ALLOC_CHECK" : "1"
+      },
+      "exit_code" : 0,
+      "seconds" : 0.0110544916242361,
+      "signal" : 0,
+      "stderr" : {
+         "bytes" : 0,
+         "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+         "text" : ""
+      },
+      "stdin" : {
+         "bytes" : 0,
+         "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+         "text" : ""
+      },
+      "stdout" : {
+         "bytes" : 84,
+         "sha256" : "7bdbd548d5b5fa5e889e45943224622bbb15540b30e205bda6b9d7a94eb7d733",
+         "text" : "C toolchain: zig 0.17.1 (/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig)\n"
+      },
+      "timeout" : false
+   },
+   "total" : 12
+}
