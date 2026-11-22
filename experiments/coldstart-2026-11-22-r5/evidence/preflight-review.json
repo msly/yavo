@@ -1,0 +1,131 @@
+{
+  "schema_version": 1,
+  "recorded_at_utc": "2026-11-22T06:35:28Z",
+  "reviewer_role": "independent protocol and preflight reviewer; did not author task solutions or run participant sessions",
+  "scope": [
+    "TASKS.md",
+    "judge/generate.py",
+    "judge/cases.json",
+    "tools/lab.pl",
+    "tools/freeze.pl",
+    "PARTICIPANT.md"
+  ],
+  "reviewed_task_files_sha256": {
+    "TASKS.md": "68281940838e3bfbe4fb4bc30fa895f662a408315461921c493899a4fe45065b",
+    "judge/cases.json": "2cf5d0c505d65b52b85a8264dd647ffce6d2f49979da22338341035e45402ec1",
+    "judge/generate.py": "d0b48314fc4ab329a05e54aaee115e1dcb6f9c6808fa33b2e0ff3cf173a0a26d"
+  },
+  "task_protocol_findings": [
+    {
+      "id": "entry-file-conflict",
+      "status": "resolved_in_reviewed_packet",
+      "finding": "Original task common instructions used TNN.yv/TNN.rs, while the instrumented runner requires main.yv/main.rs within each task directory.",
+      "observed_resolution": "COMMON and generated TASKS.md now specify independent per-task directories with main.yv/main.rs; T04 adds a module in that directory."
+    },
+    {
+      "id": "account-balance-range",
+      "status": "resolved_in_reviewed_packet",
+      "finding": "T01 originally bounded all balances at 10^9, but the large-sums hidden case produces a current balance of 3*10^9.",
+      "observed_resolution": "Task now bounds only initial balances and transfer amounts at 10^9 and permits larger post-transfer balances."
+    },
+    {
+      "id": "version-numeric-identifier-range",
+      "status": "resolved_in_reviewed_packet",
+      "finding": "Common i64 statement conflicted with T12 pure numeric PRE identifiers beyond i64.",
+      "observed_resolution": "Common statement explicitly excepts T12 comparison-only numeric PRE identifiers."
+    }
+  ],
+  "historical_task_overlap": {
+    "status": "retained_and_disclosed",
+    "packet": "Twelve newly specified programs, not twelve wholly unseen task families or a strict family holdout.",
+    "reused_families": [
+      {
+        "current": "T01 atomic-transfer ledger",
+        "historical": "coldstart-2026-11-20/T03 accounts",
+        "new_requirements": "Atomic batch rollback and consumption, sequential credit, new self-transfer rule."
+      },
+      {
+        "current": "T06 three-thread run-length encoding",
+        "historical": "coldstart-2026-11-20/T06 run-length codec",
+        "new_requirements": "Three actual OS workers, prescribed contiguous chunks, ordered merging across boundaries."
+      },
+      {
+        "current": "T07 TTL LRU",
+        "historical": "coldstart-2026-11-20/T10 LRU",
+        "new_requirements": "Expiry before each operation, zero TTL deletion, overwrite renewal, get without renewal."
+      }
+    ],
+    "no_exact_reuse_of_round_three_or_four_packet": true
+  },
+  "oracle_review": {
+    "current_observation": "No computational mismatch identified in reviewed money/decimal parsing, CSV, TTL LRU, path normalization, escaped glob or version ordering logic.",
+    "independent_glob_check": {
+      "status": "passed",
+      "cases": 6248,
+      "pattern_alphabet": [
+        "a",
+        "b",
+        "*",
+        "?",
+        "\\"
+      ],
+      "pattern_lengths": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "texts": [
+        "",
+        "a",
+        "b",
+        "ab",
+        "*",
+        "?",
+        "\\",
+        "a\\"
+      ],
+      "method": "Independently tokenize escapes, reject a final unmatched backslash, then propagate prefix-match states. A star reaches all text prefixes at or after a currently reachable prefix; a question mark or matching literal advances one byte. Compare acceptance or invalidity with generate.py glob_regex plus re.fullmatch."
+    },
+    "frozen_case_regeneration_agreement": {
+      "status": "passed",
+      "cases": 168,
+      "public_cases": 24,
+      "hidden_cases": 144,
+      "method": "For every frozen case, recompute stdout using the corresponding current ORACLES function and compare to stored expected stdout.",
+      "independent_oracle": false
+    },
+    "limitations": "Review and bounded checks do not prove all possible task inputs correct. Frozen-case regeneration checks internal consistency, not an independently derived expected output for every case."
+  },
+  "runner_findings": [
+    {
+      "id": "task-order-and-public-before-submit",
+      "status": "reported_to_controller_fixes_in_progress_not_signed_off",
+      "finding": "Initial lab interface did not enforce T01..T12 submission order or require a public run for a successfully built submitted version."
+    },
+    {
+      "id": "output-byte-limit",
+      "status": "reported_to_controller_fixes_in_progress_not_signed_off",
+      "finding": "Initial stdout/stderr capture was unbounded and read complete files into JSON; runaway output could exhaust storage or memory and lose event finalization."
+    },
+    {
+      "id": "raw-output-comparison",
+      "status": "reported_to_controller_fixes_in_progress_not_signed_off",
+      "finding": "Initial public judgment compared UTF-8 decoded strings with replacement, rather than exact bytes; malformed output could alias a replacement character."
+    },
+    {
+      "id": "actual-backend-identity",
+      "status": "reported_to_controller_fixes_in_progress_not_signed_off",
+      "finding": "Initial freeze covered yavo, runtime header, toolchain lock, rustc and linker wrapper, but not the actual Zig executable or Rust sysroot components."
+    },
+    {
+      "id": "missing-entry-build-attempt",
+      "status": "reported_to_controller_accounting_review_required",
+      "finding": "Initial build path increments attempt count and snapshots before verifying entry existence. An interface-error first request must remain a failed first attempt and must not disappear from denominators merely because it has no compiler exit-code record."
+    }
+  ],
+  "freeze_status": "Controller must finish runner checks and freeze final hashes before participant dispatch; this receipt is not a final runner acceptance or a completed experiment.",
+  "credentials_or_hidden_model_reasoning_read": false
+}
+

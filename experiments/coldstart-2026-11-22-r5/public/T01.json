@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "tasks": [
+    {
+      "id": "T01",
+      "kind": "program",
+      "title": "原子转账账本",
+      "structural": [],
+      "cases": [
+        {
+          "id": "T01-public-01",
+          "visibility": "public",
+          "stdin": "account bob 20\naccount ann 10\npay bob ann 3\nbalance ann\nbatch 2\nann bob 4\nbob ann 100\nbalance ann\n",
+          "stdout": "paid\nann: 13\nbatch: row 2 funds bob\nann: 13\nann=13\nbob=17\ntotal: 30\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T01-public-02",
+          "visibility": "public",
+          "stdin": "account a 0007\naccount a 99\npay a a 7\nbatch 0\npay ghost absent 0\n",
+          "stdout": "error: duplicate a\npaid\nbatch: ok\nerror: unknown ghost\na=7\ntotal: 7\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "frozen_manifest_sha256": "aeb5c46db375e84c3d90257aec501161f29d4e4802f4a1a884b699753750bee3",
+  "before_participants": true,
+  "task_packet_files_verified": 28,
+  "runner_syntax": "passed",
+  "judge_selftest_scenarios": 14,
+  "judge_selftest_status": "passed",
+  "smoke": {
+    "scope": "Controller-only probes; excluded from all participant results and costs",
+    "rust_build_and_exact_stdout": "passed: probe 3 newline, exit 0, empty stderr",
+    "yavo_build_and_exact_stdout": "passed after controller removed an invalid semicolon; initial failed source and diagnostic retained in ignored smoke workspace",
+    "successful_build_requires_public_test_before_submit": "passed: submit refused with interface exit 2",
+    "public_mismatch": "passed: controller probe is not a task solution and public examples are judged false",
+    "source_freeze_on_submit": "passed",
+    "task_order": "passed: T02 write refused before T01 submission"
+  },
+  "review_fixes": {
+    "ordered_tasks_and_current_public_test_gate": "implemented and smoke-verified",
+    "output_limit": "implemented: 1 MiB per stream; process-group termination; output_limit prevents success",
+    "public_byte_comparison": "implemented: original stdout/stderr bytes compared with UTF-8 encoded expectations; decoded JSON is display only",
+    "first_build_interface_error": "implemented: initial build outcome defaults to failure before source validation; summary also reads earliest build event",
+    "toolchain_identity": "implemented: actual Zig binary, Rust driver and standard archives hashed at session and judge boundaries; core identities checked before each build"
+  }
+}

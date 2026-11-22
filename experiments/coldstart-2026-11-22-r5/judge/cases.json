@@ -1,0 +1,1930 @@
+{
+  "schema_version": 1,
+  "seed": 2026112205,
+  "tasks": [
+    {
+      "id": "T01",
+      "kind": "program",
+      "title": "原子转账账本",
+      "structural": [],
+      "cases": [
+        {
+          "id": "T01-public-01",
+          "visibility": "public",
+          "stdin": "account bob 20\naccount ann 10\npay bob ann 3\nbalance ann\nbatch 2\nann bob 4\nbob ann 100\nbalance ann\n",
+          "stdout": "paid\nann: 13\nbatch: row 2 funds bob\nann: 13\nann=13\nbob=17\ntotal: 30\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T01-public-02",
+          "visibility": "public",
+          "stdin": "account a 0007\naccount a 99\npay a a 7\nbatch 0\npay ghost absent 0\n",
+          "stdout": "error: duplicate a\npaid\nbatch: ok\nerror: unknown ghost\na=7\ntotal: 7\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T01-hidden-01",
+          "visibility": "hidden",
+          "purpose": "empty",
+          "stdin": "",
+          "stdout": "total: 0\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T01-hidden-02",
+          "visibility": "hidden",
+          "purpose": "self-funds-before-noop",
+          "stdin": "account a 3\npay a a 4\npay a a 0\n",
+          "stdout": "error: funds a\npaid\na=3\ntotal: 3\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T01-hidden-03",
+          "visibility": "hidden",
+          "purpose": "destination-check-before-funds",
+          "stdin": "account a 0\npay a missing 5\npay missing absent 5\n",
+          "stdout": "error: unknown missing\nerror: unknown missing\na=0\ntotal: 0\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T01-hidden-04",
+          "visibility": "hidden",
+          "purpose": "batch-rollback-and-consume",
+          "stdin": "account a 10\naccount b 0\nbatch 3\na b 6\na b 6\nb a 1\nbalance a\nbalance b\npay b a 0\n",
+          "stdout": "batch: row 2 funds a\na: 10\nb: 0\npaid\na=10\nb=0\ntotal: 10\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T01-hidden-05",
+          "visibility": "hidden",
+          "purpose": "batch-sequential-credit",
+          "stdin": "account a 10\naccount b 0\naccount c 0\nbatch 3\na b 10\nb c 10\nc a 10\n",
+          "stdout": "batch: ok\na=10\nb=0\nc=0\ntotal: 10\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T01-hidden-06",
+          "visibility": "hidden",
+          "purpose": "duplicates-sort-and-zero",
+          "stdin": "account z 0\naccount Aa 3\naccount A 7\naccount z 9\nbatch 0\nbalance nope\n",
+          "stdout": "error: duplicate z\nbatch: ok\nerror: unknown nope\nA=7\nAa=3\nz=0\ntotal: 10\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T01-hidden-07",
+          "visibility": "hidden",
+          "purpose": "large-sums",
+          "stdin": "account a 1000000000\naccount b 1000000000\naccount c 1000000000\nbatch 2\na c 1000000000\nb c 1000000000\n",
+          "stdout": "batch: ok\na=0\nb=0\nc=3000000000\ntotal: 3000000000\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T01-hidden-08",
+          "visibility": "hidden",
+          "purpose": "whitespace-and-leading-zero",
+          "stdin": " \n\taccount\ta\t0000\naccount b 000010\n batch 2\nb a 000001\na b 000000\nbalance a\n",
+          "stdout": "batch: ok\na: 1\na=1\nb=9\ntotal: 10\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T01-hidden-09",
+          "visibility": "hidden",
+          "purpose": "seed-2026112205",
+          "stdin": "account a 13\naccount b 9\naccount c 3\naccount d 25\npay a a 4\nbatch 3\nc d 13\nx x 2\na c 14\nbatch 3\nd x 0\nb c 1\nx c 13\npay d x 5\npay b a 1\nbatch 3\na a 4\nb c 17\nc a 10\npay b d 2\npay x d 10\nbatch 1\nx c 0\nbatch 3\nb x 9\na x 4\nx b 2\npay d b 15\npay b a 1\nbatch 0\npay b c 12\npay c d 11\npay b x 17\nbatch 4\nb x 6\nc d 19\nd x 14\nc c 1\nbatch 1\nc x 5\npay d b 6\nbatch 4\nd a 15\na x 10\na x 0\nc b 3\nbatch 4\nx d 8\nx d 2\na a 19\na c 2\npay b x 17\npay d a 1\npay b c 17\npay d a 19\n",
+          "stdout": "paid\nbatch: row 1 funds c\nbatch: row 1 unknown x\nerror: unknown x\npaid\nbatch: row 2 funds b\npaid\nerror: unknown x\nbatch: row 1 unknown x\nbatch: row 1 unknown x\npaid\npaid\nbatch: ok\npaid\npaid\nerror: unknown x\nbatch: row 1 unknown x\nbatch: row 1 unknown x\npaid\nbatch: row 2 unknown x\nbatch: row 1 unknown x\nerror: unknown x\npaid\nerror: funds b\nerror: funds d\na=16\nb=14\nc=4\nd=16\ntotal: 50\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T01-hidden-10",
+          "visibility": "hidden",
+          "purpose": "seed-2026112206",
+          "stdin": "account a 20\naccount b 6\naccount c 10\naccount d 10\nbatch 0\npay b x 6\npay x d 12\nbatch 3\nc b 8\na c 13\nc b 12\npay x d 11\npay a b 15\npay b b 11\npay c d 0\nbatch 1\na b 18\nbatch 3\nx a 8\nc a 2\nc x 17\npay b d 0\npay b x 8\nbatch 2\nc a 6\nd x 12\npay c b 7\npay d x 11\npay c b 1\nbatch 3\na x 3\nb b 11\na c 15\npay d a 17\npay c x 4\npay b c 12\npay d c 17\npay d c 19\nbatch 2\na c 13\nd b 6\npay x c 17\nbatch 0\n",
+          "stdout": "batch: ok\nerror: unknown x\nerror: unknown x\nbatch: ok\nerror: unknown x\nerror: funds a\npaid\npaid\nbatch: row 1 funds a\nbatch: row 1 unknown x\npaid\nerror: unknown x\nbatch: row 1 funds c\nerror: funds c\nerror: unknown x\npaid\nbatch: row 1 unknown x\nerror: funds d\nerror: unknown x\npaid\nerror: funds d\nerror: funds d\nbatch: row 1 funds a\nerror: unknown x\nbatch: ok\na=7\nb=15\nc=14\nd=10\ntotal: 46\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T01-hidden-11",
+          "visibility": "hidden",
+          "purpose": "seed-2026112207",
+          "stdin": "account a 4\naccount b 10\naccount c 10\naccount d 2\nbatch 1\nd b 19\nbatch 4\nc d 14\na c 3\nb b 4\na a 4\npay a x 14\nbatch 2\nx a 14\na a 2\npay x a 14\npay a x 11\npay b d 18\npay b b 7\nbatch 4\nd b 15\nx d 17\na c 4\nb a 16\npay b d 7\nbatch 4\nx x 18\nx a 3\nd a 16\nd b 19\npay a b 1\nbatch 3\nb a 10\nc a 17\nc d 9\npay c a 18\npay b c 18\nbatch 2\nb c 17\nb a 2\npay d a 12\npay c b 9\npay x b 8\npay a d 15\nbatch 1\nb c 10\npay x b 6\npay c d 5\npay x b 10\nbatch 3\nd a 11\na b 18\nb x 9\n",
+          "stdout": "batch: row 1 funds d\nbatch: row 1 funds c\nerror: unknown x\nbatch: row 1 unknown x\nerror: unknown x\nerror: unknown x\nerror: funds b\npaid\nbatch: row 1 funds d\npaid\nbatch: row 1 unknown x\npaid\nbatch: row 1 funds b\nerror: funds c\nerror: funds b\nbatch: row 1 funds b\nerror: funds d\npaid\nerror: unknown x\nerror: funds a\nbatch: ok\nerror: unknown x\npaid\nerror: unknown x\nbatch: row 2 funds a\na=3\nb=3\nc=6\nd=14\ntotal: 26\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T01-hidden-12",
+          "visibility": "hidden",
+          "purpose": "seed-2026112208",
+          "stdin": "account a 11\naccount b 14\naccount c 29\naccount d 14\nbatch 4\nb c 13\nb x 7\nc d 15\nc b 17\npay x b 11\npay c c 8\npay x a 2\npay c d 15\npay x d 0\npay b d 14\nbatch 1\nx d 15\npay d c 18\nbatch 3\nb a 1\nc x 7\nd b 4\npay x b 17\npay d b 4\npay d b 10\npay c d 2\npay d c 1\npay d c 9\nbatch 4\nx b 6\na a 19\nx c 19\nc x 5\npay d a 12\npay c c 10\npay b x 14\nbatch 1\nc x 4\nbatch 4\na c 7\nx d 19\nd x 1\nb x 6\npay c c 7\nbatch 0\nbatch 4\na x 11\nd b 14\na x 12\na c 14\n",
+          "stdout": "batch: row 2 unknown x\nerror: unknown x\npaid\nerror: unknown x\npaid\nerror: unknown x\npaid\nbatch: row 1 unknown x\npaid\nbatch: row 1 funds b\nerror: unknown x\npaid\npaid\npaid\npaid\npaid\nbatch: row 1 unknown x\nerror: funds d\npaid\nerror: unknown x\nbatch: row 1 unknown x\nbatch: row 2 unknown x\npaid\nbatch: ok\nbatch: row 1 unknown x\na=11\nb=14\nc=40\nd=3\ntotal: 68\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        }
+      ]
+    },
+    {
+      "id": "T02",
+      "kind": "program",
+      "title": "严格 CSV 记录",
+      "structural": [],
+      "cases": [
+        {
+          "id": "T02-public-01",
+          "visibility": "public",
+          "stdin": "a,\"b,c\",\n\"say \"\"hi\"\"\",x\n",
+          "stdout": "1: 3\n1:a\n3:b,c\n0:\n2: 2\n8:say \"hi\"\n1:x\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T02-public-02",
+          "visibility": "public",
+          "stdin": "\n\"\"\na\"b,c\n\"x\" tail\n",
+          "stdout": "1: 1\n0:\n2: 1\n0:\n3: invalid\n4: invalid\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T02-hidden-01",
+          "visibility": "hidden",
+          "purpose": "empty-file",
+          "stdin": "",
+          "stdout": "",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T02-hidden-02",
+          "visibility": "hidden",
+          "purpose": "empty-record-vs-final-newline",
+          "stdin": "\n\n",
+          "stdout": "1: 1\n0:\n2: 1\n0:\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T02-hidden-03",
+          "visibility": "hidden",
+          "purpose": "trailing-and-consecutive-empty-fields",
+          "stdin": ",\n,,\na,,b,\n",
+          "stdout": "1: 2\n0:\n0:\n2: 3\n0:\n0:\n0:\n3: 4\n1:a\n0:\n1:b\n0:\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T02-hidden-04",
+          "visibility": "hidden",
+          "purpose": "escaped-quote-runs",
+          "stdin": "\"\"\n\"\"\"\"\n\"\"\"\"\"\"\n\"a\"\"b\"\n",
+          "stdout": "1: 1\n0:\n2: 1\n1:\"\n3: 1\n2:\"\"\n4: 1\n3:a\"b\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T02-hidden-05",
+          "visibility": "hidden",
+          "purpose": "unclosed-and-junk",
+          "stdin": "\"\n\"abc\na\"\n\"ok\"x\n\"ok\" \n",
+          "stdout": "1: invalid\n2: invalid\n3: invalid\n4: invalid\n5: invalid\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T02-hidden-06",
+          "visibility": "hidden",
+          "purpose": "spaces-are-data",
+          "stdin": " a , b \n\" a \",\" \"\n \"a\"\n",
+          "stdout": "1: 2\n3: a \n3: b \n2: 2\n3: a \n1: \n3: invalid\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T02-hidden-07",
+          "visibility": "hidden",
+          "purpose": "delimiters-as-data",
+          "stdin": "\"a,b\",\"|:\",\"${x}\"\n",
+          "stdout": "1: 3\n3:a,b\n2:|:\n4:${x}\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T02-hidden-08",
+          "visibility": "hidden",
+          "purpose": "max-width",
+          "stdin": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n",
+          "stdout": "1: 1\n200:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T02-hidden-09",
+          "visibility": "hidden",
+          "purpose": "seed-2026112205",
+          "stdin": "\"\"\n\"\"\"\"\"b\"\"bb\",\"|,\",\"|b\"\n\"\",\" |,,\"\",\"\n\"  |b ,\",\",b\"\"aa\",\"\",\"bb,ab\"\"\"\n\",\"\n\"baaa a\",\"\"\"\"\"b\"\"||\"\n\"\"\"aab,b,\",\"\",\"\",,\" b   \"\n\"a,|\",,\",|a\"\"b\",\"b\"\"bb \"\",\",\"|,,\"\"\"\n\"ab a,\",\"a\"\"\",\"a,b|\",\"a \"\n\"aa|\"\"|\"\n\"\",\"a\",\"a\"\"bad\n\"|,,\"\"a \",\"||\"\"\"\"\",\"\"\"\",\"|,abb\"\"bad\n\"ab\"\"b\"\n\"a\"\"bad\n\"a| b,ba\",\"||ab, \",a\n\"\"\"ba,\",\"\"\"b|,b\",\" \",\",,b |\"\"\"\"\"\"bad\n\"\"\"\",\"a,a \"\"\",\"b|\"\"b\"\" ,\"\n\"\",\"\"\"\"\n\"\"\"| a\",\",ba\"\"|\",\"\"\"\",,\"bad\n\"ba\"\"\",\"\"\"  ,|\",b,\"bad\n\"\"\"\",\"|  ,\",,\",,\"\"\"\"|\"\"\"\n b\"bad\n  ,\"  \"\",b\"\"bad\n\"|||\"\n\"\"\"ab a\",\"b  |ba\"\n",
+          "stdout": "1: 1\n0:\n2: 3\n6:\"\"b\"bb\n2:|,\n2:|b\n3: 2\n0:\n6: |,,\",\n4: 4\n6:  |b ,\n5:,b\"aa\n0:\n6:bb,ab\"\n5: 1\n1:,\n6: 2\n6:baaa a\n6:\"\"b\"||\n7: 5\n7:\"aab,b,\n0:\n0:\n0:\n5: b   \n8: 5\n3:a,|\n0:\n5:,|a\"b\n7:b\"bb \",\n4:|,,\"\n9: 4\n5:ab a,\n2:a\"\n4:a,b|\n2:a \n10: 1\n5:aa|\"|\n11: invalid\n12: invalid\n13: 1\n4:ab\"b\n14: invalid\n15: 3\n7:a| b,ba\n6:||ab, \n1:a\n16: invalid\n17: 3\n1:\"\n5:a,a \"\n7:b|\"b\" ,\n18: 2\n0:\n1:\"\n19: invalid\n20: invalid\n21: 4\n1:\"\n4:|  ,\n0:\n6:,,\"\"|\"\n22: invalid\n23: invalid\n24: 1\n3:|||\n25: 2\n5:\"ab a\n6:b  |ba\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T02-hidden-10",
+          "visibility": "hidden",
+          "purpose": "seed-2026112206",
+          "stdin": "\"\"\"\",\"\",\" ,,,,\"\" \"\n\"| b \"\"\",\"\"\",b|\"\"b\",\" \",\",b\"\"a,,|\"\"bad\n\"\"\",,b \",a b|  a,\" \"\",,|\",\"|b||a\",\"   \"\n\",ab a ,\",\" a\"\"\"\"ba\",\"\",\"a,a,\"\n\"a,\"\"\",\"|,\"\"\",\",,| \"\"\"\" \",  ,\",\"\"|  \"\"|\"\"bad\n| |b,\"a|\",\"|b,\",\",|a\"\"|\",a \n\"abaab|,\",\",\",\"\"\" b|\"\"b\",\"b\",\"\"\n\"a ,\",\",,bb|\",\", \"\"bad\n\"|,,\"\n\",| \",aabb| ,\"\",\"\"\"ba\"\"a\",\"a\"\",b\"\n\",|ab\",a,\"|b\"\" \",\",aa\"\"a||\",\",\"\"b| \"\"\"\"bad\n\", ,b\",\"\"\" ,\",\"||  \"\n\"\"\" a b\"\"\"\"\",\"ba,b\",\",b\",\"\"\"\",\"a\"\"aba\"\n\"|, \",\"b \"\n\"b\"\",,\",\" \"\"\"\"|\",\"\"\"\",\" a,b\"\"bad\nb,,,\",aa\",\"bb|\"\",| \"\n\" a,a |\",\"\",\"b,|,,,\"\"\",\" ||\"\n\",\",\"|b \",,\"\"\"b,\",\"a\"\"b\"\",\"\"\"\"\"\"bad\n\"b||||,\",\"|a\",\",  |\",\"\"\"a \"\" b \"\n\"\",\"|b \",\"b |\"\n||,\"b\"\"|,\"\"a\",\"  a,|\"\"\",\"a\"\"\"\n\",\"\n\" b\",a,\"|,  \"\n,\"\"\"bb\",\"|a, ,b\",\",b\",\",\"\"\"\",\"\n\",\",\" \"\",| \"\",\",\"\",\"|\"\"bb\", a|b|b\n",
+          "stdout": "1: 3\n1:\"\n0:\n7: ,,,,\" \n2: invalid\n3: 5\n5:\",,b \n7:a b|  a\n5: \",,|\n5:|b||a\n3:   \n4: 4\n7:,ab a ,\n6: a\"\"ba\n0:\n4:a,a,\n5: invalid\n6: 5\n4:| |b\n2:a|\n3:|b,\n5:,|a\"|\n2:a \n7: 5\n7:abaab|,\n1:,\n6:\" b|\"b\n1:b\n0:\n8: invalid\n9: 1\n3:|,,\n10: 5\n3:,| \n6:aabb| \n0:\n5:\"ba\"a\n4:a\",b\n11: invalid\n12: 3\n4:, ,b\n3:\" ,\n4:||  \n13: 5\n7:\" a b\"\"\n4:ba,b\n2:,b\n1:\"\n5:a\"aba\n14: 2\n3:|, \n2:b \n15: invalid\n16: 5\n1:b\n0:\n0:\n3:,aa\n7:bb|\",| \n17: 4\n6: a,a |\n0:\n7:b,|,,,\"\n3: ||\n18: invalid\n19: 4\n6:b||||,\n2:|a\n4:,  |\n7:\"a \" b \n20: 3\n0:\n3:|b \n3:b |\n21: 4\n2:||\n6:b\"|,\"a\n6:  a,|\"\n2:a\"\n22: 1\n1:,\n23: 3\n2: b\n1:a\n4:|,  \n24: 5\n0:\n3:\"bb\n6:|a, ,b\n2:,b\n4:,\"\",\n25: 5\n1:,\n7: \",| \",\n0:\n4:|\"bb\n6: a|b|b\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T02-hidden-11",
+          "visibility": "hidden",
+          "purpose": "seed-2026112207",
+          "stdin": "\", \"\n\"|a,,a|a\",\"\"\"\"\"\",\n\",\"\",b\",\"\"\"\"\"\"\n\"aa\"\",,  \",\" a\"\"bad\n\"\"\" a\",\"\"\" \"\"|\"\"\",\"|a\"\n\"a,\",\"bad\n\"a,, \"\"bad\n|,\"|a\"\"a|b\",,\"\", b|  \n\"\",,\",,\"\"|b\"\"\"\"\",\"\"\n\"a\"\nba,\",\",\"\"\"|bb\",\"|\"\",, b|\"\na,\"\"\" ,\",\"\"\",a\",\"\"\"|\"\"\"\n\" ,a\"\"aa \", \n,,b,|aa,\"  \"\"bad\n,\"baaa\"\"b\",\"\"\"\"\n\"aabb|\",\"||\"\" b\",\" a\",\"\"\"\", b\n\"\"\"b, b\",\"\"\"|| \"\"|b\",\" ,\"\n\"\"\",ab \"\",\",\" ,|\",\"aab\"\" ab\",\"a\"\" \"\n\",,,,  ,\"\n\"\"\"b  \"\"b\",\"\"\"bad\n,\"|\"\"\",\"\"\" b | \"\"bad\n\" , ,\",\"|,a,a\"\n\"bad\nb,|\"bad\n\"|,\",\"a\",\"\"\"a,,\",  |a \n",
+          "stdout": "1: 1\n2:, \n2: 3\n7:|a,,a|a\n2:\"\"\n0:\n3: 2\n4:,\",b\n2:\"\"\n4: invalid\n5: 3\n3:\" a\n5:\" \"|\"\n2:|a\n6: invalid\n7: invalid\n8: 5\n1:|\n6:|a\"a|b\n0:\n0:\n5: b|  \n9: 4\n0:\n0:\n7:,,\"|b\"\"\n0:\n10: 1\n1:a\n11: 4\n2:ba\n1:,\n4:\"|bb\n7:|\",, b|\n12: 4\n1:a\n3:\" ,\n3:\",a\n3:\"|\"\n13: 2\n7: ,a\"aa \n1: \n14: invalid\n15: 3\n0:\n6:baaa\"b\n1:\"\n16: 5\n5:aabb|\n5:||\" b\n2: a\n1:\"\n2: b\n17: 3\n5:\"b, b\n7:\"|| \"|b\n2: ,\n18: 4\n7:\",ab \",\n3: ,|\n7:aab\" ab\n3:a\" \n19: 1\n7:,,,,  ,\n20: invalid\n21: invalid\n22: 2\n4: , ,\n5:|,a,a\n23: invalid\n24: invalid\n25: 4\n2:|,\n1:a\n4:\"a,,\n5:  |a \n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T02-hidden-12",
+          "visibility": "hidden",
+          "purpose": "seed-2026112208",
+          "stdin": "\", \"\n\"\"\"  \",\" a|a, \"\"\",\",a\"\"\",\"a, \",\"\"\"bad\n\" \"\"   |\"\n bb|,\"b\"\"b\",\",a,,\",\"b|\"\"\",\"|,,\"\",\"\"bad\n\"\"\" ,\",\"||\"\"\"\"a\"\",\",\",a\",\"a|a,\"\"\",\"  ,\"\n\"b\",\"a\"\"\",\"\"\"|||,a \",\"\",\" ,\"\" aa\"\n\"|| \"\"\"\"a\"\n\"\",\"|a ,\"\na|,\"|\"\"a\",\"\"\"\"\" | ,\"\"\"\n\"bb\"\" ,b\"\n\"bbaa,,\",\"ab\"\"\"\", \",\"\"\"a\"\"bad\n\"b ,\",\",,|\"\n\" ,\"\"ab \"\"bad\n\"ba ,  \",\",\",\" ,\"\"\"\"b\",\"a|a \"\" \"\"bad\n\",ba| \",,\"a|\"\"bad\n\"b\"\"\",|,\"||a b\"\n\"|,,\",\"\"\"\"\"\",  ,\"b,b\"\n\"\"\"ab\"\"|\"\"\"\"\",\"ab b\",\",|,\"\n,|\n\"b|\"\" \",\"\", |bb\n\" b,b||\",\"\",\"bbab,b \",\n\"\",\"ab\"\"| |\",\"\"\"abb b\"\"\",\"\"\n\", \",\"\"\"a a \"\"a\",\"a,aa,\",\"\",\", ba,b\"\"\"\n\"b, \",\",\"\"||\",\" b, ,b\",\"|b|\",\",a a,a\"\n\"\"\"\"\" a,ab\"\n",
+          "stdout": "1: 1\n2:, \n2: invalid\n3: 1\n6: \"   |\n4: invalid\n5: 5\n3:\" ,\n7:||\"\"a\",\n2:,a\n5:a|a,\"\n3:  ,\n6: 5\n1:b\n2:a\"\n7:\"|||,a \n0:\n6: ,\" aa\n7: 1\n6:|| \"\"a\n8: 2\n0:\n4:|a ,\n9: 3\n2:a|\n3:|\"a\n7:\"\" | ,\"\n10: 1\n6:bb\" ,b\n11: invalid\n12: 2\n3:b ,\n3:,,|\n13: invalid\n14: invalid\n15: invalid\n16: 3\n2:b\"\n1:|\n5:||a b\n17: 4\n3:|,,\n2:\"\"\n2:  \n3:b,b\n18: 3\n7:\"ab\"|\"\"\n4:ab b\n3:,|,\n19: 2\n0:\n1:|\n20: 3\n4:b|\" \n0:\n4: |bb\n21: 4\n6: b,b||\n0:\n7:bbab,b \n0:\n22: 4\n0:\n6:ab\"| |\n7:\"abb b\"\n0:\n23: 5\n2:, \n7:\"a a \"a\n5:a,aa,\n0:\n7:, ba,b\"\n24: 5\n3:b, \n4:,\"||\n6: b, ,b\n3:|b|\n6:,a a,a\n25: 1\n7:\"\" a,ab\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        }
+      ]
+    },
+    {
+      "id": "T03",
+      "kind": "program",
+      "title": "整数区间集合",
+      "structural": [],
+      "cases": [
+        {
+          "id": "T03-public-01",
+          "visibility": "public",
+          "stdin": "add 1 3\nadd 5 7\nadd 4 4\nshow\ndel 3 5\nshow\nhas 3\nhas 7\n",
+          "stdout": "1:7\n1:2 6:7\nno\nyes\ncount: 4\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T03-public-02",
+          "visibility": "public",
+          "stdin": "show\nadd -2 2\ndel -2 -2\ndel 2 2\nshow\n",
+          "stdout": "empty\n-1:1\ncount: 3\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T03-hidden-01",
+          "visibility": "hidden",
+          "purpose": "empty",
+          "stdin": "",
+          "stdout": "count: 0\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T03-hidden-02",
+          "visibility": "hidden",
+          "purpose": "single-point",
+          "stdin": "add 0 0\nshow\nhas 0\ndel 0 0\nshow\n",
+          "stdout": "0:0\nyes\nempty\ncount: 0\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T03-hidden-03",
+          "visibility": "hidden",
+          "purpose": "merge-both-sides",
+          "stdin": "add -5 -1\nadd 1 4\nadd 0 0\nshow\n",
+          "stdout": "-5:4\ncount: 10\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T03-hidden-04",
+          "visibility": "hidden",
+          "purpose": "split-and-rejoin",
+          "stdin": "add 0 10\ndel 3 7\nshow\nadd 3 7\nshow\n",
+          "stdout": "0:2 8:10\n0:10\ncount: 11\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T03-hidden-05",
+          "visibility": "hidden",
+          "purpose": "outside-deletion",
+          "stdin": "add 2 5\ndel -9 1\ndel 6 99\nshow\n",
+          "stdout": "2:5\ncount: 4\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T03-hidden-06",
+          "visibility": "hidden",
+          "purpose": "overlap-idempotence",
+          "stdin": "add 1 9\nadd 3 4\nadd 1 9\ndel 4 6\ndel 4 6\nshow\n",
+          "stdout": "1:3 7:9\ncount: 6\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T03-hidden-07",
+          "visibility": "hidden",
+          "purpose": "large-span",
+          "stdin": "add -1000000000 1000000000\nhas -1000000000\nhas 1000000000\ndel -999999999 999999999\nshow\n",
+          "stdout": "yes\nyes\n-1000000000:-1000000000 1000000000:1000000000\ncount: 2\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T03-hidden-08",
+          "visibility": "hidden",
+          "purpose": "erase-everything",
+          "stdin": "add -3 -1\nadd 2 7\ndel -100 100\nshow\nhas 0\n",
+          "stdout": "empty\nno\ncount: 0\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T03-hidden-09",
+          "visibility": "hidden",
+          "purpose": "seed-2026112205",
+          "stdin": "del -4 30\nhas 9\nhas -39\nadd 11 23\nadd 1 18\nshow\nadd 26 39\nadd 25 39\nadd 0 1\nadd -3 24\nhas -12\ndel -24 2\nshow\nadd -35 31\nshow\ndel -39 15\nhas -32\nadd -40 -12\ndel -13 9\ndel 16 28\nhas -17\nshow\ndel -7 7\nshow\nhas -44\nhas -44\nshow\nhas -3\nhas -12\ndel -7 2\nadd 28 37\ndel 26 39\nadd 16 31\nadd -26 39\nhas -8\nhas -41\ndel -17 22\nadd -21 -1\nshow\nshow\nadd -34 31\nadd 25 29\nhas 23\ndel -16 34\ndel -27 9\n",
+          "stdout": "no\nno\n1:23\nno\n3:39\n-35:39\nno\nyes\n-40:-14 29:39\n-40:-14 29:39\nno\nno\n-40:-14 29:39\nno\nno\nyes\nno\n-40:-1 23:39\n-40:-1 23:39\nyes\ncount: 18\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T03-hidden-10",
+          "visibility": "hidden",
+          "purpose": "seed-2026112206",
+          "stdin": "show\nadd -37 -35\ndel -4 -4\nhas -33\nhas -16\nhas -33\nadd 7 29\nhas -8\ndel -17 32\nadd 5 25\nhas 40\nhas 24\nhas -36\ndel -20 29\nshow\ndel -28 -4\nadd -29 9\nadd -7 4\nhas 42\nshow\ndel -28 10\nshow\nshow\nadd 6 32\ndel -18 19\nhas -36\nhas -36\nadd 2 16\nhas 43\ndel -6 26\nadd -15 26\ndel -11 0\nadd -5 26\nhas 28\ndel -6 10\nshow\nshow\nshow\ndel -5 12\nhas -12\ndel -27 15\ndel -22 11\nadd -4 31\nadd -4 4\nshow\n",
+          "stdout": "empty\nno\nno\nno\nno\nno\nyes\nyes\n-37:-35\nno\n-37:-35 -29:9\n-37:-35 -29:-29\n-37:-35 -29:-29\nyes\nyes\nno\nyes\n-37:-35 -29:-29 -15:-12 11:32\n-37:-35 -29:-29 -15:-12 11:32\n-37:-35 -29:-29 -15:-12 11:32\nyes\n-37:-35 -29:-29 -4:32\ncount: 41\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T03-hidden-11",
+          "visibility": "hidden",
+          "purpose": "seed-2026112207",
+          "stdin": "del -39 1\nhas 7\ndel -28 -16\nadd -27 15\nshow\nadd 15 31\nshow\nshow\nshow\nhas 45\ndel 14 28\nhas -5\nhas 11\nhas -10\nshow\nadd -29 -12\ndel -23 38\nshow\nhas -39\ndel 15 21\nshow\nshow\nadd 14 19\ndel -19 -9\nadd -32 -28\nhas -16\nadd -28 10\nadd 1 12\ndel -16 9\nhas 33\nshow\nhas 36\nshow\ndel -29 2\nshow\nhas 14\nhas 11\nshow\nshow\nadd -15 12\nadd 8 21\ndel -8 38\nadd -40 -32\nhas -14\nshow\n",
+          "stdout": "no\n-27:15\n-27:31\n-27:31\n-27:31\nno\nyes\nyes\nyes\n-27:13 29:31\n-29:-24\nno\n-29:-24\n-29:-24\nno\nno\n-32:-17 10:12 14:19\nno\n-32:-17 10:12 14:19\n-32:-30 10:12 14:19\nyes\nyes\n-32:-30 10:12 14:19\n-32:-30 10:12 14:19\nyes\n-40:-30 -15:-9\ncount: 18\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T03-hidden-12",
+          "visibility": "hidden",
+          "purpose": "seed-2026112208",
+          "stdin": "has -37\nshow\nshow\nhas 37\nadd -33 26\nhas 28\nadd -10 23\nshow\nshow\nhas 8\nadd 32 40\nshow\ndel -30 -12\ndel -19 -2\nshow\nshow\nadd -3 -1\nhas -25\nhas -19\nshow\nhas 27\nshow\ndel -31 -28\nadd -28 31\nshow\nshow\ndel -33 -12\ndel -33 26\nadd -33 -25\nadd 30 37\nshow\nhas 34\nshow\nshow\nhas -37\nhas 14\nhas -37\ndel -27 -22\ndel 7 23\ndel -12 32\nshow\ndel -27 3\nshow\nshow\ndel -19 30\n",
+          "stdout": "no\nempty\nempty\nno\nno\n-33:26\n-33:26\nyes\n-33:26 32:40\n-33:-31 -1:26 32:40\n-33:-31 -1:26 32:40\nno\nno\n-33:-31 -3:26 32:40\nno\n-33:-31 -3:26 32:40\n-33:-32 -28:40\n-33:-32 -28:40\n-33:-25 27:40\nyes\n-33:-25 27:40\n-33:-25 27:40\nno\nno\nno\n-33:-28 33:40\n-33:-28 33:40\n-33:-28 33:40\ncount: 14\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        }
+      ]
+    },
+    {
+      "id": "T04",
+      "kind": "program",
+      "title": "精确长度换算（多文件）",
+      "structural": [
+        "At least two source files; all numeric parsing, unit validation, exact conversion and fraction reduction occur in a non-entry module; entry performs I/O and calls that module."
+      ],
+      "cases": [
+        {
+          "id": "T04-public-01",
+          "visibility": "public",
+          "stdin": "1.5 m cm\n001 mm cm\n-0.125 km m\n",
+          "stdout": "1: 150 cm\n2: 1/10 cm\n3: -125 m\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T04-public-02",
+          "visibility": "public",
+          "stdin": "+1 m mm\n.5 m cm\n-0.000 km mm\n1 m inch\n",
+          "stdout": "1: invalid\n2: invalid\n3: 0 mm\n4: invalid\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T04-hidden-01",
+          "visibility": "hidden",
+          "purpose": "empty",
+          "stdin": "",
+          "stdout": "",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T04-hidden-02",
+          "visibility": "hidden",
+          "purpose": "zero-normalization",
+          "stdin": "-0 mm km\n-0.000 m cm\n00000.000 km mm\n",
+          "stdout": "1: 0 km\n2: 0 cm\n3: 0 mm\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T04-hidden-03",
+          "visibility": "hidden",
+          "purpose": "leading-zero-length",
+          "stdin": "0000000000000000000000000000000000000000000000000000000000000001 mm cm\n",
+          "stdout": "1: 1/10 cm\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T04-hidden-04",
+          "visibility": "hidden",
+          "purpose": "fraction-reduction",
+          "stdin": "0.125 mm cm\n2.500 cm m\n-1.250 m km\n",
+          "stdout": "1: 1/80 cm\n2: 1/40 m\n3: -1/800 km\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T04-hidden-05",
+          "visibility": "hidden",
+          "purpose": "bounds",
+          "stdin": "1000000 km mm\n-1000000 km mm\n1000000.001 mm mm\n1000001 m m\n",
+          "stdout": "1: 1000000000000 mm\n2: -1000000000000 mm\n3: invalid\n4: invalid\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T04-hidden-06",
+          "visibility": "hidden",
+          "purpose": "grammar",
+          "stdin": "1. m cm\n.1 m cm\n+1 m cm\n1e2 m cm\n1.0000 m cm\n--1 m cm\n",
+          "stdout": "1: invalid\n2: invalid\n3: invalid\n4: invalid\n5: invalid\n6: invalid\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T04-hidden-07",
+          "visibility": "hidden",
+          "purpose": "fields-units-case",
+          "stdin": "\n1 m\n1 m cm extra\n1 M cm\n1 m CM\n1 mm km\n",
+          "stdout": "1: invalid\n2: invalid\n3: invalid\n4: invalid\n5: invalid\n6: 1/1000000 km\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T04-hidden-08",
+          "visibility": "hidden",
+          "purpose": "precision-direction",
+          "stdin": "0.001 km mm\n0.001 mm km\n-0.001 cm m\n",
+          "stdout": "1: 1000 mm\n2: 1/1000000000 km\n3: -1/100000 m\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T04-hidden-09",
+          "visibility": "hidden",
+          "purpose": "seed-2026112205",
+          "stdin": "129.133 km m\n728.016 m mm\n-191.727 mm mm\n-331.781 km mm\n-120.808 mm mm\n851.458 cm km\n283.052 km km\n-399.199 cm km\n-956.900 km km\n-706.285 m mm\n-390.475 mm km\n225.678 mm km\n124.213 m m\n-790.499 mm m\n-190.956 km km\n-286.251 m km\n-838.770 cm mm\n-837.177 m km\n-18.203 cm cm\n415.512 m m\n-946.970 m mm\n130.549 cm km\n520.126 cm km\n904.829 km cm\n-892.465 mm cm\n",
+          "stdout": "1: 129133 m\n2: 728016 mm\n3: -191727/1000 mm\n4: -331781000 mm\n5: -15101/125 mm\n6: 425729/50000000 km\n7: 70763/250 km\n8: -399199/100000000 km\n9: -9569/10 km\n10: -706285 mm\n11: -15619/40000000 km\n12: 112839/500000000 km\n13: 124213/1000 m\n14: -790499/1000000 m\n15: -47739/250 km\n16: -286251/1000000 km\n17: -83877/10 mm\n18: -837177/1000000 km\n19: -18203/1000 cm\n20: 51939/125 m\n21: -946970 mm\n22: 130549/100000000 km\n23: 260063/50000000 km\n24: 90482900 cm\n25: -178493/2000 cm\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T04-hidden-10",
+          "visibility": "hidden",
+          "purpose": "seed-2026112206",
+          "stdin": "994.665 km mm\n84.854 mm mm\n-517.964 m mm\n452.808 km cm\n-655.123 km m\n199.865 km mm\n533.666 km m\n-418.451 mm mm\n197.115 km cm\n846.637 km km\n244.718 cm cm\n-639.108 mm mm\n971.304 km km\n680.713 m km\n-423.728 km m\n-440.220 cm m\n-346.821 mm m\n398.147 km m\n401.221 cm km\n121.096 cm m\n-588.850 m mm\n-603.618 km cm\n-865.098 km m\n558.854 mm m\n859.925 km mm\n",
+          "stdout": "1: 994665000 mm\n2: 42427/500 mm\n3: -517964 mm\n4: 45280800 cm\n5: -655123 m\n6: 199865000 mm\n7: 533666 m\n8: -418451/1000 mm\n9: 19711500 cm\n10: 846637/1000 km\n11: 122359/500 cm\n12: -159777/250 mm\n13: 121413/125 km\n14: 680713/1000000 km\n15: -423728 m\n16: -22011/5000 m\n17: -346821/1000000 m\n18: 398147 m\n19: 401221/100000000 km\n20: 15137/12500 m\n21: -588850 mm\n22: -60361800 cm\n23: -865098 m\n24: 279427/500000 m\n25: 859925000 mm\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T04-hidden-11",
+          "visibility": "hidden",
+          "purpose": "seed-2026112207",
+          "stdin": "280.750 km cm\n-768.257 km km\n648.868 mm cm\n-857.009 cm km\n843.438 m mm\n-426.777 km km\n596.903 km m\n-990.051 cm m\n-889.926 km km\n961.184 km m\n98.995 km m\n-833.862 cm cm\n-908.327 m mm\n-37.941 mm cm\n-401.845 km cm\n220.968 cm mm\n-693.055 mm cm\n336.161 m mm\n-38.231 m km\n696.361 km m\n-252.726 m m\n137.451 mm km\n-185.780 mm cm\n-120.199 m km\n983.217 km km\n",
+          "stdout": "1: 28075000 cm\n2: -768257/1000 km\n3: 162217/2500 cm\n4: -857009/100000000 km\n5: 843438 mm\n6: -426777/1000 km\n7: 596903 m\n8: -990051/100000 m\n9: -444963/500 km\n10: 961184 m\n11: 98995 m\n12: -416931/500 cm\n13: -908327 mm\n14: -37941/10000 cm\n15: -40184500 cm\n16: 55242/25 mm\n17: -138611/2000 cm\n18: 336161 mm\n19: -38231/1000000 km\n20: 696361 m\n21: -126363/500 m\n22: 137451/1000000000 km\n23: -9289/500 cm\n24: -120199/1000000 km\n25: 983217/1000 km\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T04-hidden-12",
+          "visibility": "hidden",
+          "purpose": "seed-2026112208",
+          "stdin": "-10.784 m m\n-227.097 mm mm\n308.685 mm km\n-686.201 m cm\n884.068 cm cm\n17.749 cm m\n-707.850 cm cm\n855.551 mm cm\n946.590 km mm\n347.039 m cm\n589.273 mm mm\n-798.916 km m\n883.986 mm mm\n-803.897 cm mm\n-668.197 cm cm\n975.030 mm cm\n-771.592 km km\n932.038 cm m\n652.137 cm cm\n-343.729 mm km\n-122.388 km cm\n927.527 mm km\n728.702 cm mm\n470.674 km cm\n-744.755 km km\n",
+          "stdout": "1: -1348/125 m\n2: -227097/1000 mm\n3: 61737/200000000 km\n4: -686201/10 cm\n5: 221017/250 cm\n6: 17749/100000 m\n7: -14157/20 cm\n8: 855551/10000 cm\n9: 946590000 mm\n10: 347039/10 cm\n11: 589273/1000 mm\n12: -798916 m\n13: 441993/500 mm\n14: -803897/100 mm\n15: -668197/1000 cm\n16: 97503/1000 cm\n17: -96449/125 km\n18: 466019/50000 m\n19: 652137/1000 cm\n20: -343729/1000000000 km\n21: -12238800 cm\n22: 927527/1000000000 km\n23: 364351/50 mm\n24: 47067400 cm\n25: -148951/200 km\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        }
+      ]
+    },
+    {
+      "id": "T05",
+      "kind": "program",
+      "title": "网格连通域",
+      "structural": [],
+      "cases": [
+        {
+          "id": "T05-public-01",
+          "visibility": "public",
+          "stdin": "3 4\n##..\n.#.#\n...#\n",
+          "stdout": "components: 2\n1: area=3 perimeter=8 box=0,0:1,1\n2: area=2 perimeter=6 box=1,3:2,3\nlargest: 1\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T05-public-02",
+          "visibility": "public",
+          "stdin": "3 3\n###\n#.#\n###\n",
+          "stdout": "components: 1\n1: area=8 perimeter=16 box=0,0:2,2\nlargest: 1\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T05-hidden-01",
+          "visibility": "hidden",
+          "purpose": "zero-grid",
+          "stdin": "0 0\n",
+          "stdout": "components: 0\nlargest: none\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T05-hidden-02",
+          "visibility": "hidden",
+          "purpose": "one-water",
+          "stdin": "1 1\n.\n",
+          "stdout": "components: 0\nlargest: none\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T05-hidden-03",
+          "visibility": "hidden",
+          "purpose": "one-land",
+          "stdin": "1 1\n#\n",
+          "stdout": "components: 1\n1: area=1 perimeter=4 box=0,0:0,0\nlargest: 1\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T05-hidden-04",
+          "visibility": "hidden",
+          "purpose": "diagonal-separate",
+          "stdin": "3 3\n#.#\n.#.\n#.#\n",
+          "stdout": "components: 5\n1: area=1 perimeter=4 box=0,0:0,0\n2: area=1 perimeter=4 box=0,2:0,2\n3: area=1 perimeter=4 box=1,1:1,1\n4: area=1 perimeter=4 box=2,0:2,0\n5: area=1 perimeter=4 box=2,2:2,2\nlargest: 1\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T05-hidden-05",
+          "visibility": "hidden",
+          "purpose": "equal-area-stable",
+          "stdin": "2 5\n##.##\n.....\n",
+          "stdout": "components: 2\n1: area=2 perimeter=6 box=0,0:0,1\n2: area=2 perimeter=6 box=0,3:0,4\nlargest: 1\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T05-hidden-06",
+          "visibility": "hidden",
+          "purpose": "border-full",
+          "stdin": "2 3\n###\n###\n",
+          "stdout": "components: 1\n1: area=6 perimeter=10 box=0,0:1,2\nlargest: 1\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T05-hidden-07",
+          "visibility": "hidden",
+          "purpose": "multiple-holes",
+          "stdin": "5 5\n#####\n#.#.#\n#####\n#.#.#\n#####\n",
+          "stdout": "components: 1\n1: area=21 perimeter=36 box=0,0:4,4\nlargest: 1\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T05-hidden-08",
+          "visibility": "hidden",
+          "purpose": "snake-and-island",
+          "stdin": "4 5\n###.#\n..#..\n###..\n#....\n",
+          "stdout": "components: 2\n1: area=8 perimeter=18 box=0,0:3,2\n2: area=1 perimeter=4 box=0,4:0,4\nlargest: 1\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T05-hidden-09",
+          "visibility": "hidden",
+          "purpose": "seed-2026112205",
+          "stdin": "5 9\n.#..###..\n##.#..#..\n##...##.#\n####.###.\n##...####\n",
+          "stdout": "components: 4\n1: area=11 perimeter=18 box=0,0:4,3\n2: area=13 perimeter=22 box=0,4:4,8\n3: area=1 perimeter=4 box=1,3:1,3\n4: area=1 perimeter=4 box=2,8:2,8\nlargest: 2\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T05-hidden-10",
+          "visibility": "hidden",
+          "purpose": "seed-2026112206",
+          "stdin": "6 9\n#..#####.\n#####.##.\n.##......\n...#.....\n...##....\n##...####\n",
+          "stdout": "components: 4\n1: area=15 perimeter=26 box=0,0:2,7\n2: area=3 perimeter=8 box=3,3:4,4\n3: area=2 perimeter=6 box=5,0:5,1\n4: area=4 perimeter=10 box=5,5:5,8\nlargest: 1\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T05-hidden-11",
+          "visibility": "hidden",
+          "purpose": "seed-2026112207",
+          "stdin": "7 9\n.###..###\n..#..#.#.\n.###.##.#\n#######..\n##..#.###\n..#......\n.##.....#\n",
+          "stdout": "components: 5\n1: area=23 perimeter=40 box=0,0:4,8\n2: area=4 perimeter=10 box=0,6:1,8\n3: area=1 perimeter=4 box=2,8:2,8\n4: area=3 perimeter=8 box=5,1:6,2\n5: area=1 perimeter=4 box=6,8:6,8\nlargest: 1\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T05-hidden-12",
+          "visibility": "hidden",
+          "purpose": "seed-2026112208",
+          "stdin": "8 9\n#.#####.#\n###..#.##\n#.###....\n..#...##.\n#.##.....\n.####...#\n.##..#.#.\n#.###.#..\n",
+          "stdout": "components: 9\n1: area=26 perimeter=50 box=0,0:7,6\n2: area=3 perimeter=8 box=0,7:1,8\n3: area=2 perimeter=6 box=3,6:3,7\n4: area=1 perimeter=4 box=4,0:4,0\n5: area=1 perimeter=4 box=5,8:5,8\n6: area=1 perimeter=4 box=6,5:6,5\n7: area=1 perimeter=4 box=6,7:6,7\n8: area=1 perimeter=4 box=7,0:7,0\n9: area=1 perimeter=4 box=7,6:7,6\nlargest: 1\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        }
+      ]
+    },
+    {
+      "id": "T06",
+      "kind": "program",
+      "title": "三线程游程编码",
+      "structural": [
+        "Three OS worker threads are all started before any join; each encodes its prescribed contiguous chunk, including empty chunks; main only merges ordered worker runs and does not re-encode the complete input."
+      ],
+      "cases": [
+        {
+          "id": "T06-public-01",
+          "visibility": "public",
+          "stdin": "aaabbbbbcc\n",
+          "stdout": "97 3\n98 5\n99 2\nruns: 3 chars: 10\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T06-public-02",
+          "visibility": "public",
+          "stdin": "A\n",
+          "stdout": "65 1\nruns: 1 chars: 1\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T06-hidden-01",
+          "visibility": "hidden",
+          "purpose": "empty",
+          "stdin": "\n",
+          "stdout": "runs: 0 chars: 0\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T06-hidden-02",
+          "visibility": "hidden",
+          "purpose": "two-empty-worker",
+          "stdin": "xx\n",
+          "stdout": "120 2\nruns: 1 chars: 2\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T06-hidden-03",
+          "visibility": "hidden",
+          "purpose": "one-run-across-all-chunks",
+          "stdin": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n",
+          "stdout": "120 600\nruns: 1 chars: 600\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T06-hidden-04",
+          "visibility": "hidden",
+          "purpose": "boundary-same",
+          "stdin": "abbbbc\n",
+          "stdout": "97 1\n98 4\n99 1\nruns: 3 chars: 6\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T06-hidden-05",
+          "visibility": "hidden",
+          "purpose": "remainder-one",
+          "stdin": "aaabaaa\n",
+          "stdout": "97 3\n98 1\n97 3\nruns: 3 chars: 7\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T06-hidden-06",
+          "visibility": "hidden",
+          "purpose": "remainder-two",
+          "stdin": "aabbbbaa\n",
+          "stdout": "97 2\n98 4\n97 2\nruns: 3 chars: 8\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T06-hidden-07",
+          "visibility": "hidden",
+          "purpose": "spaces-and-backslash",
+          "stdin": "  $$\\\\\"\"  \n",
+          "stdout": "32 2\n36 2\n92 2\n34 2\n32 2\nruns: 5 chars: 10\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T06-hidden-08",
+          "visibility": "hidden",
+          "purpose": "alternating",
+          "stdin": "abababababababababababababababababababababababababababababab\n",
+          "stdout": "97 1\n98 1\n97 1\n98 1\n97 1\n98 1\n97 1\n98 1\n97 1\n98 1\n97 1\n98 1\n97 1\n98 1\n97 1\n98 1\n97 1\n98 1\n97 1\n98 1\n97 1\n98 1\n97 1\n98 1\n97 1\n98 1\n97 1\n98 1\n97 1\n98 1\n97 1\n98 1\n97 1\n98 1\n97 1\n98 1\n97 1\n98 1\n97 1\n98 1\n97 1\n98 1\n97 1\n98 1\n97 1\n98 1\n97 1\n98 1\n97 1\n98 1\n97 1\n98 1\n97 1\n98 1\n97 1\n98 1\n97 1\n98 1\n97 1\n98 1\nruns: 60 chars: 60\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T06-hidden-09",
+          "visibility": "hidden",
+          "purpose": "seed-2026112205",
+          "stdin": "\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\cccc$$aaaaaaaccccccccccc\\\\  \\\\\\\\\\acccccccccccc        ccccccbbbbbbbbbbbbb\\\\\\\\\\\\\\aaa\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\n",
+          "stdout": "92 25\n99 4\n36 2\n97 7\n99 11\n92 2\n32 2\n92 5\n97 1\n99 12\n32 8\n99 6\n98 13\n92 7\n97 3\n92 18\nruns: 16 chars: 126\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T06-hidden-10",
+          "visibility": "hidden",
+          "purpose": "seed-2026112206",
+          "stdin": "bbbbbbbbbbaaaaaaaaa                bbbbbbbbbbccccc aaaaaaaa        bbbbaaaaa       \\\\\\\\\\\\\\\\\\\\       bbbbbbbbbb   cccc$$$$$$\n",
+          "stdout": "98 10\n97 9\n32 16\n98 10\n99 5\n32 1\n97 8\n32 8\n98 4\n97 5\n32 7\n92 10\n32 7\n98 10\n32 3\n99 4\n36 6\nruns: 17 chars: 123\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T06-hidden-11",
+          "visibility": "hidden",
+          "purpose": "seed-2026112207",
+          "stdin": "aaaaaaaaaa\\\\\\\\\\\\\\\\bbbb$$$$$$$$aaaabaaaaaa$$cc            bb         \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\       \\\\\\\\\\\\\\\\           $$$$$$bbbbbbbbb\n",
+          "stdout": "97 10\n92 8\n98 4\n36 8\n97 4\n98 1\n97 6\n36 2\n99 2\n32 12\n98 2\n32 9\n92 19\n32 7\n92 8\n32 11\n36 6\n98 9\nruns: 18 chars: 128\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T06-hidden-12",
+          "visibility": "hidden",
+          "purpose": "seed-2026112208",
+          "stdin": "aaaaaa\\\\\\\\\\\\\\\\\\\\\\\\a\\\\cccccccc\\\\\\\\\\\\\\\\\\\\\\cccccccccc\\\\\\\\\\\\\\\\\\\\\\\\         cccccccbbbbbbbbaaacccccccccbbbbbbbbbbb          aa                     \n",
+          "stdout": "97 6\n92 12\n97 1\n92 2\n99 8\n92 11\n99 10\n92 12\n32 9\n99 7\n98 8\n97 3\n99 9\n98 11\n32 10\n97 2\n32 21\nruns: 17 chars: 142\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        }
+      ]
+    },
+    {
+      "id": "T07",
+      "kind": "program",
+      "title": "带 TTL 的 LRU 缓存",
+      "structural": [],
+      "cases": [
+        {
+          "id": "T07-public-01",
+          "visibility": "public",
+          "stdin": "2\n0 put a 10 5\n0 put b 20 10\n1 get a\n2 put c 30 10\n2 keys\n5 get a\n5 keys\n",
+          "stdout": "a: 10\nkeys: c a\na: missing\nkeys: c\nkeys: c\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T07-public-02",
+          "visibility": "public",
+          "stdin": "1\n0 put a 7 4\n1 get a\n4 get a\n4 put a 9 0\n4 keys\n",
+          "stdout": "a: 7\na: missing\nkeys: none\nkeys: none\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T07-hidden-01",
+          "visibility": "hidden",
+          "purpose": "no-events",
+          "stdin": "3\n",
+          "stdout": "keys: none\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T07-hidden-02",
+          "visibility": "hidden",
+          "purpose": "zero-capacity",
+          "stdin": "0\n0 put a 1 10\n0 get a\n0 keys\n",
+          "stdout": "a: missing\nkeys: none\nkeys: none\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T07-hidden-03",
+          "visibility": "hidden",
+          "purpose": "zero-ttl-removes-existing",
+          "stdin": "2\n0 put a 1 10\n1 put a 2 0\n1 get a\n",
+          "stdout": "a: missing\nkeys: none\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T07-hidden-04",
+          "visibility": "hidden",
+          "purpose": "expiry-before-eviction",
+          "stdin": "2\n0 put a 1 2\n0 put b 2 10\n1 get a\n2 put c 3 10\n2 keys\n2 get b\n",
+          "stdout": "a: 1\nkeys: c b\nb: 2\nkeys: b c\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T07-hidden-05",
+          "visibility": "hidden",
+          "purpose": "get-does-not-renew",
+          "stdin": "1\n0 put a 1 3\n1 get a\n2 get a\n3 get a\n",
+          "stdout": "a: 1\na: 1\na: missing\nkeys: none\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T07-hidden-06",
+          "visibility": "hidden",
+          "purpose": "overwrite-refreshes",
+          "stdin": "2\n0 put a 1 1\n0 put b 2 10\n0 put a 3 10\n1 keys\n1 put c 4 10\n1 keys\n",
+          "stdout": "keys: a b\nkeys: c a\nkeys: c a\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T07-hidden-07",
+          "visibility": "hidden",
+          "purpose": "same-time-order",
+          "stdin": "2\n5 put a 1 2\n5 put b 2 2\n5 get a\n5 put c 3 2\n5 keys\n7 keys\n",
+          "stdout": "a: 1\nkeys: c a\nkeys: none\nkeys: none\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T07-hidden-08",
+          "visibility": "hidden",
+          "purpose": "missing-get-and-keys-no-touch",
+          "stdin": "2\n0 put a 1 100\n0 put b 2 100\n0 get missing\n0 keys\n0 put c 3 100\n0 get a\n",
+          "stdout": "missing: missing\nkeys: b a\na: missing\nkeys: c b\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T07-hidden-09",
+          "visibility": "hidden",
+          "purpose": "seed-2026112205",
+          "stdin": "1\n1 get a\n3 put f 17 10\n5 get c\n5 get b\n7 put e 3 1\n7 put f 18 1\n8 get f\n9 put e -11 6\n9 put a 8 13\n9 get e\n10 get b\n12 keys\n14 put b -15 12\n16 keys\n18 put a -13 1\n19 get e\n20 get b\n22 put f -15 12\n24 keys\n24 put e -7 10\n26 get e\n28 put b 14 9\n28 get a\n29 put c 11 11\n31 put c 12 11\n32 put b -18 0\n33 put d 20 2\n33 keys\n33 put d 3 5\n35 put f 17 3\n36 get a\n38 put e -2 10\n39 keys\n39 keys\n40 put b 5 9\n42 put d -9 9\n42 put c -17 0\n43 put a -15 10\n44 get e\n46 put d 19 3\n47 put f 11 4\n48 put c -15 7\n50 keys\n51 keys\n52 put d -20 11\n53 put a -18 10\n53 put f 10 2\n53 put a 13 7\n53 get f\n54 put f 5 12\n",
+          "stdout": "a: missing\nc: missing\nb: missing\nf: missing\ne: missing\nb: missing\nkeys: a\nkeys: b\ne: missing\nb: missing\nkeys: f\ne: -7\na: missing\nkeys: d\na: missing\nkeys: e\nkeys: e\ne: missing\nkeys: c\nkeys: c\nf: missing\nkeys: f\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T07-hidden-10",
+          "visibility": "hidden",
+          "purpose": "seed-2026112206",
+          "stdin": "2\n1 keys\n1 put a 11 10\n3 put b 16 13\n3 get c\n4 keys\n5 put b 8 13\n7 keys\n7 put d 19 4\n9 keys\n11 get d\n12 put f -11 13\n14 put b 15 3\n16 keys\n18 put a 3 5\n20 put a -8 1\n21 keys\n23 put c -4 12\n23 get c\n25 put d -4 3\n25 put e 3 2\n27 get a\n29 get f\n29 put c 16 2\n31 put b -18 4\n33 put b -18 5\n34 put c -4 13\n36 put b 7 6\n37 put a -13 7\n39 put e -13 5\n40 put e -19 6\n42 get b\n44 keys\n46 put a 14 10\n46 keys\n47 put b -19 14\n47 put a -20 5\n49 keys\n50 keys\n50 put f -3 5\n51 put c 14 0\n52 put a 11 9\n52 get b\n52 put a -6 2\n53 put c -12 8\n53 get e\n54 put c -10 1\n54 get b\n54 put f 18 7\n55 put a -17 11\n57 put c 4 0\n",
+          "stdout": "keys: none\nc: missing\nkeys: b a\nkeys: b a\nkeys: d b\nd: missing\nkeys: b f\nkeys: f\nc: -4\na: missing\nf: missing\nb: missing\nkeys: e\nkeys: a\nkeys: a b\nkeys: a b\nb: missing\ne: missing\nb: missing\nkeys: a f\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T07-hidden-11",
+          "visibility": "hidden",
+          "purpose": "seed-2026112207",
+          "stdin": "3\n1 keys\n1 put c 20 2\n3 put d 16 5\n3 get f\n5 get a\n6 put b 8 2\n7 keys\n7 keys\n8 put b 11 7\n9 put c 3 9\n9 put b 16 7\n10 put c -1 10\n11 keys\n12 put c 16 3\n13 keys\n15 put b -19 3\n16 get e\n17 keys\n17 put c -18 14\n19 get a\n19 put d -13 1\n20 put d 2 3\n22 get c\n22 get a\n24 put a 6 5\n24 put e -15 4\n24 put d 14 14\n26 put a -15 10\n28 get f\n28 put b -14 7\n30 put d 0 13\n32 put e -20 13\n34 get f\n35 keys\n37 keys\n38 keys\n39 keys\n40 get c\n41 put d 3 0\n42 put f 15 12\n43 put c 4 8\n45 get f\n46 keys\n46 put e 12 9\n46 put b 2 7\n48 get f\n49 keys\n51 put b 4 7\n53 keys\n55 put f -9 7\n",
+          "stdout": "keys: none\nf: missing\na: missing\nkeys: b d\nkeys: b d\nkeys: c b\nkeys: c b\ne: missing\nkeys: b\na: missing\nc: -18\na: missing\nf: missing\nf: missing\nkeys: e d\nkeys: e d\nkeys: e d\nkeys: e d\nc: missing\nf: 15\nkeys: f c\nf: 15\nkeys: f b e\nkeys: b f e\nkeys: f b\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T07-hidden-12",
+          "visibility": "hidden",
+          "purpose": "seed-2026112208",
+          "stdin": "4\n2 keys\n4 get f\n4 get f\n6 get d\n8 keys\n9 put c 15 6\n9 put b 16 0\n10 keys\n12 put e 18 12\n13 put a 14 9\n15 keys\n15 keys\n16 keys\n17 get c\n19 put c 8 3\n21 put c 5 6\n22 put f -15 7\n22 put b -16 1\n22 get d\n24 keys\n25 keys\n27 get d\n27 put e 2 2\n28 keys\n30 put f 3 9\n30 put c 4 0\n31 put c 18 14\n33 put e 20 5\n33 keys\n34 put e 5 11\n34 put d -8 10\n35 keys\n36 keys\n38 put e 13 11\n39 keys\n41 keys\n43 get b\n45 keys\n45 keys\n45 keys\n46 put c -10 6\n48 put f -13 11\n48 get b\n50 put f 13 10\n51 get e\n53 keys\n54 keys\n56 put e 3 7\n58 get f\n60 put b 19 8\n",
+          "stdout": "keys: none\nf: missing\nf: missing\nd: missing\nkeys: none\nkeys: c\nkeys: a e\nkeys: a e\nkeys: a e\nc: missing\nd: missing\nkeys: f c\nkeys: f c\nd: missing\nkeys: e f\nkeys: e c f\nkeys: d e c f\nkeys: d e c f\nkeys: e d c\nkeys: e d c\nb: missing\nkeys: e\nkeys: e\nkeys: e\nb: missing\ne: missing\nkeys: f\nkeys: f\nf: 13\nkeys: b e\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        }
+      ]
+    },
+    {
+      "id": "T08",
+      "kind": "program",
+      "title": "标签目录",
+      "structural": [],
+      "cases": [
+        {
+          "id": "T08-public-01",
+          "visibility": "public",
+          "stdin": "set a red blue red\nset b blue\nadd c red\nquery blue\nquery red blue\nremove a red\ntags a\n",
+          "stdout": "docs: a b\ndocs: a\na: blue\ntotal: docs=3 tags=2\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T08-public-02",
+          "visibility": "public",
+          "stdin": "set empty\nadd b x\nquery\ndrop b\nquery x\ntags empty\n",
+          "stdout": "docs: b empty\ndocs: none\nempty: none\ntotal: docs=1 tags=0\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T08-hidden-01",
+          "visibility": "hidden",
+          "purpose": "empty",
+          "stdin": "",
+          "stdout": "total: docs=0 tags=0\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T08-hidden-02",
+          "visibility": "hidden",
+          "purpose": "duplicates",
+          "stdin": "set z a a b\nadd z a\nquery a a\ntags z\n",
+          "stdout": "docs: z\nz: a b\ntotal: docs=1 tags=2\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T08-hidden-03",
+          "visibility": "hidden",
+          "purpose": "replacement-removes-stale",
+          "stdin": "set a red blue\nset b blue\nset a green\nquery red\nquery blue\n",
+          "stdout": "docs: none\ndocs: b\ntotal: docs=2 tags=2\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T08-hidden-04",
+          "visibility": "hidden",
+          "purpose": "empty-query-includes-empty",
+          "stdin": "set a\nset b x\nquery\nquery x\n",
+          "stdout": "docs: a b\ndocs: b\ntotal: docs=2 tags=1\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T08-hidden-05",
+          "visibility": "hidden",
+          "purpose": "drop-recreate",
+          "stdin": "set a old\ndrop a\nadd a new\ntags a\nquery old\n",
+          "stdout": "a: new\ndocs: none\ntotal: docs=1 tags=1\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T08-hidden-06",
+          "visibility": "hidden",
+          "purpose": "remove-last-keeps-document",
+          "stdin": "add a x\nremove a x\nquery\ntags a\n",
+          "stdout": "docs: a\na: none\ntotal: docs=1 tags=0\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T08-hidden-07",
+          "visibility": "hidden",
+          "purpose": "missing-noops",
+          "stdin": "remove missing x\ndrop missing\ntags missing\nquery\n",
+          "stdout": "missing: missing\ndocs: none\ntotal: docs=0 tags=0\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T08-hidden-08",
+          "visibility": "hidden",
+          "purpose": "sort-and-union-count",
+          "stdin": "set z b a\nset aa c b\nset a b\nquery b\ntags z\ndrop aa\n",
+          "stdout": "docs: a aa z\nz: a b\ntotal: docs=2 tags=2\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T08-hidden-09",
+          "visibility": "hidden",
+          "purpose": "seed-2026112205",
+          "stdin": "add zz blue\nset a red\ndrop b\nremove aa red\nadd aa green\ndrop a\nquery blue green\nadd aa red\nquery red\nset b green green\nadd c red\nset aa blue\nadd aa green\ntags b\nremove aa green\ntags b\ntags aa\ntags aa\nremove c red\nremove zz red\nadd zz blue\nset aa green green\ndrop zz\ntags c\nquery green blue\ndrop zz\nquery green green red\nset a blue green red red\ndrop c\ntags c\nadd aa blue\ntags a\nset zz red green\nquery green green\nadd c blue\nquery green green\nremove b blue\ndrop b\nset a \nadd b green\nremove b red\nremove a blue\ndrop aa\nadd b blue\nadd aa blue\n",
+          "stdout": "docs: none\ndocs: aa\nb: green\nb: green\naa: blue\naa: blue\nc: none\ndocs: none\ndocs: none\nc: missing\na: blue green red\ndocs: a aa b zz\ndocs: a aa b zz\ntotal: docs=5 tags=3\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T08-hidden-10",
+          "visibility": "hidden",
+          "purpose": "seed-2026112206",
+          "stdin": "drop a\nset aa green green\ndrop aa\nremove aa blue\nquery blue red red\nset aa \nset b green blue blue red\nadd aa red\ndrop aa\nquery blue red\nadd a red\nremove zz green\nset aa red blue blue blue\ntags zz\ndrop a\nremove a blue\nset a red blue blue green\nset a red blue green green\ndrop aa\nquery \nadd a green\ntags c\ndrop b\ndrop c\nset zz blue red\nadd zz blue\nadd b red\nquery red green\nquery green red red\ntags a\nquery red red\nadd b green\nremove a blue\nset a red\nremove a green\nremove b green\nremove zz green\nremove b red\nadd a blue\nadd a red\nadd c red\nset b blue\nset zz blue green blue green\ntags a\ndrop aa\n",
+          "stdout": "docs: none\ndocs: b\nzz: missing\ndocs: a b\nc: missing\ndocs: a\ndocs: a\na: blue green red\ndocs: a b zz\na: blue red\ntotal: docs=4 tags=3\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T08-hidden-11",
+          "visibility": "hidden",
+          "purpose": "seed-2026112207",
+          "stdin": "query blue red green\nset b green green blue blue\nadd c blue\ndrop aa\nset c blue\nremove aa red\ntags zz\ndrop zz\nremove b green\nset c green\ndrop b\ndrop aa\nquery blue blue\ntags a\ntags aa\nset aa red red green blue\ntags zz\nset a red\nquery red\ntags c\ndrop a\nremove b blue\nremove aa green\nremove zz red\nadd zz red\ndrop zz\ntags a\nset zz red blue\ndrop aa\ntags a\nadd a blue\ntags aa\ntags b\ntags zz\ntags b\ntags b\nset zz \ntags zz\nadd aa green\nset c \nset c \nremove zz red\nremove zz red\nadd zz blue\ndrop a\n",
+          "stdout": "docs: none\nzz: missing\ndocs: none\na: missing\naa: missing\nzz: missing\ndocs: a aa\nc: green\na: missing\na: missing\naa: missing\nb: missing\nzz: blue red\nb: missing\nb: missing\nzz: none\ntotal: docs=3 tags=2\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T08-hidden-12",
+          "visibility": "hidden",
+          "purpose": "seed-2026112208",
+          "stdin": "add b blue\nadd b blue\nset a green green\nremove zz blue\nquery green red blue\nremove zz green\ndrop aa\nquery red\nset c \nremove zz blue\nadd zz green\nremove a green\nadd b blue\nadd c red\ntags zz\nadd zz blue\nquery blue\ndrop aa\nremove b green\ndrop a\ndrop zz\nset aa green green red red\ndrop c\ndrop a\nadd aa blue\nadd a blue\nadd b blue\nset a blue blue green\ntags zz\ndrop b\ntags b\nset c \nset zz blue\nremove a blue\nadd a blue\nadd b blue\nquery red green red\nquery \nremove zz red\nremove b green\ntags zz\ndrop aa\nremove c blue\ndrop a\nset aa blue green blue\n",
+          "stdout": "docs: none\ndocs: none\nzz: green\ndocs: b zz\nzz: missing\nb: missing\ndocs: aa\ndocs: a aa b c zz\nzz: blue\ntotal: docs=4 tags=2\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        }
+      ]
+    },
+    {
+      "id": "T09",
+      "kind": "program",
+      "title": "带转义的 glob 匹配",
+      "structural": [],
+      "cases": [
+        {
+          "id": "T09-public-01",
+          "visibility": "public",
+          "stdin": "a*?c\nabbc\na\\*b\na*b\na\\*b\naxxb\n",
+          "stdout": "1: yes\n2: yes\n3: no\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T09-public-02",
+          "visibility": "public",
+          "stdin": "\n\n*\n\nabc\\\nabc\n",
+          "stdout": "1: yes\n2: yes\n3: invalid\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T09-hidden-01",
+          "visibility": "hidden",
+          "purpose": "empty-file",
+          "stdin": "",
+          "stdout": "",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T09-hidden-02",
+          "visibility": "hidden",
+          "purpose": "empty-combinations",
+          "stdin": "\n\n\na\n*\n\n?\n\n",
+          "stdout": "1: yes\n2: no\n3: yes\n4: no\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T09-hidden-03",
+          "visibility": "hidden",
+          "purpose": "full-match",
+          "stdin": "a\ncat\na*\nba\n*a\nab\n",
+          "stdout": "1: no\n2: no\n3: no\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T09-hidden-04",
+          "visibility": "hidden",
+          "purpose": "literal-wildcards",
+          "stdin": "\\*\\?\n*?\n\\*\\?\nxx\n",
+          "stdout": "1: yes\n2: no\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T09-hidden-05",
+          "visibility": "hidden",
+          "purpose": "backslash-and-trailing",
+          "stdin": "\\\\\n\\\nabc\\\nabc\n",
+          "stdout": "1: yes\n2: invalid\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T09-hidden-06",
+          "visibility": "hidden",
+          "purpose": "ordinary-escape",
+          "stdin": "\\a\\b\nab\n\\a\n\\a\n",
+          "stdout": "1: yes\n2: no\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T09-hidden-07",
+          "visibility": "hidden",
+          "purpose": "multiple-stars",
+          "stdin": "***a**b***\naaab\n**?**?**\na\n**?**?**\nab\n",
+          "stdout": "1: yes\n2: no\n3: yes\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T09-hidden-08",
+          "visibility": "hidden",
+          "purpose": "spaces-punctuation",
+          "stdin": "[x].*\n[x]. abc\n? ?\na b\n",
+          "stdout": "1: yes\n2: yes\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T09-hidden-09",
+          "visibility": "hidden",
+          "purpose": "seed-2026112205",
+          "stdin": "b\\ \\ \\b\n\\ \\b*\nb\n\n a?\\a\na?  * *?\n\\aa b* \\*ba\naa\\*\\a*\\\\\n\\\n*\n* b?\\ \\b**\n* *\\b\\a?\\\n  \n\\\n\n\\\nb*\\\nb?a*\\b*?b\nb?\\\\?b*?\n\na? \n\\\n\nab*\\\\\n* ?* *a*\\**\nb\\*a \n\\*babb b\\\n\\a\n?\n\\\\\nb? a\n?\n*bb \\\n* *\n?ba\nb  a\n\\\nbbba*?\\?\n? **???*\\ \\\na\\*?\n * *\naa \n\n?\n\\a\\aa*?\\\n??bb \\\n ?a\n\n?aa b*??\nb\\ a*?b b\n  ba\\?* ??\n?*\na?\\?*\n* ?b\\b \\\n?\\ a\n \\aa\nb bb\\\nb  a\na\n \\ ? ?\\ ?\n",
+          "stdout": "1: no\n2: no\n3: no\n4: no\n5: invalid\n6: no\n7: no\n8: no\n9: invalid\n10: no\n11: no\n12: no\n13: no\n14: invalid\n15: no\n16: no\n17: invalid\n18: no\n19: invalid\n20: invalid\n21: no\n22: no\n23: invalid\n24: no\n25: no\n26: no\n27: no\n28: no\n29: invalid\n30: no\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T09-hidden-10",
+          "visibility": "hidden",
+          "purpose": "seed-2026112206",
+          "stdin": "b?\n *aaa\\a \n?\\\\*aab\n\n \\\\aa?*b  \na\n\\\\ \\ab\n?a\n?a\n a*\n\\\\*?***\\ab\n\n\\\\?bb \n\na* \n b\n\\ ?\n\\\\?  b\nb \\\\\n?a\\b\\a\na bb\\*a b\n\n \\ \\ a*\\\n*bb**?\n?ab\n*?\n **\n b\\ b\naa\\\\\\ a\n\\ ?\nb*\\**ba ??\n\\***b\n?a*a\n \\ bba\n*?\na\\b?ab \\a\n\\b?\\? a?\na?\\ b b\n\n* a\n* \n\\a\\??\n*  bb?*b \n\n\\?a \\b \naaaa*? \\\n*?a \\\nb?aa\nb?\n?ab\\*b\\b\n ? ?ab  ?a\n\\? \\ a?a\n\\a \nb?*a\naa\\*b?baab\na abb? \na?a\\b\nb?bb\n\\ a? ?\n \\a\n",
+          "stdout": "1: no\n2: no\n3: no\n4: no\n5: no\n6: no\n7: no\n8: no\n9: no\n10: no\n11: no\n12: invalid\n13: no\n14: yes\n15: no\n16: no\n17: no\n18: yes\n19: no\n20: no\n21: no\n22: no\n23: no\n24: invalid\n25: no\n26: no\n27: no\n28: no\n29: no\n30: no\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T09-hidden-11",
+          "visibility": "hidden",
+          "purpose": "seed-2026112207",
+          "stdin": "\naba\\a\n?b\\ba\\*\\b \\\n\nb\na\na\\aa* \na*\\\n? a??b\n a*\\\nb\\   aaa?\n\\\n\\?*aaa** *\\\n\\\\?*\nb?a?\\\nab??\n\na?*ba*\na\n?\n\\?aba\n a a\\*a\n ?*\\\naa* \nb\\ b?\\?\\\nba*bb\n\n* ? * \n??aba\n \nb\\a\\a\\ba?*\nb?\\a\n?\\\n?ba\\ *?a\\\nb\n\\a*\\?\n**a\nbb *\\ab\n *ab b\n? ?\\\n ba\n \n\\? *a\\ b\n\n\n*a\\b\n?*\\b\\  \n*\na\\b ?\n*?a\\b**??\n   ? a \n\\b\na\\ a \na*aaa\n*\\\na*b?\n baaba\\ ?a\na\n *  \\\n\\\n",
+          "stdout": "1: no\n2: invalid\n3: no\n4: no\n5: no\n6: no\n7: invalid\n8: invalid\n9: no\n10: no\n11: no\n12: invalid\n13: invalid\n14: no\n15: no\n16: no\n17: invalid\n18: no\n19: no\n20: no\n21: no\n22: no\n23: no\n24: no\n25: no\n26: no\n27: no\n28: invalid\n29: no\n30: invalid\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T09-hidden-12",
+          "visibility": "hidden",
+          "purpose": "seed-2026112208",
+          "stdin": "?ba*\\?\\ *\\\nb\\a *a*b\\\n?  *\n*?\\??a\\a\n\\?aa*? ?\na\nb?*\n?* \\ \\\n b\\ba\\* \n?\\ *\\\n?\\?a\n\\\nb\\a\na a\\b\n ? \n? b a*a\n??*?b\\b?\n\\b a\\\n\\a  ?bb\\\n??*?\\*\nb?\n \nbbab* \\ aa?\na\\ *?b b\na\\a\\ a\n b\n \n**a\\ \\\nba\n*b?\na*?*?  a a*\nbb\\b\na \\bb\n*\n**\\\nb ab\n\nb*b*?b ?\n*  \n \n?a \nab*?b\n* \\ba\\\\b\n\n ?\\\\a\\**\n*  \n**\\*?bb\\a\n*a\\b\n *\n**\\?bb\n\n * *?*\nb\\\\a\\\\???\n\\b*b???\n*a\\b\\?b*bb \n \\ ?*\n ba*b\n\n ?\\b ?\\ \n*\\*b?  *\n",
+          "stdout": "1: invalid\n2: no\n3: no\n4: no\n5: no\n6: no\n7: no\n8: no\n9: no\n10: invalid\n11: no\n12: no\n13: no\n14: no\n15: no\n16: no\n17: no\n18: invalid\n19: no\n20: no\n21: no\n22: no\n23: no\n24: no\n25: no\n26: no\n27: no\n28: no\n29: no\n30: no\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        }
+      ]
+    },
+    {
+      "id": "T10",
+      "kind": "program",
+      "title": "相对路径归一化",
+      "structural": [],
+      "cases": [
+        {
+          "id": "T10-public-01",
+          "visibility": "public",
+          "stdin": "/a/b\n../c//./d/\n/../../x\n\n",
+          "stdout": "/a/c/d\n/x\n/a/b\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T10-public-02",
+          "visibility": "public",
+          "stdin": "/\n.../.hidden/../z\na/../../b\n////\n",
+          "stdout": "/.../z\n/b\n/\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T10-hidden-01",
+          "visibility": "hidden",
+          "purpose": "no-queries",
+          "stdin": "/a\n",
+          "stdout": "",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T10-hidden-02",
+          "visibility": "hidden",
+          "purpose": "empty-query",
+          "stdin": "/a/b\n\n",
+          "stdout": "/a/b\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T10-hidden-03",
+          "visibility": "hidden",
+          "purpose": "root-clamp",
+          "stdin": "/a\n../../../\n/../../..\n",
+          "stdout": "/\n/\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T10-hidden-04",
+          "visibility": "hidden",
+          "purpose": "absolute-resets",
+          "stdin": "/a/b\n/x/y\n/x/../z\n",
+          "stdout": "/x/y\n/z\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T10-hidden-05",
+          "visibility": "hidden",
+          "purpose": "dot-literals",
+          "stdin": "/a\n.../.hidden/..hidden/..\n./.\n",
+          "stdout": "/a/.../.hidden\n/a\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T10-hidden-06",
+          "visibility": "hidden",
+          "purpose": "independent-queries",
+          "stdin": "/a/b\n../x\n../y\n\n",
+          "stdout": "/a/x\n/a/y\n/a/b\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T10-hidden-07",
+          "visibility": "hidden",
+          "purpose": "repeated-slashes",
+          "stdin": "/\n////a////b////\n////\n",
+          "stdout": "/a/b\n/\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T10-hidden-08",
+          "visibility": "hidden",
+          "purpose": "cancel-and-reenter",
+          "stdin": "/a/b/c\n../../../../d/../e\nq/./../r\n",
+          "stdout": "/e\n/a/b/c/r\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T10-hidden-09",
+          "visibility": "hidden",
+          "purpose": "seed-2026112205",
+          "stdin": "/root/base\n.x/b/b\n../.x/...\n//b/../b/a\n/.x/b/...//a\n.../a/a/b\n./.x/b\nb//.\n//.x/.\n.../..././.\nb\n\n./b/./\na//.x/a\n/.x/..\n\n./.\n..\n.x/a/../b/.../\n/./../.x/../b\n.../a/a/a/.x/a\n/\n.x/.../.../b/.\n.x/b\n/a/b/\nb/../b\na/.x\n./.x/../b/.../a/..\n./...\n..\n/.../.../...//.x\n",
+          "stdout": "/root/base/.x/b/b\n/root/.x/...\n/b/a\n/.x/b/.../a\n/root/base/.../a/a/b\n/root/base/.x/b\n/root/base/b\n/.x\n/root/base/.../...\n/root/base/b\n/root/base\n/root/base/b\n/root/base/a/.x/a\n/\n/root/base\n/root/base\n/root\n/root/base/.x/b/...\n/b\n/root/base/.../a/a/a/.x/a\n/\n/root/base/.x/.../.../b\n/root/base/.x/b\n/a/b\n/root/base/b\n/root/base/a/.x\n/root/base/b/...\n/root/base/...\n/root\n/.../.../.../.x\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T10-hidden-10",
+          "visibility": "hidden",
+          "purpose": "seed-2026112206",
+          "stdin": "/root/base\n../a/./b/.x/.x/a\n./.x/...//.\n../a/\n./a/b/b/..\n\n/a/b//./.x\n..././.x\n.../b/././../../b\n\na/.x\n../..//b\n.../../..././b/.\n.x\nb/.\n../././/.../b/.x\n/.../b//.././a\na\n..///a\na//b/\n/../\n//...\n/a\n/b//b/\n...//../b/b/..\n/.../.x/b/.x\na/.x/b\na/.x/.../././a\n./.x/.x/.../..\n/../.x//a/..\n/.x/./.../.x/\n",
+          "stdout": "/root/a/b/.x/.x/a\n/root/base/.x/...\n/root/a\n/root/base/a/b\n/root/base\n/a/b/.x\n/root/base/.../.x\n/root/base/b\n/root/base\n/root/base/a/.x\n/b\n/root/base/.../b\n/root/base/.x\n/root/base/b\n/root/.../b/.x\n/.../a\n/root/base/a\n/root/a\n/root/base/a/b\n/\n/...\n/a\n/b/b\n/root/base/b\n/.../.x/b/.x\n/root/base/a/.x/b\n/root/base/a/.x/.../a\n/root/base/.x/.x\n/.x\n/.x/.../.x\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T10-hidden-11",
+          "visibility": "hidden",
+          "purpose": "seed-2026112207",
+          "stdin": "/root/base\n\n/a/b\n/.x/a/b\n\n.../../b/../b\n/a/a/\n/.../.x/.x/b/..\nb//.../a/\n\n/\n/b/a/b/./b/.\n\n././...\n\n../\n.x/a/\n/a/.\n/a/./.x//./a\n/b/../..\n../..//.x/b\n/./b/b/../b/.x\n\n/a/..\n\n/.x/a/b\nb/a/b\n/..\n.x/../..././b/a/\n./b/.../..\n../b/.../../../...\n",
+          "stdout": "/root/base\n/a/b\n/.x/a/b\n/root/base\n/root/base/b\n/a/a\n/.../.x/.x\n/root/base/b/.../a\n/root/base\n/\n/b/a/b/b\n/root/base\n/root/base/...\n/root/base\n/root\n/root/base/.x/a\n/a\n/a/.x/a\n/\n/.x/b\n/b/b/.x\n/root/base\n/\n/root/base\n/.x/a/b\n/root/base/b/a/b\n/\n/root/base/.../b/a\n/root/base/b\n/root/...\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T10-hidden-12",
+          "visibility": "hidden",
+          "purpose": "seed-2026112208",
+          "stdin": "/root/base\n/.x//b/../...//b\n./b/./b/..\n/.x/.\na/.x/.../a/b/.x/.x\na///.\na/.x/.../b\n//.../../..\na/.//.x\n.x/.x/\na/a/..//.x\nb/.././..//./\n/././/.\n/\n/...\n\n//../.x\nb/../.x\n/a/a/b/a\n/.../.x/./../.x/..\n.../a/b/../.x/.x/...\n/a/.x\n.../a/../.../.../\n/b/.x//.x\n/.x\na/..\n//../b\n/.//a\na/.x\nb\n/.../../.x/.x/./b/.\n",
+          "stdout": "/.x/.../b\n/root/base/b\n/.x\n/root/base/a/.x/.../a/b/.x/.x\n/root/base/a\n/root/base/a/.x/.../b\n/\n/root/base/a/.x\n/root/base/.x/.x\n/root/base/a/.x\n/root\n/\n/\n/...\n/root/base\n/.x\n/root/base/.x\n/a/a/b/a\n/...\n/root/base/.../a/.x/.x/...\n/a/.x\n/root/base/.../.../...\n/b/.x/.x\n/.x\n/root/base\n/b\n/a\n/root/base/a/.x\n/root/base/b\n/.x/.x/b\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        }
+      ]
+    },
+    {
+      "id": "T11",
+      "kind": "program",
+      "title": "滑动窗口下中位数",
+      "structural": [],
+      "cases": [
+        {
+          "id": "T11-public-01",
+          "visibility": "public",
+          "stdin": "3\n4 1 7 2 2\n",
+          "stdout": "3: median=4 sum=12\n4: median=2 sum=10\n5: median=2 sum=11\nwindows: 3\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T11-public-02",
+          "visibility": "public",
+          "stdin": "2\n-3 -1 -1 8\n",
+          "stdout": "2: median=-3 sum=-4\n3: median=-1 sum=-2\n4: median=-1 sum=7\nwindows: 3\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T11-hidden-01",
+          "visibility": "hidden",
+          "purpose": "empty-sequence",
+          "stdin": "1\n",
+          "stdout": "windows: 0\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T11-hidden-02",
+          "visibility": "hidden",
+          "purpose": "shorter-than-window",
+          "stdin": "5\n1 2 3 4\n",
+          "stdout": "windows: 0\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T11-hidden-03",
+          "visibility": "hidden",
+          "purpose": "single-window",
+          "stdin": "3\n8 -2 4\n",
+          "stdout": "3: median=4 sum=10\nwindows: 1\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T11-hidden-04",
+          "visibility": "hidden",
+          "purpose": "even-lower-median",
+          "stdin": "4\n1 2 8 9 10\n",
+          "stdout": "4: median=2 sum=20\n5: median=8 sum=29\nwindows: 2\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T11-hidden-05",
+          "visibility": "hidden",
+          "purpose": "duplicates-leaving",
+          "stdin": "3\n2 2 2 1 1 3 3\n",
+          "stdout": "3: median=2 sum=6\n4: median=2 sum=5\n5: median=1 sum=4\n6: median=1 sum=5\n7: median=3 sum=7\nwindows: 5\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T11-hidden-06",
+          "visibility": "hidden",
+          "purpose": "large-sum",
+          "stdin": "4\n1000000000 1000000000 1000000000 1000000000 -1000000000\n",
+          "stdout": "4: median=1000000000 sum=4000000000\n5: median=1000000000 sum=2000000000\nwindows: 2\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T11-hidden-07",
+          "visibility": "hidden",
+          "purpose": "size-one",
+          "stdin": "1\n-2 0 5 -1\n",
+          "stdout": "1: median=-2 sum=-2\n2: median=0 sum=0\n3: median=5 sum=5\n4: median=-1 sum=-1\nwindows: 4\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T11-hidden-08",
+          "visibility": "hidden",
+          "purpose": "multiline-whitespace",
+          "stdin": "2\n\n1\t3\n -5 7\n",
+          "stdout": "2: median=1 sum=4\n3: median=-5 sum=-2\n4: median=-5 sum=2\nwindows: 3\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T11-hidden-09",
+          "visibility": "hidden",
+          "purpose": "seed-2026112205",
+          "stdin": "2\n9 17 1 -5 -12 0 9 -9 13 -3 11 -16 10 -10 -7 18 5 -16 -20 -17 -5 -8 -2 1 -5 4 -4 9 5 -17 -16 -10 17 17 9 15 -9 5 -11 15\n",
+          "stdout": "2: median=9 sum=26\n3: median=1 sum=18\n4: median=-5 sum=-4\n5: median=-12 sum=-17\n6: median=-12 sum=-12\n7: median=0 sum=9\n8: median=-9 sum=0\n9: median=-9 sum=4\n10: median=-3 sum=10\n11: median=-3 sum=8\n12: median=-16 sum=-5\n13: median=-16 sum=-6\n14: median=-10 sum=0\n15: median=-10 sum=-17\n16: median=-7 sum=11\n17: median=5 sum=23\n18: median=-16 sum=-11\n19: median=-20 sum=-36\n20: median=-20 sum=-37\n21: median=-17 sum=-22\n22: median=-8 sum=-13\n23: median=-8 sum=-10\n24: median=-2 sum=-1\n25: median=-5 sum=-4\n26: median=-5 sum=-1\n27: median=-4 sum=0\n28: median=-4 sum=5\n29: median=5 sum=14\n30: median=-17 sum=-12\n31: median=-17 sum=-33\n32: median=-16 sum=-26\n33: median=-10 sum=7\n34: median=17 sum=34\n35: median=9 sum=26\n36: median=9 sum=24\n37: median=-9 sum=6\n38: median=-9 sum=-4\n39: median=-11 sum=-6\n40: median=-11 sum=4\nwindows: 39\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T11-hidden-10",
+          "visibility": "hidden",
+          "purpose": "seed-2026112206",
+          "stdin": "3\n-12 11 16 -16 4 -11 12 2 6 2 -2 9 -15 16 14 -20 13 -7 -11 2 -15 16 19 -7 3 -14 7 6 9 -11 10 1 -19 -8 14 19 -10 -13 1 18\n",
+          "stdout": "3: median=11 sum=15\n4: median=11 sum=11\n5: median=4 sum=4\n6: median=-11 sum=-23\n7: median=4 sum=5\n8: median=2 sum=3\n9: median=6 sum=20\n10: median=2 sum=10\n11: median=2 sum=6\n12: median=2 sum=9\n13: median=-2 sum=-8\n14: median=9 sum=10\n15: median=14 sum=15\n16: median=14 sum=10\n17: median=13 sum=7\n18: median=-7 sum=-14\n19: median=-7 sum=-5\n20: median=-7 sum=-16\n21: median=-11 sum=-24\n22: median=2 sum=3\n23: median=16 sum=20\n24: median=16 sum=28\n25: median=3 sum=15\n26: median=-7 sum=-18\n27: median=3 sum=-4\n28: median=6 sum=-1\n29: median=7 sum=22\n30: median=6 sum=4\n31: median=9 sum=8\n32: median=1 sum=0\n33: median=1 sum=-8\n34: median=-8 sum=-26\n35: median=-8 sum=-13\n36: median=14 sum=25\n37: median=14 sum=23\n38: median=-10 sum=-4\n39: median=-10 sum=-22\n40: median=1 sum=6\nwindows: 38\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T11-hidden-11",
+          "visibility": "hidden",
+          "purpose": "seed-2026112207",
+          "stdin": "4\n10 11 18 0 4 15 17 6 -2 17 -11 2 -6 -3 -13 -14 -3 -10 20 4 -9 10 14 -13 -16 0 -10 -10 -9 8 -9 0 6 10 12 -1 -18 -13 16 8\n",
+          "stdout": "4: median=10 sum=39\n5: median=4 sum=33\n6: median=4 sum=37\n7: median=4 sum=36\n8: median=6 sum=42\n9: median=6 sum=36\n10: median=6 sum=38\n11: median=-2 sum=10\n12: median=-2 sum=6\n13: median=-6 sum=2\n14: median=-6 sum=-18\n15: median=-6 sum=-20\n16: median=-13 sum=-36\n17: median=-13 sum=-33\n18: median=-13 sum=-40\n19: median=-10 sum=-7\n20: median=-3 sum=11\n21: median=-9 sum=5\n22: median=4 sum=25\n23: median=4 sum=19\n24: median=-9 sum=2\n25: median=-13 sum=-5\n26: median=-13 sum=-15\n27: median=-13 sum=-39\n28: median=-10 sum=-36\n29: median=-10 sum=-29\n30: median=-10 sum=-21\n31: median=-9 sum=-20\n32: median=-9 sum=-10\n33: median=0 sum=5\n34: median=0 sum=7\n35: median=6 sum=28\n36: median=6 sum=27\n37: median=-1 sum=3\n38: median=-13 sum=-20\n39: median=-13 sum=-16\n40: median=-13 sum=-7\nwindows: 37\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T11-hidden-12",
+          "visibility": "hidden",
+          "purpose": "seed-2026112208",
+          "stdin": "5\n5 -14 -16 12 -3 -19 -12 9 8 19 6 -1 -2 5 15 -16 -7 10 -8 -2 -19 -20 3 -4 9 -6 -4 5 -4 -3 -14 -15 -14 -12 4 12 15 1 -19 -18\n",
+          "stdout": "5: median=-3 sum=-16\n6: median=-14 sum=-40\n7: median=-12 sum=-38\n8: median=-3 sum=-13\n9: median=-3 sum=-17\n10: median=8 sum=5\n11: median=8 sum=30\n12: median=8 sum=41\n13: median=6 sum=30\n14: median=5 sum=27\n15: median=5 sum=23\n16: median=-1 sum=1\n17: median=-2 sum=-5\n18: median=5 sum=7\n19: median=-7 sum=-6\n20: median=-7 sum=-23\n21: median=-7 sum=-26\n22: median=-8 sum=-39\n23: median=-8 sum=-46\n24: median=-4 sum=-42\n25: median=-4 sum=-31\n26: median=-4 sum=-18\n27: median=-4 sum=-2\n28: median=-4 sum=0\n29: median=-4 sum=0\n30: median=-4 sum=-12\n31: median=-4 sum=-20\n32: median=-4 sum=-31\n33: median=-14 sum=-50\n34: median=-14 sum=-58\n35: median=-14 sum=-51\n36: median=-12 sum=-25\n37: median=4 sum=5\n38: median=4 sum=20\n39: median=4 sum=13\n40: median=1 sum=-9\nwindows: 36\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        }
+      ]
+    },
+    {
+      "id": "T12",
+      "kind": "program",
+      "title": "版本号稳定排序",
+      "structural": [],
+      "cases": [
+        {
+          "id": "T12-public-01",
+          "visibility": "public",
+          "stdin": "1.0.0\n1.0.0-beta.2\n1.0.0-beta.11\n1.0.0-alpha\n0.9.9\n",
+          "stdout": "0.9.9\n1.0.0-alpha\n1.0.0-beta.2\n1.0.0-beta.11\n1.0.0\nvalid: 5 invalid: 0\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T12-public-02",
+          "visibility": "public",
+          "stdin": "01.0.0+z\n1.0.0+a\n1.0.0-01\n1.0.0-1\n1.0\n\n",
+          "stdout": "line 5: invalid\nline 6: invalid\n1.0.0-01\n1.0.0-1\n01.0.0+z\n1.0.0+a\nvalid: 4 invalid: 2\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T12-hidden-01",
+          "visibility": "hidden",
+          "purpose": "empty",
+          "stdin": "",
+          "stdout": "valid: 0 invalid: 0\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T12-hidden-02",
+          "visibility": "hidden",
+          "purpose": "release-after-prerelease",
+          "stdin": "1.0.0\n1.0.0-z\n1.0.0-0\n",
+          "stdout": "1.0.0-0\n1.0.0-z\n1.0.0\nvalid: 3 invalid: 0\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T12-hidden-03",
+          "visibility": "hidden",
+          "purpose": "numeric-vs-lexical",
+          "stdin": "1.0.0-10\n1.0.0-2\n1.0.0-a\n1.0.0-01\n",
+          "stdout": "1.0.0-01\n1.0.0-2\n1.0.0-10\n1.0.0-a\nvalid: 4 invalid: 0\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T12-hidden-04",
+          "visibility": "hidden",
+          "purpose": "prefix-length",
+          "stdin": "1.0.0-a.1\n1.0.0-a\n1.0.0-a.1.z\n",
+          "stdout": "1.0.0-a\n1.0.0-a.1\n1.0.0-a.1.z\nvalid: 3 invalid: 0\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T12-hidden-05",
+          "visibility": "hidden",
+          "purpose": "stable-equivalence",
+          "stdin": "0001.0.0+second\n1.00.0+first\n1.0.00\n1.0.0-01+b\n1.0.0-1+a\n",
+          "stdout": "1.0.0-01+b\n1.0.0-1+a\n0001.0.0+second\n1.00.0+first\n1.0.00\nvalid: 5 invalid: 0\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T12-hidden-06",
+          "visibility": "hidden",
+          "purpose": "large-numeric-prerelease",
+          "stdin": "1.0.0-99999999999999999999999999999999\n1.0.0-10000000000000000000000000000000\n1.0.0-00000000000000000000000000000001\n",
+          "stdout": "1.0.0-00000000000000000000000000000001\n1.0.0-10000000000000000000000000000000\n1.0.0-99999999999999999999999999999999\nvalid: 3 invalid: 0\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T12-hidden-07",
+          "visibility": "hidden",
+          "purpose": "invalid-grammar",
+          "stdin": "\n 1.0.0\n1.0.0 \n1.0\n1.0.0-\n1.0.0+\n1.0.0-a..b\n1.0.0+a+b\n1.0.0_a\n",
+          "stdout": "line 1: invalid\nline 2: invalid\nline 3: invalid\nline 4: invalid\nline 5: invalid\nline 6: invalid\nline 7: invalid\nline 8: invalid\nline 9: invalid\nvalid: 0 invalid: 9\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T12-hidden-08",
+          "visibility": "hidden",
+          "purpose": "core-boundary-case-hyphen",
+          "stdin": "1000000000.0.0\n1000000001.0.0\n1.0.0-a-1\n1.0.0-Z\n1.0.0-a\n",
+          "stdout": "line 2: invalid\n1.0.0-Z\n1.0.0-a\n1.0.0-a-1\n1000000000.0.0\nvalid: 4 invalid: 1\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T12-hidden-09",
+          "visibility": "hidden",
+          "purpose": "seed-2026112205",
+          "stdin": "2.1.1\n1.0.2\n0.2.1\n1.1.2-A.x-1+001\n2.1.1-beta.x-1+001\n0.0.1-A\n2.0.0\n0.2.2-A.10\n2.2.0-2\n1.2.2\n0.0.1-A\n2.2.0-x-1\n0.2.0-beta+001\n1.0.2-a.01\n2.2.2-2\n1.1.2-2.01.10\n1.2.2\n0.0.2\n2.0.1-2.2.10\n1.0.0-1.01\n1.1.1-beta\n1.0.1-2.1.10\n0.2.0-2.1.A\n0.1.0\n1.1.0-2.2.1+001\n1.1.1\n0.2.0-A\n0.0.1-1.a.01\n1.0.2-a.x-1\n0.1.2-A+a\n0.0.0-A.A.A\n2.1.2-2.2\n1.2.2-2.10\n2.0.0\n0.2.0\n",
+          "stdout": "0.0.0-A.A.A\n0.0.1-1.a.01\n0.0.1-A\n0.0.1-A\n0.0.2\n0.1.0\n0.1.2-A+a\n0.2.0-2.1.A\n0.2.0-A\n0.2.0-beta+001\n0.2.0\n0.2.1\n0.2.2-A.10\n1.0.0-1.01\n1.0.1-2.1.10\n1.0.2-a.01\n1.0.2-a.x-1\n1.0.2\n1.1.0-2.2.1+001\n1.1.1-beta\n1.1.1\n1.1.2-2.01.10\n1.1.2-A.x-1+001\n1.2.2-2.10\n1.2.2\n1.2.2\n2.0.0\n2.0.0\n2.0.1-2.2.10\n2.1.1-beta.x-1+001\n2.1.1\n2.1.2-2.2\n2.2.0-2\n2.2.0-x-1\n2.2.2-2\nvalid: 35 invalid: 0\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T12-hidden-10",
+          "visibility": "hidden",
+          "purpose": "seed-2026112206",
+          "stdin": "2.0.0+001\n0.1.2\n1.0.1+a\n0.1.0-beta.01.beta\n2.2.2-1.10+001\n0.2.2-10.2.10\n0.2.1+b\n0.2.2-A.x-1+b\n1.2.2\n1.0.2+001\n1.1.2-1.01+b\n1.0.0-2.beta.01\n0.0.1\n2.1.0-1.a.1\n0.1.0-a.A.2+a\n1.0.2-01.1\n1.1.0-10.A+b\n1.2.1-2.1\n0.1.1-A.1\n2.0.0-10\n1.2.1\n2.0.1-1\n0.2.1+b\n0.2.1-01\n0.1.1-beta.1.2\n1.1.1\n2.0.1-beta.1.A\n2.1.2\n1.0.2-1+001\n1.2.1-A\n2.0.0+a\n2.1.1-x-1\n0.0.0-01.a\n0.0.2-10.1.a\n1.1.0-x-1.01+a\n",
+          "stdout": "0.0.0-01.a\n0.0.1\n0.0.2-10.1.a\n0.1.0-a.A.2+a\n0.1.0-beta.01.beta\n0.1.1-A.1\n0.1.1-beta.1.2\n0.1.2\n0.2.1-01\n0.2.1+b\n0.2.1+b\n0.2.2-10.2.10\n0.2.2-A.x-1+b\n1.0.0-2.beta.01\n1.0.1+a\n1.0.2-1+001\n1.0.2-01.1\n1.0.2+001\n1.1.0-10.A+b\n1.1.0-x-1.01+a\n1.1.1\n1.1.2-1.01+b\n1.2.1-2.1\n1.2.1-A\n1.2.1\n1.2.2\n2.0.0-10\n2.0.0+001\n2.0.0+a\n2.0.1-1\n2.0.1-beta.1.A\n2.1.0-1.a.1\n2.1.1-x-1\n2.1.2\n2.2.2-1.10+001\nvalid: 35 invalid: 0\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T12-hidden-11",
+          "visibility": "hidden",
+          "purpose": "seed-2026112207",
+          "stdin": "2.0.2-beta.10+a\n2.0.1\n2.1.1-01.x-1+b\n2.0.1-a.10\n1.1.1-10.A.beta\n2.2.1\n2.2.2\n0.2.0-01\n1.2.1\n2.1.0-10\n0.1.2-beta.1\n1.2.1-2.2\n1.2.2-2+a\n1.1.0-A.beta.a\n2.0.1-x-1.2\n2.0.0-1.x-1+a\n0.0.2-A+b\n2.0.1\n2.0.1\n1.1.1-A.beta\n0.1.1-x-1.2\n0.1.1+a\n0.2.2\n1.1.0-10.beta.A\n0.1.1-beta+001\n1.0.0-beta.beta.a\n1.2.1-a.A.10+a\n1.2.0-x-1.1.beta\n2.1.1-a.10.1+a\n1.0.0-2.10.01+b\n1.2.0\n2.2.2\n1.1.1-a.10.01\n0.0.2\n2.0.2-2\n",
+          "stdout": "0.0.2-A+b\n0.0.2\n0.1.1-beta+001\n0.1.1-x-1.2\n0.1.1+a\n0.1.2-beta.1\n0.2.0-01\n0.2.2\n1.0.0-2.10.01+b\n1.0.0-beta.beta.a\n1.1.0-10.beta.A\n1.1.0-A.beta.a\n1.1.1-10.A.beta\n1.1.1-A.beta\n1.1.1-a.10.01\n1.2.0-x-1.1.beta\n1.2.0\n1.2.1-2.2\n1.2.1-a.A.10+a\n1.2.1\n1.2.2-2+a\n2.0.0-1.x-1+a\n2.0.1-a.10\n2.0.1-x-1.2\n2.0.1\n2.0.1\n2.0.1\n2.0.2-2\n2.0.2-beta.10+a\n2.1.0-10\n2.1.1-01.x-1+b\n2.1.1-a.10.1+a\n2.2.1\n2.2.2\n2.2.2\nvalid: 35 invalid: 0\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T12-hidden-12",
+          "visibility": "hidden",
+          "purpose": "seed-2026112208",
+          "stdin": "0.1.2-1.beta+a\n0.1.0-01\n0.0.2-10\n0.1.1-x-1+b\n2.2.2-10+b\n0.0.1+a\n1.2.2\n0.1.2-10.x-1.2+a\n2.1.1\n0.0.0\n2.0.2-A.A\n1.2.0-a+001\n0.1.2\n1.1.2-1.x-1\n1.1.2\n1.2.2-10\n1.2.0-A+b\n2.1.1-x-1.beta\n2.2.2\n2.1.0-2.x-1.A\n2.1.2-x-1.1\n0.2.1-a\n1.2.2+a\n2.0.1+001\n2.2.0-2.10.x-1\n0.0.1\n0.0.2-2.10.beta\n1.1.0-beta.1+001\n0.1.2-x-1.A+b\n2.2.0-10.beta.1+a\n0.1.1\n2.1.0-a.beta\n1.0.0\n1.1.1\n1.0.1-a\n",
+          "stdout": "0.0.0\n0.0.1+a\n0.0.1\n0.0.2-2.10.beta\n0.0.2-10\n0.1.0-01\n0.1.1-x-1+b\n0.1.1\n0.1.2-1.beta+a\n0.1.2-10.x-1.2+a\n0.1.2-x-1.A+b\n0.1.2\n0.2.1-a\n1.0.0\n1.0.1-a\n1.1.0-beta.1+001\n1.1.1\n1.1.2-1.x-1\n1.1.2\n1.2.0-A+b\n1.2.0-a+001\n1.2.2-10\n1.2.2\n1.2.2+a\n2.0.1+001\n2.0.2-A.A\n2.1.0-2.x-1.A\n2.1.0-a.beta\n2.1.1-x-1.beta\n2.1.1\n2.1.2-x-1.1\n2.2.0-2.10.x-1\n2.2.0-10.beta.1+a\n2.2.2-10+b\n2.2.2\nvalid: 35 invalid: 0\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        }
+      ]
+    }
+  ]
+}

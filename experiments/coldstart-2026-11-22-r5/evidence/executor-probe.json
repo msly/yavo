@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "recorded_at_utc": "2026-11-22T06:28:26Z",
+  "user_timezone": "Asia/Shanghai",
+  "purpose": "Read-only capability audit before round-five subject execution; no formal subject run was started by this probe.",
+  "language_source_revision": "5cd916bbe7c8a85776b14e2295a681db88fb5c0a",
+  "local_cli": {
+    "executable": "/opt/codex/bin/codex",
+    "version": "codex-cli 0.172.0-alpha.2",
+    "login_status": "Logged in using ChatGPT",
+    "config_model_present": false,
+    "config_model_provider_present": false,
+    "config_model_reasoning_effort_present": false,
+    "configured_profile_count": 0,
+    "configured_mcp_server_count": 0,
+    "codex_home": "/home/agent/.codex",
+    "codex_home_writable": false,
+    "temporary_directory_writable": true,
+    "raw_credentials_read": false,
+    "credential_values_recorded": false
+  },
+  "remote_executables": {
+    "codex": false,
+    "claude": false,
+    "opencode": false,
+    "aider": false,
+    "node": false,
+    "python3": false,
+    "python": false,
+    "perl": true,
+    "curl": true
+  },
+  "probes": [
+    {
+      "id": "cli-json-ephemeral-readonly",
+      "started_at_utc": null,
+      "argv": [
+        "codex",
+        "exec",
+        "--ephemeral",
+        "--skip-git-repo-check",
+        "--json",
+        "--sandbox",
+        "read-only",
+        "This is an output format capability probe. Do not invoke tools or inspect files. Reply with exactly READY."
+      ],
+      "cwd": "/workspace/scratch/17cad01173a9",
+      "exit_code": 1,
+      "outcome": "initialization_failed",
+      "stderr_relevant": "Error: failed to initialize in-process app-server client: Read-only file system (os error 30)",
+      "model_response_received": false,
+      "usage_received": false
+    },
+    {
+      "id": "cli-json-writable-sqlite-and-log",
+      "started_at_utc": null,
+      "argv": [
+        "codex",
+        "exec",
+        "--ephemeral",
+        "--skip-git-repo-check",
+        "--json",
+        "--sandbox",
+        "read-only",
+        "-c",
+        "sqlite_home=\"/tmp/yavo-r5-probe-state\"",
+        "-c",
+        "log_dir=\"/tmp/yavo-r5-probe-logs\"",
+        "This is an output format capability probe. Do not invoke tools or inspect files. Reply with exactly READY."
+      ],
+      "stdin": "/dev/null",
+      "cwd": "/workspace/scratch/17cad01173a9",
+      "exit_code": 1,
+      "outcome": "initialization_failed",
+      "stderr_relevant": "Error: failed to initialize in-process app-server client: Read-only file system (os error 30)",
+      "model_response_received": false,
+      "usage_received": false
+    }
+  ],
+  "observations": {
+    "cli_help_advertises_json_events": true,
+    "json_usage_successfully_observed": false,
+    "exact_failing_filesystem_path": null,
+    "initialization_failure_scope": "Read-only filesystem; overriding supported sqlite_home and log_dir did not resolve it. The precise failing path was not established.",
+    "strace_available": true,
+    "strace_usable": false,
+    "strace_failure": "PTRACE_TRACEME: Operation not permitted",
+    "supported_remote_app_server_endpoint_discovered": false,
+    "home_or_codex_home_overridden": false,
+    "policy_or_authentication_bypassed": false,
+    "source_files_changed_during_probe": false
+  },
+  "selected_execution": {
+    "interface": "collaboration.spawn_agent",
+    "fork_turns": "none",
+    "independent_sessions": 4,
+    "tasks_per_session": 12,
+    "runs_per_language": 2,
+    "model_configuration": "Inherit parent configuration; no explicit model or reasoning-effort override.",
+    "exact_model_id": null,
+    "sampling": null,
+    "tokens": null,
+    "token_missing_reason": "The collaboration interface available to the orchestrator does not expose verifiable per-run usage, and the local JSON CLI probes failed before producing model events.",
+    "tool_interface": "Server-side tools/lab.pl; one allowed lab operation per subject remote execution call.",
+    "operation_count_unit": "lab_operations",
+    "operation_count_scope": "Controlled subject requests only; excludes outer functions.exec wrappers, orchestration and unknown platform calls.",
+    "transcript_scope": "Visible lab requests, outputs, exit states and source snapshots; no hidden model reasoning.",
+    "monotonic_clock": "Time::HiRes::clock_gettime(CLOCK_MONOTONIC)",
+    "timing_boundary": "Actual run-start and submission-end events must be recorded by the harness; if start is the first subject operation, report that narrower boundary.",
+    "isolation": "Independent blank model contexts and per-run directories, with access restrictions enforced by prompt and audited requests, not claimed as hard platform isolation.",
+    "full_token_cost_gate": "blocked",
+    "historical_causal_comparison": "Not supported: earlier rounds report Sonnet and lack exact model/sampling records; this round changes tasks and execution interface."
+  },
+  "planned_order": [
+    {
+      "wave": 1,
+      "start_order": 1,
+      "run": "yavo-a",
+      "task_order": "T01-T12",
+      "concurrent_with": "rust-a"
+    },
+    {
+      "wave": 1,
+      "start_order": 2,
+      "run": "rust-a",
+      "task_order": "T01-T12",
+      "concurrent_with": "yavo-a"
+    },
+    {
+      "wave": 2,
+      "start_order": 1,
+      "run": "rust-b",
+      "task_order": "T01-T12",
+      "concurrent_with": "yavo-b"
+    },
+    {
+      "wave": 2,
+      "start_order": 2,
+      "run": "yavo-b",
+      "task_order": "T01-T12",
+      "concurrent_with": "rust-b"
+    }
+  ]
+}
+

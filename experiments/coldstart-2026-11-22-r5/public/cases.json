@@ -1,0 +1,345 @@
+{
+  "schema_version": 1,
+  "tasks": [
+    {
+      "id": "T01",
+      "kind": "program",
+      "title": "原子转账账本",
+      "structural": [],
+      "cases": [
+        {
+          "id": "T01-public-01",
+          "visibility": "public",
+          "stdin": "account bob 20\naccount ann 10\npay bob ann 3\nbalance ann\nbatch 2\nann bob 4\nbob ann 100\nbalance ann\n",
+          "stdout": "paid\nann: 13\nbatch: row 2 funds bob\nann: 13\nann=13\nbob=17\ntotal: 30\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T01-public-02",
+          "visibility": "public",
+          "stdin": "account a 0007\naccount a 99\npay a a 7\nbatch 0\npay ghost absent 0\n",
+          "stdout": "error: duplicate a\npaid\nbatch: ok\nerror: unknown ghost\na=7\ntotal: 7\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        }
+      ]
+    },
+    {
+      "id": "T02",
+      "kind": "program",
+      "title": "严格 CSV 记录",
+      "structural": [],
+      "cases": [
+        {
+          "id": "T02-public-01",
+          "visibility": "public",
+          "stdin": "a,\"b,c\",\n\"say \"\"hi\"\"\",x\n",
+          "stdout": "1: 3\n1:a\n3:b,c\n0:\n2: 2\n8:say \"hi\"\n1:x\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T02-public-02",
+          "visibility": "public",
+          "stdin": "\n\"\"\na\"b,c\n\"x\" tail\n",
+          "stdout": "1: 1\n0:\n2: 1\n0:\n3: invalid\n4: invalid\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        }
+      ]
+    },
+    {
+      "id": "T03",
+      "kind": "program",
+      "title": "整数区间集合",
+      "structural": [],
+      "cases": [
+        {
+          "id": "T03-public-01",
+          "visibility": "public",
+          "stdin": "add 1 3\nadd 5 7\nadd 4 4\nshow\ndel 3 5\nshow\nhas 3\nhas 7\n",
+          "stdout": "1:7\n1:2 6:7\nno\nyes\ncount: 4\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T03-public-02",
+          "visibility": "public",
+          "stdin": "show\nadd -2 2\ndel -2 -2\ndel 2 2\nshow\n",
+          "stdout": "empty\n-1:1\ncount: 3\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        }
+      ]
+    },
+    {
+      "id": "T04",
+      "kind": "program",
+      "title": "精确长度换算（多文件）",
+      "structural": [
+        "At least two source files; all numeric parsing, unit validation, exact conversion and fraction reduction occur in a non-entry module; entry performs I/O and calls that module."
+      ],
+      "cases": [
+        {
+          "id": "T04-public-01",
+          "visibility": "public",
+          "stdin": "1.5 m cm\n001 mm cm\n-0.125 km m\n",
+          "stdout": "1: 150 cm\n2: 1/10 cm\n3: -125 m\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T04-public-02",
+          "visibility": "public",
+          "stdin": "+1 m mm\n.5 m cm\n-0.000 km mm\n1 m inch\n",
+          "stdout": "1: invalid\n2: invalid\n3: 0 mm\n4: invalid\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        }
+      ]
+    },
+    {
+      "id": "T05",
+      "kind": "program",
+      "title": "网格连通域",
+      "structural": [],
+      "cases": [
+        {
+          "id": "T05-public-01",
+          "visibility": "public",
+          "stdin": "3 4\n##..\n.#.#\n...#\n",
+          "stdout": "components: 2\n1: area=3 perimeter=8 box=0,0:1,1\n2: area=2 perimeter=6 box=1,3:2,3\nlargest: 1\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T05-public-02",
+          "visibility": "public",
+          "stdin": "3 3\n###\n#.#\n###\n",
+          "stdout": "components: 1\n1: area=8 perimeter=16 box=0,0:2,2\nlargest: 1\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        }
+      ]
+    },
+    {
+      "id": "T06",
+      "kind": "program",
+      "title": "三线程游程编码",
+      "structural": [
+        "Three OS worker threads are all started before any join; each encodes its prescribed contiguous chunk, including empty chunks; main only merges ordered worker runs and does not re-encode the complete input."
+      ],
+      "cases": [
+        {
+          "id": "T06-public-01",
+          "visibility": "public",
+          "stdin": "aaabbbbbcc\n",
+          "stdout": "97 3\n98 5\n99 2\nruns: 3 chars: 10\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T06-public-02",
+          "visibility": "public",
+          "stdin": "A\n",
+          "stdout": "65 1\nruns: 1 chars: 1\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        }
+      ]
+    },
+    {
+      "id": "T07",
+      "kind": "program",
+      "title": "带 TTL 的 LRU 缓存",
+      "structural": [],
+      "cases": [
+        {
+          "id": "T07-public-01",
+          "visibility": "public",
+          "stdin": "2\n0 put a 10 5\n0 put b 20 10\n1 get a\n2 put c 30 10\n2 keys\n5 get a\n5 keys\n",
+          "stdout": "a: 10\nkeys: c a\na: missing\nkeys: c\nkeys: c\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T07-public-02",
+          "visibility": "public",
+          "stdin": "1\n0 put a 7 4\n1 get a\n4 get a\n4 put a 9 0\n4 keys\n",
+          "stdout": "a: 7\na: missing\nkeys: none\nkeys: none\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        }
+      ]
+    },
+    {
+      "id": "T08",
+      "kind": "program",
+      "title": "标签目录",
+      "structural": [],
+      "cases": [
+        {
+          "id": "T08-public-01",
+          "visibility": "public",
+          "stdin": "set a red blue red\nset b blue\nadd c red\nquery blue\nquery red blue\nremove a red\ntags a\n",
+          "stdout": "docs: a b\ndocs: a\na: blue\ntotal: docs=3 tags=2\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T08-public-02",
+          "visibility": "public",
+          "stdin": "set empty\nadd b x\nquery\ndrop b\nquery x\ntags empty\n",
+          "stdout": "docs: b empty\ndocs: none\nempty: none\ntotal: docs=1 tags=0\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        }
+      ]
+    },
+    {
+      "id": "T09",
+      "kind": "program",
+      "title": "带转义的 glob 匹配",
+      "structural": [],
+      "cases": [
+        {
+          "id": "T09-public-01",
+          "visibility": "public",
+          "stdin": "a*?c\nabbc\na\\*b\na*b\na\\*b\naxxb\n",
+          "stdout": "1: yes\n2: yes\n3: no\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T09-public-02",
+          "visibility": "public",
+          "stdin": "\n\n*\n\nabc\\\nabc\n",
+          "stdout": "1: yes\n2: yes\n3: invalid\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        }
+      ]
+    },
+    {
+      "id": "T10",
+      "kind": "program",
+      "title": "相对路径归一化",
+      "structural": [],
+      "cases": [
+        {
+          "id": "T10-public-01",
+          "visibility": "public",
+          "stdin": "/a/b\n../c//./d/\n/../../x\n\n",
+          "stdout": "/a/c/d\n/x\n/a/b\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T10-public-02",
+          "visibility": "public",
+          "stdin": "/\n.../.hidden/../z\na/../../b\n////\n",
+          "stdout": "/.../z\n/b\n/\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        }
+      ]
+    },
+    {
+      "id": "T11",
+      "kind": "program",
+      "title": "滑动窗口下中位数",
+      "structural": [],
+      "cases": [
+        {
+          "id": "T11-public-01",
+          "visibility": "public",
+          "stdin": "3\n4 1 7 2 2\n",
+          "stdout": "3: median=4 sum=12\n4: median=2 sum=10\n5: median=2 sum=11\nwindows: 3\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T11-public-02",
+          "visibility": "public",
+          "stdin": "2\n-3 -1 -1 8\n",
+          "stdout": "2: median=-3 sum=-4\n3: median=-1 sum=-2\n4: median=-1 sum=7\nwindows: 3\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        }
+      ]
+    },
+    {
+      "id": "T12",
+      "kind": "program",
+      "title": "版本号稳定排序",
+      "structural": [],
+      "cases": [
+        {
+          "id": "T12-public-01",
+          "visibility": "public",
+          "stdin": "1.0.0\n1.0.0-beta.2\n1.0.0-beta.11\n1.0.0-alpha\n0.9.9\n",
+          "stdout": "0.9.9\n1.0.0-alpha\n1.0.0-beta.2\n1.0.0-beta.11\n1.0.0\nvalid: 5 invalid: 0\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T12-public-02",
+          "visibility": "public",
+          "stdin": "01.0.0+z\n1.0.0+a\n1.0.0-01\n1.0.0-1\n1.0\n\n",
+          "stdout": "line 5: invalid\nline 6: invalid\n1.0.0-01\n1.0.0-1\n01.0.0+z\n1.0.0+a\nvalid: 4 invalid: 2\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        }
+      ]
+    }
+  ]
+}

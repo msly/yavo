@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "tasks": [
+    {
+      "id": "T07",
+      "kind": "program",
+      "title": "带 TTL 的 LRU 缓存",
+      "structural": [],
+      "cases": [
+        {
+          "id": "T07-public-01",
+          "visibility": "public",
+          "stdin": "2\n0 put a 10 5\n0 put b 20 10\n1 get a\n2 put c 30 10\n2 keys\n5 get a\n5 keys\n",
+          "stdout": "a: 10\nkeys: c a\na: missing\nkeys: c\nkeys: c\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        },
+        {
+          "id": "T07-public-02",
+          "visibility": "public",
+          "stdin": "1\n0 put a 7 4\n1 get a\n4 get a\n4 put a 9 0\n4 keys\n",
+          "stdout": "a: 7\na: missing\nkeys: none\nkeys: none\n",
+          "stderr": "",
+          "exit_code": 0,
+          "args": [],
+          "files": {}
+        }
+      ]
+    }
+  ]
+}
