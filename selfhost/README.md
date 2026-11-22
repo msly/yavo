@@ -40,6 +40,19 @@ checks that inputs did not change during the run. `receipt.json` identifies the
 achieved stage and each individual result. Native CI runs this gate on Linux,
 Windows and macOS; a configured job is not itself a passing result.
 
+## Validation snapshot (2026-11-22)
+
+The [source-bound local summary](../compiler/validation/selfhost-sh1-2026-11-22.json)
+records **72/72 cases and 10/10 auxiliary checks**, with no skipped checks:
+14 normal programs, 9 panic programs, 39 rejected programs and 10 unsupported
+programs. The 23 executable cases pass both build modes and repeat-C checks.
+Stage0 complete Debug/Release suites each pass 142 tests, fail 0 and ignore 1.
+The separate lexer runner has 11 positive groups and 24 rejected/unsupported inputs.
+[CI run 45019581088](https://github.com/msly/yavo/actions/runs/45019581088)
+passed all six jobs at `353523a`, including this frontend gate on Linux x86-64,
+Windows x86-64 and macOS arm64. These are validation counts for SH-1, not a
+self-hosting completion percentage.
+
 ## CLI
 
 ```sh

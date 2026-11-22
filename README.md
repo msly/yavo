@@ -25,14 +25,14 @@ and [on-demand API index](docs/agent-api-index.md). The complete cheatsheet rema
 
 ## Implementation and local validation
 
-The latest language-feature baseline is **`b3c27a6` (2026-11-22)**. It includes ownership, views, deterministic destruction, String/Vec/Map/Set/Heap/Deque/Arena, typed generational IDs, generics, interfaces, source modules and scoped OS threads. Agent tools include `check`, `fix`, `allocations` and evidence-bound `verify`; the backend has a content-addressed build cache.
+The broad language-feature baseline **`b3c27a6` (2026-11-22)** includes ownership, views, deterministic destruction, String/Vec/Map/Set/Heap/Deque/Arena, typed generational IDs, generics, interfaces, source modules and scoped OS threads. Agent tools include `check`, `fix`, `allocations` and evidence-bound `verify`; the backend has a content-addressed build cache.
 
 Recent changes implement index assignment, two-phase variable/field receivers, String/str comparison, constant field defaults and P-STACK. Modifying methods on indexed elements are now supported; their element borrow precedes argument evaluation. Non-Copy element reads remain borrows, with clearer `.clone()` diagnostics; literal `${` still needs escaping. See [decisions 12–19](docs/decisions.md).
 
 | Check | Recorded local result | Scope |
 | --- | --- | --- |
-| Release suite | **133 passed, 0 failed, 1 ignored** | Current PCH implementation, all 17 Cargo test groups; previous language-feature baseline was 129/0/1 |
-| Debug suite | **133 passed, 0 failed, 1 ignored** | Current PCH implementation, all 17 groups, independent completed local log |
+| Release suite | **142 passed, 0 failed, 1 ignored** | Self-hosting stage0 changes, all 19 Cargo test groups; preceding PCH batch was 133/0/1 |
+| Debug suite | **142 passed, 0 failed, 1 ignored** | Same source, all 19 groups, independent completed local log |
 | Frozen specification | **124 pass, 0 wrong, 3 unsupported, 0 not_run, 2 superseded** | 129 frozen cases; a different counting unit from Cargo test functions |
 | Cross-compilation | Six target formats/architectures build | Linux (static musl), Windows and macOS on x86-64/aarch64; native CI now covers Linux x86-64 plus the Windows x86-64/macOS arm64 selections below |
 | Overall `verify` | **`not_verified`** | Required audit remains unimplemented |
@@ -43,7 +43,9 @@ Source modules support top-level exports, per-file imports, cyclic imports and o
 
 ### GitHub CI
 
-The runtime-PCH implementation was pushed at [`7877015`](https://github.com/msly/yavo/commit/7877015ae5df2dda02ca22d1f2b621f3c3611fe8); its independent [CI run 45015772252](https://github.com/msly/yavo/actions/runs/45015772252) finished **completed/success, six of six jobs** (three native platforms, independent sanitizer, experiment evidence, agent-evaluation preparation). The latest local complete Debug and Release totals are 133/0/1 each. The following table is preserved as the preceding historical CI snapshot, not as the PCH run's counts.
+The self-hosting implementation [`353523a`](https://github.com/msly/yavo/commit/353523a62fc57d5249544c9f5df7083051d4cd78) passed [CI run 45019581088](https://github.com/msly/yavo/actions/runs/45019581088): **six of six jobs succeeded**. The local SH-1 gate passed **72/72 cases and 10/10 auxiliary checks**; complete local Debug/Release suites each passed **142/0/1**. [Source-bound local summary](compiler/validation/selfhost-sh1-2026-11-22.json). The selfhost gate passed on **Linux x86-64, Windows x86-64 and macOS arm64**. This batch verifies job/step results and artifact metadata; it does not claim independent archive download/hash verification.
+
+The runtime-PCH implementation was pushed at [`7877015`](https://github.com/msly/yavo/commit/7877015ae5df2dda02ca22d1f2b621f3c3611fe8); its independent [CI run 45015772252](https://github.com/msly/yavo/actions/runs/45015772252) finished **completed/success, six of six jobs** (three native platforms, independent sanitizer, experiment evidence, agent-evaluation preparation). That preceding batch recorded local complete Debug and Release totals of 133/0/1 each. The following table is preserved as the preceding historical CI snapshot, not as the PCH run's counts.
 
 **[Run 45002067581](https://github.com/msly/yavo/actions/runs/45002067581) passed all six jobs
 at `073003d` on 2026-11-22.** The language-feature baseline remains `b3c27a6`;
