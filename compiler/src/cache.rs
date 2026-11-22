@@ -19,7 +19,7 @@
 
 use std::ffi::OsString;
 use std::fs;
-use std::io::{self, Read};
+use std::io::{self, Read, Write};
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -119,6 +119,7 @@ pub fn sha256_file(path: &Path) -> io::Result<String> {
 
 /// Prepare a reusable runtime precompiled header. Its key is independent of user code,
 /// but includes runtime bytes, target, compiler, optimization and instrumentation settings.
+/// The published header is immutable: PCH readers validate its timestamp as well as its bytes.
 /// Unique temporary outputs and atomic renames prevent readers opening a partial PCH.
 pub fn runtime_pch(
     root: &Path, key: &str, header: &str,
@@ -131,6 +132,7 @@ pub fn runtime_pch(
     let header_path = dir.join("yavo_rt.h");
     let pch = dir.join("yavo_rt.pch");
     let sum_path = dir.join("yavo_rt.pch.sha256");
+    prepare_pch_header(&header_path, &sum_path, header.as_bytes())?;
     let valid = || -> bool {
         let Ok(expected) = fs::read_to_string(&sum_path) else { return false };
         sha256_file(&pch).is_ok_and(|actual| actual == expected.trim())
@@ -140,7 +142,6 @@ pub fn runtime_pch(
         return Ok((pch, true));
     }
 
-    write_atomic(&header_path, header.as_bytes())?;
     let temp = dir.join(format!(".yavo_rt.pch.tmp-{}", unique_suffix()));
     if let Err(e) = compile(&header_path, &temp) {
         let _ = fs::remove_file(&temp);
@@ -159,6 +160,45 @@ pub fn runtime_pch(
     write_atomic(&sum_path, built_sum.as_bytes())?;
     evict_pch(root, key);
     Ok((pch, false))
+}
+
+/// Publish complete header bytes without replacing an existing file, even on concurrent misses.
+/// Replacing identical bytes still changes the mtime recorded inside an in-flight or ready PCH.
+fn prepare_pch_header(path: &Path, sum_path: &Path, bytes: &[u8]) -> io::Result<()> {
+    let check = |actual: Vec<u8>| -> io::Result<()> {
+        if actual == bytes { Ok(()) } else {
+            Err(io::Error::new(io::ErrorKind::InvalidData, "cached runtime header does not match its key"))
+        }
+    };
+    match fs::read(path) {
+        Ok(actual) => return check(actual),
+        Err(e) if e.kind() == io::ErrorKind::NotFound => {},
+        Err(e) => return Err(e),
+    }
+    // Invalidate an orphan PCH before the new header becomes visible. Otherwise another
+    // caller could pair that newly created header with the old PCH's still-valid checksum.
+    match fs::remove_file(sum_path) {
+        Ok(()) => {},
+        Err(e) if e.kind() == io::ErrorKind::NotFound => {},
+        Err(e) => return Err(e),
+    }
+    let temp = path.with_file_name(format!(".yavo_rt.h.tmp-{}", unique_suffix()));
+    let mut file = fs::OpenOptions::new().write(true).create_new(true).open(&temp)?;
+    let written = file.write_all(bytes);
+    drop(file);
+    if let Err(e) = written {
+        let _ = fs::remove_file(&temp);
+        return Err(e);
+    }
+    // A same-directory hard link publishes the fully written file atomically and never
+    // replaces a winner. Unsupported filesystems use the existing direct-build fallback.
+    let published = fs::hard_link(&temp, path);
+    let _ = fs::remove_file(&temp);
+    match published {
+        Ok(()) => Ok(()),
+        Err(e) if e.kind() == io::ErrorKind::AlreadyExists => check(fs::read(path)?),
+        Err(e) => Err(e),
+    }
 }
 
 fn touch_file(path: &Path) {

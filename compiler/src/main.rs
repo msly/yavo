@@ -257,7 +257,7 @@ fn build_cached(
         None
     } else {
         let pch_key = cache::key(&cache::Inputs {
-            c_code: "yavo-runtime-pch-v1",
+            c_code: "yavo-runtime-pch-v2",
             runtime_header: codegen::RUNTIME_HEADER,
             toolchain_lock: toolchain::lock_contents(),
             compiler: &tc.program,

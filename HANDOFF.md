@@ -521,7 +521,7 @@ token、精确服务模型 ID 和 sampling 无可核验来源，均为 `null`；
 - [本机逐例摘要](compiler/validation/selfhost-string-2026-11-22.json)：**181/181 cases、10/10 checks、0 skip**；45 run、10 panic、105 reject、14 stage0 接受而新前端未实现、7 两侧均 U0001。55 个可执行输入各执行 Debug/Release，固定输出/退出/panic、Rust 差分与重复 C 均通过；分配检查开启。
 - 原 138 条输入字节全部保留，136 条 manifest 项完全相同；两个 owned String/field 用例原样迁为 run，新增 43 条。冻结 yavo-tests 未改。source_prefix 验收同时检查原文件和组装文件的结束时哈希稳定性。
 - 独立审查另比较 23 个循环移动检查、20 组两模式循环执行；临时值/借用路径的 14 个正例在两编译器两模式共执行 56 次，固定输出、exit0、stderr 空。探针位于 ignored selfhost-string-types / selfhost-string-review；已将发现的边界纳入正式集。
-- Rust 源码、C 运行时、Cargo 配置/锁、工具链锁与 f08c38f 相同；本机未重复全套 Rust suite，前批 Debug/Release 各 142/0/1 保持原历史口径。原有 ASan job 只覆盖旧 Rust 生成路径；此批新增 Linux native 后的 selfhost C sanitizer 步骤，绑定本次实际生成 C，并使用独立 GCC ASan/UBSan 和能力探针。
+- 首轮 CI 暴露 Rust stage0 的 PCH 缓存并发发布问题：两个 miss 生产者覆盖同字节运行时头文件，mtime 改变，使另一生产者的 PCH 失效。修复改为完整临时文件原子 no-replace 发布、已有头文件只读复用，并升级 PCH key 版本。Rust 语言语义、C 运行时、Cargo 配置/锁、工具链锁与冻结规格未改；修复后重新执行完整 Debug/Release 与 selfhost 门禁。原有 ASan job 只覆盖旧 Rust 生成路径；此批新增 Linux native 后的 selfhost C sanitizer 步骤，绑定本次实际生成 C，并使用独立 GCC ASan/UBSan 和能力探针。
 - 本机没有可用独立 GCC/ASan 运行时；新 sanitizer 步骤的实际执行结果以及三平台 CI 在完成后写入本节和摘要。不能把步骤配置成功当执行通过。
 
 ### 27.3 保留的边界与下一步

@@ -3420,6 +3420,125 @@
   "checks_failed": 0,
   "checks_passed": 10,
   "checks_skipped": 0,
+  "ci_attempts": [
+    {
+      "artifact_verification": "metadata only; archive bytes not downloaded",
+      "artifacts": [
+        {
+          "digest": "sha256:e1f5db443e42ced51ecbcb37f6e70e5c451a5286429df3c900cdb4786e14a251",
+          "expired": false,
+          "id": 14762870623,
+          "name": "native-ubuntu-24.04-44e1895c13bfc0b88468e680769c2d7aea8bb9e4",
+          "size_in_bytes": 1231821
+        },
+        {
+          "digest": "sha256:3b688a00f4dd133a662b99136b151c41e1321944f2d6c16d470cdaefc52db497",
+          "expired": false,
+          "id": 14762775245,
+          "name": "native-macos-15-44e1895c13bfc0b88468e680769c2d7aea8bb9e4",
+          "size_in_bytes": 35595777
+        },
+        {
+          "digest": "sha256:deabba537ef1e076442b866d2dcf883f112d3edd613f26c67b0f067e99d280e7",
+          "expired": false,
+          "id": 14762535059,
+          "name": "sanitizers-linux-44e1895c13bfc0b88468e680769c2d7aea8bb9e4",
+          "size_in_bytes": 4050507
+        },
+        {
+          "digest": "sha256:9c20f18403630fa8b80b115482786844e4906a40433357264b7be77024db11c4",
+          "expired": false,
+          "id": 14762295573,
+          "name": "agent-eval-preparation-44e1895c13bfc0b88468e680769c2d7aea8bb9e4",
+          "size_in_bytes": 12885
+        },
+        {
+          "digest": "sha256:bfba396f92be6a0c3c5ac2d5ffef864e7338d3823f3ea5c6d06e2c5983a4b035",
+          "expired": false,
+          "id": 14762117300,
+          "name": "experiment-evidence-44e1895c13bfc0b88468e680769c2d7aea8bb9e4",
+          "size_in_bytes": 11931
+        },
+        {
+          "digest": "sha256:235d4c6b2638476b54de62b4f0162670ca84d5851156e30877c3ad771452b3ee",
+          "expired": false,
+          "id": 14762063577,
+          "name": "native-windows-2025-44e1895c13bfc0b88468e680769c2d7aea8bb9e4",
+          "size_in_bytes": 120283709
+        }
+      ],
+      "conclusion": "failure",
+      "failure": {
+        "cause": "runtime PCH input header overwritten by concurrent producer; mtime changed",
+        "diagnostic": "mtime changed (was 1795364090, now 1795364091)",
+        "effect": "Linux selfhost and generated-C sanitizer steps skipped; no passing claim for these steps",
+        "job": "Native Linux x86_64",
+        "job_id": 137269444012,
+        "log_path": "compiler/target/selfhost-string-dev/linux-job.log",
+        "log_sha256": "e6de8b88ddffd25403e3204d8996bdb1da08d8c69d7a6ede091a856b007b7897",
+        "modes": [
+          "debug",
+          "release"
+        ],
+        "step": "Run Debug and Release sequentially",
+        "tests": [
+          "collections_and_mutable_returns_compile_for_all_targets",
+          "modules_compile_for_all_targets",
+          "arena_identity_and_graphs_compile_for_all_targets"
+        ]
+      },
+      "head_sha": "44e1895c13bfc0b88468e680769c2d7aea8bb9e4",
+      "jobs": [
+        {
+          "conclusion": "success",
+          "html_url": "https://github.com/msly/yavo/actions/runs/45042371720/job/137269443826",
+          "id": 137269443826,
+          "name": "Agent evaluation preparation",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "html_url": "https://github.com/msly/yavo/actions/runs/45042371720/job/137269444004",
+          "id": 137269444004,
+          "name": "Native Windows x86_64",
+          "status": "completed"
+        },
+        {
+          "conclusion": "failure",
+          "html_url": "https://github.com/msly/yavo/actions/runs/45042371720/job/137269444012",
+          "id": 137269444012,
+          "name": "Native Linux x86_64",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "html_url": "https://github.com/msly/yavo/actions/runs/45042371720/job/137269444051",
+          "id": 137269444051,
+          "name": "Independent Linux ASan and UBSan",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "html_url": "https://github.com/msly/yavo/actions/runs/45042371720/job/137269444098",
+          "id": 137269444098,
+          "name": "Native macOS arm64",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "html_url": "https://github.com/msly/yavo/actions/runs/45042371720/job/137269444172",
+          "id": 137269444172,
+          "name": "Round-five experiment evidence",
+          "status": "completed"
+        }
+      ],
+      "metadata_path": "compiler/target/selfhost-string-dev/ci-run-45042371720-attempt-1.json",
+      "metadata_sha256": "dd64fb73bf7eff84188dfc2c1d0ff0570c38fd557cce0fdcdb37fbf168bee020",
+      "run_id": 45042371720,
+      "status": "completed",
+      "url": "https://github.com/msly/yavo/actions/runs/45042371720"
+    }
+  ],
   "ci_sources": {
     ".github/workflows/ci.yml": "9e581dc7dd4e7e3ec2e94e4e979ac4e3dcf7558aad9e03ec747a5ca13249b020",
     "tools/ci/selfhost_sanitize.py": "91bc8b84908306033d168d9178334e57bafade220ae310a95f8f7ad4673affd8"
@@ -3438,6 +3557,20 @@
     "platform": "Linux-6.1.0-50-cloud-amd64-x86_64-with-glibc2.36"
   },
   "increment": "String and owned aggregate lifetimes; original diagnostic source",
+  "initial_local_validation": {
+    "cases": 181,
+    "checks": 10,
+    "full_receipt": {
+      "bytes": 1624446,
+      "durability": "local build output; reproduce with selfhost/bootstrap.py; CI retains its own complete run",
+      "path": "compiler/target/ci/selfhost-string-final/receipt.json",
+      "run_directory": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-string-final/run-8yq_3j_t",
+      "sha256": "b9eda1641928953f9d252ac2a69fdd9a9f6a1cf370e93cbc9e5ea13ddef0b9d5"
+    },
+    "skipped": 0,
+    "source_commit": "44e1895c13bfc0b88468e680769c2d7aea8bb9e4",
+    "status": "passed"
+  },
   "inputs": {
     "assembled_sources": {
       "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-string-final/run-8yq_3j_t/programs/diagnostic_original_source/input.yv": "5e125ecc74f10aad11eda9d741043e8ee1beecb6fe30dcaf30006b5c2713f82f"
@@ -3674,7 +3807,12 @@
     }
   ],
   "native_ci": {
-    "status": "pending"
+    "artifact_verification": "metadata only; no independent archive download/hash verification",
+    "conclusion": "failure",
+    "head_sha": "44e1895c13bfc0b88468e680769c2d7aea8bb9e4",
+    "run_id": 45042371720,
+    "status": "completed",
+    "url": "https://github.com/msly/yavo/actions/runs/45042371720"
   },
   "original_component": {
     "deterministic_c": true,
@@ -3724,25 +3862,94 @@
   "scope": "independent subset compiler; no stage2/stage3 self-compilation",
   "self_hosted": false,
   "selfhost_sanitizers": {
+    "ci_step": "Check Yavo-frontend C with independent ASan and UBSan",
+    "expected_capability_probes": [
+      "clean",
+      "address",
+      "undefined"
+    ],
+    "expected_programs": 55,
     "local_limitation": "project host lacks an independent GCC/ASan runtime",
+    "scope": "Linux GCC ASan/UBSan; LSan disabled; normal exits use YV_ALLOC_CHECK; no TSan",
     "status": "pending_ci"
   },
-  "source_commit": null,
-  "stage0_full_suites": {
-    "debug": {
-      "failed": 0,
-      "ignored": 1,
-      "passed": 142
+  "source_commit": "44e1895c13bfc0b88468e680769c2d7aea8bb9e4",
+  "stage0_changes": {
+    "header_publication": "complete unique temporary file, atomic no-replace hard link, existing contents checked without rewriting",
+    "pch_cache_namespace": "yavo-runtime-pch-v2",
+    "reason": "concurrent cache misses replaced identical runtime-header bytes, changing mtime embedded in a PCH",
+    "regression_tests": [
+      "runtime_pch_header_is_immutable_across_concurrent_misses",
+      "runtime_pch_header_recreation_invalidates_old_pch_before_readers"
+    ],
+    "runtime_and_frozen_specification_unchanged": true,
+    "scope": "PCH build-cache publication only; language semantics unchanged",
+    "source_paths": [
+      "compiler/src/cache.rs",
+      "compiler/src/main.rs"
+    ],
+    "source_sha256": {
+      "compiler/src/cache.rs": "71491bfa1220cd34c72498ab2aea9c8d8dfe59503c54189fda5d13400d9a6280",
+      "compiler/src/main.rs": "bae50868607684ff53527643e6a4c8c1d1a452bc12e4e8c8edfc1615e97e8f2b",
+      "compiler/tests/build_cache.rs": "16b31147fad7847525c6711279aa1a6d45194c92524ee2cef3ec4efc93372985"
     },
-    "reference": "compiler/validation/selfhost-sh1-2026-11-22.json",
-    "release": {
-      "failed": 0,
-      "ignored": 1,
-      "passed": 142
+    "targeted_validation": {
+      "build_cache": {
+        "failed": 0,
+        "passed": 16
+      },
+      "logs": [
+        {
+          "bytes": 1326,
+          "exit_code": 101,
+          "path": "compiler/target/selfhost-string-dev/pch-regression-before.log",
+          "sha256": "d9f01eb9187055642cbfa2fe39e462f527d7c1aa466cfaa5f948e12fcfe9aee6"
+        },
+        {
+          "bytes": 1831,
+          "exit_code": 0,
+          "path": "compiler/target/selfhost-string-dev/pch-targeted-after.log",
+          "sha256": "3da8bd86ac7a560511d4cea98d0fb2e1c3521af53b39552c5dc7eb3c6f9de142"
+        },
+        {
+          "bytes": 600,
+          "exit_code": 0,
+          "path": "compiler/target/selfhost-string-dev/pch-targets-cold.log",
+          "sha256": "394b979e43ab8840cf1db446622b5eaa9916c3c23cccd38adc3cfb169b83e0e7"
+        }
+      ],
+      "old_implementation": {
+        "failed": 2,
+        "passed": 0
+      },
+      "targets": {
+        "failed": 0,
+        "passed": 6
+      },
+      "targets_cold_cache": {
+        "failed": 0,
+        "passed": 6
+      }
     },
-    "status": "unchanged_previous_baseline_not_rerun_locally"
+    "validation_status": "pending_post_fix_validation"
   },
-  "stage0_runtime_and_frozen_specification_unchanged": true,
+  "stage0_full_suites": {
+    "previous_baseline": {
+      "debug": {
+        "failed": 0,
+        "ignored": 1,
+        "passed": 142
+      },
+      "reference": "compiler/validation/selfhost-sh1-2026-11-22.json",
+      "release": {
+        "failed": 0,
+        "ignored": 1,
+        "passed": 142
+      }
+    },
+    "status": "pending_post_cache_fix"
+  },
+  "stage0_runtime_and_frozen_specification_unchanged": false,
   "status": "passed",
   "total": 181
 }

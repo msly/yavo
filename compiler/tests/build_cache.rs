@@ -3,10 +3,16 @@
 
 mod common;
 
+#[allow(dead_code)]
+#[path = "../src/cache.rs"]
+mod backend_cache;
+
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
+use std::sync::mpsc;
 use std::thread;
+use std::time::{Duration, UNIX_EPOCH};
 
 use common::Scratch;
 
@@ -56,6 +62,80 @@ fn entries(cache: &Path) -> usize {
 
 fn pch_entries(cache: &Path) -> Vec<PathBuf> {
     fs::read_dir(cache.join("pch")).map(|r| r.map(|e| e.unwrap().path()).collect()).unwrap_or_default()
+}
+
+#[test]
+fn runtime_pch_header_is_immutable_across_concurrent_misses() {
+    let s = Scratch::new("runtime-pch-header-concurrent").unwrap();
+    let cache = s.0.join("cache");
+    const HEADER: &str = "#define YAVO_HEADER 1\n";
+    const PCH: &[u8] = b"complete pch bytes";
+    let (ready_tx, ready_rx) = mpsc::channel();
+    let (resume_tx, resume_rx) = mpsc::channel();
+    let first_cache = cache.clone();
+    let first = thread::spawn(move || {
+        let mut observed_after = None;
+        let result = backend_cache::runtime_pch(&first_cache, "same-key", HEADER, |header, out| {
+            // A fixed old timestamp makes replacement detectable without sleeping or relying
+            // on the filesystem's timestamp granularity. The first compiler is still active.
+            fs::OpenOptions::new().write(true).open(header).map_err(|e| e.to_string())?
+                .set_modified(UNIX_EPOCH + Duration::from_secs(1_000_000_000)).map_err(|e| e.to_string())?;
+            let before = fs::metadata(header).and_then(|m| m.modified()).map_err(|e| e.to_string())?;
+            ready_tx.send((header.to_owned(), before)).map_err(|e| e.to_string())?;
+            resume_rx.recv_timeout(Duration::from_secs(30)).map_err(|e| e.to_string())?;
+            observed_after = Some(fs::metadata(header).and_then(|m| m.modified()).map_err(|e| e.to_string())?);
+            fs::write(out, PCH).map_err(|e| e.to_string())
+        });
+        (result, observed_after)
+    });
+    let (header, before) = ready_rx.recv_timeout(Duration::from_secs(30)).unwrap();
+    let mut observed_second = None;
+    let second = backend_cache::runtime_pch(&cache, "same-key", HEADER, |same_header, out| {
+        observed_second = Some(fs::metadata(same_header).and_then(|m| m.modified()).map_err(|e| e.to_string())?);
+        fs::write(out, PCH).map_err(|e| e.to_string())
+    });
+    // Resume and join even if the second producer failed, so no worker outlives its scratch dir.
+    let _ = resume_tx.send(());
+    let (first, observed_after) = first.join().unwrap();
+    first.unwrap();
+    second.unwrap();
+    assert_eq!(observed_second, Some(before), "a concurrent miss replaced the header while a compiler used it");
+    assert_eq!(observed_after, Some(before), "the first compiler's recorded header timestamp changed");
+    assert_eq!(fs::read(&header).unwrap(), HEADER.as_bytes());
+    let (_, hit) = backend_cache::runtime_pch(&cache, "same-key", HEADER, |_, _| {
+        panic!("the completed PCH must be reusable")
+    }).unwrap();
+    assert!(hit);
+    assert_eq!(fs::metadata(&header).unwrap().modified().unwrap(), before);
+    let leftovers: Vec<_> = fs::read_dir(header.parent().unwrap()).unwrap().filter_map(Result::ok)
+        .map(|e| e.file_name().to_string_lossy().into_owned()).filter(|n| n.contains(".tmp-")).collect();
+    assert!(leftovers.is_empty(), "PCH publication left temporary files: {leftovers:?}");
+}
+
+#[test]
+fn runtime_pch_header_recreation_invalidates_old_pch_before_readers() {
+    let s = Scratch::new("runtime-pch-header-recreate").unwrap();
+    let cache = s.0.join("cache");
+    const HEADER: &str = "#define YAVO_HEADER 1\n";
+    let (old, _) = backend_cache::runtime_pch(&cache, "same-key", HEADER,
+        |_, out| fs::write(out, b"old pch").map_err(|e| e.to_string())).unwrap();
+    let dir = old.parent().unwrap();
+    fs::remove_file(dir.join("yavo_rt.h")).unwrap();
+    let mut rebuilt = false;
+    let mut reader_hit = None;
+    let (new, _) = backend_cache::runtime_pch(&cache, "same-key", HEADER, |header, out| {
+        rebuilt = true;
+        assert_eq!(fs::read(header).unwrap(), HEADER.as_bytes());
+        // Another caller arrives after the header was recreated, but before this compilation
+        // completes. It must not pair the new header with the old, checksummed PCH.
+        let (_, hit) = backend_cache::runtime_pch(&cache, "same-key", HEADER,
+            |_, out| fs::write(out, b"new pch").map_err(|e| e.to_string())).map_err(|e| e.to_string())?;
+        reader_hit = Some(hit);
+        fs::write(out, b"new pch").map_err(|e| e.to_string())
+    }).unwrap();
+    assert!(rebuilt, "a missing header must invalidate an otherwise checksummed PCH");
+    assert_eq!(reader_hit, Some(false), "a reader reused the old PCH during header recreation");
+    assert_eq!(fs::read(new).unwrap(), b"new pch");
 }
 
 #[test]

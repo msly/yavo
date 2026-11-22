@@ -63,13 +63,16 @@ prefix of a fresh test source with only a standalone main appended. The receipt
 binds the original, suffix and assembled source separately; the component
 executes correctly in both modes.
 
-The Rust frontend, C runtime, locked toolchain and frozen specification are
-unchanged. Complete local Rust suites retain their preceding 142/0/1 baseline;
-they were not rerun locally in this increment. Three native CI jobs execute
-the new selfhost gate. A separate Linux step recompiles the actual Yavo
-frontend's generated C with GCC ASan/UBSan; source and capability checks are
-required. Current execution results and their source commit are recorded in
-the String summary.
+Rust language semantics, the C runtime, locked toolchain and frozen
+specification are unchanged. The first CI run exposed a concurrent PCH cache
+publication bug: rewriting identical runtime-header bytes changed their
+mtime and invalidated another producer's PCH. The cache fix publishes the
+header once, preserves its identity, and versions the PCH cache namespace.
+Complete local Rust suites and the selfhost gate are rerun after this fix.
+Three native CI jobs execute the new selfhost gate. A separate Linux step
+recompiles the actual Yavo frontend's generated C with GCC ASan/UBSan; source
+and capability checks are required. Results, source commits and the first
+failed CI attempt are recorded in the String summary.
 
 The [Copy aggregate summary](../compiler/validation/selfhost-aggregates-2026-11-22.json)
 retains its 138-case baseline and
