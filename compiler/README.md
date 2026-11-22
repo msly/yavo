@@ -27,16 +27,17 @@ Six target formats/architectures cross-compile. Overall `verify` remains
 `not_verified` (exit 5), because required audit is unimplemented.
 
 History and CI are published at [msly/yavo](https://github.com/msly/yavo).
-**[CI run 44996118634](https://github.com/msly/yavo/actions/runs/44996118634) passed all five
-jobs at `0bad3d2` on 2026-11-22:**
+**[CI run 45002067581](https://github.com/msly/yavo/actions/runs/45002067581) passed all six
+jobs at `073003d` on 2026-11-22:**
 
 | Platform/job | Debug | Release | Scope |
 | --- | --- | --- | --- |
-| Linux x86-64 | 129/0/1 | 129/0/1 | Complete Cargo suites, frozen conformance and six-target compilation |
+| Linux x86-64 | 129/0/1 | 129/0/1 | Complete Cargo suites, frozen conformance and six-target compilation; 12 separate starter-guide checks |
 | Windows x86-64 | 71/0/1 | 71/0/1 | Selected native suites and compiler unit tests |
 | macOS arm64 | 74/0/1 | 74/0/1 | Same selection, including Unix-only cases |
 | Independent GCC 13.3 ASan+UBSan | 60 passed, 0 failed | — | All exported P0 run/panic fixtures; all capability probes passed |
 | Round-five experiment evidence | Passed | — | 1,344 judgments, 96 source stages, 16 structural reviews, 43 frozen files and 28 task-packet files |
+| Agent evaluation preparation | Passed | — | 33 executor tests, 25 lab/audit/freeze tests, 11 judge/summary scenarios, 94 prepared files and 112 independent oracle checks |
 
 Native counts are passed/failed/ignored. Two Unix process unit tests and one
 Unix symlink-module test are compiled out on Windows; there are no runtime
@@ -48,12 +49,17 @@ The `8a65228` verification driver uses validated artifact-relative paths on
 Windows and records its working directory. The module snapshot regression
 covers spaces and Unicode. Parser, type/borrow rules, codegen and runtime remain
 at the `b3c27a6` language-feature baseline. See [CI scope](../tools/ci/README.md),
-the [current source-bound receipt](validation/github-ci-round5-2026-11-22.json)
+the [current source-bound receipt](validation/github-ci-agent-eval-2026-11-22.json),
+[round-five CI receipt](validation/github-ci-round5-2026-11-22.json)
 and [earlier run history](validation/github-ci-2026-11-22.json).
 
-The round-five evidence job passed on the same commit as all four compiler/platform
-jobs. It checks archived raw records, source identities and recomputed summaries;
-it does not launch new model sessions or rerun all participant programs. All five
+Both experiment jobs passed on the same commit as the four compiler/platform
+jobs. Round five checks archived raw records, source identities and recomputed
+summaries; round six checks preparation and launch refusal. Neither launches
+participant sessions. Round-six live qualification remains blocked, with zero
+provider requests, participant sessions and deliveries. Linux also compiled and
+ran eight documentation/rule programs and checked four expected diagnostics.
+These 12 checks are separate from the Cargo and specification totals. All six
 downloaded artifacts match their GitHub-reported byte counts and SHA-256 digests.
 
 ### Earlier measurements and their source scope

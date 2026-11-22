@@ -9,6 +9,13 @@ artifact actions are pinned to reviewed full commits; workflow permissions are
 read-only. Debug and Release are sequential within each job because the existing
 test runners share temporary paths.
 
+The current verified run is [45002067581](https://github.com/msly/yavo/actions/runs/45002067581)
+at `073003dff72de36dfb9fd7b33afb774dea24eebc`: **all six jobs passed**.
+The [source-bound receipt](../../compiler/validation/github-ci-agent-eval-2026-11-22.json)
+records actual test reports and checks all six downloaded artifacts against the
+GitHub API's byte counts and SHA-256 digests. Round-six live qualification remains
+blocked with zero participant sessions and deliveries.
+
 Setup first builds and executes one small native program in C Debug and Release,
 sequentially, to initialize the new C toolchain before concurrent fixture tests.
 These commands have separate logs and are not performance measurements or Cargo

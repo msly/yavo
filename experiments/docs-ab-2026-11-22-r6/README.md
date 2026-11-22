@@ -31,6 +31,8 @@
 
 ## 在具备计量凭据的 Linux 主机上执行
 
+项目服务器已安装独立 Python 3.13.18：`/home/appops/.yavo/python/cpython-3.13.18-20261110/python/bin/python3`。下列命令在该服务器上应以此绝对路径替换 `python3`；系统 Python 和全局 PATH 保持原状。SSL/HTTPS、Perl 及完整离线准备检查已在该解释器下通过，见 [运行时回执](../../compiler/validation/agent-eval-runtime-2026-11-22.json)。
+
 1. 提供已授权的 `OPENAI_API_KEY` 环境变量；在 `EXECUTOR_CONFIG.json` 显式选择请求模型、预期返回模型、参数和限额。此文件不存密钥。构建 Release 编译器并安装项目固定的 Zig 工具链。
 2. 运行 `python3 experiments/docs-ab-2026-11-22-r6/tools/freeze.py`；它核对准备清单，绑定实际编译器、后端、文档、题包、prompt 和模型策略，创建不可覆盖的 runtime freeze，并回填配置中的 freeze 哈希。先提交这份冻结配置。当前准备清单不是已通过的模型资格。
 3. 执行下面的资格链。它必须真实完成“模型请求 → 固定只读 probe → 模型续答”，两次响应都保存模型、usage、配置和唯一标识。只有 qualified 回执可以进入受试运行。
@@ -54,5 +56,7 @@ python3 tools/agent_eval/executor.py run \
 ## CI 验证范围
 
 新增的 Agent evaluation preparation 任务检查执行器、记录器和汇总契约、题包与文档可重建性，以及未获资格时确实拒绝初始化。该任务通过只表示准备材料和拒绝条件有效。Linux 的文档检查独立记录 12 项结果；既有完整 Cargo、Windows/macOS 选定原生套件、sanitizer 与 R5 证据检查继续保留。
+
+实现提交 `073003d` 的 [run 45002067581](https://github.com/msly/yavo/actions/runs/45002067581) 六项 CI 全部通过。准备检查实际通过 33 项执行器测试、25 项 lab/audit/freeze 测试、11 项裁判/汇总场景，核对 94 个准备文件及 112/112 个独立 oracle 输入。六份产物均按 GitHub API 核对下载大小和 SHA-256，完整范围见 [CI 回执](../../compiler/validation/github-ci-agent-eval-2026-11-22.json)。真实 provider 请求、受试会话及交付均为 0。
 
 本批没有改编译器、运行时、语言语义或 R5 冻结输入。之后仍需先跑这个有真实计量的文档对照，再进入 60 题 pilot；相对 Rust 的正式成本门和完整 v1 验收保持未完成。

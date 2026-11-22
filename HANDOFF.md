@@ -6,7 +6,7 @@
 
 规范以 v0.5 冻结版为基础，2026-11-21 按第三轮实验修订了 V2（两阶段借用）、K1（`String`/`str` 比较），新增 V6a（字段默认值）、V14（P-STACK），见 `docs/decisions.md` 第六节；冻结测试包 `yavo-tests/` 不改。Rust 编译器与 C 运行时覆盖 P0 链路及 P1—P3 的主要功能：结构体、枚举、`T ! E`、`match`、`String`/`Vec`/`Map`/`Set`、切片、移动与析构、视图与 `of`、`&T`/`&inout T`、`?T`、方法、`Drop`、元组、不逃逸闭包、`Eq`/`Ord`、`Box`、接口、泛型、浮点；并发（`Rc`/`Arc`/`Mutex`/`with`/`scope`/`spawn`/`Channel`/`Send`/`Sync`）；Heap/Deque、`Arena[T]`/`Id[T]`、源文件模块；`yavo fix`/`allocations`/`verify`；后端构建缓存；六个目标的交叉编译。第十五批补入 V2a（元素上的修改方法），见 `docs/decisions.md` 第七节。**P0—P3 主体功能已实现，完整 v1 尚未验收，P4 仍为小规模试验。** 三平台 CI 已落地；Windows/macOS 为明确选定的原生套件。完整 v1 的工具/语言缺口、Agent 成本和正式性能门尚未闭合。各批次细节见第 4 节和 `history/`。
 规范一致性：**129 项中通过 124、判错 0、不支持 3、未运行 0、被新决定取代 2**（T-V1、T-GF2 断言旧 V2，登记在 `compiler/tests/conformance_superseded.txt`；不支持的 3 项需要锁定工具链无法链接的 ASan 运行时）。该统计只表示既有用例覆盖，不是完整 v1 完成比例。
-**2026-11-22 用户已授权推送 `msly/yavo` 并使用 GitHub CI；第五轮已推送，`0bad3d2` 的五项 CI 任务全部通过。** 当前 [run 44996118634](https://github.com/msly/yavo/actions/runs/44996118634) 同时覆盖三平台、独立 ASan/UBSan 和新增实验证据检查；五份产物均已下载并核对内容与哈希，回执在 [github-ci-round5-2026-11-22.json](compiler/validation/github-ci-round5-2026-11-22.json)。第 21 节保留首次 CI 接入历史；旧“暂不推送”约定已被本次授权取代。
+**2026-11-22 用户已授权推送 `msly/yavo` 并使用 GitHub CI；本批实现已推送，`073003d` 的六项 CI 任务全部通过。** 当前 [run 45002067581](https://github.com/msly/yavo/actions/runs/45002067581) 同时覆盖三平台、独立 ASan/UBSan、第五轮证据审计及第六轮准备检查；六份产物均已下载并核对内容、字节数与 SHA-256，回执在 [github-ci-agent-eval-2026-11-22.json](compiler/validation/github-ci-agent-eval-2026-11-22.json)。Linux 另有 12 项文档程序/诊断检查通过。第 21、22 节保留前两批 CI 历史；旧“暂不推送”约定已被本次授权取代。
 本地测试基准 `b3c27a6`：第十五批完整单条命令 Release **129 通过 / 0 失败 / 1 忽略**、Debug **129/0/1**；这是 Cargo 测试函数数，和上面的 129 项规范用例是不同计数单位。忽略的是旧 P0 探索性报告，当前 conformance 套件会执行。第十四批 `1af1f69` 为 123/0/1，新增 6 项为 `index_assignment.rs`；六个交叉目标能构建含 P-STACK 运行时的程序，最新原生 CI 覆盖 Linux x86-64 全套与 Windows x86-64/macOS arm64 选定套件。
 **最新已完成 agent 实验（第五轮，第 22 节）**：12 份新规格，4 个不继承父会话的独立会话，每语言 2 次；Yavo、Rust 均 **24/24 首编与完整题目要求通过**，包括公开、隐藏用例及模块/线程结构。48 份交付的首稿与终稿完全相同，0 次修复；96 个首/终稿快照合计 1,344 次重放全部通过。Yavo/Rust 的受控 lab 操作为 138/132（1.0455 倍），端到端时间为 671.2876/557.0373 秒（1.2051 倍）；多出的 6 次操作全是两批各 3 次速查卡读取。token、精确模型 ID、采样参数缺失并保留 `null`，正式成本门仍 blocked。三题是旧题型的新规则，模型配置也不同于历史 Sonnet，不能将跨轮首编提升归因于编译器修改。第四轮原始结果与 T10 前导零失败保留在第 20 节。
 
@@ -15,6 +15,7 @@
 ## 2. 仓库与环境
 
 - 仓库：`/data1/workspace/github/workspace/yavo`（通过 mcp-3 访问，工作区根是 `/data1/workspace/github`）；远端 [msly/yavo](https://github.com/msly/yavo)，发布与 CI 已获用户授权。
+- Agent 计量工具的服务器 Python：`/home/appops/.yavo/python/cpython-3.13.18-20261110/python/bin/python3`。项目专用安装，未改系统包或全局 PATH；使用该绝对路径运行 `tools/agent_eval/` 和第六轮脚本。SSL、HTTPS、Perl 与服务器离线检查已通过，见 [运行时回执](compiler/validation/agent-eval-runtime-2026-11-22.json)。
 - 构建前必须设置（否则找不到 cargo 或链接失败）：
 
 ```sh
@@ -181,8 +182,9 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 | 13 | `yavo verify` | 已实现；审计未实现，总体 `not_verified` |
 | 14–15 | Arena/Id；多文件源模块 | 已实现；包依赖与程序锁文件待做 |
 | 冷启动实验 | 五轮 | 第五轮两语言各 24/24 首编、公开、隐藏及结构通过；受控操作/时间比 1.0455/1.2051，token 缺失；4 会话、12 题（第 22 节） |
-| 已落地 | 三平台 CI | `8a65228` 同一提交四项任务全通过：Linux 全量、Windows/macOS 选定原生套件、独立 ASan+UBSan（第 21 节） |
+| 已落地 | 三平台 CI | `073003d` 的 run 45002067581 六项全通过：Linux 全量、Windows/macOS 选定原生套件、独立 ASan+UBSan，以及两项实验检查（第 23 节） |
 | 已落地 | 第五项 CI | `0bad3d2` 的 run 44996118634 通过，核验 1,344 条判定、96 个源码阶段、16 项结构审查和冻结题包 |
+| 已落地 | 第六项 CI | `073003d` 通过 33 项执行器、25 项 lab/audit/freeze、11 项裁判/汇总场景，以及 94 个准备文件和 112 个独立 oracle 输入；真实启动仍 blocked |
 | 准备完成，资格 blocked | 第六轮文档对照 | 短卡/索引、逐请求计量执行器、8 题与 112 个输入已准备；0 受试会话，须先获得真实 usage 资格 |
 
 批次与用户约定的历史（“可用”三批、第四到第六批）见 `history/handoff-batches-2026-11-19-to-21.md`。
@@ -393,6 +395,12 @@ token、精确服务模型 ID 和 sampling 无可核验来源，均为 `null`；
 
 当前配置模型与 freeze 字段为 null，实际模板调用在网络前拒绝，provider 请求 0；默认 `launch-qualification.json` 为 blocked。准备清单绑定当前源文件，但尚未创建带实际模型/主机工具身份的 runtime freeze。必须先选择并冻结可计量模型，完成真实资格，再开始受试；不能把离线测试或 CI 绿灯当作第六轮完成。
 
+服务器已安装 Python 3.13.18 独立运行时，官方发布包的 35,596,130 字节及 SHA-256 已核对；SSL 默认 CA 验证 HTTPS、urllib 和 Perl 均可用。服务器实跑 33 项执行器、25 项 lab/audit/freeze、11 项裁判/汇总场景，94 个准备文件与 112 个独立 oracle 输入全部通过；启动状态仍 blocked，0 模型请求/会话/交付。环境部署回执为 `compiler/validation/agent-eval-runtime-2026-11-22.json`，没有为绕过认证而修改 HOME、CODEX_HOME 或系统权限。
+
 ### 23.3 CI 与未完成验收
 
-本批新增 Agent evaluation preparation 检查，并让 Linux CI 重编短卡示例和规则反例；既有三平台、sanitizer 和第五轮归档检查保留。本批提交与六项远端 CI 结果待最终核验。编译器、运行时、语言语义和 R5 冻结输入均未修改；完整 v1、Agent 正式成本门和正式 C 性能门继续未验收。
+本批实现提交 **`073003dff72de36dfb9fd7b33afb774dea24eebc`** 已推送；[run 45002067581](https://github.com/msly/yavo/actions/runs/45002067581) **六项任务全部通过**。Linux Debug/Release 均 129/0/1，Windows 选定原生套件均 71/0/1，macOS 选定原生套件均 74/0/1；Linux 两种模式规范一致性均为 124/0/3/0/2；独立 ASan+UBSan 为 60 通过、0 失败。Linux 重编短卡示例和规则程序、检查预期诊断，12/12 通过，单独计数。
+
+新增 Agent evaluation preparation 检查通过 33 项执行器测试、25 项 lab/audit/freeze 测试、11 项裁判/汇总场景，核对 94 个准备文件及 112/112 个独立 oracle 输入；第五轮 1,344 条判定、96 个源码阶段、16 项结构审查继续通过。六份产物的下载字节数和 SHA-256 均匹配 GitHub API，实际报告、来源提交与范围见 [CI 回执](compiler/validation/github-ci-agent-eval-2026-11-22.json)。这些检查没有发起真实模型请求；第六轮仍为 0 会话、0 交付。
+
+最后的文档与回执提交仅记录上述已验证实现。编译器、运行时、语言语义和 R5 冻结输入均未修改；完整 v1、Agent 正式成本门和正式 C 性能门继续未验收。
