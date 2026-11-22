@@ -178,6 +178,16 @@ def main():
         if not args.without_zig:
             commands.extend([("zig-install", [str(binary), "toolchain", "install"]),
                              ("zig-status", [str(binary), "toolchain", "status"])])
+            fixture = COMPILER / "tests/p0/run_arith.yv"
+            for mode in ("debug", "release"):
+                artifact = OUTPUT / ("warmup-" + mode + (".exe" if os.name == "nt" else ""))
+                command = [str(binary), "build", str(fixture), "-o", str(artifact)]
+                if mode == "release":
+                    command.append("--release")
+                commands.extend([("zig-warmup-build-" + mode, command),
+                                 ("zig-warmup-run-" + mode, [str(artifact)])])
+            report["setup_warmup"] = {"fixture": "compiler/tests/p0/run_arith.yv",
+                                      "modes": ["debug", "release"], "included_in_test_totals": False}
         for label, command in commands:
             row, _ = invoke(report, label, command)
             if row["exit_code"] != 0:

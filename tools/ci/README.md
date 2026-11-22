@@ -9,6 +9,11 @@ artifact actions are pinned to reviewed full commits; workflow permissions are
 read-only. Debug and Release are sequential within each job because the existing
 test runners share temporary paths.
 
+Setup first builds and executes one small native program in C Debug and Release,
+sequentially, to initialize the new C toolchain before concurrent fixture tests.
+These commands have separate logs and are not performance measurements or Cargo
+test totals; the existing 120-second per-fixture build deadline is unchanged.
+
 | Job | Executed gate |
 | --- | --- |
 | Ubuntu 24.04, x86_64 | All Cargo tests in Debug and Release, including six-target cross-compilation and frozen conformance |

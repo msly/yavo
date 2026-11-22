@@ -279,7 +279,8 @@ fn foreign_ids_panic_for_all_queries_in_both_modes() {
             let out = common::output(&mut Command::new(&exe), common::RUN_TIMEOUT).unwrap();
             assert_eq!(out.status.code(), Some(101), "{method}: {out:?}");
             assert!(out.stdout.is_empty(), "{out:?}");
-            let expected = format!("yavo panic [P-ARENA-ID] at {}:5:13: Id belongs to another Arena\n", path.display());
+            let display = path.to_string_lossy().replace('\\', "/");
+            let expected = format!("yavo panic [P-ARENA-ID] at {display}:5:13: Id belongs to another Arena\n");
             assert_eq!(out.stderr, expected.as_bytes(), "{method}");
         }
     }
