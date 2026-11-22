@@ -1,0 +1,46 @@
+use std/{fs, os}
+use diagnostic
+use lexer
+use parser
+use codegen
+
+fn usage() {
+    eprintln("usage: yavo-selfhost check <input.yv>")
+    eprintln("       yavo-selfhost emit-c <input.yv> -o <output.c>")
+    os.exit(2)
+}
+
+fn compile(source: str, path: str) -> String ! Failure {
+    let tokens = try lexer.lex(source)
+    let program = try parser.parse(tokens)
+    return codegen.generate(program, tokens, path)
+}
+
+fn main() {
+    let args = os.args()
+    if args.len() < 3 { usage() }
+    let check = args[1] == "check"
+    let emit = args[1] == "emit-c"
+    if !check && !emit { usage() }
+    if check && args.len() != 3 { usage() }
+    if emit && (args.len() != 5 || args[3] != "-o") { usage() }
+    if emit && args[2] == args[4] {
+        eprintln("refusing to overwrite the source file")
+        os.exit(2)
+    }
+    let source = fs.readText(args[2]) catch e {
+        eprintln("cannot read input: ${e}")
+        os.exit(3)
+    }
+    // All parsing/checking/lowering completes before the output file is opened.
+    let generated = compile(source, args[2]) catch e {
+        eprintln("${args[2]}:${e.line}:${e.column}: ${e.code}: ${e.message}")
+        os.exit(1)
+    }
+    if emit {
+        fs.writeNewText(args[4], generated) catch e {
+            eprintln("cannot write output: ${e}")
+            os.exit(3)
+        }
+    }
+}

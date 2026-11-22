@@ -1,0 +1,108 @@
+use lexer
+
+fn good(source: str) -> Vec[Token] {
+    return lexer.lex(source) catch e {
+        eprintln(e.code)
+        eprintln(e.message)
+        panic("expected lexing to succeed")
+    }
+}
+
+fn bad(source: str, code: str, offset: int, line: int, column: int) {
+    match lexer.lex(source) {
+        ok(_tokens) => panic("expected lexing to fail")
+        err(e) => {
+            assert(e.code == code)
+            assert(e.offset == offset)
+            assert(e.line == line)
+            assert(e.column == column)
+        }
+    }
+}
+
+fn main() {
+    let empty = good("")
+    assert(empty.len() == 1)
+    assert(empty[0].kind == .Eof)
+    assert(empty[0].start == 0 && empty[0].end == 0)
+    assert(empty[0].line == 1 && empty[0].column == 1)
+
+    let program = good("fn main() {\n let n = (1 +\n 2)\n println(n)\n}\n")
+    assert(program.len() == 22)
+    assert(program[0].kind == .Word && program[0].text == "fn")
+    assert(program[5].text == "let" && program[5].line == 2 && program[5].column == 2)
+    assert(program[11].text == "2" && program[11].line == 3 && program[11].column == 2)
+    assert(program[13].kind == .Newline)
+    assert(program[14].text == "println")
+    assert(program[18].kind == .Newline)
+    assert(program[19].text == "}")
+    assert(program[20].kind == .Newline && program[21].kind == .Eof)
+
+    let comment = good("x+=12 // 汉🙂\nreturn")
+    assert(comment.len() == 7)
+    assert(comment[1].text == "+=")
+    assert(comment[2].kind == .Number && comment[2].text == "12")
+    assert(comment[3].kind == .Newline && comment[3].column == 12)
+    assert(comment[4].text == "return" && comment[4].line == 2)
+    assert(comment[5].kind == .Newline && comment[5].start == comment[5].end)
+
+    var quoted = "\"汉🙂\\n\\0\\u{41}\\".toString()
+    quoted.push("$")
+    quoted.push("{x}\"")
+    let strings = good(quoted)
+    assert(strings.len() == 3 && strings[0].kind == .Text)
+    var expected = "汉🙂\n\0A".toString()
+    expected.push("$")
+    expected.push("{x}")
+    assert(strings[0].text == expected)
+    assert(strings[0].start == 0 && strings[0].end == quoted.len())
+    let unicode = good("\"\\u{1F642}\\u{7f}\\u{80}\\u{7ff}\\u{800}\\u{ffff}\\u{10000}\\u{10ffff}\"")
+    assert(unicode[0].text == "🙂\u{7f}\u{80}\u{7ff}\u{800}\u{ffff}\u{10000}\u{10ffff}")
+    let escapes = good("\"\\t\\r\\\\\\\"\\'\"")
+    assert(escapes[0].text == "\t\r\\\"'")
+    let unicodeColumn = good("\"汉🙂\" x")
+    assert(unicodeColumn[1].start == 10 && unicodeColumn[1].column == 6)
+
+    let operators = good("+ - * / % +% -% *% << >> & | ^ ! == != < <= > >= && || = += -= *= /= %= ( ) { } [ ] , : . .. -> => ? ??")
+    assert(operators.len() == 43)
+    assert(operators[5].text == "+%" && operators[37].text == "..")
+    assert(operators[41].text == "??" && operators[42].kind == .Eof)
+    let continuation = good("1 +\n2\nf(\n1,\n2\n)\na[\n0\n]\n")
+    assert(continuation[0].text == "1" && continuation[2].text == "2")
+    assert(continuation[3].kind == .Newline)
+    let braces = good("f({\nx\n})")
+    assert(braces[4].kind == .Newline)
+    let crlf = good("a\r\nb")
+    assert(crlf[1].kind == .Newline && crlf[1].column == 3)
+    assert(crlf[2].text == "b" && crlf[2].line == 2 && crlf[2].column == 1)
+
+    bad("@", "E0020", 0, 1, 1)
+    bad("/* comment */", "E0020", 0, 1, 1)
+    bad("\"oops", "E0020", 0, 1, 1)
+    bad("\"oops\n\"", "E0020", 0, 1, 1)
+    bad("\"\\q\"", "E0020", 1, 1, 2)
+    bad("\"\\u{}\"", "E0020", 1, 1, 2)
+    bad("\"\\u{D800}\"", "E0020", 1, 1, 2)
+    bad("\"\\u{110000}\"", "E0020", 1, 1, 2)
+    bad("\"\\u{1234567}\"", "E0020", 1, 1, 2)
+    bad("\"\\u1234\"", "E0020", 1, 1, 2)
+    bad("\"汉🙂\" @", "E0020", 10, 1, 6)
+    bad("// 汉🙂\n @", "E0020", 12, 2, 2)
+    bad("12name", "E0020", 0, 1, 1)
+    bad("1e", "E0020", 0, 1, 1)
+    bad("1e+", "E0020", 0, 1, 1)
+    bad("1.5", "U0001", 0, 1, 1)
+    bad("1e3", "U0001", 0, 1, 1)
+    bad("1e-3", "U0001", 0, 1, 1)
+    bad("0xff", "U0001", 0, 1, 1)
+    bad("0b10", "U0001", 0, 1, 1)
+    bad("0o10", "U0001", 0, 1, 1)
+    bad("1_000", "U0001", 0, 1, 1)
+    bad("'a'", "U0001", 0, 1, 1)
+    var interpolation = "\"".toString()
+    interpolation.push("$")
+    interpolation.push("{x}\"")
+    bad(interpolation, "U0001", 1, 1, 2)
+
+    println("lexer tests passed")
+}

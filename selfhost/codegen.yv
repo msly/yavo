@@ -1,0 +1,452 @@
+// SH-1 type checking and lowering. Each value is materialized in source order.
+// Generated C uses the existing checked runtime, never invokes the Rust frontend.
+use diagnostic
+use lexer
+use model
+
+struct Local {
+    token: int
+    ty: BasicType
+    mutable: bool
+}
+
+struct Value {
+    ty: BasicType
+    name: String
+}
+
+struct Flow {
+    falls: bool = true
+    breaks: bool = false
+}
+
+struct Generator {
+    out: String = ""
+    counter: int = 0
+    locals: Vec[Local] = []
+    result: BasicType
+    loops: int = 0
+    nesting: int = 0
+    outputRoot: int = -1
+}
+
+fn problem(ts: Vec[Token], token: int, code: str, message: str) -> Failure {
+    let t = ts[token]
+    return diagnostic.make(code, message, t.start, t.line, t.column)
+}
+
+fn ctype(ty: BasicType) -> str of static {
+    if ty == .Int { return "int64_t" }
+    if ty == .Bool { return "bool" }
+    if ty == .Str { return "yv_str" }
+    return "void"
+}
+
+fn typeText(ty: BasicType) -> str of static {
+    if ty == .Int { return "int" }
+    if ty == .Bool { return "bool" }
+    if ty == .Str { return "str" }
+    return "()"
+}
+
+fn require(ts: Vec[Token], token: int, actual: BasicType, expected: BasicType) -> () ! Failure {
+    if actual != expected {
+        return err(problem(ts, token, "E0001",
+            format("expected ${typeText(expected)}, found ${typeText(actual)}")))
+    }
+}
+
+// Every byte uses exactly three octal digits: UTF-8/NUL and adjacent digits
+// round-trip without C escape ambiguity or source/filename injection.
+pub fn cString(text: str) -> String {
+    var out = "\"".toString()
+    for i in 0..text.len() {
+        let b = int(text[i])
+        out.push(format("\\${b / 64}${(b / 8) % 8}${b % 8}"))
+    }
+    out.push("\"")
+    return out
+}
+
+fn line(g: inout Generator, text: str) {
+    g.out.push(text)
+    g.out.push("\n")
+}
+
+fn value(g: inout Generator, ty: BasicType, expression: str) -> Value {
+    let n = g.counter
+    g.counter += 1
+    let name = format("t_${n}")
+    line(&g, format("${ctype(ty)} ${name} = ${expression};"))
+    return Value{ty: ty, name: name}
+}
+
+fn localIndex(g: Generator, ts: Vec[Token], token: int) -> int {
+    var i = g.locals.len()
+    while i > 0 {
+        i -= 1
+        if ts[g.locals[i].token].text == ts[token].text && ts[token].text != "_" { return i }
+    }
+    return -1
+}
+
+fn declare(g: inout Generator, ts: Vec[Token], token: int, ty: BasicType, mutable: bool) -> () ! Failure {
+    if localIndex(g, ts, token) >= 0 {
+        return err(problem(ts, token, "E0011", "Yavo does not allow shadowing an active local"))
+    }
+    if ty == .Unit || ty == .Unknown {
+        return err(problem(ts, token, "U0001", "unit-valued bindings are outside the selfhost SH-1 subset"))
+    }
+    g.locals.push(Local{token: token, ty: ty, mutable: mutable})
+}
+
+fn functionIndex(p: Program, ts: Vec[Token], token: int) -> int {
+    for i in 0..p.functions.len() {
+        if ts[p.functions[i].name].text == ts[token].text { return i }
+    }
+    return -1
+}
+
+fn builtin(name: str) -> bool {
+    return name == "print" || name == "println" || name == "eprintln" || name == "assert"
+}
+
+fn reservedFunction(name: str) -> bool {
+    return name == "print" || name == "println" || name == "eprintln" ||
+        name == "i8" || name == "i16" || name == "i32" || name == "i64" ||
+        name == "int" || name == "u8" || name == "byte" || name == "u16" ||
+        name == "u32" || name == "u64" || name == "f32" || name == "f64" ||
+        name == "bool" || name == "str" || name == "String" ||
+        name == "Vec" || name == "Box" || name == "Set"
+}
+
+fn integerOperation(ts: Vec[Token], token: int, op: str, left: str, right: str) -> String {
+    let t = ts[token]
+    var stem = "".toString()
+    if op == "+" || op == "+=" { stem = "add".toString() }
+    if op == "-" || op == "-=" { stem = "sub".toString() }
+    if op == "*" || op == "*=" { stem = "mul".toString() }
+    if op == "/" || op == "/=" { stem = "div".toString() }
+    if op == "%" || op == "%=" { stem = "rem".toString() }
+    if op == "<<" { stem = "shl".toString() }
+    if op == ">>" { stem = "shr".toString() }
+    if stem.len() > 0 {
+        return format("yv_${stem}_i64(${left}, ${right}, ${t.line}, ${t.column})")
+    }
+    if op == "+%" { stem = "addw".toString() }
+    if op == "-%" { stem = "subw".toString() }
+    if op == "*%" { stem = "mulw".toString() }
+    if stem.len() > 0 { return format("yv_${stem}_i64(${left}, ${right})") }
+    return format("(${left} ${op} ${right})")
+}
+
+fn call(g: inout Generator, p: Program, ts: Vec[Token], e: Expression, id: int) -> Value ! Failure {
+    let name = ts[e.token].text.clone()
+    if localIndex(g, ts, e.token) >= 0 {
+        return err(problem(ts, e.token, "E0001", "a local value cannot be called as a function"))
+    }
+    let index = functionIndex(p, ts, e.token)
+    if index < 0 && builtin(name) {
+        if name != "assert" && g.outputRoot != id {
+            return err(problem(ts, e.token, "E0001", "output calls must be direct statements"))
+        }
+        if e.args.len() != 1 {
+            return err(problem(ts, e.token, "E0012", "SH-1 output/assert calls require one argument"))
+        }
+        let arg = try emitExpr(&g, p, ts, e.args[0])
+        let t = ts[e.token]
+        if name == "assert" {
+            try require(ts, e.token, arg.ty, .Bool)
+            line(&g, format("if (!${arg.name}) yv_panic(\"P-ASSERT\", \"assertion failed\", ${t.line}, ${t.column});"))
+        } else {
+            if arg.ty == .Unit {
+                return err(problem(ts, e.token, "E0001", "cannot print a unit value"))
+            }
+            var fd = 1
+            if name == "eprintln" { fd = 2 }
+            let outputIndex = g.counter
+            g.counter += 1
+            line(&g, format("yv_out o_${outputIndex} = {${fd}, NULL, ${t.line}, ${t.column}};"))
+            line(&g, format("yv_output_at(${t.line}, ${t.column});"))
+            if arg.ty == .Int { line(&g, format("yv_out_i64(&o_${outputIndex}, ${arg.name});")) }
+            if arg.ty == .Bool { line(&g, format("yv_out_bool(&o_${outputIndex}, ${arg.name});")) }
+            if arg.ty == .Str { line(&g, format("yv_out_str(&o_${outputIndex}, ${arg.name});")) }
+            if name != "print" { line(&g, format("yv_out_bytes(&o_${outputIndex}, \"\\n\", 1);")) }
+        }
+        return Value{ty: .Unit, name: "".toString()}
+    }
+    if index < 0 {
+        if name == "format" || name == "int" || name == "bool" || name == "panic" ||
+            name == "some" || name == "take" || name == "replace" || name == "swap" {
+            return err(problem(ts, e.token, "U0001", "builtin is outside the selfhost SH-1 subset"))
+        }
+        return err(problem(ts, e.token, "E0010", format("unknown function '${name}'")))
+    }
+    let f = p.functions[index]
+    if f.params.len() != e.args.len() {
+        return err(problem(ts, e.token, "E0012", "wrong number of function arguments"))
+    }
+    var args: Vec[String] = []
+    for i in 0..e.args.len() {
+        let arg = try emitExpr(&g, p, ts, e.args[i])
+        try require(ts, p.expressions[e.args[i]].token, arg.ty, f.params[i].ty)
+        args.push(arg.name.clone())
+    }
+    let expression = format("sh_fn_${index}(${args.join(", ")})")
+    if f.result == .Unit {
+        line(&g, format("${expression};"))
+        return Value{ty: .Unit, name: "".toString()}
+    }
+    return value(&g, f.result, expression)
+}
+
+fn binary(g: inout Generator, p: Program, ts: Vec[Token], e: Expression) -> Value ! Failure {
+    let op = ts[e.token].text.clone()
+    let lhs = try emitExpr(&g, p, ts, e.left)
+    if op == "&&" || op == "||" {
+        try require(ts, e.token, lhs.ty, .Bool)
+        let output = value(&g, .Bool, lhs.name)
+        if op == "&&" { line(&g, format("if (${output.name}) {")) } else {
+            line(&g, format("if (!${output.name}) {"))
+        }
+        let rhs = try emitExpr(&g, p, ts, e.right)
+        try require(ts, e.token, rhs.ty, .Bool)
+        line(&g, format("${output.name} = ${rhs.name};"))
+        line(&g, "}")
+        return output
+    }
+    let rhs = try emitExpr(&g, p, ts, e.right)
+    try require(ts, e.token, rhs.ty, lhs.ty)
+    let comparison = op == "==" || op == "!=" || op == "<" || op == "<=" || op == ">" || op == ">="
+    if comparison {
+        if lhs.ty == .Unit || (lhs.ty == .Bool && op != "==" && op != "!=") {
+            return err(problem(ts, e.token, "E0001", "operator is not defined for this type"))
+        }
+        if lhs.ty == .Str {
+            return value(&g, .Bool, format("(yv_str_cmp(${lhs.name}, ${rhs.name}) ${op} 0)"))
+        }
+        return value(&g, .Bool, format("(${lhs.name} ${op} ${rhs.name})"))
+    }
+    try require(ts, e.token, lhs.ty, .Int)
+    let code = integerOperation(ts, e.token, op, lhs.name, rhs.name)
+    return value(&g, .Int, code)
+}
+
+fn emitExpr(g: inout Generator, p: Program, ts: Vec[Token], id: int) -> Value ! Failure {
+    if g.nesting >= 256 {
+        return err(problem(ts, p.expressions[id].token, "U0001", "selfhost lowering nesting limit (256) exceeded"))
+    }
+    g.nesting += 1
+    let result = try expression(&g, p, ts, id)
+    g.nesting -= 1
+    return result
+}
+
+fn minimumMagnitude(text: str) -> bool {
+    var start = 0
+    while start + 1 < text.len() && text[start] == '0' { start += 1 }
+    return text[start..text.len()] == "9223372036854775808"
+}
+
+fn unparenthesized(p: Program, id: int) -> int {
+    var current = id
+    while p.expressions[current].kind == .Paren { current = p.expressions[current].left }
+    return current
+}
+
+fn expression(g: inout Generator, p: Program, ts: Vec[Token], id: int) -> Value ! Failure {
+    let e = p.expressions[id]
+    let t = ts[e.token]
+    if e.kind == .Unit { return Value{ty: .Unit, name: "".toString()} }
+    if e.kind == .Paren { return emitExpr(&g, p, ts, e.left) }
+    if e.kind == .Number {
+        let number = t.text.parseInt() ?? return err(problem(ts, e.token, "E0003", "integer literal is outside int range"))
+        return value(&g, .Int, format("INT64_C(${number})"))
+    }
+    if e.kind == .Boolean { return value(&g, .Bool, t.text) }
+    if e.kind == .Text {
+        let quoted = cString(t.text)
+        return value(&g, .Str, format("(yv_str){${quoted}, ${t.text.len()}}"))
+    }
+    if e.kind == .Name {
+        let index = localIndex(g, ts, e.token)
+        if index < 0 { return err(problem(ts, e.token, "E0010", format("unknown local '${t.text}'"))) }
+        let local = g.locals[index]
+        return value(&g, local.ty, format("v_${local.token}"))
+    }
+    if e.kind == .Unary {
+        let child = p.expressions[unparenthesized(p, e.left)]
+        if t.text == "-" && child.kind == .Number && minimumMagnitude(ts[child.token].text) {
+            return value(&g, .Int, "INT64_MIN")
+        }
+        let arg = try emitExpr(&g, p, ts, e.left)
+        if t.text == "!" {
+            try require(ts, e.token, arg.ty, .Bool)
+            return value(&g, .Bool, format("(!${arg.name})"))
+        }
+        try require(ts, e.token, arg.ty, .Int)
+        return value(&g, .Int, format("yv_neg_i64(${arg.name}, ${t.line}, ${t.column})"))
+    }
+    if e.kind == .Binary { return binary(&g, p, ts, e) }
+    return call(&g, p, ts, e, id)
+}
+
+fn block(g: inout Generator, p: Program, ts: Vec[Token], body: Vec[int]) -> Flow ! Failure {
+    let localCount = g.locals.len()
+    var flow = Flow{}
+    line(&g, "{")
+    for id in body {
+        let next = try statement(&g, p, ts, id)
+        if flow.falls {
+            flow.breaks = flow.breaks || next.breaks
+            flow.falls = next.falls
+        }
+    }
+    while g.locals.len() > localCount {
+        let _removed = g.locals.pop()
+    }
+    line(&g, "}")
+    return flow
+}
+
+fn statement(g: inout Generator, p: Program, ts: Vec[Token], id: int) -> Flow ! Failure {
+    let s = p.statements[id]
+    if s.kind == .Bind {
+        let initial = try emitExpr(&g, p, ts, s.expr)
+        var ty = s.annotation
+        if ty == .Unknown { ty = initial.ty }
+        try require(ts, s.token, initial.ty, ty)
+        try declare(&g, ts, s.name, ty, s.mutable)
+        line(&g, format("${ctype(ty)} v_${s.name} = ${initial.name};"))
+        return Flow{}
+    }
+    if s.kind == .Assign {
+        let index = localIndex(g, ts, s.name)
+        if index < 0 { return err(problem(ts, s.name, "E0010", "assignment to an unknown local")) }
+        let local = g.locals[index]
+        if !local.mutable { return err(problem(ts, s.name, "E0014", "cannot assign to an immutable local")) }
+        let rhs = try emitExpr(&g, p, ts, s.expr)
+        try require(ts, s.token, rhs.ty, local.ty)
+        let target = format("v_${local.token}")
+        if ts[s.token].text == "=" {
+            line(&g, format("${target} = ${rhs.name};"))
+        } else {
+            try require(ts, s.token, local.ty, .Int)
+            let code = integerOperation(ts, s.token, ts[s.token].text, target, rhs.name)
+            line(&g, format("${target} = ${code};"))
+        }
+        return Flow{}
+    }
+    if s.kind == .Expr {
+        if p.expressions[s.expr].kind != .Call {
+            return err(problem(ts, s.token, "E0001", "only a direct call may stand alone as a statement"))
+        }
+        g.outputRoot = s.expr
+        let _ignored = try emitExpr(&g, p, ts, s.expr)
+        g.outputRoot = -1
+        return Flow{}
+    }
+    if s.kind == .Return {
+        if s.expr < 0 {
+            try require(ts, s.token, .Unit, g.result)
+            line(&g, "return;")
+        } else {
+            if g.result == .Unit && p.expressions[s.expr].kind != .Unit {
+                return err(problem(ts, s.token, "E0001", "a unit-returning function cannot return a value"))
+            }
+            let returned = try emitExpr(&g, p, ts, s.expr)
+            try require(ts, s.token, returned.ty, g.result)
+            if returned.ty == .Unit { line(&g, "return;") } else {
+                line(&g, format("return ${returned.name};"))
+            }
+        }
+        return Flow{falls: false}
+    }
+    if s.kind == .If {
+        let condition = try emitExpr(&g, p, ts, s.expr)
+        try require(ts, s.token, condition.ty, .Bool)
+        line(&g, format("if (${condition.name})"))
+        let yes = try block(&g, p, ts, s.body)
+        var no = Flow{}
+        if s.otherwise.len() > 0 {
+            line(&g, "else")
+            no = try block(&g, p, ts, s.otherwise)
+        }
+        return Flow{falls: yes.falls || no.falls, breaks: yes.breaks || no.breaks}
+    }
+    if s.kind == .While || s.kind == .Loop {
+        line(&g, "for (;;) {")
+        if s.kind == .While {
+            let condition = try emitExpr(&g, p, ts, s.expr)
+            try require(ts, s.token, condition.ty, .Bool)
+            line(&g, format("if (!${condition.name}) break;"))
+        }
+        g.loops += 1
+        let inner = try block(&g, p, ts, s.body)
+        g.loops -= 1
+        line(&g, "}")
+        return Flow{falls: s.kind == .While || inner.breaks}
+    }
+    if g.loops == 0 { return err(problem(ts, s.token, "E0015", "break/continue requires an enclosing loop")) }
+    if s.kind == .Break {
+        line(&g, "break;")
+        return Flow{falls: false, breaks: true}
+    }
+    line(&g, "continue;")
+    return Flow{falls: false}
+}
+
+fn signature(p: Program, index: int) -> String {
+    let f = p.functions[index]
+    var params: Vec[String] = []
+    for param in f.params {
+        params.push(format("${ctype(param.ty)} v_${param.name}"))
+    }
+    var args = params.join(", ")
+    if params.len() == 0 { args = "void".toString() }
+    return format("static ${ctype(f.result)} sh_fn_${index}(${args})")
+}
+
+pub fn generate(p: Program, ts: Vec[Token], filename: str) -> String ! Failure {
+    var entry = -1
+    for i in 0..p.functions.len() {
+        let f = p.functions[i]
+        let name = ts[f.name].text.clone()
+        if reservedFunction(name) { return err(problem(ts, f.name, "E0011", "cannot redefine a builtin")) }
+        for j in 0..i {
+            if ts[p.functions[j].name].text == name {
+                return err(problem(ts, f.name, "E0011", "duplicate function"))
+            }
+        }
+        if name == "main" {
+            if f.params.len() != 0 || f.result != .Unit {
+                return err(problem(ts, f.name, "E0016", "entry point must be fn main()"))
+            }
+            entry = i
+        }
+    }
+    if entry < 0 { return err(problem(ts, 0, "E0016", "no fn main() entry point")) }
+    var g = Generator{result: .Unit}
+    line(&g, "/* Generated by Yavo selfhost SH-1 (subset compiler). */")
+    line(&g, "#include \"yavo_rt.h\"")
+    for i in 0..p.functions.len() { line(&g, format("${signature(p, i)};")) }
+    for i in 0..p.functions.len() {
+        let f = p.functions[i]
+        g.result = f.result
+        for param in f.params { try declare(&g, ts, param.name, param.ty, false) }
+        line(&g, signature(p, i))
+        let flow = try block(&g, p, ts, f.body)
+        if f.result != .Unit && flow.falls {
+            return err(problem(ts, f.name, "E0013", "not every path returns a value"))
+        }
+        while g.locals.len() > 0 { let _removed = g.locals.pop() }
+    }
+    let file = cString(filename)
+    line(&g, "int main(int argc, char **argv) {")
+    line(&g, format("yv_rt_init(${file});"))
+    line(&g, "yv_rt_args(argc, argv);")
+    line(&g, format("sh_fn_${entry}();"))
+    line(&g, "return yv_rt_exit();")
+    line(&g, "}")
+    return take(&g.out)
+}

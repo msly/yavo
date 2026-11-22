@@ -386,6 +386,7 @@ pub enum IoOp {
     ReadLine,
     ReadText,
     WriteText,
+    WriteNewText,
 }
 
 /// The element type of a `Vec[T]` or `[]T`.
@@ -837,6 +838,9 @@ struct FnCx {
     /// two-phase): the arguments may read them, but not modify or move them, and the
     /// argument values must not keep pointing into them. With a description of the call.
     call_reserved: Vec<(LocalId, String)>,
+    /// Calls resolved to the unconditional builtins `panic` / `os.exit`. Source
+    /// spelling alone is insufficient: a user function or local can shadow a name.
+    exit_calls: std::collections::HashSet<(usize, usize)>,
 }
 
 type Moved = Vec<Option<Span>>;
@@ -864,6 +868,7 @@ impl FnCx {
             assignment_shared: Vec::new(),
             assignment_mut: Vec::new(),
             call_reserved: Vec::new(),
+            exit_calls: std::collections::HashSet::new(),
         }
     }
 }
@@ -899,8 +904,8 @@ fn union_into(slot: &mut Option<Moved>, state: &Moved) {
 }
 
 /// Whether control can never fall off the end of these statements.
-fn diverges(stmts: &[Stmt]) -> bool {
-    terminates(stmts) || stmts.iter().any(|s| matches!(s.kind, StmtKind::Break | StmtKind::Continue))
+fn diverges(stmts: &[Stmt], cx: &FnCx) -> bool {
+    terminates(stmts, cx) || stmts.iter().any(|s| matches!(s.kind, StmtKind::Break | StmtKind::Continue))
 }
 
 /// One arm of an `if let` or `match` on an optional.
@@ -1454,37 +1459,35 @@ fn edit_distance(a: &str, b: &str) -> usize {
     prev[b.len()]
 }
 
-fn terminates(stmts: &[Stmt]) -> bool {
-    stmts.iter().any(stmt_terminates)
+fn terminates(stmts: &[Stmt], cx: &FnCx) -> bool {
+    stmts.iter().any(|s| stmt_terminates(s, cx))
 }
 
-fn stmt_terminates(s: &Stmt) -> bool {
+fn stmt_terminates(s: &Stmt, cx: &FnCx) -> bool {
     match &s.kind {
         StmtKind::Return(_) => true,
         // `os.exit(...)` never returns (V8).
-        StmtKind::Expr(e) => is_exit_call(e),
+        StmtKind::Expr(e) => is_exit_call(e, cx),
         StmtKind::If { then, els: Some(els), .. } | StmtKind::IfLet { then, els: Some(els), .. } => {
-            terminates(&then.stmts)
+            terminates(&then.stmts, cx)
                 && match els {
-                    Else::Block(b) => terminates(&b.stmts),
-                    Else::If(s) => stmt_terminates(s),
+                    Else::Block(b) => terminates(&b.stmts, cx),
+                    Else::If(s) => stmt_terminates(s, cx),
                 }
         }
         // A `match` that does not cover every case is an error, so its arms are all that runs.
-        StmtKind::Match { arms, .. } => !arms.is_empty() && arms.iter().all(|a| terminates(&a.body.stmts)),
+        StmtKind::Match { arms, .. } => !arms.is_empty() && arms.iter().all(|a| terminates(&a.body.stmts, cx)),
         StmtKind::Loop { body } => !contains_break(&body.stmts),
-        StmtKind::Block(b) => terminates(&b.stmts),
-        StmtKind::With { body, .. } => terminates(&body.stmts),
-        StmtKind::Scope { body } => terminates(&body.stmts),
+        StmtKind::Block(b) => terminates(&b.stmts, cx),
+        StmtKind::With { body, .. } => terminates(&body.stmts, cx),
+        StmtKind::Scope { body } => terminates(&body.stmts, cx),
         _ => false,
     }
 }
 
-/// Whether `e` is a call that never returns: `os.exit(...)` or `panic(...)`.
-fn is_exit_call(e: &Expr) -> bool {
-    let ExprKind::Call { callee, .. } = &e.kind else { return false };
-    matches!(&callee.kind, ExprKind::Field { base, name } if name == "exit" && matches!(&base.kind, ExprKind::Ident(m) if m == "os"))
-        || matches!(&callee.kind, ExprKind::Ident(n) if n == "panic")
+/// Consult name resolution from type checking, including its lexical scope.
+fn is_exit_call(e: &Expr, cx: &FnCx) -> bool {
+    matches!(e.kind, ExprKind::Call { .. }) && cx.exit_calls.contains(&(e.span.start, e.span.end))
 }
 
 /// Whether `e` is `x ?? break` (possibly as the last link of a `??` chain).
@@ -3012,7 +3015,7 @@ impl Checker<'_> {
         let body = self.stmts(&f.body.stmts, &mut cx);
         // `-> () ! E` succeeds when it reaches its end, like a function without a return type.
         let unit_res = matches!(ret, Ty::Res(r) if res_parts(r).0 == Ty::Unit);
-        if ret != Ty::Unit && ret != Ty::Error && !unit_res && !terminates(&f.body.stmts) {
+        if ret != Ty::Unit && ret != Ty::Error && !unit_res && !terminates(&f.body.stmts, &cx) {
             self.diags
                 .error(
                     "E0013",
@@ -3108,7 +3111,7 @@ impl Checker<'_> {
         let stmts = match &body.kind {
             ExprKind::Block(b) => {
                 let stmts = self.stmts(&b.stmts, &mut ccx);
-                if ret != Ty::Unit && !terminates(&b.stmts) {
+                if ret != Ty::Unit && !terminates(&b.stmts, &ccx) {
                     self.diags
                         .error("E0013", b.close, format!("this closure can reach its end without returning a value of type `{ret}`"))
                         .note("add a `return`, or write the closure as a single expression: `(a, b) => a < b`");
@@ -5138,10 +5141,10 @@ impl Checker<'_> {
                 };
                 let after_else = std::mem::take(&mut cx.moved);
                 // A branch that cannot fall through does not affect the code after the `if`.
-                let then_div = diverges(&then.stmts);
+                let then_div = diverges(&then.stmts, cx);
                 let else_div = match els {
-                    Some(Else::Block(b)) => diverges(&b.stmts),
-                    Some(Else::If(s)) => diverges(std::slice::from_ref(s.as_ref())),
+                    Some(Else::Block(b)) => diverges(&b.stmts, cx),
+                    Some(Else::If(s)) => diverges(std::slice::from_ref(s.as_ref()), cx),
                     None => false,
                 };
                 cx.moved = match (then_div, else_div) {
@@ -5635,8 +5638,8 @@ impl Checker<'_> {
                 }
             };
             let div = match arm.body {
-                Body::Block(b) => diverges(&b.stmts),
-                Body::Stmt(s) => diverges(std::slice::from_ref(s)),
+                Body::Block(b) => diverges(&b.stmts, cx),
+                Body::Stmt(s) => diverges(std::slice::from_ref(s), cx),
                 Body::Empty => false,
             };
             match role {
@@ -7415,6 +7418,7 @@ impl Checker<'_> {
         let int = Ty::Int(IntTy::I64);
         let h = self.expr(arg, Some(int), cx);
         let h = self.fit(h, int, cx);
+        cx.exit_calls.insert((span.start, span.end));
         HExpr { kind: HExprKind::Exit(Box::new(h)), ty: Ty::Unit, span, at }
     }
 
@@ -8316,7 +8320,7 @@ impl Checker<'_> {
         let (h, div) = if block {
             let ExprKind::Block(b) = &handler.kind else { unreachable!("the parser builds a block") };
             let out = self.stmts(&b.stmts, cx);
-            let div = diverges(&b.stmts);
+            let div = diverges(&b.stmts, cx);
             if !div {
                 self.diags
                     .error("E0601", name_span, "this `catch` block can reach its closing `}`")
@@ -8431,12 +8435,12 @@ impl Checker<'_> {
             let (body, value, div) = match arm.body {
                 GBody::Block(b) => {
                     let out = self.stmts(&b.stmts, cx);
-                    (out, None, diverges(&b.stmts))
+                    (out, None, diverges(&b.stmts, cx))
                 }
                 GBody::Expr(e) => match &e.kind {
                     ExprKind::Block(b) => {
                         let out = self.stmts(&b.stmts, cx);
-                        if !diverges(&b.stmts) {
+                        if !diverges(&b.stmts, cx) {
                             self.diags
                                 .error("E0001", b.close, "a block arm of a `match` expression must leave (`return`, `break`, `continue`, `panic`)")
                                 .note("give the arm a value instead: `pattern => value`");
@@ -8727,6 +8731,9 @@ impl Checker<'_> {
             Some(m) => self.print_parts(m, cx),
             None => Vec::new(),
         };
+        if cond.is_none() {
+            cx.exit_calls.insert((span.start, span.end));
+        }
         HExpr { kind: HExprKind::Panic { cond, parts }, ty: Ty::Unit, span, at }
     }
 
@@ -8817,6 +8824,7 @@ impl Checker<'_> {
             ("io", "readLine") => (IoOp::ReadLine, 0, Ty::Res(res_of(Ty::Opt(opt_of(Ty::String)), lib(self, "io.Error")))),
             ("fs", "readText") => (IoOp::ReadText, 1, Ty::Res(res_of(Ty::String, lib(self, "fs.Error")))),
             ("fs", "writeText") => (IoOp::WriteText, 2, Ty::Res(res_of(Ty::Unit, lib(self, "fs.Error")))),
+            ("fs", "writeNewText") => (IoOp::WriteNewText, 2, Ty::Res(res_of(Ty::Unit, lib(self, "fs.Error")))),
             _ => return None,
         };
         if args.len() != nargs {

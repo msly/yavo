@@ -1,0 +1,69 @@
+// Flat, owned AST: edges are indices; source spelling lives in lexer tokens.
+pub enum BasicType {
+    Unknown
+    Unit
+    Int
+    Bool
+    Str
+}
+
+pub enum ExprKind {
+    Unit
+    Paren
+    Number
+    Boolean
+    Text
+    Name
+    Unary
+    Binary
+    Call
+}
+
+pub struct Expression {
+    kind: ExprKind
+    token: int
+    left: int = -1
+    right: int = -1
+    args: Vec[int] = []
+}
+
+pub enum StmtKind {
+    Bind
+    Assign
+    Expr
+    Return
+    If
+    While
+    Loop
+    Break
+    Continue
+}
+
+pub struct Statement {
+    kind: StmtKind
+    token: int
+    name: int = -1
+    annotation: BasicType
+    mutable: bool = false
+    expr: int = -1
+    body: Vec[int] = []
+    otherwise: Vec[int] = []
+}
+
+pub struct Parameter {
+    name: int
+    ty: BasicType
+}
+
+pub struct Function {
+    name: int
+    result: BasicType
+    params: Vec[Parameter]
+    body: Vec[int]
+}
+
+pub struct Program {
+    expressions: Vec[Expression] = []
+    statements: Vec[Statement] = []
+    functions: Vec[Function] = []
+}

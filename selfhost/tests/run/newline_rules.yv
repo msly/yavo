@@ -1,0 +1,14 @@
+// Comments do not terminate an operator continuation.
+fn add(
+    a: int,
+    b: int
+) -> int {
+    return a +
+        b
+}
+fn main() {
+    println(add(
+        20, // newline inside parentheses
+        22
+    ))
+}

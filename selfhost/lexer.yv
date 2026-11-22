@@ -1,0 +1,292 @@
+// The bootstrap subset deliberately rejects syntax it cannot yet compile.
+// Keep statement termination and string decoding aligned with the Rust lexer.
+use diagnostic
+
+pub enum TokenKind {
+    Word
+    Number
+    Text
+    Symbol
+    Newline
+    Eof
+}
+
+pub struct Token {
+    kind: TokenKind
+    text: String
+    start: int
+    end: int
+    line: int
+    column: int
+}
+
+struct Cursor {
+    pos: int = 0
+    line: int = 1
+    column: int = 1
+}
+
+fn wordStart(c: byte) -> bool {
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_'
+}
+
+fn digit(c: byte) -> bool {
+    return c >= '0' && c <= '9'
+}
+
+fn exponentAhead(source: str, pos: int) -> bool {
+    if pos + 1 >= source.len() { return false }
+    let next = source[pos + 1]
+    if digit(next) { return true }
+    return (next == '+' || next == '-') &&
+        pos + 2 < source.len() && digit(source[pos + 2])
+}
+
+fn scalarWidth(c: byte) -> int {
+    if c < 128 { return 1 }
+    if c < 224 { return 2 }
+    if c < 240 { return 3 }
+    return 4
+}
+
+// source is valid UTF-8 (str's contract); every cursor starts at a scalar boundary.
+fn bump(cursor: inout Cursor, source: str) {
+    if source[cursor.pos] == '\n' {
+        cursor.pos += 1
+        cursor.line += 1
+        cursor.column = 1
+    } else {
+        let width = scalarWidth(source[cursor.pos])
+        cursor.pos += width
+        cursor.column += 1
+    }
+}
+
+fn hexDigit(c: byte) -> int {
+    if c >= '0' && c <= '9' { return int(c) - int('0') }
+    if c >= 'a' && c <= 'f' { return int(c) - int('a') + 10 }
+    if c >= 'A' && c <= 'F' { return int(c) - int('A') + 10 }
+    return -1
+}
+
+fn scalarText(value: int) -> String {
+    var bytes: Vec[byte] = []
+    if value <= 127 {
+        bytes.push(byte(value))
+    } else if value <= 2047 {
+        bytes.push(byte(192 + value / 64))
+        bytes.push(byte(128 + value % 64))
+    } else if value <= 65535 {
+        bytes.push(byte(224 + value / 4096))
+        bytes.push(byte(128 + (value / 64) % 64))
+        bytes.push(byte(128 + value % 64))
+    } else {
+        bytes.push(byte(240 + value / 262144))
+        bytes.push(byte(128 + (value / 4096) % 64))
+        bytes.push(byte(128 + (value / 64) % 64))
+        bytes.push(byte(128 + value % 64))
+    }
+    return String.fromUtf8(bytes) catch _ {
+        panic("internal lexer error: invalid Unicode scalar")
+    }
+}
+
+fn unicodeEscape(cursor: inout Cursor, source: str, start: int, line: int, column: int) -> String ! Failure {
+    if cursor.pos >= source.len() || source[cursor.pos] != '{' {
+        return err(diagnostic.make("E0020", "invalid unicode escape; expected \\u{XXXX}", start, line, column))
+    }
+    bump(&cursor, source)
+    var value = 0
+    var digits = 0
+    while cursor.pos < source.len() && source[cursor.pos] != '}' {
+        let d = hexDigit(source[cursor.pos])
+        if d < 0 || digits == 6 {
+            return err(diagnostic.make("E0020", "invalid unicode escape; expected \\u{XXXX}", start, line, column))
+        }
+        value = value * 16 + d
+        digits += 1
+        bump(&cursor, source)
+    }
+    if digits == 0 || cursor.pos >= source.len() || value > 1114111 || (value >= 55296 && value <= 57343) {
+        return err(diagnostic.make("E0020", "invalid unicode escape; expected a Unicode scalar", start, line, column))
+    }
+    bump(&cursor, source)
+    return scalarText(value)
+}
+
+fn stringToken(cursor: inout Cursor, source: str) -> String ! Failure {
+    let start = cursor.pos
+    let line = cursor.line
+    let column = cursor.column
+    bump(&cursor, source)
+    var text = String{}
+    while cursor.pos < source.len() {
+        let c = source[cursor.pos]
+        if c == '\n' {
+            return err(diagnostic.make("E0020", "unterminated string literal", start, line, column))
+        }
+        if c == '"' {
+            bump(&cursor, source)
+            return text
+        }
+        if c == '\\' {
+            let escapeStart = cursor.pos
+            let escapeLine = cursor.line
+            let escapeColumn = cursor.column
+            bump(&cursor, source)
+            if cursor.pos >= source.len() {
+                return err(diagnostic.make("E0020", "unterminated string literal", start, line, column))
+            }
+            let e = source[cursor.pos]
+            bump(&cursor, source)
+            if e == 'n' { text.push("\n")
+            } else if e == 't' { text.push("\t")
+            } else if e == 'r' { text.push("\r")
+            } else if e == '0' { text.push("\0")
+            } else if e == '\\' { text.push("\\")
+            } else if e == '"' { text.push("\"")
+            } else if e == '\'' { text.push("'")
+            } else if e == '$' { text.push("$")
+            } else if e == 'u' {
+                let value = try unicodeEscape(&cursor, source, escapeStart, escapeLine, escapeColumn)
+                text.push(value)
+            } else {
+                return err(diagnostic.make("E0020", "unknown string escape sequence", escapeStart, escapeLine, escapeColumn))
+            }
+        } else if c == '$' && cursor.pos + 1 < source.len() && source[cursor.pos + 1] == '{' {
+            return err(diagnostic.make("U0001", "string interpolation is not in the bootstrap subset", cursor.pos, cursor.line, cursor.column))
+        } else {
+            let first = cursor.pos
+            bump(&cursor, source)
+            text.push(source[first..cursor.pos])
+        }
+    }
+    return err(diagnostic.make("E0020", "unterminated string literal", start, line, column))
+}
+
+fn twoSymbol(a: byte, b: byte) -> bool {
+    if a == '+' || a == '-' || a == '*' {
+        if b == '=' || b == '%' { return true }
+        return a == '-' && b == '>'
+    }
+    if a == '/' || a == '%' || a == '!' { return b == '=' }
+    if a == '=' { return b == '=' || b == '>' }
+    if a == '<' { return b == '=' || b == '<' }
+    if a == '>' { return b == '=' || b == '>' }
+    if a == '&' { return b == '&' }
+    if a == '|' { return b == '|' }
+    if a == '.' { return b == '.' }
+    if a == '?' { return b == '?' }
+    return false
+}
+
+fn oneSymbol(c: byte) -> bool {
+    return c == '+' || c == '-' || c == '*' || c == '/' || c == '%' ||
+        c == '<' || c == '>' || c == '=' || c == '!' || c == '&' ||
+        c == '|' || c == '^' || c == '(' || c == ')' || c == '{' ||
+        c == '}' || c == '[' || c == ']' || c == ',' || c == ':' ||
+        c == '.' || c == '?'
+}
+
+pub fn lex(source: str) -> Vec[Token] ! Failure {
+    var cursor = Cursor{}
+    var tokens: Vec[Token] = []
+    var delimiters: Vec[byte] = []
+    var endsStatement = false
+    while cursor.pos < source.len() {
+        let start = cursor.pos
+        let line = cursor.line
+        let column = cursor.column
+        let c = source[start]
+        if c == ' ' || c == '\t' || c == '\r' {
+            bump(&cursor, source)
+            continue
+        }
+        if c == '\n' {
+            bump(&cursor, source)
+            var significant = delimiters.len() == 0
+            if delimiters.len() > 0 {
+                significant = delimiters[delimiters.len() - 1] == '{'
+            }
+            if significant && endsStatement {
+                tokens.push(Token{kind: .Newline, text: String{}, start: start, end: start + 1, line: line, column: column})
+                endsStatement = false
+            }
+            continue
+        }
+        if c == '/' && start + 1 < source.len() && source[start + 1] == '/' {
+            while cursor.pos < source.len() && source[cursor.pos] != '\n' {
+                bump(&cursor, source)
+            }
+            continue
+        }
+        if c == '/' && start + 1 < source.len() && source[start + 1] == '*' {
+            return err(diagnostic.make("E0020", "block comments are not part of Yavo; use // on each line", start, line, column))
+        }
+        var kind: TokenKind = .Symbol
+        var text = String{}
+        if wordStart(c) {
+            bump(&cursor, source)
+            while cursor.pos < source.len() && (wordStart(source[cursor.pos]) || digit(source[cursor.pos])) {
+                bump(&cursor, source)
+            }
+            kind = .Word
+            text = source[start..cursor.pos].toString()
+        } else if digit(c) {
+            if c == '0' && start + 1 < source.len() &&
+                (source[start + 1] == 'x' || source[start + 1] == 'b' || source[start + 1] == 'o') {
+                return err(diagnostic.make("U0001", "non-decimal integers are not in the bootstrap subset", start, line, column))
+            }
+            bump(&cursor, source)
+            while cursor.pos < source.len() && digit(source[cursor.pos]) {
+                bump(&cursor, source)
+            }
+            if cursor.pos < source.len() {
+                let next = source[cursor.pos]
+                if next == '_' {
+                    return err(diagnostic.make("U0001", "integer separators are not in the bootstrap subset", start, line, column))
+                }
+                if (next == 'e' || next == 'E') && exponentAhead(source, cursor.pos) {
+                    return err(diagnostic.make("U0001", "floating-point numbers are not in the bootstrap subset", start, line, column))
+                }
+                if next == '.' && cursor.pos + 1 < source.len() && digit(source[cursor.pos + 1]) {
+                    return err(diagnostic.make("U0001", "floating-point numbers are not in the bootstrap subset", start, line, column))
+                }
+                if wordStart(next) {
+                    return err(diagnostic.make("E0020", "invalid integer literal", start, line, column))
+                }
+            }
+            kind = .Number
+            text = source[start..cursor.pos].toString()
+        } else if c == '"' {
+            kind = .Text
+            text = try stringToken(&cursor, source)
+        } else if c == '\'' {
+            return err(diagnostic.make("U0001", "byte literals are not in the bootstrap subset", start, line, column))
+        } else if oneSymbol(c) {
+            bump(&cursor, source)
+            if cursor.pos < source.len() && twoSymbol(c, source[cursor.pos]) {
+                bump(&cursor, source)
+            }
+            text = source[start..cursor.pos].toString()
+        } else {
+            return err(diagnostic.make("E0020", "unexpected character", start, line, column))
+        }
+        endsStatement = kind == .Word || kind == .Number || kind == .Text ||
+            text == ")" || text == "]" || text == "}"
+        if kind == .Symbol {
+            if text == "(" || text == "[" { delimiters.push('(')
+            } else if text == "{" { delimiters.push('{')
+            } else if text == ")" || text == "]" || text == "}" {
+                // Delimiter matching belongs to the parser; this mirrors Rust lexer's stack.
+                if let _ignored = delimiters.pop() {}
+            }
+        }
+        tokens.push(Token{kind: kind, text: text, start: start, end: cursor.pos, line: line, column: column})
+    }
+    if endsStatement {
+        tokens.push(Token{kind: .Newline, text: String{}, start: cursor.pos, end: cursor.pos, line: cursor.line, column: cursor.column})
+    }
+    tokens.push(Token{kind: .Eof, text: String{}, start: cursor.pos, end: cursor.pos, line: cursor.line, column: cursor.column})
+    return tokens
+}

@@ -1,0 +1,16 @@
+fn main() {
+    println(fib(10))
+    println(even(9))
+}
+fn fib(n: int) -> int {
+    if n < 2 { return n }
+    return fib(n - 1) + fib(n - 2)
+}
+fn even(n: int) -> bool {
+    if n == 0 { return true }
+    return odd(n - 1)
+}
+fn odd(n: int) -> bool {
+    if n == 0 { return false }
+    return even(n - 1)
+}

@@ -1582,6 +1582,7 @@ impl Gen {
             }
             IoOp::ReadText => format!("yv_fs_read_text({}, &{s}, &{code}, {at})", vals[0]),
             IoOp::WriteText => format!("yv_fs_write_text({}, {}, &{code}, {at})", vals[0], vals[1]),
+            IoOp::WriteNewText => format!("yv_fs_write_new_text({}, {}, &{code}, {at})", vals[0], vals[1]),
         };
         self.line(&format!("int {st} = {call};"));
         self.line(&format!("if ({st} == 0) {{"));
@@ -1589,7 +1590,7 @@ impl Gen {
         match op {
             IoOp::ReadAll | IoOp::ReadText => self.line(&format!("    {r}.val = {s};")),
             IoOp::ReadLine => self.line(&format!("    if ({has}) {{ {r}.val.has = true; {r}.val.val = {s}; }}")),
-            IoOp::WriteText => {}
+            IoOp::WriteText | IoOp::WriteNewText => {}
         }
         self.line("} else {");
         self.line(&format!("    yv_string_drop(&{s});"));

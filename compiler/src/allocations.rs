@@ -890,6 +890,7 @@ impl Visitor<'_, '_> {
                     IoOp::ReadLine => "io.readLine",
                     IoOp::ReadText => "fs.readText",
                     IoOp::WriteText => "fs.writeText",
+                    IoOp::WriteNewText => "fs.writeNewText",
                 };
                 self.builtin(name, expr, self.borrowed_exprs(args), Effect::MAY,
                     "I/O may allocate buffers or platform path conversions under the stdlib contract")

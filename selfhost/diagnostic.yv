@@ -1,0 +1,18 @@
+// Source locations use UTF-8 byte offsets and one-based Unicode scalar columns.
+pub struct Failure {
+    code: String
+    message: String
+    offset: int
+    line: int
+    column: int
+}
+
+pub fn make(code: str, message: str, offset: int, line: int, column: int) -> Failure {
+    return Failure{
+        code: code.toString(),
+        message: message.toString(),
+        offset: offset,
+        line: line,
+        column: column
+    }
+}

@@ -1518,25 +1518,28 @@ static int yv_fs_read_text(yv_str path, yv_string *out, int64_t *code, uint32_t 
     return yv_utf8_status(out, code);
 }
 
-/* `fs.writeText(path, text)`: creates or truncates the file. */
-static int yv_fs_write_text(yv_str path, yv_str text, int64_t *code, uint32_t line, uint32_t col) {
+/* Shared writer: exclusive creation is a single OS operation, never an existence check
+ * followed by a truncating open. A failed write can leave the newly created file partial. */
+static int yv_fs_write_text_mode(yv_str path, yv_str text, int64_t *code, bool exclusive, uint32_t line, uint32_t col) {
     char *p = yv_path_copy(path, line, col);
     if (p == NULL) return 3;
 #ifdef _WIN32
     wchar_t *w = yv_wide(p);
     free(p);
     if (w == NULL) return 3;
-    HANDLE h = CreateFileW(w, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    HANDLE h = CreateFileW(w, GENERIC_WRITE, 0, NULL, exclusive ? CREATE_NEW : CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    DWORD open_error = h == INVALID_HANDLE_VALUE ? GetLastError() : 0;
     free(w);
     if (h == INVALID_HANDLE_VALUE) {
-        *code = (int64_t)GetLastError();
+        *code = (int64_t)open_error;
         return 2;
     }
     size_t done = 0;
     while (done < text.len) {
         DWORD chunk = text.len - done > 0x40000000 ? 0x40000000 : (DWORD)(text.len - done), put = 0;
-        if (!WriteFile(h, text.ptr + done, chunk, &put, NULL)) {
-            *code = (int64_t)GetLastError();
+        BOOL written = WriteFile(h, text.ptr + done, chunk, &put, NULL);
+        if (!written || put == 0) {
+            *code = written ? (int64_t)ERROR_WRITE_FAULT : (int64_t)GetLastError();
             CloseHandle(h);
             return 2;
         }
@@ -1548,19 +1551,20 @@ static int yv_fs_write_text(yv_str path, yv_str text, int64_t *code, uint32_t li
     }
 #else
     int fd;
-    do fd = open(p, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+    do fd = open(p, O_WRONLY | O_CREAT | (exclusive ? O_EXCL : O_TRUNC), 0666);
     while (fd < 0 && errno == EINTR);
+    int open_error = fd < 0 ? errno : 0;
     free(p);
     if (fd < 0) {
-        *code = errno;
+        *code = open_error;
         return 2;
     }
     size_t done = 0;
     while (done < text.len) {
         ssize_t put = write(fd, text.ptr + done, text.len - done);
         if (put < 0 && errno == EINTR) continue;
-        if (put < 0) {
-            *code = errno;
+        if (put <= 0) {
+            *code = put < 0 ? errno : EIO;
             close(fd);
             return 2;
         }
@@ -1574,6 +1578,17 @@ static int yv_fs_write_text(yv_str path, yv_str text, int64_t *code, uint32_t li
     (void)line;
     (void)col;
     return 0;
+}
+
+/* `fs.writeText(path, text)`: creates or truncates the file. */
+static int yv_fs_write_text(yv_str path, yv_str text, int64_t *code, uint32_t line, uint32_t col) {
+    return yv_fs_write_text_mode(path, text, code, false, line, col);
+}
+
+/* `fs.writeNewText(path, text)`: creates a new file; existing files, directories and
+ * symbolic links are Io errors, with their content unchanged. */
+static int yv_fs_write_new_text(yv_str path, yv_str text, int64_t *code, uint32_t line, uint32_t col) {
+    return yv_fs_write_text_mode(path, text, code, true, line, col);
 }
 
 /* `os.args()`: converted and checked once at startup (S5, M5); the strings live until exit. */

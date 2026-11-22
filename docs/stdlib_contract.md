@@ -93,9 +93,15 @@ enum fs.Error {
 }
 fn fs.readText(path: str) -> String ! fs.Error
 fn fs.writeText(path: str, text: str) -> () ! fs.Error
+fn fs.writeNewText(path: str, text: str) -> () ! fs.Error
 ```
 
 这是模块中的公开类型/API 展示法。匹配写 `err(.Utf8(offset))`，构造可写 `err(fs.Error.Utf8(offset: n))`。io.Error 具有对应 Utf8/Io 变体。内含 NUL 的路径返回 InvalidPath，不能截断后访问另一个路径。原生非 Unicode 路径 v1 暂不支持；文本输入编码错误不做替换。Windows 路径转换可能分配，读写均标记“可能分配”。
+
+`writeNewText`（2026-11-22 自举驱动补充）独占创建新文件：目标已存在时返回 `Io`，
+不截断已有文件，也不沿已存在的符号链接写入；硬链接指向的文件同样受保护。
+创建与“必须不存在”的检查在 OS 打开操作中完成。它不提供整个写入过程的事务性：
+创建成功后发生写入或关闭失败，返回错误，可能留下部分写入的新文件。`writeText` 保持覆盖语义。
 
 ```text
 fn os.args() -> []str of static

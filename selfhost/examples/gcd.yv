@@ -1,0 +1,14 @@
+fn gcd(a: int, b: int) -> int {
+    var x = a
+    var y = b
+    while y != 0 {
+        let remainder = x % y
+        x = y
+        y = remainder
+    }
+    return x
+}
+
+fn main() {
+    println(gcd(48, 18))
+}

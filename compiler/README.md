@@ -7,6 +7,20 @@ scoped OS threads. Native CI runs complete Linux x86-64 suites and selected
 Windows x86-64/macOS arm64 suites. Complete phase acceptance still requires the
 remaining tools, features and full target-platform acceptance coverage.
 
+### Self-hosting work (2026-11-22)
+
+This Rust implementation is now **stage0** for the
+[Yavo-written compiler](../selfhost/README.md). The first Yavo frontend accepts
+a declared scalar/string/control-flow subset and generates checked C for
+independent programs; it cannot yet compile itself.
+
+Two concrete issues found while building it are addressed here:
+`fs.writeNewText` exclusively creates a new file, preserving existing paths and
+links; return-path analysis now treats a call as terminating only when it was
+resolved to the actual builtin `panic`/`os.exit`. A user function with the same
+name can no longer hide a missing return. The focused `fs_create_new` and
+`selfhost_blockers` regressions are part of all three native CI selections.
+
 ### Runtime header PCH cache (2026-11-22)
 
 Normal `build`/`run` commands with the pinned Zig toolchain and an enabled build

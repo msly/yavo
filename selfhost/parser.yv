@@ -1,0 +1,339 @@
+use diagnostic
+use lexer
+use model
+
+struct State {
+    pos: int = 0
+    nesting: int = 0
+    expressions: Vec[Expression] = []
+    statements: Vec[Statement] = []
+    functions: Vec[Function] = []
+}
+
+fn at(s: State, ts: Vec[Token], text: str) -> bool {
+    return (ts[s.pos].kind == .Word || ts[s.pos].kind == .Symbol) && ts[s.pos].text == text
+}
+
+fn eat(s: inout State, ts: Vec[Token], text: str) -> bool {
+    if at(s, ts, text) {
+        s.pos += 1
+        return true
+    }
+    return false
+}
+
+fn problem(s: State, ts: Vec[Token], code: str, message: str) -> Failure {
+    let t = ts[s.pos]
+    return diagnostic.make(code, message, t.start, t.line, t.column)
+}
+
+fn expect(s: inout State, ts: Vec[Token], text: str) -> int ! Failure {
+    let p = s.pos
+    if !eat(&s, ts, text) {
+        return err(problem(s, ts, "E0020", format("expected '${text}'")))
+    }
+    return p
+}
+
+fn newlines(s: inout State, ts: Vec[Token]) {
+    while ts[s.pos].kind == .Newline { s.pos += 1 }
+}
+
+fn reserved(text: str) -> bool {
+    return text == "fn" || text == "pub" || text == "let" || text == "var" ||
+        text == "if" || text == "else" || text == "while" || text == "for" ||
+        text == "in" || text == "loop" || text == "break" || text == "continue" ||
+        text == "return" || text == "true" || text == "false" || text == "use" ||
+        text == "struct" || text == "enum" || text == "match" || text == "interface" ||
+        text == "impl" || text == "const" || text == "type" || text == "none" ||
+        text == "err" || text == "try" || text == "catch" || text == "inout" ||
+        text == "sink" || text == "of" || text == "with" || text == "scope" ||
+        text == "unsafe" || text == "self" || text == "Self" || text == "defer" ||
+        text == "spawn"
+}
+
+fn identifier(s: inout State, ts: Vec[Token]) -> int ! Failure {
+    if ts[s.pos].kind != .Word || reserved(ts[s.pos].text) {
+        return err(problem(s, ts, "E0020", "expected an identifier"))
+    }
+    let p = s.pos
+    s.pos += 1
+    return p
+}
+
+fn typeName(s: inout State, ts: Vec[Token]) -> BasicType ! Failure {
+    if eat(&s, ts, "int") { return .Int }
+    if eat(&s, ts, "bool") { return .Bool }
+    if eat(&s, ts, "str") { return .Str }
+    if eat(&s, ts, "(") {
+        try expect(&s, ts, ")")
+        return .Unit
+    }
+    if ts[s.pos].kind == .Word || at(s, ts, "[") || at(s, ts, "?") || at(s, ts, "&") {
+        return err(problem(s, ts, "U0001", "type is outside the selfhost SH-1 subset"))
+    }
+    return err(problem(s, ts, "E0020", "expected a type name"))
+}
+
+fn pushExpr(s: inout State, value: sink Expression) -> int {
+    let id = s.expressions.len()
+    s.expressions.push(value)
+    return id
+}
+
+fn pushStmt(s: inout State, value: sink Statement) -> int {
+    let id = s.statements.len()
+    s.statements.push(value)
+    return id
+}
+
+fn enter(s: inout State, ts: Vec[Token]) -> () ! Failure {
+    // This is an explicit implementation limit, not a language grammar rule.
+    if s.nesting >= 128 {
+        return err(problem(s, ts, "U0001", "selfhost parser nesting limit (128) exceeded"))
+    }
+    s.nesting += 1
+}
+
+fn precedence(op: str) -> int {
+    if op == "||" { return 1 }
+    if op == "&&" { return 2 }
+    if op == "==" || op == "!=" || op == "<" || op == "<=" || op == ">" || op == ">=" { return 3 }
+    if op == "|" { return 5 }
+    if op == "^" { return 6 }
+    if op == "&" { return 7 }
+    if op == "<<" || op == ">>" { return 8 }
+    if op == "+" || op == "-" || op == "+%" || op == "-%" { return 9 }
+    if op == "*" || op == "/" || op == "%" || op == "*%" { return 10 }
+    return 0
+}
+
+fn primary(s: inout State, ts: Vec[Token]) -> int ! Failure {
+    let p = s.pos
+    if ts[p].kind == .Number {
+        s.pos += 1
+        return pushExpr(&s, Expression{kind: .Number, token: p})
+    }
+    if ts[p].kind == .Text {
+        s.pos += 1
+        return pushExpr(&s, Expression{kind: .Text, token: p})
+    }
+    if at(s, ts, "true") || at(s, ts, "false") {
+        s.pos += 1
+        return pushExpr(&s, Expression{kind: .Boolean, token: p})
+    }
+    if eat(&s, ts, "(") {
+        if eat(&s, ts, ")") {
+            return pushExpr(&s, Expression{kind: .Unit, token: p})
+        }
+        let inner = try expression(&s, ts)
+        try expect(&s, ts, ")")
+        return pushExpr(&s, Expression{kind: .Paren, token: p, left: inner})
+    }
+    if ts[p].kind == .Word && !reserved(ts[p].text) {
+        s.pos += 1
+        if at(s, ts, "{") && ts[s.pos].start == ts[p].end &&
+            ts[p].text[0] >= 'A' && ts[p].text[0] <= 'Z' {
+            return err(problem(s, ts, "U0001", "struct construction is outside the selfhost SH-1 subset"))
+        }
+        if eat(&s, ts, "(") {
+            var args: Vec[int] = []
+            while !at(s, ts, ")") {
+                let arg = try expression(&s, ts)
+                args.push(arg)
+                if !eat(&s, ts, ",") { break }
+            }
+            try expect(&s, ts, ")")
+            return pushExpr(&s, Expression{kind: .Call, token: p, args: args})
+        }
+        return pushExpr(&s, Expression{kind: .Name, token: p})
+    }
+    if at(s, ts, "[") || at(s, ts, ".") || at(s, ts, "&") ||
+        at(s, ts, "match") || at(s, ts, "try") || at(s, ts, "none") ||
+        at(s, ts, "spawn") || at(s, ts, "err") {
+        return err(problem(s, ts, "U0001", "expression is outside the selfhost SH-1 subset"))
+    }
+    return err(problem(s, ts, "E0020", "expected an expression"))
+}
+
+fn unary(s: inout State, ts: Vec[Token]) -> int ! Failure {
+    if at(s, ts, "-") || at(s, ts, "!") {
+        try enter(&s, ts)
+        let p = s.pos
+        s.pos += 1
+        let operand = try unary(&s, ts)
+        s.nesting -= 1
+        return pushExpr(&s, Expression{kind: .Unary, token: p, left: operand})
+    }
+    return primary(&s, ts)
+}
+
+fn binary(s: inout State, ts: Vec[Token], minimum: int) -> int ! Failure {
+    var lhs = try unary(&s, ts)
+    loop {
+        if ts[s.pos].kind != .Symbol { break }
+        let level = precedence(ts[s.pos].text)
+        if level == 0 || level < minimum { break }
+        let op = s.pos
+        s.pos += 1
+        let rhs = try binary(&s, ts, level + 1)
+        lhs = pushExpr(&s, Expression{kind: .Binary, token: op, left: lhs, right: rhs})
+        if level == 3 && ts[s.pos].kind == .Symbol && precedence(ts[s.pos].text) == 3 {
+            return err(problem(s, ts, "E0020", "comparison operators cannot be chained"))
+        }
+    }
+    return lhs
+}
+
+fn expression(s: inout State, ts: Vec[Token]) -> int ! Failure {
+    try enter(&s, ts)
+    let value = try binary(&s, ts, 1)
+    s.nesting -= 1
+    if at(s, ts, ".") || at(s, ts, "[") || at(s, ts, "??") ||
+        at(s, ts, "catch") || at(s, ts, "=>") || at(s, ts, "(") {
+        return err(problem(s, ts, "U0001", "expression suffix is outside the selfhost SH-1 subset"))
+    }
+    return value
+}
+
+fn block(s: inout State, ts: Vec[Token]) -> Vec[int] ! Failure {
+    try enter(&s, ts)
+    try expect(&s, ts, "{")
+    var body: Vec[int] = []
+    loop {
+        newlines(&s, ts)
+        if eat(&s, ts, "}") { break }
+        if ts[s.pos].kind == .Eof {
+            return err(problem(s, ts, "E0020", "unclosed block"))
+        }
+        let item = try statement(&s, ts)
+        body.push(item)
+        if ts[s.pos].kind != .Newline && !at(s, ts, "}") {
+            return err(problem(s, ts, "E0020", "expected a newline after the statement"))
+        }
+    }
+    s.nesting -= 1
+    return body
+}
+
+fn ifStatement(s: inout State, ts: Vec[Token]) -> int ! Failure {
+    try enter(&s, ts)
+    let p = try expect(&s, ts, "if")
+    if at(s, ts, "let") {
+        return err(problem(s, ts, "U0001", "if let is outside the selfhost SH-1 subset"))
+    }
+    let condition = try expression(&s, ts)
+    let body = try block(&s, ts)
+    var other: Vec[int] = []
+    // Like stage0, else must share the closing brace's line.
+    if eat(&s, ts, "else") {
+        if at(s, ts, "if") {
+            let nested = try ifStatement(&s, ts)
+            other.push(nested)
+        } else {
+            other = try block(&s, ts)
+        }
+    }
+    s.nesting -= 1
+    return pushStmt(&s, Statement{kind: .If, annotation: .Unknown, token: p, expr: condition, body: body, otherwise: other})
+}
+
+fn statement(s: inout State, ts: Vec[Token]) -> int ! Failure {
+    let p = s.pos
+    if at(s, ts, "let") || at(s, ts, "var") {
+        let mutable = at(s, ts, "var")
+        s.pos += 1
+        let name = try identifier(&s, ts)
+        var annotation: BasicType = .Unknown
+        if eat(&s, ts, ":") { annotation = try typeName(&s, ts) }
+        try expect(&s, ts, "=")
+        let value = try expression(&s, ts)
+        return pushStmt(&s, Statement{kind: .Bind, token: p, name: name,
+            annotation: annotation, mutable: mutable, expr: value})
+    }
+    if eat(&s, ts, "return") {
+        var value = -1
+        if ts[s.pos].kind != .Newline && !at(s, ts, "}") {
+            value = try expression(&s, ts)
+        }
+        return pushStmt(&s, Statement{kind: .Return, annotation: .Unknown, token: p, expr: value})
+    }
+    if at(s, ts, "if") { return ifStatement(&s, ts) }
+    if eat(&s, ts, "while") {
+        if at(s, ts, "let") {
+            return err(problem(s, ts, "U0001", "while let is outside the selfhost SH-1 subset"))
+        }
+        let condition = try expression(&s, ts)
+        let body = try block(&s, ts)
+        return pushStmt(&s, Statement{kind: .While, annotation: .Unknown, token: p, expr: condition, body: body})
+    }
+    if eat(&s, ts, "loop") {
+        let body = try block(&s, ts)
+        return pushStmt(&s, Statement{kind: .Loop, annotation: .Unknown, token: p, body: body})
+    }
+    if eat(&s, ts, "break") { return pushStmt(&s, Statement{kind: .Break, annotation: .Unknown, token: p}) }
+    if eat(&s, ts, "continue") { return pushStmt(&s, Statement{kind: .Continue, annotation: .Unknown, token: p}) }
+    if at(s, ts, "for") || at(s, ts, "with") || at(s, ts, "scope") ||
+        at(s, ts, "defer") || at(s, ts, "unsafe") {
+        return err(problem(s, ts, "U0001", "statement is outside the selfhost SH-1 subset"))
+    }
+    let lhs = try expression(&s, ts)
+    if at(s, ts, "=") || at(s, ts, "+=") || at(s, ts, "-=") ||
+        at(s, ts, "*=") || at(s, ts, "/=") || at(s, ts, "%=") {
+        if s.expressions[lhs].kind != .Name {
+            return err(problem(s, ts, "E0020", "assignment requires a local variable"))
+        }
+        let op = s.pos
+        let name = s.expressions[lhs].token
+        s.pos += 1
+        let rhs = try expression(&s, ts)
+        return pushStmt(&s, Statement{kind: .Assign, annotation: .Unknown, token: op, name: name, expr: rhs})
+    }
+    return pushStmt(&s, Statement{kind: .Expr, annotation: .Unknown, token: p, expr: lhs})
+}
+
+fn function(s: inout State, ts: Vec[Token]) -> Function ! Failure {
+    try expect(&s, ts, "fn")
+    let name = try identifier(&s, ts)
+    if at(s, ts, "[") {
+        return err(problem(s, ts, "U0001", "generics are outside the selfhost SH-1 subset"))
+    }
+    try expect(&s, ts, "(")
+    var params: Vec[Parameter] = []
+    while !at(s, ts, ")") {
+        let param = try identifier(&s, ts)
+        try expect(&s, ts, ":")
+        let ty = try typeName(&s, ts)
+        params.push(Parameter{name: param, ty: ty})
+        if !eat(&s, ts, ",") { break }
+    }
+    try expect(&s, ts, ")")
+    var result: BasicType = .Unit
+    if eat(&s, ts, "->") { result = try typeName(&s, ts) }
+    if result == .Str || at(s, ts, "of") || at(s, ts, "!") {
+        return err(problem(s, ts, "U0001", "borrowed returns and result types are outside the selfhost SH-1 subset"))
+    }
+    let body = try block(&s, ts)
+    return Function{name: name, result: result, params: params, body: body}
+}
+
+pub fn parse(ts: Vec[Token]) -> Program ! Failure {
+    var s = State{}
+    loop {
+        newlines(&s, ts)
+        if ts[s.pos].kind == .Eof { break }
+        if at(s, ts, "pub") { s.pos += 1 }
+        if !at(s, ts, "fn") {
+            if at(s, ts, "use") || at(s, ts, "struct") || at(s, ts, "enum") ||
+                at(s, ts, "interface") || at(s, ts, "impl") || at(s, ts, "const") ||
+                at(s, ts, "type") {
+                return err(problem(s, ts, "U0001", "only function items are in the selfhost SH-1 subset"))
+            }
+            return err(problem(s, ts, "E0020", "expected a function item"))
+        }
+        let f = try function(&s, ts)
+        s.functions.push(f)
+    }
+    return Program{expressions: take(&s.expressions), statements: take(&s.statements),
+        functions: take(&s.functions)}
+}
