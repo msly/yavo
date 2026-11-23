@@ -1,4 +1,4 @@
-# Yavo-written compiler: temporary borrowed-index subset
+# Yavo-written compiler: byte and text-index subset
 
 This directory starts the [self-hosting roadmap](../docs/self-hosting.md).
 It contains a real subset compiler written in Yavo: source is tokenized,
@@ -8,14 +8,16 @@ an input program back to the Rust frontend.
 
 **Current status: subset compiler; self-compilation is not implemented.**
 The input subset includes Copy aggregates, payload-free enums, owned String
-values and vectors of Copy or owned String/struct elements. Non-Copy vector
-indices support expression-local read-only access, field projection, ordinary
-read-only arguments and explicit String/Vec clone. The complete original
-`diagnostic.yv` and `model.yv` are compiled with appended test entries and
-helpers. Separate model workloads cover owned AST storage and content
-traversal. Full compiler sources still require byte and text indexing,
-persistent element borrows, mutation through those borrows, explicit parameter modes,
-options/results, modules and other forms outside the accepted input subset.
+values, vectors of Copy or owned String/struct elements, and Copy `byte`
+values. It supports byte literals, contextual integer arithmetic, int/byte
+conversions and single-byte text indexing. Non-Copy vector indices support
+expression-local read-only access, field projection, ordinary read-only
+arguments and explicit String/Vec clone. The complete current
+`diagnostic.yv` and `model.yv` are compiled with appended workloads, while
+seven unchanged lexer function fragments have independent execution oracles.
+Full compiler sources still require text slices, persistent element borrows,
+mutation through those borrows, explicit parameter modes, options/results,
+formatting, modules and other forms outside the accepted input subset.
 The validation receipt explicitly records `self_hosted: false` and tests that
 checking its own entry point reports `U0001`.
 
@@ -51,6 +53,95 @@ achieved stage and each individual result. Native CI runs this gate on Linux,
 Windows and macOS; a configured job is not itself a passing result.
 
 ## Validation snapshot (2026-11-23)
+
+The [byte and text-index summary](../compiler/validation/selfhost-byte-2026-11-23.json)
+binds source `aecdfe58e6f81b794c48827fa2e49905a59331e5` to baseline
+`190f04a` and records **321/321 cases, 119 executable inputs and 10/10
+auxiliary checks**, with no skipped checks:
+
+| Case category | Passed |
+| --- | ---: |
+| Normal programs | 93 |
+| Panic programs | 26 |
+| Rejected programs | 167 |
+| Inputs accepted by stage0 but outside this subset | 28 |
+| Boundaries unsupported by both frontends | 7 |
+
+All 119 executable inputs pass Debug and Release fixed output/exit/panic
+oracles, separate Rust reference execution and repeated-C byte comparisons.
+The summary rehashes all **476 candidate/reference mode binaries** and
+binds final source, generated C, commands, toolchain and observed outputs.
+Normal exits retain allocation checking. Supplementary development evidence
+has separate identities: all 321 checks and 17 new/promoted programs across
+both frontends and modes (68 executions), plus 51 independent contract
+checks and four review programs across both frontends and modes (16 executions).
+
+All **286 preceding fixture sources are retained byte-for-byte**:
+285 manifest entries are unchanged, `unsupported_byte` is promoted to
+`byte_literal_basic` with unchanged source, and 35 cases are new.
+The original four `known_gap` records are unchanged. The new conservative
+text-receiver U0001 case is recorded separately.
+
+There are still **two complete original source files and three source-prefix
+workloads**, plus **seven original function fragments**:
+
+| Original input | Bytes / functions | Workload |
+| --- | ---: | --- |
+| `diagnostic.yv` | 438 bytes | Diagnostic execution |
+| Current `model.yv` | 1,599 bytes | Owned AST storage and lifetime |
+| Current `model.yv` | 1,599 bytes | Read-only AST content traversal |
+| `lexer.yv` function fragments | 7 functions | Classification, UTF-8 leading-byte width and exponent lookahead |
+
+The model grew from 1,581 to 1,599 bytes solely by appending `Byte` to
+`BasicType` and `ExprKind`. Existing variants and all payload fields are
+unchanged. Each model workload uses the complete current file bytes,
+without source rewriting. The existing traversal oracle remains **18594**
+for the Program and **20410** for six clones surviving original-owner
+replacement; the full gate executes that same fixed oracle against the
+current model.
+
+The [lexer helper example](examples/lexer_byte_helpers.yv) extracts
+`wordStart`, `digit`, `exponentAhead`, `scalarWidth`, `hexDigit`,
+`twoSymbol` and `oneSymbol` byte-for-byte from the production lexer.
+All seven also match their baseline function bytes. The receipt binds the
+complete lexer hash, each original range/hash, concatenation order,
+independent harness and assembled input. Its fixed oracle checks all
+**256 byte values**, all **65,536 byte pairs** and **15 exponent contexts**;
+the aggregate output is `53, 10, 22, 7066600, 20, 272301, 8` on separate
+lines. These are seven accepted function fragments; the complete lexer
+still does not belong to the input subset. The four existing data examples
+and this helper example make **five published examples**, each
+byte-identical to its executable fixture.
+
+Five production frontend sources changed: lexer, parser, model, types and
+codegen. `lexer_test.yv` was also updated to replace the old unsupported-byte
+assertion while preserving all other old assertions. Its Debug and Release
+runs cover ASCII/raw control bytes, seven escapes, positions and malformed
+literals. Stage0, shared runtime, toolchain locks, language contract, frozen
+specification, bootstrap harness and CI workflow are unchanged.
+
+Complete local Rust suites were rerun: Debug and Release each pass
+**145 tests, 0 failures and 1 existing ignored test**, with no filtered tests.
+The frozen gate retains **124 passes, 3 unsupported and 2 superseded cases**,
+with no wrong or unrun cases. The receipt remains `self_hosted: false`.
+
+[CI run 45126097965](https://github.com/msly/yavo/actions/runs/45126097965) passed **six of six jobs** at
+`aecdfe5`. The selfhost gate succeeded on Linux x86-64, Windows x86-64
+and macOS arm64. The native Linux job passed **119/119 Yavo-generated C
+programs and 3/3 capability probes** with independent GCC ASan/UBSan.
+The native Linux archive matched GitHub's size/SHA-256; its actual source,
+C, frontend/program binaries and outputs were independently verified,
+including all 476 bootstrap mode execution records and the three
+original-source workloads. The other five archives have metadata checks only.
+LSan is disabled; normal exits use YV_ALLOC_CHECK.
+
+Native Linux artifact **14795972640** contains
+**318,163,047 bytes**, SHA-256
+`2498ed6dd31fd6b26d68f799a8b584ff569015d6d912c7df6210af50da71ee77`. The verification reads archive bytes and
+original receipts without re-executing the archived programs; stage0,
+Zig and GCC retain receipt identity checks.
+
+### Historical borrowed-index snapshot (2026-11-23)
 
 The [borrowed-index summary](../compiler/validation/selfhost-borrow-index-2026-11-23.json)
 binds source `b5dfe9f` to baseline `2604318` and records **286/286 cases,
@@ -299,17 +390,17 @@ JSON diagnostics, suggestions and recovery remain future work.
 | Area | Implemented |
 | --- | --- |
 | Files | One source file; function and aggregate declarations, including `pub`; required `fn main()` |
-| Types | `int` (signed 64-bit), `bool`, borrowed `str`, owned `String`, `Vec[T]` with Copy or owned String/struct elements, unit return; nominal structs and payload-free enums |
-| String | Empty construction, str.toString, len, clone, push, output, String/str equality and ordering, UTF-8/NUL |
-| Vec | Typed empty construction, empty/nonempty literals, len, consuming push, reserve, recursive clone/drop; checked reads and index/field/compound assignments for Copy elements; expression-local read-only indexing and field projection for owned elements |
+| Types | `int` (signed 64-bit), `byte` (unsigned 8-bit), `bool`, borrowed `str`, owned `String`, `Vec[T]` with Copy or owned String/struct elements, unit return; nominal structs and payload-free enums |
+| String | Empty construction, str.toString, len, clone, push, output, String/str equality and ordering, UTF-8/NUL; checked single-byte indexing returns Copy byte |
+| Vec | Typed empty construction, empty/nonempty literals including Vec[byte], len, consuming push, reserve, recursive clone/drop; checked reads and index/field/compound assignments for Copy elements; expression-local read-only indexing and field projection for owned elements |
 | Aggregates | Forward/nested fields, construction, reads and mutable fields; Copy values or owned String/Vec/nested struct fields; constant defaults and empty aggregates; by-value cycles rejected |
 | Enums | Qualified and context-inferred cases, nominal type checks, equality/inequality, case-name output |
-| Literals | Decimal integers including negative `INT64_MIN`, booleans, unit, non-interpolated UTF-8 strings with supported escapes and NUL; vector literals with contextual or first-element type inference |
+| Literals | Decimal integers including negative `INT64_MIN`, contextual byte-range integers, single-quoted ASCII byte literals and seven escapes, booleans, unit, non-interpolated UTF-8 strings with supported escapes and NUL; vector literals with contextual or first-element type inference |
 | Functions | Typed parameters, scalar/String/Vec/struct/unit returns, forward calls and recursion; owned ordinary parameters borrow read-only; str returns remain outside the subset |
 | Locals | `let`/`var`, inferred or explicit types, assignment and arithmetic compound assignment; active locals cannot be shadowed |
 | Control flow | `if`/`else if`/`else`, `while`, `loop`, `break`, `continue`, explicit return and return-path checks |
-| Expressions | Parentheses, unary minus/not, checked integer arithmetic, wrapping arithmetic, bit operations/shifts, equality/order, short-circuit boolean operators |
-| Builtins | Single-argument `print`/`println`/`eprintln` as direct statements, `assert(bool)`; user functions take precedence over the assert prelude |
+| Expressions | Parentheses, int unary minus, boolean not, checked int/byte arithmetic, wrapping arithmetic, bit operations/shifts, contextual integer arithmetic, equality/order, short-circuit boolean operators |
+| Builtins | Single-argument `print`/`println`/`eprintln` as direct statements including decimal byte output, `assert(bool)`, explicit `int(...)`/`byte(...)` conversions; user functions take precedence over the assert prelude |
 | Ownership | Consuming bindings/assignment/construction/returns; moved-value checking, read-only parameters, expression-local element borrows, root-based argument/receiver protection |
 | Runtime behavior | Checked arithmetic/panic/output, ordered evaluation, moved-source zeroing and cleanup on scope/statement/control-flow exits |
 
@@ -318,12 +409,43 @@ as an expression statement, and unit-returning functions allow `return` or
 `return ()`, matching the existing language. The parser bounds syntactic nesting
 at 128 and expression lowering at 256; exceeding either returns `U0001`.
 
-Aggregate fields may hold int, bool, String, supported vectors, payload-free
+Aggregate fields may hold int, byte, bool, String, supported vectors, payload-free
 enums or nested structs. Borrowed `str` fields are rejected with E0301;
 unit fields remain outside this subset. Struct equality/printing/clone and enum ordering are
 rejected consistently with stage0. Explicit constructor fields are evaluated
 in source order. Bare enum cases use annotation/parameter/return/field/
 assignment/RHS comparison context.
+
+### Byte values and text reads
+
+`byte` is a Copy unsigned 8-bit value. A single-quoted literal has a fixed
+byte type; it is one ASCII character or one of `\n`, `\t`, `\r`, `\0`,
+`\\`, `\'` and `\"`. Raw TAB, CR, NUL and DEL are accepted; raw newline,
+non-ASCII characters, empty/multiple characters and other escapes are E0020.
+Byte output is the decimal numeric value.
+
+Integer literals and supported literal arithmetic expressions take byte
+context from annotations, parameters, returns, fields, vector elements or
+a typed comparison/arithmetic operand. Ordinary int variables and byte
+literals do not implicitly change type. Type inference can inspect a typed
+right operand without moving its runtime effects before the left operand.
+A byte-context literal outside 0..255 is E0003. Constant field declarations
+defer numeric range checks and fixed byte-to-int fitting until constructor
+instantiation, matching stage0.
+
+`int(byte)` widens explicitly; `byte(int)` checks its value and panics
+P-CONVERT outside 0..255. Identity `int(int)` and `byte(byte)` conversions
+are supported. Arithmetic uses the existing checked/wrapping u8 runtime
+operations; overflow, division by zero and invalid shift width retain the
+stage0 panic categories in both modes.
+
+String/str indexing checks bounds and copies one UTF-8 **byte**, including
+a continuation byte or NUL. It does not decode a Unicode scalar. Index
+arguments accept int or byte, while `Vec.reserve` still requires int.
+The receiver remains protected during index evaluation. The materialized
+byte immediately detaches from its owner and can survive later movement or
+replacement of that owner. Temporary String receivers live through the
+access. Text indexing is read-only; text slices remain outside this subset.
 
 ### Ownership boundaries
 
@@ -346,7 +468,7 @@ break/continue and scope exit; moved sources are zeroed before later cleanup.
 Loop move checks reproduce stage0's conservative second body pass, including
 moves before a syntactic break/return. Reinitialization restores availability.
 
-Vectors accept `int`, `bool`, payload-free enums, `String` and named structs,
+Vectors accept `int`, `byte`, `bool`, payload-free enums, `String` and named structs,
 including structs with String or supported Vec fields. Nominal enum/struct
 identity is preserved in the element type. A vector owns its buffer even
 when its elements are Copy; a struct containing a vector is therefore owned.
@@ -411,16 +533,16 @@ Four accepted stage0 boundaries remain explicitly U0001 here:
 The manifest and summary retain all four minimal sources and reasons.
 Stage0's observed results at these boundaries are not correctness oracles.
 
-Two additional conservative U0001 fixtures protect an outer owner while an
-indexed borrow is used in a comparison or nested index evaluation.
-Stage0 accepts those inputs; the fixtures do not execute these programs
-or add new known_gap records.
+Three additional conservative U0001 fixtures protect an outer owner while
+an indexed borrow is used in a comparison, a nested index is evaluated, or
+a text index expression consumes its receiver. Stage0 accepts those inputs;
+the fixtures do not execute these programs or add new known_gap records.
 
 Unsupported input includes persistent bindings of borrowed elements and
 mutation through non-Copy indexes, direct nested Vec elements, borrowed `str`
 or unit elements, pop, slices, other collections, imports,
 enum payloads, explicit user inout/sink/references/take, options/results,
-user-defined methods, generics, interpolation, byte/float/nondecimal literals,
+user-defined methods, generics, interpolation, float/nondecimal literals,
 integer separators, for loops, closures and concurrency. String temporary
 receivers cannot be modified. This list describes the new frontend's input,
 not the broader Rust frontend.
@@ -457,41 +579,41 @@ including Expression arguments/names, Statement branches, Function
 parameters/body and TypeDecl fields/variants. Explicit clone results and
 Copy fields remain readable after replacing the original Program.
 
-The next increment is **byte and single-byte text indexing**: byte types
-and literals, contextual integer constants, `int(byte)`/`byte(int)`,
-String/str indexing and `Vec[byte]` on the existing Copy-element path.
-Conversion and out-of-range behavior must follow stage0's existing contract.
-Single-byte indexing must check bounds, preserve receiver evaluation order
-and return an independent Copy byte, including for temporary Strings.
+The byte increment also accepts the seven original lexer helpers in
+[lexer_byte_helpers.yv](examples/lexer_byte_helpers.yv). This adds classification,
+UTF-8 leading-byte width and exponent-lookahead execution alongside the
+existing AST workloads.
 
-Acceptance will extract the original byte ranges of seven `lexer.yv`
-functions: `wordStart`, `digit`, `exponentAhead`, `scalarWidth`,
-`hexDigit`, `twoSymbol` and `oneSymbol`. Only an independent entry point
-is appended. Record the original file hash, each byte range/hash, concatenation
-order, entry-point hash and assembled-input hash; freeze classification,
-conversion and bounds oracles before candidate execution.
-This accepts **seven original function fragments**, not the complete lexer.
-The full lexer still needs slicing, `inout Cursor`, results/error propagation,
-`String.fromUtf8`, pop/optional/if let and modules.
+The next increment is **explicit bounded text slices with expression-local
+str borrows**. It should accept String/str `base[start..end]`, with both
+bounds exactly int, source-order receiver/start/end evaluation, and
+P-INDEX/P-STR-BOUNDARY checks through the existing runtime. A slice must
+retain its originating owner root and lifetime through comparisons,
+read-only arguments and chained accesses; `len`, byte indexing, comparison
+results and `toString()` produce independent results. Both bound
+expressions and later call arguments must respect the active borrow.
+Same-root `String.push(slice)` remains E0403; an explicit `toString()`
+copy can detach before push.
 
-Persistent bindings such as `let e = p.expressions[i]` need alias slots and
-the original owner root, with scope, last-use, branch and loop analysis;
-removing the current binding rejection alone would lose those constraints.
-Owned-element writes, mutation methods, explicit references, borrowed
-returns and inout/sink/take remain separate increments.
+Acceptance will extract unchanged original byte ranges for
+`lexer.integerLiteralFits` and `codegen.minimumMagnitude` and append
+independent workloads. Freeze u128 maximum/overflow, int64 minimum magnitude,
+long leading-zero and empty/ASCII/UTF-8/NUL expectations before candidate
+execution. Test negative/reversed/high bounds, non-scalar UTF-8 boundaries,
+byte-bound type rejection, evaluation order, temporary owners, root conflicts
+and detached owned/copy results. Preserve all existing fixed-oracle,
+original-prefix, resource, regression and native CI gates.
 
-Implementation note: inferred vector literals currently receive their final
-element destructor after lowering the elements. This is valid for the current
-subset. Before adding try/result paths that can leave a literal early, the
-temporary's complete type/destructor must be established or backfilled before
-emitting any early cleanup.
+Persistent `let`/`var` slice bindings, borrowed returns, Vec slices and
+open-ended slices remain separate work. Current Local records do not retain
+origin roots or view lifetimes; merely allowing a str descriptor to be
+stored would lose the relationship to its owner. After this increment the
+original function-fragment gate would contain **nine functions: eight from
+lexer and one from codegen**.
 
-Explicit inout/sink/take, options, results with try/catch, modules and remaining
-literal/builtin forms follow actual compiler-source dependencies. Each
-increment requires independent positive/negative and resource checks.
-
-After the input subset covers all compiler sources, build stage2 using stage1,
-then stage3 using stage2 in fresh directories; compare their generated C and
-independent program behavior. Only that closes SH-2. Replacing the existing
-compiler also requires the broader language, diagnostics and platform gates
-in SH-3. Self-hosting and practical application acceptance remain separate.
+Full lexer acceptance still needs `inout Cursor` and explicit `&` arguments,
+results and err/try/catch, `String.fromUtf8`, pop/optional/if let and modules.
+The new `byteToken` helper also uses format/interpolation, which remains an
+input-language dependency. Parser, types and codegen additionally need
+persistent owned-element borrows, indexed owned-field mutation and the
+remaining collection, formatting and module operations.

@@ -2,16 +2,18 @@
 
 Yavo is a systems-language prototype for coding agents: ownership and deterministic destruction without a tracing GC, a Rust frontend, a C17 backend, and a pinned `zig cc` toolchain. The main P0–P3 language paths are implemented; **full v1 acceptance and lower agent delivery cost than Rust remain unproven**.
 
-**Current development goal (2026-11-23): self-hosting.** The new
+**Current development goal (2026-11-23): self-hosting.** The
 [Yavo-written subset compiler](selfhost/README.md) implements parsing, checking
 and C generation for independent programs, including owned String values,
 vectors of Copy or owned elements, nested structs and payload-free enums.
-Non-Copy vector elements now support expression-scoped read-only indexing,
-field projection and ordinary read-only arguments. The original diagnostic
-and AST-model components compile with appended test entry points. The model
-workloads cover owned storage and content traversal, including reading cloned
-buffers after releasing the original owner. Byte/text primitives are next.
-Full self-compilation is pending. The [roadmap](docs/self-hosting.md) separates the first subset,
+It now accepts byte values and literals, contextual integer expressions,
+checked int/byte conversion, single-byte String/str indexing and Vec[byte].
+Seven original lexer helper functions execute with an independent harness,
+in addition to the original diagnostic and current AST-model sources with
+appended workloads for diagnostics, owned storage and content traversal.
+The next increment is expression-local text slicing and two more original
+function fragments. Full self-compilation is pending. The
+[roadmap](docs/self-hosting.md) separates the first subset,
 stage0 → stage1 → stage2 → stage3 bootstrap, replacement of the Rust frontend,
 and practical acceptance using non-compiler applications.
 
@@ -37,7 +39,7 @@ Recent changes implement index assignment, two-phase variable/field receivers, S
 
 | Check | Recorded local result | Scope |
 | --- | --- | --- |
-| Release suite | **145 passed, 0 failed, 1 ignored** | Current borrowed-index increment, all 19 Cargo test groups; Rust sources are unchanged |
+| Release suite | **145 passed, 0 failed, 1 ignored** | Current byte increment, all 19 Cargo test groups; Rust sources are unchanged |
 | Debug suite | **145 passed, 0 failed, 1 ignored** | Same source, all 19 groups, independent completed local log |
 | Frozen specification | **124 pass, 0 wrong, 3 unsupported, 0 not_run, 2 superseded** | 129 frozen cases; a different counting unit from Cargo test functions |
 | Cross-compilation | Six target formats/architectures build | Linux (static musl), Windows and macOS on x86-64/aarch64; native CI now covers Linux x86-64 plus the Windows x86-64/macOS arm64 selections below |
@@ -49,7 +51,26 @@ Source modules support top-level exports, per-file imports, cyclic imports and o
 
 ### GitHub CI
 
-The current borrowed-index increment passed **286/286 selfhost cases and
+The current byte increment passed **321/321 local selfhost cases and
+10/10 auxiliary checks**, with all **119 executable inputs** passing both
+frontends in Debug/Release against fixed oracles. Repeated C, normal-exit
+allocation checks and all **476 mode-binary identities** were verified.
+The [byte receipt](compiler/validation/selfhost-byte-2026-11-23.json) binds
+implementation `aecdfe5`, complete local Rust suites, two current original
+sources across three prefix workloads, and seven unchanged lexer function
+fragments with independent byte/symbol oracles.
+
+[CI run 45126097965](https://github.com/msly/yavo/actions/runs/45126097965) passed **six of six jobs** at
+`aecdfe5`. The selfhost gate succeeded on Linux x86-64, Windows x86-64
+and macOS arm64. The native Linux job passed **119/119 Yavo-generated C
+programs and 3/3 capability probes** with independent GCC ASan/UBSan.
+The native Linux archive matched GitHub's size/SHA-256; its actual source,
+C, frontend/program binaries and outputs were independently verified,
+including all 476 bootstrap mode execution records and the three
+original-source workloads. The other five archives have metadata checks only.
+LSan is disabled; normal exits use YV_ALLOC_CHECK.
+
+The preceding borrowed-index increment passed **286/286 selfhost cases and
 10/10 auxiliary checks**, with all 102 executable inputs passing Debug/Release
 fixed oracles, Rust differential checks and repeated-C comparisons.
 [CI run 45121072503](https://github.com/msly/yavo/actions/runs/45121072503) passed **six of six jobs** at `b5dfe9f`,
