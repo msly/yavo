@@ -1,0 +1,475 @@
+{
+  "schema": "yavo-stage2-compiler-sanitizer-summary/1",
+  "date": "2026-11-23",
+  "batch": 28,
+  "status": "passed_for_recorded_independent_linux_execution",
+  "scope": "Independent GCC ASan/UBSan of the actual stage2 compiler plus existing generated-program validation; not a local full-adapter run.",
+  "base_git_commit": "394f1b857714fba7cc69c0b025e25178ad63f1fc",
+  "implementation_commit": null,
+  "implementation_identity": "Source-file SHA-256 bindings below; the batch-28 overall receipt will bind the implementation commit.",
+  "source_files": {
+    "selfhost/support.yv": {
+      "sha256": "244b13598621ec3d0e7a8163f15636156473a96d4a9d533f925a91108e6f7380",
+      "bytes": 2221
+    },
+    "selfhost/lexer.yv": {
+      "sha256": "90001fb929ad14d269169c47ec176f42d24012a3259bc99649f37925dad2ed3d",
+      "bytes": 15281
+    },
+    "selfhost/model.yv": {
+      "sha256": "497327c9270915bb6e7c0f2c23f4f5b6c224a06561810e28cf32722a7f846c28",
+      "bytes": 2353
+    },
+    "selfhost/parser.yv": {
+      "sha256": "9cd138b48fa9206cfad028d9f619a065c742744cf220b971168980156bc9d700",
+      "bytes": 24953
+    },
+    "selfhost/types.yv": {
+      "sha256": "d37846190d57514dee86715adfdb3478d4169f59bc9bd57bd37137236bcea779",
+      "bytes": 11753
+    },
+    "selfhost/codegen.yv": {
+      "sha256": "853017d3d1067196081eec8e16ed41ef62fff31b99586f5658e730e601d7b668",
+      "bytes": 76324
+    },
+    "selfhost/main.yv": {
+      "sha256": "04f60f0f88d1c9a2f702fef5395009796b28a9f2df185b066d59371ae40a98ea",
+      "bytes": 1327
+    },
+    "tools/ci/selfhost_sanitize.py": {
+      "sha256": "dc6815aa8c2b19b5a8eeff3b88515b819b4126a3a4f19e5564703e46acc97467",
+      "bytes": 15207
+    },
+    "tools/ci/selfhost_compiler_sanitize.py": {
+      "sha256": "9b933ba6578949e4952d113f08a65135cae3ed848ddc5144ed6a66c88bb762f4",
+      "bytes": 19216
+    },
+    "tools/sanitizers/run.py": {
+      "sha256": "bfe9aa0fc4bf8890c1fd54e0f830d7e608fb71db1b5b0acd9c4d7a2f7ca76847",
+      "bytes": 12331
+    },
+    "selfhost/bootstrap.py": {
+      "sha256": "bacf33a966f2d226e36182f357f9e3f46a87c6d87889c42a11915c269bda757e",
+      "bytes": 30264
+    }
+  },
+  "bootstrap": {
+    "receipt": {
+      "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch28/receipt.json",
+      "sha256": "ad6aedca7ef8c213ea069b2b19850709b523ac9d2185dd8c3917f81fb3c23beb",
+      "bytes": 3694122
+    },
+    "work": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch28/run-bccm3ta1",
+    "status": "passed",
+    "self_hosted": true,
+    "cases": 335,
+    "compiler_bundle": {
+      "bytes": 134212,
+      "parts": [
+        {
+          "file": "support.yv",
+          "sha256": "244b13598621ec3d0e7a8163f15636156473a96d4a9d533f925a91108e6f7380"
+        },
+        {
+          "file": "lexer.yv",
+          "sha256": "90001fb929ad14d269169c47ec176f42d24012a3259bc99649f37925dad2ed3d"
+        },
+        {
+          "file": "model.yv",
+          "sha256": "497327c9270915bb6e7c0f2c23f4f5b6c224a06561810e28cf32722a7f846c28"
+        },
+        {
+          "file": "parser.yv",
+          "sha256": "9cd138b48fa9206cfad028d9f619a065c742744cf220b971168980156bc9d700"
+        },
+        {
+          "file": "types.yv",
+          "sha256": "d37846190d57514dee86715adfdb3478d4169f59bc9bd57bd37137236bcea779"
+        },
+        {
+          "file": "codegen.yv",
+          "sha256": "853017d3d1067196081eec8e16ed41ef62fff31b99586f5658e730e601d7b668"
+        },
+        {
+          "file": "main.yv",
+          "sha256": "04f60f0f88d1c9a2f702fef5395009796b28a9f2df185b066d59371ae40a98ea"
+        }
+      ],
+      "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch28/run-bccm3ta1/yavo-selfhost.yv",
+      "sha256": "b5a6e193bec7498a164f31567f437eaca3b2f390fc3a639a5775d8281862fc1d"
+    },
+    "stage2_c": {
+      "bytes": 574405,
+      "sha256": "4e9d15e32c1d556ba7616e3aa430c8fc87973c791ee7ad8868d1aa844a3c0f12"
+    },
+    "stage3_c": {
+      "bytes": 574405,
+      "sha256": "4e9d15e32c1d556ba7616e3aa430c8fc87973c791ee7ad8868d1aa844a3c0f12"
+    },
+    "stage2_sha256": "f9e2931e5407ece4b1c9bc46e4949086a0bd024113aa60c9a44a895e5f82f827",
+    "stage3_sha256": "f9e2931e5407ece4b1c9bc46e4949086a0bd024113aa60c9a44a895e5f82f827",
+    "stage0": {
+      "path": "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+      "sha256": "4482658b76d489863bdd16d1bc4263e87cdabf2fda0b3557cba16944ff1aaab8"
+    },
+    "zig": {
+      "expected_version": "0.17.1",
+      "path": "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+      "sha256": "58959f01285c05a74276f09327b551d42ed6006bf325a78dc661a024e314987b"
+    },
+    "runtime_sha256": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+    "toolchain_lock_sha256": "a9bbe83e644b0e1cee19c8dba8b5157eaed3e9ddc71b96d8aab2b2d2bb15f53c"
+  },
+  "execution": {
+    "host": {
+      "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+      "machine": "x86_64",
+      "uname": [
+        "Linux",
+        "85dbaea7bfa9",
+        "6.18.57",
+        "#1 SMP Tue Oct 20 21:56:04 UTC 2026",
+        "x86_64",
+        ""
+      ],
+      "libc": [
+        "glibc",
+        "2.41"
+      ]
+    },
+    "c_compiler": {
+      "path": "/usr/bin/x86_64-linux-gnu-gcc-14",
+      "sha256": "a23ecab8ff08f09ad8c80602c2c5df7f49e09c25905cb8975902e101bf72635f",
+      "bytes": 1162264,
+      "version": "x86_64-linux-gnu-gcc-14 (Debian 14.2.0-19) 14.2.0",
+      "version_receipt": {
+        "argv": [
+          "/usr/bin/x86_64-linux-gnu-gcc-14",
+          "--version"
+        ],
+        "cwd": "/workspace/scratch/10567e8df470/stage2-sanitizer/programs-validation",
+        "exit_code": 0,
+        "timed_out": false,
+        "timeout_seconds": 10,
+        "elapsed_seconds": 0.0036441510001168353,
+        "stdout": {
+          "path": "/workspace/scratch/10567e8df470/stage2-sanitizer/programs-validation/compiler-version.stdout",
+          "sha256": "2ae7618a3dfad6644f70dbf191f205882a96d3aac6350978839c4c19389f95a5",
+          "bytes": 252
+        },
+        "stderr": {
+          "path": "/workspace/scratch/10567e8df470/stage2-sanitizer/programs-validation/compiler-version.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      },
+      "runtime_libraries": {
+        "libasan.so": {
+          "path": "/usr/lib/x86_64-linux-gnu/libasan.so.8.0.0",
+          "sha256": "f5c57422d80671ced6cffe350f92c8ab9bec23fda9b155658aac630d2bc2a240",
+          "bytes": 10825952
+        },
+        "libubsan.so": {
+          "path": "/usr/lib/x86_64-linux-gnu/libubsan.so.1.0.0",
+          "sha256": "c3912c88d4d1d3772d44c2a77fcda85ebf2790e6efc3602f9489a4e23f4899e2",
+          "bytes": 3377640
+        },
+        "libc.so.6": {
+          "path": "/usr/lib/x86_64-linux-gnu/libc.so.6",
+          "sha256": "9792e3cbb541c8f44c7acf5f14f4022ea62998ecc787d326bed4d8b6547dfd92",
+          "bytes": 1995216
+        },
+        "libgcc_s.so.1": {
+          "path": "/usr/lib/x86_64-linux-gnu/libgcc_s.so.1",
+          "sha256": "30c61ab012a4241bed033725a09b61f5fdd3bb7df95ee852d0b096520524c7af",
+          "bytes": 182856
+        }
+      }
+    },
+    "flags": [
+      "-std=c17",
+      "-D_POSIX_C_SOURCE=200809L",
+      "-DYV_ALLOC_CHECK=1",
+      "-g",
+      "-O1",
+      "-fno-omit-frame-pointer",
+      "-fno-strict-aliasing",
+      "-fno-pie",
+      "-no-pie",
+      "-fsanitize=address",
+      "-fsanitize=undefined",
+      "-fno-sanitize-recover=all",
+      "-pthread"
+    ],
+    "sanitizer_environment": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1:abort_on_error=0",
+      "LC_ALL": "C",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "capabilities": {
+      "clean": {
+        "passed": true,
+        "exit_code": 0,
+        "timed_out": false,
+        "stdout": {
+          "path": "/workspace/scratch/10567e8df470/stage2-sanitizer/programs-validation/probe-clean.stdout",
+          "sha256": "2e6d31a5983a91251bfae5aefa1c0a19d8ba3cf601d0e8a706b4cfa9661a6b8a",
+          "bytes": 2
+        },
+        "stderr": {
+          "path": "/workspace/scratch/10567e8df470/stage2-sanitizer/programs-validation/probe-clean.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      },
+      "address": {
+        "passed": true,
+        "exit_code": 1,
+        "timed_out": false,
+        "stdout": {
+          "path": "/workspace/scratch/10567e8df470/stage2-sanitizer/programs-validation/probe-address.stdout",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "stderr": {
+          "path": "/workspace/scratch/10567e8df470/stage2-sanitizer/programs-validation/probe-address.stderr",
+          "sha256": "1c6eabaa2ea0be891de6e7bac193b26a4aa42c97c716fb1d99858f2d2230789f",
+          "bytes": 3225
+        }
+      },
+      "undefined": {
+        "passed": true,
+        "exit_code": 1,
+        "timed_out": false,
+        "stdout": {
+          "path": "/workspace/scratch/10567e8df470/stage2-sanitizer/programs-validation/probe-undefined.stdout",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "stderr": {
+          "path": "/workspace/scratch/10567e8df470/stage2-sanitizer/programs-validation/probe-undefined.stderr",
+          "sha256": "cc344fafedf16dad7ffa4ea2e109c30daaa7f5278d7fd0bd47192f3784053f9b",
+          "bytes": 711
+        }
+      }
+    },
+    "capability_source": {
+      "path": "/workspace/scratch/10567e8df470/stage2-sanitizer/programs-validation/capability.c",
+      "sha256": "f5b916d0a677a387f262fe94581f4b65da1807c22503ab2b1fdf08eae6892f64",
+      "bytes": 491
+    },
+    "capability_artifact": {
+      "path": "/workspace/scratch/10567e8df470/stage2-sanitizer/programs-validation/capability",
+      "sha256": "ee53b3404cf30cfff9fc2f0fa154602fee7025ad8e02c1c3fd3dd9f8c9cada70",
+      "bytes": 30480
+    }
+  },
+  "generated_program_gate": {
+    "passed": 126,
+    "failed": 0,
+    "total": 126,
+    "status": "passed",
+    "source": "Existing tools/sanitizers/run.py executed the unchanged exported source/C pairs and fixed output/panic oracles."
+  },
+  "compiler_gate": {
+    "status": "passed",
+    "self_compilation_passed": true,
+    "self_compiled_c_sha256": "4e9d15e32c1d556ba7616e3aa430c8fc87973c791ee7ad8868d1aa844a3c0f12",
+    "cases": {
+      "passed": 335,
+      "total": 335,
+      "not_run": 0
+    },
+    "emissions": {
+      "passed": 126,
+      "total": 126,
+      "not_run": 0
+    },
+    "stress": {
+      "passed": 8,
+      "total": 8,
+      "not_run": 0,
+      "cases": [
+        {
+          "id": "truncated_function",
+          "passed": true,
+          "input_bytes": 11,
+          "input_sha256": "4bf5a51c679193a7c8131e000699ca3349a4b4bf5f9b8a381326c7f8c3560205",
+          "expected_exit": 1,
+          "expected_diagnostic": "E0020"
+        },
+        {
+          "id": "unterminated_string",
+          "passed": true,
+          "input_bytes": 131093,
+          "input_sha256": "14a56f19a3a89b82360f591f97ed15352053d7f6c8c943f0f4bad59a100ea751",
+          "expected_exit": 1,
+          "expected_diagnostic": "E0020"
+        },
+        {
+          "id": "invalid_character",
+          "passed": true,
+          "input_bytes": 36,
+          "input_sha256": "c683903a2382ff072c3b64da30219f0259c02442e73f309ebb6151308225cd5b",
+          "expected_exit": 1,
+          "expected_diagnostic": "E0020"
+        },
+        {
+          "id": "embedded_nul",
+          "passed": true,
+          "input_bytes": 16,
+          "input_sha256": "2b02325e0b922952a371dd62b33bd803d2660a2b66ecad9a18d2129450bc64dc",
+          "expected_exit": 1,
+          "expected_diagnostic": "E0020"
+        },
+        {
+          "id": "deep_parentheses",
+          "passed": true,
+          "input_bytes": 624,
+          "input_sha256": "2aa4ade5b8faecad6f8c62cf290249ef4b2f16ddb1ea6144a96283946dce9435",
+          "expected_exit": 1,
+          "expected_diagnostic": "U0001"
+        },
+        {
+          "id": "deep_blocks",
+          "passed": true,
+          "input_bytes": 1934,
+          "input_sha256": "a6ddb4d40bc142ff60dc88e62b7a91cefcdef66f78de93dd149b9691a77c8545",
+          "expected_exit": 1,
+          "expected_diagnostic": "U0001"
+        },
+        {
+          "id": "invalid_utf8",
+          "passed": true,
+          "input_bytes": 16,
+          "input_sha256": "1242a845491ed173ba59bb6d7e8852ef4e7e7000a04ab9c255b18531a4f6cf2c",
+          "expected_exit": 3,
+          "expected_diagnostic": null
+        },
+        {
+          "id": "long_unexpected_token",
+          "passed": true,
+          "input_bytes": 163853,
+          "input_sha256": "969badca02637babd90b6be46cad3186b740574ef204c6b844f07a639249dcef",
+          "expected_exit": 1,
+          "expected_diagnostic": "E0020"
+        }
+      ]
+    },
+    "instrumented_compiler": {
+      "bytes": 2282216,
+      "path": "/workspace/scratch/10567e8df470/stage2-sanitizer/compiler-validation-final/build/yavo-stage2-sanitized",
+      "sha256": "60c4bab1ffa5048286fcb828a3d7c366a5e16cea80bd0c4a0cbe20efdb734eb1"
+    },
+    "build_elapsed_seconds": 7.0356357149998985,
+    "self_check_elapsed_seconds": 0.2647859730000164,
+    "self_emit_elapsed_seconds": 0.26494133799997144,
+    "isolated_build_inputs": [
+      {
+        "bytes": 574405,
+        "copy_path": "/workspace/scratch/10567e8df470/stage2-sanitizer/compiler-validation-final/build/stage2.c",
+        "copy_sha256": "4e9d15e32c1d556ba7616e3aa430c8fc87973c791ee7ad8868d1aa844a3c0f12",
+        "source_path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch28/run-bccm3ta1/stages/stage2/yavo-selfhost.c",
+        "source_sha256": "4e9d15e32c1d556ba7616e3aa430c8fc87973c791ee7ad8868d1aa844a3c0f12"
+      },
+      {
+        "bytes": 72317,
+        "copy_path": "/workspace/scratch/10567e8df470/stage2-sanitizer/compiler-validation-final/build/yavo_rt.h",
+        "copy_sha256": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+        "source_path": "/data1/workspace/github/workspace/yavo/compiler/runtime/yavo_rt.h",
+        "source_sha256": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc"
+      }
+    ],
+    "changed_inputs_and_outputs": []
+  },
+  "provenance_negative_checks": {
+    "rejected": 5,
+    "total": 5,
+    "results": [
+      {
+        "id": "old_non_selfhosted_receipt",
+        "rejected": true,
+        "reason": "stage2 sanitizer requires a successful self-hosted fixed point"
+      },
+      {
+        "id": "substituted_stage2_C",
+        "rejected": true,
+        "reason": "bootstrap stage artifact identity mismatch: /data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch28/run-bccm3ta1/stages/stage2/yavo-selfhost.c"
+      },
+      {
+        "id": "reordered_bundle_parts",
+        "rejected": true,
+        "reason": "compiler bundle is not the exact declared Yavo source concatenation"
+      },
+      {
+        "id": "wrong_frontend_generation",
+        "rejected": true,
+        "reason": "bootstrap stage command does not establish the required provenance"
+      },
+      {
+        "id": "corrupted_recorded_stream",
+        "rejected": true,
+        "reason": "bootstrap stream bytes do not match their recorded identity"
+      }
+    ]
+  },
+  "input_transfer": {
+    "remote_full_input_verification": {
+      "result": "passed",
+      "bound_files": 621,
+      "executable_programs": 126,
+      "bootstrap_cases": 335,
+      "checks": "Adapter load_inputs executed on the remote host before export and again after the final validator changes; source, runtime, stage0, Zig, stage artifacts and fixture identities were checked. This did not execute GCC there."
+    },
+    "archive": {
+      "path": "/workspace/scratch/10567e8df470/stage2-sanitizer/inputs.tar.gz",
+      "sha256": "80050318e02f192ee56d4d404b1a2e2f058860d5f8741db540e8f0da4b0629fd",
+      "bytes": 1381009
+    },
+    "archive_members": 494,
+    "original_remote_identity_manifest": {
+      "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch28/sanitizer-export28/verified-remote-inputs.json",
+      "sha256": "d4646d98bf7a61af0fad7f36a451cca708c65a10fa0f0243c385ec4f90b10690",
+      "bytes": 109250
+    },
+    "original_remote_manifest_stage": "Export before the adjacent-header fix; final validator source hashes are bound separately in source_files.",
+    "copied_original_bound_identities": 364,
+    "original_bound_identities_remaining_remote": 257,
+    "path_handling": "Original bootstrap receipt and all recorded absolute paths were preserved. Files were mirrored under the same absolute repository prefix locally; receipt paths were not rewritten.",
+    "local_final_validator_binding": "The reviewed helper was updated after export, hash-bound separately and used for the final full compiler-gate rerun; the other copied original identities remained unchanged.",
+    "full_adapter_local_status": "not_run",
+    "full_adapter_ci_status": "pending",
+    "full_adapter_boundary": "Local execution independently ran the exported-program runner and the compiler validator. It did not run the full adapter with locally installed original stage0 and Zig. Native Linux CI must execute the full integrated adapter."
+  },
+  "original_reports": {
+    "compiler_final": {
+      "path": "/workspace/scratch/10567e8df470/stage2-sanitizer/compiler-validation-final/receipt.json",
+      "sha256": "c29ac0bc27e00cf4d61a4c5386c1be30851daf97c2bcfadad055b21f64c4d07f",
+      "bytes": 613107
+    },
+    "generated_programs": {
+      "path": "/workspace/scratch/10567e8df470/stage2-sanitizer/programs-validation/report.json",
+      "sha256": "c91ca689cf3db9a512bd227374bec19cc15aa425d6f0e422c0437f3d47ad49e4",
+      "bytes": 626836
+    },
+    "provenance_negative_checks": {
+      "path": "/workspace/scratch/10567e8df470/stage2-sanitizer/provenance-negative-checks.json",
+      "sha256": "79315576689f6bd2c393cbc9f57661115252efd1e8668c45bd57882e87d02fdd",
+      "bytes": 846
+    },
+    "exported_program_bundle": {
+      "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch28/sanitizer-export28/programs-bundle.json",
+      "sha256": "e8466967e6008eacf1cb712b72795b98c3a04c0e938163141f442daad9a07301",
+      "bytes": 909899
+    }
+  },
+  "limits": [
+    "Linux ASan/UBSan only; no TSan.",
+    "LeakSanitizer disabled; successful compiler exits use YV_ALLOC_CHECK.",
+    "Invalid-source paths terminate at their first diagnostic; heap leak checks do not run after os.exit.",
+    "Malformed inputs are a fixed bounded stress corpus, not fuzzing.",
+    "No Windows/macOS sanitizer execution in this independent Linux run.",
+    "The five receipt-tampering checks were an independent local adversarial check, not an added CI self-test.",
+    "The overall CI result and implementation commit are intentionally left to the batch-28 overall receipt."
+  ]
+}

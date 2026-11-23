@@ -1,0 +1,63 @@
+use stats
+
+pub struct FileRow {
+    path: String
+    summary: Summary
+}
+
+fn escaped(path: str) -> String {
+    var out = String{}
+    var begin = 0
+    for i in 0..path.len() {
+        let b = path[i]
+        if b == '\\' || b == '\t' || b == '\n' || b == '\r' {
+            out.push(path[begin..i])
+            if b == '\\' {
+                out.push("\\\\")
+            } else if b == '\t' {
+                out.push("\\t")
+            } else if b == '\n' {
+                out.push("\\n")
+            } else {
+                out.push("\\r")
+            }
+            begin = i + 1
+        }
+    }
+    out.push(path[begin..path.len()])
+    return out
+}
+
+pub fn help() {
+    println("Usage: yavo-test-summary [--] LOG...")
+}
+
+pub fn usageError() {
+    eprintln("ECLI_USAGE: expected one or more log paths")
+    eprintln("Usage: yavo-test-summary [--] LOG...")
+}
+
+pub fn readError(path: str) {
+    let name = escaped(path)
+    eprintln("${name}: EIO_READ: cannot read UTF-8 log")
+}
+
+pub fn logError(path: str, problem: LogError) {
+    let name = escaped(path)
+    eprintln("${name}:${problem.line}: ${problem.code}: ${problem.message}")
+}
+
+pub fn mismatch(path: str, line: int) {
+    let name = escaped(path)
+    eprintln("${name}:${line}: ELOG_MISMATCH: declared counts differ from recounted records")
+}
+
+pub fn table(rows: Vec[FileRow]) {
+    println("file\tpassed\tfailed\tskipped\trequirement_passed\trequirement_failed\tstatus")
+    for row in rows {
+        let name = escaped(row.path)
+        let status = stats.status(row.summary)
+        let counts = row.summary.counts
+        println("${name}\t${counts.passed}\t${counts.failed}\t${counts.skipped}\t${counts.requirementPassed}\t${counts.requirementFailed}\t${status}")
+    }
+}

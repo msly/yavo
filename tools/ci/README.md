@@ -9,7 +9,45 @@ artifact actions are pinned to reviewed full commits; workflow permissions are
 read-only. Debug and Release are sequential within each job because the existing
 test runners share temporary paths.
 
-The current byte validation completed successfully in
+The bootstrap-subset fixed point was confirmed on all three native platforms in
+[45150424099](https://github.com/msly/yavo/actions/runs/45150424099) at `4739ffc`:
+six of six jobs passed, including each native selfhost step. The
+[native confirmation index](../../compiler/validation/selfhost-fixed-point-native-2026-11-23.json)
+binds the run, job/step results and artifact metadata. It preserves the original
+`67794d9` local fixed-point receipt rather than rewriting its historical pending
+platform status. That historical run sanitized stage1-generated applications,
+not the stage2 compiler itself.
+
+## Batch 28 application and compiler checks
+
+Every native job now runs `python3 tools/ci/test_summary.py`. It compiles the
+first non-compiler application from four modules in three independent empty-cache
+builds, compares Release C and binary identities, and executes the frozen log
+contract in Debug and Release. A separately compiled exit-check helper validates
+tracked heap cleanup on nonzero exits: a real String clean/leak probe must
+preserve exit 2 or detect the leak with exit 102 before application cases run.
+The helper leaves production C/runtime bytes unchanged and has its own identity.
+This is one application's acceptance, not completion of all three SH-4 projects.
+Each run writes a new attempt and a current receipt under
+`compiler/target/ci/test-summary/`.
+
+The existing Linux `selfhost_sanitize.py` step now requires both the generated
+program gate and `selfhost_compiler_sanitize.py` to pass. The latter builds one
+GCC ASan/UBSan compiler from the actual stage2 C and exercises self-compilation,
+every manifest check and executable emission, and eight fixed malformed inputs.
+The copied compiler C/runtime are bound to their bootstrap hashes in a fresh
+build directory; GCC and sanitizer-library identities match the proven probes.
+No new Rust frontend is used to generate the tested compiler C. LSan remains
+disabled; compiler rejection via `os.exit` is not reported as a leak-check pass.
+
+`python3 tools/ci/selfhost_sanitize.py --bootstrap-output PATH` selects another
+completed bootstrap output directory. Native CI keeps the default paths, and
+uploads the full application, compiler-sanitizer and bootstrap receipts with
+the existing platform artifact.
+
+## Earlier confirmed runs
+
+The preceding byte validation completed successfully in
 [45126097965](https://github.com/msly/yavo/actions/runs/45126097965) at
 `aecdfe58e6f81b794c48827fa2e49905a59331e5`.
 The [byte receipt](../../compiler/validation/selfhost-byte-2026-11-23.json)

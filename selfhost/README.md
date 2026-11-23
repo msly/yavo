@@ -86,6 +86,27 @@ to `text_slice_owned_print` with unchanged source, and 14 cases are new
 rejection codes). The historical prefix workloads now use the pre-rewrite
 `diagnostic.yv` and `model.yv` frozen in `tests/prefixes/`.
 
+## Independent compiler sanitizer gate
+
+On Linux, after a successful bootstrap, run:
+
+```sh
+python3 tools/ci/selfhost_sanitize.py
+```
+
+The existing gate still sanitizes generated applications. It now also compiles
+the actual stage2 C once with independently probed GCC ASan/UBSan, then requires
+self-compilation, all fixture checks, all executable C emissions and eight fixed
+malformed inputs to agree with their recorded and independent expectations.
+Compiler C and runtime copies are hash-checked in a fresh build directory so an
+adjacent header cannot replace the declared runtime. Reports bind the source
+bundle, fixed point, actual compiler, GCC/libraries and every input/output.
+
+`--bootstrap-output DIR` selects a nondefault completed bootstrap directory.
+The fixed corpus is not fuzzing, and this Linux gate does not claim TSan or
+LeakSanitizer coverage. Normal compiler returns use the allocation checker;
+first-error `os.exit` paths do not run its heap summary.
+
 ## CLI
 
 ```sh
@@ -171,7 +192,8 @@ arguments accept int or byte, while `Vec.reserve` still requires int.
 The receiver remains protected during index evaluation. The materialized
 byte immediately detaches from its owner and can survive later movement or
 replacement of that owner. Temporary String receivers live through the
-access. Text indexing is read-only; text slices remain outside this subset.
+access. Text indexing is read-only; expression-local text slices are supported,
+while persistent bindings of views into owned strings remain outside the subset.
 
 ### Ownership boundaries
 

@@ -1,0 +1,1889 @@
+{
+  "schema": "yavo-test-summary-cases/1",
+  "spec_sha256": "331e9879090302711dc13bb2f946b085c01b55fbe4e6a5d0bb33efcbaf67783c",
+  "scope": "application scenarios, not SH-4 or language completion",
+  "cases": [
+    {
+      "id": "help",
+      "args": [
+        "--help"
+      ],
+      "files": [],
+      "expected": {
+        "exit": 0,
+        "rows": null,
+        "diagnostics": [],
+        "help": true
+      }
+    },
+    {
+      "id": "no_arguments",
+      "args": [],
+      "files": [],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "ECLI_USAGE"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "unknown_option",
+      "args": [
+        "--other"
+      ],
+      "files": [],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "ECLI_USAGE"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "help_with_file",
+      "args": [
+        "input.log",
+        "--help"
+      ],
+      "files": [],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "ECLI_USAGE"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "separator_without_file",
+      "args": [
+        "--"
+      ],
+      "files": [],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "ECLI_USAGE"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "archived_real_pair",
+      "args": [
+        "@repo:experiments/coldstart-2026-11-21-r4/evidence/yavo-verification.log",
+        "@repo:experiments/coldstart-2026-11-21-r4/evidence/rust-verification.log"
+      ],
+      "files": [
+        {
+          "path": "@repo:experiments/coldstart-2026-11-21-r4/evidence/yavo-verification.log",
+          "repository": "experiments/coldstart-2026-11-21-r4/evidence/yavo-verification.log",
+          "sha256": "8a7a3ef52c4f4ca47564ddece2b6dee623ad67b7439040a4b9da2ff14ba330df"
+        },
+        {
+          "path": "@repo:experiments/coldstart-2026-11-21-r4/evidence/rust-verification.log",
+          "repository": "experiments/coldstart-2026-11-21-r4/evidence/rust-verification.log",
+          "sha256": "8a7a3ef52c4f4ca47564ddece2b6dee623ad67b7439040a4b9da2ff14ba330df"
+        }
+      ],
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "@repo:experiments/coldstart-2026-11-21-r4/evidence/yavo-verification.log",
+            18,
+            0,
+            0,
+            4,
+            0,
+            "ok"
+          ],
+          [
+            "@repo:experiments/coldstart-2026-11-21-r4/evidence/rust-verification.log",
+            18,
+            0,
+            0,
+            4,
+            0,
+            "ok"
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      },
+      "group": "real_archives"
+    },
+    {
+      "id": "mixed_crlf_unicode",
+      "args": [
+        "结果 空间.log"
+      ],
+      "files": [
+        {
+          "path": "结果 空间.log",
+          "text": " \tREQ alpha files ≥2 ok \t\r\nREQ alpha unicode 文本 fail\r\nalpha PASS\r\nbeta FAIL\r\ngamma SKIP\r\n_0.a:- PASS\r\nverification: 002 passed, 01 failed, 1 skipped; requirement failures: 1\r\n \t\r\n"
+        }
+      ],
+      "expected": {
+        "exit": 1,
+        "rows": [
+          [
+            "结果 空间.log",
+            2,
+            1,
+            1,
+            1,
+            1,
+            "failed"
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "zero_only_without_final_lf",
+      "args": [
+        "zero.log"
+      ],
+      "files": [
+        {
+          "path": "zero.log",
+          "text": "verification: 0 passed, 0 failed, 0 skipped; requirement failures: 0"
+        }
+      ],
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "zero.log",
+            0,
+            0,
+            0,
+            0,
+            0,
+            "ok"
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "many_leading_zeros",
+      "args": [
+        "zero.log"
+      ],
+      "files": [
+        {
+          "path": "zero.log",
+          "text": "verification: 00000000000000000000000000000000000000000000000000000000000000000000000000000000 passed, 00000000000000000000000000000000000000000000000000000000000000000000000000000000 failed, 00000000000000000000000000000000000000000000000000000000000000000000000000000000 skipped; requirement failures: 00000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        }
+      ],
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "zero.log",
+            0,
+            0,
+            0,
+            0,
+            0,
+            "ok"
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "keyword_ids_namespaces",
+      "args": [
+        "keywords.log"
+      ],
+      "files": [
+        {
+          "path": "keywords.log",
+          "text": "REQ PASS\nverification: PASS\nREQ REQ structural check ok\nREQ verification: another check ok\nverification: 2 passed, 0 failed, 0 skipped; requirement failures: 0\n"
+        }
+      ],
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "keywords.log",
+            2,
+            0,
+            0,
+            2,
+            0,
+            "ok"
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "distinct_requirements_same_id",
+      "args": [
+        "req.log"
+      ],
+      "files": [
+        {
+          "path": "req.log",
+          "text": "REQ Same needs two fields ok\nREQ Same needs three fields ok\nverification: 0 passed, 0 failed, 0 skipped; requirement failures: 0\n"
+        }
+      ],
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "req.log",
+            0,
+            0,
+            0,
+            2,
+            0,
+            "ok"
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "requirement_failure_only",
+      "args": [
+        "req.log"
+      ],
+      "files": [
+        {
+          "path": "req.log",
+          "text": "REQ absent exists fail\nverification: 0 passed, 0 failed, 0 skipped; requirement failures: 1\n"
+        }
+      ],
+      "expected": {
+        "exit": 1,
+        "rows": [
+          [
+            "req.log",
+            0,
+            0,
+            0,
+            0,
+            1,
+            "failed"
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "skip_allowed",
+      "args": [
+        "skip.log"
+      ],
+      "files": [
+        {
+          "path": "skip.log",
+          "text": "S SKIP\nverification: 0 passed, 0 failed, 1 skipped; requirement failures: 0\n"
+        }
+      ],
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "skip.log",
+            0,
+            0,
+            1,
+            0,
+            0,
+            "ok"
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "mismatch_precedes_failed_status",
+      "args": [
+        "wrong.log"
+      ],
+      "files": [
+        {
+          "path": "wrong.log",
+          "text": "A PASS\nB FAIL\nC SKIP\nREQ X structural fail\nverification: 9 passed, 8 failed, 7 skipped; requirement failures: 6\n"
+        }
+      ],
+      "expected": {
+        "exit": 1,
+        "rows": [
+          [
+            "wrong.log",
+            1,
+            1,
+            1,
+            0,
+            1,
+            "mismatch"
+          ]
+        ],
+        "diagnostics": [
+          {
+            "path": "wrong.log",
+            "code": "ELOG_MISMATCH",
+            "line": 5
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "ordered_repeated_paths",
+      "args": [
+        "第二 b.log",
+        "first.log",
+        "第二 b.log"
+      ],
+      "files": [
+        {
+          "path": "第二 b.log",
+          "text": "S SKIP\nverification: 0 passed, 0 failed, 1 skipped; requirement failures: 0\n"
+        },
+        {
+          "path": "first.log",
+          "text": "A PASS\nverification: 1 passed, 0 failed, 0 skipped; requirement failures: 0\n"
+        }
+      ],
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "第二 b.log",
+            0,
+            0,
+            1,
+            0,
+            0,
+            "ok"
+          ],
+          [
+            "first.log",
+            1,
+            0,
+            0,
+            0,
+            0,
+            "ok"
+          ],
+          [
+            "第二 b.log",
+            0,
+            0,
+            1,
+            0,
+            0,
+            "ok"
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "dash_names_after_separator",
+      "args": [
+        "--",
+        "--help",
+        "-case.log"
+      ],
+      "files": [
+        {
+          "path": "--help",
+          "text": "verification: 0 passed, 0 failed, 0 skipped; requirement failures: 0\n"
+        },
+        {
+          "path": "-case.log",
+          "text": "A PASS\nverification: 1 passed, 0 failed, 0 skipped; requirement failures: 0\n"
+        }
+      ],
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "--help",
+            0,
+            0,
+            0,
+            0,
+            0,
+            "ok"
+          ],
+          [
+            "-case.log",
+            1,
+            0,
+            0,
+            0,
+            0,
+            "ok"
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "duplicate_test",
+      "args": [
+        "input.log"
+      ],
+      "files": [
+        {
+          "path": "input.log",
+          "text": "A PASS\n\nA FAIL\nverification: 1 passed, 1 failed, 0 skipped; requirement failures: 0\n"
+        }
+      ],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "input.log",
+            "code": "ELOG_DUPLICATE",
+            "line": 3
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "duplicate_normalized_requirement",
+      "args": [
+        "input.log"
+      ],
+      "files": [
+        {
+          "path": "input.log",
+          "text": "REQ A two  words ok\n\tREQ\tA\ttwo words fail\nverification: 0 passed, 0 failed, 0 skipped; requirement failures: 0\n"
+        }
+      ],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "input.log",
+            "code": "ELOG_DUPLICATE",
+            "line": 2
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "empty_file",
+      "args": [
+        "input.log"
+      ],
+      "files": [
+        {
+          "path": "input.log",
+          "text": ""
+        }
+      ],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "input.log",
+            "code": "ELOG_SUMMARY",
+            "line": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "blank_crlf_file",
+      "args": [
+        "input.log"
+      ],
+      "files": [
+        {
+          "path": "input.log",
+          "text": "\n \t\r\n"
+        }
+      ],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "input.log",
+            "code": "ELOG_SUMMARY",
+            "line": 3
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "missing_summary_final_lf",
+      "args": [
+        "input.log"
+      ],
+      "files": [
+        {
+          "path": "input.log",
+          "text": "A PASS\n"
+        }
+      ],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "input.log",
+            "code": "ELOG_SUMMARY",
+            "line": 2
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "missing_summary_no_final_lf",
+      "args": [
+        "input.log"
+      ],
+      "files": [
+        {
+          "path": "input.log",
+          "text": "A PASS"
+        }
+      ],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "input.log",
+            "code": "ELOG_SUMMARY",
+            "line": 2
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "missing_summary_trailing_blank",
+      "args": [
+        "input.log"
+      ],
+      "files": [
+        {
+          "path": "input.log",
+          "text": "A PASS\n\n"
+        }
+      ],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "input.log",
+            "code": "ELOG_SUMMARY",
+            "line": 3
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "record_after_summary",
+      "args": [
+        "input.log"
+      ],
+      "files": [
+        {
+          "path": "input.log",
+          "text": "verification: 0 passed, 0 failed, 0 skipped; requirement failures: 0\n\nA PASS\n"
+        }
+      ],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "input.log",
+            "code": "ELOG_FORMAT",
+            "line": 3
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "duplicate_summary",
+      "args": [
+        "input.log"
+      ],
+      "files": [
+        {
+          "path": "input.log",
+          "text": "verification: 0 passed, 0 failed, 0 skipped; requirement failures: 0\nverification: 0 passed, 0 failed, 0 skipped; requirement failures: 0\n"
+        }
+      ],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "input.log",
+            "code": "ELOG_FORMAT",
+            "line": 2
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "missing_requirement_description",
+      "args": [
+        "input.log"
+      ],
+      "files": [
+        {
+          "path": "input.log",
+          "text": "REQ A ok\nverification: 0 passed, 0 failed, 0 skipped; requirement failures: 0\n"
+        }
+      ],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "input.log",
+            "code": "ELOG_FORMAT",
+            "line": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "invalid_test_id",
+      "args": [
+        "input.log"
+      ],
+      "files": [
+        {
+          "path": "input.log",
+          "text": "-A PASS\nverification: 1 passed, 0 failed, 0 skipped; requirement failures: 0"
+        }
+      ],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "input.log",
+            "code": "ELOG_FORMAT",
+            "line": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "invalid_requirement_id",
+      "args": [
+        "input.log"
+      ],
+      "files": [
+        {
+          "path": "input.log",
+          "text": "REQ -A check ok\nverification: 0 passed, 0 failed, 0 skipped; requirement failures: 0\n"
+        }
+      ],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "input.log",
+            "code": "ELOG_FORMAT",
+            "line": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "invalid_status_case",
+      "args": [
+        "input.log"
+      ],
+      "files": [
+        {
+          "path": "input.log",
+          "text": "A pass\nverification: 1 passed, 0 failed, 0 skipped; requirement failures: 0"
+        }
+      ],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "input.log",
+            "code": "ELOG_FORMAT",
+            "line": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "extra_test_fields",
+      "args": [
+        "input.log"
+      ],
+      "files": [
+        {
+          "path": "input.log",
+          "text": "A PASS extra\nverification: 1 passed, 0 failed, 0 skipped; requirement failures: 0"
+        }
+      ],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "input.log",
+            "code": "ELOG_FORMAT",
+            "line": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "summary_punctuation",
+      "args": [
+        "input.log"
+      ],
+      "files": [
+        {
+          "path": "input.log",
+          "text": "verification: 0 passed, 0 failed, 0 skipped, requirement failures: 0\n"
+        }
+      ],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "input.log",
+            "code": "ELOG_FORMAT",
+            "line": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "signed_summary_count",
+      "args": [
+        "input.log"
+      ],
+      "files": [
+        {
+          "path": "input.log",
+          "text": "verification: +0 passed, 0 failed, 0 skipped; requirement failures: 0"
+        }
+      ],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "input.log",
+            "code": "ELOG_FORMAT",
+            "line": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "non_ascii_summary_digit",
+      "args": [
+        "input.log"
+      ],
+      "files": [
+        {
+          "path": "input.log",
+          "text": "verification: ٠ passed, 0 failed, 0 skipped; requirement failures: 0"
+        }
+      ],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "input.log",
+            "code": "ELOG_FORMAT",
+            "line": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "overflow_summary_count",
+      "args": [
+        "input.log"
+      ],
+      "files": [
+        {
+          "path": "input.log",
+          "text": "verification: 9223372036854775808 passed, 0 failed, 0 skipped; requirement failures: 0"
+        }
+      ],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "input.log",
+            "code": "ELOG_FORMAT",
+            "line": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "maximum_counts_are_valid_mismatch",
+      "args": [
+        "max.log"
+      ],
+      "files": [
+        {
+          "path": "max.log",
+          "text": "verification: 0009223372036854775807 passed, 9223372036854775807 failed, 9223372036854775807 skipped; requirement failures: 9223372036854775807"
+        }
+      ],
+      "expected": {
+        "exit": 1,
+        "rows": [
+          [
+            "max.log",
+            0,
+            0,
+            0,
+            0,
+            0,
+            "mismatch"
+          ]
+        ],
+        "diagnostics": [
+          {
+            "path": "max.log",
+            "code": "ELOG_MISMATCH",
+            "line": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "control_nul",
+      "args": [
+        "input.log"
+      ],
+      "files": [
+        {
+          "path": "input.log",
+          "text": "A\u0000PASS\nverification: 1 passed, 0 failed, 0 skipped; requirement failures: 0"
+        }
+      ],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "input.log",
+            "code": "ELOG_FORMAT",
+            "line": 1
+          }
+        ],
+        "help": false
+      },
+      "group": "ascii_controls"
+    },
+    {
+      "id": "control_vertical_tab",
+      "args": [
+        "input.log"
+      ],
+      "files": [
+        {
+          "path": "input.log",
+          "text": "A\u000bPASS\nverification: 1 passed, 0 failed, 0 skipped; requirement failures: 0"
+        }
+      ],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "input.log",
+            "code": "ELOG_FORMAT",
+            "line": 1
+          }
+        ],
+        "help": false
+      },
+      "group": "ascii_controls"
+    },
+    {
+      "id": "control_form_feed",
+      "args": [
+        "input.log"
+      ],
+      "files": [
+        {
+          "path": "input.log",
+          "text": "A\fPASS\nverification: 1 passed, 0 failed, 0 skipped; requirement failures: 0"
+        }
+      ],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "input.log",
+            "code": "ELOG_FORMAT",
+            "line": 1
+          }
+        ],
+        "help": false
+      },
+      "group": "ascii_controls"
+    },
+    {
+      "id": "control_del",
+      "args": [
+        "input.log"
+      ],
+      "files": [
+        {
+          "path": "input.log",
+          "text": "APASS\nverification: 1 passed, 0 failed, 0 skipped; requirement failures: 0"
+        }
+      ],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "input.log",
+            "code": "ELOG_FORMAT",
+            "line": 1
+          }
+        ],
+        "help": false
+      },
+      "group": "ascii_controls"
+    },
+    {
+      "id": "control_bare_cr",
+      "args": [
+        "input.log"
+      ],
+      "files": [
+        {
+          "path": "input.log",
+          "text": "A\rPASS\nverification: 1 passed, 0 failed, 0 skipped; requirement failures: 0"
+        }
+      ],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "input.log",
+            "code": "ELOG_FORMAT",
+            "line": 1
+          }
+        ],
+        "help": false
+      },
+      "group": "ascii_controls"
+    },
+    {
+      "id": "unicode_space_0085",
+      "args": [
+        "input.log"
+      ],
+      "files": [
+        {
+          "path": "input.log",
+          "text": "REQ A fieldfield ok\nverification: 0 passed, 0 failed, 0 skipped; requirement failures: 0\n"
+        }
+      ],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "input.log",
+            "code": "ELOG_FORMAT",
+            "line": 1
+          }
+        ],
+        "help": false
+      },
+      "group": "explicit_unicode_whitespace"
+    },
+    {
+      "id": "unicode_space_00a0",
+      "args": [
+        "input.log"
+      ],
+      "files": [
+        {
+          "path": "input.log",
+          "text": "REQ A field field ok\nverification: 0 passed, 0 failed, 0 skipped; requirement failures: 0\n"
+        }
+      ],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "input.log",
+            "code": "ELOG_FORMAT",
+            "line": 1
+          }
+        ],
+        "help": false
+      },
+      "group": "explicit_unicode_whitespace"
+    },
+    {
+      "id": "unicode_space_1680",
+      "args": [
+        "input.log"
+      ],
+      "files": [
+        {
+          "path": "input.log",
+          "text": "REQ A field field ok\nverification: 0 passed, 0 failed, 0 skipped; requirement failures: 0\n"
+        }
+      ],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "input.log",
+            "code": "ELOG_FORMAT",
+            "line": 1
+          }
+        ],
+        "help": false
+      },
+      "group": "explicit_unicode_whitespace"
+    },
+    {
+      "id": "unicode_space_2000",
+      "args": [
+        "input.log"
+      ],
+      "files": [
+        {
+          "path": "input.log",
+          "text": "REQ A field field ok\nverification: 0 passed, 0 failed, 0 skipped; requirement failures: 0\n"
+        }
+      ],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "input.log",
+            "code": "ELOG_FORMAT",
+            "line": 1
+          }
+        ],
+        "help": false
+      },
+      "group": "explicit_unicode_whitespace"
+    },
+    {
+      "id": "unicode_space_2001",
+      "args": [
+        "input.log"
+      ],
+      "files": [
+        {
+          "path": "input.log",
+          "text": "REQ A field field ok\nverification: 0 passed, 0 failed, 0 skipped; requirement failures: 0\n"
+        }
+      ],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "input.log",
+            "code": "ELOG_FORMAT",
+            "line": 1
+          }
+        ],
+        "help": false
+      },
+      "group": "explicit_unicode_whitespace"
+    },
+    {
+      "id": "unicode_space_2002",
+      "args": [
+        "input.log"
+      ],
+      "files": [
+        {
+          "path": "input.log",
+          "text": "REQ A field field ok\nverification: 0 passed, 0 failed, 0 skipped; requirement failures: 0\n"
+        }
+      ],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "input.log",
+            "code": "ELOG_FORMAT",
+            "line": 1
+          }
+        ],
+        "help": false
+      },
+      "group": "explicit_unicode_whitespace"
+    },
+    {
+      "id": "unicode_space_2003",
+      "args": [
+        "input.log"
+      ],
+      "files": [
+        {
+          "path": "input.log",
+          "text": "REQ A field field ok\nverification: 0 passed, 0 failed, 0 skipped; requirement failures: 0\n"
+        }
+      ],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "input.log",
+            "code": "ELOG_FORMAT",
+            "line": 1
+          }
+        ],
+        "help": false
+      },
+      "group": "explicit_unicode_whitespace"
+    },
+    {
+      "id": "unicode_space_2004",
+      "args": [
+        "input.log"
+      ],
+      "files": [
+        {
+          "path": "input.log",
+          "text": "REQ A field field ok\nverification: 0 passed, 0 failed, 0 skipped; requirement failures: 0\n"
+        }
+      ],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "input.log",
+            "code": "ELOG_FORMAT",
+            "line": 1
+          }
+        ],
+        "help": false
+      },
+      "group": "explicit_unicode_whitespace"
+    },
+    {
+      "id": "unicode_space_2005",
+      "args": [
+        "input.log"
+      ],
+      "files": [
+        {
+          "path": "input.log",
+          "text": "REQ A field field ok\nverification: 0 passed, 0 failed, 0 skipped; requirement failures: 0\n"
+        }
+      ],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "input.log",
+            "code": "ELOG_FORMAT",
+            "line": 1
+          }
+        ],
+        "help": false
+      },
+      "group": "explicit_unicode_whitespace"
+    },
+    {
+      "id": "unicode_space_2006",
+      "args": [
+        "input.log"
+      ],
+      "files": [
+        {
+          "path": "input.log",
+          "text": "REQ A field field ok\nverification: 0 passed, 0 failed, 0 skipped; requirement failures: 0\n"
+        }
+      ],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "input.log",
+            "code": "ELOG_FORMAT",
+            "line": 1
+          }
+        ],
+        "help": false
+      },
+      "group": "explicit_unicode_whitespace"
+    },
+    {
+      "id": "unicode_space_2007",
+      "args": [
+        "input.log"
+      ],
+      "files": [
+        {
+          "path": "input.log",
+          "text": "REQ A field field ok\nverification: 0 passed, 0 failed, 0 skipped; requirement failures: 0\n"
+        }
+      ],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "input.log",
+            "code": "ELOG_FORMAT",
+            "line": 1
+          }
+        ],
+        "help": false
+      },
+      "group": "explicit_unicode_whitespace"
+    },
+    {
+      "id": "unicode_space_2008",
+      "args": [
+        "input.log"
+      ],
+      "files": [
+        {
+          "path": "input.log",
+          "text": "REQ A field field ok\nverification: 0 passed, 0 failed, 0 skipped; requirement failures: 0\n"
+        }
+      ],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "input.log",
+            "code": "ELOG_FORMAT",
+            "line": 1
+          }
+        ],
+        "help": false
+      },
+      "group": "explicit_unicode_whitespace"
+    },
+    {
+      "id": "unicode_space_2009",
+      "args": [
+        "input.log"
+      ],
+      "files": [
+        {
+          "path": "input.log",
+          "text": "REQ A field field ok\nverification: 0 passed, 0 failed, 0 skipped; requirement failures: 0\n"
+        }
+      ],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "input.log",
+            "code": "ELOG_FORMAT",
+            "line": 1
+          }
+        ],
+        "help": false
+      },
+      "group": "explicit_unicode_whitespace"
+    },
+    {
+      "id": "unicode_space_200a",
+      "args": [
+        "input.log"
+      ],
+      "files": [
+        {
+          "path": "input.log",
+          "text": "REQ A field field ok\nverification: 0 passed, 0 failed, 0 skipped; requirement failures: 0\n"
+        }
+      ],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "input.log",
+            "code": "ELOG_FORMAT",
+            "line": 1
+          }
+        ],
+        "help": false
+      },
+      "group": "explicit_unicode_whitespace"
+    },
+    {
+      "id": "unicode_space_2028",
+      "args": [
+        "input.log"
+      ],
+      "files": [
+        {
+          "path": "input.log",
+          "text": "REQ A field field ok\nverification: 0 passed, 0 failed, 0 skipped; requirement failures: 0\n"
+        }
+      ],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "input.log",
+            "code": "ELOG_FORMAT",
+            "line": 1
+          }
+        ],
+        "help": false
+      },
+      "group": "explicit_unicode_whitespace"
+    },
+    {
+      "id": "unicode_space_2029",
+      "args": [
+        "input.log"
+      ],
+      "files": [
+        {
+          "path": "input.log",
+          "text": "REQ A field field ok\nverification: 0 passed, 0 failed, 0 skipped; requirement failures: 0\n"
+        }
+      ],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "input.log",
+            "code": "ELOG_FORMAT",
+            "line": 1
+          }
+        ],
+        "help": false
+      },
+      "group": "explicit_unicode_whitespace"
+    },
+    {
+      "id": "unicode_space_202f",
+      "args": [
+        "input.log"
+      ],
+      "files": [
+        {
+          "path": "input.log",
+          "text": "REQ A field field ok\nverification: 0 passed, 0 failed, 0 skipped; requirement failures: 0\n"
+        }
+      ],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "input.log",
+            "code": "ELOG_FORMAT",
+            "line": 1
+          }
+        ],
+        "help": false
+      },
+      "group": "explicit_unicode_whitespace"
+    },
+    {
+      "id": "unicode_space_205f",
+      "args": [
+        "input.log"
+      ],
+      "files": [
+        {
+          "path": "input.log",
+          "text": "REQ A field field ok\nverification: 0 passed, 0 failed, 0 skipped; requirement failures: 0\n"
+        }
+      ],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "input.log",
+            "code": "ELOG_FORMAT",
+            "line": 1
+          }
+        ],
+        "help": false
+      },
+      "group": "explicit_unicode_whitespace"
+    },
+    {
+      "id": "unicode_space_3000",
+      "args": [
+        "input.log"
+      ],
+      "files": [
+        {
+          "path": "input.log",
+          "text": "REQ A field　field ok\nverification: 0 passed, 0 failed, 0 skipped; requirement failures: 0\n"
+        }
+      ],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "input.log",
+            "code": "ELOG_FORMAT",
+            "line": 1
+          }
+        ],
+        "help": false
+      },
+      "group": "explicit_unicode_whitespace"
+    },
+    {
+      "id": "unicode_blank_is_invalid",
+      "args": [
+        "input.log"
+      ],
+      "files": [
+        {
+          "path": "input.log",
+          "text": "　\nverification: 0 passed, 0 failed, 0 skipped; requirement failures: 0\n"
+        }
+      ],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "input.log",
+            "code": "ELOG_FORMAT",
+            "line": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "terminal_bare_cr",
+      "args": [
+        "input.log"
+      ],
+      "files": [
+        {
+          "path": "input.log",
+          "text": "verification: 0 passed, 0 failed, 0 skipped; requirement failures: 0\r"
+        }
+      ],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "input.log",
+            "code": "ELOG_FORMAT",
+            "line": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "invalid_utf8",
+      "args": [
+        "bad.log"
+      ],
+      "files": [
+        {
+          "path": "bad.log",
+          "base64": "QSBQQVNTCv/+"
+        }
+      ],
+      "expected": {
+        "exit": 3,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "bad.log",
+            "code": "EIO_READ"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "missing_file",
+      "args": [
+        "absent.log"
+      ],
+      "files": [],
+      "expected": {
+        "exit": 3,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "absent.log",
+            "code": "EIO_READ"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "directory_input",
+      "args": [
+        "a_directory"
+      ],
+      "files": [
+        {
+          "path": "a_directory",
+          "directory": true
+        }
+      ],
+      "expected": {
+        "exit": 3,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "a_directory",
+            "code": "EIO_READ"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "valid_then_malformed_suppresses_stdout",
+      "args": [
+        "good.log",
+        "bad.log"
+      ],
+      "files": [
+        {
+          "path": "good.log",
+          "text": "A PASS\nverification: 1 passed, 0 failed, 0 skipped; requirement failures: 0\n"
+        },
+        {
+          "path": "bad.log",
+          "text": "not a log"
+        }
+      ],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "bad.log",
+            "code": "ELOG_FORMAT",
+            "line": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "mismatch_then_malformed",
+      "args": [
+        "wrong.log",
+        "bad.log"
+      ],
+      "files": [
+        {
+          "path": "wrong.log",
+          "text": "verification: 1 passed, 0 failed, 0 skipped; requirement failures: 0"
+        },
+        {
+          "path": "bad.log",
+          "text": "not a log"
+        }
+      ],
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "wrong.log",
+            "code": "ELOG_MISMATCH",
+            "line": 1
+          },
+          {
+            "path": "bad.log",
+            "code": "ELOG_FORMAT",
+            "line": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "first_hard_error_wins",
+      "args": [
+        "good.log",
+        "absent.log",
+        "bad.log"
+      ],
+      "files": [
+        {
+          "path": "good.log",
+          "text": "A PASS\nverification: 1 passed, 0 failed, 0 skipped; requirement failures: 0\n"
+        },
+        {
+          "path": "bad.log",
+          "text": "not a log"
+        }
+      ],
+      "expected": {
+        "exit": 3,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "absent.log",
+            "code": "EIO_READ"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "mismatch_then_read_failure",
+      "args": [
+        "wrong.log",
+        "absent.log"
+      ],
+      "files": [
+        {
+          "path": "wrong.log",
+          "text": "verification: 1 passed, 0 failed, 0 skipped; requirement failures: 0"
+        }
+      ],
+      "expected": {
+        "exit": 3,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "wrong.log",
+            "code": "ELOG_MISMATCH",
+            "line": 1
+          },
+          {
+            "path": "absent.log",
+            "code": "EIO_READ"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "multiple_mismatch_order",
+      "args": [
+        "second.log",
+        "first.log"
+      ],
+      "files": [
+        {
+          "path": "first.log",
+          "text": "verification: 1 passed, 0 failed, 0 skipped; requirement failures: 0"
+        },
+        {
+          "path": "second.log",
+          "text": "verification: 2 passed, 0 failed, 0 skipped; requirement failures: 0"
+        }
+      ],
+      "expected": {
+        "exit": 1,
+        "rows": [
+          [
+            "second.log",
+            0,
+            0,
+            0,
+            0,
+            0,
+            "mismatch"
+          ],
+          [
+            "first.log",
+            0,
+            0,
+            0,
+            0,
+            0,
+            "mismatch"
+          ]
+        ],
+        "diagnostics": [
+          {
+            "path": "second.log",
+            "code": "ELOG_MISMATCH",
+            "line": 1
+          },
+          {
+            "path": "first.log",
+            "code": "ELOG_MISMATCH",
+            "line": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "posix_tsv_control_filename",
+      "args": [
+        "目录/空 格\\tab\tline\ncr\r.log"
+      ],
+      "files": [
+        {
+          "path": "目录/空 格\\tab\tline\ncr\r.log",
+          "text": "A PASS\nverification: 1 passed, 0 failed, 0 skipped; requirement failures: 0\n"
+        }
+      ],
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "目录/空 格\\tab\tline\ncr\r.log",
+            1,
+            0,
+            0,
+            0,
+            0,
+            "ok"
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      },
+      "platforms": [
+        "posix"
+      ]
+    },
+    {
+      "id": "windows_tsv_backslash_path",
+      "args": [
+        "目录\\空 格\\result.log"
+      ],
+      "files": [
+        {
+          "path": "目录\\空 格\\result.log",
+          "text": "A PASS\nverification: 1 passed, 0 failed, 0 skipped; requirement failures: 0\n"
+        }
+      ],
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "目录\\空 格\\result.log",
+            1,
+            0,
+            0,
+            0,
+            0,
+            "ok"
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      },
+      "platforms": [
+        "nt"
+      ]
+    },
+    {
+      "id": "escaped_read_error_path",
+      "args": [
+        "missing\\tab\tline\ncr\r.log"
+      ],
+      "files": [],
+      "expected": {
+        "exit": 3,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "missing\\tab\tline\ncr\r.log",
+            "code": "EIO_READ"
+          }
+        ],
+        "help": false
+      }
+    }
+  ]
+}

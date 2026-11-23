@@ -1,0 +1,53 @@
+pub struct Counts {
+    passed: int = 0
+    failed: int = 0
+    skipped: int = 0
+    requirementPassed: int = 0
+    requirementFailed: int = 0
+}
+
+pub struct Summary {
+    counts: Counts
+    mismatch: bool
+    summaryLine: int
+}
+
+pub struct LogError {
+    line: int
+    code: String
+    message: String
+}
+
+pub fn problem(line: int, code: str, message: str) -> LogError {
+    return LogError{line: line, code: code.toString(), message: message.toString()}
+}
+
+pub fn addTest(counts: inout Counts, status: str) {
+    if status == "PASS" {
+        counts.passed += 1
+    } else if status == "FAIL" {
+        counts.failed += 1
+    } else {
+        counts.skipped += 1
+    }
+}
+
+pub fn addRequirement(counts: inout Counts, status: str) {
+    if status == "ok" {
+        counts.requirementPassed += 1
+    } else {
+        counts.requirementFailed += 1
+    }
+}
+
+pub fn agrees(actual: Counts, declared: Counts) -> bool {
+    return actual.passed == declared.passed && actual.failed == declared.failed && actual.skipped == declared.skipped && actual.requirementFailed == declared.requirementFailed
+}
+
+pub fn status(summary: Summary) -> str of static {
+    if summary.mismatch { return "mismatch" }
+    if summary.counts.failed > 0 || summary.counts.requirementFailed > 0 {
+        return "failed"
+    }
+    return "ok"
+}

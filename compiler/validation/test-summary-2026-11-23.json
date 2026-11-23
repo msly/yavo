@@ -1,0 +1,789 @@
+{
+  "application_sources": {
+    "main.yv": {
+      "bytes": 1316,
+      "sha256": "679f3a3e2262661f46954efc047bf81d4e6700ae0a2f2b1d9d39d14b13110c05"
+    },
+    "parser.yv": {
+      "bytes": 5976,
+      "sha256": "c77a47ab0da7278d9bd7c37601773f6622127f7c306052451d8e2f7dc607a627"
+    },
+    "report.yv": {
+      "bytes": 1740,
+      "sha256": "bb93039be6c92001366804108fc0f55b4cebcadc0950fda3a0dfa1b5c2dd5950"
+    },
+    "stats.yv": {
+      "bytes": 1310,
+      "sha256": "d4afde1d7f164c2aa5157c0219fc78fe330231b3d105255d07e80f9859d95238"
+    }
+  },
+  "base_revision": "394f1b857714fba7cc69c0b025e25178ad63f1fc",
+  "batch": 28,
+  "checks": [
+    {
+      "id": "independent_release_generated_c",
+      "left_sha256": "bbe0a3e939ba6be867c269939709a7eb71084fe9055f308231b44ed7a4171f8c",
+      "passed": true,
+      "right_sha256": "bbe0a3e939ba6be867c269939709a7eb71084fe9055f308231b44ed7a4171f8c"
+    },
+    {
+      "id": "independent_release_binary",
+      "left_sha256": "868a9498c1c1ce90c431779c2ff512864473bce24d35939c41e79daf0ff466d4",
+      "passed": true,
+      "right_sha256": "868a9498c1c1ce90c431779c2ff512864473bce24d35939c41e79daf0ff466d4"
+    },
+    {
+      "changed": [],
+      "id": "inputs_unchanged",
+      "passed": true
+    },
+    {
+      "id": "complete_application_inventory",
+      "observed_native_builds": 3,
+      "observed_scenarios_per_artifact": {
+        "cleanup-checked": 71,
+        "debug": 71,
+        "release-a": 71
+      },
+      "passed": true,
+      "required_cleanup_capabilities": 2,
+      "required_native_builds": 3,
+      "required_scenarios_per_artifact": 71
+    }
+  ],
+  "cleanup_validation": {
+    "application_build": {
+      "argv": [
+        "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+        "cc",
+        "-std=c17",
+        "-fno-strict-aliasing",
+        "-DYV_ALLOC_CHECK",
+        "-O2",
+        "-s",
+        "-I",
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/cleanup-checked/build",
+        "-include",
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/cleanup-checked/build/exit_check.h",
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/cleanup-checked/build/program.c",
+        "-o",
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/cleanup-checked/yavo-test-summary"
+      ],
+      "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/cleanup-checked",
+      "elapsed_seconds": 0.8676209226250648,
+      "environment_overrides": {
+        "TEMP": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-a/empty-caches/temporary",
+        "TMP": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-a/empty-caches/temporary",
+        "TMPDIR": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-a/empty-caches/temporary",
+        "YAVO_ALLOC_CHECK": "1",
+        "YAVO_CACHE_DIR": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-a/empty-caches/yavo",
+        "YAVO_NO_CACHE": "1",
+        "YAVO_NO_PCH": "1",
+        "ZIG_GLOBAL_CACHE_DIR": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-a/empty-caches/zig-global",
+        "ZIG_LOCAL_CACHE_DIR": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-a/empty-caches/zig-local"
+      },
+      "exit_code": 0,
+      "launch_error": null,
+      "stderr": {
+        "bytes": 0,
+        "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/cleanup-checked/application-build/stderr.bin",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stdout": {
+        "bytes": 0,
+        "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/cleanup-checked/application-build/stdout.bin",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "timed_out": false
+    },
+    "binary": {
+      "bytes": 33720,
+      "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/cleanup-checked/yavo-test-summary",
+      "sha256": "3becd7a4f274a762286aef0262280e2d000bcf49cd87bdebb34d87f1f08602d5"
+    },
+    "copied_inputs": {
+      "cleanup_clean.c": {
+        "compiled_copy": {
+          "bytes": 274,
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/cleanup-checked/build/cleanup_clean.c",
+          "sha256": "b2db0ac317eb9e75d8ec4f5fcbbcbd77a5d313cd7d5a873c7471c2ecc660138d"
+        },
+        "original": {
+          "bytes": 274,
+          "path": "/data1/workspace/github/workspace/yavo/examples/test-summary/tests/cleanup_clean.c",
+          "sha256": "b2db0ac317eb9e75d8ec4f5fcbbcbd77a5d313cd7d5a873c7471c2ecc660138d"
+        }
+      },
+      "cleanup_leak.c": {
+        "compiled_copy": {
+          "bytes": 272,
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/cleanup-checked/build/cleanup_leak.c",
+          "sha256": "ad91d6554ac57fdab13864c92c33d6bfa47d71ede15fd41b826bf4d4d646dfc9"
+        },
+        "original": {
+          "bytes": 272,
+          "path": "/data1/workspace/github/workspace/yavo/examples/test-summary/tests/cleanup_leak.c",
+          "sha256": "ad91d6554ac57fdab13864c92c33d6bfa47d71ede15fd41b826bf4d4d646dfc9"
+        }
+      },
+      "exit_check.h": {
+        "compiled_copy": {
+          "bytes": 511,
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/cleanup-checked/build/exit_check.h",
+          "sha256": "77c2b169eabefe4dae59350a8d694e962d5f2746b6a2a5df9a0a056fe8cdb244"
+        },
+        "original": {
+          "bytes": 511,
+          "path": "/data1/workspace/github/workspace/yavo/examples/test-summary/tests/exit_check.h",
+          "sha256": "77c2b169eabefe4dae59350a8d694e962d5f2746b6a2a5df9a0a056fe8cdb244"
+        }
+      },
+      "program.c": {
+        "compiled_copy": {
+          "bytes": 61797,
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/cleanup-checked/build/program.c",
+          "sha256": "bbe0a3e939ba6be867c269939709a7eb71084fe9055f308231b44ed7a4171f8c"
+        },
+        "original": {
+          "bytes": 61797,
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-a/program.c",
+          "sha256": "bbe0a3e939ba6be867c269939709a7eb71084fe9055f308231b44ed7a4171f8c"
+        }
+      },
+      "yavo_rt.h": {
+        "compiled_copy": {
+          "bytes": 72317,
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/cleanup-checked/build/yavo_rt.h",
+          "sha256": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc"
+        },
+        "original": {
+          "bytes": 72317,
+          "path": "/data1/workspace/github/workspace/yavo/compiler/runtime/yavo_rt.h",
+          "sha256": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc"
+        }
+      }
+    },
+    "not_covered": [
+      "use-after-free",
+      "untracked native allocations",
+      "panic unwinding"
+    ],
+    "original_generated_c": {
+      "bytes": 61797,
+      "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-a/program.c",
+      "sha256": "bbe0a3e939ba6be867c269939709a7eb71084fe9055f308231b44ed7a4171f8c"
+    },
+    "probes": [
+      {
+        "binary": {
+          "bytes": 9352,
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/cleanup-checked/clean",
+          "sha256": "b53d5d4ba6b45324ba52d156273f38d15a5bed9496e5e856dc24fcfafee49c27"
+        },
+        "build": {
+          "argv": [
+            "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+            "cc",
+            "-std=c17",
+            "-fno-strict-aliasing",
+            "-DYV_ALLOC_CHECK",
+            "-O2",
+            "-s",
+            "-I",
+            "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/cleanup-checked/build",
+            "-include",
+            "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/cleanup-checked/build/exit_check.h",
+            "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/cleanup-checked/build/cleanup_clean.c",
+            "-o",
+            "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/cleanup-checked/clean"
+          ],
+          "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/cleanup-checked",
+          "elapsed_seconds": 0.2147690774872899,
+          "environment_overrides": {
+            "TEMP": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-a/empty-caches/temporary",
+            "TMP": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-a/empty-caches/temporary",
+            "TMPDIR": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-a/empty-caches/temporary",
+            "YAVO_ALLOC_CHECK": "1",
+            "YAVO_CACHE_DIR": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-a/empty-caches/yavo",
+            "YAVO_NO_CACHE": "1",
+            "YAVO_NO_PCH": "1",
+            "ZIG_GLOBAL_CACHE_DIR": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-a/empty-caches/zig-global",
+            "ZIG_LOCAL_CACHE_DIR": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-a/empty-caches/zig-local"
+          },
+          "exit_code": 0,
+          "launch_error": null,
+          "stderr": {
+            "bytes": 0,
+            "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/cleanup-checked/clean-build/stderr.bin",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stdout": {
+            "bytes": 0,
+            "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/cleanup-checked/clean-build/stdout.bin",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "timed_out": false
+        },
+        "expected_exit": 2,
+        "id": "clean",
+        "passed": true,
+        "run": {
+          "argv": [
+            "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/cleanup-checked/clean"
+          ],
+          "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/cleanup-checked",
+          "elapsed_seconds": 0.0017855586484074593,
+          "environment_overrides": {
+            "TEMP": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-a/empty-caches/temporary",
+            "TMP": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-a/empty-caches/temporary",
+            "TMPDIR": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-a/empty-caches/temporary",
+            "YAVO_ALLOC_CHECK": "1",
+            "YAVO_CACHE_DIR": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-a/empty-caches/yavo",
+            "YAVO_NO_CACHE": "1",
+            "YAVO_NO_PCH": "1",
+            "ZIG_GLOBAL_CACHE_DIR": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-a/empty-caches/zig-global",
+            "ZIG_LOCAL_CACHE_DIR": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-a/empty-caches/zig-local"
+          },
+          "exit_code": 2,
+          "launch_error": null,
+          "stderr": {
+            "bytes": 0,
+            "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/cleanup-checked/clean-run/stderr.bin",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stdout": {
+            "bytes": 0,
+            "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/cleanup-checked/clean-run/stdout.bin",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "timed_out": false
+        },
+        "source": {
+          "bytes": 274,
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/cleanup-checked/build/cleanup_clean.c",
+          "sha256": "b2db0ac317eb9e75d8ec4f5fcbbcbd77a5d313cd7d5a873c7471c2ecc660138d"
+        }
+      },
+      {
+        "binary": {
+          "bytes": 9056,
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/cleanup-checked/leak",
+          "sha256": "a213e5d3f217a7c14fdea328a1a8111223ae1b5d32373666f1ec9289864f0e5f"
+        },
+        "build": {
+          "argv": [
+            "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+            "cc",
+            "-std=c17",
+            "-fno-strict-aliasing",
+            "-DYV_ALLOC_CHECK",
+            "-O2",
+            "-s",
+            "-I",
+            "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/cleanup-checked/build",
+            "-include",
+            "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/cleanup-checked/build/exit_check.h",
+            "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/cleanup-checked/build/cleanup_leak.c",
+            "-o",
+            "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/cleanup-checked/leak"
+          ],
+          "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/cleanup-checked",
+          "elapsed_seconds": 0.21539071667939425,
+          "environment_overrides": {
+            "TEMP": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-a/empty-caches/temporary",
+            "TMP": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-a/empty-caches/temporary",
+            "TMPDIR": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-a/empty-caches/temporary",
+            "YAVO_ALLOC_CHECK": "1",
+            "YAVO_CACHE_DIR": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-a/empty-caches/yavo",
+            "YAVO_NO_CACHE": "1",
+            "YAVO_NO_PCH": "1",
+            "ZIG_GLOBAL_CACHE_DIR": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-a/empty-caches/zig-global",
+            "ZIG_LOCAL_CACHE_DIR": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-a/empty-caches/zig-local"
+          },
+          "exit_code": 0,
+          "launch_error": null,
+          "stderr": {
+            "bytes": 0,
+            "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/cleanup-checked/leak-build/stderr.bin",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stdout": {
+            "bytes": 0,
+            "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/cleanup-checked/leak-build/stdout.bin",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "timed_out": false
+        },
+        "expected_exit": 102,
+        "id": "leak",
+        "passed": true,
+        "run": {
+          "argv": [
+            "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/cleanup-checked/leak"
+          ],
+          "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/cleanup-checked",
+          "elapsed_seconds": 0.0017041238024830818,
+          "environment_overrides": {
+            "TEMP": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-a/empty-caches/temporary",
+            "TMP": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-a/empty-caches/temporary",
+            "TMPDIR": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-a/empty-caches/temporary",
+            "YAVO_ALLOC_CHECK": "1",
+            "YAVO_CACHE_DIR": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-a/empty-caches/yavo",
+            "YAVO_NO_CACHE": "1",
+            "YAVO_NO_PCH": "1",
+            "ZIG_GLOBAL_CACHE_DIR": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-a/empty-caches/zig-global",
+            "ZIG_LOCAL_CACHE_DIR": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-a/empty-caches/zig-local"
+          },
+          "exit_code": 102,
+          "launch_error": null,
+          "stderr": {
+            "bytes": 54,
+            "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/cleanup-checked/leak-run/stderr.bin",
+            "sha256": "195cc60f6b3c91581307ab0040ec2d3d22ea070a1dfc76d5867fe73457ec2eb8"
+          },
+          "stdout": {
+            "bytes": 0,
+            "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/cleanup-checked/leak-run/stdout.bin",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "timed_out": false
+        },
+        "source": {
+          "bytes": 272,
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/cleanup-checked/build/cleanup_leak.c",
+          "sha256": "ad91d6554ac57fdab13864c92c33d6bfa47d71ede15fd41b826bf4d4d646dfc9"
+        }
+      }
+    ],
+    "runtime": {
+      "bytes": 72317,
+      "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/cleanup-checked/build/yavo_rt.h",
+      "sha256": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc"
+    },
+    "scope": "supplementary artifact with test-only os.exit allocation check; production C and runtime unmodified",
+    "shim": {
+      "bytes": 511,
+      "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/cleanup-checked/build/exit_check.h",
+      "sha256": "77c2b169eabefe4dae59350a8d694e962d5f2746b6a2a5df9a0a056fe8cdb244"
+    },
+    "status": "passed"
+  },
+  "compiler": {
+    "bytes": 2824408,
+    "path": "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+    "sha256": "4482658b76d489863bdd16d1bc4263e87cdabf2fda0b3557cba16944ff1aaab8"
+  },
+  "compiler_role": "existing Rust stage0 Release artifact; acceptance driver did not rebuild the compiler",
+  "counts": {
+    "applicable_scenarios": 71,
+    "application_executions_total": 213,
+    "cleanup_capability_probes": 2,
+    "failed": 0,
+    "frozen_scenarios": 72,
+    "native_builds": 3,
+    "native_debug_executions": 71,
+    "native_release_executions": 71,
+    "normal_application_executions": 142,
+    "not_applicable_native_filename_scenarios": 1,
+    "passed": 213,
+    "supplementary_compile_commands": 3,
+    "supplementary_exit_check_executions": 71
+  },
+  "date": "2026-11-23",
+  "driver": {
+    "bytes": 26482,
+    "path": "tools/ci/test_summary.py",
+    "sha256": "64df98993057eaf63ddc920c369fe56001634a2f83355dc6d29286698d0f8699"
+  },
+  "final_bound_input_count": 63,
+  "host": {
+    "machine": "x86_64",
+    "platform": "Linux-6.1.0-50-cloud-amd64-x86_64-with-glibc2.36"
+  },
+  "implementation_commit": null,
+  "limits": [
+    "71 scenarios are executions of one application, not 71 independent Agent tasks",
+    "explicit-exit instrumentation measures tracked heap blocks; no use-after-free or untracked allocation claim",
+    "whole-file input, not streaming or large-file scalability acceptance",
+    "native CI evidence for this implementation will be linked by the batch CI summary"
+  ],
+  "monetary_cost": null,
+  "native_builds": [
+    {
+      "binary": {
+        "bytes": 4190768,
+        "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/debug/yavo-test-summary",
+        "sha256": "03ce7631afbc8653d48c7337b3374187e12d8de181d086a771013fca3636ef43"
+      },
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "build",
+          "src/main.yv",
+          "-o",
+          "yavo-test-summary",
+          "--emit-c",
+          "program.c"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/debug",
+        "elapsed_seconds": 19.133390539325774,
+        "environment_overrides": {
+          "TEMP": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/debug/empty-caches/temporary",
+          "TMP": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/debug/empty-caches/temporary",
+          "TMPDIR": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/debug/empty-caches/temporary",
+          "YAVO_ALLOC_CHECK": "1",
+          "YAVO_CACHE_DIR": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/debug/empty-caches/yavo",
+          "YAVO_NO_CACHE": "1",
+          "YAVO_NO_PCH": "1",
+          "ZIG_GLOBAL_CACHE_DIR": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/debug/empty-caches/zig-global",
+          "ZIG_LOCAL_CACHE_DIR": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/debug/empty-caches/zig-local"
+        },
+        "exit_code": 0,
+        "launch_error": null,
+        "stderr": {
+          "bytes": 0,
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/debug/build-command/stderr.bin",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdout": {
+          "bytes": 0,
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/debug/build-command/stdout.bin",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "timed_out": false
+      },
+      "generated_c": {
+        "bytes": 61797,
+        "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/debug/program.c",
+        "sha256": "bbe0a3e939ba6be867c269939709a7eb71084fe9055f308231b44ed7a4171f8c"
+      },
+      "id": "debug",
+      "initial_cache_state": "all four directories newly created and empty",
+      "mode": "debug",
+      "passed": true,
+      "source_snapshot": {
+        "main.yv": {
+          "bytes": 1316,
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/debug/src/main.yv",
+          "sha256": "679f3a3e2262661f46954efc047bf81d4e6700ae0a2f2b1d9d39d14b13110c05"
+        },
+        "parser.yv": {
+          "bytes": 5976,
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/debug/src/parser.yv",
+          "sha256": "c77a47ab0da7278d9bd7c37601773f6622127f7c306052451d8e2f7dc607a627"
+        },
+        "report.yv": {
+          "bytes": 1740,
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/debug/src/report.yv",
+          "sha256": "bb93039be6c92001366804108fc0f55b4cebcadc0950fda3a0dfa1b5c2dd5950"
+        },
+        "stats.yv": {
+          "bytes": 1310,
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/debug/src/stats.yv",
+          "sha256": "d4afde1d7f164c2aa5157c0219fc78fe330231b3d105255d07e80f9859d95238"
+        }
+      }
+    },
+    {
+      "binary": {
+        "bytes": 33608,
+        "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-a/yavo-test-summary",
+        "sha256": "868a9498c1c1ce90c431779c2ff512864473bce24d35939c41e79daf0ff466d4"
+      },
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "build",
+          "src/main.yv",
+          "-o",
+          "yavo-test-summary",
+          "--emit-c",
+          "program.c",
+          "--release"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-a",
+        "elapsed_seconds": 4.328596545383334,
+        "environment_overrides": {
+          "TEMP": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-a/empty-caches/temporary",
+          "TMP": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-a/empty-caches/temporary",
+          "TMPDIR": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-a/empty-caches/temporary",
+          "YAVO_ALLOC_CHECK": "1",
+          "YAVO_CACHE_DIR": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-a/empty-caches/yavo",
+          "YAVO_NO_CACHE": "1",
+          "YAVO_NO_PCH": "1",
+          "ZIG_GLOBAL_CACHE_DIR": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-a/empty-caches/zig-global",
+          "ZIG_LOCAL_CACHE_DIR": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-a/empty-caches/zig-local"
+        },
+        "exit_code": 0,
+        "launch_error": null,
+        "stderr": {
+          "bytes": 0,
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-a/build-command/stderr.bin",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdout": {
+          "bytes": 0,
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-a/build-command/stdout.bin",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "timed_out": false
+      },
+      "generated_c": {
+        "bytes": 61797,
+        "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-a/program.c",
+        "sha256": "bbe0a3e939ba6be867c269939709a7eb71084fe9055f308231b44ed7a4171f8c"
+      },
+      "id": "release-a",
+      "initial_cache_state": "all four directories newly created and empty",
+      "mode": "release",
+      "passed": true,
+      "source_snapshot": {
+        "main.yv": {
+          "bytes": 1316,
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-a/src/main.yv",
+          "sha256": "679f3a3e2262661f46954efc047bf81d4e6700ae0a2f2b1d9d39d14b13110c05"
+        },
+        "parser.yv": {
+          "bytes": 5976,
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-a/src/parser.yv",
+          "sha256": "c77a47ab0da7278d9bd7c37601773f6622127f7c306052451d8e2f7dc607a627"
+        },
+        "report.yv": {
+          "bytes": 1740,
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-a/src/report.yv",
+          "sha256": "bb93039be6c92001366804108fc0f55b4cebcadc0950fda3a0dfa1b5c2dd5950"
+        },
+        "stats.yv": {
+          "bytes": 1310,
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-a/src/stats.yv",
+          "sha256": "d4afde1d7f164c2aa5157c0219fc78fe330231b3d105255d07e80f9859d95238"
+        }
+      }
+    },
+    {
+      "binary": {
+        "bytes": 33608,
+        "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-b/yavo-test-summary",
+        "sha256": "868a9498c1c1ce90c431779c2ff512864473bce24d35939c41e79daf0ff466d4"
+      },
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "build",
+          "src/main.yv",
+          "-o",
+          "yavo-test-summary",
+          "--emit-c",
+          "program.c",
+          "--release"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-b",
+        "elapsed_seconds": 4.2776060197502375,
+        "environment_overrides": {
+          "TEMP": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-b/empty-caches/temporary",
+          "TMP": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-b/empty-caches/temporary",
+          "TMPDIR": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-b/empty-caches/temporary",
+          "YAVO_ALLOC_CHECK": "1",
+          "YAVO_CACHE_DIR": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-b/empty-caches/yavo",
+          "YAVO_NO_CACHE": "1",
+          "YAVO_NO_PCH": "1",
+          "ZIG_GLOBAL_CACHE_DIR": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-b/empty-caches/zig-global",
+          "ZIG_LOCAL_CACHE_DIR": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-b/empty-caches/zig-local"
+        },
+        "exit_code": 0,
+        "launch_error": null,
+        "stderr": {
+          "bytes": 0,
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-b/build-command/stderr.bin",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdout": {
+          "bytes": 0,
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-b/build-command/stdout.bin",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "timed_out": false
+      },
+      "generated_c": {
+        "bytes": 61797,
+        "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-b/program.c",
+        "sha256": "bbe0a3e939ba6be867c269939709a7eb71084fe9055f308231b44ed7a4171f8c"
+      },
+      "id": "release-b",
+      "initial_cache_state": "all four directories newly created and empty",
+      "mode": "release",
+      "passed": true,
+      "source_snapshot": {
+        "main.yv": {
+          "bytes": 1316,
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-b/src/main.yv",
+          "sha256": "679f3a3e2262661f46954efc047bf81d4e6700ae0a2f2b1d9d39d14b13110c05"
+        },
+        "parser.yv": {
+          "bytes": 5976,
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-b/src/parser.yv",
+          "sha256": "c77a47ab0da7278d9bd7c37601773f6622127f7c306052451d8e2f7dc607a627"
+        },
+        "report.yv": {
+          "bytes": 1740,
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-b/src/report.yv",
+          "sha256": "bb93039be6c92001366804108fc0f55b4cebcadc0950fda3a0dfa1b5c2dd5950"
+        },
+        "stats.yv": {
+          "bytes": 1310,
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/release-b/src/stats.yv",
+          "sha256": "d4afde1d7f164c2aa5157c0219fc78fe330231b3d105255d07e80f9859d95238"
+        }
+      }
+    }
+  ],
+  "not_applicable": [
+    {
+      "id": "windows_tsv_backslash_path",
+      "platforms": [
+        "nt"
+      ]
+    }
+  ],
+  "oracle_inputs": {
+    "examples/test-summary/SPEC.md": {
+      "bytes": 7139,
+      "path": "examples/test-summary/SPEC.md",
+      "sha256": "331e9879090302711dc13bb2f946b085c01b55fbe4e6a5d0bb33efcbaf67783c"
+    },
+    "examples/test-summary/tests/cases.json": {
+      "bytes": 40707,
+      "path": "examples/test-summary/tests/cases.json",
+      "sha256": "35f8bb3662dfeb73381ce12dc9d42c86ad5a3c58cecd1a127353ce927fcf58b4"
+    },
+    "examples/test-summary/tests/oracle-freeze.json": {
+      "bytes": 1029,
+      "path": "examples/test-summary/tests/oracle-freeze.json",
+      "sha256": "ec7d7ed72ec15e210d463da39017100270684d4400b2d05fa3edc657fdc86a95"
+    },
+    "examples/test-summary/tests/oracle.py": {
+      "bytes": 5114,
+      "path": "examples/test-summary/tests/oracle.py",
+      "sha256": "bab614edf41bb424ff648ffe5f2def7bf6e5d824b66909965fc5b73e2b0eef14"
+    }
+  },
+  "platform_coverage": [
+    {
+      "evidence": "this source-bound local receipt",
+      "platform": "Linux x86-64",
+      "status": "passed"
+    },
+    {
+      "platform": "Windows x86-64",
+      "status": "pending_native_ci"
+    },
+    {
+      "platform": "macOS arm64",
+      "status": "pending_native_ci"
+    }
+  ],
+  "provenance_review": {
+    "all_recorded_bound_files_rehashed_for_summary": true,
+    "cleanup_compiles_only_fresh_runtime_shim_probe_copies": true,
+    "native_source_copies_generated_c_and_binaries_bound": true,
+    "original_and_copied_cleanup_inputs_hash_equal": true
+  },
+  "provider_usage": null,
+  "raw_receipt": {
+    "bytes": 743953,
+    "path": "compiler/target/ci/test-summary-bound-final/receipt.json",
+    "sha256": "514d4536b5a66d31571cad2560b4a18010dcd39c7ebd69d4631580d26d6d97d2"
+  },
+  "raw_work": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae",
+  "real_inputs": [
+    {
+      "bytes": 324,
+      "path": "experiments/coldstart-2026-11-21-r4/evidence/yavo-verification.log",
+      "sha256": "8a7a3ef52c4f4ca47564ddece2b6dee623ad67b7439040a4b9da2ff14ba330df"
+    },
+    {
+      "bytes": 324,
+      "path": "experiments/coldstart-2026-11-21-r4/evidence/rust-verification.log",
+      "sha256": "8a7a3ef52c4f4ca47564ddece2b6dee623ad67b7439040a4b9da2ff14ba330df"
+    }
+  ],
+  "retained_prior_local_attempts": [
+    {
+      "receipt": {
+        "bytes": 474924,
+        "path": "compiler/target/ci/test-summary-first/receipt.json",
+        "sha256": "3c6718f22ab24abb704745a3183c92d89dd56eb4aeab438025d94b496672cbd2"
+      },
+      "scope": "initial 142 normal executions before supplementary cleanup checks"
+    },
+    {
+      "receipt": {
+        "bytes": 720354,
+        "path": "compiler/target/ci/test-summary-final/receipt.json",
+        "sha256": "e3c57764fdfbbe521ef55bde6a61ab633a2c4794672076b3fb0b6e5193784c5b"
+      },
+      "scope": "213 executions before compiled-copy provenance hardening; superseded by current receipt"
+    }
+  ],
+  "runtime": {
+    "bytes": 72317,
+    "path": "/data1/workspace/github/workspace/yavo/compiler/runtime/yavo_rt.h",
+    "sha256": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc"
+  },
+  "schema": "yavo-test-summary-application-summary/1",
+  "scope": "first independent external CLI application acceptance using Rust stage0; not complete SH-4 or full-language self-hosting",
+  "status": "passed",
+  "supplementary_sources": {
+    "cleanup_clean.c": {
+      "bytes": 274,
+      "path": "examples/test-summary/tests/cleanup_clean.c",
+      "sha256": "b2db0ac317eb9e75d8ec4f5fcbbcbd77a5d313cd7d5a873c7471c2ecc660138d"
+    },
+    "cleanup_leak.c": {
+      "bytes": 272,
+      "path": "examples/test-summary/tests/cleanup_leak.c",
+      "sha256": "ad91d6554ac57fdab13864c92c33d6bfa47d71ede15fd41b826bf4d4d646dfc9"
+    },
+    "exit_check.h": {
+      "bytes": 511,
+      "path": "examples/test-summary/tests/exit_check.h",
+      "sha256": "77c2b169eabefe4dae59350a8d694e962d5f2746b6a2a5df9a0a056fe8cdb244"
+    }
+  },
+  "toolchain": {
+    "executable": {
+      "bytes": 185530576,
+      "path": "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+      "sha256": "58959f01285c05a74276f09327b551d42ed6006bf325a78dc661a024e314987b"
+    },
+    "lock": {
+      "bytes": 1096,
+      "path": "/data1/workspace/github/workspace/yavo/compiler/toolchain.lock",
+      "sha256": "a9bbe83e644b0e1cee19c8dba8b5157eaed3e9ddc71b96d8aab2b2d2bb15f53c"
+    },
+    "locked_archive": "https://ziglang.org/download/0.17.1/zig-x86_64-linux-0.17.1.tar.xz 3581863e3cbcfd0fce0efc682ce7e9e93da96668a977791d356a26d2a7e9b17a",
+    "version": "0.17.1",
+    "version_command": {
+      "argv": [
+        "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+        "version"
+      ],
+      "cwd": "/data1/workspace/github/workspace/yavo",
+      "elapsed_seconds": 0.007944214157760143,
+      "environment_overrides": {},
+      "exit_code": 0,
+      "launch_error": null,
+      "stderr": {
+        "bytes": 0,
+        "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/zig-version/stderr.bin",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stdout": {
+        "bytes": 7,
+        "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/test-summary-bound-final/attempt-cnyk74ae/zig-version/stdout.bin",
+        "sha256": "cd81ec19767ffb807bada6d48578a18d77a29adb394e09e9cdfcd5ea9eebb6a2"
+      },
+      "timed_out": false
+    }
+  }
+}

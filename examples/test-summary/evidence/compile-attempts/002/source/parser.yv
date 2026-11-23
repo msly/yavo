@@ -1,0 +1,155 @@
+use stats
+
+fn asciiSpace(b: byte) -> bool {
+    return b == ' ' || b == '\t'
+}
+
+fn identifierStart(b: byte) -> bool {
+    return (b >= 'A' && b <= 'Z') || (b >= 'a' && b <= 'z') || (b >= '0' && b <= '9') || b == '_'
+}
+
+fn validIdentifier(id: str) -> bool {
+    if id.len() == 0 { return false }
+    if !identifierStart(id[0]) { return false }
+    for i in 1..id.len() {
+        let b = id[i]
+        if !identifierStart(b) && b != '.' && b != ':' && b != '-' {
+            return false
+        }
+    }
+    return true
+}
+
+fn invalidCharacters(line: str) -> bool {
+    let n = line.len()
+    for i in 0..n {
+        let a = int(line[i])
+        if (a < 32 && a != 9) || a == 127 { return true }
+        if a == 194 && i + 1 < n {
+            let b = int(line[i + 1])
+            if b == 133 || b == 160 { return true }
+        }
+        if i + 2 < n {
+            let b = int(line[i + 1])
+            let c = int(line[i + 2])
+            if a == 225 && b == 154 && c == 128 { return true }
+            if a == 226 && b == 128 && ((c >= 128 && c <= 138) || c == 168 || c == 169 || c == 175) { return true }
+            if a == 226 && b == 129 && c == 159 { return true }
+            if a == 227 && b == 128 && c == 128 { return true }
+        }
+    }
+    return false
+}
+
+fn fields(line: str) -> Vec[str] of line {
+    var words: Vec[str] = []
+    var i = 0
+    while i < line.len() {
+        while i < line.len() && asciiSpace(line[i]) { i += 1 }
+        let begin = i
+        while i < line.len() && !asciiSpace(line[i]) { i += 1 }
+        if begin < i { words.push(line[begin..i]) }
+    }
+    return words
+}
+
+fn stripTerminalCr(raw: str, followedByLf: bool) -> str of raw {
+    if followedByLf && raw.endsWith("\r") {
+        return raw[0..raw.len() - 1]
+    }
+    return raw
+}
+
+fn count(word: str, line: int) -> int ! LogError {
+    if word.len() == 0 {
+        return err(stats.problem(line, "ELOG_FORMAT", "empty summary count"))
+    }
+    for i in 0..word.len() {
+        if word[i] < '0' || word[i] > '9' {
+            return err(stats.problem(line, "ELOG_FORMAT", "summary count must contain decimal digits"))
+        }
+    }
+    let value = word.parseInt() ?? return err(stats.problem(line, "ELOG_FORMAT", "summary count exceeds int range"))
+    return value
+}
+
+fn declaredCounts(words: []str, line: int) -> Counts ! LogError {
+    if words.len() != 10 {
+        return err(stats.problem(line, "ELOG_FORMAT", "malformed verification summary"))
+    }
+    if words[0] != "verification:" || words[2] != "passed," || words[4] != "failed," || words[6] != "skipped;" || words[7] != "requirement" || words[8] != "failures:" {
+        return err(stats.problem(line, "ELOG_FORMAT", "invalid summary keywords or punctuation"))
+    }
+    let passed = try count(words[1], line)
+    let failed = try count(words[3], line)
+    let skipped = try count(words[5], line)
+    let requirementFailed = try count(words[9], line)
+    return Counts{passed: passed, failed: failed, skipped: skipped, requirementFailed: requirementFailed}
+}
+
+pub fn parse(text: str) -> Summary ! LogError {
+    let physical = text.split("\n")
+    var lineCount = physical.len()
+    if text.len() == 0 {
+        lineCount = 0
+    } else if text.endsWith("\n") {
+        lineCount -= 1
+    }
+    var actual = Counts{}
+    var declared = Counts{}
+    var summaryLine = 0
+    var cases: Map[String, int] = [:]
+    var requirements: Map[String, int] = [:]
+    for index in 0..lineCount {
+        let lineNumber = index + 1
+        let line = stripTerminalCr(physical[index], index < physical.len() - 1)
+        if invalidCharacters(line) {
+            return err(stats.problem(lineNumber, "ELOG_FORMAT", "invalid control character or Unicode whitespace"))
+        }
+        let words = fields(line)
+        if words.len() == 0 { continue }
+        if summaryLine != 0 {
+            return err(stats.problem(lineNumber, "ELOG_FORMAT", "nonblank record follows verification summary"))
+        }
+        if words.len() == 2 && (words[1] == "PASS" || words[1] == "FAIL" || words[1] == "SKIP") {
+            if !validIdentifier(words[0]) {
+                return err(stats.problem(lineNumber, "ELOG_FORMAT", "invalid test identifier"))
+            }
+            if cases.has(words[0]) {
+                return err(stats.problem(lineNumber, "ELOG_DUPLICATE", "duplicate test identifier"))
+            }
+            cases.set(words[0].toString(), lineNumber)
+            stats.addTest(&actual, words[1])
+        } else if words[0] == "REQ" {
+            if words.len() < 4 {
+                return err(stats.problem(lineNumber, "ELOG_FORMAT", "requirement needs an identifier, description and status"))
+            }
+            if !validIdentifier(words[1]) {
+                return err(stats.problem(lineNumber, "ELOG_FORMAT", "invalid requirement identifier"))
+            }
+            let state = words[words.len() - 1]
+            if state != "ok" && state != "fail" {
+                return err(stats.problem(lineNumber, "ELOG_FORMAT", "invalid requirement status"))
+            }
+            var key = words[1].toString()
+            for i in 2..words.len() - 1 {
+                key.push(" ")
+                key.push(words[i])
+            }
+            if requirements.has(key) {
+                return err(stats.problem(lineNumber, "ELOG_DUPLICATE", "duplicate requirement identifier and description"))
+            }
+            requirements.set(key, lineNumber)
+            stats.addRequirement(&actual, state)
+        } else if words[0] == "verification:" {
+            declared = try declaredCounts(words, lineNumber)
+            summaryLine = lineNumber
+        } else {
+            return err(stats.problem(lineNumber, "ELOG_FORMAT", "unrecognized record"))
+        }
+    }
+    if summaryLine == 0 {
+        return err(stats.problem(lineCount + 1, "ELOG_SUMMARY", "missing verification summary"))
+    }
+    return Summary{counts: actual, mismatch: !stats.agrees(actual, declared), summaryLine: summaryLine}
+}

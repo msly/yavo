@@ -1,14 +1,16 @@
-# Yavo 交接文档（2026-11-23，第二十七批：引导子集自举固定点）
+# Yavo 交接文档（2026-11-23，第二十八批：真实 CLI 与 stage2 内存检查）
 
-给下一个会话：先读第 1、2、10、11 节及 docs/self-hosting.md、selfhost/README.md 再开工。第十二至第二十六批的原始记录在 `history/handoff-batches-2026-11-21-to-23.md`，第六至第十一批在 `history/handoff-batches-2026-11-19-to-21.md`。
+给下一个会话：先读第 1、2、10、12 节及 docs/self-hosting.md、selfhost/README.md 再开工。第十二至第二十六批的原始记录在 `history/handoff-batches-2026-11-21-to-23.md`，第六至第十一批在 `history/handoff-batches-2026-11-19-to-21.md`。
 
 ## 1. 一句话状态
 
-**Yavo 编写的编译器已经能编译自己：stage1 → stage2 → stage3 的生成 C 逐字节一致（第二十七批，提交 `67794d9`）。** 用户在 2026-11-23 选择“先快速证明”路线（docs/decisions.md 第八节，决定 20–24）：`selfhost/` 的源码改写为编译器自己实现的引导子集，不再原样编译旧源码。新增语言能力全部是 stage0 的严格子集：inout 参数与 `&变量`/`&变量.字段` 实参、`take(&place)`、表达式内文本切片、`use std/{fs, os}`、`os.args`/`os.exit`、配 `catch _` 的 `fs.readText`/`fs.writeNewText`/`String.fromUtf8`。编译器内部改用 Copy AST 加列表池、首个诊断即退出，多文件由 bootstrap.py 逐字节拼接。
+**SH-2 引导子集自举固定点已完成，下一阶段是 SH-3 编译器接替与 SH-4 真实 CLI 交付。** `4739ffc` 的 [CI run 45150424099](https://github.com/msly/yavo/actions/runs/45150424099) 三平台原生固定点通过，6/6 jobs 成功；[独立原生索引](compiler/validation/selfhost-fixed-point-native-2026-11-23.json) 保存 run、job/step 与工件元数据，原 `67794d9` 本机回执不改写。
 
-本机完整门 **335/335 cases、11/11 checks、0 skip**；stage2.c = stage3.c（574,149 字节），stage2/stage3 二进制一致，stage2 在全部用例上与 stage1 的诊断和生成 C 相同，stage2 编译自身后通过分配检查。摘要见 `compiler/validation/selfhost-fixpoint-2026-11-23.json`。Rust 编译器、运行时、冻结规格未改（Rust 套件沿用第二十六批：Debug/Release 各 145/0/1，冻结 129 项 124 pass、3 unsupported、2 superseded）。CI 结果见第 11 节：实现提交的 run 在 Linux、Windows 通过，macOS 上固定点 C 一致、335/335 通过，只有二进制身份检查因输出文件名不同而失败，`4739ffc` 修正后 run 45150424099 三平台 6/6 通过。
+**第二十八批新增首个真实应用 `examples/test-summary/` 和 stage2 编译器自身的 GCC ASan/UBSan 门。** CLI 用现有 Rust stage0，读取仓库真实测试日志，核验逐用例结果与末行汇总，输出稳定 TSV。四模块首次 check、Debug、Release 均通过，1 个源码版本、3 次作者编译调用、0 编译修复；独立应用门已在 Linux 通过 71 个适用场景的 Debug/Release 142 次执行、退出清理辅助产物 71 次执行（合计 213/213），以及两次独立 Release 的 C/二进制一致性。真实 String clean/leak 探针分别保持 exit 2 和检测为 exit 102；本批三平台 CI 结果在完成后补充。
 
-自举之外的状态不变：Rust stage0 仍是日常编译器；第六轮文档实验仍为 0 会话（缺可计量环境）；完整 v1 缺口见第 7、9 节。
+本批本机固定点复验 **335/335 cases、11/11 checks、0 skip**。独立 Linux/GCC 14.2 的 stage2 检查已通过：自编译、335 checks、126 emits、8 个固定坏输入；原有 126 程序 sanitizer 与 3 项能力探针也通过。完整 adapter 及本批应用的三平台原生执行尚待本批推送后的 CI 确认。
+
+Rust stage0 仍是日常编译器，编译器/运行时/冻结规格未因本批改变；已有 Rust Debug/Release 各 145/0/1，冻结 129 项为 124 pass、3 unsupported、2 superseded。第六轮文档实验仍 0 会话、0 交付，真实 usage 资格未取得。SH-4 需要三个独立应用，首个应用不能替代整阶段验收。
 
 ## 2. 仓库与环境
 
@@ -190,15 +192,14 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 
 ## 10. 下一个会话的第一步
 
-1. 检查 Git 状态、最新提交与 CI；读 [自举路线](docs/self-hosting.md) 和 [selfhost 说明](selfhost/README.md)。`python3 selfhost/bootstrap.py`（本机用第 2 节的 Python 绝对路径）约 3 分钟，固定点和 335 例必须全过。
-2. **固定点是回归门。** 改 `selfhost/` 的任何提交都要保持 stage2.c = stage3.c、stage2 与 stage1 全用例一致；新能力先加外部正负例并与 stage0 的接受范围、错误码对齐（stage0 接受但子集不做的写法报 U0001），再让编译器源码用上。
-3. **第一个非编译器 CLI（SH-4）**：让 agent 用 stage0 从零写一个日志/文本统计工具，记录编译—修复轮数和语言阻塞。这条线验证“给 agent 用的语言”这个核心目标，不依赖自举扩展。
-4. **扩大引导子集**，按收益：结果类型与 `try`（取代首错即退出）→ optional 与 `pop`（删掉 `trunc*` 辅助函数）→ `for` → 插值/`format` → 模块（取代拼接）。每项完成后编译器源码迁过去并重新达到固定点。之后再讨论 SH-3 接替。
-5. 保持冻结 129 项规格、Debug/Release 和三平台原生回归。不要同时跑两条 cargo test：现有测试共用临时目录。Cargo 退出 0 外须核对 conformance wrong/not_run。
-6. 第六轮文档实验仍为 0 会话；有可计量环境才恢复 executor 资格、文档对照、60 题 pilot 及正式成本研究。
-7. `yavo test`、包与程序锁、FFI/audit、一般闭包、公开 Join/spawn inout 等完整 v1 缺口按真实应用需要排序。
+1. 检查 Git 状态、最新提交与 CI；先读本批第 12 节，再读 [自举路线](docs/self-hosting.md)、[selfhost 说明](selfhost/README.md)及首个[应用契约](examples/test-summary/SPEC.md)。已有固定点和首个 CLI 的工作无需从头重做。
+2. **下一个编译器功能是 Result 与 `try`。** 先在外部正负例中与 stage0 接受范围、错误码对齐，再让编译器自身替换首错即退出的内部处理；覆盖临时对象和部分初始化 Vec 元素的提前退出清理，然后重新达到固定点。
+3. 之后按 Optional/`pop` → `for` → 插值/`format` → 源模块顺序扩大引导子集。每项让编译器源码实际使用；现有 stage0 支持某能力不等于 selfhost 已移植。
+4. SH-4 应用线继续用 stage0，后续选择结构化文本校验和多文件依赖/索引工具；用真实阻塞决定最小 `yavo test`、文件/进程 API、依赖锁定与分发的顺序。第一款应用完整入口是 `python3 tools/ci/test_summary.py`，本机 Python 路径见第 2 节。
+5. 自举改动保持 stage2.c = stage3.c、stage2 与 stage1 全用例一致；Linux 的 `tools/ci/selfhost_sanitize.py` 同时要求生成程序门和编译器自身门通过。保持冻结规格、Debug/Release 和三平台原生回归；不要同时运行共用临时目录的两条 cargo test。
+6. 第六轮文档实验有可计量环境才恢复，随后执行 60 题 pilot 及正式成本研究；当前工程推进不受它阻塞。
 
-正式门槛仍按 `docs/plan.md`：配对通过率差的单侧 95% 下界至少 −5 个百分点，单位成功交付成本较 Rust 低至少 20% 并独立复现；冻结基准的运行耗时几何均值不超过 C 的 1.5 倍。工程目标包括小程序编译 P50 ≤200 ms、Linux strip 后 ≤250 KB、Windows 真机测试及可复现产物。
+正式门槛仍按 `docs/plan.md`：配对通过率差的单侧 95% 下界至少 −5 个百分点，单位成功交付成本较 Rust 低至少 20% 并独立复现；冻结运行基准几何均值不超过 C 的 1.5 倍。工程目标包括小程序编译 P50 ≤200 ms、Linux strip 后 ≤250 KB、Windows 原生测试及可复现产物。
 
 ## 11. 第二十七批：引导子集与自举固定点（2026-11-23）
 
@@ -209,6 +210,16 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - 性能：stage1 编译自身约 0.03 s，生成 C 574 KB；Zig 构建约 5 s。完整门约 2 分 40 秒（4 核服务器）。
 - CI：`67794d9` 的 [run 45147299836](https://github.com/msly/yavo/actions/runs/45147299836) 中 Linux x86-64（含 Rust 全量与独立 ASan/UBSan 作业）、Windows x86-64 及其余三项通过；macOS arm64 的 selfhost receipt 显示固定点成立（stage2.c = stage3.c，574,333 字节；335/335），唯一失败是 `stage3_binary_reproduces_stage2`：Mach-O 的 ad-hoc 签名写入输出文件名，stage2/stage3 用了不同文件名。修正为两代都输出为各自目录下的 `yavo-selfhost`（`4739ffc`），其 [run 45150424099](https://github.com/msly/yavo/actions/runs/45150424099) **6/6 jobs 成功**：Linux x86-64、Windows x86-64、macOS arm64 原生 selfhost 步骤全部通过，固定点在三平台原生确认。下载 macOS 归档用的是本机 git 凭据调用 artifacts API。
 - 未覆盖：stage2 本身未跑 GCC ASan/UBSan（sanitizer 作业仍覆盖 stage1 生成的程序 C）。
+
+## 12. 第二十八批：真实 CLI 与 stage2 内存检查（2026-11-23）
+
+- 首个应用 `examples/test-summary/` 包含 main/parser/stats/report 四模块；SPEC 明确日志语法、重复项、汇总不一致、错误码、路径转义与多文件输出原子性。真实输入来自第四轮 Yavo/Rust 验证日志。无需更改编译器或运行时。
+- 作者首次完整源码检查、Debug 和 Release 构建全部通过；完整三次调用、源码快照、诊断和工具身份在 `examples/test-summary/evidence/`，后续验收或修复追加记录，不替换首次结果。真实 usage 不可用，token/成本保持未知。
+- 独立验收由 `examples/test-summary/tests/` 的固定期望与独立 Python oracle 组成，冻结后再执行应用。72 场景中每平台 71 适用，另外 1 项是目标系统不支持的原生文件名形式；三次独立空缓存构建，Debug/Release 逐例输出比较，Release C/二进制身份比较。此处计数是单应用场景，不是 71 个独立应用。
+- 应用最终 Linux 门为 213/213（Debug/Release 142，加退出检查辅助产物 71）；原始 C/runtime 不改写，通过独立 forced-include shim 在显式退出前检查堆块。clean/leak 两个真实 String 探针先验证辅助检查有效。runtime、shim、probe、生成 C 均从全新目录的哈希绑定副本编译；三次原生构建的源副本、C、binary 及辅助产物运行后全部复验，避免同名头遮蔽或工件在执行中变化。见 `compiler/validation/test-summary-2026-11-23.json`。
+- `tools/ci/selfhost_sanitize.py` 保留原 126 个生成程序门；新增 `selfhost_compiler_sanitize.py` 只额外 GCC 编译一次实际 stage2 C，随后执行自编译、335 checks、126 emits 与 8 个坏输入压力用例。当前 stage2 C 与 runtime 复制到全新构建目录并逐字节核对，防止同目录同名头遮蔽已绑定 runtime。
+- 独立 GCC 14.2 本机验证通过，详细范围及来源绑定见 `compiler/validation/stage2-sanitizer-2026-11-23.json`；正常编译器退出有分配检查，首错 `os.exit` 路径不声称泄漏检查。LSan、TSan 和其他平台 sanitizer 不在本批范围。
+- 已把应用验收接入 Linux x86-64、Windows x86-64、macOS arm64 原生 CI；本批 CI 尚待推送后运行。最终结果与回执索引在 CI 完成后补充。
 
 ## 历史批次（已移出）
 

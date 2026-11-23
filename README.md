@@ -2,20 +2,21 @@
 
 Yavo is a systems-language prototype for coding agents: ownership and deterministic destruction without a tracing GC, a Rust frontend, a C17 backend, and a pinned `zig cc` toolchain. The main P0–P3 language paths are implemented; **full v1 acceptance and lower agent delivery cost than Rust remain unproven**.
 
-**Current development goal (2026-11-23): self-hosting.** The
-[Yavo-written subset compiler](selfhost/README.md) implements parsing, checking
-and C generation for independent programs, including owned String values,
-vectors of Copy or owned elements, nested structs and payload-free enums.
-It now accepts byte values and literals, contextual integer expressions,
-checked int/byte conversion, single-byte String/str indexing and Vec[byte].
-Seven original lexer helper functions execute with an independent harness,
-in addition to the original diagnostic and current AST-model sources with
-appended workloads for diagnostics, owned storage and content traversal.
-The next increment is expression-local text slicing and two more original
-function fragments. Full self-compilation is pending. The
-[roadmap](docs/self-hosting.md) separates the first subset,
-stage0 → stage1 → stage2 → stage3 bootstrap, replacement of the Rust frontend,
-and practical acceptance using non-compiler applications.
+**Bootstrap-subset self-hosting is complete (2026-11-23).** The
+[Yavo-written compiler](selfhost/README.md) compiles its own complete source
+through stage1 → stage2 → stage3, with byte-identical generated C and matching
+stage2/stage3 binaries on each native platform. [CI run 45150424099](https://github.com/msly/yavo/actions/runs/45150424099)
+passed all six jobs at `4739ffc`, including Linux x86-64, Windows x86-64 and
+macOS arm64. The [native confirmation index](compiler/validation/selfhost-fixed-point-native-2026-11-23.json)
+preserves those results separately from the original local fixed-point receipt.
+
+**Current goal: practical CLI delivery and gradual replacement of the Rust
+frontend.** Rust stage0 remains the daily compiler and supports substantially
+more of the language. The [roadmap](docs/self-hosting.md) keeps SH-3 compiler
+replacement and SH-4 non-compiler application acceptance separate from the
+completed SH-2 fixed point. The first application is
+[yavo-test-summary](examples/test-summary/README.md), a verifier for existing
+experiment logs; it uses stage0 rather than waiting for selfhost feature parity.
 
 The specification starts from **v0.5**, with dated revisions in [docs/decisions.md](docs/decisions.md). Historical revisions remain unchanged under `history/v0.x/` and Git tags `v0.1` through `v0.5`.
 
@@ -235,8 +236,8 @@ and [module/thread audit](experiments/coldstart-2026-11-22-r5/evidence/manual-re
 
 ## Next work and acceptance gates
 
-1. Expand the [selfhost frontend](selfhost/README.md) according to its own source requirements: aggregate types and fields, String/Vec ownership and borrowing, results, modules and the remaining required syntax. Keep external positive/negative tests and repair concrete stage0 blockers.
-2. Complete the [SH-2 bootstrap](docs/self-hosting.md): stage1 compiles the Yavo compiler sources into stage2, stage2 produces stage3, and both compile independent programs consistently. Keep the locked C runtime/Zig backend; no hidden Rust frontend fallback.
+1. Validate the first non-compiler CLI with stage0, independent input/output oracles, resource checks and native Linux/Windows/macOS execution. Record actual compile/repair attempts and concrete language/library blockers.
+2. Preserve the completed [SH-2 fixed point](docs/self-hosting.md) as a regression gate and validate the stage2 compiler itself with independent ASan/UBSan. Expand selfhost in order: Result/try, Optional/pop, for, formatting and source modules; use each addition in the compiler itself and reestablish the fixed point.
 3. Complete SH-3 before making it the default compiler, and validate at least three non-compiler CLI projects for SH-4. Preserve frozen conformance, native platform checks, diagnostics and resource validation.
 4. Resume the qualified [per-request executor](tools/agent_eval/README.md), [prepared document experiment](experiments/docs-ab-2026-11-22-r6/README.md), 60-task pilot and formal cost study as later product evidence. Live API qualification is still **blocked**, with **0 round-six participant sessions**; it no longer blocks compiler development.
 5. Remaining v1 functionality includes user test blocks and `yavo test`, local/Git dependencies and a lockfile, FFI/unsafe/audit, general closures/higher-order parameters, public movable Join and `spawn inout`. Prioritize these only when required by the declared application scope or a concrete bootstrap blocker.
