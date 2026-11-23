@@ -9,7 +9,19 @@ artifact actions are pinned to reviewed full commits; workflow permissions are
 read-only. Debug and Release are sequential within each job because the existing
 test runners share temporary paths.
 
-The current Copy-vector validation is
+The current owned-vector validation is
+[45116399319](https://github.com/msly/yavo/actions/runs/45116399319) at
+`c7be68216129dc9f1dad5aad668e2f1382142c1d`.
+**All six jobs passed.** The
+[owned-vector receipt](../../compiler/validation/selfhost-owned-vec-2026-11-23.json)
+records successful selfhost steps on all three native platforms and
+**90/90 programs plus 3/3 capability probes** in the Linux frontend ASan/UBSan
+step. The downloaded native Linux archive matched GitHub's size/SHA-256;
+its three original receipts and actual source/C/frontend/program/output bytes
+were independently checked against the fixed oracles. The other five archives
+have metadata checks only.
+
+The preceding Copy-vector validation is
 [45103511821](https://github.com/msly/yavo/actions/runs/45103511821) at
 `7881db94f1509baa317d9bf84fae2ae28f402a80`: **all six jobs passed**.
 The [Vec receipt](../../compiler/validation/selfhost-vec-2026-11-23.json)
@@ -50,16 +62,17 @@ scenarios remain excluded because the current conformance runner explicitly
 requires Linux x86_64 for those scenarios.
 
 All native jobs run `selfhost/bootstrap.py`: the Yavo-written frontend is built
-by stage0, then independently checks/emits C for 242 fixed cases. The 78 executable
+by stage0, then independently checks/emits C for 263 fixed cases. The 90 executable
 inputs run in both C modes against fixed oracles and a Rust differential
-reference. The original diagnostic source is verified as an unchanged prefix
-of an executable component test. This remains a subset gate, not stage2/stage3
+reference. The original diagnostic and AST-model sources are verified as unchanged
+prefixes of executable component tests. The model workload constructs owned AST
+storage; borrowed element traversal is the next increment. This remains a subset gate, not stage2/stage3
 self-compilation.
 
 The Linux native job additionally runs `selfhost_sanitize.py`. It verifies the
 bootstrap receipt, manifest, source identities and the candidate frontend's
 actual repeated C outputs before reusing the independent GCC sanitizer runner.
-All 78 programs and clean/UAF/signed-overflow capability probes are mandatory.
+All 90 programs and clean/UAF/signed-overflow capability probes are mandatory.
 C is not regenerated through the Rust frontend. This step is separate from
 the existing P0 sanitizer job. LSan is disabled; normal exits use YV_ALLOC_CHECK.
 

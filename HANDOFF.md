@@ -1,8 +1,10 @@
-# Yavo 交接文档（2026-11-23，第二十三批：Copy Vec 与 AST 存储前置）
+# Yavo 交接文档（2026-11-23，第二十四批：拥有元素 Vec 与原样 AST 模型）
 
-给下一个会话：先读第 1、2、10、28 节及 docs/self-hosting.md、selfhost/README.md 再开工。当前主线是自举，第 28 节记录 Copy Vec、整体进度与下一步 AST 拥有存储，第 27 节保留 String / Failure 所有权闭环，第 26 节保留 Copy 聚合类型，第 25 节保留第一批实现。第 24 节是第十九批运行时 PCH 构建优化；第 23 节是第十八批第六轮准备，真实计量资格仍未通过、受试会话为 0；第 22 节保留已完成的第五轮实验。第 21 节是第十六批三平台 CI；第 20 节是第十四、十五批语言修订与第四轮；第 19 节是第三轮；第 18 节是构建缓存。第六到第十一批原始记录与完整 v1 清单在 `history/handoff-batches-2026-11-19-to-21.md`。
+给下一个会话：先读第 1、2、10、29 节及 docs/self-hosting.md、selfhost/README.md 再开工。当前主线是自举，第 29 节记录拥有元素 Vec、原样 AST 模型与下一步只读遍历，第 28 节保留 Copy Vec，第 27 节保留 String / Failure 所有权闭环，第 26 节保留 Copy 聚合类型，第 25 节保留第一批实现。第 24 节是第十九批运行时 PCH 构建优化；第 23 节是第十八批第六轮准备，真实计量资格仍未通过、受试会话为 0；第 22 节保留已完成的第五轮实验。第 21 节是第十六批三平台 CI；第 20 节是第十四、十五批语言修订与第四轮；第 19 节是第三轮；第 18 节是构建缓存。第六到第十一批原始记录与完整 v1 清单在 `history/handoff-batches-2026-11-19-to-21.md`。
 
 ## 1. 一句话状态
+
+**第二十四批完成拥有元素 Vec 与原样 AST 存储。** 新前端支持 Vec[String] 和元素含 String/Vec 的拥有结构，构造与 push 消费元素，递归 clone/drop 保持独立拥有权；间接递归类型由完整布局与前置 helper 声明处理。原样 model.yv 的 **1,581 字节未改**，追加入口构造 Program 四类非空向量及内部数据，覆盖字段 push、移动、返回、重赋值与资源清理；原样 diagnostic 的 438 字节验收继续保留。实现提交 `c7be68216129dc9f1dad5aad668e2f1382142c1d`。本机总结果与 CI 状态见第 29.2 节；当前仍 `self_hosted=false`。本批只验证 AST 存储长度与资源管理，尚未读取拥有元素内容。下一步是非 Copy 索引的表达式内只读借用、字段投影、普通只读实参与 String/Vec 显式 clone，以原样 model 的遍历摘要作为退出条件。
 
 **第二十三批完成 Copy 元素的 Vec。** 新前端支持 int/bool/无载荷枚举/Copy struct 的向量字面量、类型化空构造、len/push/reserve/clone、边界检查、索引读取与赋值、容器移动及析构；新增可增长的 token 元数据表示例。补齐 stage0 已有契约中的 Vec[T]{} 空构造分派并增加回归。实现提交 `7881db94f1509baa317d9bf84fae2ae28f402a80`；本机完整 Debug/Release 各 **145/0/1**，自举门 **242/242 cases、10/10 checks、0 skip**，78 个可执行输入的两模式固定预期与差分全部通过。原 181 个输入源码字节全部保留，61 个新例，1 个旧向量例原样迁为 run。当前 `self_hosted=false`，尚无 stage2/stage3。下一增量是 **拥有元素 Vec → 原样 model.yv 的 AST 构造与资源管理**，CI 及完整验收见第 28 节。
 
@@ -16,7 +18,7 @@
 
 规范以 v0.5 冻结版为基础，2026-11-21 按第三轮实验修订了 V2（两阶段借用）、K1（`String`/`str` 比较），新增 V6a（字段默认值）、V14（P-STACK），见 `docs/decisions.md` 第六节；冻结测试包 `yavo-tests/` 不改。Rust 编译器与 C 运行时覆盖 P0 链路及 P1—P3 的主要功能：结构体、枚举、`T ! E`、`match`、`String`/`Vec`/`Map`/`Set`、切片、移动与析构、视图与 `of`、`&T`/`&inout T`、`?T`、方法、`Drop`、元组、不逃逸闭包、`Eq`/`Ord`、`Box`、接口、泛型、浮点；并发（`Rc`/`Arc`/`Mutex`/`with`/`scope`/`spawn`/`Channel`/`Send`/`Sync`）；Heap/Deque、`Arena[T]`/`Id[T]`、源文件模块；`yavo fix`/`allocations`/`verify`；后端构建缓存；六个目标的交叉编译。第十五批补入 V2a（元素上的修改方法），见 `docs/decisions.md` 第七节。**P0—P3 主体功能已实现，完整 v1 尚未验收，P4 仍为小规模试验。** 三平台 CI 已落地；Windows/macOS 为明确选定的原生套件。完整 v1 的工具/语言缺口、Agent 成本和正式性能门尚未闭合。各批次细节见第 4 节和 `history/`。
 规范一致性：**129 项中通过 124、判错 0、不支持 3、未运行 0、被新决定取代 2**（T-V1、T-GF2 断言旧 V2，登记在 `compiler/tests/conformance_superseded.txt`；不支持的 3 项需要锁定工具链无法链接的 ASan 运行时）。该统计只表示既有用例覆盖，不是完整 v1 完成比例。
-**2026-11-22 用户已授权推送 `msly/yavo` 并使用 GitHub CI。** 以下保留第十八批 `073003d` 六项任务通过的历史证据；最新自举 CI 见第 28 节。历史 [run 45002067581](https://github.com/msly/yavo/actions/runs/45002067581) 同时覆盖三平台、独立 ASan/UBSan、第五轮证据审计及第六轮准备检查；六份产物均已下载并核对内容、字节数与 SHA-256，回执在 [github-ci-agent-eval-2026-11-22.json](compiler/validation/github-ci-agent-eval-2026-11-22.json)。Linux 另有 12 项文档程序/诊断检查通过。第 21、22 节保留前两批 CI 历史；旧“暂不推送”约定已被本次授权取代。
+**2026-11-22 用户已授权推送 `msly/yavo` 并使用 GitHub CI。** 以下保留第十八批 `073003d` 六项任务通过的历史证据；最新自举 CI 见第 29 节。历史 [run 45002067581](https://github.com/msly/yavo/actions/runs/45002067581) 同时覆盖三平台、独立 ASan/UBSan、第五轮证据审计及第六轮准备检查；六份产物均已下载并核对内容、字节数与 SHA-256，回执在 [github-ci-agent-eval-2026-11-22.json](compiler/validation/github-ci-agent-eval-2026-11-22.json)。Linux 另有 12 项文档程序/诊断检查通过。第 21、22 节保留前两批 CI 历史；旧“暂不推送”约定已被本次授权取代。
 本地测试基准 `b3c27a6`：第十五批完整单条命令 Release **129 通过 / 0 失败 / 1 忽略**、Debug **129/0/1**；这是 Cargo 测试函数数，和上面的 129 项规范用例是不同计数单位。忽略的是旧 P0 探索性报告，当前 conformance 套件会执行。第十四批 `1af1f69` 为 123/0/1，新增 6 项为 `index_assignment.rs`；六个交叉目标能构建含 P-STACK 运行时的程序，最新原生 CI 覆盖 Linux x86-64 全套与 Windows x86-64/macOS arm64 选定套件。
 **最新已完成 agent 实验（第五轮，第 22 节）**：12 份新规格，4 个不继承父会话的独立会话，每语言 2 次；Yavo、Rust 均 **24/24 首编与完整题目要求通过**，包括公开、隐藏用例及模块/线程结构。48 份交付的首稿与终稿完全相同，0 次修复；96 个首/终稿快照合计 1,344 次重放全部通过。Yavo/Rust 的受控 lab 操作为 138/132（1.0455 倍），端到端时间为 671.2876/557.0373 秒（1.2051 倍）；多出的 6 次操作全是两批各 3 次速查卡读取。token、精确模型 ID、采样参数缺失并保留 `null`，正式成本门仍 blocked。三题是旧题型的新规则，模型配置也不同于历史 Sonnet，不能将跨轮首编提升归因于编译器修改。第四轮原始结果与 T10 前导零失败保留在第 20 节。
 
@@ -202,7 +204,7 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 ## 10. 下一个会话的第一步
 
 1. 先检查 Git 状态和最新提交，读 [自举路线](docs/self-hosting.md) 和 [当前前端范围](selfhost/README.md)。`selfhost/bootstrap.py` 是子集验收入口；不能把 SH-1 通过写成完成自举。环境见第 2 节。
-2. **下一步完成 AST 拥有存储**：Copy Vec 已通过验收。支持 Vec[String] 与元素含 String/Vec 的拥有结构，覆盖元素构造/push 消费、递归 drop/clone、整容器移动/返回/重赋值；将原样 model.yv 作为完整前缀，仅追加独立入口与辅助函数，构造 Program 的四类非空向量并验证资源释放。该组件只含声明，不要求先补 inout 或借用索引。非 Copy 元素的索引与遍历另设下一门，必须保持借用语义；随后按 lexer/parser/types/codegen/main 的实际依赖接入参数模式、字节文本、optional/result 和模块。详见第 28 节及 docs/self-hosting.md。
+2. **下一步完成原样 AST 的只读遍历**：拥有元素 Vec 与原样 model 存储已实现。支持非 Copy 索引的表达式内只读访问、连续字段投影、普通只读实参及 String/Vec 显式 clone；原样 model 加遍历入口读取四类 Program 向量与内部 Vec，计算独立固定摘要。必须区分索引所得 &T、拥有字段和独立 owner，禁止浅复制后登记 owner 或隐式 deep clone。Copy 读取/len/clone 后及时释放该次根依赖，普通调用的借用实参保留到调用完成。持续 let e = v[i]、拥有元素写入/修改方法、显式引用/inout/sink/take、借用返回和切片留待后继。退出条件见第 29.5 节及 docs/self-hosting.md。
 3. **完成 SH-2 闭环**：Rust stage0 构建 stage1；stage1 编译全部 Yavo 编译器源码生成 stage2；stage2 生成 stage3。后两代对固定输入的 C 以及独立程序行为须一致，保留源码/工具链/命令身份。允许 Python 驱动和锁定 Zig 后端，禁止把未实现部分交回 Rust 前端。
 4. **实用验收单独执行**：逐步完成至少三个非编译器 CLI 项目，覆盖结构化文本、数据统计、多文件索引；再验证诊断、失败路径、资源和跨平台。只有自举不足以验收这些能力。SH-3 覆盖旧编译器后才接替默认入口。
 5. 保持冻结 129 项规格、Debug/Release 和三平台原生回归。不要同时跑两条 cargo test：现有测试共用临时目录。Cargo 退出 0 外须核对 conformance wrong/not_run。新 fs_create_new/selfhost_blockers 已加入 Windows/macOS 显式选择。
@@ -573,3 +575,52 @@ token、精确服务模型 ID 和 sampling 无可核验来源，均为 `null`；
 **下一步退出条件：原样 model.yv 的 AST 拥有存储与生命周期。** model 当前只有声明；Program 的 Expression/Statement/Function/TypeDecl 四类元素因内部 Vec 字段而 owned。实现拥有元素 Vec 的 push 消费、递归析构与独立 clone、整容器移动/返回/重赋值，并以原样源前缀加入口构造四类非空向量。加入 Vec[String] 与含 String 的 Token 型结构作为通用路径检查；Debug/Release、差分、分配检查及独立 sanitizer 都通过。该验收可以只读取长度，AST 借用索引与遍历随后单列，禁止隐式深复制冒充借用语义。
 
 后续按真实依赖推进 lexer 的字节文本/错误传播/参数模式与模块，再扩 parser/types 的拥有元素位置与遍历，补 codegen 剩余循环、格式化、join 等形式，接 main 的参数切片与文件接口。输入子集覆盖全编译器后，在独立目录执行 stage1 → stage2 → stage3 并比较生成 C 与外部程序结果。每个增量完成后更新整体状态与下一步退出条件。
+
+## 29. 第二十四批：拥有元素 Vec 与原样 AST 模型（2026-11-23）
+
+### 29.1 实现范围与所有权语义
+
+- 新前端允许 `Vec[String]` 和元素含 String/Vec 的拥有结构，包括 `Node { children: Vec[Node] }` 这样的间接递归。类型布局仍只沿按值结构依赖排序；全部布局完成后声明所有相关 drop/clone helper，再生成定义，避免 Vec 元素依赖造成循环声明问题。
+- 向量字面量和 push 消费拥有元素，转移后清零来源；普通参数继续只读借用。容器与包含容器的结构支持本地移动、返回、重赋值及作用域/正常控制流退出清理。
+- Vec.clone 对 Copy 元素复制，对 String 和拥有结构递归生成独立资源；结构 helper 递归复制拥有字段。Vec 按已初始化的 len 升序析构元素，结构字段按声明逆序析构。clone 每完成一个元素才增加结果 len；字面量临时值最终记录准确的元素析构类型。用户结构直接调用 `.clone()` 仍不受支持。
+- 原样 `selfhost/model.yv` 的 **1,581 字节**保持不变，SHA-256 为 `15e075cc0126ecbbefa922dc1e24ea806986ed1625d9d4eb6387ea8cde1c848e`。仅追加 `selfhost/tests/run/model_original_source.yv` 中的辅助函数与入口；合成输入 SHA-256 为 `fdba5b09b90e45aa0cba055ac9df6f4420b2bfc4fbffa1d3b3ebae3b5fc603e1`。
+- model 工作负载构造四类非空 Program 向量：Expression、Statement、Function、TypeDecl；填充 args/names、body/otherwise、params、fields/variants，并实际向 Program 字段 push。通过 `Vec[Program].clone()`、移动、返回、重赋值及跨作用域清理验证拥有存储。**本批固定输出验证长度与存储结果，未读取拥有元素内容，也未完成 AST 遍历。**
+- 原样 diagnostic 的 **438 字节**组件继续保留；新增 `selfhost/examples/owned_token_store.yv` 与对应 fixture 字节一致。Rust 前端、运行时、工具链锁、Cargo 锁和冻结规格未在本批修改。
+
+### 29.2 验收身份与结果
+
+- [本轮汇总](compiler/validation/selfhost-owned-vec-2026-11-23.json)绑定实现提交 `c7be68216129dc9f1dad5aad668e2f1382142c1d`。本轮验收规模为 **263 cases、90 个可执行输入、10 项辅助检查**；可执行输入覆盖 Debug/Release 固定输出、退出码/panic 分类、stage0 差分、重复生成 C 与正常退出资源检查。panic 用例不作为栈展开或析构完整性的证明。
+- 原 **242 个输入源码字节全部保留，241 个旧 manifest 项不变**；旧 `unsupported_vec_owned_struct_element` 原样迁为 `owned_vec_struct_declaration`，新增 **21 个用例**。promotion 的原始来源、源码身份与分类变化单独记录。
+- 本机串行完整验证驱动退出码已确认为 **0**；各套件总结果与最终内容复核：**263/263 cases、10/10 checks、0 skip**：74 run、16 panic、143 reject、23 stage0 接受而新前端未实现、7 两侧均 U0001。90 个可执行输入通过两前端的 Debug/Release 固定预期与差分；360 个对应二进制已重算身份。完整 Rust Debug/Release 各 **145 passed、0 failed、1 ignored**，各 19 个测试组；冻结 129 项保持 124 pass、3 unsupported、2 superseded、0 wrong/not_run。最终候选由冻结源码重新构建，完整验证期间生产输入哈希稳定。
+- 原生 CI、独立 sanitizer 与归档核验结果：[CI 45116399319](https://github.com/msly/yavo/actions/runs/45116399319) 在实现提交上 **6/6 jobs 成功**，Linux x86-64、Windows x86-64、macOS arm64 的 selfhost 步骤全部成功。Linux native 的新前端生成 C 通过独立 GCC 13.3 ASan/UBSan：**90/90 程序、3/3 能力探针、0 failed/not_run**；故障探针分别捕获 heap-use-after-free 和 signed integer overflow。既有独立 Rust/P0 sanitizer job 是另一验收路径。
+- 原生 Linux 归档 ID **14792570849**，**243,500,405 字节**，SHA-256 `95e6bb2f93e9416234d73ddf596241172c3a321c5af929f43ae8004fb4b0e7bf`；下载后与 GitHub 大小/哈希一致。独立核验三份原始回执、90 组实际源码/C/程序/输出、bootstrap 360 次记录执行的固定预期、两个原样组件合成输入，以及 frontend 与 runtime 实际字节。stage0/Zig/GCC 仅核对回执身份链；其余五份归档只验证元数据。LSan 关闭，正常退出使用 YV_ALLOC_CHECK；未运行 TSan。
+- 开发阶段的定向探针另行验证递归 helper、clone 后的根释放、receiver 保护、临时向量清理和析构次序；其候选二进制身份独立，不替代本轮最终源码验收。
+
+### 29.3 明确保留的边界
+
+拥有元素的索引读取、元素字段读取和索引位置修改仍明确报 U0001；不把缓冲区中的拥有描述符浅复制为新 owner。String/Vec 的内部递归复制已实现，用户结构方法、持久局部借用、显式引用/inout/sink/take、借用返回、一般嵌套 Vec 类型、str 元素、切片及 pop 所需 optional 均按现有边界处理。
+
+既有 **4 条 known_gap** 保留：while 条件消费现有 owner、借用比较操作数后转移同根、普通索引求值期间消费容器根、reserve 参数求值期间转移接收者根。对应 manifest ID 为 `unsupported_loop_condition_move`、`unsupported_comparison_borrow_move`、`unsupported_vec_index_receiver_move`、`unsupported_vec_reserve_receiver_move`；stage0 的异常行为不作为固定预期。本轮没有通过放宽这些边界完成拥有存储。
+
+### 29.4 整体进度
+
+| 阶段 | 当前结果 | 尚需完成 |
+| --- | --- | --- |
+| SH-1 子集编译器 | 标量、函数/控制流、Copy 聚合、String、Copy Vec 和拥有元素 Vec 存储；外部正负程序与资源门持续执行 | 基础阶段已达到，继续按编译器源码依赖扩大输入子集 |
+| SH-2 最小自举闭环 | 原样 diagnostic 与 model 资源组件已接入；`self_hosted=false`，没有 stage2/stage3 | 元素借用与遍历、修改与参数模式、字节文本、结果/optional、模块和入口依赖；最后执行完整源码的 stage1 → stage2 → stage3 固定点 |
+| SH-3 主编译器接替 | 默认入口仍是 Rust stage0 | 既有语言与诊断覆盖、原生平台和回归门通过后接替日常入口 |
+| SH-4 声明范围内的实用交付 | 面向本地 CLI 与批处理，独立于自举验收 | 三个非编译器 CLI、真实失败路径、资源与平台门，以及既定性能和成本目标 |
+
+原样组件数量、用例数量和实现行数不换算为自举完成百分比。model 存储组件扩大了已验证的数据结构范围；完整编译器仍不能作为新前端的可接受输入。
+
+### 29.5 下一步与退出条件
+
+**下一最小增量：非 Copy 索引的表达式内只读借用。** 范围限定为元素读取、连续字段投影、普通只读实参，以及 String/Vec 的 len 和显式 clone；直接结构 clone 不在范围内。
+
+1. 保留 model 原始字节，以追加入口遍历 Program 的四类非空向量及其内部 Vec，读取标量/Copy 字段，计算事先固定的计数与校验摘要；不能只复用本批长度输出代替内容遍历。
+2. 索引产生的借用、拥有字段和独立 owner 在检查与生成代码中保持区分。借用元素可传给普通只读参数；显式 String/Vec clone 的结果可独立移动和释放，不能隐式深复制索引结果。
+3. 容器和临时 owner 在整个表达式及调用需要的范围内存活；借用实参保持到调用完成。Copy 读取、len 和 clone 完成后释放相应根依赖，合法后续移动可用；仍被借用时，移动、push/reserve 和同根冲突必须受保护。
+4. 验收覆盖嵌套字段、临时容器、普通参数、同次调用的求值顺序、边界失败及借用冲突；固定预期、stage0 差分、Debug/Release 和资源检查均通过，既有存储用例和 known_gap 边界继续保留。
+5. 持久 `let e = v[i]`、拥有元素赋值/字段修改/修改方法、显式引用/inout/sink/take、借用返回和切片留给后继。parser/types/codegen 原源码仍使用这些能力，完成表达式内遍历不等于这些组件已原样接入。
+
+后续接入元素内 `try` 时，应在元素类型确定后立即更新 Vec 字面量临时值的类型，使后续元素提前退出时按正确类型清理已初始化部分。当前该 `try` 路径仍在输入子集外；这是后继结果传播的实现依赖，不是本轮失败。

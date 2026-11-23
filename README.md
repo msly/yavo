@@ -5,9 +5,11 @@ Yavo is a systems-language prototype for coding agents: ownership and determinis
 **Current development goal (2026-11-23): self-hosting.** The new
 [Yavo-written subset compiler](selfhost/README.md) implements parsing, checking
 and C generation for independent programs, including owned String values,
-Copy-element vectors, nested structs and payload-free enums. It compiles the
-original diagnostic component with an appended test entry point; an expandable
-token metadata table now exercises vector storage. Full self-compilation is pending. The [roadmap](docs/self-hosting.md) separates the first subset,
+vectors of Copy or owned elements, nested structs and payload-free enums.
+It compiles the original diagnostic and AST-model components with appended
+test entry points. The model workload constructs and manages nonempty owned
+AST storage; borrowing and traversing its elements is the next increment.
+Full self-compilation is pending. The [roadmap](docs/self-hosting.md) separates the first subset,
 stage0 → stage1 → stage2 → stage3 bootstrap, replacement of the Rust frontend,
 and practical acceptance using non-compiler applications.
 
@@ -33,7 +35,7 @@ Recent changes implement index assignment, two-phase variable/field receivers, S
 
 | Check | Recorded local result | Scope |
 | --- | --- | --- |
-| Release suite | **145 passed, 0 failed, 1 ignored** | Current Copy-vector increment, all 19 Cargo test groups; includes the typed-empty-vector constructor regression |
+| Release suite | **145 passed, 0 failed, 1 ignored** | Current owned-vector increment, all 19 Cargo test groups; Rust sources are unchanged |
 | Debug suite | **145 passed, 0 failed, 1 ignored** | Same source, all 19 groups, independent completed local log |
 | Frozen specification | **124 pass, 0 wrong, 3 unsupported, 0 not_run, 2 superseded** | 129 frozen cases; a different counting unit from Cargo test functions |
 | Cross-compilation | Six target formats/architectures build | Linux (static musl), Windows and macOS on x86-64/aarch64; native CI now covers Linux x86-64 plus the Windows x86-64/macOS arm64 selections below |
@@ -45,7 +47,21 @@ Source modules support top-level exports, per-file imports, cyclic imports and o
 
 ### GitHub CI
 
-The current Copy-vector increment passes **242/242 selfhost cases and
+The current owned-vector increment passed **263/263 selfhost cases and
+10/10 auxiliary checks**, with all 90 executable inputs passing Debug/Release
+fixed oracles, Rust differential checks and repeated-C comparisons.
+[CI run 45116399319](https://github.com/msly/yavo/actions/runs/45116399319) passed **six of six jobs** at `c7be682`,
+including the selfhost gate on Linux, Windows and macOS. The native Linux
+gate passed **90/90 Yavo-generated C programs with GCC 13.3 ASan/UBSan and
+3/3 capability probes**.
+The [owned-vector receipt](compiler/validation/selfhost-owned-vec-2026-11-23.json)
+binds the source, complete local Rust suites, both unchanged original
+components and CI results. The native Linux archive was downloaded and matched
+GitHub's size/SHA-256; actual source, C, frontend/program binaries and outputs
+were independently verified. The other five archives have metadata checks only.
+LSan is disabled; normal exits use YV_ALLOC_CHECK.
+
+The preceding Copy-vector increment passed **242/242 selfhost cases and
 10/10 auxiliary checks**, with all 78 executable inputs passing Debug/Release
 fixed oracles, Rust differential checks and repeated-C comparisons.
 [CI run 45103511821](https://github.com/msly/yavo/actions/runs/45103511821)
@@ -58,7 +74,6 @@ The native Linux archive was downloaded and matched GitHub's size/SHA-256;
 actual source, C, frontend/program binaries and output bytes were independently
 verified against the bootstrap receipt and fixed oracles. Other five archives
 have metadata checks only. LSan is disabled; normal exits use YV_ALLOC_CHECK.
-The next component target is the original model.yv with owned AST storage.
 
 The String ownership increment passes **181/181 local selfhost cases and
 10/10 auxiliary checks**. All 55 executable inputs pass Debug/Release fixed
