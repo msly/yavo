@@ -1,0 +1,143 @@
+// expect-error: E0013 30:1
+// expect-error: E0013 34:1
+// expect-error: E0013 38:1
+// expect-error: E0013 42:1
+// expect-error: E0013 46:1
+// expect-error: E0013 50:1
+// expect-error: E0013 54:1
+// expect-error: E0013 60:1
+// expect-error: E0013 64:1
+// expect-error: E0013 69:1
+// expect-error: E0013 73:1
+// expect-error: E0013 82:1
+// expect-error: E0013 86:1
+// expect-error: E0013 90:1
+// expect-error: E0013 94:1
+// expect-error: E0013 99:1
+// expect-error: E0013 103:1
+// expect-error: E0013 109:1
+// Catch exits remain visible through surrounding expression forms.
+// Each failing function can leave its loop without producing its return value.
+use std/fs
+
+struct Cell { value: int }
+fn number() -> int ! int { return err(7) }
+fn identity(value: int) -> int { return value }
+fn forward(value: int) -> int ! int { return ok(value) }
+
+fn missing_direct() -> int {
+    loop { let _n = number() catch _ { break } }
+}
+
+fn missing_argument() -> int {
+    loop { let _n = identity(number() catch _ { break }) }
+}
+
+fn missing_vector() -> int {
+    loop { let _items = [number() catch _ { break }] }
+}
+
+fn missing_structure() -> int {
+    loop { let _cell = Cell{value: number() catch _ { break }} }
+}
+
+fn missing_propagated() -> int ! int {
+    loop { let _n = try forward(number() catch _ { break }) }
+}
+
+fn missing_binary() -> int {
+    loop { let _n = 1 + (number() catch _ { break }) }
+}
+
+fn missing_returned() -> int {
+    loop { return number() catch _ { break } }
+}
+
+fn missing_condition() -> int {
+    loop {
+        if (number() catch _ { break }) == 0 { continue }
+    }
+}
+
+fn missing_tuple() -> int {
+    loop { let (_a, _b) = (1, number() catch _ { break }) }
+}
+
+fn missing_assignment_target() -> int {
+    var values = [0]
+    loop { values[number() catch _ { break }] = 1 }
+}
+
+fn missing_standard_error() -> int {
+    loop { let _text = fs.readText("missing-return-regression.yv") catch _ { break } }
+}
+
+fn missing_match_arm() -> int {
+    loop {
+        let _n = match some(1) {
+            some(_x) => number() catch _ { break }
+            none => 0
+        }
+    }
+}
+
+fn missing_interpolation() -> int {
+    loop { println("${number() catch _ { break }}") }
+}
+
+fn missing_catch_input() -> int {
+    loop { let _n = forward(number() catch _ { break }) catch _ { continue } }
+}
+
+fn missing_map_value() -> int {
+    loop { let _values = [0: number() catch _ { break }] }
+}
+
+fn missing_slice_bound() -> int {
+    let values = [0]
+    loop { let _view = values[0..(number() catch _ { break })] }
+}
+
+fn missing_field_base() -> int {
+    loop { let _n = Cell{value: number() catch _ { break }}.value }
+}
+
+fn missing_loop_input() -> int {
+    loop {
+        for _i in 0..(number() catch _ { break }) {}
+    }
+}
+
+// These breaks target an inner loop; the enclosing loop remains infinite.
+fn nested_loop_boundary() -> int {
+    loop {
+        loop { let _n = number() catch _ { break } }
+    }
+}
+fn nested_while_boundary() -> int {
+    loop {
+        while true { let _n = number() catch _ { break } }
+    }
+}
+fn nested_for_boundary() -> int {
+    loop {
+        for _i in 0..1 { let _n = number() catch _ { break } }
+    }
+}
+fn closure_boundary() -> int {
+    loop {
+        var values = [2, 1]
+        values.sortBy((a, b) => {
+            loop { let _n = number() catch _ { break } }
+            return a < b
+        })
+    }
+}
+fn continue_is_not_break() -> int {
+    loop { let _n = number() catch _ { continue } }
+}
+fn break_then_return() -> int {
+    loop { let _n = number() catch _ { break } }
+    return 9
+}
+fn main() {}

@@ -1,0 +1,324 @@
+{
+  "schema": "yavo-result-oracle-candidates/1",
+  "baseline": "aecd7c3",
+  "cases": [
+    {
+      "id": "result_forms",
+      "kind": "run",
+      "stdout": "1\n2\n3\n4\n5\n6\n7\n8\n9\nunit\n",
+      "file": "run/result_forms.yv"
+    },
+    {
+      "id": "result_owned_string",
+      "kind": "run",
+      "stdout": "value\nfailure\n",
+      "file": "run/result_owned_string.yv"
+    },
+    {
+      "id": "result_owned_vec",
+      "kind": "run",
+      "stdout": "2\none\ntwo\n2\nbad\ndetail\n",
+      "file": "run/result_owned_vec.yv"
+    },
+    {
+      "id": "result_owned_struct",
+      "kind": "run",
+      "stdout": "payload\nitem\nfailure\ntrace\n",
+      "file": "run/result_owned_struct.yv"
+    },
+    {
+      "id": "result_multilevel_try",
+      "kind": "run",
+      "stdout": "leaf\n2\nfailed\n",
+      "file": "run/result_multilevel_try.yv"
+    },
+    {
+      "id": "result_vec_partial_try",
+      "kind": "run",
+      "stdout": "LAEstop\n",
+      "file": "run/result_vec_partial_try.yv"
+    },
+    {
+      "id": "result_vec_struct_partial_try",
+      "kind": "run",
+      "stdout": "ABCDEstop\n",
+      "file": "run/result_vec_struct_partial_try.yv"
+    },
+    {
+      "id": "result_struct_partial_try",
+      "kind": "run",
+      "stdout": "CABEstop\n",
+      "file": "run/result_struct_partial_try.yv"
+    },
+    {
+      "id": "result_argument_try_order",
+      "kind": "run",
+      "stdout": "GABCcalled\n3\nGABstop\n",
+      "file": "run/result_argument_try_order.yv"
+    },
+    {
+      "id": "result_short_circuit_try",
+      "kind": "run",
+      "stdout": "false\ntrue\nAtrue\nBfalse\nEE\n",
+      "file": "run/result_short_circuit_try.yv"
+    },
+    {
+      "id": "result_catch_return",
+      "kind": "run",
+      "stdout": "failure\n9\n10\n",
+      "file": "run/result_catch_return.yv"
+    },
+    {
+      "id": "result_catch_loop",
+      "kind": "run",
+      "stdout": "skip\nok\nstop\n3\n",
+      "file": "run/result_catch_loop.yv"
+    },
+    {
+      "id": "result_try_loop_cleanup",
+      "kind": "run",
+      "stdout": "0\n1\nstop\n",
+      "file": "run/result_try_loop_cleanup.yv"
+    },
+    {
+      "id": "result_catch_discard_owned",
+      "kind": "run",
+      "stdout": "caught\nafter\n",
+      "file": "run/result_catch_discard_owned.yv"
+    },
+    {
+      "id": "result_unhandled_statement",
+      "kind": "reject",
+      "file": "reject/result_unhandled_statement.yv",
+      "diagnostic": "E0001",
+      "first_error": {
+        "code": "E0001",
+        "line": 2,
+        "column": 13
+      }
+    },
+    {
+      "id": "result_unhandled_value",
+      "kind": "reject",
+      "file": "reject/result_unhandled_value.yv",
+      "diagnostic": "E0001",
+      "first_error": {
+        "code": "E0001",
+        "line": 4,
+        "column": 13
+      }
+    },
+    {
+      "id": "result_try_outside",
+      "kind": "reject",
+      "file": "reject/result_try_outside.yv",
+      "diagnostic": "E0001",
+      "first_error": {
+        "code": "E0001",
+        "line": 2,
+        "column": 25
+      }
+    },
+    {
+      "id": "result_try_error_type",
+      "kind": "reject",
+      "file": "reject/result_try_error_type.yv",
+      "diagnostic": "E0001",
+      "first_error": {
+        "code": "E0001",
+        "line": 2,
+        "column": 36
+      }
+    },
+    {
+      "id": "result_success_type",
+      "kind": "reject",
+      "file": "reject/result_success_type.yv",
+      "diagnostic": "E0001",
+      "first_error": {
+        "code": "E0001",
+        "line": 1,
+        "column": 35
+      }
+    },
+    {
+      "id": "result_error_type",
+      "kind": "reject",
+      "file": "reject/result_error_type.yv",
+      "diagnostic": "E0001",
+      "first_error": {
+        "code": "E0001",
+        "line": 1,
+        "column": 39
+      }
+    },
+    {
+      "id": "result_err_inferred",
+      "kind": "reject",
+      "file": "reject/result_err_inferred.yv",
+      "diagnostic": "E0001",
+      "first_error": {
+        "code": "E0001",
+        "line": 1,
+        "column": 26
+      }
+    },
+    {
+      "id": "result_borrowed_try",
+      "kind": "reject",
+      "file": "reject/result_borrowed_try.yv",
+      "diagnostic": "E0401",
+      "first_error": {
+        "code": "E0401",
+        "line": 2,
+        "column": 16
+      }
+    },
+    {
+      "id": "result_borrowed_catch",
+      "kind": "reject",
+      "file": "reject/result_borrowed_catch.yv",
+      "diagnostic": "E0401",
+      "first_error": {
+        "code": "E0401",
+        "line": 2,
+        "column": 16
+      }
+    },
+    {
+      "id": "result_use_after_try",
+      "kind": "reject",
+      "file": "reject/result_use_after_try.yv",
+      "diagnostic": "E0402",
+      "first_error": {
+        "code": "E0402",
+        "line": 5,
+        "column": 22
+      }
+    },
+    {
+      "id": "result_use_after_catch",
+      "kind": "reject",
+      "file": "reject/result_use_after_catch.yv",
+      "diagnostic": "E0402",
+      "first_error": {
+        "code": "E0402",
+        "line": 5,
+        "column": 18
+      }
+    },
+    {
+      "id": "result_catch_falls_through",
+      "kind": "reject",
+      "file": "reject/result_catch_falls_through.yv",
+      "diagnostic": "E0601",
+      "first_error": {
+        "code": "E0601",
+        "line": 3,
+        "column": 32
+      }
+    },
+    {
+      "id": "result_catch_partial_termination",
+      "kind": "reject",
+      "file": "reject/result_catch_partial_termination.yv",
+      "diagnostic": "E0601",
+      "first_error": {
+        "code": "E0601",
+        "line": 3,
+        "column": 32
+      }
+    },
+    {
+      "id": "result_missing_return",
+      "kind": "reject",
+      "file": "reject/result_missing_return.yv",
+      "diagnostic": "E0013",
+      "first_error": {
+        "code": "E0013",
+        "line": 1,
+        "column": 27
+      }
+    },
+    {
+      "id": "result_nested_chain",
+      "kind": "reject",
+      "file": "reject/result_nested_chain.yv",
+      "diagnostic": "E0020",
+      "first_error": {
+        "code": "E0020",
+        "line": 1,
+        "column": 26
+      }
+    },
+    {
+      "id": "result_nested_parenthesized",
+      "kind": "reject",
+      "file": "reject/result_nested_parenthesized.yv",
+      "diagnostic": "E0020",
+      "first_error": {
+        "code": "E0020",
+        "line": 1,
+        "column": 16
+      }
+    },
+    {
+      "id": "unsupported_result_arrow_catch",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "reason": "This batch accepts terminating block catch handlers; arrow catch expressions remain outside the bootstrap subset.",
+      "file": "unsupported/unsupported_result_arrow_catch.yv"
+    },
+    {
+      "id": "unsupported_result_field",
+      "kind": "shared_unsupported",
+      "diagnostic": "U0001",
+      "reason": "Both stage0 and the bootstrap subset reject Result fields with U0001; user-function Result values do not extend field storage.",
+      "file": "unsupported/unsupported_result_field.yv"
+    },
+    {
+      "id": "unsupported_result_vec_element",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "reason": "User-function Result values are supported; Vec elements of Result type remain outside the bootstrap subset.",
+      "file": "unsupported/unsupported_result_vec_element.yv"
+    },
+    {
+      "id": "result_compare",
+      "kind": "reject",
+      "diagnostic": "E0501",
+      "file": "reject/result_compare.yv",
+      "first_error": {
+        "code": "E0501",
+        "line": 5,
+        "column": 12
+      }
+    },
+    {
+      "id": "result_catch_break_missing_return",
+      "kind": "reject",
+      "file": "reject/result_catch_break_missing_return.yv",
+      "diagnostic": "E0013",
+      "note": "A catch-handler break makes the non-unit function fall through. The old stage0 incorrectly accepted it; the fixed independent Rust checker rejects it. See the before/after oracle evidence.",
+      "first_error": {
+        "code": "E0013",
+        "line": 6,
+        "column": 1
+      }
+    },
+    {
+      "id": "unsupported_result_borrowed_view",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_result_borrowed_view.yv",
+      "diagnostic": "U0001",
+      "reason": "Implicit Result wrapping of a transient view into owned String requires borrow-lifetime tracking beyond this batch; the stage0-valid owner is not mutated."
+    },
+    {
+      "id": "unsupported_result_temporary_view",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_result_temporary_view.yv",
+      "diagnostic": "U0001",
+      "reason": "Explicit ok wrapping of a transient view into a temporary String remains outside the subset; stage0 consumes the view during the call and drops the owner after the call returns."
+    }
+  ]
+}

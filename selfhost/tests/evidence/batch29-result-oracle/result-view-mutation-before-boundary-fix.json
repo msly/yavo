@@ -1,0 +1,35 @@
+{
+  "schema": "yavo-result-mutation-review/1",
+  "note": "This invalid owner-mutation input is review evidence only, not a formal same-code fixture. It is checked but never compiled or executed.",
+  "source_sha256": "589d44617079d1476757b6c4c903a05b7efb3acc4217a489beefb49e95866ce8",
+  "source": "fn main() {\n    var owner = \"hello\".toString()\n    let stored: str ! int = owner[0..1]\n    owner.push(\"many many many many many many many many many many characters\")\n    let value = stored catch _ { return }\n    println(value)\n}\n",
+  "records": [
+    {
+      "tag": "stage0_debug_after_catch_break_fix",
+      "binary": "compiler/target/debug/yavo",
+      "binary_sha256": "ac2c0f2d03076747b98ba912285ddd3789fc866b0dfbf8ea2d180958ea744679",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/debug/yavo",
+        "check",
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-readonly-review/borrowed-result-view.yv",
+        "--json"
+      ],
+      "exit_code": 1,
+      "stdout": "{\"diagnostics\":[{\"code\":\"E0102\",\"column\":5,\"end_column\":10,\"end_line\":4,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-readonly-review/borrowed-result-view.yv\",\"fixes\":[],\"line\":4,\"message\":\"cannot modify `owner` while `stored` still points into it\",\"notes\":[\"`stored` is used again on line 5\"],\"primary\":{\"column\":5,\"end\":96,\"end_column\":10,\"end_line\":4,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-readonly-review/borrowed-result-view.yv\",\"line\":4,\"start\":91},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-readonly-review/borrowed-result-view.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"589d44617079d1476757b6c4c903a05b7efb3acc4217a489beefb49e95866ce8\",\"warning_count\":0}\n",
+      "stderr": ""
+    },
+    {
+      "tag": "stage1_attempt02_before_view_boundary_fix",
+      "binary": "compiler/target/ci/batch29-integration/attempt02/stage1",
+      "binary_sha256": "972d397e4069b492a918825301099f48f3e06046590a0c49433b8edb6201d503",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-integration/attempt02/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-readonly-review/borrowed-result-view.yv"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ]
+}

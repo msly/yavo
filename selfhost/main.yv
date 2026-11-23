@@ -7,13 +7,10 @@ fn usage() {
     os.exit(2)
 }
 
-fn compile(source: str, path: str) -> String {
-    let lexed = lex(source, path)
-    if lexed.failed {
-        report(path, lexed.line, lexed.column, lexed.code, lexed.message)
-    }
-    let program = parse(lexed.tokens)
-    return generate(program, lexed.tokens, path)
+fn compile(source: str, path: str) -> String ! Diagnostic {
+    let tokens = try lex(source, path)
+    let program = parse(tokens)
+    return ok(generate(program, tokens, path))
 }
 
 fn main() {
@@ -32,7 +29,10 @@ fn main() {
         eprintln("cannot read input")
         os.exit(3)
     }
-    let generated = compile(source, args[2])
+    let generated = compile(source, args[2]) catch diagnostic {
+        report(args[2], diagnostic.line, diagnostic.column, diagnostic.code, diagnostic.message)
+        os.exit(1)
+    }
     if emitMode {
         fs.writeNewText(args[4], generated) catch _ {
             eprintln("cannot write output")

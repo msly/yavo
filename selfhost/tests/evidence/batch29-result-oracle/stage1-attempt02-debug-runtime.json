@@ -1,0 +1,911 @@
+{
+  "schema": "yavo-result-stage1-runtime-oracle/1",
+  "stage1_snapshot": "batch29-integration/attempt02",
+  "profile": "Debug",
+  "inputs": {
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-integration/attempt02/stage1": "972d397e4069b492a918825301099f48f3e06046590a0c49433b8edb6201d503",
+    "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig": "58959f01285c05a74276f09327b551d42ed6006bf325a78dc661a024e314987b",
+    "/data1/workspace/github/workspace/yavo/compiler/runtime/yavo_rt.h": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/candidates.json": "4f23fbc188798228a9cfbafd3e116c59338f0000547cc973025d7bc92d07d43a",
+    "/data1/workspace/github/workspace/yavo/compiler/toolchain.lock": "a9bbe83e644b0e1cee19c8dba8b5157eaed3e9ddc71b96d8aab2b2d2bb15f53c",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_forms.yv": "12c1f69ffee422fcbe1a0047708ccbf2224ed6cb059509d2eff29fbda80ca18d",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_forms/source.yv": "12c1f69ffee422fcbe1a0047708ccbf2224ed6cb059509d2eff29fbda80ca18d",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_forms/yavo_rt.h": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_forms/program.c": "baee44e3477a07aa93e02773c99d4f0aa87e37dafbf0f875dad4ad1f027ce57f",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_forms/program": "7b1554d31b1beab8187ce7382d62f9656fb7dfee58e73010120432506d137e5d",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_owned_string.yv": "859f7dfc282c9488580b08f47ffb21c0f025deba86a52104d569ac735dcc283b",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_owned_string/source.yv": "859f7dfc282c9488580b08f47ffb21c0f025deba86a52104d569ac735dcc283b",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_owned_string/yavo_rt.h": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_owned_string/program.c": "2fd112969140a9d4bac9d72719224ec5f871814effa849f309866ee1ff173646",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_owned_string/program": "28cc6d433167425dcfdc0427aff6d394018c9b92ee045d6f681ecfa512586663",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_owned_vec.yv": "3cded6ba19416cf36bd1644f48a172f4fc54608ea2fb711dd23ecc0f4c8dca2d",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_owned_vec/source.yv": "3cded6ba19416cf36bd1644f48a172f4fc54608ea2fb711dd23ecc0f4c8dca2d",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_owned_vec/yavo_rt.h": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_owned_vec/program.c": "d39687cc04153b95d2fcf3dc1d4d9f5771bb4b2b799416df3db1b880be100e12",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_owned_vec/program": "f9cefa2703a140cdf9611be15ea6f60858f142636fd64b7c8b93e73d38124c82",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_owned_struct.yv": "527d973ef19484f5b5c50da49a7fb4ab3052f2f5446fe98303366cff1a2118b9",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_owned_struct/source.yv": "527d973ef19484f5b5c50da49a7fb4ab3052f2f5446fe98303366cff1a2118b9",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_owned_struct/yavo_rt.h": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_owned_struct/program.c": "f60c70e65fd8abf560a0d3a8c1ed6f7d5f633d907cc87dee37e91a89c6bc589e",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_owned_struct/program": "37af0d20d48924c4b2ca8124583613e37586b5cc98af0299537331e694a4c987",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_multilevel_try.yv": "18936cc9672cd63dbcd849b148a49f9577a4781d39c5492451f1b275aad4e6a2",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_multilevel_try/source.yv": "18936cc9672cd63dbcd849b148a49f9577a4781d39c5492451f1b275aad4e6a2",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_multilevel_try/yavo_rt.h": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_multilevel_try/program.c": "e7d6b6d89c519157b31d1318b6eaa3a2f8e44835e941681c090b6e336bcdbf42",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_multilevel_try/program": "8cdde4af5591ea33a4049061f3db1e1d7b35aa0fe65aabd8fbaa59b0c2c97f02",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_vec_partial_try.yv": "bf2fdbb4ca3796a54c57ee09b7ef8e3c2d37605716b5ae68eae667cf41d225a5",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_vec_partial_try/source.yv": "bf2fdbb4ca3796a54c57ee09b7ef8e3c2d37605716b5ae68eae667cf41d225a5",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_vec_partial_try/yavo_rt.h": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_vec_partial_try/program.c": "c9cb64418a22a87a522b018ff13b2df692b6a5c19b539855bc554fef4d13ae2b",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_vec_partial_try/program": "9a79fd230fe847e7ab965da85a6cfe29b31657d4024fbcf0d5105f6d973da67e",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_vec_struct_partial_try.yv": "08d6aa560329de21114177a76094b8394709fe10d7f7cf210c4e550cd6931202",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_vec_struct_partial_try/source.yv": "08d6aa560329de21114177a76094b8394709fe10d7f7cf210c4e550cd6931202",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_vec_struct_partial_try/yavo_rt.h": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_vec_struct_partial_try/program.c": "bf56c3ca7545ccb0c11ed01d3ee25ecff1978abcc352f05ccf4e43f1204408fc",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_vec_struct_partial_try/program": "09a6d486f57aba18246311c08f003682c6c6b9f1847b98f02cabff09a9f381b5",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_struct_partial_try.yv": "6c722c192e7a7fd777e99f925e68d5aa3675f6fc1cce70a41cc7267668302551",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_struct_partial_try/source.yv": "6c722c192e7a7fd777e99f925e68d5aa3675f6fc1cce70a41cc7267668302551",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_struct_partial_try/yavo_rt.h": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_struct_partial_try/program.c": "a5507ca7054f51b5479bd455bf0fe39f4c648b47ae569c0846b099942d28f1cb",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_struct_partial_try/program": "ad210266116c6aade86cacea610cdd721e49e581ce7c30cac0ab5b0903f69e4f",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_argument_try_order.yv": "b0c98b05a9610b095bfa57bccaac01e1c06eee2a3ebb7e1fceea49a9fe2c8398",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_argument_try_order/source.yv": "b0c98b05a9610b095bfa57bccaac01e1c06eee2a3ebb7e1fceea49a9fe2c8398",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_argument_try_order/yavo_rt.h": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_argument_try_order/program.c": "0e6841a53b4c354327de1db88be27673339200c291ddd6061ece12ae0a9f231b",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_argument_try_order/program": "f2e25de6accfe465c5a66cc9b2b7314a387020a37e4164f0e2a92a2e7600acb1",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_short_circuit_try.yv": "251808b950dd7225ebff7fc1a8237cc50514be9f26ee1ff660d10c4d4ac1e4e0",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_short_circuit_try/source.yv": "251808b950dd7225ebff7fc1a8237cc50514be9f26ee1ff660d10c4d4ac1e4e0",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_short_circuit_try/yavo_rt.h": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_short_circuit_try/program.c": "afa6d992d003c1920142ceea41a54f6044c2e2a9e88493e72554956b8effcc1d",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_short_circuit_try/program": "60a24c1dab4de015fd5ffeafc4359f50424576346a78ae509f080b8c751da59c",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_catch_return.yv": "8785a473993f1cc9e5828a6e651c98eb2a7dfd93856827e2728629ed6d49aba5",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_catch_return/source.yv": "8785a473993f1cc9e5828a6e651c98eb2a7dfd93856827e2728629ed6d49aba5",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_catch_return/yavo_rt.h": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_catch_return/program.c": "6dca78e2fa2269e8481920116497007e7f9289aeab7a637b5e01ef43ce882153",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_catch_return/program": "2d61890943c24ccfe318d164fd0d71bc9fac71cae35a85b369d8969ec9c2b6b4",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_catch_loop.yv": "38995bb3123abcf5980a13c9745d32e0d9604a897d6066bb154760acc7a26549",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_catch_loop/source.yv": "38995bb3123abcf5980a13c9745d32e0d9604a897d6066bb154760acc7a26549",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_catch_loop/yavo_rt.h": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_catch_loop/program.c": "ca02073fdd380800fb7c57d511ab47112e8f98b03af2cd6d8f2465d006473b8a",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_catch_loop/program": "7d78b31090dde1bb508fdb7abfa48643716ab4bd7dea32078a8d17ee1455136b",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_try_loop_cleanup.yv": "e9c68908aeff70a876cafb52491184ae3dc5df6328fa4e6f7cc6059eb5603aed",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_try_loop_cleanup/source.yv": "e9c68908aeff70a876cafb52491184ae3dc5df6328fa4e6f7cc6059eb5603aed",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_try_loop_cleanup/yavo_rt.h": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_try_loop_cleanup/program.c": "9218e9f043effcb318b8d076d64fcc473bb4d52d7e7227ba0940669b5251694e",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_try_loop_cleanup/program": "5e977c4f4074eb18da2a28ebc5c11b2ba2bc320900a39e21a461a2f805527835",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_catch_discard_owned.yv": "2e0608d9d27cf20d8d621e3925743edfb50f6696202c8008fe0567f593d7deaf",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_catch_discard_owned/source.yv": "2e0608d9d27cf20d8d621e3925743edfb50f6696202c8008fe0567f593d7deaf",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_catch_discard_owned/yavo_rt.h": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_catch_discard_owned/program.c": "85ee598673bc0c42a277f230e12ace3ec9a9e6239340d0dc50bb6356f2a24800",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_catch_discard_owned/program": "0dbe7145a2f21569c0e6f7845bbb9667e60f52598aa393e637101540352627f7"
+  },
+  "flags": [
+    "-std=c17",
+    "-fno-strict-aliasing",
+    "-DYV_ALLOC_CHECK",
+    "-O0",
+    "-g"
+  ],
+  "environment": {
+    "YAVO_ALLOC_CHECK": "1",
+    "YAVO_NO_CACHE": "1"
+  },
+  "records": [
+    {
+      "id": "result_forms",
+      "file": "run/result_forms.yv",
+      "source_sha256": "12c1f69ffee422fcbe1a0047708ccbf2224ed6cb059509d2eff29fbda80ca18d",
+      "source": "fn plain() -> int ! int { return 1 }\nfn explicitOk() -> int ! int { return ok(2) }\nfn failure() -> int ! int { return err(3) }\nfn forwarded() -> int ! int { return failure() }\nfn fourth() -> int ! int { return 4 }\nfn show(value: int ! int) {\n    let number = value catch error {\n        println(error)\n        return\n    }\n    println(number)\n}\nfn bareUnit() -> () ! int { return }\nfn fallingUnit() -> () ! int {}\nfn explicitUnit() -> () ! int { return () }\nfn savedTry() -> int ! int {\n    let result: int ! int = 9\n    return try result\n}\nfn main() {\n    show(plain())\n    show(explicitOk())\n    show(failure())\n    let inferred = fourth()\n    show(inferred)\n    let success: int ! int = ok(5)\n    show(success)\n    let failed: int ! int = err(6)\n    show(failed)\n    let automatic: int ! int = 7\n    show(automatic)\n    let forwardedError = forwarded() catch error {\n        println(error + 5)\n        bareUnit() catch _ { return }\n        fallingUnit() catch _ { return }\n        explicitUnit() catch _ { return }\n        let number = savedTry() catch _ { return }\n        println(number)\n        let _ = failure()\n        println(\"unit\")\n        return\n    }\n    println(forwardedError)\n}\n",
+      "runtime_copy_sha256": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+      "expected": {
+        "exit_code": 0,
+        "stdout": "1\n2\n3\n4\n5\n6\n7\n8\n9\nunit\n",
+        "stderr": ""
+      },
+      "passed": true,
+      "emit": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-integration/attempt02/stage1",
+          "emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_forms/source.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_forms/program.c"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "",
+        "seconds": 0.002,
+        "timed_out": false
+      },
+      "generated_c_sha256": "baee44e3477a07aa93e02773c99d4f0aa87e37dafbf0f875dad4ad1f027ce57f",
+      "build": {
+        "command": [
+          "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+          "cc",
+          "-std=c17",
+          "-fno-strict-aliasing",
+          "-DYV_ALLOC_CHECK",
+          "-O0",
+          "-g",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_forms/program.c",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_forms/program"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "",
+        "seconds": 0.165,
+        "timed_out": false
+      },
+      "binary_sha256": "7b1554d31b1beab8187ce7382d62f9656fb7dfee58e73010120432506d137e5d",
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_forms/program"
+        ],
+        "exit_code": 0,
+        "stdout": "1\n2\n3\n4\n5\n6\n7\n8\n9\nunit\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      }
+    },
+    {
+      "id": "result_owned_string",
+      "file": "run/result_owned_string.yv",
+      "source_sha256": "859f7dfc282c9488580b08f47ffb21c0f025deba86a52104d569ac735dcc283b",
+      "source": "fn source(success: bool) -> String ! String {\n    if success { return \"value\".toString() }\n    return err(\"failure\".toString())\n}\nfn forward(success: bool) -> String ! String {\n    let result = source(success)\n    let value = result catch error { return err(error) }\n    return value\n}\nfn show(success: bool) {\n    let value = forward(success) catch error {\n        println(error)\n        return\n    }\n    println(value)\n}\nfn main() {\n    show(true)\n    show(false)\n    let _ = source(true)\n    let _ = source(false)\n    let saved = source(false)\n}\n",
+      "runtime_copy_sha256": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+      "expected": {
+        "exit_code": 0,
+        "stdout": "value\nfailure\n",
+        "stderr": ""
+      },
+      "passed": true,
+      "emit": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-integration/attempt02/stage1",
+          "emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_owned_string/source.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_owned_string/program.c"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      },
+      "generated_c_sha256": "2fd112969140a9d4bac9d72719224ec5f871814effa849f309866ee1ff173646",
+      "build": {
+        "command": [
+          "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+          "cc",
+          "-std=c17",
+          "-fno-strict-aliasing",
+          "-DYV_ALLOC_CHECK",
+          "-O0",
+          "-g",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_owned_string/program.c",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_owned_string/program"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "",
+        "seconds": 0.168,
+        "timed_out": false
+      },
+      "binary_sha256": "28cc6d433167425dcfdc0427aff6d394018c9b92ee045d6f681ecfa512586663",
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_owned_string/program"
+        ],
+        "exit_code": 0,
+        "stdout": "value\nfailure\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      }
+    },
+    {
+      "id": "result_owned_vec",
+      "file": "run/result_owned_vec.yv",
+      "source_sha256": "3cded6ba19416cf36bd1644f48a172f4fc54608ea2fb711dd23ecc0f4c8dca2d",
+      "source": "fn source(success: bool) -> Vec[String] ! Vec[String] {\n    if success { return [\"one\".toString(), \"two\".toString()] }\n    return err([\"bad\".toString(), \"detail\".toString()])\n}\nfn forward(success: bool) -> Vec[String] ! Vec[String] {\n    let values = try source(success)\n    return values\n}\nfn show(success: bool) {\n    let values = forward(success) catch errors {\n        println(errors.len())\n        println(errors[0])\n        println(errors[1])\n        return\n    }\n    println(values.len())\n    println(values[0])\n    println(values[1])\n}\nfn main() {\n    show(true)\n    show(false)\n    let _ = source(true)\n    let _ = source(false)\n}\n",
+      "runtime_copy_sha256": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+      "expected": {
+        "exit_code": 0,
+        "stdout": "2\none\ntwo\n2\nbad\ndetail\n",
+        "stderr": ""
+      },
+      "passed": true,
+      "emit": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-integration/attempt02/stage1",
+          "emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_owned_vec/source.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_owned_vec/program.c"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      },
+      "generated_c_sha256": "d39687cc04153b95d2fcf3dc1d4d9f5771bb4b2b799416df3db1b880be100e12",
+      "build": {
+        "command": [
+          "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+          "cc",
+          "-std=c17",
+          "-fno-strict-aliasing",
+          "-DYV_ALLOC_CHECK",
+          "-O0",
+          "-g",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_owned_vec/program.c",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_owned_vec/program"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "",
+        "seconds": 0.181,
+        "timed_out": false
+      },
+      "binary_sha256": "f9cefa2703a140cdf9611be15ea6f60858f142636fd64b7c8b93e73d38124c82",
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_owned_vec/program"
+        ],
+        "exit_code": 0,
+        "stdout": "2\none\ntwo\n2\nbad\ndetail\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      }
+    },
+    {
+      "id": "result_owned_struct",
+      "file": "run/result_owned_struct.yv",
+      "source_sha256": "527d973ef19484f5b5c50da49a7fb4ab3052f2f5446fe98303366cff1a2118b9",
+      "source": "struct Payload {\n    text: String\n    items: Vec[String]\n}\nstruct Fault {\n    message: String\n    trail: Vec[String]\n}\nfn source(success: bool) -> Payload ! Fault {\n    if success {\n        return Payload{text: \"payload\".toString(), items: [\"item\".toString()]}\n    }\n    return err(Fault{message: \"failure\".toString(), trail: [\"trace\".toString()]})\n}\nfn rethrow(success: bool) -> Payload ! Fault {\n    let value = source(success) catch error { return err(error) }\n    return value\n}\nfn forward(success: bool) -> Payload ! Fault { return try rethrow(success) }\nfn show(success: bool) {\n    let value = forward(success) catch error {\n        println(error.message)\n        println(error.trail[0])\n        return\n    }\n    println(value.text)\n    println(value.items[0])\n}\nfn main() {\n    show(true)\n    show(false)\n}\n",
+      "runtime_copy_sha256": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+      "expected": {
+        "exit_code": 0,
+        "stdout": "payload\nitem\nfailure\ntrace\n",
+        "stderr": ""
+      },
+      "passed": true,
+      "emit": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-integration/attempt02/stage1",
+          "emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_owned_struct/source.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_owned_struct/program.c"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      },
+      "generated_c_sha256": "f60c70e65fd8abf560a0d3a8c1ed6f7d5f633d907cc87dee37e91a89c6bc589e",
+      "build": {
+        "command": [
+          "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+          "cc",
+          "-std=c17",
+          "-fno-strict-aliasing",
+          "-DYV_ALLOC_CHECK",
+          "-O0",
+          "-g",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_owned_struct/program.c",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_owned_struct/program"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "",
+        "seconds": 0.156,
+        "timed_out": false
+      },
+      "binary_sha256": "37af0d20d48924c4b2ca8124583613e37586b5cc98af0299537331e694a4c987",
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_owned_struct/program"
+        ],
+        "exit_code": 0,
+        "stdout": "payload\nitem\nfailure\ntrace\n",
+        "stderr": "",
+        "seconds": 0.002,
+        "timed_out": false
+      }
+    },
+    {
+      "id": "result_multilevel_try",
+      "file": "run/result_multilevel_try.yv",
+      "source_sha256": "18936cc9672cd63dbcd849b148a49f9577a4781d39c5492451f1b275aad4e6a2",
+      "source": "struct Guard { text: String }\nfn leaf(fail: bool) -> String ! String {\n    let value = \"leaf\".toString()\n    if fail { return err(\"failed\".toString()) }\n    return value\n}\nfn middle(fail: bool) -> Vec[String] ! String {\n    let guard = [\"middle\".toString(), \"live\".toString()]\n    let value = try leaf(fail)\n    return [value, \"tail\".toString()]\n}\nfn outer(fail: bool) -> int ! String {\n    let guard = Guard{text: \"outer\".toString()}\n    let values = try middle(fail)\n    println(values[0])\n    return values.len()\n}\nfn show(fail: bool) {\n    let count = outer(fail) catch error {\n        println(error)\n        return\n    }\n    println(count)\n}\nfn main() {\n    show(false)\n    show(true)\n}\n",
+      "runtime_copy_sha256": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+      "expected": {
+        "exit_code": 0,
+        "stdout": "leaf\n2\nfailed\n",
+        "stderr": ""
+      },
+      "passed": true,
+      "emit": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-integration/attempt02/stage1",
+          "emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_multilevel_try/source.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_multilevel_try/program.c"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      },
+      "generated_c_sha256": "e7d6b6d89c519157b31d1318b6eaa3a2f8e44835e941681c090b6e336bcdbf42",
+      "build": {
+        "command": [
+          "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+          "cc",
+          "-std=c17",
+          "-fno-strict-aliasing",
+          "-DYV_ALLOC_CHECK",
+          "-O0",
+          "-g",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_multilevel_try/program.c",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_multilevel_try/program"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "",
+        "seconds": 0.168,
+        "timed_out": false
+      },
+      "binary_sha256": "8cdde4af5591ea33a4049061f3db1e1d7b35aa0fe65aabd8fbaa59b0c2c97f02",
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_multilevel_try/program"
+        ],
+        "exit_code": 0,
+        "stdout": "leaf\n2\nfailed\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      }
+    },
+    {
+      "id": "result_vec_partial_try",
+      "file": "run/result_vec_partial_try.yv",
+      "source_sha256": "bf2fdbb4ca3796a54c57ee09b7ef8e3c2d37605716b5ae68eae667cf41d225a5",
+      "source": "fn piece(tag: str) -> String {\n    print(tag)\n    return tag.toString()\n}\nfn stop() -> String ! String {\n    print(\"E\")\n    return err(\"stop\".toString())\n}\nfn build() -> Vec[String] ! String {\n    let guard = piece(\"L\")\n    return [piece(\"A\"), try stop(), piece(\"Z\")]\n}\nfn main() {\n    let values = build() catch error {\n        println(error)\n        return\n    }\n    println(values.len())\n}\n",
+      "runtime_copy_sha256": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+      "expected": {
+        "exit_code": 0,
+        "stdout": "LAEstop\n",
+        "stderr": ""
+      },
+      "passed": true,
+      "emit": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-integration/attempt02/stage1",
+          "emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_vec_partial_try/source.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_vec_partial_try/program.c"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      },
+      "generated_c_sha256": "c9cb64418a22a87a522b018ff13b2df692b6a5c19b539855bc554fef4d13ae2b",
+      "build": {
+        "command": [
+          "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+          "cc",
+          "-std=c17",
+          "-fno-strict-aliasing",
+          "-DYV_ALLOC_CHECK",
+          "-O0",
+          "-g",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_vec_partial_try/program.c",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_vec_partial_try/program"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "",
+        "seconds": 0.161,
+        "timed_out": false
+      },
+      "binary_sha256": "9a79fd230fe847e7ab965da85a6cfe29b31657d4024fbcf0d5105f6d973da67e",
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_vec_partial_try/program"
+        ],
+        "exit_code": 0,
+        "stdout": "LAEstop\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      }
+    },
+    {
+      "id": "result_vec_struct_partial_try",
+      "file": "run/result_vec_struct_partial_try.yv",
+      "source_sha256": "08d6aa560329de21114177a76094b8394709fe10d7f7cf210c4e550cd6931202",
+      "source": "struct Group {\n    title: String\n    words: Vec[String]\n}\nfn piece(tag: str) -> String {\n    print(tag)\n    return tag.toString()\n}\nfn stop() -> String ! String {\n    print(\"E\")\n    return err(\"stop\".toString())\n}\nfn build() -> Vec[Group] ! String {\n    return [Group{title: piece(\"A\"), words: [piece(\"B\")]}, Group{title: piece(\"C\"), words: [piece(\"D\"), try stop()]}, Group{title: piece(\"Z\"), words: []}]\n}\nfn main() {\n    let values = build() catch error {\n        println(error)\n        return\n    }\n    println(values.len())\n}\n",
+      "runtime_copy_sha256": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+      "expected": {
+        "exit_code": 0,
+        "stdout": "ABCDEstop\n",
+        "stderr": ""
+      },
+      "passed": true,
+      "emit": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-integration/attempt02/stage1",
+          "emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_vec_struct_partial_try/source.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_vec_struct_partial_try/program.c"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      },
+      "generated_c_sha256": "bf56c3ca7545ccb0c11ed01d3ee25ecff1978abcc352f05ccf4e43f1204408fc",
+      "build": {
+        "command": [
+          "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+          "cc",
+          "-std=c17",
+          "-fno-strict-aliasing",
+          "-DYV_ALLOC_CHECK",
+          "-O0",
+          "-g",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_vec_struct_partial_try/program.c",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_vec_struct_partial_try/program"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "",
+        "seconds": 0.162,
+        "timed_out": false
+      },
+      "binary_sha256": "09a6d486f57aba18246311c08f003682c6c6b9f1847b98f02cabff09a9f381b5",
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_vec_struct_partial_try/program"
+        ],
+        "exit_code": 0,
+        "stdout": "ABCDEstop\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      }
+    },
+    {
+      "id": "result_struct_partial_try",
+      "file": "run/result_struct_partial_try.yv",
+      "source_sha256": "6c722c192e7a7fd777e99f925e68d5aa3675f6fc1cce70a41cc7267668302551",
+      "source": "struct Parts {\n    first: String\n    second: Vec[String]\n    third: String\n}\nfn piece(tag: str) -> String {\n    print(tag)\n    return tag.toString()\n}\nfn stop() -> String ! String {\n    print(\"E\")\n    return err(\"stop\".toString())\n}\nfn build() -> Parts ! String {\n    let guard = [\"live\".toString()]\n    return Parts{third: piece(\"C\"), first: piece(\"A\"), second: [piece(\"B\"), try stop()]}\n}\nfn main() {\n    let value = build() catch error {\n        println(error)\n        return\n    }\n    println(value.first)\n}\n",
+      "runtime_copy_sha256": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+      "expected": {
+        "exit_code": 0,
+        "stdout": "CABEstop\n",
+        "stderr": ""
+      },
+      "passed": true,
+      "emit": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-integration/attempt02/stage1",
+          "emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_struct_partial_try/source.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_struct_partial_try/program.c"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "",
+        "seconds": 0.002,
+        "timed_out": false
+      },
+      "generated_c_sha256": "a5507ca7054f51b5479bd455bf0fe39f4c648b47ae569c0846b099942d28f1cb",
+      "build": {
+        "command": [
+          "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+          "cc",
+          "-std=c17",
+          "-fno-strict-aliasing",
+          "-DYV_ALLOC_CHECK",
+          "-O0",
+          "-g",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_struct_partial_try/program.c",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_struct_partial_try/program"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "",
+        "seconds": 0.187,
+        "timed_out": false
+      },
+      "binary_sha256": "ad210266116c6aade86cacea610cdd721e49e581ce7c30cac0ab5b0903f69e4f",
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_struct_partial_try/program"
+        ],
+        "exit_code": 0,
+        "stdout": "CABEstop\n",
+        "stderr": "",
+        "seconds": 0.002,
+        "timed_out": false
+      }
+    },
+    {
+      "id": "result_argument_try_order",
+      "file": "run/result_argument_try_order.yv",
+      "source_sha256": "b0c98b05a9610b095bfa57bccaac01e1c06eee2a3ebb7e1fceea49a9fe2c8398",
+      "source": "fn piece(tag: str) -> String {\n    print(tag)\n    return tag.toString()\n}\nfn second(fail: bool) -> String ! String {\n    print(\"B\")\n    if fail { return err(\"stop\".toString()) }\n    return \"b\".toString()\n}\nfn combine(first: String, second: String, third: String) -> int {\n    println(\"called\")\n    return first.len() + second.len() + third.len()\n}\nfn work(fail: bool) -> int ! String {\n    let guard = piece(\"G\")\n    return combine(piece(\"A\"), try second(fail), piece(\"C\"))\n}\nfn show(fail: bool) {\n    let count = work(fail) catch error {\n        println(error)\n        return\n    }\n    println(count)\n}\nfn main() {\n    show(false)\n    show(true)\n}\n",
+      "runtime_copy_sha256": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+      "expected": {
+        "exit_code": 0,
+        "stdout": "GABCcalled\n3\nGABstop\n",
+        "stderr": ""
+      },
+      "passed": true,
+      "emit": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-integration/attempt02/stage1",
+          "emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_argument_try_order/source.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_argument_try_order/program.c"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      },
+      "generated_c_sha256": "0e6841a53b4c354327de1db88be27673339200c291ddd6061ece12ae0a9f231b",
+      "build": {
+        "command": [
+          "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+          "cc",
+          "-std=c17",
+          "-fno-strict-aliasing",
+          "-DYV_ALLOC_CHECK",
+          "-O0",
+          "-g",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_argument_try_order/program.c",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_argument_try_order/program"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "",
+        "seconds": 0.164,
+        "timed_out": false
+      },
+      "binary_sha256": "f2e25de6accfe465c5a66cc9b2b7314a387020a37e4164f0e2a92a2e7600acb1",
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_argument_try_order/program"
+        ],
+        "exit_code": 0,
+        "stdout": "GABCcalled\n3\nGABstop\n",
+        "stderr": "",
+        "seconds": 0.002,
+        "timed_out": false
+      }
+    },
+    {
+      "id": "result_short_circuit_try",
+      "file": "run/result_short_circuit_try.yv",
+      "source_sha256": "251808b950dd7225ebff7fc1a8237cc50514be9f26ee1ff660d10c4d4ac1e4e0",
+      "source": "fn gate(tag: str, answer: bool, fail: bool) -> bool ! String {\n    print(tag)\n    if fail { return err(tag.toString()) }\n    return answer\n}\nfn work(mode: int) -> bool ! String {\n    if mode == 0 { return false && try gate(\"X\", true, true) }\n    if mode == 1 { return true || try gate(\"X\", false, true) }\n    if mode == 2 { return true && try gate(\"A\", true, false) }\n    if mode == 3 { return false || try gate(\"B\", false, false) }\n    return true && try gate(\"E\", true, true)\n}\nfn show(mode: int) {\n    let answer = work(mode) catch error {\n        println(error)\n        return\n    }\n    println(answer)\n}\nfn main() {\n    show(0)\n    show(1)\n    show(2)\n    show(3)\n    show(4)\n}\n",
+      "runtime_copy_sha256": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+      "expected": {
+        "exit_code": 0,
+        "stdout": "false\ntrue\nAtrue\nBfalse\nEE\n",
+        "stderr": ""
+      },
+      "passed": true,
+      "emit": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-integration/attempt02/stage1",
+          "emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_short_circuit_try/source.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_short_circuit_try/program.c"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      },
+      "generated_c_sha256": "afa6d992d003c1920142ceea41a54f6044c2e2a9e88493e72554956b8effcc1d",
+      "build": {
+        "command": [
+          "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+          "cc",
+          "-std=c17",
+          "-fno-strict-aliasing",
+          "-DYV_ALLOC_CHECK",
+          "-O0",
+          "-g",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_short_circuit_try/program.c",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_short_circuit_try/program"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "",
+        "seconds": 0.167,
+        "timed_out": false
+      },
+      "binary_sha256": "60a24c1dab4de015fd5ffeafc4359f50424576346a78ae509f080b8c751da59c",
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_short_circuit_try/program"
+        ],
+        "exit_code": 0,
+        "stdout": "false\ntrue\nAtrue\nBfalse\nEE\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      }
+    },
+    {
+      "id": "result_catch_return",
+      "file": "run/result_catch_return.yv",
+      "source_sha256": "8785a473993f1cc9e5828a6e651c98eb2a7dfd93856827e2728629ed6d49aba5",
+      "source": "fn failure() -> int ! String { return err(\"failure\".toString()) }\nfn named() -> int {\n    let guard = [\"live\".toString()]\n    let value = failure() catch error {\n        println(error)\n        return 9\n    }\n    return value\n}\nfn ignored() -> int {\n    let guard = \"live\".toString()\n    let value = failure() catch _ { return 10 }\n    return value\n}\nfn main() {\n    println(named())\n    println(ignored())\n}\n",
+      "runtime_copy_sha256": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+      "expected": {
+        "exit_code": 0,
+        "stdout": "failure\n9\n10\n",
+        "stderr": ""
+      },
+      "passed": true,
+      "emit": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-integration/attempt02/stage1",
+          "emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_catch_return/source.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_catch_return/program.c"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      },
+      "generated_c_sha256": "6dca78e2fa2269e8481920116497007e7f9289aeab7a637b5e01ef43ce882153",
+      "build": {
+        "command": [
+          "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+          "cc",
+          "-std=c17",
+          "-fno-strict-aliasing",
+          "-DYV_ALLOC_CHECK",
+          "-O0",
+          "-g",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_catch_return/program.c",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_catch_return/program"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "",
+        "seconds": 0.152,
+        "timed_out": false
+      },
+      "binary_sha256": "2d61890943c24ccfe318d164fd0d71bc9fac71cae35a85b369d8969ec9c2b6b4",
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_catch_return/program"
+        ],
+        "exit_code": 0,
+        "stdout": "failure\n9\n10\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      }
+    },
+    {
+      "id": "result_catch_loop",
+      "file": "run/result_catch_loop.yv",
+      "source_sha256": "38995bb3123abcf5980a13c9745d32e0d9604a897d6066bb154760acc7a26549",
+      "source": "fn step(index: int) -> String ! String {\n    if index == 1 { return err(\"skip\".toString()) }\n    if index == 3 { return err(\"stop\".toString()) }\n    return \"ok\".toString()\n}\nfn main() {\n    var index = 0\n    let outer = [\"outside\".toString()]\n    while index < 5 {\n        index += 1\n        let guard = [\"inside\".toString()]\n        let value = step(index) catch error {\n            println(error)\n            if index == 1 { continue }\n            break\n        }\n        println(value)\n    }\n    println(index)\n}\n",
+      "runtime_copy_sha256": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+      "expected": {
+        "exit_code": 0,
+        "stdout": "skip\nok\nstop\n3\n",
+        "stderr": ""
+      },
+      "passed": true,
+      "emit": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-integration/attempt02/stage1",
+          "emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_catch_loop/source.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_catch_loop/program.c"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      },
+      "generated_c_sha256": "ca02073fdd380800fb7c57d511ab47112e8f98b03af2cd6d8f2465d006473b8a",
+      "build": {
+        "command": [
+          "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+          "cc",
+          "-std=c17",
+          "-fno-strict-aliasing",
+          "-DYV_ALLOC_CHECK",
+          "-O0",
+          "-g",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_catch_loop/program.c",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_catch_loop/program"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "",
+        "seconds": 0.197,
+        "timed_out": false
+      },
+      "binary_sha256": "7d78b31090dde1bb508fdb7abfa48643716ab4bd7dea32078a8d17ee1455136b",
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_catch_loop/program"
+        ],
+        "exit_code": 0,
+        "stdout": "skip\nok\nstop\n3\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      }
+    },
+    {
+      "id": "result_try_loop_cleanup",
+      "file": "run/result_try_loop_cleanup.yv",
+      "source_sha256": "e9c68908aeff70a876cafb52491184ae3dc5df6328fa4e6f7cc6059eb5603aed",
+      "source": "fn step(index: int) -> String ! String {\n    if index == 2 { return err(\"stop\".toString()) }\n    return \"ok\".toString()\n}\nfn work() -> int ! String {\n    let outer = [\"outside\".toString()]\n    var index = 0\n    while index < 4 {\n        let inner = [\"inside\".toString()]\n        let value = try step(index)\n        println(index)\n        index += 1\n    }\n    return index\n}\nfn main() {\n    let value = work() catch error {\n        println(error)\n        return\n    }\n    println(value)\n}\n",
+      "runtime_copy_sha256": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+      "expected": {
+        "exit_code": 0,
+        "stdout": "0\n1\nstop\n",
+        "stderr": ""
+      },
+      "passed": true,
+      "emit": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-integration/attempt02/stage1",
+          "emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_try_loop_cleanup/source.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_try_loop_cleanup/program.c"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      },
+      "generated_c_sha256": "9218e9f043effcb318b8d076d64fcc473bb4d52d7e7227ba0940669b5251694e",
+      "build": {
+        "command": [
+          "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+          "cc",
+          "-std=c17",
+          "-fno-strict-aliasing",
+          "-DYV_ALLOC_CHECK",
+          "-O0",
+          "-g",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_try_loop_cleanup/program.c",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_try_loop_cleanup/program"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "",
+        "seconds": 0.162,
+        "timed_out": false
+      },
+      "binary_sha256": "5e977c4f4074eb18da2a28ebc5c11b2ba2bc320900a39e21a461a2f805527835",
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_try_loop_cleanup/program"
+        ],
+        "exit_code": 0,
+        "stdout": "0\n1\nstop\n",
+        "stderr": "",
+        "seconds": 0.002,
+        "timed_out": false
+      }
+    },
+    {
+      "id": "result_catch_discard_owned",
+      "file": "run/result_catch_discard_owned.yv",
+      "source_sha256": "2e0608d9d27cf20d8d621e3925743edfb50f6696202c8008fe0567f593d7deaf",
+      "source": "struct Fault {\n    message: String\n    trail: Vec[String]\n}\nfn failure() -> () ! Fault {\n    return err(Fault{message: \"failure\".toString(), trail: [\"trace\".toString()]})\n}\nfn work() {\n    let guard = [\"live\".toString()]\n    failure() catch _ {\n        println(\"caught\")\n        return\n    }\n}\nfn main() {\n    work()\n    println(\"after\")\n}\n",
+      "runtime_copy_sha256": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+      "expected": {
+        "exit_code": 0,
+        "stdout": "caught\nafter\n",
+        "stderr": ""
+      },
+      "passed": true,
+      "emit": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-integration/attempt02/stage1",
+          "emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_catch_discard_owned/source.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_catch_discard_owned/program.c"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      },
+      "generated_c_sha256": "85ee598673bc0c42a277f230e12ace3ec9a9e6239340d0dc50bb6356f2a24800",
+      "build": {
+        "command": [
+          "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+          "cc",
+          "-std=c17",
+          "-fno-strict-aliasing",
+          "-DYV_ALLOC_CHECK",
+          "-O0",
+          "-g",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_catch_discard_owned/program.c",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_catch_discard_owned/program"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "",
+        "seconds": 0.184,
+        "timed_out": false
+      },
+      "binary_sha256": "0dbe7145a2f21569c0e6f7845bbb9667e60f52598aa393e637101540352627f7",
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-stage1-runtime-attempt02/result_catch_discard_owned/program"
+        ],
+        "exit_code": 0,
+        "stdout": "caught\nafter\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      }
+    }
+  ],
+  "status": "passed",
+  "inputs_changed": [],
+  "passed": 14,
+  "total": 14
+}

@@ -1490,12 +1490,33 @@ fn is_exit_call(e: &Expr, cx: &FnCx) -> bool {
     matches!(e.kind, ExprKind::Call { .. }) && cx.exit_calls.contains(&(e.span.start, e.span.end))
 }
 
-/// Whether `e` is `x ?? break` (possibly as the last link of a `??` chain).
+/// Whether evaluating `e` can break out of the current loop. A catch or match
+/// block can hide the exit inside any operand, argument or constructed value.
+/// Closure bodies execute in another function and do not target this loop.
 fn expr_breaks(e: &Expr) -> bool {
     match &e.kind {
-        ExprKind::Coalesce { rhs, .. } => matches!(rhs.kind, ExprKind::Break) || expr_breaks(rhs),
-        ExprKind::Paren(inner) => expr_breaks(inner),
-        _ => false,
+        ExprKind::Break => true,
+        ExprKind::Return(value) => value.as_ref().is_some_and(|value| expr_breaks(value)),
+        ExprKind::Case { args, .. } => args.iter().flatten().any(expr_breaks),
+        ExprKind::Named { value, .. } | ExprKind::Err(value) | ExprKind::Try(value)
+        | ExprKind::Spawn(value) | ExprKind::Paren(value) | ExprKind::Borrow(value)
+        | ExprKind::Unary { expr: value, .. } | ExprKind::Field { base: value, .. } => expr_breaks(value),
+        ExprKind::Catch { value, handler, .. } => expr_breaks(value) || expr_breaks(handler),
+        ExprKind::Match { value, arms } => expr_breaks(value) || arms.iter().any(|arm| expr_breaks(&arm.body)),
+        ExprKind::Block(block) => contains_break(&block.stmts),
+        ExprKind::Str(segments) => segments.iter().any(|segment| {
+            matches!(segment, StrSeg::Expr { expr, .. } if expr_breaks(expr))
+        }),
+        ExprKind::Call { callee, args } => expr_breaks(callee) || args.iter().any(expr_breaks),
+        ExprKind::StructLit { fields, .. } => fields.iter().any(|field| expr_breaks(&field.value)),
+        ExprKind::VecLit(items) | ExprKind::Tuple(items) => items.iter().any(expr_breaks),
+        ExprKind::MapLit(entries) => entries.iter().any(|(key, value)| expr_breaks(key) || expr_breaks(value)),
+        ExprKind::Index { base, index } => expr_breaks(base) || expr_breaks(index),
+        ExprKind::SliceRange { base, start, end } => expr_breaks(base) || expr_breaks(start) || expr_breaks(end),
+        ExprKind::Binary { lhs, rhs, .. } | ExprKind::Coalesce { lhs, rhs, .. } => expr_breaks(lhs) || expr_breaks(rhs),
+        ExprKind::Int(_) | ExprKind::Float(_) | ExprKind::Byte(_) | ExprKind::Bool(_)
+        | ExprKind::Ident(_) | ExprKind::Generic { .. } | ExprKind::None | ExprKind::Continue
+        | ExprKind::Unit | ExprKind::Closure { .. } => false,
     }
 }
 
@@ -1503,20 +1524,27 @@ fn expr_breaks(e: &Expr) -> bool {
 fn contains_break(stmts: &[Stmt]) -> bool {
     stmts.iter().any(|s| match &s.kind {
         StmtKind::Break => true,
-        StmtKind::Let { init: e, .. } | StmtKind::Assign { value: e, .. } | StmtKind::Expr(e) => expr_breaks(e),
-        StmtKind::If { then, els, .. } | StmtKind::IfLet { then, els, .. } => {
-            contains_break(&then.stmts)
+        StmtKind::Let { init: e, .. } | StmtKind::LetTuple { init: e, .. }
+        | StmtKind::Expr(e) | StmtKind::Return(Some(e)) => expr_breaks(e),
+        StmtKind::Assign { target, value, .. } => expr_breaks(target) || expr_breaks(value),
+        StmtKind::If { cond, then, els } | StmtKind::IfLet { value: cond, then, els, .. } => {
+            expr_breaks(cond) || contains_break(&then.stmts)
                 || match els {
                     Some(Else::Block(b)) => contains_break(&b.stmts),
                     Some(Else::If(s)) => contains_break(std::slice::from_ref(s.as_ref())),
                     None => false,
                 }
         }
-        StmtKind::Match { arms, .. } => arms.iter().any(|a| contains_break(&a.body.stmts)),
+        StmtKind::Match { value, arms } => expr_breaks(value) || arms.iter().any(|a| contains_break(&a.body.stmts)),
         StmtKind::Block(b) => contains_break(&b.stmts),
-        StmtKind::With { body, .. } => contains_break(&body.stmts),
+        StmtKind::With { init, body, .. } => expr_breaks(init) || contains_break(&body.stmts),
         StmtKind::Scope { body } => contains_break(&body.stmts),
-        _ => false,
+        // Loop inputs are checked before entering their body (see loop_body).
+        // Only their expressions belong to this loop; inner body exits do not.
+        StmtKind::While { cond, .. } => expr_breaks(cond),
+        StmtKind::For { start, end, .. } => expr_breaks(start) || expr_breaks(end),
+        StmtKind::ForIn { iter, .. } => expr_breaks(iter),
+        StmtKind::Loop { .. } | StmtKind::Continue | StmtKind::Return(None) => false,
     })
 }
 

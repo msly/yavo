@@ -34,16 +34,6 @@ struct Cursor {
     failColumn: int = 0
 }
 
-pub struct Lexed {
-    tokens: Vec[Token]
-    failed: bool = false
-    code: String = ""
-    message: String = ""
-    offset: int = 0
-    line: int = 0
-    column: int = 0
-}
-
 // Fatal diagnostic at a token; the path is the Eof token's text.
 pub fn fail(ts: Vec[Token], token: int, code: str, message: str) {
     report(ts[ts.len() - 1].text, ts[token].line, ts[token].column, code, message)
@@ -296,13 +286,13 @@ fn withoutLast(values: Vec[byte]) -> Vec[byte] {
     return out
 }
 
-fn lexFailure(cursor: Cursor) -> Lexed {
-    return Lexed{tokens: Vec[Token]{}, failed: true, code: cursor.code.clone(),
+fn lexFailure(cursor: Cursor) -> Diagnostic {
+    return Diagnostic{code: cursor.code.clone(),
         message: cursor.message.clone(), offset: cursor.failOffset,
         line: cursor.failLine, column: cursor.failColumn}
 }
 
-pub fn lex(source: str, path: str) -> Lexed {
+pub fn lex(source: str, path: str) -> Vec[Token] ! Diagnostic {
     var cursor = Cursor{}
     var tokens: Vec[Token] = []
     var delimiters: Vec[byte] = []
@@ -336,7 +326,7 @@ pub fn lex(source: str, path: str) -> Lexed {
         }
         if c == '/' && start + 1 < source.len() && source[start + 1] == '*' {
             stop(&cursor, "E0020", "block comments are not part of Yavo; use // on each line", start, line, column)
-            return lexFailure(cursor)
+            return err(lexFailure(cursor))
         }
         var kind: TokenKind = .Symbol
         var text = String{}
@@ -351,7 +341,7 @@ pub fn lex(source: str, path: str) -> Lexed {
             if c == '0' && start + 1 < source.len() &&
                 (source[start + 1] == 'x' || source[start + 1] == 'b' || source[start + 1] == 'o') {
                 stop(&cursor, "U0001", "non-decimal integers are not in the bootstrap subset", start, line, column)
-                return lexFailure(cursor)
+                return err(lexFailure(cursor))
             }
             bump(&cursor, source)
             while cursor.pos < source.len() && digit(source[cursor.pos]) {
@@ -361,35 +351,35 @@ pub fn lex(source: str, path: str) -> Lexed {
                 let next = source[cursor.pos]
                 if next == '_' {
                     stop(&cursor, "U0001", "integer separators are not in the bootstrap subset", start, line, column)
-                    return lexFailure(cursor)
+                    return err(lexFailure(cursor))
                 }
                 if (next == 'e' || next == 'E') && exponentAhead(source, cursor.pos) {
                     stop(&cursor, "U0001", "floating-point numbers are not in the bootstrap subset", start, line, column)
-                    return lexFailure(cursor)
+                    return err(lexFailure(cursor))
                 }
                 if next == '.' && cursor.pos + 1 < source.len() && digit(source[cursor.pos + 1]) {
                     stop(&cursor, "U0001", "floating-point numbers are not in the bootstrap subset", start, line, column)
-                    return lexFailure(cursor)
+                    return err(lexFailure(cursor))
                 }
                 if wordStart(next) {
                     stop(&cursor, "E0020", "invalid integer literal", start, line, column)
-                    return lexFailure(cursor)
+                    return err(lexFailure(cursor))
                 }
             }
             kind = .Number
             text = source[start..cursor.pos].toString()
             if !integerLiteralFits(text) {
                 stop(&cursor, "E0003", "integer literal is too large for any integer type", start, line, column)
-                return lexFailure(cursor)
+                return err(lexFailure(cursor))
             }
         } else if c == '"' {
             kind = .Text
             text = stringToken(&cursor, source)
-            if cursor.failed { return lexFailure(cursor) }
+            if cursor.failed { return err(lexFailure(cursor)) }
         } else if c == '\'' {
             kind = .Byte
             text = byteToken(&cursor, source)
-            if cursor.failed { return lexFailure(cursor) }
+            if cursor.failed { return err(lexFailure(cursor)) }
         } else if oneSymbol(c) {
             bump(&cursor, source)
             if cursor.pos < source.len() && twoSymbol(c, source[cursor.pos]) {
@@ -398,7 +388,7 @@ pub fn lex(source: str, path: str) -> Lexed {
             text = source[start..cursor.pos].toString()
         } else {
             stop(&cursor, "E0020", "unexpected character", start, line, column)
-            return lexFailure(cursor)
+            return err(lexFailure(cursor))
         }
         endsStatement = kind == .Word || kind == .Number || kind == .Text || kind == .Byte ||
             text == ")" || text == "]" || text == "}"
@@ -416,5 +406,5 @@ pub fn lex(source: str, path: str) -> Lexed {
         tokens.push(Token{kind: .Newline, text: String{}, start: cursor.pos, end: cursor.pos, line: cursor.line, column: cursor.column})
     }
     tokens.push(Token{kind: .Eof, text: path.toString(), start: cursor.pos, end: cursor.pos, line: cursor.line, column: cursor.column})
-    return Lexed{tokens: tokens}
+    return ok(tokens)
 }

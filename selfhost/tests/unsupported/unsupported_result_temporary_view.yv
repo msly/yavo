@@ -1,0 +1,5 @@
+fn show(stored: str ! int) {
+    let value = stored catch _ { return }
+    println(value)
+}
+fn main() { show(ok("abc".toString()[0..1])) }

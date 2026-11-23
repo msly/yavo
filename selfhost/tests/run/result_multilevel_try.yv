@@ -1,0 +1,28 @@
+struct Guard { text: String }
+fn leaf(fail: bool) -> String ! String {
+    let value = "leaf".toString()
+    if fail { return err("failed".toString()) }
+    return value
+}
+fn middle(fail: bool) -> Vec[String] ! String {
+    let guard = ["middle".toString(), "live".toString()]
+    let value = try leaf(fail)
+    return [value, "tail".toString()]
+}
+fn outer(fail: bool) -> int ! String {
+    let guard = Guard{text: "outer".toString()}
+    let values = try middle(fail)
+    println(values[0])
+    return values.len()
+}
+fn show(fail: bool) {
+    let count = outer(fail) catch error {
+        println(error)
+        return
+    }
+    println(count)
+}
+fn main() {
+    show(false)
+    show(true)
+}

@@ -1,0 +1,22 @@
+{
+  "schema": "yavo-result-stage0-bug-exception/1",
+  "baseline": "aecd7c3",
+  "expected_after_fix": {
+    "exit_code": 1,
+    "first_code": "E0013"
+  },
+  "reason": "A break in a catch handler exits the loop, so the non-unit function reaches its end without a return. Accepting this source is a stage0 return-completeness bug; it must not define a successful golden oracle. The program is checked but never compiled or run.",
+  "compiler_sha256": "4482658b76d489863bdd16d1bc4263e87cdabf2fda0b3557cba16944ff1aaab8",
+  "compiler_unchanged": true,
+  "source_sha256": "120f1a4c8dce49b215735c95765e238fbeb5b5c6706f14e550b0f4bdd64a89c1",
+  "source": "fn bad() -> int ! String { return err(\"err\".toString()) }\nfn value() -> int {\n    loop {\n        let _n = bad() catch _ { break }\n    }\n}\nfn main() { println(value()) }\n",
+  "command": [
+    "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+    "check",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_catch_break_missing_return.yv",
+    "--json"
+  ],
+  "observed_exit_code": 0,
+  "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_catch_break_missing_return.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"120f1a4c8dce49b215735c95765e238fbeb5b5c6706f14e550b0f4bdd64a89c1\",\"warning_count\":0}\n",
+  "stderr": ""
+}

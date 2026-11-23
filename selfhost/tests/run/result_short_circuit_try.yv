@@ -1,0 +1,26 @@
+fn gate(tag: str, answer: bool, fail: bool) -> bool ! String {
+    print(tag)
+    if fail { return err(tag.toString()) }
+    return answer
+}
+fn work(mode: int) -> bool ! String {
+    if mode == 0 { return false && try gate("X", true, true) }
+    if mode == 1 { return true || try gate("X", false, true) }
+    if mode == 2 { return true && try gate("A", true, false) }
+    if mode == 3 { return false || try gate("B", false, false) }
+    return true && try gate("E", true, true)
+}
+fn show(mode: int) {
+    let answer = work(mode) catch error {
+        println(error)
+        return
+    }
+    println(answer)
+}
+fn main() {
+    show(0)
+    show(1)
+    show(2)
+    show(3)
+    show(4)
+}

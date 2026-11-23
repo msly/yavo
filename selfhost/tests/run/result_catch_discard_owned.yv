@@ -1,0 +1,18 @@
+struct Fault {
+    message: String
+    trail: Vec[String]
+}
+fn failure() -> () ! Fault {
+    return err(Fault{message: "failure".toString(), trail: ["trace".toString()]})
+}
+fn work() {
+    let guard = ["live".toString()]
+    failure() catch _ {
+        println("caught")
+        return
+    }
+}
+fn main() {
+    work()
+    println("after")
+}

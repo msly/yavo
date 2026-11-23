@@ -1,0 +1,116 @@
+{
+  "schema": "yavo-result-stage0-view-boundary-oracle/1",
+  "compiler": "compiler/target/debug/yavo",
+  "profile": "Debug",
+  "environment": {
+    "YAVO_ALLOC_CHECK": "1",
+    "YAVO_NO_CACHE": "1"
+  },
+  "inputs": {
+    "/data1/workspace/github/workspace/yavo/compiler/target/debug/yavo": "ac2c0f2d03076747b98ba912285ddd3789fc866b0dfbf8ea2d180958ea744679",
+    "/data1/workspace/github/workspace/yavo/compiler/runtime/yavo_rt.h": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+    "/data1/workspace/github/workspace/yavo/compiler/toolchain.lock": "a9bbe83e644b0e1cee19c8dba8b5157eaed3e9ddc71b96d8aab2b2d2bb15f53c",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_result_borrowed_view.yv": "c72902463f974929b6fff4af6fee372932b28b783130f157636c6d786c6d5087",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_result_temporary_view.yv": "2e50aa37044630d8c0fc7000cfca10b7bbbbd4783fc0824859ca98cfbad6ad81"
+  },
+  "records": [
+    {
+      "id": "unsupported_result_borrowed_view",
+      "source_sha256": "c72902463f974929b6fff4af6fee372932b28b783130f157636c6d786c6d5087",
+      "source": "fn main() {\n    let owner = \"abc\".toString()\n    let stored: str ! int = owner[0..1]\n    let value = stored catch _ { return }\n    println(value)\n}\n",
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/debug/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_result_borrowed_view.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_result_borrowed_view.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"c72902463f974929b6fff4af6fee372932b28b783130f157636c6d786c6d5087\",\"warning_count\":0}\n",
+        "stderr": ""
+      },
+      "passed": true,
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/debug/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_result_borrowed_view.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/view-boundaries-debug-1/unsupported_result_borrowed_view/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/view-boundaries-debug-1/unsupported_result_borrowed_view/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_result_borrowed_view.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"c72902463f974929b6fff4af6fee372932b28b783130f157636c6d786c6d5087\",\"warning_count\":0}\n",
+        "stderr": ""
+      },
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/view-boundaries-debug-1/unsupported_result_borrowed_view/program"
+        ],
+        "exit_code": 0,
+        "stdout": "a\n",
+        "stderr": ""
+      },
+      "binary_sha256": "2ab41667d901e648bd1322e7bd9db41063a494d2b4733ad5388746ded1497507",
+      "generated_c_sha256": "1c5d9d8bd201d5d6d539c7c55a8940f09614e7e955cdfdc1cbc77a727c171db3",
+      "expected": {
+        "exit_code": 0,
+        "stdout": "a\n",
+        "stderr": ""
+      }
+    },
+    {
+      "id": "unsupported_result_temporary_view",
+      "source_sha256": "2e50aa37044630d8c0fc7000cfca10b7bbbbd4783fc0824859ca98cfbad6ad81",
+      "source": "fn show(stored: str ! int) {\n    let value = stored catch _ { return }\n    println(value)\n}\nfn main() { show(ok(\"abc\".toString()[0..1])) }\n",
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/debug/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_result_temporary_view.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_result_temporary_view.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"2e50aa37044630d8c0fc7000cfca10b7bbbbd4783fc0824859ca98cfbad6ad81\",\"warning_count\":0}\n",
+        "stderr": ""
+      },
+      "passed": true,
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/debug/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_result_temporary_view.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/view-boundaries-debug-1/unsupported_result_temporary_view/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/view-boundaries-debug-1/unsupported_result_temporary_view/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_result_temporary_view.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"2e50aa37044630d8c0fc7000cfca10b7bbbbd4783fc0824859ca98cfbad6ad81\",\"warning_count\":0}\n",
+        "stderr": ""
+      },
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/view-boundaries-debug-1/unsupported_result_temporary_view/program"
+        ],
+        "exit_code": 0,
+        "stdout": "a\n",
+        "stderr": ""
+      },
+      "binary_sha256": "c969d2b026d22ea0e0cc44ff0a5e29bbcacb54f64fe420dcde13d546bb966112",
+      "generated_c_sha256": "10afc94a6e10c6c18acdd62414603006ba338d73ec2802ca90e37ac897a6f202",
+      "expected": {
+        "exit_code": 0,
+        "stdout": "a\n",
+        "stderr": ""
+      }
+    }
+  ],
+  "inputs_changed": [],
+  "passed": 2,
+  "total": 2,
+  "status": "passed"
+}

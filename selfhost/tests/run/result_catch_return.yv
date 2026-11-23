@@ -1,0 +1,18 @@
+fn failure() -> int ! String { return err("failure".toString()) }
+fn named() -> int {
+    let guard = ["live".toString()]
+    let value = failure() catch error {
+        println(error)
+        return 9
+    }
+    return value
+}
+fn ignored() -> int {
+    let guard = "live".toString()
+    let value = failure() catch _ { return 10 }
+    return value
+}
+fn main() {
+    println(named())
+    println(ignored())
+}

@@ -217,6 +217,7 @@ fn vectorHelper(ty: Type) -> String {
 
 fn dropName(reg: Registry, ty: Type) -> String {
     if ty.kind == .String { return "yv_string_drop".toString() }
+    if ty.kind == .Result { return join2("sh_result_drop_", decimal(ty.decl)) }
     if ty.kind == .Vec {
         if owned(reg, element(ty)) {
             return join2("sh_vec_drop_", vectorHelper(ty))
@@ -824,14 +825,108 @@ fn methodValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
     return Value{ty: primitive(.Unit), name: "".toString()}
 }
 
-// `fs.readText`, `fs.writeNewText` and `String.fromUtf8` with a `catch _` handler.
-// The handler must not complete normally (stage0 E0601).
+// Moving a payload into a Result leaves the original owner empty. The inactive
+// branch stays zero, and the Result destructor visits only the active branch.
+fn wrapResult(g: inout Generator, reg: Registry, ts: Vec[Token], token: int, ty: Type, value: Value, success: bool) -> Value {
+    if value.transient {
+        fail(ts, token, "U0001", "result payloads holding views of owned strings are outside this subset; use String")
+    }
+    let taken = takeValue(&g, reg, ts, token, value)
+    var initial = join3("(", cType(ty), "){ .ok = ")
+    if success { initial.push("true") } else { initial.push("false") }
+    if !success || value.ty.kind != .Unit {
+        if success { initial.push(", .val = ") } else { initial.push(", .err = ") }
+        initial.push(taken.name)
+    }
+    initial.push(" }")
+    let result = typedValue(&g, reg, ty, initial)
+    zeroValue(&g, reg, taken)
+    return result
+}
+
+fn resultConstructor(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression, expected: Type) -> Value {
+    if expected.kind != .Result {
+        fail(ts, e.token, "E0001", "ok/err requires an expected result type")
+    }
+    if e.argCount != 1 { fail(ts, e.token, "E0012", "ok/err requires one argument") }
+    let success = ts[e.token].text == "ok"
+    var payload = resultError(reg, expected)
+    if success { payload = resultOk(reg, expected) }
+    let arg = p.lists[e.argStart]
+    if success && payload.kind == .Unit && p.expressions[unparenthesized(p, arg)].kind != .Unit {
+        fail(ts, p.expressions[arg].token, "E0001", "this result has no success value; write ok(())")
+    }
+    let value = emitExpected(&g, p, ts, reg, arg, payload)
+    require(reg, ts, p.expressions[arg].token, value.ty, payload)
+    return wrapResult(&g, reg, ts, e.token, expected, value, success)
+}
+
+fn resultPayload(g: inout Generator, reg: Registry, value: Value) -> Value {
+    let ty = resultOk(reg, value.ty)
+    if ty.kind == .Unit {
+        zeroValue(&g, reg, value)
+        return Value{ty: ty, name: String{}}
+    }
+    let result = typedValue(&g, reg, ty, join3("(", value.name, ").val"))
+    zeroValue(&g, reg, value)
+    return result
+}
+
+fn tryValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression) -> Value {
+    let value = emitExpr(&g, p, ts, reg, e.left)
+    if value.ty.kind != .Result { fail(ts, e.token, "E0001", "try requires a result value") }
+    if g.result.kind != .Result { fail(ts, e.token, "E0001", "try requires a result-returning function") }
+    require(reg, ts, e.token, resultError(reg, value.ty), resultError(reg, g.result))
+    let taken = takeValue(&g, reg, ts, p.expressions[e.left].token, value)
+    emit(&g, join3("if (!(", taken.name, ").ok) {"))
+    let n = g.counter
+    g.counter += 1
+    let target = join2("return_", decimal(n))
+    let returnedC = cType(g.result)
+    put(&g, join4(returnedC, " ", target, " = ("))
+    put(&g, returnedC)
+    emit(&g, join3("){ .ok = false, .err = (", taken.name, ").err };"))
+    // Transfer the error before cleaning the original Result or any enclosing
+    // partially constructed value. The return slot is deliberately not a temp.
+    zeroValue(&g, reg, taken)
+    cleanTemps(&g, reg, 0)
+    cleanLocals(&g, reg, 0)
+    emit(&g, join3("return ", target, ";"))
+    emit(&g, "}")
+    return resultPayload(&g, reg, taken)
+}
+
+fn userCatchValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression) -> Value {
+    let value = emitExpr(&g, p, ts, reg, e.left)
+    if value.ty.kind != .Result { fail(ts, e.token, "E0001", "catch requires a result value") }
+    let taken = takeValue(&g, reg, ts, p.expressions[e.left].token, value)
+    let errorType = resultError(reg, value.ty)
+    let count = g.locals.len()
+    let before = movedState(g)
+    emit(&g, join3("if (!(", taken.name, ").ok) {"))
+    if ts[e.extra].text == "_" {
+        dropValue(&g, reg, taken.ty, taken.name)
+    } else {
+        declare(&g, ts, e.extra, errorType, false, false, false)
+        put(&g, cType(errorType))
+        put(&g, join3(" v_", decimal(e.extra), " = ("))
+        emit(&g, join2(taken.name, ").err;"))
+    }
+    zeroValue(&g, reg, taken)
+    let flow = emitBlock(&g, p, ts, reg, e.argStart, e.argCount)
+    if flow.falls { fail(ts, e.extra, "E0601", "this catch block can reach its closing brace") }
+    cleanLocals(&g, reg, count)
+    if g.locals.len() > count { g.locals = truncLocals(g.locals, count) }
+    restoreState(&g, before)
+    emit(&g, "}")
+    return resultPayload(&g, reg, taken)
+}
+
+// Standard-library error enums retain their dedicated catch-_ path. User
+// results use the same owned-payload rules for named and discarded errors.
 fn catchValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression) -> Value {
     let callId = e.left
     let call = p.expressions[callId]
-    if ts[e.extra].text != "_" {
-        fail(ts, e.extra, "U0001", "error bindings are outside the selfhost subset; use catch _")
-    }
     var op = 0
     if call.kind == .Method {
         let module = standardModule(g, p, ts, p.expressions[call.left])
@@ -839,8 +934,9 @@ fn catchValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: 
         if module == 2 && ts[call.token].text == "writeNewText" { op = 2 }
         if module == 3 && ts[call.token].text == "fromUtf8" { op = 3 }
     }
-    if op == 0 {
-        fail(ts, e.token, "U0001", "catch is limited to fs.readText, fs.writeNewText and String.fromUtf8 in this subset")
+    if op == 0 { return userCatchValue(&g, p, ts, reg, e) }
+    if ts[e.extra].text != "_" {
+        fail(ts, e.extra, "U0001", "standard-library error bindings are outside this subset; use catch _")
     }
     var arity = 1
     if op == 2 { arity = 2 }
@@ -995,7 +1091,7 @@ fn binaryValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
         if lhs.ty.kind == .Unit || (lhs.ty.kind == .Bool && !equality) {
             fail(ts, e.token, "E0001", "operator is not defined for this type")
         }
-        if lhs.ty.kind == .Vec || lhs.ty.kind == .Args ||
+        if lhs.ty.kind == .Vec || lhs.ty.kind == .Args || lhs.ty.kind == .Result ||
             (lhs.ty.kind == .Named && (reg.entries[lhs.ty.decl].kind == .Struct || !equality)) {
             fail(ts, e.token, "E0501", "this aggregate does not implement the required comparison")
         }
@@ -1017,6 +1113,12 @@ fn emitExpected(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, i
     g.nesting += 1
     let result = expressionValue(&g, p, ts, reg, id, expected)
     g.nesting -= 1
+    if expected.kind == .Result && !same(result.ty, expected) {
+        let ok = resultOk(reg, expected)
+        if ok.kind != .Unit && same(result.ty, ok) {
+            return wrapResult(&g, reg, ts, p.expressions[id].token, expected, result, true)
+        }
+    }
     return result
 }
 
@@ -1152,11 +1254,13 @@ fn vectorValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
     // Register the outer owner before lowering its elements. Prefixing the resulting
     // C with the allocation also preserves allocation-before-element evaluation when
     // the element type is inferred from the first expression.
-    let temporary = g.temps.len()
-    g.temps.push(Temporary{ty: primitive(.Vec), id: n})
-    let before = take(&g.out)
     var ty = primitive(.Unknown)
     if elem.kind != .Unknown { ty = vector(ts, e.token, elem) }
+    let temporary = g.temps.len()
+    var registered = primitive(.Vec)
+    if ty.kind != .Unknown { registered = ty }
+    g.temps.push(Temporary{ty: registered, id: n})
+    let before = take(&g.out)
     var i = 0
     while i < e.argCount {
         let arg = p.lists[e.argStart + i]
@@ -1171,6 +1275,9 @@ fn vectorValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
             }
             elem = item.ty
             ty = vector(ts, argToken, elem)
+            // A later element may try-return. Once the first element's type
+            // is known, every following error edge needs its real destructor.
+            g.temps[temporary].ty = ty
         }
         require(reg, ts, argToken, item.ty, elem)
         let taken = takeValue(&g, reg, ts, argToken, item)
@@ -1273,12 +1380,14 @@ fn sliceValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: 
 
 fn expressionValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, id: int, expected: Type) -> Value {
     let e = p.expressions[id]
+    var hint = expected
+    if hint.kind == .Result { hint = resultOk(reg, hint) }
     if e.kind == .Unit { return Value{ty: primitive(.Unit), name: "".toString()} }
     if e.kind == .Paren { return emitExpected(&g, p, ts, reg, e.left, expected) }
     if e.kind == .Number {
         let number = parseDecimal(ts[e.token].text)
         if number < 0 { fail(ts, e.token, "E0003", "integer literal is outside int range") }
-        if expected.kind == .Byte {
+        if hint.kind == .Byte {
             if number > 255 {
                 fail(ts, e.token, "E0003", "integer literal is outside byte range")
             }
@@ -1308,7 +1417,7 @@ fn expressionValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry
     if e.kind == .Unary {
         let child = p.expressions[unparenthesized(p, e.left)]
         let minus = ts[e.token].text == "-"
-        if minus && child.kind == .Number && expected.kind == .Byte {
+        if minus && child.kind == .Number && hint.kind == .Byte {
             let number = parseDecimal(ts[child.token].text)
             if number != 0 {
                 fail(ts, e.token, "E0003", "negative literal is outside byte range")
@@ -1318,7 +1427,7 @@ fn expressionValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry
         if minus && child.kind == .Number && minimumMagnitude(ts[child.token].text) {
             return scalar(&g, .Int, "INT64_MIN")
         }
-        var context = expected
+        var context = hint
         if !minus { context = primitive(.Bool) }
         let arg = emitExpected(&g, p, ts, reg, e.left, context)
         if !minus {
@@ -1328,17 +1437,22 @@ fn expressionValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry
         basic(reg, ts, e.token, arg.ty, .Int)
         return scalar(&g, .Int, join5("yv_neg_i64(", arg.name, ", ", lineColumn(ts, e.token), ")"))
     }
-    if e.kind == .Binary { return binaryValue(&g, p, ts, reg, e, expected) }
-    if e.kind == .Variant { return enumValue(&g, reg, ts, e.token, expected) }
+    if e.kind == .Binary { return binaryValue(&g, p, ts, reg, e, hint) }
+    if e.kind == .Variant { return enumValue(&g, reg, ts, e.token, hint) }
     if e.kind == .Construct { return constructValue(&g, p, ts, reg, e) }
-    if e.kind == .Vector { return vectorValue(&g, p, ts, reg, e, expected) }
+    if e.kind == .Vector { return vectorValue(&g, p, ts, reg, e, hint) }
     if e.kind == .Index { return indexValue(&g, p, ts, reg, e) }
     if e.kind == .Slice { return sliceValue(&g, p, ts, reg, e) }
     if e.kind == .Field { return fieldValue(&g, p, ts, reg, e) }
     if e.kind == .Method { return methodValue(&g, p, ts, reg, e) }
     if e.kind == .Catch { return catchValue(&g, p, ts, reg, e) }
+    if e.kind == .Try { return tryValue(&g, p, ts, reg, e) }
     if e.kind == .Ref {
         fail(ts, e.token, "U0001", "borrow expressions outside inout and take arguments are outside this subset")
+    }
+    if (ts[e.token].text == "ok" || ts[e.token].text == "err") &&
+        functionIndex(p, ts, e.token) < 0 && localIndex(g, ts, e.token) < 0 {
+        return resultConstructor(&g, p, ts, reg, e, expected)
     }
     return callValue(&g, p, ts, reg, e, id)
 }
@@ -1545,7 +1659,7 @@ fn loopStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, 
     let tempCount = g.temps.len()
     pushLoop(&g, count, tempCount)
     g.loops += 1
-    let inner = emitBlock(&g, p, ts, reg, s.bodyStart, s.bodyCount)
+    let _inner = emitBlock(&g, p, ts, reg, s.bodyStart, s.bodyCount)
     g.loops -= 1
     let frame = popLoop(&g)
     let ended = movedState(g)
@@ -1569,7 +1683,9 @@ fn loopStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, 
         restoreState(&g, after)
     }
     emit(&g, "}")
-    return Flow{falls: s.kind == .While || inner.breaks}
+    // recordExit also sees break inside expression handlers. A syntactically
+    // nested catch must not make an escapable loop look non-terminating.
+    return Flow{falls: s.kind == .While || frame.hasBreak}
 }
 
 fn exitsProcess(g: Generator, p: Program, ts: Vec[Token], id: int) -> bool {
@@ -1633,16 +1749,28 @@ fn emitStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, 
     }
     if s.kind == .Expr {
         let kind = p.expressions[s.expr].kind
-        if kind != .Call && kind != .Method && kind != .Catch {
+        if kind != .Call && kind != .Method && kind != .Catch && kind != .Try {
             fail(ts, s.token, "E0001", "only a direct call may stand alone as a statement")
         }
         g.outputRoot = s.expr
         let _ignored = emitExpr(&g, p, ts, reg, s.expr)
         g.outputRoot = -1
+        if _ignored.ty.kind == .Result {
+            fail(ts, s.token, "E0001", "the result of this call must be handled or explicitly discarded")
+        }
         if exitsProcess(g, p, ts, s.expr) { return Flow{falls: false} }
         return Flow{}
     }
     if s.kind == .Return {
+        if g.result.kind == .Result && resultOk(reg, g.result).kind == .Unit {
+            if s.expr < 0 || p.expressions[unparenthesized(p, s.expr)].kind == .Unit {
+                cleanTemps(&g, reg, 0)
+                cleanLocals(&g, reg, 0)
+                let returnedC = cType(g.result)
+                emit(&g, join3("return (", returnedC, "){ .ok = true };"))
+                return Flow{falls: false}
+            }
+        }
         if s.expr < 0 {
             require(reg, ts, s.token, primitive(.Unit), g.result)
             cleanTemps(&g, reg, 0)
@@ -1756,6 +1884,39 @@ fn vectorLifecycle(g: inout Generator, reg: Registry, elem: Type) {
     emit(&g, "}")
 }
 
+fn resultLayouts(g: inout Generator, reg: Registry) {
+    var i = 0
+    while i < reg.results.len() {
+        let ty = Type{kind: .Result, decl: i, elementKind: .Unknown}
+        let success = resultOk(reg, ty)
+        let error = resultError(reg, ty)
+        emit(&g, join3("typedef struct sh_result_", decimal(i), " {"))
+        emit(&g, "bool ok;")
+        if success.kind != .Unit { emit(&g, join2(cType(success), " val;")) }
+        emit(&g, join2(cType(error), " err;"))
+        emit(&g, join3("} sh_result_", decimal(i), ";"))
+        i += 1
+    }
+}
+
+fn resultLifecycle(g: inout Generator, reg: Registry) {
+    var i = 0
+    while i < reg.results.len() {
+        let ty = Type{kind: .Result, decl: i, elementKind: .Unknown}
+        if owned(reg, ty) {
+            emit(&g, join5("static void ", dropName(reg, ty), "(", cType(ty), " *p) {"))
+            emit(&g, "if (p->ok) {")
+            dropValue(&g, reg, resultOk(reg, ty), "p->val")
+            emit(&g, "} else {")
+            dropValue(&g, reg, resultError(reg, ty), "p->err")
+            emit(&g, "}")
+            emit(&g, join3("*p = (", cType(ty), "){0};"))
+            emit(&g, "}")
+        }
+        i += 1
+    }
+}
+
 fn declarations(g: inout Generator, reg: Registry) {
     var i = 0
     while i < reg.entries.len() {
@@ -1778,6 +1939,8 @@ fn declarations(g: inout Generator, reg: Registry) {
         }
         k += 1
     }
+
+    resultLayouts(&g, reg)
 
     // Every named C layout is complete. Lifecycle prototypes break indirect
     // dependency cycles such as Node -> Vec[Node] without recursive discovery.
@@ -1842,6 +2005,7 @@ fn declarations(g: inout Generator, reg: Registry) {
         }
         k += 1
     }
+    resultLifecycle(&g, reg)
 }
 
 pub fn generate(p: Program, ts: Vec[Token], filename: str) -> String {
@@ -1889,10 +2053,17 @@ pub fn generate(p: Program, ts: Vec[Token], filename: str) -> String {
             k += 1
         }
         emit(&g, signature(p, ts, reg, i))
+        emit(&g, "{")
         let flow = emitBlock(&g, p, ts, reg, f.bodyStart, f.bodyCount)
         if g.result.kind != .Unit && flow.falls {
-            fail(ts, f.name, "E0013", "not every path returns a value")
+            if g.result.kind == .Result && resultOk(reg, g.result).kind == .Unit {
+                let returnedC = cType(g.result)
+                emit(&g, join3("return (", returnedC, "){ .ok = true };"))
+            } else {
+                fail(ts, f.name, "E0013", "not every path returns a value")
+            }
         }
+        emit(&g, "}")
         g.locals = []
         i += 1
     }

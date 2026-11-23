@@ -1,0 +1,445 @@
+{
+  "baseline_commit": "aecd7c397276a7ff6c258eac9c5e202dc66546b4",
+  "baseline_short": "aecd7c3",
+  "date": "2026-11-24",
+  "existing_checker_regressions": {
+    "command": [
+      "/home/appops/.cargo/bin/cargo",
+      "test",
+      "--manifest-path",
+      "compiler/Cargo.toml",
+      "--test",
+      "selfhost_blockers"
+    ],
+    "exit_code": 0,
+    "exit_record": {
+      "bytes": 2,
+      "path": "compiler/target/ci/batch29-codegen-review/existing-check-tests.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "failed": 0,
+    "ignored": 0,
+    "linker": "/home/appops/.yavo/bin/rust-linker",
+    "passed": 7,
+    "stderr": {
+      "bytes": 677,
+      "path": "compiler/target/ci/batch29-codegen-review/existing-check-tests.stderr",
+      "sha256": "fe04b17a17a5c5fc932f510026c99672ed971cc5599bf4d5163db26d16423f2c"
+    },
+    "stdout": {
+      "bytes": 597,
+      "path": "compiler/target/ci/batch29-codegen-review/existing-check-tests.stdout",
+      "sha256": "d28ed0d100ef38b4571cf220d03b27a194ae5372671e83681b9740bf0059e8eb"
+    },
+    "test_source": {
+      "bytes": 5373,
+      "path": "compiler/tests/selfhost_blockers.rs",
+      "sha256": "4d0ed2dbf658f56c0664e4d65754078371321029dc8cfb3125274fa605cb76c3"
+    },
+    "tests": [
+      "builtin_panic_and_os_exit_still_terminate_all_supported_contexts",
+      "later_local_declarations_do_not_change_an_earlier_builtin_call",
+      "shadowed_panic_cannot_end_a_catch_or_match_value_block",
+      "a_returning_panic_keeps_moved_values_in_branch_merges",
+      "local_and_parameter_shadowing_do_not_create_exits",
+      "user_panic_function_does_not_supply_a_missing_return",
+      "typed_empty_vectors_follow_the_builtin_constructor_contract"
+    ]
+  },
+  "finding": {
+    "mechanism": "The old expr_breaks only recognized coalescing and parentheses. A break hidden in a catch handler was absent from contains_break, so a loop that could exit was treated as non-returning and a non-unit function could be accepted without producing a return value.",
+    "old_rust_consequence": "Generated value() reaches YV_UNREACHABLE(), defined as __builtin_unreachable() in the runtime, when its catch handler breaks. The undefined behavior follows from the reachable C path; the generated programs were not executed.",
+    "old_subset_consequence": "The baseline selfhost subset also accepts the standard-library catch-break reproducer and emits a non-void C function that falls through while main consumes the return value.",
+    "runtime_definition": {
+      "expansion": "__builtin_unreachable()",
+      "line": 42,
+      "macro": "YV_UNREACHABLE()",
+      "path": "compiler/runtime/yavo_rt.h",
+      "sha256": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc"
+    },
+    "unsafe_programs_executed": false
+  },
+  "implementation_commit": null,
+  "minimal_reproducers": [
+    {
+      "generated_program_compiled": false,
+      "generated_program_executed": false,
+      "id": "catch_break_return",
+      "minimal_reproducer": "fn bad() -> int ! String { return err(\"err\".toString()) }\nfn value() -> int {\n    loop {\n        let _n = bad() catch _ { break }\n    }\n}\nfn main() { println(value()) }\n",
+      "new_stage0_check": {
+        "diagnostics": {
+          "bytes": 709,
+          "path": "compiler/target/ci/batch29-codegen-review/catch_break_return.after.json",
+          "sha256": "35e64ffd0b101b96ac1237b0c60a864b0484160dbf1bd1114e7fd062f32dcfdf"
+        },
+        "errors": [
+          {
+            "code": "E0013",
+            "column": 1,
+            "line": 6
+          }
+        ],
+        "exit_code": 1
+      },
+      "old_stage0_check": {
+        "diagnostics": {
+          "bytes": 240,
+          "path": "compiler/target/ci/batch29-codegen-review/catch_break_return.before.json",
+          "sha256": "2ed9493c3f7f0c93adb6df4a9f19f03a58e345480b5cbad2212049b1fc31beb9"
+        },
+        "errors": 0,
+        "exit_code": 0,
+        "warnings": 0
+      },
+      "old_stage0_function_c": "static int64_t yv_fn_value(void) {\n    for (;;) {\n        yv_res_i64__String t1 = yv_fn_bad();\n        yv_res_i64__String t2 = t1;\n        int64_t t3 = {0};\n        if (t2.ok) { t3 = t2.val; } else {\n            yv_drop_String(&t2.err);\n            break;\n        }\n        int64_t l0__n = t3;\n    }\n    YV_UNREACHABLE();\n}",
+      "old_stage0_generated_c": {
+        "bytes": 4460,
+        "path": "compiler/target/ci/batch29-codegen-review/catch_break_return.stage0.c",
+        "sha256": "e3992047670acc5ed1bf70d8321a2d3dfcf2ee1422efb3e906b945563d25db35"
+      },
+      "reachability": "The fallible call produces an error; its catch handler breaks out of the enclosing loop, reaching YV_UNREACHABLE in value(), whose int return is consumed by main().",
+      "source": {
+        "bytes": 169,
+        "path": "compiler/target/ci/batch29-codegen-review/catch_break_return.yv",
+        "sha256": "120f1a4c8dce49b215735c95765e238fbeb5b5c6706f14e550b0f4bdd64a89c1"
+      }
+    },
+    {
+      "generated_program_compiled": false,
+      "generated_program_executed": false,
+      "id": "stdio_catch_break_return",
+      "minimal_reproducer": "use std/fs\nfn value() -> int {\n    loop {\n        let _text = fs.readText(\"file-that-does-not-exist-for-result-review\") catch _ { break }\n    }\n}\nfn main() { println(value()) }\n",
+      "new_stage0_check": {
+        "diagnostics": {
+          "bytes": 727,
+          "path": "compiler/target/ci/batch29-codegen-review/stdio_catch_break_return.after.json",
+          "sha256": "2326d861304c61436254466646dc3db83c59e935a09ac687de59cf61f64405ab"
+        },
+        "errors": [
+          {
+            "code": "E0013",
+            "column": 1,
+            "line": 6
+          }
+        ],
+        "exit_code": 1
+      },
+      "old_stage0_check": {
+        "diagnostics": {
+          "bytes": 246,
+          "path": "compiler/target/ci/batch29-codegen-review/stdio_catch_break_return.before.json",
+          "sha256": "96e1b6c533e7aa0db1ef82c922688eadcb65c622f5bb1b0e1af026e3cbe938f2"
+        },
+        "errors": 0,
+        "exit_code": 0,
+        "warnings": 0
+      },
+      "old_stage0_function_c": "static int64_t yv_fn_value(void) {\n    for (;;) {\n        yv_res_String__E_fs_Error t1 = {0};\n        yv_string t2 = {0};\n        int64_t t3 = 0;\n        int t4 = yv_fs_read_text(((yv_str){\"file-that-does-not-exist-for-result-review\", 42}), &t2, &t3, 4, 21);\n        if (t4 == 0) {\n            t1.ok = true;\n            t1.val = t2;\n        } else {\n            yv_string_drop(&t2);\n            t1.err.tag = (uint32_t)(t4 - 1);\n            if (t4 == 1) t1.err.u.v0.f_offset = t3;\n            else if (t4 == 2) t1.err.u.v1.f_code = t3;\n        }\n        yv_res_String__E_fs_Error t6 = t1;\n        yv_string t7 = {0};\n        if (t6.ok) { t7 = t6.val; } else {\n            break;\n        }\n        yv_string l0__text = t7;\n        yv_drop_String(&l0__text);\n    }\n    YV_UNREACHABLE();\n}",
+      "old_stage0_generated_c": {
+        "bytes": 4726,
+        "path": "compiler/target/ci/batch29-codegen-review/stdio_catch_break_return.stage0.c",
+        "sha256": "65290b510a542a044d96916852f88bc841a2ee97ee342c62056b61facce78680"
+      },
+      "reachability": "The fallible call produces an error; its catch handler breaks out of the enclosing loop, reaching YV_UNREACHABLE in value(), whose int return is consumed by main().",
+      "source": {
+        "bytes": 177,
+        "path": "compiler/target/ci/batch29-codegen-review/stdio_catch_break_return.yv",
+        "sha256": "74ea4e00d3fa88206c582225d6e3165c5a853acbcd5186b8b8a98756502dcd2b"
+      }
+    }
+  ],
+  "old_rust_identity": {
+    "binary": {
+      "identity_basis": "Captured in the original execution receipts; the live stage0 path may subsequently be rebuilt.",
+      "path_at_execution": "compiler/target/release/yavo",
+      "sha256": "4482658b76d489863bdd16d1bc4263e87cdabf2fda0b3557cba16944ff1aaab8"
+    },
+    "compiler_source_git_tree": "0e847adbced1ce25eb87c5e4a8bc4e0398ccaac7",
+    "frozen_checker": {
+      "bytes": 429903,
+      "path": "compiler/target/ci/batch29-codegen-review/check.before.rs",
+      "sha256": "fcc7ca4484ca6988e52a14170c26beb21201b6ba39fc039198d8af71d163dcd5"
+    },
+    "source_baseline_commit": "aecd7c397276a7ff6c258eac9c5e202dc66546b4",
+    "source_sha256": {
+      "compiler/Cargo.lock": "1855e4b98bba9e064b54ffdb43935981e5dc2f22d8c5561688cac88bcf73ad41",
+      "compiler/Cargo.toml": "c3d8cd3d23c13ced4499ea298eefabeef20bf522ad7ec573ef6692b8b75b87a9",
+      "compiler/runtime/yavo_rt.h": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+      "compiler/src/ast.rs": "e2205244e7dfd902c6860c044c1ff4ca8dae79db123d7d80c0799bc23ed1b343",
+      "compiler/src/check.rs": "fcc7ca4484ca6988e52a14170c26beb21201b6ba39fc039198d8af71d163dcd5",
+      "compiler/src/codegen.rs": "b906f946307dd44d43e0c653f0512685c5c27ecd042c1483efd8cca8ad222f09"
+    }
+  },
+  "old_subset_identity": {
+    "assembled_source": {
+      "bytes": 134218,
+      "path": "compiler/target/ci/batch29-lexer-migration/cli-compatibility/baseline.yv",
+      "sha256": "b766c64ee1dd101c684bbdbe8f1186c8378518e67492df37710a9540674eb5f5"
+    },
+    "assembly_order": [
+      "selfhost/support.yv",
+      "selfhost/lexer.yv",
+      "selfhost/model.yv",
+      "selfhost/parser.yv",
+      "selfhost/types.yv",
+      "selfhost/codegen.yv",
+      "selfhost/main.yv"
+    ],
+    "binary": {
+      "bytes": 247864,
+      "path": "compiler/target/ci/batch29-lexer-migration/cli-compatibility/baseline",
+      "sha256": "576681108c7e9605a55994b8c8727af5860b64b738f368bc87a8093d8cd0e0d3"
+    },
+    "construction_receipt": {
+      "bytes": 15829,
+      "path": "compiler/target/ci/batch29-lexer-migration/cli-compatibility/receipt.json",
+      "sha256": "beba38f05f839a0ae3f24112ffea42019e2c2dc1702ab9a29f579bfb1897c160"
+    },
+    "runtime_sha256": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+    "source_baseline_commit": "aecd7c397276a7ff6c258eac9c5e202dc66546b4",
+    "source_sha256": {
+      "selfhost/codegen.yv": "853017d3d1067196081eec8e16ed41ef62fff31b99586f5658e730e601d7b668",
+      "selfhost/lexer.yv": "90001fb929ad14d269169c47ec176f42d24012a3259bc99649f37925dad2ed3d",
+      "selfhost/main.yv": "04f60f0f88d1c9a2f702fef5395009796b28a9f2df185b066d59371ae40a98ea",
+      "selfhost/model.yv": "497327c9270915bb6e7c0f2c23f4f5b6c224a06561810e28cf32722a7f846c28",
+      "selfhost/parser.yv": "9cd138b48fa9206cfad028d9f619a065c742744cf220b971168980156bc9d700",
+      "selfhost/support.yv": "244b13598621ec3d0e7a8163f15636156473a96d4a9d533f925a91108e6f7380",
+      "selfhost/types.yv": "d37846190d57514dee86715adfdb3478d4169f59bc9bd57bd37137236bcea779"
+    },
+    "stage0_binary_sha256": "4482658b76d489863bdd16d1bc4263e87cdabf2fda0b3557cba16944ff1aaab8",
+    "stage0_generated_compiler_c": {
+      "bytes": 516973,
+      "path": "compiler/target/ci/batch29-lexer-migration/cli-compatibility/baseline.c",
+      "sha256": "8142921c6356c838f5f3a354e309bca47a82728cc30e24f2abbf2ef93e91c87c"
+    },
+    "zig_binary_sha256": "58959f01285c05a74276f09327b551d42ed6006bf325a78dc661a024e314987b"
+  },
+  "old_subset_standard_library_reproduction": {
+    "emit_exit_code": 0,
+    "emit_stderr": {
+      "bytes": 0,
+      "path": "compiler/target/ci/batch29-codegen-review/stdio-old-subset-emit.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "emit_stdout": {
+      "bytes": 0,
+      "path": "compiler/target/ci/batch29-codegen-review/stdio-old-subset-emit.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "function_c": "static int64_t sh_fn_0(void)\n{\nfor (;;) {\n{\nyv_str t_1 = (yv_str){\"\\146\\151\\154\\145\\055\\164\\150\\141\\164\\055\\144\\157\\145\\163\\055\\156\\157\\164\\055\\145\\170\\151\\163\\164\\055\\146\\157\\162\\055\\162\\145\\163\\165\\154\\164\\055\\162\\145\\166\\151\\145\\167\", 42};\nint64_t c_0 = 0;\nyv_string t_0 = {0};\nif (yv_fs_read_text(t_1, &t_0, &c_0, 4, 24) != 0) {\nyv_string_drop(&t_0);\nt_0 = (yv_string){0};\n{\nbreak;\n}\n}\nyv_string v_15 = t_0;\nt_0 = (yv_string){0};\nyv_string_drop(&(t_0));\nyv_string_drop(&(v_15));\n}\n}\n}",
+    "generated_c": {
+      "bytes": 2077,
+      "path": "compiler/target/ci/batch29-codegen-review/stdio_catch_break_return.baseline-subset.c",
+      "sha256": "b981377eb90a73634a79886c286e14ba7b463aa9b79db6961eb7cbde5ca9959a"
+    },
+    "generated_program_compiled": false,
+    "generated_program_executed": false,
+    "source": {
+      "bytes": 177,
+      "path": "compiler/target/ci/batch29-codegen-review/stdio_catch_break_return.yv",
+      "sha256": "74ea4e00d3fa88206c582225d6e3165c5a853acbcd5186b8b8a98756502dcd2b"
+    }
+  },
+  "raw_receipts": {
+    "discovery": {
+      "bytes": 2153,
+      "path": "compiler/target/ci/batch29-codegen-review/safety-discovery.json",
+      "sha256": "f274b43d8f011321a45cb71c52780ece0be2d9cfc3d9e81399faece4150bcfbe"
+    },
+    "targeted_repair": {
+      "bytes": 2705,
+      "path": "compiler/target/ci/batch29-codegen-review/catch-break-fix.json",
+      "sha256": "54f5762d543f41cbf9cca852510173d2fce720e3833e3a2f0b0e0ed002ceee2c"
+    }
+  },
+  "repair": {
+    "behavior": "Traverse caller-evaluated expression operands and catch/match blocks when determining whether a loop can break. Include statement inputs, assignment targets and return expressions. Do not traverse closure bodies or nested loop bodies; loop inputs are checked in the surrounding context.",
+    "checker_binary": {
+      "identity_basis": "Captured in the original targeted-check receipt; subsequent root builds are outside this summary.",
+      "path_at_execution": "compiler/target/debug/yavo",
+      "profile": "debug",
+      "sha256": "ac2c0f2d03076747b98ba912285ddd3789fc866b0dfbf8ea2d180958ea744679"
+    },
+    "implementation_commit": null,
+    "sources": [
+      {
+        "bytes": 432397,
+        "path": "compiler/src/check.rs",
+        "sha256": "19603d21a1fd9677573ad74a2ddfb9a108dc3e06aa58b332c8fe20f5f9795cad"
+      },
+      {
+        "bytes": 3539,
+        "path": "compiler/tests/p0/errors_catch_break_return.yv",
+        "sha256": "c62a879c2d18a0eb394b21b62217d6bcf646a7db4801d5204950199857a9832c"
+      }
+    ]
+  },
+  "schema": "yavo-catch-break-return-validation/1",
+  "scope": "Local source-bound evidence for the discovered catch-break return-completeness defect and its Rust checker repair. This summary records already completed checks and does not run programs or tests.",
+  "scope_boundaries": {
+    "binary_reproduction": "No independent rebuild comparison of the Rust stage0 binaries is claimed by this summary.",
+    "full_rust_debug_release_suites": "Not asserted by this local summary; root indexes their completed results separately.",
+    "native_CI": "Not asserted by this local summary; root indexes completed native CI separately.",
+    "no_UBSan_execution_claim": true,
+    "no_unsafe_program_execution": true,
+    "selfhost_372_case_gate": "Not asserted by this local summary; root indexes its completed result separately.",
+    "selfhost_flow_repair_validation": "Indexed separately by the root integration record.",
+    "summary_created_without_rerunning_tests": true
+  },
+  "status": "passed",
+  "targeted_regression": {
+    "accepted_boundary_function_count": 6,
+    "accepted_boundary_functions": [
+      {
+        "diagnostics": [],
+        "function": "nested_loop_boundary",
+        "line": 112
+      },
+      {
+        "diagnostics": [],
+        "function": "nested_while_boundary",
+        "line": 117
+      },
+      {
+        "diagnostics": [],
+        "function": "nested_for_boundary",
+        "line": 122
+      },
+      {
+        "diagnostics": [],
+        "function": "closure_boundary",
+        "line": 127
+      },
+      {
+        "diagnostics": [],
+        "function": "continue_is_not_break",
+        "line": 136
+      },
+      {
+        "diagnostics": [],
+        "function": "break_then_return",
+        "line": 139
+      }
+    ],
+    "after": {
+      "errors": 18,
+      "exit_code": 1,
+      "raw_diagnostics": {
+        "bytes": 8416,
+        "path": "compiler/target/ci/batch29-codegen-review/errors_catch_break_return.after.json",
+        "sha256": "f19172f440d732b24a70ef4a8218acf6e1f5c44b9f8334444529f11262bd6083"
+      },
+      "warnings": 0
+    },
+    "before": {
+      "errors": 0,
+      "exit_code": 0,
+      "raw_diagnostics": {
+        "bytes": 223,
+        "path": "compiler/target/ci/batch29-codegen-review/errors_catch_break_return.before.json",
+        "sha256": "452d2c19b6d89e8159924f9c4ffc1d7c73e2e7b87a27ab8a0e518c0d86b8ae48"
+      },
+      "warnings": 0
+    },
+    "boundary_evidence_kind": "No diagnostics in these six functions during the same fixture check; these functions were not run.",
+    "expected_diagnostics": [
+      {
+        "code": "E0013",
+        "column": 1,
+        "line": 30
+      },
+      {
+        "code": "E0013",
+        "column": 1,
+        "line": 34
+      },
+      {
+        "code": "E0013",
+        "column": 1,
+        "line": 38
+      },
+      {
+        "code": "E0013",
+        "column": 1,
+        "line": 42
+      },
+      {
+        "code": "E0013",
+        "column": 1,
+        "line": 46
+      },
+      {
+        "code": "E0013",
+        "column": 1,
+        "line": 50
+      },
+      {
+        "code": "E0013",
+        "column": 1,
+        "line": 54
+      },
+      {
+        "code": "E0013",
+        "column": 1,
+        "line": 60
+      },
+      {
+        "code": "E0013",
+        "column": 1,
+        "line": 64
+      },
+      {
+        "code": "E0013",
+        "column": 1,
+        "line": 69
+      },
+      {
+        "code": "E0013",
+        "column": 1,
+        "line": 73
+      },
+      {
+        "code": "E0013",
+        "column": 1,
+        "line": 82
+      },
+      {
+        "code": "E0013",
+        "column": 1,
+        "line": 86
+      },
+      {
+        "code": "E0013",
+        "column": 1,
+        "line": 90
+      },
+      {
+        "code": "E0013",
+        "column": 1,
+        "line": 94
+      },
+      {
+        "code": "E0013",
+        "column": 1,
+        "line": 99
+      },
+      {
+        "code": "E0013",
+        "column": 1,
+        "line": 103
+      },
+      {
+        "code": "E0013",
+        "column": 1,
+        "line": 109
+      }
+    ],
+    "fixture": {
+      "bytes": 3539,
+      "path": "compiler/tests/p0/errors_catch_break_return.yv",
+      "sha256": "c62a879c2d18a0eb394b21b62217d6bcf646a7db4801d5204950199857a9832c"
+    },
+    "newly_rejected_function_count": 18,
+    "result": "passed"
+  }
+}

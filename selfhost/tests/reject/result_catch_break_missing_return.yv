@@ -1,0 +1,7 @@
+fn bad() -> int ! String { return err("err".toString()) }
+fn value() -> int {
+    loop {
+        let _n = bad() catch _ { break }
+    }
+}
+fn main() { println(value()) }

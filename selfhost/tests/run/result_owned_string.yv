@@ -1,0 +1,23 @@
+fn source(success: bool) -> String ! String {
+    if success { return "value".toString() }
+    return err("failure".toString())
+}
+fn forward(success: bool) -> String ! String {
+    let result = source(success)
+    let value = result catch error { return err(error) }
+    return value
+}
+fn show(success: bool) {
+    let value = forward(success) catch error {
+        println(error)
+        return
+    }
+    println(value)
+}
+fn main() {
+    show(true)
+    show(false)
+    let _ = source(true)
+    let _ = source(false)
+    let saved = source(false)
+}

@@ -7,12 +7,13 @@ scoped OS threads. Native CI runs complete Linux x86-64 suites and selected
 Windows x86-64/macOS arm64 suites. Complete phase acceptance still requires the
 remaining tools, features and full target-platform acceptance coverage.
 
-### Self-hosting work (2026-11-22)
+### Self-hosting work (updated 2026-11-24)
 
 This Rust implementation is now **stage0** for the
-[Yavo-written compiler](../selfhost/README.md). The first Yavo frontend accepts
-a declared scalar/string/control-flow subset and generates checked C for
-independent programs; it cannot yet compile itself.
+[Yavo-written compiler](../selfhost/README.md). The declared bootstrap subset
+compiles itself to a stage2/stage3 fixed point, originally confirmed on Linux,
+Windows and macOS. Batch 29 adds user-function Result/try and migrates the actual
+lexer error path. Rust remains the daily compiler while SH-3 coverage expands.
 
 Two concrete issues found while building it are addressed here:
 `fs.writeNewText` exclusively creates a new file, preserving existing paths and
@@ -20,6 +21,15 @@ links; return-path analysis now treats a call as terminating only when it was
 resolved to the actual builtin `panic`/`os.exit`. A user function with the same
 name can no longer hide a missing return. The focused `fs_create_new` and
 `selfhost_blockers` regressions are part of all three native CI selections.
+
+Batch 29 additionally fixes `contains_break`: return-path analysis now visits
+expressions, including catch handlers nested in initializers, arguments, return
+values and loop headers. A break in a nested loop body or a closure still belongs
+to that inner construct. The new P0 fixture requires 18 reachable missing-return
+paths to report `E0013` and preserves six legal boundaries. Complete local
+Debug/Release suites each pass 145 tests, with one historical ignored test;
+[source-bound evidence](validation/catch-break-return-2026-11-24.json) preserves
+the old accepted inputs and generated C without executing invalid programs.
 
 ### Runtime header PCH cache (2026-11-22)
 

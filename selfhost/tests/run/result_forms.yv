@@ -1,0 +1,44 @@
+fn plain() -> int ! int { return 1 }
+fn explicitOk() -> int ! int { return ok(2) }
+fn failure() -> int ! int { return err(3) }
+fn forwarded() -> int ! int { return failure() }
+fn fourth() -> int ! int { return 4 }
+fn show(value: int ! int) {
+    let number = value catch error {
+        println(error)
+        return
+    }
+    println(number)
+}
+fn bareUnit() -> () ! int { return }
+fn fallingUnit() -> () ! int {}
+fn explicitUnit() -> () ! int { return () }
+fn savedTry() -> int ! int {
+    let result: int ! int = 9
+    return try result
+}
+fn main() {
+    show(plain())
+    show(explicitOk())
+    show(failure())
+    let inferred = fourth()
+    show(inferred)
+    let success: int ! int = ok(5)
+    show(success)
+    let failed: int ! int = err(6)
+    show(failed)
+    let automatic: int ! int = 7
+    show(automatic)
+    let forwardedError = forwarded() catch error {
+        println(error + 5)
+        bareUnit() catch _ { return }
+        fallingUnit() catch _ { return }
+        explicitUnit() catch _ { return }
+        let number = savedTry() catch _ { return }
+        println(number)
+        let _ = failure()
+        println("unit")
+        return
+    }
+    println(forwardedError)
+}

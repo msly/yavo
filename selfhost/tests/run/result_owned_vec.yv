@@ -1,0 +1,25 @@
+fn source(success: bool) -> Vec[String] ! Vec[String] {
+    if success { return ["one".toString(), "two".toString()] }
+    return err(["bad".toString(), "detail".toString()])
+}
+fn forward(success: bool) -> Vec[String] ! Vec[String] {
+    let values = try source(success)
+    return values
+}
+fn show(success: bool) {
+    let values = forward(success) catch errors {
+        println(errors.len())
+        println(errors[0])
+        println(errors[1])
+        return
+    }
+    println(values.len())
+    println(values[0])
+    println(values[1])
+}
+fn main() {
+    show(true)
+    show(false)
+    let _ = source(true)
+    let _ = source(false)
+}

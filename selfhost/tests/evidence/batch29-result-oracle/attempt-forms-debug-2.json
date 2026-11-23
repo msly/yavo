@@ -1,0 +1,80 @@
+{
+  "schema": "yavo-result-stage0-oracle/1",
+  "baseline": "aecd7c3",
+  "profile": "Debug",
+  "environment": {
+    "YAVO_ALLOC_CHECK": "1",
+    "YAVO_NO_CACHE": "1"
+  },
+  "inputs": {
+    "compiler/target/release/yavo": "4482658b76d489863bdd16d1bc4263e87cdabf2fda0b3557cba16944ff1aaab8",
+    "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig": "58959f01285c05a74276f09327b551d42ed6006bf325a78dc661a024e314987b",
+    "compiler/runtime/yavo_rt.h": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+    "compiler/toolchain.lock": "a9bbe83e644b0e1cee19c8dba8b5157eaed3e9ddc71b96d8aab2b2d2bb15f53c",
+    "selfhost/tests/evidence/batch29-result-oracle/verify_stage0.py": "316cf5e4cc09bdf1faaf114aafb6997296df5fc516463c48dfdca13d908e98cc",
+    "selfhost/tests/evidence/batch29-result-oracle/candidates.json": "fa8036ed6a9426eab67d15b12e412919180fa54be69c39ef9e90a4ca0679449d",
+    "selfhost/tests/run/result_forms.yv": "12c1f69ffee422fcbe1a0047708ccbf2224ed6cb059509d2eff29fbda80ca18d"
+  },
+  "records": [
+    {
+      "id": "result_forms",
+      "kind": "run",
+      "file": "run/result_forms.yv",
+      "source_sha256": "12c1f69ffee422fcbe1a0047708ccbf2224ed6cb059509d2eff29fbda80ca18d",
+      "source": "fn plain() -> int ! int { return 1 }\nfn explicitOk() -> int ! int { return ok(2) }\nfn failure() -> int ! int { return err(3) }\nfn forwarded() -> int ! int { return failure() }\nfn fourth() -> int ! int { return 4 }\nfn show(value: int ! int) {\n    let number = value catch error {\n        println(error)\n        return\n    }\n    println(number)\n}\nfn bareUnit() -> () ! int { return }\nfn fallingUnit() -> () ! int {}\nfn explicitUnit() -> () ! int { return () }\nfn savedTry() -> int ! int {\n    let result: int ! int = 9\n    return try result\n}\nfn main() {\n    show(plain())\n    show(explicitOk())\n    show(failure())\n    let inferred = fourth()\n    show(inferred)\n    let success: int ! int = ok(5)\n    show(success)\n    let failed: int ! int = err(6)\n    show(failed)\n    let automatic: int ! int = 7\n    show(automatic)\n    let forwardedError = forwarded() catch error {\n        println(error + 5)\n        bareUnit() catch _ { return }\n        fallingUnit() catch _ { return }\n        explicitUnit() catch _ { return }\n        let number = savedTry() catch _ { return }\n        println(number)\n        let _ = failure()\n        println(\"unit\")\n        return\n    }\n    println(forwardedError)\n}\n",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_forms.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_forms.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"12c1f69ffee422fcbe1a0047708ccbf2224ed6cb059509d2eff29fbda80ca18d\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.002,
+        "timed_out": false
+      },
+      "first_error": null,
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_forms.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/forms-debug-2/result_forms/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/forms-debug-2/result_forms/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_forms.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"12c1f69ffee422fcbe1a0047708ccbf2224ed6cb059509d2eff29fbda80ca18d\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.165,
+        "timed_out": false
+      },
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/forms-debug-2/result_forms/program"
+        ],
+        "exit_code": 0,
+        "stdout": "1\n2\n3\n4\n5\n6\n7\n8\n9\nunit\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      },
+      "binary_sha256": "0107eef4c216726823995b878bae9d7085ff0e51566112de96738ff188aeaa73",
+      "generated_c_sha256": "46fc36508aaba84c4c7c6a1acc49ef325f075bc030502813872369b6b5cca689",
+      "expected": {
+        "exit_code": 0,
+        "stdout": "1\n2\n3\n4\n5\n6\n7\n8\n9\nunit\n",
+        "stderr": ""
+      }
+    }
+  ],
+  "status": "passed",
+  "inputs_changed": [],
+  "passed": 1,
+  "total": 1
+}

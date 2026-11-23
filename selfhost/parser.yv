@@ -11,6 +11,7 @@ struct State {
     lists: Vec[int] = []
     params: Vec[Parameter] = []
     fields: Vec[FieldDecl] = []
+    resultTypes: Vec[ResultRef] = []
     importsFs: bool = false
     importsOs: bool = false
 }
@@ -92,10 +93,13 @@ fn vectorType(s: inout State, ts: Vec[Token], name: int) -> TypeRef {
     if elem.kind == .Vec {
         fail(ts, token, "U0001", "nested Vec elements are outside the selfhost subset")
     }
+    if elem.kind == .Result {
+        fail(ts, token, "U0001", "Result vector elements are outside the selfhost subset")
+    }
     return TypeRef{kind: .Vec, name: name, elementKind: elem.kind, elementName: token}
 }
 
-fn typeName(s: inout State, ts: Vec[Token]) -> TypeRef {
+fn typeAtom(s: inout State, ts: Vec[Token]) -> TypeRef {
     enter(&s, ts)
     var result = TypeRef{elementKind: .Unknown, kind: .Unknown}
     if eat(&s, ts, "int") { result = TypeRef{elementKind: .Unknown, kind: .Int}
@@ -110,8 +114,20 @@ fn typeName(s: inout State, ts: Vec[Token]) -> TypeRef {
             result = TypeRef{elementKind: .Unknown, kind: .Named, name: name}
         }
     } else if eat(&s, ts, "(") {
+        let open = s.pos - 1
         if !at(s, ts, ")") {
-            syntax(s, ts, "U0001", "tuple types are outside the selfhost subset")
+            let _first = typeName(&s, ts)
+            var count = 1
+            while eat(&s, ts, ",") {
+                if at(s, ts, ")") { break }
+                let _next = typeName(&s, ts)
+                count += 1
+            }
+            expect(&s, ts, ")")
+            if count < 2 {
+                fail(ts, open, "E0020", "a tuple type needs at least two elements")
+            }
+            fail(ts, open, "U0001", "tuple types are outside the selfhost subset")
         }
         expect(&s, ts, ")")
         result = TypeRef{elementKind: .Unknown, kind: .Unit}
@@ -125,11 +141,26 @@ fn typeName(s: inout State, ts: Vec[Token]) -> TypeRef {
     } else {
         syntax(s, ts, "E0020", "expected a type name")
     }
-    if at(s, ts, "[") || at(s, ts, ".") || at(s, ts, "!") || at(s, ts, "->") || at(s, ts, "+") {
+    if at(s, ts, "[") || at(s, ts, ".") || at(s, ts, "->") || at(s, ts, "+") {
         syntax(s, ts, "U0001", "type suffix is outside the selfhost subset")
     }
     s.nesting -= 1
     return result
+}
+
+fn typeName(s: inout State, ts: Vec[Token]) -> TypeRef {
+    let ok = typeAtom(&s, ts)
+    if !at(s, ts, "!") { return ok }
+    let token = s.pos
+    s.pos += 1
+    let errorToken = s.pos
+    let error = typeAtom(&s, ts)
+    if at(s, ts, "!") {
+        syntax(s, ts, "E0020", "a result type has one success type and one error type")
+    }
+    let index = s.resultTypes.len()
+    s.resultTypes.push(ResultRef{ok: ok, error: error, errorToken: errorToken})
+    return TypeRef{kind: .Result, name: token, elementKind: .Unknown, result: index}
 }
 
 fn pushExpr(s: inout State, kind: ExprKind, token: int, left: int, right: int) -> int {
@@ -229,6 +260,13 @@ fn primary(s: inout State, ts: Vec[Token]) -> int {
         expect(&s, ts, ")")
         return pushExpr(&s, .Paren, p, inner, -1)
     }
+    if eat(&s, ts, "err") {
+        // Stage0 parses err as one expression, not a variadic ordinary call.
+        expect(&s, ts, "(")
+        let error = parseExpression(&s, ts)
+        expect(&s, ts, ")")
+        return pushList(&s, .Call, p, -1, [error])
+    }
     if ts[p].kind == .Word && !reservedWord(ts[p].text) {
         s.pos += 1
         return pushExpr(&s, .Name, p, -1, -1)
@@ -246,8 +284,7 @@ fn primary(s: inout State, ts: Vec[Token]) -> int {
         s.nesting -= 1
         return pushExpr(&s, .Ref, p, target, -1)
     }
-    if at(s, ts, "match") || at(s, ts, "try") || at(s, ts, "none") ||
-        at(s, ts, "spawn") || at(s, ts, "err") {
+    if at(s, ts, "match") || at(s, ts, "none") || at(s, ts, "spawn") {
         syntax(s, ts, "U0001", "expression is outside the selfhost SH-1 subset")
     }
     syntax(s, ts, "E0020", "expected an expression")
@@ -383,6 +420,14 @@ fn postfix(s: inout State, ts: Vec[Token]) -> int {
 }
 
 fn unary(s: inout State, ts: Vec[Token]) -> int {
+    if at(s, ts, "try") {
+        enter(&s, ts)
+        let token = s.pos
+        s.pos += 1
+        let operand = unary(&s, ts)
+        s.nesting -= 1
+        return pushExpr(&s, .Try, token, operand, -1)
+    }
     if at(s, ts, "-") || at(s, ts, "!") {
         enter(&s, ts)
         let p = s.pos
@@ -421,6 +466,9 @@ fn parseExpression(s: inout State, ts: Vec[Token]) -> int {
         var binding = s.pos
         if ts[s.pos].kind == .Word && ts[s.pos].text == "_" { s.pos += 1 } else {
             binding = identifier(&s, ts)
+        }
+        if at(s, ts, "=>") {
+            syntax(s, ts, "U0001", "expression catch handlers are outside the selfhost subset")
         }
         let handler = parseBlock(&s, ts)
         value = pushList(&s, .Catch, token, value, handler)
@@ -563,8 +611,12 @@ fn parseFunction(s: inout State, ts: Vec[Token]) -> Function {
     expect(&s, ts, ")")
     var result = TypeRef{elementKind: .Unknown, kind: .Unit}
     if eat(&s, ts, "->") { result = typeName(&s, ts) }
-    if result.kind == .Str || at(s, ts, "of") || at(s, ts, "!") {
-        syntax(s, ts, "U0001", "borrowed returns and result types are outside the selfhost SH-1 subset")
+    var borrowedResult = result.kind == .Str
+    if result.kind == .Result {
+        borrowedResult = s.resultTypes[result.result].ok.kind == .Str
+    }
+    if borrowedResult || at(s, ts, "of") {
+        syntax(s, ts, "U0001", "borrowed returns are outside the selfhost subset")
     }
     let body = parseBlock(&s, ts)
     let paramStart = s.params.len()
@@ -687,5 +739,6 @@ pub fn parse(ts: Vec[Token]) -> Program {
     return Program{expressions: take(&s.expressions), statements: take(&s.statements),
         functions: take(&s.functions), types: take(&s.types), lists: take(&s.lists),
         params: take(&s.params), fields: take(&s.fields),
+        resultTypes: take(&s.resultTypes),
         importsFs: s.importsFs, importsOs: s.importsOs}
 }

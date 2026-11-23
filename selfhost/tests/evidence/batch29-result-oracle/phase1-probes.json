@@ -1,0 +1,656 @@
+{
+  "schema": "yavo-result-phase1-probes/1",
+  "baseline": "aecd7c3",
+  "compiler_sha256": "4482658b76d489863bdd16d1bc4263e87cdabf2fda0b3557cba16944ff1aaab8",
+  "check_count": 21,
+  "runtime_count": 16,
+  "runtime_passed": 16,
+  "note": "Exploratory stage0 probes; arrow catch syntax in these historical sources is not part of the accepted bootstrap subset. The files array preserves every original source, command-result JSON and output file byte-for-byte as UTF-8 text.",
+  "files": [
+    {
+      "path": "phase1/borrowed_parameter_try/input.yv",
+      "sha256": "b6b13d546837a11b500f75cd150391b966e8fbd8812b87d6548263d8be99ca44",
+      "utf8": "fn f(r: String ! String) -> String ! String { return try r }\nfn main() { }\n"
+    },
+    {
+      "path": "phase1/borrowed_parameter_try/stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/borrowed_parameter_try/stdout.json",
+      "sha256": "310b91533258fbfa9cfd81a1690d9c5276079a363a189f9eba92d26db4131b3b",
+      "utf8": "{\"diagnostics\":[{\"code\":\"E0401\",\"column\":58,\"end_column\":59,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/borrowed_parameter_try/input.yv\",\"fixes\":[],\"line\":1,\"message\":\"cannot move out of `r`: it belongs to the caller\",\"notes\":[\"declare it as `r: sink String ! String` to take ownership, or pass `r.clone()`\"],\"primary\":{\"column\":58,\"end\":58,\"end_column\":59,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/borrowed_parameter_try/input.yv\",\"line\":1,\"start\":57},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/borrowed_parameter_try/input.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"b6b13d546837a11b500f75cd150391b966e8fbd8812b87d6548263d8be99ca44\",\"warning_count\":0}\n"
+    },
+    {
+      "path": "phase1/catch_owned_call_rethrow/build.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/catch_owned_call_rethrow/build.stdout.json",
+      "sha256": "c0e36417315a9fe598a8bdbd48ec5de245404f25071c18737e49778011aabb50",
+      "utf8": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/catch_owned_call_rethrow/input.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"cc4004fc8b5890dbaf72a311068ec8916f36a3687a64d26d46f677ea8d153cfc\",\"warning_count\":0}\n"
+    },
+    {
+      "path": "phase1/catch_owned_call_rethrow/input.yv",
+      "sha256": "cc4004fc8b5890dbaf72a311068ec8916f36a3687a64d26d46f677ea8d153cfc",
+      "utf8": "fn f() -> int ! String { return err(\"bad\".toString()) }\nfn g() -> int ! String { let n = f() catch e { return err(e) }\n return n }\nfn main() { let n = g() catch e { println(e)\n return }\n println(n) }\n"
+    },
+    {
+      "path": "phase1/catch_owned_call_rethrow/run.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/catch_owned_call_rethrow/run.stdout.txt",
+      "sha256": "1d7a363ce12430881ec56c9cf1409c49c491043618e598c356e2959040872f5a",
+      "utf8": "bad\n"
+    },
+    {
+      "path": "phase1/catch_owned_call_rethrow/stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/catch_owned_call_rethrow/stdout.json",
+      "sha256": "c0e36417315a9fe598a8bdbd48ec5de245404f25071c18737e49778011aabb50",
+      "utf8": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/catch_owned_call_rethrow/input.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"cc4004fc8b5890dbaf72a311068ec8916f36a3687a64d26d46f677ea8d153cfc\",\"warning_count\":0}\n"
+    },
+    {
+      "path": "phase1/catch_owned_local_rethrow/build.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/catch_owned_local_rethrow/build.stdout.json",
+      "sha256": "84ecf5e1f887fd2dd2ad9272406ba65793aa15802f03de287e33b62fc974d3aa",
+      "utf8": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/catch_owned_local_rethrow/input.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"f95872bf113c210d4105c35aa2ec55627faa0e1d692a80a17d2c237486814914\",\"warning_count\":0}\n"
+    },
+    {
+      "path": "phase1/catch_owned_local_rethrow/input.yv",
+      "sha256": "f95872bf113c210d4105c35aa2ec55627faa0e1d692a80a17d2c237486814914",
+      "utf8": "fn f() -> int ! String { return err(\"bad\".toString()) }\nfn g() -> int ! String { let r = f()\n let n = r catch e { return err(e) }\n return n }\nfn main() { let n = g() catch e { println(e)\n return }\n println(n) }\n"
+    },
+    {
+      "path": "phase1/catch_owned_local_rethrow/run.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/catch_owned_local_rethrow/run.stdout.txt",
+      "sha256": "1d7a363ce12430881ec56c9cf1409c49c491043618e598c356e2959040872f5a",
+      "utf8": "bad\n"
+    },
+    {
+      "path": "phase1/catch_owned_local_rethrow/stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/catch_owned_local_rethrow/stdout.json",
+      "sha256": "84ecf5e1f887fd2dd2ad9272406ba65793aa15802f03de287e33b62fc974d3aa",
+      "utf8": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/catch_owned_local_rethrow/input.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"f95872bf113c210d4105c35aa2ec55627faa0e1d692a80a17d2c237486814914\",\"warning_count\":0}\n"
+    },
+    {
+      "path": "phase1/execution.json",
+      "sha256": "10a124053014525147ddfa57a56b1bbc335a9082eef573f9569504612a9ffd17",
+      "utf8": "[\n  {\n    \"id\": \"local_inferred_catch\",\n    \"build_command\": [\n      \"/data1/workspace/github/workspace/yavo/compiler/target/release/yavo\",\n      \"build\",\n      \"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/local_inferred_catch/input.yv\",\n      \"-o\",\n      \"/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/phase1/local_inferred_catch/program\",\n      \"--json\"\n    ],\n    \"build_exit\": 0,\n    \"expected_stdout\": \"7\\n\",\n    \"alloc_check\": true,\n    \"run_exit\": 0,\n    \"stdout\": \"7\\n\",\n    \"stderr\": \"\",\n    \"binary_sha256\": \"2751b8e226f83000ec74bab7cdb292db3d3485a487ee1aea6746604a32663344\",\n    \"passed\": true\n  },\n  {\n    \"id\": \"local_typed_ok\",\n    \"build_command\": [\n      \"/data1/workspace/github/workspace/yavo/compiler/target/release/yavo\",\n      \"build\",\n      \"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/local_typed_ok/input.yv\",\n      \"-o\",\n      \"/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/phase1/local_typed_ok/program\",\n      \"--json\"\n    ],\n    \"build_exit\": 0,\n    \"expected_stdout\": \"7\\n\",\n    \"alloc_check\": true,\n    \"run_exit\": 0,\n    \"stdout\": \"7\\n\",\n    \"stderr\": \"\",\n    \"binary_sha256\": \"69029019912ffa2559c07902bc59c3400a79cfb4ccaba42ee6515d61b802c4de\",\n    \"passed\": true\n  },\n  {\n    \"id\": \"local_typed_err\",\n    \"build_command\": [\n      \"/data1/workspace/github/workspace/yavo/compiler/target/release/yavo\",\n      \"build\",\n      \"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/local_typed_err/input.yv\",\n      \"-o\",\n      \"/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/phase1/local_typed_err/program\",\n      \"--json\"\n    ],\n    \"build_exit\": 0,\n    \"expected_stdout\": \"9\\n\",\n    \"alloc_check\": true,\n    \"run_exit\": 0,\n    \"stdout\": \"9\\n\",\n    \"stderr\": \"\",\n    \"binary_sha256\": \"316522cc1739d2ba6cf85958e61cb467431269193bb8a8fa89331625a5b0f263\",\n    \"passed\": true\n  },\n  {\n    \"id\": \"local_typed_success\",\n    \"build_command\": [\n      \"/data1/workspace/github/workspace/yavo/compiler/target/release/yavo\",\n      \"build\",\n      \"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/local_typed_success/input.yv\",\n      \"-o\",\n      \"/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/phase1/local_typed_success/program\",\n      \"--json\"\n    ],\n    \"build_exit\": 0,\n    \"expected_stdout\": \"7\\n\",\n    \"alloc_check\": true,\n    \"run_exit\": 0,\n    \"stdout\": \"7\\n\",\n    \"stderr\": \"\",\n    \"binary_sha256\": \"97f4acb76946c293ef8b1a61532d98bcb9cccad64f47e764a70f6776c670f10b\",\n    \"passed\": true\n  },\n  {\n    \"id\": \"local_try\",\n    \"build_command\": [\n      \"/data1/workspace/github/workspace/yavo/compiler/target/release/yavo\",\n      \"build\",\n      \"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/local_try/input.yv\",\n      \"-o\",\n      \"/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/phase1/local_try/program\",\n      \"--json\"\n    ],\n    \"build_exit\": 0,\n    \"expected_stdout\": \"7\\n\",\n    \"alloc_check\": true,\n    \"run_exit\": 0,\n    \"stdout\": \"7\\n\",\n    \"stderr\": \"\",\n    \"binary_sha256\": \"5846ed7a0afc127211df0853eabf2df982fd321a841d26620d90e85982657b59\",\n    \"passed\": true\n  },\n  {\n    \"id\": \"local_unhandled_saved\",\n    \"build_command\": [\n      \"/data1/workspace/github/workspace/yavo/compiler/target/release/yavo\",\n      \"build\",\n      \"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/local_unhandled_saved/input.yv\",\n      \"-o\",\n      \"/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/phase1/local_unhandled_saved/program\",\n      \"--json\"\n    ],\n    \"build_exit\": 0,\n    \"expected_stdout\": \"\",\n    \"alloc_check\": true,\n    \"run_exit\": 0,\n    \"stdout\": \"\",\n    \"stderr\": \"\",\n    \"binary_sha256\": \"f6388aab4417322f1febda08fd85165470052b1f4763e287aaaf9f25436b2c14\",\n    \"passed\": true\n  },\n  {\n    \"id\": \"return_success\",\n    \"build_command\": [\n      \"/data1/workspace/github/workspace/yavo/compiler/target/release/yavo\",\n      \"build\",\n      \"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/return_success/input.yv\",\n      \"-o\",\n      \"/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/phase1/return_success/program\",\n      \"--json\"\n    ],\n    \"build_exit\": 0,\n    \"expected_stdout\": \"7\\n\",\n    \"alloc_check\": true,\n    \"run_exit\": 0,\n    \"stdout\": \"7\\n\",\n    \"stderr\": \"\",\n    \"binary_sha256\": \"1c6b38a475b2c11e7432d498d992aa9a3521948289ee9625009361a648d36059\",\n    \"passed\": true\n  },\n  {\n    \"id\": \"return_ok\",\n    \"build_command\": [\n      \"/data1/workspace/github/workspace/yavo/compiler/target/release/yavo\",\n      \"build\",\n      \"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/return_ok/input.yv\",\n      \"-o\",\n      \"/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/phase1/return_ok/program\",\n      \"--json\"\n    ],\n    \"build_exit\": 0,\n    \"expected_stdout\": \"7\\n\",\n    \"alloc_check\": true,\n    \"run_exit\": 0,\n    \"stdout\": \"7\\n\",\n    \"stderr\": \"\",\n    \"binary_sha256\": \"0c2f24e705e564797734e1370dd811c84c77cdf15c73bae723dec2f51ae1ee02\",\n    \"passed\": true\n  },\n  {\n    \"id\": \"return_err\",\n    \"build_command\": [\n      \"/data1/workspace/github/workspace/yavo/compiler/target/release/yavo\",\n      \"build\",\n      \"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/return_err/input.yv\",\n      \"-o\",\n      \"/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/phase1/return_err/program\",\n      \"--json\"\n    ],\n    \"build_exit\": 0,\n    \"expected_stdout\": \"9\\n\",\n    \"alloc_check\": true,\n    \"run_exit\": 0,\n    \"stdout\": \"9\\n\",\n    \"stderr\": \"\",\n    \"binary_sha256\": \"affb693e74e1df1520202f10c6a64394403e50fdc1e39ca596bd4ffe1ac8ee0f\",\n    \"passed\": true\n  },\n  {\n    \"id\": \"return_other_result\",\n    \"build_command\": [\n      \"/data1/workspace/github/workspace/yavo/compiler/target/release/yavo\",\n      \"build\",\n      \"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/return_other_result/input.yv\",\n      \"-o\",\n      \"/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/phase1/return_other_result/program\",\n      \"--json\"\n    ],\n    \"build_exit\": 0,\n    \"expected_stdout\": \"9\\n\",\n    \"alloc_check\": true,\n    \"run_exit\": 0,\n    \"stdout\": \"9\\n\",\n    \"stderr\": \"\",\n    \"binary_sha256\": \"a5dd7cdf8fac3043a9f1de48bd785d2906efc4f70cd12087863f0ce498d5dd36\",\n    \"passed\": true\n  },\n  {\n    \"id\": \"unit_empty_return\",\n    \"build_command\": [\n      \"/data1/workspace/github/workspace/yavo/compiler/target/release/yavo\",\n      \"build\",\n      \"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/unit_empty_return/input.yv\",\n      \"-o\",\n      \"/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/phase1/unit_empty_return/program\",\n      \"--json\"\n    ],\n    \"build_exit\": 0,\n    \"expected_stdout\": \"7\\n\",\n    \"alloc_check\": true,\n    \"run_exit\": 0,\n    \"stdout\": \"7\\n\",\n    \"stderr\": \"\",\n    \"binary_sha256\": \"064c379584a94e9639b9c51aeefa9f01f32e2be0c69c907b15eb5134f7891314\",\n    \"passed\": true\n  },\n  {\n    \"id\": \"unit_fallthrough\",\n    \"build_command\": [\n      \"/data1/workspace/github/workspace/yavo/compiler/target/release/yavo\",\n      \"build\",\n      \"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/unit_fallthrough/input.yv\",\n      \"-o\",\n      \"/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/phase1/unit_fallthrough/program\",\n      \"--json\"\n    ],\n    \"build_exit\": 0,\n    \"expected_stdout\": \"7\\n\",\n    \"alloc_check\": true,\n    \"run_exit\": 0,\n    \"stdout\": \"7\\n\",\n    \"stderr\": \"\",\n    \"binary_sha256\": \"ef9c39efed9f74461edbe403a48110288123b2b28ed5353f9fe6e006ffffafa2\",\n    \"passed\": true\n  },\n  {\n    \"id\": \"unit_explicit_value\",\n    \"build_command\": [\n      \"/data1/workspace/github/workspace/yavo/compiler/target/release/yavo\",\n      \"build\",\n      \"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/unit_explicit_value/input.yv\",\n      \"-o\",\n      \"/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/phase1/unit_explicit_value/program\",\n      \"--json\"\n    ],\n    \"build_exit\": 0,\n    \"expected_stdout\": \"7\\n\",\n    \"alloc_check\": true,\n    \"run_exit\": 0,\n    \"stdout\": \"7\\n\",\n    \"stderr\": \"\",\n    \"binary_sha256\": \"72bd0211cc7f39de280c19c5ee8ebab79177336210faea7d754a0679af3f7130\",\n    \"passed\": true\n  },\n  {\n    \"id\": \"catch_owned_call_rethrow\",\n    \"build_command\": [\n      \"/data1/workspace/github/workspace/yavo/compiler/target/release/yavo\",\n      \"build\",\n      \"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/catch_owned_call_rethrow/input.yv\",\n      \"-o\",\n      \"/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/phase1/catch_owned_call_rethrow/program\",\n      \"--json\"\n    ],\n    \"build_exit\": 0,\n    \"expected_stdout\": \"bad\\n\",\n    \"alloc_check\": true,\n    \"run_exit\": 0,\n    \"stdout\": \"bad\\n\",\n    \"stderr\": \"\",\n    \"binary_sha256\": \"0fe5fed15d2afc2d333e51b0c36cc9c8302ea7f44b1370bc8a03cf3990b2afca\",\n    \"passed\": true\n  },\n  {\n    \"id\": \"catch_owned_local_rethrow\",\n    \"build_command\": [\n      \"/data1/workspace/github/workspace/yavo/compiler/target/release/yavo\",\n      \"build\",\n      \"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/catch_owned_local_rethrow/input.yv\",\n      \"-o\",\n      \"/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/phase1/catch_owned_local_rethrow/program\",\n      \"--json\"\n    ],\n    \"build_exit\": 0,\n    \"expected_stdout\": \"bad\\n\",\n    \"alloc_check\": true,\n    \"run_exit\": 0,\n    \"stdout\": \"bad\\n\",\n    \"stderr\": \"\",\n    \"binary_sha256\": \"c81def20980faf0f8623fbb53d0b1a97b619fdea8ddf4f914106d69b148250c5\",\n    \"passed\": true\n  },\n  {\n    \"id\": \"local_owned_try\",\n    \"build_command\": [\n      \"/data1/workspace/github/workspace/yavo/compiler/target/release/yavo\",\n      \"build\",\n      \"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/local_owned_try/input.yv\",\n      \"-o\",\n      \"/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/phase1/local_owned_try/program\",\n      \"--json\"\n    ],\n    \"build_exit\": 0,\n    \"expected_stdout\": \"ok\\n\",\n    \"alloc_check\": true,\n    \"run_exit\": 0,\n    \"stdout\": \"ok\\n\",\n    \"stderr\": \"\",\n    \"binary_sha256\": \"39998c7fe1b908973fde9ed57320b102bbfb2f0ae7267e60f0355b544e032029\",\n    \"passed\": true\n  }\n]\n"
+    },
+    {
+      "path": "phase1/local_inferred_catch/build.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/local_inferred_catch/build.stdout.json",
+      "sha256": "9dd9d2a786a6b5bffcd093e3048d15e318bced50197f53ce64e41870a1aac738",
+      "utf8": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/local_inferred_catch/input.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"5e4789e4031b01c377c4173902538344c7db2826ef21d7b872b5f3b5282316b8\",\"warning_count\":0}\n"
+    },
+    {
+      "path": "phase1/local_inferred_catch/input.yv",
+      "sha256": "5e4789e4031b01c377c4173902538344c7db2826ef21d7b872b5f3b5282316b8",
+      "utf8": "fn f() -> int ! int { return 7 }\nfn main() { let r = f()\n let n = r catch e => e\n println(n) }\n"
+    },
+    {
+      "path": "phase1/local_inferred_catch/run.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/local_inferred_catch/run.stdout.txt",
+      "sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "utf8": "7\n"
+    },
+    {
+      "path": "phase1/local_inferred_catch/stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/local_inferred_catch/stdout.json",
+      "sha256": "9dd9d2a786a6b5bffcd093e3048d15e318bced50197f53ce64e41870a1aac738",
+      "utf8": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/local_inferred_catch/input.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"5e4789e4031b01c377c4173902538344c7db2826ef21d7b872b5f3b5282316b8\",\"warning_count\":0}\n"
+    },
+    {
+      "path": "phase1/local_owned_try/build.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/local_owned_try/build.stdout.json",
+      "sha256": "a299c1afda4867c2c88e0d4dae18dda0b4c803d35f55f898958021adf4d4fdb6",
+      "utf8": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/local_owned_try/input.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"7ef4320966f1ded4850dadf8aeccae7b922982d7e7a7ed62d7cdf42f67158997\",\"warning_count\":0}\n"
+    },
+    {
+      "path": "phase1/local_owned_try/input.yv",
+      "sha256": "7ef4320966f1ded4850dadf8aeccae7b922982d7e7a7ed62d7cdf42f67158997",
+      "utf8": "fn f() -> String ! String { return \"ok\".toString() }\nfn g() -> String ! String { let r = f()\n return try r }\nfn main() { let s = g() catch _ => \"error\".toString()\n println(s) }\n"
+    },
+    {
+      "path": "phase1/local_owned_try/run.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/local_owned_try/run.stdout.txt",
+      "sha256": "dc51b8c96c2d745df3bd5590d990230a482fd247123599548e0632fdbf97fc22",
+      "utf8": "ok\n"
+    },
+    {
+      "path": "phase1/local_owned_try/stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/local_owned_try/stdout.json",
+      "sha256": "a299c1afda4867c2c88e0d4dae18dda0b4c803d35f55f898958021adf4d4fdb6",
+      "utf8": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/local_owned_try/input.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"7ef4320966f1ded4850dadf8aeccae7b922982d7e7a7ed62d7cdf42f67158997\",\"warning_count\":0}\n"
+    },
+    {
+      "path": "phase1/local_try/build.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/local_try/build.stdout.json",
+      "sha256": "aedfc246729c25c1af2392213771f2cd21c8758cd4ab221c8f563865796471f0",
+      "utf8": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/local_try/input.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"6ae90c1499377976df8c33ace8b7ea4e23b706d3bab1ad22ad0ea782c8987c24\",\"warning_count\":0}\n"
+    },
+    {
+      "path": "phase1/local_try/input.yv",
+      "sha256": "6ae90c1499377976df8c33ace8b7ea4e23b706d3bab1ad22ad0ea782c8987c24",
+      "utf8": "fn f() -> int ! int { return 7 }\nfn g() -> int ! int { let r = f()\n return try r }\nfn main() { println(g() catch e => e) }\n"
+    },
+    {
+      "path": "phase1/local_try/run.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/local_try/run.stdout.txt",
+      "sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "utf8": "7\n"
+    },
+    {
+      "path": "phase1/local_try/stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/local_try/stdout.json",
+      "sha256": "aedfc246729c25c1af2392213771f2cd21c8758cd4ab221c8f563865796471f0",
+      "utf8": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/local_try/input.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"6ae90c1499377976df8c33ace8b7ea4e23b706d3bab1ad22ad0ea782c8987c24\",\"warning_count\":0}\n"
+    },
+    {
+      "path": "phase1/local_typed_err/build.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/local_typed_err/build.stdout.json",
+      "sha256": "e49248a926a566bd00da4d64fa609fba988b068831a5207cc343f2d9445107b0",
+      "utf8": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/local_typed_err/input.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"093d632fcc01b788df69fea8417ebf3a0cdb1915556b58deab693e5c7242a7a7\",\"warning_count\":0}\n"
+    },
+    {
+      "path": "phase1/local_typed_err/input.yv",
+      "sha256": "093d632fcc01b788df69fea8417ebf3a0cdb1915556b58deab693e5c7242a7a7",
+      "utf8": "fn main() { let r: int ! int = err(9)\n let n = r catch e => e\n println(n) }\n"
+    },
+    {
+      "path": "phase1/local_typed_err/run.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/local_typed_err/run.stdout.txt",
+      "sha256": "2e6d31a5983a91251bfae5aefa1c0a19d8ba3cf601d0e8a706b4cfa9661a6b8a",
+      "utf8": "9\n"
+    },
+    {
+      "path": "phase1/local_typed_err/stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/local_typed_err/stdout.json",
+      "sha256": "e49248a926a566bd00da4d64fa609fba988b068831a5207cc343f2d9445107b0",
+      "utf8": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/local_typed_err/input.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"093d632fcc01b788df69fea8417ebf3a0cdb1915556b58deab693e5c7242a7a7\",\"warning_count\":0}\n"
+    },
+    {
+      "path": "phase1/local_typed_ok/build.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/local_typed_ok/build.stdout.json",
+      "sha256": "7de3c294f9cfc75278bc860dfcc745e879fc6152de4ca8e0c1c67becd98721df",
+      "utf8": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/local_typed_ok/input.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"d20688a351ff52a8a118395c286e52b54cbd17575383b1607c074c990b45e656\",\"warning_count\":0}\n"
+    },
+    {
+      "path": "phase1/local_typed_ok/input.yv",
+      "sha256": "d20688a351ff52a8a118395c286e52b54cbd17575383b1607c074c990b45e656",
+      "utf8": "fn main() { let r: int ! int = ok(7)\n let n = r catch e => e\n println(n) }\n"
+    },
+    {
+      "path": "phase1/local_typed_ok/run.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/local_typed_ok/run.stdout.txt",
+      "sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "utf8": "7\n"
+    },
+    {
+      "path": "phase1/local_typed_ok/stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/local_typed_ok/stdout.json",
+      "sha256": "7de3c294f9cfc75278bc860dfcc745e879fc6152de4ca8e0c1c67becd98721df",
+      "utf8": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/local_typed_ok/input.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"d20688a351ff52a8a118395c286e52b54cbd17575383b1607c074c990b45e656\",\"warning_count\":0}\n"
+    },
+    {
+      "path": "phase1/local_typed_success/build.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/local_typed_success/build.stdout.json",
+      "sha256": "bd3edac0cc6f866378df19e759897af5361023c79e1d80a5a16a612872debc8b",
+      "utf8": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/local_typed_success/input.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"78cf2c23ab4d7800c9f338b8baf1945a21a3ca77830058e080f2776636f39a4b\",\"warning_count\":0}\n"
+    },
+    {
+      "path": "phase1/local_typed_success/input.yv",
+      "sha256": "78cf2c23ab4d7800c9f338b8baf1945a21a3ca77830058e080f2776636f39a4b",
+      "utf8": "fn main() { let r: int ! int = 7\n let n = r catch e => e\n println(n) }\n"
+    },
+    {
+      "path": "phase1/local_typed_success/run.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/local_typed_success/run.stdout.txt",
+      "sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "utf8": "7\n"
+    },
+    {
+      "path": "phase1/local_typed_success/stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/local_typed_success/stdout.json",
+      "sha256": "bd3edac0cc6f866378df19e759897af5361023c79e1d80a5a16a612872debc8b",
+      "utf8": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/local_typed_success/input.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"78cf2c23ab4d7800c9f338b8baf1945a21a3ca77830058e080f2776636f39a4b\",\"warning_count\":0}\n"
+    },
+    {
+      "path": "phase1/local_unhandled_saved/build.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/local_unhandled_saved/build.stdout.json",
+      "sha256": "7330fa0e8f70b2fd6342bf2661420c985bc51dff5dfc8654c86342d3dd6fd6b0",
+      "utf8": "{\"diagnostics\":[{\"code\":\"W0001\",\"column\":17,\"end_column\":18,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/local_unhandled_saved/input.yv\",\"fixes\":[{\"applicability\":\"automatic\",\"edits\":[{\"end\":50,\"replacement\":\"_r\",\"start\":49}],\"id\":\"rename-unused\",\"impact\":\"Keeps the same binding, writes and destruction time; only suppresses the unused-binding warning.\",\"patch_id\":\"rename-unused:9513359f2210253d8a175649d859bf8a4370b234cddb137d557ecebe60e2613b\",\"preconditions\":[\"All edited identifiers resolve to this binding.\",\"The new name does not capture any existing name in the function.\"],\"recheck\":\"passed\",\"recheck_scope\":\"automatic-set\",\"title\":\"Rename r to _r\"}],\"line\":2,\"message\":\"unused variable `r`\",\"notes\":[\"rename it to `_r` if this is intentional\"],\"primary\":{\"column\":17,\"end\":50,\"end_column\":18,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/local_unhandled_saved/input.yv\",\"line\":2,\"start\":49},\"severity\":\"WARN\"}],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/local_unhandled_saved/input.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"17c9268135ade4cf08a5cb32949e966017b5a2965a8ccf43678851d168b04f40\",\"warning_count\":1}\n"
+    },
+    {
+      "path": "phase1/local_unhandled_saved/input.yv",
+      "sha256": "17c9268135ade4cf08a5cb32949e966017b5a2965a8ccf43678851d168b04f40",
+      "utf8": "fn f() -> int ! int { return 7 }\nfn main() { let r = f() }\n"
+    },
+    {
+      "path": "phase1/local_unhandled_saved/run.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/local_unhandled_saved/run.stdout.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/local_unhandled_saved/stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/local_unhandled_saved/stdout.json",
+      "sha256": "7330fa0e8f70b2fd6342bf2661420c985bc51dff5dfc8654c86342d3dd6fd6b0",
+      "utf8": "{\"diagnostics\":[{\"code\":\"W0001\",\"column\":17,\"end_column\":18,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/local_unhandled_saved/input.yv\",\"fixes\":[{\"applicability\":\"automatic\",\"edits\":[{\"end\":50,\"replacement\":\"_r\",\"start\":49}],\"id\":\"rename-unused\",\"impact\":\"Keeps the same binding, writes and destruction time; only suppresses the unused-binding warning.\",\"patch_id\":\"rename-unused:9513359f2210253d8a175649d859bf8a4370b234cddb137d557ecebe60e2613b\",\"preconditions\":[\"All edited identifiers resolve to this binding.\",\"The new name does not capture any existing name in the function.\"],\"recheck\":\"passed\",\"recheck_scope\":\"automatic-set\",\"title\":\"Rename r to _r\"}],\"line\":2,\"message\":\"unused variable `r`\",\"notes\":[\"rename it to `_r` if this is intentional\"],\"primary\":{\"column\":17,\"end\":50,\"end_column\":18,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/local_unhandled_saved/input.yv\",\"line\":2,\"start\":49},\"severity\":\"WARN\"}],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/local_unhandled_saved/input.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"17c9268135ade4cf08a5cb32949e966017b5a2965a8ccf43678851d168b04f40\",\"warning_count\":1}\n"
+    },
+    {
+      "path": "phase1/results.json",
+      "sha256": "a35f06c547317bf00677efbabd646e190939e540cd2189f43f142bd076075550",
+      "utf8": "{\n  \"compiler_sha256\": \"4482658b76d489863bdd16d1bc4263e87cdabf2fda0b3557cba16944ff1aaab8\",\n  \"records\": [\n    {\n      \"id\": \"local_inferred_catch\",\n      \"exit_code\": 0,\n      \"command\": [\n        \"/data1/workspace/github/workspace/yavo/compiler/target/release/yavo\",\n        \"check\",\n        \"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/local_inferred_catch/input.yv\",\n        \"--json\"\n      ],\n      \"source_sha256\": \"5e4789e4031b01c377c4173902538344c7db2826ef21d7b872b5f3b5282316b8\",\n      \"diagnostics\": []\n    },\n    {\n      \"id\": \"local_typed_ok\",\n      \"exit_code\": 0,\n      \"command\": [\n        \"/data1/workspace/github/workspace/yavo/compiler/target/release/yavo\",\n        \"check\",\n        \"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/local_typed_ok/input.yv\",\n        \"--json\"\n      ],\n      \"source_sha256\": \"d20688a351ff52a8a118395c286e52b54cbd17575383b1607c074c990b45e656\",\n      \"diagnostics\": []\n    },\n    {\n      \"id\": \"local_typed_err\",\n      \"exit_code\": 0,\n      \"command\": [\n        \"/data1/workspace/github/workspace/yavo/compiler/target/release/yavo\",\n        \"check\",\n        \"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/local_typed_err/input.yv\",\n        \"--json\"\n      ],\n      \"source_sha256\": \"093d632fcc01b788df69fea8417ebf3a0cdb1915556b58deab693e5c7242a7a7\",\n      \"diagnostics\": []\n    },\n    {\n      \"id\": \"local_typed_success\",\n      \"exit_code\": 0,\n      \"command\": [\n        \"/data1/workspace/github/workspace/yavo/compiler/target/release/yavo\",\n        \"check\",\n        \"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/local_typed_success/input.yv\",\n        \"--json\"\n      ],\n      \"source_sha256\": \"78cf2c23ab4d7800c9f338b8baf1945a21a3ca77830058e080f2776636f39a4b\",\n      \"diagnostics\": []\n    },\n    {\n      \"id\": \"local_try\",\n      \"exit_code\": 0,\n      \"command\": [\n        \"/data1/workspace/github/workspace/yavo/compiler/target/release/yavo\",\n        \"check\",\n        \"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/local_try/input.yv\",\n        \"--json\"\n      ],\n      \"source_sha256\": \"6ae90c1499377976df8c33ace8b7ea4e23b706d3bab1ad22ad0ea782c8987c24\",\n      \"diagnostics\": []\n    },\n    {\n      \"id\": \"local_unhandled_saved\",\n      \"exit_code\": 0,\n      \"command\": [\n        \"/data1/workspace/github/workspace/yavo/compiler/target/release/yavo\",\n        \"check\",\n        \"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/local_unhandled_saved/input.yv\",\n        \"--json\"\n      ],\n      \"source_sha256\": \"17c9268135ade4cf08a5cb32949e966017b5a2965a8ccf43678851d168b04f40\",\n      \"diagnostics\": [\n        {\n          \"code\": \"W0001\",\n          \"severity\": \"WARN\",\n          \"message\": \"unused variable `r`\",\n          \"primary\": {\n            \"column\": 17,\n            \"end\": 50,\n            \"end_column\": 18,\n            \"end_line\": 2,\n            \"file\": \"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/local_unhandled_saved/input.yv\",\n            \"line\": 2,\n            \"start\": 49\n          }\n        }\n      ]\n    },\n    {\n      \"id\": \"unhandled_call\",\n      \"exit_code\": 1,\n      \"command\": [\n        \"/data1/workspace/github/workspace/yavo/compiler/target/release/yavo\",\n        \"check\",\n        \"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/unhandled_call/input.yv\",\n        \"--json\"\n      ],\n      \"source_sha256\": \"d39014ebd07c623dbd0e35649494b355e13b99907e1b6669faea3e5b010a26b0\",\n      \"diagnostics\": [\n        {\n          \"code\": \"E0001\",\n          \"severity\": \"ERROR\",\n          \"message\": \"the result of this call is not handled (`int ! int`)\",\n          \"primary\": {\n            \"column\": 13,\n            \"end\": 48,\n            \"end_column\": 16,\n            \"end_line\": 2,\n            \"file\": \"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/unhandled_call/input.yv\",\n            \"line\": 2,\n            \"start\": 45\n          }\n        }\n      ]\n    },\n    {\n      \"id\": \"unhandled_use\",\n      \"exit_code\": 1,\n      \"command\": [\n        \"/data1/workspace/github/workspace/yavo/compiler/target/release/yavo\",\n        \"check\",\n        \"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/unhandled_use/input.yv\",\n        \"--json\"\n      ],\n      \"source_sha256\": \"f13b1ceb6dd2ee9df18d6ad019b7e2b42cd0c4fcc83c3500dfbaaaa0dc76f881\",\n      \"diagnostics\": [\n        {\n          \"code\": \"E0001\",\n          \"severity\": \"ERROR\",\n          \"message\": \"operator `+` needs integer operands, found `int ! int` and `int`\",\n          \"primary\": {\n            \"column\": 10,\n            \"end\": 71,\n            \"end_column\": 15,\n            \"end_line\": 3,\n            \"file\": \"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/unhandled_use/input.yv\",\n            \"line\": 3,\n            \"start\": 66\n          }\n        }\n      ]\n    },\n    {\n      \"id\": \"return_success\",\n      \"exit_code\": 0,\n      \"command\": [\n        \"/data1/workspace/github/workspace/yavo/compiler/target/release/yavo\",\n        \"check\",\n        \"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/return_success/input.yv\",\n        \"--json\"\n      ],\n      \"source_sha256\": \"35942f93295b928cdc04feb92c37cae399161e4cd114ad20ce2801bc3f35c43e\",\n      \"diagnostics\": []\n    },\n    {\n      \"id\": \"return_ok\",\n      \"exit_code\": 0,\n      \"command\": [\n        \"/data1/workspace/github/workspace/yavo/compiler/target/release/yavo\",\n        \"check\",\n        \"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/return_ok/input.yv\",\n        \"--json\"\n      ],\n      \"source_sha256\": \"1fab1f090454787b3999cef1e89219ca84c92b80b0935f995177a9d67eaba71a\",\n      \"diagnostics\": []\n    },\n    {\n      \"id\": \"return_err\",\n      \"exit_code\": 0,\n      \"command\": [\n        \"/data1/workspace/github/workspace/yavo/compiler/target/release/yavo\",\n        \"check\",\n        \"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/return_err/input.yv\",\n        \"--json\"\n      ],\n      \"source_sha256\": \"95810a5dacfd714dfe3f998bba81d7db729dbec0f9c845e61a9dff0136681081\",\n      \"diagnostics\": []\n    },\n    {\n      \"id\": \"return_other_result\",\n      \"exit_code\": 0,\n      \"command\": [\n        \"/data1/workspace/github/workspace/yavo/compiler/target/release/yavo\",\n        \"check\",\n        \"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/return_other_result/input.yv\",\n        \"--json\"\n      ],\n      \"source_sha256\": \"3f9c24e2bb6afcdabdd956f0d373a64038aa6db333270c3f1ec8a16c62b43c78\",\n      \"diagnostics\": []\n    },\n    {\n      \"id\": \"unit_empty_return\",\n      \"exit_code\": 0,\n      \"command\": [\n        \"/data1/workspace/github/workspace/yavo/compiler/target/release/yavo\",\n        \"check\",\n        \"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/unit_empty_return/input.yv\",\n        \"--json\"\n      ],\n      \"source_sha256\": \"5c4b374b43f3864d4d54fd318e5c2d511407021998fca2e9e84762ed1f215604\",\n      \"diagnostics\": []\n    },\n    {\n      \"id\": \"unit_fallthrough\",\n      \"exit_code\": 0,\n      \"command\": [\n        \"/data1/workspace/github/workspace/yavo/compiler/target/release/yavo\",\n        \"check\",\n        \"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/unit_fallthrough/input.yv\",\n        \"--json\"\n      ],\n      \"source_sha256\": \"22c8a2906dfdda78c411928709520cfc41100167126a1effa42714e866360b5b\",\n      \"diagnostics\": []\n    },\n    {\n      \"id\": \"unit_explicit_value\",\n      \"exit_code\": 0,\n      \"command\": [\n        \"/data1/workspace/github/workspace/yavo/compiler/target/release/yavo\",\n        \"check\",\n        \"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/unit_explicit_value/input.yv\",\n        \"--json\"\n      ],\n      \"source_sha256\": \"c69ad0af22fd46f170081415b796488e0c9bf1eef9f8b67175bbfc4fd796f103\",\n      \"diagnostics\": []\n    },\n    {\n      \"id\": \"catch_owned_call_rethrow\",\n      \"exit_code\": 0,\n      \"command\": [\n        \"/data1/workspace/github/workspace/yavo/compiler/target/release/yavo\",\n        \"check\",\n        \"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/catch_owned_call_rethrow/input.yv\",\n        \"--json\"\n      ],\n      \"source_sha256\": \"cc4004fc8b5890dbaf72a311068ec8916f36a3687a64d26d46f677ea8d153cfc\",\n      \"diagnostics\": []\n    },\n    {\n      \"id\": \"catch_owned_local_rethrow\",\n      \"exit_code\": 0,\n      \"command\": [\n        \"/data1/workspace/github/workspace/yavo/compiler/target/release/yavo\",\n        \"check\",\n        \"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/catch_owned_local_rethrow/input.yv\",\n        \"--json\"\n      ],\n      \"source_sha256\": \"f95872bf113c210d4105c35aa2ec55627faa0e1d692a80a17d2c237486814914\",\n      \"diagnostics\": []\n    },\n    {\n      \"id\": \"borrowed_parameter_try\",\n      \"exit_code\": 1,\n      \"command\": [\n        \"/data1/workspace/github/workspace/yavo/compiler/target/release/yavo\",\n        \"check\",\n        \"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/borrowed_parameter_try/input.yv\",\n        \"--json\"\n      ],\n      \"source_sha256\": \"b6b13d546837a11b500f75cd150391b966e8fbd8812b87d6548263d8be99ca44\",\n      \"diagnostics\": [\n        {\n          \"code\": \"E0401\",\n          \"severity\": \"ERROR\",\n          \"message\": \"cannot move out of `r`: it belongs to the caller\",\n          \"primary\": {\n            \"column\": 58,\n            \"end\": 58,\n            \"end_column\": 59,\n            \"end_line\": 1,\n            \"file\": \"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/borrowed_parameter_try/input.yv\",\n            \"line\": 1,\n            \"start\": 57\n          }\n        }\n      ]\n    },\n    {\n      \"id\": \"local_owned_try\",\n      \"exit_code\": 0,\n      \"command\": [\n        \"/data1/workspace/github/workspace/yavo/compiler/target/release/yavo\",\n        \"check\",\n        \"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/local_owned_try/input.yv\",\n        \"--json\"\n      ],\n      \"source_sha256\": \"7ef4320966f1ded4850dadf8aeccae7b922982d7e7a7ed62d7cdf42f67158997\",\n      \"diagnostics\": []\n    },\n    {\n      \"id\": \"untyped_err\",\n      \"exit_code\": 1,\n      \"command\": [\n        \"/data1/workspace/github/workspace/yavo/compiler/target/release/yavo\",\n        \"check\",\n        \"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/untyped_err/input.yv\",\n        \"--json\"\n      ],\n      \"source_sha256\": \"e39832ceea02a2b1855e7553edaf2263075bb05abef869390e43eed27dd31135\",\n      \"diagnostics\": [\n        {\n          \"code\": \"E0001\",\n          \"severity\": \"ERROR\",\n          \"message\": \"cannot tell which result type this `err(...)` has\",\n          \"primary\": {\n            \"column\": 21,\n            \"end\": 26,\n            \"end_column\": 27,\n            \"end_line\": 1,\n            \"file\": \"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/untyped_err/input.yv\",\n            \"line\": 1,\n            \"start\": 20\n          }\n        }\n      ]\n    },\n    {\n      \"id\": \"unit_unhandled_call\",\n      \"exit_code\": 1,\n      \"command\": [\n        \"/data1/workspace/github/workspace/yavo/compiler/target/release/yavo\",\n        \"check\",\n        \"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/unit_unhandled_call/input.yv\",\n        \"--json\"\n      ],\n      \"source_sha256\": \"c020767b3ce8cc6cc1f7e0d52a97781f6fe2ca53081d390dcdfbb75f68314b06\",\n      \"diagnostics\": [\n        {\n          \"code\": \"E0001\",\n          \"severity\": \"ERROR\",\n          \"message\": \"the result of this call is not handled (`() ! int`)\",\n          \"primary\": {\n            \"column\": 13,\n            \"end\": 48,\n            \"end_column\": 16,\n            \"end_line\": 2,\n            \"file\": \"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/unit_unhandled_call/input.yv\",\n            \"line\": 2,\n            \"start\": 45\n          }\n        }\n      ]\n    }\n  ]\n}\n"
+    },
+    {
+      "path": "phase1/return_err/build.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/return_err/build.stdout.json",
+      "sha256": "847f1a4120e890ae24afbda431adcaf2e030727c459441b4829fe7fd2bf8cb21",
+      "utf8": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/return_err/input.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"95810a5dacfd714dfe3f998bba81d7db729dbec0f9c845e61a9dff0136681081\",\"warning_count\":0}\n"
+    },
+    {
+      "path": "phase1/return_err/input.yv",
+      "sha256": "95810a5dacfd714dfe3f998bba81d7db729dbec0f9c845e61a9dff0136681081",
+      "utf8": "fn f() -> int ! int { return err(9) }\nfn main() { println(f() catch e => e) }\n"
+    },
+    {
+      "path": "phase1/return_err/run.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/return_err/run.stdout.txt",
+      "sha256": "2e6d31a5983a91251bfae5aefa1c0a19d8ba3cf601d0e8a706b4cfa9661a6b8a",
+      "utf8": "9\n"
+    },
+    {
+      "path": "phase1/return_err/stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/return_err/stdout.json",
+      "sha256": "847f1a4120e890ae24afbda431adcaf2e030727c459441b4829fe7fd2bf8cb21",
+      "utf8": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/return_err/input.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"95810a5dacfd714dfe3f998bba81d7db729dbec0f9c845e61a9dff0136681081\",\"warning_count\":0}\n"
+    },
+    {
+      "path": "phase1/return_ok/build.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/return_ok/build.stdout.json",
+      "sha256": "2a5b2c67d4c9a525c31030ea9281687792315a92431504b249a2aa6b98661493",
+      "utf8": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/return_ok/input.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"1fab1f090454787b3999cef1e89219ca84c92b80b0935f995177a9d67eaba71a\",\"warning_count\":0}\n"
+    },
+    {
+      "path": "phase1/return_ok/input.yv",
+      "sha256": "1fab1f090454787b3999cef1e89219ca84c92b80b0935f995177a9d67eaba71a",
+      "utf8": "fn f() -> int ! int { return ok(7) }\nfn main() { println(f() catch e => e) }\n"
+    },
+    {
+      "path": "phase1/return_ok/run.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/return_ok/run.stdout.txt",
+      "sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "utf8": "7\n"
+    },
+    {
+      "path": "phase1/return_ok/stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/return_ok/stdout.json",
+      "sha256": "2a5b2c67d4c9a525c31030ea9281687792315a92431504b249a2aa6b98661493",
+      "utf8": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/return_ok/input.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"1fab1f090454787b3999cef1e89219ca84c92b80b0935f995177a9d67eaba71a\",\"warning_count\":0}\n"
+    },
+    {
+      "path": "phase1/return_other_result/build.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/return_other_result/build.stdout.json",
+      "sha256": "f8bebb29dca1d3405083f55ced5c82f493d82e295a850f6aa18fd75eeff48ef5",
+      "utf8": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/return_other_result/input.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"3f9c24e2bb6afcdabdd956f0d373a64038aa6db333270c3f1ec8a16c62b43c78\",\"warning_count\":0}\n"
+    },
+    {
+      "path": "phase1/return_other_result/input.yv",
+      "sha256": "3f9c24e2bb6afcdabdd956f0d373a64038aa6db333270c3f1ec8a16c62b43c78",
+      "utf8": "fn f() -> int ! int { return err(9) }\nfn g() -> int ! int { return f() }\nfn main() { println(g() catch e => e) }\n"
+    },
+    {
+      "path": "phase1/return_other_result/run.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/return_other_result/run.stdout.txt",
+      "sha256": "2e6d31a5983a91251bfae5aefa1c0a19d8ba3cf601d0e8a706b4cfa9661a6b8a",
+      "utf8": "9\n"
+    },
+    {
+      "path": "phase1/return_other_result/stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/return_other_result/stdout.json",
+      "sha256": "f8bebb29dca1d3405083f55ced5c82f493d82e295a850f6aa18fd75eeff48ef5",
+      "utf8": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/return_other_result/input.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"3f9c24e2bb6afcdabdd956f0d373a64038aa6db333270c3f1ec8a16c62b43c78\",\"warning_count\":0}\n"
+    },
+    {
+      "path": "phase1/return_success/build.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/return_success/build.stdout.json",
+      "sha256": "eaa1206b677b6ef1000071cc37922847a3c13f7637e46212094d4102177ec7d1",
+      "utf8": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/return_success/input.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"35942f93295b928cdc04feb92c37cae399161e4cd114ad20ce2801bc3f35c43e\",\"warning_count\":0}\n"
+    },
+    {
+      "path": "phase1/return_success/input.yv",
+      "sha256": "35942f93295b928cdc04feb92c37cae399161e4cd114ad20ce2801bc3f35c43e",
+      "utf8": "fn f() -> int ! int { return 7 }\nfn main() { println(f() catch e => e) }\n"
+    },
+    {
+      "path": "phase1/return_success/run.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/return_success/run.stdout.txt",
+      "sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "utf8": "7\n"
+    },
+    {
+      "path": "phase1/return_success/stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/return_success/stdout.json",
+      "sha256": "eaa1206b677b6ef1000071cc37922847a3c13f7637e46212094d4102177ec7d1",
+      "utf8": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/return_success/input.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"35942f93295b928cdc04feb92c37cae399161e4cd114ad20ce2801bc3f35c43e\",\"warning_count\":0}\n"
+    },
+    {
+      "path": "phase1/unhandled_call/input.yv",
+      "sha256": "d39014ebd07c623dbd0e35649494b355e13b99907e1b6669faea3e5b010a26b0",
+      "utf8": "fn f() -> int ! int { return 7 }\nfn main() { f() }\n"
+    },
+    {
+      "path": "phase1/unhandled_call/stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/unhandled_call/stdout.json",
+      "sha256": "a482e51eb4328bfcd76f59584610c2f4bea9fc0ddef5ba935d70b4a472b7f3ef",
+      "utf8": "{\"diagnostics\":[{\"code\":\"E0001\",\"column\":13,\"end_column\":16,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/unhandled_call/input.yv\",\"fixes\":[],\"line\":2,\"message\":\"the result of this call is not handled (`int ! int`)\",\"notes\":[\"handle it with `try`, `catch` or `match`, or discard it explicitly with `let _ = ...`\"],\"primary\":{\"column\":13,\"end\":48,\"end_column\":16,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/unhandled_call/input.yv\",\"line\":2,\"start\":45},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/unhandled_call/input.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"d39014ebd07c623dbd0e35649494b355e13b99907e1b6669faea3e5b010a26b0\",\"warning_count\":0}\n"
+    },
+    {
+      "path": "phase1/unhandled_use/input.yv",
+      "sha256": "f13b1ceb6dd2ee9df18d6ad019b7e2b42cd0c4fcc83c3500dfbaaaa0dc76f881",
+      "utf8": "fn f() -> int ! int { return 7 }\nfn main() { let r = f()\n println(r + 1) }\n"
+    },
+    {
+      "path": "phase1/unhandled_use/stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/unhandled_use/stdout.json",
+      "sha256": "36bb124b93287a946136022eb3d1ce07f0fe714688b7fb66c047e41f0a129041",
+      "utf8": "{\"diagnostics\":[{\"code\":\"E0001\",\"column\":10,\"end_column\":15,\"end_line\":3,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/unhandled_use/input.yv\",\"fixes\":[],\"line\":3,\"message\":\"operator `+` needs integer operands, found `int ! int` and `int`\",\"notes\":[],\"primary\":{\"column\":10,\"end\":71,\"end_column\":15,\"end_line\":3,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/unhandled_use/input.yv\",\"line\":3,\"start\":66},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/unhandled_use/input.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"f13b1ceb6dd2ee9df18d6ad019b7e2b42cd0c4fcc83c3500dfbaaaa0dc76f881\",\"warning_count\":0}\n"
+    },
+    {
+      "path": "phase1/unit_empty_return/build.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/unit_empty_return/build.stdout.json",
+      "sha256": "426f8faee6ffa125897762401273e9443aa4fd970685add4ee58258fc7b980c1",
+      "utf8": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/unit_empty_return/input.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"5c4b374b43f3864d4d54fd318e5c2d511407021998fca2e9e84762ed1f215604\",\"warning_count\":0}\n"
+    },
+    {
+      "path": "phase1/unit_empty_return/input.yv",
+      "sha256": "5c4b374b43f3864d4d54fd318e5c2d511407021998fca2e9e84762ed1f215604",
+      "utf8": "fn f() -> () ! int { return }\nfn main() { f() catch _ { return }\n println(7) }\n"
+    },
+    {
+      "path": "phase1/unit_empty_return/run.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/unit_empty_return/run.stdout.txt",
+      "sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "utf8": "7\n"
+    },
+    {
+      "path": "phase1/unit_empty_return/stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/unit_empty_return/stdout.json",
+      "sha256": "426f8faee6ffa125897762401273e9443aa4fd970685add4ee58258fc7b980c1",
+      "utf8": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/unit_empty_return/input.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"5c4b374b43f3864d4d54fd318e5c2d511407021998fca2e9e84762ed1f215604\",\"warning_count\":0}\n"
+    },
+    {
+      "path": "phase1/unit_explicit_value/build.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/unit_explicit_value/build.stdout.json",
+      "sha256": "060da0683abfb6c87303c818d72b93e66e64c32793321445d01d0d49d6cec071",
+      "utf8": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/unit_explicit_value/input.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"c69ad0af22fd46f170081415b796488e0c9bf1eef9f8b67175bbfc4fd796f103\",\"warning_count\":0}\n"
+    },
+    {
+      "path": "phase1/unit_explicit_value/input.yv",
+      "sha256": "c69ad0af22fd46f170081415b796488e0c9bf1eef9f8b67175bbfc4fd796f103",
+      "utf8": "fn f() -> () ! int { return () }\nfn main() { f() catch _ { return }\n println(7) }\n"
+    },
+    {
+      "path": "phase1/unit_explicit_value/run.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/unit_explicit_value/run.stdout.txt",
+      "sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "utf8": "7\n"
+    },
+    {
+      "path": "phase1/unit_explicit_value/stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/unit_explicit_value/stdout.json",
+      "sha256": "060da0683abfb6c87303c818d72b93e66e64c32793321445d01d0d49d6cec071",
+      "utf8": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/unit_explicit_value/input.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"c69ad0af22fd46f170081415b796488e0c9bf1eef9f8b67175bbfc4fd796f103\",\"warning_count\":0}\n"
+    },
+    {
+      "path": "phase1/unit_fallthrough/build.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/unit_fallthrough/build.stdout.json",
+      "sha256": "b668cf5d4e6be80a07e4a0132d6acb8a09dd49776cd96104907541947a1e8773",
+      "utf8": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/unit_fallthrough/input.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"22c8a2906dfdda78c411928709520cfc41100167126a1effa42714e866360b5b\",\"warning_count\":0}\n"
+    },
+    {
+      "path": "phase1/unit_fallthrough/input.yv",
+      "sha256": "22c8a2906dfdda78c411928709520cfc41100167126a1effa42714e866360b5b",
+      "utf8": "fn f() -> () ! int { }\nfn main() { f() catch _ { return }\n println(7) }\n"
+    },
+    {
+      "path": "phase1/unit_fallthrough/run.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/unit_fallthrough/run.stdout.txt",
+      "sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "utf8": "7\n"
+    },
+    {
+      "path": "phase1/unit_fallthrough/stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/unit_fallthrough/stdout.json",
+      "sha256": "b668cf5d4e6be80a07e4a0132d6acb8a09dd49776cd96104907541947a1e8773",
+      "utf8": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/unit_fallthrough/input.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"22c8a2906dfdda78c411928709520cfc41100167126a1effa42714e866360b5b\",\"warning_count\":0}\n"
+    },
+    {
+      "path": "phase1/unit_unhandled_call/input.yv",
+      "sha256": "c020767b3ce8cc6cc1f7e0d52a97781f6fe2ca53081d390dcdfbb75f68314b06",
+      "utf8": "fn f() -> () ! int { return () }\nfn main() { f() }\n"
+    },
+    {
+      "path": "phase1/unit_unhandled_call/stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/unit_unhandled_call/stdout.json",
+      "sha256": "99bd64091392af0a66d4f216ddf6d63e263223bcbbc1d9d7ad199aee2c3f4dd9",
+      "utf8": "{\"diagnostics\":[{\"code\":\"E0001\",\"column\":13,\"end_column\":16,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/unit_unhandled_call/input.yv\",\"fixes\":[],\"line\":2,\"message\":\"the result of this call is not handled (`() ! int`)\",\"notes\":[\"handle it with `try`, `catch` or `match`, or discard it explicitly with `let _ = ...`\"],\"primary\":{\"column\":13,\"end\":48,\"end_column\":16,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/unit_unhandled_call/input.yv\",\"line\":2,\"start\":45},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/unit_unhandled_call/input.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"c020767b3ce8cc6cc1f7e0d52a97781f6fe2ca53081d390dcdfbb75f68314b06\",\"warning_count\":0}\n"
+    },
+    {
+      "path": "phase1/untyped_err/input.yv",
+      "sha256": "e39832ceea02a2b1855e7553edaf2263075bb05abef869390e43eed27dd31135",
+      "utf8": "fn main() { let r = err(7) }\n"
+    },
+    {
+      "path": "phase1/untyped_err/stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    {
+      "path": "phase1/untyped_err/stdout.json",
+      "sha256": "0f4c85dee5b98c04a1fefda2868fa22c610ee2cc67bdf28b40ccfd7210798391",
+      "utf8": "{\"diagnostics\":[{\"code\":\"E0001\",\"column\":21,\"end_column\":27,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/untyped_err/input.yv\",\"fixes\":[],\"line\":1,\"message\":\"cannot tell which result type this `err(...)` has\",\"notes\":[\"use it where a `T ! E` is expected, e.g. `return err(...)` in a function returning `T ! E`\"],\"primary\":{\"column\":21,\"end\":26,\"end_column\":27,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/untyped_err/input.yv\",\"line\":1,\"start\":20},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/phase1/untyped_err/input.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"e39832ceea02a2b1855e7553edaf2263075bb05abef869390e43eed27dd31135\",\"warning_count\":0}\n"
+    }
+  ]
+}

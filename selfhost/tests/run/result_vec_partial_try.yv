@@ -1,0 +1,19 @@
+fn piece(tag: str) -> String {
+    print(tag)
+    return tag.toString()
+}
+fn stop() -> String ! String {
+    print("E")
+    return err("stop".toString())
+}
+fn build() -> Vec[String] ! String {
+    let guard = piece("L")
+    return [piece("A"), try stop(), piece("Z")]
+}
+fn main() {
+    let values = build() catch error {
+        println(error)
+        return
+    }
+    println(values.len())
+}

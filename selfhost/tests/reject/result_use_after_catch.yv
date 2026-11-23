@@ -1,0 +1,8 @@
+fn source() -> String ! String { return "value".toString() }
+fn main() {
+    let result = source()
+    let first = result catch _ { return }
+    let second = result catch _ { return }
+    println(first)
+    println(second)
+}

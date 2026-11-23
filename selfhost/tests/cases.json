@@ -1,6 +1,6 @@
 {
   "schema": "yavo-selfhost-cases/1",
-  "description": "Independent fixed-oracle probes for the Yavo-written scalar, byte, aggregate, String and owned-vector subset; not the frozen full-language conformance suite.",
+  "description": "Independent fixed-oracle probes for the Yavo-written scalar, byte, aggregate, String, owned-vector and user-function Result subset; not the frozen full-language conformance suite.",
   "cases": [
     {
       "id": "arithmetic",
@@ -2305,7 +2305,272 @@
       "diagnostic": "U0001",
       "file": "unsupported/unsupported_catch_binding.yv",
       "batch": "bootstrap-fixed-point",
-      "reason": "stage0 binds the error value; the bootstrap subset supports only catch _ handlers."
+      "reason": "Named catch binding of standard-library fs.Error remains outside this user-function Result batch; the original source bytes and fixture identity are unchanged."
+    },
+    {
+      "id": "result_forms",
+      "kind": "run",
+      "stdout": "1\n2\n3\n4\n5\n6\n7\n8\n9\nunit\n",
+      "file": "run/result_forms.yv",
+      "batch": "user-result"
+    },
+    {
+      "id": "result_owned_string",
+      "kind": "run",
+      "stdout": "value\nfailure\n",
+      "file": "run/result_owned_string.yv",
+      "batch": "user-result"
+    },
+    {
+      "id": "result_owned_vec",
+      "kind": "run",
+      "stdout": "2\none\ntwo\n2\nbad\ndetail\n",
+      "file": "run/result_owned_vec.yv",
+      "batch": "user-result"
+    },
+    {
+      "id": "result_owned_struct",
+      "kind": "run",
+      "stdout": "payload\nitem\nfailure\ntrace\n",
+      "file": "run/result_owned_struct.yv",
+      "batch": "user-result"
+    },
+    {
+      "id": "result_multilevel_try",
+      "kind": "run",
+      "stdout": "leaf\n2\nfailed\n",
+      "file": "run/result_multilevel_try.yv",
+      "batch": "user-result"
+    },
+    {
+      "id": "result_vec_partial_try",
+      "kind": "run",
+      "stdout": "LAEstop\n",
+      "file": "run/result_vec_partial_try.yv",
+      "batch": "user-result"
+    },
+    {
+      "id": "result_vec_struct_partial_try",
+      "kind": "run",
+      "stdout": "ABCDEstop\n",
+      "file": "run/result_vec_struct_partial_try.yv",
+      "batch": "user-result"
+    },
+    {
+      "id": "result_struct_partial_try",
+      "kind": "run",
+      "stdout": "CABEstop\n",
+      "file": "run/result_struct_partial_try.yv",
+      "batch": "user-result"
+    },
+    {
+      "id": "result_argument_try_order",
+      "kind": "run",
+      "stdout": "GABCcalled\n3\nGABstop\n",
+      "file": "run/result_argument_try_order.yv",
+      "batch": "user-result"
+    },
+    {
+      "id": "result_short_circuit_try",
+      "kind": "run",
+      "stdout": "false\ntrue\nAtrue\nBfalse\nEE\n",
+      "file": "run/result_short_circuit_try.yv",
+      "batch": "user-result"
+    },
+    {
+      "id": "result_catch_return",
+      "kind": "run",
+      "stdout": "failure\n9\n10\n",
+      "file": "run/result_catch_return.yv",
+      "batch": "user-result"
+    },
+    {
+      "id": "result_catch_loop",
+      "kind": "run",
+      "stdout": "skip\nok\nstop\n3\n",
+      "file": "run/result_catch_loop.yv",
+      "batch": "user-result"
+    },
+    {
+      "id": "result_try_loop_cleanup",
+      "kind": "run",
+      "stdout": "0\n1\nstop\n",
+      "file": "run/result_try_loop_cleanup.yv",
+      "batch": "user-result"
+    },
+    {
+      "id": "result_catch_discard_owned",
+      "kind": "run",
+      "stdout": "caught\nafter\n",
+      "file": "run/result_catch_discard_owned.yv",
+      "batch": "user-result"
+    },
+    {
+      "id": "result_unhandled_statement",
+      "kind": "reject",
+      "file": "reject/result_unhandled_statement.yv",
+      "diagnostic": "E0001",
+      "batch": "user-result"
+    },
+    {
+      "id": "result_unhandled_value",
+      "kind": "reject",
+      "file": "reject/result_unhandled_value.yv",
+      "diagnostic": "E0001",
+      "batch": "user-result"
+    },
+    {
+      "id": "result_try_outside",
+      "kind": "reject",
+      "file": "reject/result_try_outside.yv",
+      "diagnostic": "E0001",
+      "batch": "user-result"
+    },
+    {
+      "id": "result_try_error_type",
+      "kind": "reject",
+      "file": "reject/result_try_error_type.yv",
+      "diagnostic": "E0001",
+      "batch": "user-result"
+    },
+    {
+      "id": "result_success_type",
+      "kind": "reject",
+      "file": "reject/result_success_type.yv",
+      "diagnostic": "E0001",
+      "batch": "user-result"
+    },
+    {
+      "id": "result_error_type",
+      "kind": "reject",
+      "file": "reject/result_error_type.yv",
+      "diagnostic": "E0001",
+      "batch": "user-result"
+    },
+    {
+      "id": "result_err_inferred",
+      "kind": "reject",
+      "file": "reject/result_err_inferred.yv",
+      "diagnostic": "E0001",
+      "batch": "user-result"
+    },
+    {
+      "id": "result_borrowed_try",
+      "kind": "reject",
+      "file": "reject/result_borrowed_try.yv",
+      "diagnostic": "E0401",
+      "batch": "user-result"
+    },
+    {
+      "id": "result_borrowed_catch",
+      "kind": "reject",
+      "file": "reject/result_borrowed_catch.yv",
+      "diagnostic": "E0401",
+      "batch": "user-result"
+    },
+    {
+      "id": "result_use_after_try",
+      "kind": "reject",
+      "file": "reject/result_use_after_try.yv",
+      "diagnostic": "E0402",
+      "batch": "user-result"
+    },
+    {
+      "id": "result_use_after_catch",
+      "kind": "reject",
+      "file": "reject/result_use_after_catch.yv",
+      "diagnostic": "E0402",
+      "batch": "user-result"
+    },
+    {
+      "id": "result_catch_falls_through",
+      "kind": "reject",
+      "file": "reject/result_catch_falls_through.yv",
+      "diagnostic": "E0601",
+      "batch": "user-result"
+    },
+    {
+      "id": "result_catch_partial_termination",
+      "kind": "reject",
+      "file": "reject/result_catch_partial_termination.yv",
+      "diagnostic": "E0601",
+      "batch": "user-result"
+    },
+    {
+      "id": "result_missing_return",
+      "kind": "reject",
+      "file": "reject/result_missing_return.yv",
+      "diagnostic": "E0013",
+      "batch": "user-result"
+    },
+    {
+      "id": "result_nested_chain",
+      "kind": "reject",
+      "file": "reject/result_nested_chain.yv",
+      "diagnostic": "E0020",
+      "batch": "user-result"
+    },
+    {
+      "id": "result_nested_parenthesized",
+      "kind": "reject",
+      "file": "reject/result_nested_parenthesized.yv",
+      "diagnostic": "E0020",
+      "batch": "user-result"
+    },
+    {
+      "id": "unsupported_result_arrow_catch",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "reason": "This batch accepts terminating block catch handlers; arrow catch expressions remain outside the bootstrap subset.",
+      "file": "unsupported/unsupported_result_arrow_catch.yv",
+      "batch": "user-result"
+    },
+    {
+      "id": "unsupported_result_field",
+      "kind": "shared_unsupported",
+      "diagnostic": "U0001",
+      "reason": "Both stage0 and the bootstrap subset reject Result fields with U0001; user-function Result values do not extend field storage.",
+      "file": "unsupported/unsupported_result_field.yv",
+      "batch": "user-result"
+    },
+    {
+      "id": "unsupported_result_vec_element",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "reason": "User-function Result values are supported; Vec elements of Result type remain outside the bootstrap subset.",
+      "file": "unsupported/unsupported_result_vec_element.yv",
+      "batch": "user-result"
+    },
+    {
+      "id": "result_compare",
+      "kind": "reject",
+      "file": "reject/result_compare.yv",
+      "diagnostic": "E0501",
+      "batch": "user-result"
+    },
+    {
+      "id": "result_catch_break_missing_return",
+      "kind": "reject",
+      "file": "reject/result_catch_break_missing_return.yv",
+      "diagnostic": "E0013",
+      "note": "A catch-handler break makes the non-unit function fall through. The old stage0 incorrectly accepted it; the fixed independent Rust checker rejects it. See the before/after oracle evidence.",
+      "batch": "user-result"
+    },
+    {
+      "id": "unsupported_result_borrowed_view",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_result_borrowed_view.yv",
+      "diagnostic": "U0001",
+      "reason": "Implicit Result wrapping of a transient view into owned String requires borrow-lifetime tracking beyond this batch; the stage0-valid owner is not mutated.",
+      "batch": "user-result"
+    },
+    {
+      "id": "unsupported_result_temporary_view",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_result_temporary_view.yv",
+      "diagnostic": "U0001",
+      "reason": "Explicit ok wrapping of a transient view into a temporary String remains outside the subset; stage0 consumes the view during the call and drops the owner after the call returns.",
+      "batch": "user-result"
     }
   ],
   "promotions": [

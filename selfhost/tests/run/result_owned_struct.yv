@@ -1,0 +1,32 @@
+struct Payload {
+    text: String
+    items: Vec[String]
+}
+struct Fault {
+    message: String
+    trail: Vec[String]
+}
+fn source(success: bool) -> Payload ! Fault {
+    if success {
+        return Payload{text: "payload".toString(), items: ["item".toString()]}
+    }
+    return err(Fault{message: "failure".toString(), trail: ["trace".toString()]})
+}
+fn rethrow(success: bool) -> Payload ! Fault {
+    let value = source(success) catch error { return err(error) }
+    return value
+}
+fn forward(success: bool) -> Payload ! Fault { return try rethrow(success) }
+fn show(success: bool) {
+    let value = forward(success) catch error {
+        println(error.message)
+        println(error.trail[0])
+        return
+    }
+    println(value.text)
+    println(value.items[0])
+}
+fn main() {
+    show(true)
+    show(false)
+}

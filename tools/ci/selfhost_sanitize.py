@@ -150,7 +150,63 @@ def load_inputs(receipt_path):
         raise ValueError("assembled source list does not match the bootstrap receipt")
     if not programs:
         raise ValueError("the manifest contains no executable cases")
-    COMPILER_SANITIZER.load_stage_inputs(BOOTSTRAP, receipt, bound)
+    _, stages = COMPILER_SANITIZER.load_stage_inputs(BOOTSTRAP, receipt, bound)
+    # This is the current production lexer, not a copied test implementation.
+    # Its handled failures return normally and therefore also exercise the
+    # allocation counter when LeakSanitizer is disabled by the runner.
+    if checks.get("lexer_units_selfhost", {}).get("passed") is not True:
+        raise ValueError("bootstrap did not execute the selfhost lexer unit")
+    unit = receipt["lexer_selfhost_unit"]
+    bundle = inputs["lexer_unit_bundle"]
+    source = contained(work / "lexer-test.yv", work)
+    expected_parts = [{"file": part, "sha256": BOOTSTRAP.digest(SELFHOST / part)}
+                      for part in BOOTSTRAP.LEXER_UNIT_PARTS]
+    if (bundle["path"] != str(source) or bundle["parts"] != expected_parts
+            or bundle["bytes"] != source.stat().st_size
+            or source.read_bytes() != b"".join((SELFHOST / part).read_bytes()
+                                               for part in BOOTSTRAP.LEXER_UNIT_PARTS)
+            or unit["source"] != {"path": str(source), "sha256": bundle["sha256"]}
+            or unit.get("deterministic_c") is not True):
+        raise ValueError("selfhost lexer unit does not bind the production source bundle")
+    bind(source, bundle["sha256"], "selfhost lexer unit source")
+    for key, filename, compiler_key, command_key in (
+            ("generated_c", "program.c", "stage1", "stage1_emit"),
+            ("stage2_c", "stage2.c", "stage2", "stage2_emit")):
+        path = contained(work / "lexer-selfhost" / filename, work)
+        artifact = unit[key]
+        if artifact["path"] != str(path) or artifact["bytes"] != path.stat().st_size:
+            raise ValueError("selfhost lexer unit C path or size mismatch")
+        bind(path, artifact["sha256"], "selfhost lexer unit C")
+        compiler = inputs["subset_compiler"]["path"] if compiler_key == "stage1" else stages["stage2"]
+        COMPILER_SANITIZER.require_command(unit[command_key], [compiler, "emit-c", source, "-o", path])
+    c_file = work / "lexer-selfhost/program.c"
+    if c_file.read_bytes() != (work / "lexer-selfhost/stage2.c").read_bytes():
+        raise ValueError("selfhost lexer unit C differs between compiler generations")
+    modes = unit["modes"]
+    if [row["mode"] for row in modes] != ["debug", "release"]:
+        raise ValueError("selfhost lexer unit must run in both build modes")
+    for row in modes:
+        mode = row["mode"]
+        target = contained(work / "lexer-selfhost" / ("lexer-" + mode + BOOTSTRAP.EXE), work)
+        if row["binary"]["path"] != str(target) or row.get("passed") is not True:
+            raise ValueError("selfhost lexer unit binary or result mismatch")
+        bind(target, row["binary"]["sha256"], "selfhost lexer unit binary")
+        COMPILER_SANITIZER.require_command(row["build"],
+            [inputs["zig"]["path"], "cc", *BOOTSTRAP.CC_FLAGS[mode], "-I", COMPILER / "runtime",
+             c_file, "-o", target])
+        executed = row["run"]
+        if (executed["argv"] != [str(target)] or executed["exit_code"] != 0
+                or executed["timed_out"] is not False
+                or executed.get("environment", {}).get("YAVO_ALLOC_CHECK") != "1"
+                or COMPILER_SANITIZER.recorded_bytes(executed["stdout"]) != b"lexer tests passed\n"
+                or COMPILER_SANITIZER.recorded_bytes(executed["stderr"]) != b""):
+            raise ValueError("selfhost lexer unit lacks its exact successful execution")
+    if any(program["id"] == "lexer_selfhost_unit" for program in programs):
+        raise ValueError("reserved selfhost lexer unit ID collides with a fixture")
+    programs.append({"id": "lexer_selfhost_unit", "entry": str(source.relative_to(ROOT)),
+                     "source": source.read_text(encoding="utf-8"), "source_sha256": bundle["sha256"],
+                     "c": c_file.read_text(encoding="utf-8"), "c_sha256": BOOTSTRAP.digest(c_file),
+                     "expected": {"stdout": "lexer tests passed\n", "stderr": "", "exit_code": 0}})
     return receipt, programs, bound, runtime
 
 

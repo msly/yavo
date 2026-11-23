@@ -1,0 +1,43 @@
+{
+  "schema": "yavo-result-mutation-boundary-review/1",
+  "scope": "One check-only review of the unchanged owner-mutation source using the final bootstrap stage1. The invalid program was not compiled or executed and is not a registered manifest case.",
+  "before_receipt": "result-view-mutation-before-boundary-fix.json",
+  "before_receipt_sha256": "fc670f7d564d01db93a2f3cc591605d5c8820dd411114b9a42e11e9b89d7cfcb",
+  "source_sha256": "589d44617079d1476757b6c4c903a05b7efb3acc4217a489beefb49e95866ce8",
+  "source": "fn main() {\n    var owner = \"hello\".toString()\n    let stored: str ! int = owner[0..1]\n    owner.push(\"many many many many many many many many many many characters\")\n    let value = stored catch _ { return }\n    println(value)\n}\n",
+  "inputs": {
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-result29/run-xaphi507/yavo-selfhost": "dc3af5cafff5bf9535f551c0e8b723c8415023449c5797f0a1f3001172643a63",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-readonly-review/borrowed-result-view.yv": "589d44617079d1476757b6c4c903a05b7efb3acc4217a489beefb49e95866ce8",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/cases.json": "25221e50ab66687b097e6f371ce886f0961fd77c622a2e259ad36bb7a7a91e37",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch29-result-oracle/result-view-mutation-before-boundary-fix.json": "fc670f7d564d01db93a2f3cc591605d5c8820dd411114b9a42e11e9b89d7cfcb"
+  },
+  "stage1": "compiler/target/ci/selfhost-result29/run-xaphi507/yavo-selfhost",
+  "command": [
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-result29/run-xaphi507/yavo-selfhost",
+    "check",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-readonly-review/borrowed-result-view.yv"
+  ],
+  "environment": {
+    "YAVO_ALLOC_CHECK": "1",
+    "YAVO_NO_CACHE": "1"
+  },
+  "exit_code": 1,
+  "stdout": "",
+  "stderr": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-result-readonly-review/borrowed-result-view.yv:3:34: U0001: result payloads holding views of owned strings are outside this subset; use String\n",
+  "seconds": 0.001,
+  "first_error": {
+    "line": 3,
+    "column": 34,
+    "code": "U0001",
+    "message": "result payloads holding views of owned strings are outside this subset; use String"
+  },
+  "expected": {
+    "exit_code": 1,
+    "stdout": "",
+    "first_code": "U0001",
+    "first_line": 3,
+    "meaning": "The Result wrapping is rejected before the later owner mutation, rather than claiming stage0 E0102 diagnostic equivalence."
+  },
+  "inputs_changed": [],
+  "passed": true
+}

@@ -1,0 +1,51 @@
+{
+  "schema": "yavo-result-stage0-oracle/1",
+  "baseline": "aecd7c3",
+  "profile": "Debug",
+  "environment": {
+    "YAVO_ALLOC_CHECK": "1",
+    "YAVO_NO_CACHE": "1"
+  },
+  "inputs": {
+    "compiler/target/release/yavo": "4482658b76d489863bdd16d1bc4263e87cdabf2fda0b3557cba16944ff1aaab8",
+    "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig": "58959f01285c05a74276f09327b551d42ed6006bf325a78dc661a024e314987b",
+    "compiler/runtime/yavo_rt.h": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+    "compiler/toolchain.lock": "a9bbe83e644b0e1cee19c8dba8b5157eaed3e9ddc71b96d8aab2b2d2bb15f53c",
+    "selfhost/tests/evidence/batch29-result-oracle/verify_stage0.py": "316cf5e4cc09bdf1faaf114aafb6997296df5fc516463c48dfdca13d908e98cc",
+    "selfhost/tests/evidence/batch29-result-oracle/candidates.json": "4f611832a86860177f45e6903f040a6c1996489176a3fd9791789b1e2f9a8ca0",
+    "selfhost/tests/reject/result_compare.yv": "f74965a37682353f3e0de35378b356c5d81b442d6b518b924981d52a4986bd51"
+  },
+  "records": [
+    {
+      "id": "result_compare",
+      "kind": "reject",
+      "file": "reject/result_compare.yv",
+      "source_sha256": "f74965a37682353f3e0de35378b356c5d81b442d6b518b924981d52a4986bd51",
+      "source": "fn result() -> int ! String { return ok(1) }\nfn main() {\n    let x = result()\n    let y = result()\n    assert(x == y)\n}\n",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_compare.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"E0501\",\"column\":12,\"end_column\":18,\"end_line\":5,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_compare.yv\",\"fixes\":[],\"line\":5,\"message\":\"values of type `int ! String` cannot be compared\",\"notes\":[],\"primary\":{\"column\":12,\"end\":116,\"end_column\":18,\"end_line\":5,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_compare.yv\",\"line\":5,\"start\":110},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_compare.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"f74965a37682353f3e0de35378b356c5d81b442d6b518b924981d52a4986bd51\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.002,
+        "timed_out": false
+      },
+      "first_error": {
+        "code": "E0501",
+        "line": 5,
+        "column": 12,
+        "message": "values of type `int ! String` cannot be compared"
+      }
+    }
+  ],
+  "status": "passed",
+  "inputs_changed": [],
+  "passed": 1,
+  "total": 1
+}

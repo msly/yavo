@@ -11,6 +11,7 @@ pub enum BasicType {
     Named
     Byte
     Args
+    Result
 }
 
 pub struct TypeRef {
@@ -18,6 +19,14 @@ pub struct TypeRef {
     name: int = -1
     elementKind: BasicType
     elementName: int = -1
+    result: int = -1
+}
+
+// Result payloads are non-Result types. The syntax pool keeps TypeRef Copy.
+pub struct ResultRef {
+    ok: TypeRef
+    error: TypeRef
+    errorToken: int
 }
 
 pub enum AggregateKind {
@@ -61,6 +70,7 @@ pub enum ExprKind {
     Slice
     Ref
     Catch
+    Try
 }
 
 // args/names index Program.lists. A Slice keeps its end in extra; a Catch
@@ -130,6 +140,7 @@ pub struct Program {
     lists: Vec[int] = []
     params: Vec[Parameter] = []
     fields: Vec[FieldDecl] = []
+    resultTypes: Vec[ResultRef] = []
     importsFs: bool = false
     importsOs: bool = false
 }

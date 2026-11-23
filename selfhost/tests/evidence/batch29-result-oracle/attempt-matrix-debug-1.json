@@ -1,0 +1,1314 @@
+{
+  "schema": "yavo-result-stage0-oracle/1",
+  "baseline": "aecd7c3",
+  "profile": "Debug",
+  "environment": {
+    "YAVO_ALLOC_CHECK": "1",
+    "YAVO_NO_CACHE": "1"
+  },
+  "inputs": {
+    "compiler/target/release/yavo": "4482658b76d489863bdd16d1bc4263e87cdabf2fda0b3557cba16944ff1aaab8",
+    "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig": "58959f01285c05a74276f09327b551d42ed6006bf325a78dc661a024e314987b",
+    "compiler/runtime/yavo_rt.h": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+    "compiler/toolchain.lock": "a9bbe83e644b0e1cee19c8dba8b5157eaed3e9ddc71b96d8aab2b2d2bb15f53c",
+    "selfhost/tests/evidence/batch29-result-oracle/verify_stage0.py": "32be5d7bc4f2ff6076aa48d868eba053108ccaf954640e70858c6fea1ccb7e96",
+    "selfhost/tests/evidence/batch29-result-oracle/candidates.json": "08670ec492070cbef54a410c76244ff54d4d635f3e0f6d12be580cd65015c613",
+    "selfhost/tests/run/result_forms.yv": "f74097f32936a85e2b438f3f82613995cb3d6632ac36dae4a4df7a35026128dc",
+    "selfhost/tests/run/result_owned_string.yv": "859f7dfc282c9488580b08f47ffb21c0f025deba86a52104d569ac735dcc283b",
+    "selfhost/tests/run/result_owned_vec.yv": "3cded6ba19416cf36bd1644f48a172f4fc54608ea2fb711dd23ecc0f4c8dca2d",
+    "selfhost/tests/run/result_owned_struct.yv": "527d973ef19484f5b5c50da49a7fb4ab3052f2f5446fe98303366cff1a2118b9",
+    "selfhost/tests/run/result_multilevel_try.yv": "18936cc9672cd63dbcd849b148a49f9577a4781d39c5492451f1b275aad4e6a2",
+    "selfhost/tests/run/result_vec_partial_try.yv": "bf2fdbb4ca3796a54c57ee09b7ef8e3c2d37605716b5ae68eae667cf41d225a5",
+    "selfhost/tests/run/result_nested_vec_partial_try.yv": "98f866ce3a763156a0e69fc4258bd531a9c84da6df18ed2a9858052c66689117",
+    "selfhost/tests/run/result_struct_partial_try.yv": "6c722c192e7a7fd777e99f925e68d5aa3675f6fc1cce70a41cc7267668302551",
+    "selfhost/tests/run/result_argument_try_order.yv": "b0c98b05a9610b095bfa57bccaac01e1c06eee2a3ebb7e1fceea49a9fe2c8398",
+    "selfhost/tests/run/result_short_circuit_try.yv": "251808b950dd7225ebff7fc1a8237cc50514be9f26ee1ff660d10c4d4ac1e4e0",
+    "selfhost/tests/run/result_catch_return.yv": "8785a473993f1cc9e5828a6e651c98eb2a7dfd93856827e2728629ed6d49aba5",
+    "selfhost/tests/run/result_catch_loop.yv": "38995bb3123abcf5980a13c9745d32e0d9604a897d6066bb154760acc7a26549",
+    "selfhost/tests/run/result_try_loop_cleanup.yv": "e9c68908aeff70a876cafb52491184ae3dc5df6328fa4e6f7cc6059eb5603aed",
+    "selfhost/tests/run/result_catch_discard_owned.yv": "2e0608d9d27cf20d8d621e3925743edfb50f6696202c8008fe0567f593d7deaf",
+    "selfhost/tests/reject/result_unhandled_statement.yv": "6766ab7c9b8efcb266fbc543ef323c969f87dc57ef19f88e69c04acb8709d1f7",
+    "selfhost/tests/reject/result_unhandled_value.yv": "778bd89697b3527e13ea37cc720fc6c39201c1dca391190ea169197d374fbd35",
+    "selfhost/tests/reject/result_try_outside.yv": "3fb9d1f5ac499b8347a1ab09622e04231d02eff29b638fe051bb8578ec0de743",
+    "selfhost/tests/reject/result_try_error_type.yv": "24012e058212adb220c45a6f0fd77ae0454f6a53ea3506f4c9ec6d27dbf2a0fb",
+    "selfhost/tests/reject/result_success_type.yv": "0ef9c814bfbbea601873fbe5589a9c556319dc55264a771c181353713a69a405",
+    "selfhost/tests/reject/result_error_type.yv": "a94b8bb31965a7614770fc0c462184d03bbd8ae4f3ce57e2f7cf34a19367d5e3",
+    "selfhost/tests/reject/result_err_inferred.yv": "6af6474414e55f56ed8f5dcc6dd352563a368afdd1f1794c9bf0a0e210474ead",
+    "selfhost/tests/reject/result_borrowed_try.yv": "f5e73b489bdf82cce66e49183587c5d46a0df6e3f54058b19ded144a7cc66d43",
+    "selfhost/tests/reject/result_borrowed_catch.yv": "e9d8113baceca5c6d422bbe748e013ed9f37004857c90d40f2cf4e12c2c9ba86",
+    "selfhost/tests/reject/result_use_after_try.yv": "1c8bc6ec0b25bb00b94b8e6a4970bdb27bc096b61e0d9f70bafa3b317a39594d",
+    "selfhost/tests/reject/result_use_after_catch.yv": "78e4fe6c8206104084b9be55b6294bd3a3fb238fd3ecbe99304960b622c9249e",
+    "selfhost/tests/reject/result_catch_falls_through.yv": "6c15ff5e6556526e9ef79033156c66a76b1dec49f4ac42bdce6360b38ffd272d",
+    "selfhost/tests/reject/result_catch_partial_termination.yv": "bbd964bd7847891c381a858dd1ee8fad19f4d16928c21fdc2aa4358b48e22d57",
+    "selfhost/tests/reject/result_missing_return.yv": "718bc4e9ef1125f71fa3351a14adb25060107664da5e6a14a273346c6c61a95c",
+    "selfhost/tests/reject/result_nested_chain.yv": "bdf431c11797e3b81ef09853a71e23ec25970c5127d716a60196c68bea43d0e7",
+    "selfhost/tests/reject/result_nested_parenthesized.yv": "1d7cb284c6939f49b4bb4d289b2723818e3ae523b07bb3ac224692d066903ee1",
+    "selfhost/tests/unsupported/unsupported_result_arrow_catch.yv": "31f052c9465527743adb7ff1a1bfa6cc3804ccac44c93b80fa4d8fc91c9bcd93",
+    "selfhost/tests/unsupported/unsupported_result_field.yv": "0386094d2f5959d73e229f104f2bf7749abd9af6f3ab3c943771ed1a4d452f87",
+    "selfhost/tests/unsupported/unsupported_result_vec_element.yv": "5c3c9463ca8093d52edad901a97e60c9d6938ef9537fe4d43932ad000eb2cdb8"
+  },
+  "records": [
+    {
+      "id": "result_forms",
+      "kind": "run",
+      "file": "run/result_forms.yv",
+      "source_sha256": "f74097f32936a85e2b438f3f82613995cb3d6632ac36dae4a4df7a35026128dc",
+      "source": "fn plain() -> int ! int { return 1 }\nfn explicitOk() -> int ! int { return ok(2) }\nfn failure() -> int ! int { return err(3) }\nfn forwarded() -> int ! int { return failure() }\nfn show(value: int ! int) {\n    let number = value catch error {\n        println(error)\n        return\n    }\n    println(number)\n}\nfn bareUnit() -> () ! int { return }\nfn fallingUnit() -> () ! int {}\nfn explicitUnit() -> () ! int { return () }\nfn savedTry() -> int ! int {\n    let result: int ! int = 9\n    return try result\n}\nfn main() {\n    show(plain())\n    show(explicitOk())\n    show(failure())\n    let inferred = ok(4)\n    show(inferred)\n    let success: int ! int = ok(5)\n    show(success)\n    let failed: int ! int = err(6)\n    show(failed)\n    let automatic: int ! int = 7\n    show(automatic)\n    let forwardedError = forwarded() catch error {\n        println(error + 5)\n        bareUnit() catch _ { return }\n        fallingUnit() catch _ { return }\n        explicitUnit() catch _ { return }\n        let number = savedTry() catch _ { return }\n        println(number)\n        let _ = failure()\n        println(\"unit\")\n        return\n    }\n    println(forwardedError)\n}\n",
+      "passed": false,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_forms.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"E0001\",\"column\":20,\"end_column\":25,\"end_line\":23,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_forms.yv\",\"fixes\":[],\"line\":23,\"message\":\"cannot tell which result type this `ok(...)` has\",\"notes\":[\"use it where a `T ! E` is expected, e.g. `return err(...)` in a function returning `T ! E`\"],\"primary\":{\"column\":20,\"end\":600,\"end_column\":25,\"end_line\":23,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_forms.yv\",\"line\":23,\"start\":595},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_forms.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"f74097f32936a85e2b438f3f82613995cb3d6632ac36dae4a4df7a35026128dc\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.002,
+        "timed_out": false
+      },
+      "first_error": {
+        "code": "E0001",
+        "line": 23,
+        "column": 20,
+        "message": "cannot tell which result type this `ok(...)` has"
+      }
+    },
+    {
+      "id": "result_owned_string",
+      "kind": "run",
+      "file": "run/result_owned_string.yv",
+      "source_sha256": "859f7dfc282c9488580b08f47ffb21c0f025deba86a52104d569ac735dcc283b",
+      "source": "fn source(success: bool) -> String ! String {\n    if success { return \"value\".toString() }\n    return err(\"failure\".toString())\n}\nfn forward(success: bool) -> String ! String {\n    let result = source(success)\n    let value = result catch error { return err(error) }\n    return value\n}\nfn show(success: bool) {\n    let value = forward(success) catch error {\n        println(error)\n        return\n    }\n    println(value)\n}\nfn main() {\n    show(true)\n    show(false)\n    let _ = source(true)\n    let _ = source(false)\n    let saved = source(false)\n}\n",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_owned_string.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[{\"code\":\"W0001\",\"column\":9,\"end_column\":14,\"end_line\":22,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_owned_string.yv\",\"fixes\":[{\"applicability\":\"automatic\",\"edits\":[{\"end\":530,\"replacement\":\"_saved\",\"start\":525}],\"id\":\"rename-unused\",\"impact\":\"Keeps the same binding, writes and destruction time; only suppresses the unused-binding warning.\",\"patch_id\":\"rename-unused:cf7b16232db05ad05be002ee20a23a635782cc920d496287acb5857cb5c03b44\",\"preconditions\":[\"All edited identifiers resolve to this binding.\",\"The new name does not capture any existing name in the function.\"],\"recheck\":\"passed\",\"recheck_scope\":\"automatic-set\",\"title\":\"Rename saved to _saved\"}],\"line\":22,\"message\":\"unused variable `saved`\",\"notes\":[\"rename it to `_saved` if this is intentional\"],\"primary\":{\"column\":9,\"end\":530,\"end_column\":14,\"end_line\":22,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_owned_string.yv\",\"line\":22,\"start\":525},\"severity\":\"WARN\"}],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_owned_string.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"859f7dfc282c9488580b08f47ffb21c0f025deba86a52104d569ac735dcc283b\",\"warning_count\":1}\n",
+        "stderr": "",
+        "seconds": 0.002,
+        "timed_out": false
+      },
+      "first_error": null,
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_owned_string.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/matrix-debug-1/result_owned_string/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/matrix-debug-1/result_owned_string/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[{\"code\":\"W0001\",\"column\":9,\"end_column\":14,\"end_line\":22,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_owned_string.yv\",\"fixes\":[{\"applicability\":\"automatic\",\"edits\":[{\"end\":530,\"replacement\":\"_saved\",\"start\":525}],\"id\":\"rename-unused\",\"impact\":\"Keeps the same binding, writes and destruction time; only suppresses the unused-binding warning.\",\"patch_id\":\"rename-unused:cf7b16232db05ad05be002ee20a23a635782cc920d496287acb5857cb5c03b44\",\"preconditions\":[\"All edited identifiers resolve to this binding.\",\"The new name does not capture any existing name in the function.\"],\"recheck\":\"passed\",\"recheck_scope\":\"automatic-set\",\"title\":\"Rename saved to _saved\"}],\"line\":22,\"message\":\"unused variable `saved`\",\"notes\":[\"rename it to `_saved` if this is intentional\"],\"primary\":{\"column\":9,\"end\":530,\"end_column\":14,\"end_line\":22,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_owned_string.yv\",\"line\":22,\"start\":525},\"severity\":\"WARN\"}],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_owned_string.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"859f7dfc282c9488580b08f47ffb21c0f025deba86a52104d569ac735dcc283b\",\"warning_count\":1}\n",
+        "stderr": "",
+        "seconds": 0.16,
+        "timed_out": false
+      },
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/matrix-debug-1/result_owned_string/program"
+        ],
+        "exit_code": 0,
+        "stdout": "value\nfailure\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      },
+      "binary_sha256": "927bd7e3499fc7bd177a63c068aa35f3f39f72abe584aac96e521e5fe4b48da5",
+      "generated_c_sha256": "e1915c9b57acb40459ecbf046a7718f6c858e78a9779a08665cf6aff3f1baa69",
+      "expected": {
+        "exit_code": 0,
+        "stdout": "value\nfailure\n",
+        "stderr": ""
+      }
+    },
+    {
+      "id": "result_owned_vec",
+      "kind": "run",
+      "file": "run/result_owned_vec.yv",
+      "source_sha256": "3cded6ba19416cf36bd1644f48a172f4fc54608ea2fb711dd23ecc0f4c8dca2d",
+      "source": "fn source(success: bool) -> Vec[String] ! Vec[String] {\n    if success { return [\"one\".toString(), \"two\".toString()] }\n    return err([\"bad\".toString(), \"detail\".toString()])\n}\nfn forward(success: bool) -> Vec[String] ! Vec[String] {\n    let values = try source(success)\n    return values\n}\nfn show(success: bool) {\n    let values = forward(success) catch errors {\n        println(errors.len())\n        println(errors[0])\n        println(errors[1])\n        return\n    }\n    println(values.len())\n    println(values[0])\n    println(values[1])\n}\nfn main() {\n    show(true)\n    show(false)\n    let _ = source(true)\n    let _ = source(false)\n}\n",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_owned_vec.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_owned_vec.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"3cded6ba19416cf36bd1644f48a172f4fc54608ea2fb711dd23ecc0f4c8dca2d\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.002,
+        "timed_out": false
+      },
+      "first_error": null,
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_owned_vec.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/matrix-debug-1/result_owned_vec/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/matrix-debug-1/result_owned_vec/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_owned_vec.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"3cded6ba19416cf36bd1644f48a172f4fc54608ea2fb711dd23ecc0f4c8dca2d\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.154,
+        "timed_out": false
+      },
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/matrix-debug-1/result_owned_vec/program"
+        ],
+        "exit_code": 0,
+        "stdout": "2\none\ntwo\n2\nbad\ndetail\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      },
+      "binary_sha256": "ccac2d4902ba433a6ae364ecebb0de9fd337682356431501cd0cda0218b375f6",
+      "generated_c_sha256": "03417ca023b408f49fbfd39f30dcc960e66cd83cd662ec62f6ba0285e8183694",
+      "expected": {
+        "exit_code": 0,
+        "stdout": "2\none\ntwo\n2\nbad\ndetail\n",
+        "stderr": ""
+      }
+    },
+    {
+      "id": "result_owned_struct",
+      "kind": "run",
+      "file": "run/result_owned_struct.yv",
+      "source_sha256": "527d973ef19484f5b5c50da49a7fb4ab3052f2f5446fe98303366cff1a2118b9",
+      "source": "struct Payload {\n    text: String\n    items: Vec[String]\n}\nstruct Fault {\n    message: String\n    trail: Vec[String]\n}\nfn source(success: bool) -> Payload ! Fault {\n    if success {\n        return Payload{text: \"payload\".toString(), items: [\"item\".toString()]}\n    }\n    return err(Fault{message: \"failure\".toString(), trail: [\"trace\".toString()]})\n}\nfn rethrow(success: bool) -> Payload ! Fault {\n    let value = source(success) catch error { return err(error) }\n    return value\n}\nfn forward(success: bool) -> Payload ! Fault { return try rethrow(success) }\nfn show(success: bool) {\n    let value = forward(success) catch error {\n        println(error.message)\n        println(error.trail[0])\n        return\n    }\n    println(value.text)\n    println(value.items[0])\n}\nfn main() {\n    show(true)\n    show(false)\n}\n",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_owned_struct.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_owned_struct.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"527d973ef19484f5b5c50da49a7fb4ab3052f2f5446fe98303366cff1a2118b9\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.002,
+        "timed_out": false
+      },
+      "first_error": null,
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_owned_struct.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/matrix-debug-1/result_owned_struct/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/matrix-debug-1/result_owned_struct/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_owned_struct.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"527d973ef19484f5b5c50da49a7fb4ab3052f2f5446fe98303366cff1a2118b9\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.18,
+        "timed_out": false
+      },
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/matrix-debug-1/result_owned_struct/program"
+        ],
+        "exit_code": 0,
+        "stdout": "payload\nitem\nfailure\ntrace\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      },
+      "binary_sha256": "b1527b88880a81132d568dc66811dc80c61651924f0d0adc43750b7f9db0c124",
+      "generated_c_sha256": "59c243bb4aace45c2fb2d349a9500d3356a29f854b0b957f9cdc9e62fbab5282",
+      "expected": {
+        "exit_code": 0,
+        "stdout": "payload\nitem\nfailure\ntrace\n",
+        "stderr": ""
+      }
+    },
+    {
+      "id": "result_multilevel_try",
+      "kind": "run",
+      "file": "run/result_multilevel_try.yv",
+      "source_sha256": "18936cc9672cd63dbcd849b148a49f9577a4781d39c5492451f1b275aad4e6a2",
+      "source": "struct Guard { text: String }\nfn leaf(fail: bool) -> String ! String {\n    let value = \"leaf\".toString()\n    if fail { return err(\"failed\".toString()) }\n    return value\n}\nfn middle(fail: bool) -> Vec[String] ! String {\n    let guard = [\"middle\".toString(), \"live\".toString()]\n    let value = try leaf(fail)\n    return [value, \"tail\".toString()]\n}\nfn outer(fail: bool) -> int ! String {\n    let guard = Guard{text: \"outer\".toString()}\n    let values = try middle(fail)\n    println(values[0])\n    return values.len()\n}\nfn show(fail: bool) {\n    let count = outer(fail) catch error {\n        println(error)\n        return\n    }\n    println(count)\n}\nfn main() {\n    show(false)\n    show(true)\n}\n",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_multilevel_try.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[{\"code\":\"W0001\",\"column\":9,\"end_column\":14,\"end_line\":8,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_multilevel_try.yv\",\"fixes\":[{\"applicability\":\"automatic\",\"edits\":[{\"end\":233,\"replacement\":\"_guard\",\"start\":228}],\"id\":\"rename-unused\",\"impact\":\"Keeps the same binding, writes and destruction time; only suppresses the unused-binding warning.\",\"patch_id\":\"rename-unused:75c25f2452d4eb9b8736f924beb832d29fdb4ba6ebeec6773d3177759e1329c2\",\"preconditions\":[\"All edited identifiers resolve to this binding.\",\"The new name does not capture any existing name in the function.\"],\"recheck\":\"passed\",\"recheck_scope\":\"automatic-set\",\"title\":\"Rename guard to _guard\"}],\"line\":8,\"message\":\"unused variable `guard`\",\"notes\":[\"rename it to `_guard` if this is intentional\"],\"primary\":{\"column\":9,\"end\":233,\"end_column\":14,\"end_line\":8,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_multilevel_try.yv\",\"line\":8,\"start\":228},\"severity\":\"WARN\"},{\"code\":\"W0001\",\"column\":9,\"end_column\":14,\"end_line\":13,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_multilevel_try.yv\",\"fixes\":[{\"applicability\":\"automatic\",\"edits\":[{\"end\":400,\"replacement\":\"_guard\",\"start\":395}],\"id\":\"rename-unused\",\"impact\":\"Keeps the same binding, writes and destruction time; only suppresses the unused-binding warning.\",\"patch_id\":\"rename-unused:9eeb49a54b98d49a588f4fc3fd53e48b9c0444d61f2665740904e633bc033f17\",\"preconditions\":[\"All edited identifiers resolve to this binding.\",\"The new name does not capture any existing name in the function.\"],\"recheck\":\"passed\",\"recheck_scope\":\"automatic-set\",\"title\":\"Rename guard to _guard\"}],\"line\":13,\"message\":\"unused variable `guard`\",\"notes\":[\"rename it to `_guard` if this is intentional\"],\"primary\":{\"column\":9,\"end\":400,\"end_column\":14,\"end_line\":13,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_multilevel_try.yv\",\"line\":13,\"start\":395},\"severity\":\"WARN\"}],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_multilevel_try.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"18936cc9672cd63dbcd849b148a49f9577a4781d39c5492451f1b275aad4e6a2\",\"warning_count\":2}\n",
+        "stderr": "",
+        "seconds": 0.002,
+        "timed_out": false
+      },
+      "first_error": null,
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_multilevel_try.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/matrix-debug-1/result_multilevel_try/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/matrix-debug-1/result_multilevel_try/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[{\"code\":\"W0001\",\"column\":9,\"end_column\":14,\"end_line\":8,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_multilevel_try.yv\",\"fixes\":[{\"applicability\":\"automatic\",\"edits\":[{\"end\":233,\"replacement\":\"_guard\",\"start\":228}],\"id\":\"rename-unused\",\"impact\":\"Keeps the same binding, writes and destruction time; only suppresses the unused-binding warning.\",\"patch_id\":\"rename-unused:75c25f2452d4eb9b8736f924beb832d29fdb4ba6ebeec6773d3177759e1329c2\",\"preconditions\":[\"All edited identifiers resolve to this binding.\",\"The new name does not capture any existing name in the function.\"],\"recheck\":\"passed\",\"recheck_scope\":\"automatic-set\",\"title\":\"Rename guard to _guard\"}],\"line\":8,\"message\":\"unused variable `guard`\",\"notes\":[\"rename it to `_guard` if this is intentional\"],\"primary\":{\"column\":9,\"end\":233,\"end_column\":14,\"end_line\":8,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_multilevel_try.yv\",\"line\":8,\"start\":228},\"severity\":\"WARN\"},{\"code\":\"W0001\",\"column\":9,\"end_column\":14,\"end_line\":13,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_multilevel_try.yv\",\"fixes\":[{\"applicability\":\"automatic\",\"edits\":[{\"end\":400,\"replacement\":\"_guard\",\"start\":395}],\"id\":\"rename-unused\",\"impact\":\"Keeps the same binding, writes and destruction time; only suppresses the unused-binding warning.\",\"patch_id\":\"rename-unused:9eeb49a54b98d49a588f4fc3fd53e48b9c0444d61f2665740904e633bc033f17\",\"preconditions\":[\"All edited identifiers resolve to this binding.\",\"The new name does not capture any existing name in the function.\"],\"recheck\":\"passed\",\"recheck_scope\":\"automatic-set\",\"title\":\"Rename guard to _guard\"}],\"line\":13,\"message\":\"unused variable `guard`\",\"notes\":[\"rename it to `_guard` if this is intentional\"],\"primary\":{\"column\":9,\"end\":400,\"end_column\":14,\"end_line\":13,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_multilevel_try.yv\",\"line\":13,\"start\":395},\"severity\":\"WARN\"}],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_multilevel_try.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"18936cc9672cd63dbcd849b148a49f9577a4781d39c5492451f1b275aad4e6a2\",\"warning_count\":2}\n",
+        "stderr": "",
+        "seconds": 0.163,
+        "timed_out": false
+      },
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/matrix-debug-1/result_multilevel_try/program"
+        ],
+        "exit_code": 0,
+        "stdout": "leaf\n2\nfailed\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      },
+      "binary_sha256": "f75fdc78787de70f9a341b3ea33205b1598b43c28f72f8439b0bef055fb844e9",
+      "generated_c_sha256": "68f51c760e6cc5e269342a72c68944fe336dccfcce9bc499ef7036aee5207bb8",
+      "expected": {
+        "exit_code": 0,
+        "stdout": "leaf\n2\nfailed\n",
+        "stderr": ""
+      }
+    },
+    {
+      "id": "result_vec_partial_try",
+      "kind": "run",
+      "file": "run/result_vec_partial_try.yv",
+      "source_sha256": "bf2fdbb4ca3796a54c57ee09b7ef8e3c2d37605716b5ae68eae667cf41d225a5",
+      "source": "fn piece(tag: str) -> String {\n    print(tag)\n    return tag.toString()\n}\nfn stop() -> String ! String {\n    print(\"E\")\n    return err(\"stop\".toString())\n}\nfn build() -> Vec[String] ! String {\n    let guard = piece(\"L\")\n    return [piece(\"A\"), try stop(), piece(\"Z\")]\n}\nfn main() {\n    let values = build() catch error {\n        println(error)\n        return\n    }\n    println(values.len())\n}\n",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_vec_partial_try.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[{\"code\":\"W0001\",\"column\":9,\"end_column\":14,\"end_line\":10,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_vec_partial_try.yv\",\"fixes\":[{\"applicability\":\"automatic\",\"edits\":[{\"end\":206,\"replacement\":\"_guard\",\"start\":201}],\"id\":\"rename-unused\",\"impact\":\"Keeps the same binding, writes and destruction time; only suppresses the unused-binding warning.\",\"patch_id\":\"rename-unused:fa45bf1abbff4b9d911cd379a5b76ca7431537c25538f14f90c8d9bdc88c7501\",\"preconditions\":[\"All edited identifiers resolve to this binding.\",\"The new name does not capture any existing name in the function.\"],\"recheck\":\"passed\",\"recheck_scope\":\"automatic-set\",\"title\":\"Rename guard to _guard\"}],\"line\":10,\"message\":\"unused variable `guard`\",\"notes\":[\"rename it to `_guard` if this is intentional\"],\"primary\":{\"column\":9,\"end\":206,\"end_column\":14,\"end_line\":10,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_vec_partial_try.yv\",\"line\":10,\"start\":201},\"severity\":\"WARN\"}],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_vec_partial_try.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"bf2fdbb4ca3796a54c57ee09b7ef8e3c2d37605716b5ae68eae667cf41d225a5\",\"warning_count\":1}\n",
+        "stderr": "",
+        "seconds": 0.002,
+        "timed_out": false
+      },
+      "first_error": null,
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_vec_partial_try.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/matrix-debug-1/result_vec_partial_try/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/matrix-debug-1/result_vec_partial_try/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[{\"code\":\"W0001\",\"column\":9,\"end_column\":14,\"end_line\":10,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_vec_partial_try.yv\",\"fixes\":[{\"applicability\":\"automatic\",\"edits\":[{\"end\":206,\"replacement\":\"_guard\",\"start\":201}],\"id\":\"rename-unused\",\"impact\":\"Keeps the same binding, writes and destruction time; only suppresses the unused-binding warning.\",\"patch_id\":\"rename-unused:fa45bf1abbff4b9d911cd379a5b76ca7431537c25538f14f90c8d9bdc88c7501\",\"preconditions\":[\"All edited identifiers resolve to this binding.\",\"The new name does not capture any existing name in the function.\"],\"recheck\":\"passed\",\"recheck_scope\":\"automatic-set\",\"title\":\"Rename guard to _guard\"}],\"line\":10,\"message\":\"unused variable `guard`\",\"notes\":[\"rename it to `_guard` if this is intentional\"],\"primary\":{\"column\":9,\"end\":206,\"end_column\":14,\"end_line\":10,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_vec_partial_try.yv\",\"line\":10,\"start\":201},\"severity\":\"WARN\"}],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_vec_partial_try.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"bf2fdbb4ca3796a54c57ee09b7ef8e3c2d37605716b5ae68eae667cf41d225a5\",\"warning_count\":1}\n",
+        "stderr": "",
+        "seconds": 0.158,
+        "timed_out": false
+      },
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/matrix-debug-1/result_vec_partial_try/program"
+        ],
+        "exit_code": 0,
+        "stdout": "LAEstop\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      },
+      "binary_sha256": "2c0cca417f7c25758ecd087fb3c97afe268051975f46e8ef8125ce9c29bd0cdf",
+      "generated_c_sha256": "b61dd1bce9658d21c8d48c5f1de89f9a8dc20de79b0744c804673685f808359c",
+      "expected": {
+        "exit_code": 0,
+        "stdout": "LAEstop\n",
+        "stderr": ""
+      }
+    },
+    {
+      "id": "result_nested_vec_partial_try",
+      "kind": "run",
+      "file": "run/result_nested_vec_partial_try.yv",
+      "source_sha256": "98f866ce3a763156a0e69fc4258bd531a9c84da6df18ed2a9858052c66689117",
+      "source": "fn piece(tag: str) -> String {\n    print(tag)\n    return tag.toString()\n}\nfn stop() -> String ! String {\n    print(\"E\")\n    return err(\"stop\".toString())\n}\nfn build() -> Vec[Vec[String]] ! String {\n    return [[piece(\"A\")], [piece(\"B\"), try stop()], [piece(\"Z\")]]\n}\nfn main() {\n    let values = build() catch error {\n        println(error)\n        return\n    }\n    println(values.len())\n}\n",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_nested_vec_partial_try.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_nested_vec_partial_try.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"98f866ce3a763156a0e69fc4258bd531a9c84da6df18ed2a9858052c66689117\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      },
+      "first_error": null,
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_nested_vec_partial_try.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/matrix-debug-1/result_nested_vec_partial_try/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/matrix-debug-1/result_nested_vec_partial_try/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_nested_vec_partial_try.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"98f866ce3a763156a0e69fc4258bd531a9c84da6df18ed2a9858052c66689117\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.161,
+        "timed_out": false
+      },
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/matrix-debug-1/result_nested_vec_partial_try/program"
+        ],
+        "exit_code": 0,
+        "stdout": "ABEstop\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      },
+      "binary_sha256": "050e0a2ee2c55b54aaa1a5aa1ce8ea4d8247b983b9e4711226169daa27dd4391",
+      "generated_c_sha256": "4a5851a585f6902f39eb2375c81a46bd84ff22fd249581e03146be1113a383f4",
+      "expected": {
+        "exit_code": 0,
+        "stdout": "ABEstop\n",
+        "stderr": ""
+      }
+    },
+    {
+      "id": "result_struct_partial_try",
+      "kind": "run",
+      "file": "run/result_struct_partial_try.yv",
+      "source_sha256": "6c722c192e7a7fd777e99f925e68d5aa3675f6fc1cce70a41cc7267668302551",
+      "source": "struct Parts {\n    first: String\n    second: Vec[String]\n    third: String\n}\nfn piece(tag: str) -> String {\n    print(tag)\n    return tag.toString()\n}\nfn stop() -> String ! String {\n    print(\"E\")\n    return err(\"stop\".toString())\n}\nfn build() -> Parts ! String {\n    let guard = [\"live\".toString()]\n    return Parts{third: piece(\"C\"), first: piece(\"A\"), second: [piece(\"B\"), try stop()]}\n}\nfn main() {\n    let value = build() catch error {\n        println(error)\n        return\n    }\n    println(value.first)\n}\n",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_struct_partial_try.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[{\"code\":\"W0001\",\"column\":9,\"end_column\":14,\"end_line\":15,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_struct_partial_try.yv\",\"fixes\":[{\"applicability\":\"automatic\",\"edits\":[{\"end\":277,\"replacement\":\"_guard\",\"start\":272}],\"id\":\"rename-unused\",\"impact\":\"Keeps the same binding, writes and destruction time; only suppresses the unused-binding warning.\",\"patch_id\":\"rename-unused:4ca9aee7be12316f16a22dd546d343aaed6300ae9e0afa3ca7ec3c7d911d8596\",\"preconditions\":[\"All edited identifiers resolve to this binding.\",\"The new name does not capture any existing name in the function.\"],\"recheck\":\"passed\",\"recheck_scope\":\"automatic-set\",\"title\":\"Rename guard to _guard\"}],\"line\":15,\"message\":\"unused variable `guard`\",\"notes\":[\"rename it to `_guard` if this is intentional\"],\"primary\":{\"column\":9,\"end\":277,\"end_column\":14,\"end_line\":15,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_struct_partial_try.yv\",\"line\":15,\"start\":272},\"severity\":\"WARN\"}],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_struct_partial_try.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"6c722c192e7a7fd777e99f925e68d5aa3675f6fc1cce70a41cc7267668302551\",\"warning_count\":1}\n",
+        "stderr": "",
+        "seconds": 0.002,
+        "timed_out": false
+      },
+      "first_error": null,
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_struct_partial_try.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/matrix-debug-1/result_struct_partial_try/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/matrix-debug-1/result_struct_partial_try/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[{\"code\":\"W0001\",\"column\":9,\"end_column\":14,\"end_line\":15,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_struct_partial_try.yv\",\"fixes\":[{\"applicability\":\"automatic\",\"edits\":[{\"end\":277,\"replacement\":\"_guard\",\"start\":272}],\"id\":\"rename-unused\",\"impact\":\"Keeps the same binding, writes and destruction time; only suppresses the unused-binding warning.\",\"patch_id\":\"rename-unused:4ca9aee7be12316f16a22dd546d343aaed6300ae9e0afa3ca7ec3c7d911d8596\",\"preconditions\":[\"All edited identifiers resolve to this binding.\",\"The new name does not capture any existing name in the function.\"],\"recheck\":\"passed\",\"recheck_scope\":\"automatic-set\",\"title\":\"Rename guard to _guard\"}],\"line\":15,\"message\":\"unused variable `guard`\",\"notes\":[\"rename it to `_guard` if this is intentional\"],\"primary\":{\"column\":9,\"end\":277,\"end_column\":14,\"end_line\":15,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_struct_partial_try.yv\",\"line\":15,\"start\":272},\"severity\":\"WARN\"}],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_struct_partial_try.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"6c722c192e7a7fd777e99f925e68d5aa3675f6fc1cce70a41cc7267668302551\",\"warning_count\":1}\n",
+        "stderr": "",
+        "seconds": 0.152,
+        "timed_out": false
+      },
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/matrix-debug-1/result_struct_partial_try/program"
+        ],
+        "exit_code": 0,
+        "stdout": "CABEstop\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      },
+      "binary_sha256": "731c4faf7e641894576a851bdd21dc98b0916ce5cf4b3ddb584f0e41d0bdfd9d",
+      "generated_c_sha256": "415e14782e1b6e5d78d517318c7d4ab429e869837f557bd16d54e2a811b6bf09",
+      "expected": {
+        "exit_code": 0,
+        "stdout": "CABEstop\n",
+        "stderr": ""
+      }
+    },
+    {
+      "id": "result_argument_try_order",
+      "kind": "run",
+      "file": "run/result_argument_try_order.yv",
+      "source_sha256": "b0c98b05a9610b095bfa57bccaac01e1c06eee2a3ebb7e1fceea49a9fe2c8398",
+      "source": "fn piece(tag: str) -> String {\n    print(tag)\n    return tag.toString()\n}\nfn second(fail: bool) -> String ! String {\n    print(\"B\")\n    if fail { return err(\"stop\".toString()) }\n    return \"b\".toString()\n}\nfn combine(first: String, second: String, third: String) -> int {\n    println(\"called\")\n    return first.len() + second.len() + third.len()\n}\nfn work(fail: bool) -> int ! String {\n    let guard = piece(\"G\")\n    return combine(piece(\"A\"), try second(fail), piece(\"C\"))\n}\nfn show(fail: bool) {\n    let count = work(fail) catch error {\n        println(error)\n        return\n    }\n    println(count)\n}\nfn main() {\n    show(false)\n    show(true)\n}\n",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_argument_try_order.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[{\"code\":\"W0001\",\"column\":9,\"end_column\":14,\"end_line\":15,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_argument_try_order.yv\",\"fixes\":[{\"applicability\":\"automatic\",\"edits\":[{\"end\":399,\"replacement\":\"_guard\",\"start\":394}],\"id\":\"rename-unused\",\"impact\":\"Keeps the same binding, writes and destruction time; only suppresses the unused-binding warning.\",\"patch_id\":\"rename-unused:8315754e30a8f8db1ec4974cc851230e463820ddc0b0d3cc8fadbea8fdafce61\",\"preconditions\":[\"All edited identifiers resolve to this binding.\",\"The new name does not capture any existing name in the function.\"],\"recheck\":\"passed\",\"recheck_scope\":\"automatic-set\",\"title\":\"Rename guard to _guard\"}],\"line\":15,\"message\":\"unused variable `guard`\",\"notes\":[\"rename it to `_guard` if this is intentional\"],\"primary\":{\"column\":9,\"end\":399,\"end_column\":14,\"end_line\":15,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_argument_try_order.yv\",\"line\":15,\"start\":394},\"severity\":\"WARN\"}],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_argument_try_order.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"b0c98b05a9610b095bfa57bccaac01e1c06eee2a3ebb7e1fceea49a9fe2c8398\",\"warning_count\":1}\n",
+        "stderr": "",
+        "seconds": 0.002,
+        "timed_out": false
+      },
+      "first_error": null,
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_argument_try_order.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/matrix-debug-1/result_argument_try_order/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/matrix-debug-1/result_argument_try_order/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[{\"code\":\"W0001\",\"column\":9,\"end_column\":14,\"end_line\":15,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_argument_try_order.yv\",\"fixes\":[{\"applicability\":\"automatic\",\"edits\":[{\"end\":399,\"replacement\":\"_guard\",\"start\":394}],\"id\":\"rename-unused\",\"impact\":\"Keeps the same binding, writes and destruction time; only suppresses the unused-binding warning.\",\"patch_id\":\"rename-unused:8315754e30a8f8db1ec4974cc851230e463820ddc0b0d3cc8fadbea8fdafce61\",\"preconditions\":[\"All edited identifiers resolve to this binding.\",\"The new name does not capture any existing name in the function.\"],\"recheck\":\"passed\",\"recheck_scope\":\"automatic-set\",\"title\":\"Rename guard to _guard\"}],\"line\":15,\"message\":\"unused variable `guard`\",\"notes\":[\"rename it to `_guard` if this is intentional\"],\"primary\":{\"column\":9,\"end\":399,\"end_column\":14,\"end_line\":15,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_argument_try_order.yv\",\"line\":15,\"start\":394},\"severity\":\"WARN\"}],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_argument_try_order.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"b0c98b05a9610b095bfa57bccaac01e1c06eee2a3ebb7e1fceea49a9fe2c8398\",\"warning_count\":1}\n",
+        "stderr": "",
+        "seconds": 0.153,
+        "timed_out": false
+      },
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/matrix-debug-1/result_argument_try_order/program"
+        ],
+        "exit_code": 0,
+        "stdout": "GABCcalled\n3\nGABstop\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      },
+      "binary_sha256": "bf6bb0fb257ac3ef1d0a3b3575d2b27df564b3dd2d4e8d18fc3ae4b0df9f7218",
+      "generated_c_sha256": "deb1e603e1a3db7ea72107f0dbe22b982a58918559c5cb3a3a763d41bfc0c62d",
+      "expected": {
+        "exit_code": 0,
+        "stdout": "GABCcalled\n3\nGABstop\n",
+        "stderr": ""
+      }
+    },
+    {
+      "id": "result_short_circuit_try",
+      "kind": "run",
+      "file": "run/result_short_circuit_try.yv",
+      "source_sha256": "251808b950dd7225ebff7fc1a8237cc50514be9f26ee1ff660d10c4d4ac1e4e0",
+      "source": "fn gate(tag: str, answer: bool, fail: bool) -> bool ! String {\n    print(tag)\n    if fail { return err(tag.toString()) }\n    return answer\n}\nfn work(mode: int) -> bool ! String {\n    if mode == 0 { return false && try gate(\"X\", true, true) }\n    if mode == 1 { return true || try gate(\"X\", false, true) }\n    if mode == 2 { return true && try gate(\"A\", true, false) }\n    if mode == 3 { return false || try gate(\"B\", false, false) }\n    return true && try gate(\"E\", true, true)\n}\nfn show(mode: int) {\n    let answer = work(mode) catch error {\n        println(error)\n        return\n    }\n    println(answer)\n}\nfn main() {\n    show(0)\n    show(1)\n    show(2)\n    show(3)\n    show(4)\n}\n",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_short_circuit_try.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_short_circuit_try.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"251808b950dd7225ebff7fc1a8237cc50514be9f26ee1ff660d10c4d4ac1e4e0\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.002,
+        "timed_out": false
+      },
+      "first_error": null,
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_short_circuit_try.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/matrix-debug-1/result_short_circuit_try/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/matrix-debug-1/result_short_circuit_try/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_short_circuit_try.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"251808b950dd7225ebff7fc1a8237cc50514be9f26ee1ff660d10c4d4ac1e4e0\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.14,
+        "timed_out": false
+      },
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/matrix-debug-1/result_short_circuit_try/program"
+        ],
+        "exit_code": 0,
+        "stdout": "false\ntrue\nAtrue\nBfalse\nEE\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      },
+      "binary_sha256": "1d3bed7a67d2ba6ec916c04c5bffbe0fb25f81fcb7f0b84b24c9903b640d6fd8",
+      "generated_c_sha256": "89eba17672e475cd9882ac47759f4a04d3e3cc29ba083c79cfd0c1996036dcc9",
+      "expected": {
+        "exit_code": 0,
+        "stdout": "false\ntrue\nAtrue\nBfalse\nEE\n",
+        "stderr": ""
+      }
+    },
+    {
+      "id": "result_catch_return",
+      "kind": "run",
+      "file": "run/result_catch_return.yv",
+      "source_sha256": "8785a473993f1cc9e5828a6e651c98eb2a7dfd93856827e2728629ed6d49aba5",
+      "source": "fn failure() -> int ! String { return err(\"failure\".toString()) }\nfn named() -> int {\n    let guard = [\"live\".toString()]\n    let value = failure() catch error {\n        println(error)\n        return 9\n    }\n    return value\n}\nfn ignored() -> int {\n    let guard = \"live\".toString()\n    let value = failure() catch _ { return 10 }\n    return value\n}\nfn main() {\n    println(named())\n    println(ignored())\n}\n",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_catch_return.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[{\"code\":\"W0001\",\"column\":9,\"end_column\":14,\"end_line\":3,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_catch_return.yv\",\"fixes\":[{\"applicability\":\"automatic\",\"edits\":[{\"end\":99,\"replacement\":\"_guard\",\"start\":94}],\"id\":\"rename-unused\",\"impact\":\"Keeps the same binding, writes and destruction time; only suppresses the unused-binding warning.\",\"patch_id\":\"rename-unused:df80d52cd9378b3ffaedea2f5e32c2fba9815ab7143cf2df3b5b43bba0c36e78\",\"preconditions\":[\"All edited identifiers resolve to this binding.\",\"The new name does not capture any existing name in the function.\"],\"recheck\":\"passed\",\"recheck_scope\":\"automatic-set\",\"title\":\"Rename guard to _guard\"}],\"line\":3,\"message\":\"unused variable `guard`\",\"notes\":[\"rename it to `_guard` if this is intentional\"],\"primary\":{\"column\":9,\"end\":99,\"end_column\":14,\"end_line\":3,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_catch_return.yv\",\"line\":3,\"start\":94},\"severity\":\"WARN\"},{\"code\":\"W0001\",\"column\":9,\"end_column\":14,\"end_line\":11,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_catch_return.yv\",\"fixes\":[{\"applicability\":\"automatic\",\"edits\":[{\"end\":262,\"replacement\":\"_guard\",\"start\":257}],\"id\":\"rename-unused\",\"impact\":\"Keeps the same binding, writes and destruction time; only suppresses the unused-binding warning.\",\"patch_id\":\"rename-unused:55db640db1c9dfadfc20fa512cb5026056ef35ea29052e8192cb054520a82ee8\",\"preconditions\":[\"All edited identifiers resolve to this binding.\",\"The new name does not capture any existing name in the function.\"],\"recheck\":\"passed\",\"recheck_scope\":\"automatic-set\",\"title\":\"Rename guard to _guard\"}],\"line\":11,\"message\":\"unused variable `guard`\",\"notes\":[\"rename it to `_guard` if this is intentional\"],\"primary\":{\"column\":9,\"end\":262,\"end_column\":14,\"end_line\":11,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_catch_return.yv\",\"line\":11,\"start\":257},\"severity\":\"WARN\"}],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_catch_return.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"8785a473993f1cc9e5828a6e651c98eb2a7dfd93856827e2728629ed6d49aba5\",\"warning_count\":2}\n",
+        "stderr": "",
+        "seconds": 0.002,
+        "timed_out": false
+      },
+      "first_error": null,
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_catch_return.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/matrix-debug-1/result_catch_return/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/matrix-debug-1/result_catch_return/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[{\"code\":\"W0001\",\"column\":9,\"end_column\":14,\"end_line\":3,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_catch_return.yv\",\"fixes\":[{\"applicability\":\"automatic\",\"edits\":[{\"end\":99,\"replacement\":\"_guard\",\"start\":94}],\"id\":\"rename-unused\",\"impact\":\"Keeps the same binding, writes and destruction time; only suppresses the unused-binding warning.\",\"patch_id\":\"rename-unused:df80d52cd9378b3ffaedea2f5e32c2fba9815ab7143cf2df3b5b43bba0c36e78\",\"preconditions\":[\"All edited identifiers resolve to this binding.\",\"The new name does not capture any existing name in the function.\"],\"recheck\":\"passed\",\"recheck_scope\":\"automatic-set\",\"title\":\"Rename guard to _guard\"}],\"line\":3,\"message\":\"unused variable `guard`\",\"notes\":[\"rename it to `_guard` if this is intentional\"],\"primary\":{\"column\":9,\"end\":99,\"end_column\":14,\"end_line\":3,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_catch_return.yv\",\"line\":3,\"start\":94},\"severity\":\"WARN\"},{\"code\":\"W0001\",\"column\":9,\"end_column\":14,\"end_line\":11,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_catch_return.yv\",\"fixes\":[{\"applicability\":\"automatic\",\"edits\":[{\"end\":262,\"replacement\":\"_guard\",\"start\":257}],\"id\":\"rename-unused\",\"impact\":\"Keeps the same binding, writes and destruction time; only suppresses the unused-binding warning.\",\"patch_id\":\"rename-unused:55db640db1c9dfadfc20fa512cb5026056ef35ea29052e8192cb054520a82ee8\",\"preconditions\":[\"All edited identifiers resolve to this binding.\",\"The new name does not capture any existing name in the function.\"],\"recheck\":\"passed\",\"recheck_scope\":\"automatic-set\",\"title\":\"Rename guard to _guard\"}],\"line\":11,\"message\":\"unused variable `guard`\",\"notes\":[\"rename it to `_guard` if this is intentional\"],\"primary\":{\"column\":9,\"end\":262,\"end_column\":14,\"end_line\":11,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_catch_return.yv\",\"line\":11,\"start\":257},\"severity\":\"WARN\"}],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_catch_return.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"8785a473993f1cc9e5828a6e651c98eb2a7dfd93856827e2728629ed6d49aba5\",\"warning_count\":2}\n",
+        "stderr": "",
+        "seconds": 0.153,
+        "timed_out": false
+      },
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/matrix-debug-1/result_catch_return/program"
+        ],
+        "exit_code": 0,
+        "stdout": "failure\n9\n10\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      },
+      "binary_sha256": "6bdfe1ee297c0aa6818c6dd9fa861b04bf051d266c11fa81d2d501de7f241f99",
+      "generated_c_sha256": "6277bff8bb4540abfb989db1b5f2c1164b19f45740c33f2b9f1c4915e9b7ad39",
+      "expected": {
+        "exit_code": 0,
+        "stdout": "failure\n9\n10\n",
+        "stderr": ""
+      }
+    },
+    {
+      "id": "result_catch_loop",
+      "kind": "run",
+      "file": "run/result_catch_loop.yv",
+      "source_sha256": "38995bb3123abcf5980a13c9745d32e0d9604a897d6066bb154760acc7a26549",
+      "source": "fn step(index: int) -> String ! String {\n    if index == 1 { return err(\"skip\".toString()) }\n    if index == 3 { return err(\"stop\".toString()) }\n    return \"ok\".toString()\n}\nfn main() {\n    var index = 0\n    let outer = [\"outside\".toString()]\n    while index < 5 {\n        index += 1\n        let guard = [\"inside\".toString()]\n        let value = step(index) catch error {\n            println(error)\n            if index == 1 { continue }\n            break\n        }\n        println(value)\n    }\n    println(index)\n}\n",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_catch_loop.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[{\"code\":\"W0001\",\"column\":9,\"end_column\":14,\"end_line\":8,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_catch_loop.yv\",\"fixes\":[{\"applicability\":\"automatic\",\"edits\":[{\"end\":217,\"replacement\":\"_outer\",\"start\":212}],\"id\":\"rename-unused\",\"impact\":\"Keeps the same binding, writes and destruction time; only suppresses the unused-binding warning.\",\"patch_id\":\"rename-unused:c7e9897a92a930bbea1b3fc55a59ad1c8e8a550cef1faf616f84ecf74361f596\",\"preconditions\":[\"All edited identifiers resolve to this binding.\",\"The new name does not capture any existing name in the function.\"],\"recheck\":\"passed\",\"recheck_scope\":\"automatic-set\",\"title\":\"Rename outer to _outer\"}],\"line\":8,\"message\":\"unused variable `outer`\",\"notes\":[\"rename it to `_outer` if this is intentional\"],\"primary\":{\"column\":9,\"end\":217,\"end_column\":14,\"end_line\":8,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_catch_loop.yv\",\"line\":8,\"start\":212},\"severity\":\"WARN\"},{\"code\":\"W0001\",\"column\":13,\"end_column\":18,\"end_line\":11,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_catch_loop.yv\",\"fixes\":[{\"applicability\":\"automatic\",\"edits\":[{\"end\":301,\"replacement\":\"_guard\",\"start\":296}],\"id\":\"rename-unused\",\"impact\":\"Keeps the same binding, writes and destruction time; only suppresses the unused-binding warning.\",\"patch_id\":\"rename-unused:b117f20fcc2794a5977dc6c14bc896edd9f66e85c15e18e3d4e792fc15b41083\",\"preconditions\":[\"All edited identifiers resolve to this binding.\",\"The new name does not capture any existing name in the function.\"],\"recheck\":\"passed\",\"recheck_scope\":\"automatic-set\",\"title\":\"Rename guard to _guard\"}],\"line\":11,\"message\":\"unused variable `guard`\",\"notes\":[\"rename it to `_guard` if this is intentional\"],\"primary\":{\"column\":13,\"end\":301,\"end_column\":18,\"end_line\":11,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_catch_loop.yv\",\"line\":11,\"start\":296},\"severity\":\"WARN\"}],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_catch_loop.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"38995bb3123abcf5980a13c9745d32e0d9604a897d6066bb154760acc7a26549\",\"warning_count\":2}\n",
+        "stderr": "",
+        "seconds": 0.002,
+        "timed_out": false
+      },
+      "first_error": null,
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_catch_loop.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/matrix-debug-1/result_catch_loop/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/matrix-debug-1/result_catch_loop/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[{\"code\":\"W0001\",\"column\":9,\"end_column\":14,\"end_line\":8,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_catch_loop.yv\",\"fixes\":[{\"applicability\":\"automatic\",\"edits\":[{\"end\":217,\"replacement\":\"_outer\",\"start\":212}],\"id\":\"rename-unused\",\"impact\":\"Keeps the same binding, writes and destruction time; only suppresses the unused-binding warning.\",\"patch_id\":\"rename-unused:c7e9897a92a930bbea1b3fc55a59ad1c8e8a550cef1faf616f84ecf74361f596\",\"preconditions\":[\"All edited identifiers resolve to this binding.\",\"The new name does not capture any existing name in the function.\"],\"recheck\":\"passed\",\"recheck_scope\":\"automatic-set\",\"title\":\"Rename outer to _outer\"}],\"line\":8,\"message\":\"unused variable `outer`\",\"notes\":[\"rename it to `_outer` if this is intentional\"],\"primary\":{\"column\":9,\"end\":217,\"end_column\":14,\"end_line\":8,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_catch_loop.yv\",\"line\":8,\"start\":212},\"severity\":\"WARN\"},{\"code\":\"W0001\",\"column\":13,\"end_column\":18,\"end_line\":11,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_catch_loop.yv\",\"fixes\":[{\"applicability\":\"automatic\",\"edits\":[{\"end\":301,\"replacement\":\"_guard\",\"start\":296}],\"id\":\"rename-unused\",\"impact\":\"Keeps the same binding, writes and destruction time; only suppresses the unused-binding warning.\",\"patch_id\":\"rename-unused:b117f20fcc2794a5977dc6c14bc896edd9f66e85c15e18e3d4e792fc15b41083\",\"preconditions\":[\"All edited identifiers resolve to this binding.\",\"The new name does not capture any existing name in the function.\"],\"recheck\":\"passed\",\"recheck_scope\":\"automatic-set\",\"title\":\"Rename guard to _guard\"}],\"line\":11,\"message\":\"unused variable `guard`\",\"notes\":[\"rename it to `_guard` if this is intentional\"],\"primary\":{\"column\":13,\"end\":301,\"end_column\":18,\"end_line\":11,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_catch_loop.yv\",\"line\":11,\"start\":296},\"severity\":\"WARN\"}],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_catch_loop.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"38995bb3123abcf5980a13c9745d32e0d9604a897d6066bb154760acc7a26549\",\"warning_count\":2}\n",
+        "stderr": "",
+        "seconds": 0.147,
+        "timed_out": false
+      },
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/matrix-debug-1/result_catch_loop/program"
+        ],
+        "exit_code": 0,
+        "stdout": "skip\nok\nstop\n3\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      },
+      "binary_sha256": "32c54e8125c4a962c37e49e35e909887eb25376d4d7f0a2454dca2af0866b6ee",
+      "generated_c_sha256": "d1983d2c5a920ac3fb17080cd2c7db89bfe57183d478b8c0f209e65a69228ab7",
+      "expected": {
+        "exit_code": 0,
+        "stdout": "skip\nok\nstop\n3\n",
+        "stderr": ""
+      }
+    },
+    {
+      "id": "result_try_loop_cleanup",
+      "kind": "run",
+      "file": "run/result_try_loop_cleanup.yv",
+      "source_sha256": "e9c68908aeff70a876cafb52491184ae3dc5df6328fa4e6f7cc6059eb5603aed",
+      "source": "fn step(index: int) -> String ! String {\n    if index == 2 { return err(\"stop\".toString()) }\n    return \"ok\".toString()\n}\nfn work() -> int ! String {\n    let outer = [\"outside\".toString()]\n    var index = 0\n    while index < 4 {\n        let inner = [\"inside\".toString()]\n        let value = try step(index)\n        println(index)\n        index += 1\n    }\n    return index\n}\nfn main() {\n    let value = work() catch error {\n        println(error)\n        return\n    }\n    println(value)\n}\n",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_try_loop_cleanup.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[{\"code\":\"W0001\",\"column\":9,\"end_column\":14,\"end_line\":6,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_try_loop_cleanup.yv\",\"fixes\":[{\"applicability\":\"automatic\",\"edits\":[{\"end\":163,\"replacement\":\"_outer\",\"start\":158}],\"id\":\"rename-unused\",\"impact\":\"Keeps the same binding, writes and destruction time; only suppresses the unused-binding warning.\",\"patch_id\":\"rename-unused:4234d5b9105555922b987a43b9b01e8b96a7c7efae32347533c3aeb152be6f74\",\"preconditions\":[\"All edited identifiers resolve to this binding.\",\"The new name does not capture any existing name in the function.\"],\"recheck\":\"passed\",\"recheck_scope\":\"automatic-set\",\"title\":\"Rename outer to _outer\"}],\"line\":6,\"message\":\"unused variable `outer`\",\"notes\":[\"rename it to `_outer` if this is intentional\"],\"primary\":{\"column\":9,\"end\":163,\"end_column\":14,\"end_line\":6,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_try_loop_cleanup.yv\",\"line\":6,\"start\":158},\"severity\":\"WARN\"},{\"code\":\"W0001\",\"column\":13,\"end_column\":18,\"end_line\":9,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_try_loop_cleanup.yv\",\"fixes\":[{\"applicability\":\"automatic\",\"edits\":[{\"end\":246,\"replacement\":\"_inner\",\"start\":241}],\"id\":\"rename-unused\",\"impact\":\"Keeps the same binding, writes and destruction time; only suppresses the unused-binding warning.\",\"patch_id\":\"rename-unused:153836e7d20d600aa588b9172483ab1e31f9ec229346fd4fda550ca415188bc8\",\"preconditions\":[\"All edited identifiers resolve to this binding.\",\"The new name does not capture any existing name in the function.\"],\"recheck\":\"passed\",\"recheck_scope\":\"automatic-set\",\"title\":\"Rename inner to _inner\"}],\"line\":9,\"message\":\"unused variable `inner`\",\"notes\":[\"rename it to `_inner` if this is intentional\"],\"primary\":{\"column\":13,\"end\":246,\"end_column\":18,\"end_line\":9,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_try_loop_cleanup.yv\",\"line\":9,\"start\":241},\"severity\":\"WARN\"},{\"code\":\"W0001\",\"column\":13,\"end_column\":18,\"end_line\":10,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_try_loop_cleanup.yv\",\"fixes\":[{\"applicability\":\"automatic\",\"edits\":[{\"end\":288,\"replacement\":\"_value\",\"start\":283}],\"id\":\"rename-unused\",\"impact\":\"Keeps the same binding, writes and destruction time; only suppresses the unused-binding warning.\",\"patch_id\":\"rename-unused:ab6eda025a9c17c836c982c560e944c902c97c1626db81ac3090161c38c30be7\",\"preconditions\":[\"All edited identifiers resolve to this binding.\",\"The new name does not capture any existing name in the function.\"],\"recheck\":\"passed\",\"recheck_scope\":\"automatic-set\",\"title\":\"Rename value to _value\"}],\"line\":10,\"message\":\"unused variable `value`\",\"notes\":[\"rename it to `_value` if this is intentional\"],\"primary\":{\"column\":13,\"end\":288,\"end_column\":18,\"end_line\":10,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_try_loop_cleanup.yv\",\"line\":10,\"start\":283},\"severity\":\"WARN\"}],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_try_loop_cleanup.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"e9c68908aeff70a876cafb52491184ae3dc5df6328fa4e6f7cc6059eb5603aed\",\"warning_count\":3}\n",
+        "stderr": "",
+        "seconds": 0.002,
+        "timed_out": false
+      },
+      "first_error": null,
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_try_loop_cleanup.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/matrix-debug-1/result_try_loop_cleanup/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/matrix-debug-1/result_try_loop_cleanup/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[{\"code\":\"W0001\",\"column\":9,\"end_column\":14,\"end_line\":6,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_try_loop_cleanup.yv\",\"fixes\":[{\"applicability\":\"automatic\",\"edits\":[{\"end\":163,\"replacement\":\"_outer\",\"start\":158}],\"id\":\"rename-unused\",\"impact\":\"Keeps the same binding, writes and destruction time; only suppresses the unused-binding warning.\",\"patch_id\":\"rename-unused:4234d5b9105555922b987a43b9b01e8b96a7c7efae32347533c3aeb152be6f74\",\"preconditions\":[\"All edited identifiers resolve to this binding.\",\"The new name does not capture any existing name in the function.\"],\"recheck\":\"passed\",\"recheck_scope\":\"automatic-set\",\"title\":\"Rename outer to _outer\"}],\"line\":6,\"message\":\"unused variable `outer`\",\"notes\":[\"rename it to `_outer` if this is intentional\"],\"primary\":{\"column\":9,\"end\":163,\"end_column\":14,\"end_line\":6,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_try_loop_cleanup.yv\",\"line\":6,\"start\":158},\"severity\":\"WARN\"},{\"code\":\"W0001\",\"column\":13,\"end_column\":18,\"end_line\":9,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_try_loop_cleanup.yv\",\"fixes\":[{\"applicability\":\"automatic\",\"edits\":[{\"end\":246,\"replacement\":\"_inner\",\"start\":241}],\"id\":\"rename-unused\",\"impact\":\"Keeps the same binding, writes and destruction time; only suppresses the unused-binding warning.\",\"patch_id\":\"rename-unused:153836e7d20d600aa588b9172483ab1e31f9ec229346fd4fda550ca415188bc8\",\"preconditions\":[\"All edited identifiers resolve to this binding.\",\"The new name does not capture any existing name in the function.\"],\"recheck\":\"passed\",\"recheck_scope\":\"automatic-set\",\"title\":\"Rename inner to _inner\"}],\"line\":9,\"message\":\"unused variable `inner`\",\"notes\":[\"rename it to `_inner` if this is intentional\"],\"primary\":{\"column\":13,\"end\":246,\"end_column\":18,\"end_line\":9,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_try_loop_cleanup.yv\",\"line\":9,\"start\":241},\"severity\":\"WARN\"},{\"code\":\"W0001\",\"column\":13,\"end_column\":18,\"end_line\":10,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_try_loop_cleanup.yv\",\"fixes\":[{\"applicability\":\"automatic\",\"edits\":[{\"end\":288,\"replacement\":\"_value\",\"start\":283}],\"id\":\"rename-unused\",\"impact\":\"Keeps the same binding, writes and destruction time; only suppresses the unused-binding warning.\",\"patch_id\":\"rename-unused:ab6eda025a9c17c836c982c560e944c902c97c1626db81ac3090161c38c30be7\",\"preconditions\":[\"All edited identifiers resolve to this binding.\",\"The new name does not capture any existing name in the function.\"],\"recheck\":\"passed\",\"recheck_scope\":\"automatic-set\",\"title\":\"Rename value to _value\"}],\"line\":10,\"message\":\"unused variable `value`\",\"notes\":[\"rename it to `_value` if this is intentional\"],\"primary\":{\"column\":13,\"end\":288,\"end_column\":18,\"end_line\":10,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_try_loop_cleanup.yv\",\"line\":10,\"start\":283},\"severity\":\"WARN\"}],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_try_loop_cleanup.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"e9c68908aeff70a876cafb52491184ae3dc5df6328fa4e6f7cc6059eb5603aed\",\"warning_count\":3}\n",
+        "stderr": "",
+        "seconds": 0.174,
+        "timed_out": false
+      },
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/matrix-debug-1/result_try_loop_cleanup/program"
+        ],
+        "exit_code": 0,
+        "stdout": "0\n1\nstop\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      },
+      "binary_sha256": "c2399bcb0167e4cc6cfe11af759a567f2a04e83390fea57bf8abe77779a6574a",
+      "generated_c_sha256": "7e22cbdb998adb1818eb55e1e3e8048ffa32d53b95c4f0dd209f38bceecb8e23",
+      "expected": {
+        "exit_code": 0,
+        "stdout": "0\n1\nstop\n",
+        "stderr": ""
+      }
+    },
+    {
+      "id": "result_catch_discard_owned",
+      "kind": "run",
+      "file": "run/result_catch_discard_owned.yv",
+      "source_sha256": "2e0608d9d27cf20d8d621e3925743edfb50f6696202c8008fe0567f593d7deaf",
+      "source": "struct Fault {\n    message: String\n    trail: Vec[String]\n}\nfn failure() -> () ! Fault {\n    return err(Fault{message: \"failure\".toString(), trail: [\"trace\".toString()]})\n}\nfn work() {\n    let guard = [\"live\".toString()]\n    failure() catch _ {\n        println(\"caught\")\n        return\n    }\n}\nfn main() {\n    work()\n    println(\"after\")\n}\n",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_catch_discard_owned.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[{\"code\":\"W0001\",\"column\":9,\"end_column\":14,\"end_line\":9,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_catch_discard_owned.yv\",\"fixes\":[{\"applicability\":\"automatic\",\"edits\":[{\"end\":198,\"replacement\":\"_guard\",\"start\":193}],\"id\":\"rename-unused\",\"impact\":\"Keeps the same binding, writes and destruction time; only suppresses the unused-binding warning.\",\"patch_id\":\"rename-unused:41564da14bb177c62583803a97023bdaa3f52a783577dcc7b09890544be41082\",\"preconditions\":[\"All edited identifiers resolve to this binding.\",\"The new name does not capture any existing name in the function.\"],\"recheck\":\"passed\",\"recheck_scope\":\"automatic-set\",\"title\":\"Rename guard to _guard\"}],\"line\":9,\"message\":\"unused variable `guard`\",\"notes\":[\"rename it to `_guard` if this is intentional\"],\"primary\":{\"column\":9,\"end\":198,\"end_column\":14,\"end_line\":9,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_catch_discard_owned.yv\",\"line\":9,\"start\":193},\"severity\":\"WARN\"}],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_catch_discard_owned.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"2e0608d9d27cf20d8d621e3925743edfb50f6696202c8008fe0567f593d7deaf\",\"warning_count\":1}\n",
+        "stderr": "",
+        "seconds": 0.003,
+        "timed_out": false
+      },
+      "first_error": null,
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_catch_discard_owned.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/matrix-debug-1/result_catch_discard_owned/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/matrix-debug-1/result_catch_discard_owned/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[{\"code\":\"W0001\",\"column\":9,\"end_column\":14,\"end_line\":9,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_catch_discard_owned.yv\",\"fixes\":[{\"applicability\":\"automatic\",\"edits\":[{\"end\":198,\"replacement\":\"_guard\",\"start\":193}],\"id\":\"rename-unused\",\"impact\":\"Keeps the same binding, writes and destruction time; only suppresses the unused-binding warning.\",\"patch_id\":\"rename-unused:41564da14bb177c62583803a97023bdaa3f52a783577dcc7b09890544be41082\",\"preconditions\":[\"All edited identifiers resolve to this binding.\",\"The new name does not capture any existing name in the function.\"],\"recheck\":\"passed\",\"recheck_scope\":\"automatic-set\",\"title\":\"Rename guard to _guard\"}],\"line\":9,\"message\":\"unused variable `guard`\",\"notes\":[\"rename it to `_guard` if this is intentional\"],\"primary\":{\"column\":9,\"end\":198,\"end_column\":14,\"end_line\":9,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_catch_discard_owned.yv\",\"line\":9,\"start\":193},\"severity\":\"WARN\"}],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_catch_discard_owned.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"2e0608d9d27cf20d8d621e3925743edfb50f6696202c8008fe0567f593d7deaf\",\"warning_count\":1}\n",
+        "stderr": "",
+        "seconds": 0.164,
+        "timed_out": false
+      },
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/matrix-debug-1/result_catch_discard_owned/program"
+        ],
+        "exit_code": 0,
+        "stdout": "caught\nafter\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      },
+      "binary_sha256": "47b1ce495e742edee052aa33747c36c3326efc7c62f67a81fcbd6e21d1d09c4d",
+      "generated_c_sha256": "e72863686143f9e213f06da76c3088b8556d1ea6d00c3e0576c96b3041541355",
+      "expected": {
+        "exit_code": 0,
+        "stdout": "caught\nafter\n",
+        "stderr": ""
+      }
+    },
+    {
+      "id": "result_unhandled_statement",
+      "kind": "reject",
+      "file": "reject/result_unhandled_statement.yv",
+      "source_sha256": "6766ab7c9b8efcb266fbc543ef323c969f87dc57ef19f88e69c04acb8709d1f7",
+      "source": "fn source() -> int ! int { return 1 }\nfn main() { source() }\n",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_unhandled_statement.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"E0001\",\"column\":13,\"end_column\":21,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_unhandled_statement.yv\",\"fixes\":[],\"line\":2,\"message\":\"the result of this call is not handled (`int ! int`)\",\"notes\":[\"handle it with `try`, `catch` or `match`, or discard it explicitly with `let _ = ...`\"],\"primary\":{\"column\":13,\"end\":58,\"end_column\":21,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_unhandled_statement.yv\",\"line\":2,\"start\":50},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_unhandled_statement.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"6766ab7c9b8efcb266fbc543ef323c969f87dc57ef19f88e69c04acb8709d1f7\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      },
+      "first_error": {
+        "code": "E0001",
+        "line": 2,
+        "column": 13,
+        "message": "the result of this call is not handled (`int ! int`)"
+      }
+    },
+    {
+      "id": "result_unhandled_value",
+      "kind": "reject",
+      "file": "reject/result_unhandled_value.yv",
+      "source_sha256": "778bd89697b3527e13ea37cc720fc6c39201c1dca391190ea169197d374fbd35",
+      "source": "fn source() -> int ! int { return 1 }\nfn main() {\n    let result = source()\n    println(result + 1)\n}\n",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_unhandled_value.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"E0001\",\"column\":13,\"end_column\":23,\"end_line\":4,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_unhandled_value.yv\",\"fixes\":[],\"line\":4,\"message\":\"operator `+` needs integer operands, found `int ! int` and `int`\",\"notes\":[],\"primary\":{\"column\":13,\"end\":98,\"end_column\":23,\"end_line\":4,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_unhandled_value.yv\",\"line\":4,\"start\":88},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_unhandled_value.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"778bd89697b3527e13ea37cc720fc6c39201c1dca391190ea169197d374fbd35\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      },
+      "first_error": {
+        "code": "E0001",
+        "line": 4,
+        "column": 13,
+        "message": "operator `+` needs integer operands, found `int ! int` and `int`"
+      }
+    },
+    {
+      "id": "result_try_outside",
+      "kind": "reject",
+      "file": "reject/result_try_outside.yv",
+      "source_sha256": "3fb9d1f5ac499b8347a1ab09622e04231d02eff29b638fe051bb8578ec0de743",
+      "source": "fn source() -> int ! int { return 1 }\nfn main() { let value = try source() }\n",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_try_outside.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"E0001\",\"column\":25,\"end_column\":37,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_try_outside.yv\",\"fixes\":[],\"line\":2,\"message\":\"`try` can only be used in a function that returns `T ! E`\",\"notes\":[\"this function returns `()`; handle the error with `catch` or `match` instead\"],\"primary\":{\"column\":25,\"end\":74,\"end_column\":37,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_try_outside.yv\",\"line\":2,\"start\":62},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_try_outside.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"3fb9d1f5ac499b8347a1ab09622e04231d02eff29b638fe051bb8578ec0de743\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      },
+      "first_error": {
+        "code": "E0001",
+        "line": 2,
+        "column": 25,
+        "message": "`try` can only be used in a function that returns `T ! E`"
+      }
+    },
+    {
+      "id": "result_try_error_type",
+      "kind": "reject",
+      "file": "reject/result_try_error_type.yv",
+      "source_sha256": "24012e058212adb220c45a6f0fd77ae0454f6a53ea3506f4c9ec6d27dbf2a0fb",
+      "source": "fn source() -> int ! String { return err(\"bad\".toString()) }\nfn forward() -> int ! int { return try source() }\nfn main() {}\n",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_try_error_type.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"E0001\",\"column\":36,\"end_column\":48,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_try_error_type.yv\",\"fixes\":[],\"line\":2,\"message\":\"`try` would return a `String` error, but this function returns `int` errors\",\"notes\":[\"handle it here with `catch` or `match`, and return an error of type `int`\"],\"primary\":{\"column\":36,\"end\":108,\"end_column\":48,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_try_error_type.yv\",\"line\":2,\"start\":96},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_try_error_type.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"24012e058212adb220c45a6f0fd77ae0454f6a53ea3506f4c9ec6d27dbf2a0fb\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      },
+      "first_error": {
+        "code": "E0001",
+        "line": 2,
+        "column": 36,
+        "message": "`try` would return a `String` error, but this function returns `int` errors"
+      }
+    },
+    {
+      "id": "result_success_type",
+      "kind": "reject",
+      "file": "reject/result_success_type.yv",
+      "source_sha256": "0ef9c814bfbbea601873fbe5589a9c556319dc55264a771c181353713a69a405",
+      "source": "fn source() -> int ! int { return \"wrong\".toString() }\nfn main() {}\n",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_success_type.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"E0001\",\"column\":35,\"end_column\":53,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_success_type.yv\",\"fixes\":[],\"line\":1,\"message\":\"mismatched types: expected `int ! int`, found `String`\",\"notes\":[],\"primary\":{\"column\":35,\"end\":52,\"end_column\":53,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_success_type.yv\",\"line\":1,\"start\":34},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_success_type.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"0ef9c814bfbbea601873fbe5589a9c556319dc55264a771c181353713a69a405\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      },
+      "first_error": {
+        "code": "E0001",
+        "line": 1,
+        "column": 35,
+        "message": "mismatched types: expected `int ! int`, found `String`"
+      }
+    },
+    {
+      "id": "result_error_type",
+      "kind": "reject",
+      "file": "reject/result_error_type.yv",
+      "source_sha256": "a94b8bb31965a7614770fc0c462184d03bbd8ae4f3ce57e2f7cf34a19367d5e3",
+      "source": "fn source() -> int ! int { return err(\"wrong\".toString()) }\nfn main() {}\n",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_error_type.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"E0001\",\"column\":39,\"end_column\":57,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_error_type.yv\",\"fixes\":[],\"line\":1,\"message\":\"mismatched types: expected `int`, found `String`\",\"notes\":[],\"primary\":{\"column\":39,\"end\":56,\"end_column\":57,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_error_type.yv\",\"line\":1,\"start\":38},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_error_type.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"a94b8bb31965a7614770fc0c462184d03bbd8ae4f3ce57e2f7cf34a19367d5e3\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      },
+      "first_error": {
+        "code": "E0001",
+        "line": 1,
+        "column": 39,
+        "message": "mismatched types: expected `int`, found `String`"
+      }
+    },
+    {
+      "id": "result_err_inferred",
+      "kind": "reject",
+      "file": "reject/result_err_inferred.yv",
+      "source_sha256": "6af6474414e55f56ed8f5dcc6dd352563a368afdd1f1794c9bf0a0e210474ead",
+      "source": "fn main() { let result = err(1) }\n",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_err_inferred.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"E0001\",\"column\":26,\"end_column\":32,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_err_inferred.yv\",\"fixes\":[],\"line\":1,\"message\":\"cannot tell which result type this `err(...)` has\",\"notes\":[\"use it where a `T ! E` is expected, e.g. `return err(...)` in a function returning `T ! E`\"],\"primary\":{\"column\":26,\"end\":31,\"end_column\":32,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_err_inferred.yv\",\"line\":1,\"start\":25},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_err_inferred.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"6af6474414e55f56ed8f5dcc6dd352563a368afdd1f1794c9bf0a0e210474ead\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      },
+      "first_error": {
+        "code": "E0001",
+        "line": 1,
+        "column": 26,
+        "message": "cannot tell which result type this `err(...)` has"
+      }
+    },
+    {
+      "id": "result_borrowed_try",
+      "kind": "reject",
+      "file": "reject/result_borrowed_try.yv",
+      "source_sha256": "f5e73b489bdf82cce66e49183587c5d46a0df6e3f54058b19ded144a7cc66d43",
+      "source": "fn forward(value: String ! String) -> String ! String {\n    return try value\n}\nfn main() {}\n",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_borrowed_try.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"E0401\",\"column\":16,\"end_column\":21,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_borrowed_try.yv\",\"fixes\":[],\"line\":2,\"message\":\"cannot move out of `value`: it belongs to the caller\",\"notes\":[\"declare it as `value: sink String ! String` to take ownership, or pass `value.clone()`\"],\"primary\":{\"column\":16,\"end\":76,\"end_column\":21,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_borrowed_try.yv\",\"line\":2,\"start\":71},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_borrowed_try.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"f5e73b489bdf82cce66e49183587c5d46a0df6e3f54058b19ded144a7cc66d43\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      },
+      "first_error": {
+        "code": "E0401",
+        "line": 2,
+        "column": 16,
+        "message": "cannot move out of `value`: it belongs to the caller"
+      }
+    },
+    {
+      "id": "result_borrowed_catch",
+      "kind": "reject",
+      "file": "reject/result_borrowed_catch.yv",
+      "source_sha256": "e9d8113baceca5c6d422bbe748e013ed9f37004857c90d40f2cf4e12c2c9ba86",
+      "source": "fn show(value: String ! String) {\n    let text = value catch error {\n        println(error)\n        return\n    }\n    println(text)\n}\nfn main() {}\n",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_borrowed_catch.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"E0401\",\"column\":16,\"end_column\":21,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_borrowed_catch.yv\",\"fixes\":[],\"line\":2,\"message\":\"cannot move out of `value`: it belongs to the caller\",\"notes\":[\"declare it as `value: sink String ! String` to take ownership, or pass `value.clone()`\"],\"primary\":{\"column\":16,\"end\":54,\"end_column\":21,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_borrowed_catch.yv\",\"line\":2,\"start\":49},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_borrowed_catch.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"e9d8113baceca5c6d422bbe748e013ed9f37004857c90d40f2cf4e12c2c9ba86\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      },
+      "first_error": {
+        "code": "E0401",
+        "line": 2,
+        "column": 16,
+        "message": "cannot move out of `value`: it belongs to the caller"
+      }
+    },
+    {
+      "id": "result_use_after_try",
+      "kind": "reject",
+      "file": "reject/result_use_after_try.yv",
+      "source_sha256": "1c8bc6ec0b25bb00b94b8e6a4970bdb27bc096b61e0d9f70bafa3b317a39594d",
+      "source": "fn source() -> String ! String { return \"value\".toString() }\nfn forward() -> String ! String {\n    let result = source()\n    let first = try result\n    let second = try result\n    return second\n}\nfn main() {}\n",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_use_after_try.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"W0001\",\"column\":9,\"end_column\":14,\"end_line\":4,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_use_after_try.yv\",\"fixes\":[],\"line\":4,\"message\":\"unused variable `first`\",\"notes\":[\"rename it to `_first` if this is intentional\"],\"primary\":{\"column\":9,\"end\":134,\"end_column\":14,\"end_line\":4,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_use_after_try.yv\",\"line\":4,\"start\":129},\"severity\":\"WARN\"},{\"code\":\"E0402\",\"column\":22,\"end_column\":28,\"end_line\":5,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_use_after_try.yv\",\"fixes\":[],\"line\":5,\"message\":\"use of moved value `result`\",\"notes\":[\"it was moved on line 4 (on at least one path to here)\",\"keep a copy with `result.clone()` there, or use it before moving it\"],\"primary\":{\"column\":22,\"end\":175,\"end_column\":28,\"end_line\":5,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_use_after_try.yv\",\"line\":5,\"start\":169},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_use_after_try.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"1c8bc6ec0b25bb00b94b8e6a4970bdb27bc096b61e0d9f70bafa3b317a39594d\",\"warning_count\":1}\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      },
+      "first_error": {
+        "code": "E0402",
+        "line": 5,
+        "column": 22,
+        "message": "use of moved value `result`"
+      }
+    },
+    {
+      "id": "result_use_after_catch",
+      "kind": "reject",
+      "file": "reject/result_use_after_catch.yv",
+      "source_sha256": "78e4fe6c8206104084b9be55b6294bd3a3fb238fd3ecbe99304960b622c9249e",
+      "source": "fn source() -> String ! String { return \"value\".toString() }\nfn main() {\n    let result = source()\n    let first = result catch _ { return }\n    let second = result catch _ { return }\n    println(first)\n    println(second)\n}\n",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_use_after_catch.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"E0402\",\"column\":18,\"end_column\":24,\"end_line\":5,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_use_after_catch.yv\",\"fixes\":[],\"line\":5,\"message\":\"use of moved value `result`\",\"notes\":[\"it was moved on line 4 (on at least one path to here)\",\"keep a copy with `result.clone()` there, or use it before moving it\"],\"primary\":{\"column\":18,\"end\":164,\"end_column\":24,\"end_line\":5,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_use_after_catch.yv\",\"line\":5,\"start\":158},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_use_after_catch.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"78e4fe6c8206104084b9be55b6294bd3a3fb238fd3ecbe99304960b622c9249e\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      },
+      "first_error": {
+        "code": "E0402",
+        "line": 5,
+        "column": 18,
+        "message": "use of moved value `result`"
+      }
+    },
+    {
+      "id": "result_catch_falls_through",
+      "kind": "reject",
+      "file": "reject/result_catch_falls_through.yv",
+      "source_sha256": "6c15ff5e6556526e9ef79033156c66a76b1dec49f4ac42bdce6360b38ffd272d",
+      "source": "fn source() -> int ! int { return err(1) }\nfn main() {\n    let value = source() catch error {\n        println(error)\n    }\n    println(value)\n}\n",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_catch_falls_through.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"E0601\",\"column\":32,\"end_column\":37,\"end_line\":3,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_catch_falls_through.yv\",\"fixes\":[],\"line\":3,\"message\":\"this `catch` block can reach its closing `}`\",\"notes\":[\"leave the block with `return`, `break`, `continue` or `panic(...)`, or give a replacement value with `catch e => value`\"],\"primary\":{\"column\":32,\"end\":91,\"end_column\":37,\"end_line\":3,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_catch_falls_through.yv\",\"line\":3,\"start\":86},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_catch_falls_through.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"6c15ff5e6556526e9ef79033156c66a76b1dec49f4ac42bdce6360b38ffd272d\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      },
+      "first_error": {
+        "code": "E0601",
+        "line": 3,
+        "column": 32,
+        "message": "this `catch` block can reach its closing `}`"
+      }
+    },
+    {
+      "id": "result_catch_partial_termination",
+      "kind": "reject",
+      "file": "reject/result_catch_partial_termination.yv",
+      "source_sha256": "bbd964bd7847891c381a858dd1ee8fad19f4d16928c21fdc2aa4358b48e22d57",
+      "source": "fn source() -> int ! int { return err(1) }\nfn main() {\n    let value = source() catch error {\n        if error == 1 { return }\n    }\n    println(value)\n}\n",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_catch_partial_termination.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"E0601\",\"column\":32,\"end_column\":37,\"end_line\":3,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_catch_partial_termination.yv\",\"fixes\":[],\"line\":3,\"message\":\"this `catch` block can reach its closing `}`\",\"notes\":[\"leave the block with `return`, `break`, `continue` or `panic(...)`, or give a replacement value with `catch e => value`\"],\"primary\":{\"column\":32,\"end\":91,\"end_column\":37,\"end_line\":3,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_catch_partial_termination.yv\",\"line\":3,\"start\":86},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_catch_partial_termination.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"bbd964bd7847891c381a858dd1ee8fad19f4d16928c21fdc2aa4358b48e22d57\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.002,
+        "timed_out": false
+      },
+      "first_error": {
+        "code": "E0601",
+        "line": 3,
+        "column": 32,
+        "message": "this `catch` block can reach its closing `}`"
+      }
+    },
+    {
+      "id": "result_missing_return",
+      "kind": "reject",
+      "file": "reject/result_missing_return.yv",
+      "source_sha256": "718bc4e9ef1125f71fa3351a14adb25060107664da5e6a14a273346c6c61a95c",
+      "source": "fn source() -> int ! int {}\nfn main() {}\n",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_missing_return.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"E0013\",\"column\":27,\"end_column\":28,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_missing_return.yv\",\"fixes\":[],\"line\":1,\"message\":\"function `source` can reach its end without returning a value of type `int ! int`\",\"notes\":[\"add a `return` statement before the closing `}`\"],\"primary\":{\"column\":27,\"end\":27,\"end_column\":28,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_missing_return.yv\",\"line\":1,\"start\":26},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_missing_return.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"718bc4e9ef1125f71fa3351a14adb25060107664da5e6a14a273346c6c61a95c\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      },
+      "first_error": {
+        "code": "E0013",
+        "line": 1,
+        "column": 27,
+        "message": "function `source` can reach its end without returning a value of type `int ! int`"
+      }
+    },
+    {
+      "id": "result_nested_chain",
+      "kind": "reject",
+      "file": "reject/result_nested_chain.yv",
+      "source_sha256": "bdf431c11797e3b81ef09853a71e23ec25970c5127d716a60196c68bea43d0e7",
+      "source": "fn source() -> int ! int ! int { return 1 }\nfn main() {}\n",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_nested_chain.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"E0020\",\"column\":26,\"end_column\":27,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_nested_chain.yv\",\"fixes\":[],\"line\":1,\"message\":\"expected `{`, found `!`\",\"notes\":[],\"primary\":{\"column\":26,\"end\":26,\"end_column\":27,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_nested_chain.yv\",\"line\":1,\"start\":25},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_nested_chain.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"bdf431c11797e3b81ef09853a71e23ec25970c5127d716a60196c68bea43d0e7\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      },
+      "first_error": {
+        "code": "E0020",
+        "line": 1,
+        "column": 26,
+        "message": "expected `{`, found `!`"
+      }
+    },
+    {
+      "id": "result_nested_parenthesized",
+      "kind": "reject",
+      "file": "reject/result_nested_parenthesized.yv",
+      "source_sha256": "1d7cb284c6939f49b4bb4d289b2723818e3ae523b07bb3ac224692d066903ee1",
+      "source": "fn source() -> (int ! int) ! int { return 1 }\nfn main() {}\n",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_nested_parenthesized.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"E0020\",\"column\":16,\"end_column\":27,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_nested_parenthesized.yv\",\"fixes\":[],\"line\":1,\"message\":\"a tuple type needs at least two elements, e.g. `(int, String)`\",\"notes\":[],\"primary\":{\"column\":16,\"end\":26,\"end_column\":27,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_nested_parenthesized.yv\",\"line\":1,\"start\":15},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_nested_parenthesized.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"1d7cb284c6939f49b4bb4d289b2723818e3ae523b07bb3ac224692d066903ee1\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      },
+      "first_error": {
+        "code": "E0020",
+        "line": 1,
+        "column": 16,
+        "message": "a tuple type needs at least two elements, e.g. `(int, String)`"
+      }
+    },
+    {
+      "id": "unsupported_result_arrow_catch",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_result_arrow_catch.yv",
+      "source_sha256": "31f052c9465527743adb7ff1a1bfa6cc3804ccac44c93b80fa4d8fc91c9bcd93",
+      "source": "fn source() -> int ! int { return err(1) }\nfn main() {\n    let value = source() catch error => error\n    println(value)\n}\n",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_result_arrow_catch.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_result_arrow_catch.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"31f052c9465527743adb7ff1a1bfa6cc3804ccac44c93b80fa4d8fc91c9bcd93\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      },
+      "first_error": null
+    },
+    {
+      "id": "unsupported_result_field",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_result_field.yv",
+      "source_sha256": "0386094d2f5959d73e229f104f2bf7749abd9af6f3ab3c943771ed1a4d452f87",
+      "source": "struct Holder { value: int ! int }\nfn main() {\n    let holder = Holder{value: ok(1)}\n    let value = holder.value catch _ { return }\n    println(value)\n}\n",
+      "passed": false,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_result_field.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"U0001\",\"column\":24,\"end_column\":33,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_result_field.yv\",\"fixes\":[],\"line\":1,\"message\":\"fields of type `int ! int` are not supported yet\",\"notes\":[],\"primary\":{\"column\":24,\"end\":32,\"end_column\":33,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_result_field.yv\",\"line\":1,\"start\":23},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_result_field.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"0386094d2f5959d73e229f104f2bf7749abd9af6f3ab3c943771ed1a4d452f87\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.002,
+        "timed_out": false
+      },
+      "first_error": {
+        "code": "U0001",
+        "line": 1,
+        "column": 24,
+        "message": "fields of type `int ! int` are not supported yet"
+      }
+    },
+    {
+      "id": "unsupported_result_vec_element",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_result_vec_element.yv",
+      "source_sha256": "5c3c9463ca8093d52edad901a97e60c9d6938ef9537fe4d43932ad000eb2cdb8",
+      "source": "fn main() {\n    let values: Vec[int ! int] = [ok(1)]\n    println(values.len())\n}\n",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_result_vec_element.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_result_vec_element.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"5c3c9463ca8093d52edad901a97e60c9d6938ef9537fe4d43932ad000eb2cdb8\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.002,
+        "timed_out": false
+      },
+      "first_error": null
+    }
+  ],
+  "status": "failed",
+  "inputs_changed": [],
+  "passed": 31,
+  "total": 33
+}

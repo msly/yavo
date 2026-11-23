@@ -18,6 +18,24 @@ binds the run, job/step results and artifact metadata. It preserves the original
 platform status. That historical run sanitized stage1-generated applications,
 not the stage2 compiler itself.
 
+## Batch 29 Result and real lexer checks
+
+The current manifest has 372 cases and 140 executable inputs. Bootstrap retains
+the stage0 lexer unit and adds `lexer_units_selfhost`: stage1 and stage2 must emit
+identical C from the current `support.yv + lexer.yv + lexer_test.yv`, and that C
+runs in Debug/Release with `YV_ALLOC_CHECK`. Expected lexical errors are caught;
+the successful test process returns normally after checking diagnostics that
+outlive their source/path allocations and 16 rounds of partial-token cleanup.
+Together with the existing guards this makes 12 auxiliary checks.
+
+The Linux adapter requires the same exact source concatenation, stage1/stage2
+emission commands, C hashes, two mode binaries and successful output before
+adding `lexer_selfhost_unit` to the GCC sanitizer bundle. The generated-program
+gate therefore has 141 programs (140 manifest programs plus the real lexer unit).
+The separately instrumented stage2 compiler still covers every manifest check
+and executable emission (372/140), self-compilation and eight malformed inputs.
+The source-bound local and native receipts distinguish these counting units.
+
 ## Batch 28 application and compiler checks
 
 [Run 45174913978](https://github.com/msly/yavo/actions/runs/45174913978) passed
@@ -158,7 +176,9 @@ not stage2/stage3 self-compilation.
 The Linux native job additionally runs `selfhost_sanitize.py`. It verifies the
 bootstrap receipt, manifest, source identities and the candidate frontend's
 actual repeated C outputs before reusing the independent GCC sanitizer runner.
-All 119 programs and clean/UAF/signed-overflow capability probes are mandatory.
+All current executable inputs, the real lexer unit and the clean/UAF/signed-overflow
+capability probes are mandatory; historical program counts above retain their
+original source scope.
 C is not regenerated through the Rust frontend. This step is separate from
 the existing P0 sanitizer job. LSan is disabled; normal exits use YV_ALLOC_CHECK.
 

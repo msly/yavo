@@ -1,0 +1,28 @@
+fn piece(tag: str) -> String {
+    print(tag)
+    return tag.toString()
+}
+fn second(fail: bool) -> String ! String {
+    print("B")
+    if fail { return err("stop".toString()) }
+    return "b".toString()
+}
+fn combine(first: String, second: String, third: String) -> int {
+    println("called")
+    return first.len() + second.len() + third.len()
+}
+fn work(fail: bool) -> int ! String {
+    let guard = piece("G")
+    return combine(piece("A"), try second(fail), piece("C"))
+}
+fn show(fail: bool) {
+    let count = work(fail) catch error {
+        println(error)
+        return
+    }
+    println(count)
+}
+fn main() {
+    show(false)
+    show(true)
+}

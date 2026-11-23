@@ -304,8 +304,52 @@ def main():
         unit_build = command("build-lexer-unit", [stage0, "build", unit_source,
                                                 "-o", unit], timeout=240)
         unit_run = command("run-lexer-unit", [unit], frontend=True, timeout=15) if succeeded(unit_build) else None
-        check("lexer_units", succeeded(unit_build) and unit_run is not None and succeeded(unit_run),
+        def lexer_unit_passed(result):
+            return (result is not None and succeeded(result)
+                    and result["stdout"] == b"lexer tests passed\n" and result["stderr"] == b"")
+
+        check("lexer_units", succeeded(unit_build) and lexer_unit_passed(unit_run),
               build=unit_build["record"], run=unit_run["record"] if unit_run else None)
+
+        # Exercise the real lexer and its owned error propagation through the
+        # Yavo backend. Expected failures are caught and main returns normally,
+        # so YV_ALLOC_CHECK observes partial token/text and Diagnostic cleanup.
+        lexer_directory = work / "lexer-selfhost"
+        lexer_directory.mkdir()
+        lexer_c = lexer_directory / "program.c"
+        lexer_c2 = lexer_directory / "stage2.c"
+        lexer_emit = command("lexer-unit-stage1-emit", [binary, "emit-c", unit_source, "-o", lexer_c],
+                             frontend=True, timeout=30)
+        lexer_emit2 = (command("lexer-unit-stage2-emit", [stage2, "emit-c", unit_source, "-o", lexer_c2],
+                              frontend=True, timeout=30) if stage2 is not None else None)
+        lexer_equal = (succeeded(lexer_emit) and lexer_emit2 is not None and succeeded(lexer_emit2)
+                       and lexer_c.is_file() and lexer_c2.is_file()
+                       and lexer_c.read_bytes() == lexer_c2.read_bytes())
+        lexer_record = {"source": {"path": str(unit_source), "sha256": digest(unit_source)},
+                        "stage1_emit": lexer_emit["record"],
+                        "stage2_emit": lexer_emit2["record"] if lexer_emit2 else None,
+                        "deterministic_c": lexer_equal, "modes": []}
+        for key, path in (("generated_c", lexer_c), ("stage2_c", lexer_c2)):
+            if path.is_file():
+                lexer_record[key] = {"path": str(path), "bytes": path.stat().st_size,
+                                     "sha256": digest(path)}
+        if lexer_equal:
+            for mode in ("debug", "release"):
+                target = lexer_directory / ("lexer-" + mode + EXE)
+                built = command("lexer-unit-" + mode + "-build",
+                                [zig, "cc", *CC_FLAGS[mode], "-I", COMPILER / "runtime",
+                                 lexer_c, "-o", target], timeout=240)
+                executed = (command("lexer-unit-" + mode + "-run", [target], frontend=True, timeout=30)
+                            if succeeded(built) else None)
+                row = {"mode": mode, "build": built["record"],
+                       "run": executed["record"] if executed else None,
+                       "passed": succeeded(built) and lexer_unit_passed(executed)}
+                if target.is_file():
+                    row["binary"] = {"path": str(target), "sha256": digest(target)}
+                lexer_record["modes"].append(row)
+        report["lexer_selfhost_unit"] = lexer_record
+        check("lexer_units_selfhost", lexer_equal and len(lexer_record["modes"]) == 2
+              and all(row["passed"] for row in lexer_record["modes"]))
 
         for case in cases:
             name, kind = case["id"], case["kind"]
@@ -480,6 +524,8 @@ def main():
             str(COMPILER / "toolchain.lock"): report["inputs"]["toolchain_lock_sha256"],
             str(Path(__file__).resolve()): report["inputs"]["harness_sha256"],
             str(SELFHOST / "tests/cases.json"): report["inputs"]["manifest_sha256"],
+            str(bundle): report["inputs"]["compiler_bundle"]["sha256"],
+            str(unit_source): report["inputs"]["lexer_unit_bundle"]["sha256"],
             **{str(ROOT / name): value for name, value in report["inputs"]["yavo_sources"].items()},
             **{str(SELFHOST / "tests" / name): value for name, value in report["inputs"]["fixtures"].items()},
             **{str(SELFHOST / "examples" / name): value for name, value in report["inputs"]["examples"].items()},

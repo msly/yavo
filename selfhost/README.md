@@ -12,8 +12,10 @@ separate behavioral reference; no stage delegates an input back to Rust.
 The compiler sources were rewritten into a *bootstrap dialect*: a strict
 subset of the stage0 language that the compiler itself implements (see
 [decision 20–24](../docs/decisions.md)). It is not yet the default compiler:
-stage0 accepts far more of the language (results, optionals, `for`,
+stage0 accepts far more of the language (optionals, `for`,
 interpolation, modules, methods, generics, Map/Set, closures, threads...).
+Batch 29 adds user-function results and error propagation, including the
+compiler's own `lex → compile → main` path; it does not complete SH-3.
 
 ## Build and validate
 
@@ -28,7 +30,8 @@ The compiler is one program assembled from `COMPILER_PARTS` in
 `bootstrap.py`: `support.yv`, `lexer.yv`, `model.yv`, `parser.yv`,
 `types.yv`, `codegen.yv`, `main.yv`, concatenated byte for byte (there are no
 modules in the bootstrap dialect). The lexer unit test is assembled from
-`support.yv`, `lexer.yv` and `lexer_test.yv` and built by stage0.
+`support.yv`, `lexer.yv` and `lexer_test.yv`; its current validation status is
+listed below.
 
 `bootstrap.py` accepts `--stage0`, `--zig` and `--output`. Defaults use the
 Release compiler, the toolchain installation described by `compiler/toolchain.lock`,
@@ -56,7 +59,37 @@ and writes `receipt.json` with `achieved: "self-hosted-fixed-point"` and
 `self_hosted: true` only when everything passes. Native CI runs this gate on
 Linux, Windows and macOS; a configured job is not itself a passing result.
 
-## Validation snapshot (2026-11-23, fixed point)
+## Current validation: batch 29 (2026-11-24)
+
+Local validation passes **372/372 cases**, including **140 executable C
+emissions**: 112 normal programs, 28 panic programs, 190 rejected programs,
+33 inputs accepted by stage0 but outside this subset, and 9 boundaries
+unsupported by both frontends. The expanded corpus covers user-function
+Result/try/catch behavior, owned success and error payloads, early-exit cleanup,
+and explicit unsupported boundaries. Rust Debug and Release each pass
+**145 tests, 0 failures and 1 existing ignored test**.
+
+The compiler now returns an owned `Diagnostic` from `lex` through `compile`;
+`main` reports it and exits with status 1. Parsing, type checking and lowering
+still report the first error directly. A related stage0 return-completeness
+bug is fixed: a `break` nested in a catch expression must count as an exit
+from its enclosing loop. Targeted validation includes 18 missing-return
+rejections with E0013 and 6 legal loop/closure boundaries.
+
+The [final local receipt](../compiler/validation/selfhost-result-2026-11-24.json)
+records **372/372 cases, 12/12 auxiliary checks and no skips**. The fixed-point
+C is 623,204 bytes and the identical Linux stage2/stage3 binaries are 293,640
+bytes. The new `lexer_units_selfhost` check passes stage1/stage2 C equality and
+Zig Debug/Release allocation checks on the whole production lexer unit.
+All 420 fixture C files and 560 mode binaries were rehashed against the receipt.
+The GCC application gate now has
+140 fixture inputs plus this whole-lexer unit; the stage2 compiler gate has
+372 checks, 140 emissions and 8 malformed-input stress cases. Batch 29 native
+Linux/Windows/macOS results are **pending submission and CI confirmation**;
+the historical fixed-point and [batch 28 native records](../compiler/validation/batch28-native-2026-11-23.json)
+retain their original scope.
+
+## Historical fixed-point snapshot (2026-11-23, batch 27)
 
 The [fixed-point summary](../compiler/validation/selfhost-fixpoint-2026-11-23.json)
 binds source `67794d9` and records **335/335 cases and 11/11 checks**, no skips:
@@ -135,13 +168,14 @@ JSON diagnostics, suggestions and recovery remain future work.
 | Area | Implemented |
 | --- | --- |
 | Files | One source file; function and aggregate declarations, including `pub`; required `fn main()`; optional leading `use std/{fs, os}` (other imports are `U0001`) |
-| Types | `int` (signed 64-bit), `byte` (unsigned 8-bit), `bool`, borrowed `str`, owned `String`, `Vec[T]` with Copy or owned String/struct elements, unit return; nominal structs and payload-free enums |
+| Types | `int` (signed 64-bit), `byte` (unsigned 8-bit), `bool`, borrowed `str`, owned `String`, `Vec[T]` with Copy or owned String/struct elements, unit return; nominal structs, payload-free enums and supported `T ! E` results |
 | String | Empty construction, str.toString, len, clone, push, output, String/str equality and ordering, UTF-8/NUL; checked single-byte indexing returns Copy byte |
 | Vec | Typed empty construction, empty/nonempty literals including Vec[byte], len, consuming push, reserve, recursive clone/drop; checked reads and index/field/compound assignments for Copy elements; expression-local read-only indexing and field projection for owned elements |
 | Aggregates | Forward/nested fields, construction, reads and mutable fields; Copy values or owned String/Vec/nested struct fields; constant defaults and empty aggregates; by-value cycles rejected |
 | Enums | Qualified and context-inferred cases, nominal type checks, equality/inequality, case-name output |
 | Literals | Decimal integers including negative `INT64_MIN`, contextual byte-range integers, single-quoted ASCII byte literals and seven escapes, booleans, unit, non-interpolated UTF-8 strings with supported escapes and NUL; vector literals with contextual or first-element type inference |
 | Functions | Typed parameters, scalar/String/Vec/struct/unit returns, forward calls and recursion; owned ordinary parameters borrow read-only; `inout` parameters with `&variable` or `&variable.field` arguments (later arguments may not use that root, E0102); str returns remain outside the subset |
+| Results | User-function `T ! E`, contextual `ok(value)`/`err(error)` and implicit success wrapping, `try`, terminating `catch name { ... }`/`catch _ { ... }`; owned String/Vec/struct payloads and cleanup on propagation |
 | Text slices | Expression-local `s[start..end]` on str/String with int bounds, P-INDEX and P-STR-BOUNDARY checks; usable in comparisons, read-only arguments, `push` and `toString()`; a view of an owned String cannot be bound or assigned (U0001) |
 | Standard calls | `take(&place)` for String/Vec places; `os.args()` (len, indexing to static str), `os.exit(code)`; `fs.readText`, `fs.writeNewText` and `String.fromUtf8` only with a `catch _ { ... }` handler that cannot fall through (E0601) |
 | Locals | `let`/`var`, inferred or explicit types, assignment and arithmetic compound assignment; active locals cannot be shadowed |
@@ -151,9 +185,10 @@ JSON diagnostics, suggestions and recovery remain future work.
 | Ownership | Consuming bindings/assignment/construction/returns; moved-value checking, read-only parameters, expression-local element borrows, root-based argument/receiver protection |
 | Runtime behavior | Checked arithmetic/panic/output, ordered evaluation, moved-source zeroing and cleanup on scope/statement/control-flow exits |
 
-Non-unit values require an explicit return. Only a direct function/method call may stand alone
-as an expression statement, and unit-returning functions allow `return` or
-`return ()`, matching the existing language. The parser bounds syntactic nesting
+Value-returning functions require an explicit return. Direct calls, method
+calls, `try` and `catch` may be expression statements; a Result-valued call
+must be handled or explicitly discarded with `let _ = ...`. Plain unit-returning
+functions allow `return` or `return ()`. The parser bounds syntactic nesting
 at 128 and expression lowering at 256; exceeding either returns `U0001`.
 
 Aggregate fields may hold int, byte, bool, String, supported vectors, payload-free
@@ -162,6 +197,33 @@ unit fields remain outside this subset. Struct equality/printing/clone and enum 
 rejected consistently with stage0. Explicit constructor fields are evaluated
 in source order. Bare enum cases use annotation/parameter/return/field/
 assignment/RHS comparison context.
+
+### Results and error propagation
+
+`T ! E` is supported in function signatures and local annotations. Its success
+payload may use an existing supported non-Result type, including `String`,
+`Vec[Token]` and owned structs. The error payload may be an owned struct or
+another supported non-Result value; unit errors are rejected with E0001 and
+borrowed errors with E0301. Local results can carry static `str`; borrowed
+`str` function returns remain U0001. Wrapping a view into an owned String in
+a Result is also U0001, preserving the existing persistent-view boundary.
+
+Annotations, parameters, assignments and returns supply the expected Result
+type for `ok`/`err` and implicit success wrapping. An unannotated `err(...)`
+has no inferable success type and is E0001. A `() ! E` function accepts
+`return`, `return ()`, `return ok(())` and falling through as success.
+`try` requires an enclosing Result-returning function with the same error type.
+`catch name { ... }` transfers the error into its binding; `catch _` discards
+it. Both handlers must terminate with return, loop control or an accepted
+process exit; reaching the closing brace is E0601. Arrow catch is U0001.
+
+An owned Result moves when consumed by `try`, `catch`, assignment or return.
+Its active payload is transferred before the Result is cleared, and only the
+active branch is destroyed. Moving from a borrowed Result parameter is E0401;
+using a consumed owner again is E0402. Early propagation cleans live locals,
+statement temporaries and initialized prefixes of aggregate/vector values.
+Result fields, `Vec[Result]`, nested Results and public Result member/method
+operations remain outside this subset; Result comparisons are E0501.
 
 ### Byte values and text reads
 
@@ -252,8 +314,9 @@ Using that borrowed result as an owned annotation, return, push argument or
 typed vector element is E0404; moving an owned field out of it is E0401.
 An arbitrary user struct still has no built-in clone method (E0010).
 Owned-element replacement, indexed-field mutation and mutation methods
-through an owned element remain outside the subset. Explicit references,
-inout/sink/take and borrowed returns are separate dependencies.
+through an owned element remain outside the subset. General explicit references,
+sink parameters, taking from owned indexed elements and borrowed returns
+remain separate boundaries.
 
 Out-of-range index operations raise P-INDEX. `reserve` requests a minimum
 total capacity without changing length; negative or overflowing capacities
@@ -288,8 +351,9 @@ the fixtures do not execute these programs or add new known_gap records.
 
 Unsupported input includes persistent bindings of borrowed elements and
 mutation through non-Copy indexes, direct nested Vec elements, borrowed `str`
-or unit elements, pop, slices, other collections, imports,
-enum payloads, explicit user inout/sink/references/take, options/results,
+or unit vector elements, pop, vector slices, other collections, user modules,
+enum payloads, sink parameters and general references, optionals, Result fields,
+`Vec[Result]`, nested Results, arrow catch,
 user-defined methods, generics, interpolation, float/nondecimal literals,
 integer separators, for loops, closures and concurrency. String temporary
 receivers cannot be modified. This list describes the new frontend's input,
@@ -299,20 +363,22 @@ not the broader Rust frontend.
 
 | File | Responsibility |
 | --- | --- |
-| `support.yv` | Decimal formatting/parsing, small string joins, fatal `path:line:column: CODE: message` reporting |
-| `lexer.yv` | UTF-8-aware tokens, escapes, source spans, newline termination; failures are returned in `Lexed` |
+| `support.yv` | Decimal formatting/parsing, small string joins, owned `Diagnostic` and `path:line:column: CODE: message` reporting |
+| `lexer.yv` | UTF-8-aware tokens, escapes, source spans, newline termination; returns `Vec[Token] ! Diagnostic` |
 | `model.yv` | Copy AST nodes; child lists are ranges in shared Program pools |
 | `parser.yv` | Aggregate/function/statement/expression grammar, imports, slices, borrows, catch, unsupported boundaries |
-| `types.yv` | Nominal and vector-element types, field/default checks, cycles/layout order, transitive ownership |
-| `codegen.yv` | Places, borrowed/consuming values, inout/take, vector operations, move-state joins, cleanup, loop replay and ordered C |
-| `main.yv` | CLI, input and exclusive output creation |
-| `lexer_test.yv` | Lexer boundary assertions (built by stage0) |
+| `types.yv` | Nominal/vector/Result type pools, field/default checks, cycles/layout order, transitive ownership |
+| `codegen.yv` | Places, borrowed/consuming values, Result wrapping/propagation, inout/take, vector operations, move-state joins, cleanup, loop replay and ordered C |
+| `main.yv` | `compile` returns `String ! Diagnostic`; CLI reports errors, reads input and creates output exclusively |
+| `lexer_test.yv` | Lexer boundary assertions, including owned error propagation and cleanup on normal test returns |
 | `tests/` and `bootstrap.py` | Independent behavior/rejection oracles, fixed point and reproducible execution |
 
-Inside the compiler the first diagnostic is fatal: parsing, checking and
-lowering call `fail`, which prints and exits with status 1. The lexer records
-its failure in the returned `Lexed` value so that its unit test can inspect
-it. Two compiler-internal workarounds follow from the dialect: owned vectors
+Inside the compiler, parsing, checking and lowering still call `fail`, which
+prints the first diagnostic and exits with status 1. Lexing returns an owned
+`Diagnostic` containing code, message and byte/line/column location; `compile`
+uses `try`, and `main` catches, reports and exits. Lexer tests catch failures
+and return normally so allocation checks can observe cleanup. Two
+compiler-internal workarounds remain: owned vectors
 cannot be truncated without `pop`, so small `trunc*` helpers rebuild them,
 and loop exit states live in one flat `Vec[bool]` pool.
 
@@ -323,12 +389,12 @@ executable fixtures from earlier increments.
 
 ## Next steps
 
-Self-hosting is now a regression gate rather than the next feature. The
-order of work is in [docs/self-hosting.md](../docs/self-hosting.md): native
-three-platform confirmation of the fixed point, then widening the dialect
-toward SH-3 by moving the compiler's own source onto features as they land
-(results and `try`, optionals, `for`, interpolation, modules), each with the
-fixed point re-established.
+Self-hosting is a regression gate. After confirming batch 29 on native
+Linux/Windows/macOS, the next language increment is Optional and `Vec.pop`
+to replace the compiler's `trunc*` rebuilding helpers. Later increments cover
+`for`, interpolation/`format` and modules, each with compiler-source migration
+and a renewed fixed point. [SH-3](../docs/self-hosting.md) remains incomplete;
+SH-4 has one of three independent applications validated.
 
 ## Historical snapshots
 

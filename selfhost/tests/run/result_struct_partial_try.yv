@@ -1,0 +1,24 @@
+struct Parts {
+    first: String
+    second: Vec[String]
+    third: String
+}
+fn piece(tag: str) -> String {
+    print(tag)
+    return tag.toString()
+}
+fn stop() -> String ! String {
+    print("E")
+    return err("stop".toString())
+}
+fn build() -> Parts ! String {
+    let guard = ["live".toString()]
+    return Parts{third: piece("C"), first: piece("A"), second: [piece("B"), try stop()]}
+}
+fn main() {
+    let value = build() catch error {
+        println(error)
+        return
+    }
+    println(value.first)
+}

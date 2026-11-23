@@ -1,0 +1,15 @@
+{
+  "schema": "yavo-result-stage1-check-addendum/1",
+  "binary_sha256": "972d397e4069b492a918825301099f48f3e06046590a0c49433b8edb6201d503",
+  "source_sha256": "08d6aa560329de21114177a76094b8394709fe10d7f7cf210c4e550cd6931202",
+  "source": "struct Group {\n    title: String\n    words: Vec[String]\n}\nfn piece(tag: str) -> String {\n    print(tag)\n    return tag.toString()\n}\nfn stop() -> String ! String {\n    print(\"E\")\n    return err(\"stop\".toString())\n}\nfn build() -> Vec[Group] ! String {\n    return [Group{title: piece(\"A\"), words: [piece(\"B\")]}, Group{title: piece(\"C\"), words: [piece(\"D\"), try stop()]}, Group{title: piece(\"Z\"), words: []}]\n}\nfn main() {\n    let values = build() catch error {\n        println(error)\n        return\n    }\n    println(values.len())\n}\n",
+  "command": [
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch29-integration/attempt02/stage1",
+    "check",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_vec_struct_partial_try.yv"
+  ],
+  "exit_code": 0,
+  "stdout": "",
+  "stderr": "",
+  "passed": true
+}

@@ -1,0 +1,7 @@
+fn source() -> int ! int { return err(1) }
+fn main() {
+    let value = source() catch error {
+        if error == 1 { return }
+    }
+    println(value)
+}

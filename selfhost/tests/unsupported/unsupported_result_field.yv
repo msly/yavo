@@ -1,0 +1,6 @@
+struct Holder { value: int ! int }
+fn main() {
+    let holder = Holder{value: ok(1)}
+    let value = holder.value catch _ { return }
+    println(value)
+}

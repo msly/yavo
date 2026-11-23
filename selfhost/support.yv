@@ -3,6 +3,16 @@ use std/{fs, os}
 // Shared text helpers and the fatal diagnostic path of the bootstrap compiler.
 // Locations are UTF-8 byte offsets with one-based lines and Unicode scalar columns.
 
+// Errors returned across compiler phases own their text. The input path belongs
+// to the top-level caller and is not borrowed by the diagnostic.
+pub struct Diagnostic {
+    code: String
+    message: String
+    offset: int
+    line: int
+    column: int
+}
+
 pub fn decimal(n: int) -> String {
     var out = String{}
     var value = n

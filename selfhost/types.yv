@@ -25,11 +25,18 @@ pub struct Info {
     owned: bool = false
 }
 
+pub struct ResultInfo {
+    ok: Type
+    error: Type
+}
+
 pub struct Registry {
     entries: Vec[Info] = []
     fields: Vec[Field] = []
     variants: Vec[int] = []
     order: Vec[int] = []
+    results: Vec[ResultInfo] = []
+    resultRefs: Vec[int] = []
 }
 
 pub fn primitive(kind: BasicType) -> Type {
@@ -40,9 +47,17 @@ pub fn element(ty: Type) -> Type {
     return Type{kind: ty.elementKind, decl: ty.elementDecl, elementKind: .Unknown}
 }
 
+pub fn resultOk(reg: Registry, ty: Type) -> Type {
+    return reg.results[ty.decl].ok
+}
+
+pub fn resultError(reg: Registry, ty: Type) -> Type {
+    return reg.results[ty.decl].error
+}
+
 pub fn same(a: Type, b: Type) -> bool {
     if a.kind != b.kind { return false }
-    if a.kind == .Named { return a.decl == b.decl }
+    if a.kind == .Named || a.kind == .Result { return a.decl == b.decl }
     if a.kind == .Vec {
         return a.elementKind == b.elementKind &&
             (a.elementKind != .Named || a.elementDecl == b.elementDecl)
@@ -52,6 +67,9 @@ pub fn same(a: Type, b: Type) -> bool {
 
 pub fn owned(reg: Registry, ty: Type) -> bool {
     if ty.kind == .String || ty.kind == .Vec { return true }
+    if ty.kind == .Result {
+        return owned(reg, resultOk(reg, ty)) || owned(reg, resultError(reg, ty))
+    }
     return ty.kind == .Named && reg.entries[ty.decl].owned
 }
 
@@ -67,6 +85,7 @@ pub fn cType(t: Type) -> String {
     if t.kind == .String { return "yv_string".toString() }
     if t.kind == .Vec || t.kind == .Args { return "yv_vec".toString() }
     if t.kind == .Named { return join2("sh_type_", decimal(t.decl)) }
+    if t.kind == .Result { return join2("sh_result_", decimal(t.decl)) }
     return "void".toString()
 }
 
@@ -80,6 +99,9 @@ pub fn describe(reg: Registry, ts: Vec[Token], t: Type) -> String {
     if t.kind == .Args { return "[]str".toString() }
     if t.kind == .Unit { return "()".toString() }
     if t.kind == .Named { return ts[reg.entries[t.decl].name].text.clone() }
+    if t.kind == .Result {
+        return join3(describe(reg, ts, resultOk(reg, t)), " ! ", describe(reg, ts, resultError(reg, t)))
+    }
     return "<unknown>".toString()
 }
 
@@ -141,6 +163,9 @@ pub fn vector(ts: Vec[Token], token: int, elem: Type) -> Type {
 }
 
 pub fn resolve(reg: Registry, ts: Vec[Token], syn: TypeRef) -> Type {
+    if syn.kind == .Result {
+        return Type{kind: .Result, decl: reg.resultRefs[syn.result], elementKind: .Unknown}
+    }
     if syn.kind == .Vec {
         let elem = resolve(reg, ts, TypeRef{kind: syn.elementKind,
             name: syn.elementName, elementKind: .Unknown})
@@ -159,6 +184,33 @@ pub fn resolve(reg: Registry, ts: Vec[Token], syn: TypeRef) -> Type {
         fail(ts, syn.name, "E0010", join3("unknown type '", ts[syn.name].text, "'"))
     }
     return Type{elementKind: .Unknown, kind: .Named, decl: decl}
+}
+
+fn collectResults(p: Program, ts: Vec[Token], reg: inout Registry) {
+    var i = 0
+    while i < p.resultTypes.len() {
+        let syntax = p.resultTypes[i]
+        let ok = resolve(reg, ts, syntax.ok)
+        let error = resolve(reg, ts, syntax.error)
+        if ok.kind == .Result || error.kind == .Result || error.kind == .Unit {
+            fail(ts, syntax.errorToken, "E0001", "a result needs a non-Result success type and a non-unit error type")
+        }
+        if error.kind == .Str {
+            fail(ts, syntax.errorToken, "E0301", "an error value cannot hold a borrowed str; use String")
+        }
+        var found = -1
+        var j = 0
+        while j < reg.results.len() {
+            if same(reg.results[j].ok, ok) && same(reg.results[j].error, error) { found = j }
+            j += 1
+        }
+        if found < 0 {
+            found = reg.results.len()
+            reg.results.push(ResultInfo{ok: ok, error: error})
+        }
+        reg.resultRefs.push(found)
+        i += 1
+    }
 }
 
 fn checkDefault(p: Program, reg: Registry, ts: Vec[Token], item: Field) {
@@ -218,6 +270,9 @@ pub fn collect(p: Program, ts: Vec[Token]) -> Registry {
         reg.entries.push(Info{kind: d.kind, name: d.name})
         i += 1
     }
+    // Every annotation was pooled by the parser; intern before any signature or
+    // expression is lowered so C result layouts are complete and stable.
+    collectResults(p, ts, &reg)
     i = 0
     while i < p.types.len() {
         let d = p.types[i]
@@ -238,6 +293,9 @@ pub fn collect(p: Program, ts: Vec[Token]) -> Registry {
             }
             if ty.kind == .Unit {
                 fail(ts, f.name, "U0001", "unit fields are outside the selfhost subset")
+            }
+            if ty.kind == .Result {
+                fail(ts, f.name, "U0001", "Result fields are outside the selfhost subset")
             }
             let item = Field{name: f.name, ty: ty, initial: f.initial}
             checkDefault(p, reg, ts, item)

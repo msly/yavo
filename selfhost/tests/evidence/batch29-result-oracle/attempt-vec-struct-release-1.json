@@ -1,0 +1,81 @@
+{
+  "schema": "yavo-result-stage0-oracle/1",
+  "baseline": "aecd7c3",
+  "profile": "Release",
+  "environment": {
+    "YAVO_ALLOC_CHECK": "1",
+    "YAVO_NO_CACHE": "1"
+  },
+  "inputs": {
+    "compiler/target/release/yavo": "4482658b76d489863bdd16d1bc4263e87cdabf2fda0b3557cba16944ff1aaab8",
+    "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig": "58959f01285c05a74276f09327b551d42ed6006bf325a78dc661a024e314987b",
+    "compiler/runtime/yavo_rt.h": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+    "compiler/toolchain.lock": "a9bbe83e644b0e1cee19c8dba8b5157eaed3e9ddc71b96d8aab2b2d2bb15f53c",
+    "selfhost/tests/evidence/batch29-result-oracle/verify_stage0.py": "316cf5e4cc09bdf1faaf114aafb6997296df5fc516463c48dfdca13d908e98cc",
+    "selfhost/tests/evidence/batch29-result-oracle/candidates.json": "4f23fbc188798228a9cfbafd3e116c59338f0000547cc973025d7bc92d07d43a",
+    "selfhost/tests/run/result_vec_struct_partial_try.yv": "08d6aa560329de21114177a76094b8394709fe10d7f7cf210c4e550cd6931202"
+  },
+  "records": [
+    {
+      "id": "result_vec_struct_partial_try",
+      "kind": "run",
+      "file": "run/result_vec_struct_partial_try.yv",
+      "source_sha256": "08d6aa560329de21114177a76094b8394709fe10d7f7cf210c4e550cd6931202",
+      "source": "struct Group {\n    title: String\n    words: Vec[String]\n}\nfn piece(tag: str) -> String {\n    print(tag)\n    return tag.toString()\n}\nfn stop() -> String ! String {\n    print(\"E\")\n    return err(\"stop\".toString())\n}\nfn build() -> Vec[Group] ! String {\n    return [Group{title: piece(\"A\"), words: [piece(\"B\")]}, Group{title: piece(\"C\"), words: [piece(\"D\"), try stop()]}, Group{title: piece(\"Z\"), words: []}]\n}\nfn main() {\n    let values = build() catch error {\n        println(error)\n        return\n    }\n    println(values.len())\n}\n",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_vec_struct_partial_try.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_vec_struct_partial_try.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"08d6aa560329de21114177a76094b8394709fe10d7f7cf210c4e550cd6931202\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.002,
+        "timed_out": false
+      },
+      "first_error": null,
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_vec_struct_partial_try.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/vec-struct-release-1/result_vec_struct_partial_try/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/vec-struct-release-1/result_vec_struct_partial_try/program.c",
+          "--json",
+          "--release"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_vec_struct_partial_try.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"08d6aa560329de21114177a76094b8394709fe10d7f7cf210c4e550cd6931202\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.223,
+        "timed_out": false
+      },
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch29-oracle/vec-struct-release-1/result_vec_struct_partial_try/program"
+        ],
+        "exit_code": 0,
+        "stdout": "ABCDEstop\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      },
+      "binary_sha256": "222d5a5bda01768e5a5a33db93ac330e1735461a5ab773ff37ad6fb08410009a",
+      "generated_c_sha256": "ee51cfdee0004aa7cd4fc7e926a797249a160714e8a2e3a12c388c3e7874345e",
+      "expected": {
+        "exit_code": 0,
+        "stdout": "ABCDEstop\n",
+        "stderr": ""
+      }
+    }
+  ],
+  "status": "passed",
+  "inputs_changed": [],
+  "passed": 1,
+  "total": 1
+}

@@ -1,24 +1,56 @@
-// Built by stage0 from support.yv + lexer.yv + this file (see bootstrap.py).
+// Built by stage0 and the selfhost compiler from the same three source files.
 
 fn good(source: str) -> Vec[Token] {
-    var lexed = lex(source, "test.yv")
-    if lexed.failed {
-        eprintln(lexed.code)
-        eprintln(lexed.message)
-        panic("expected lexing to succeed")
+    let tokens = lex(source, "test.yv") catch diagnostic {
+        eprintln(diagnostic.code)
+        eprintln(diagnostic.message)
+        eprintln("expected lexing to succeed")
+        os.exit(1)
     }
-    assert(lexed.tokens[lexed.tokens.len() - 1].text == "test.yv")
-    return take(&lexed.tokens)
+    assert(tokens[tokens.len() - 1].text == "test.yv")
+    return tokens
 }
 
 fn bad(source: str, code: str, offset: int, line: int, column: int) {
-    let lexed = lex(source, "test.yv")
-    assert(lexed.failed)
-    assert(lexed.tokens.len() == 0)
-    assert(lexed.code == code)
-    assert(lexed.offset == offset)
-    assert(lexed.line == line)
-    assert(lexed.column == column)
+    let _tokens = lex(source, "test.yv") catch diagnostic {
+        assert(diagnostic.code == code)
+        assert(diagnostic.offset == offset)
+        assert(diagnostic.line == line)
+        assert(diagnostic.column == column)
+        return
+    }
+    eprintln("expected lexing to fail")
+    os.exit(1)
+}
+
+// Both Result branches must release this function's owned locals. On failure,
+// try forwards the diagnostic while the lexer drops partial tokens and text.
+fn throughTemporary(source: str, path: str) -> Vec[Token] ! Diagnostic {
+    var temporary: Vec[String] = []
+    temporary.push(source.toString())
+    temporary.push(path.toString())
+    let tokens = try lex(source, path)
+    assert(temporary.len() == 2)
+    return ok(tokens)
+}
+
+// The returned diagnostic outlives both the source and path allocations. The
+// final @ must not replace the earlier escape error or its scalar position.
+fn detachedFailure() -> Diagnostic {
+    var source = "(\n".toString()
+    var tokenIndex = 0
+    while tokenIndex < 32 {
+        source.push("\"owned token 汉🙂\",\n")
+        tokenIndex += 1
+    }
+    source.push("  \"decoded text 汉🙂\\q\" @")
+    var path = "temporary ".toString()
+    path.push("诊断路径.yv")
+    let _tokens = throughTemporary(source, path) catch diagnostic {
+        return diagnostic
+    }
+    eprintln("expected owned diagnostic")
+    os.exit(1)
 }
 
 fn main() {
@@ -112,7 +144,11 @@ fn main() {
     let intOverflow = good("9223372036854775808")
     assert(intOverflow[0].kind == .Number)
     var leading = String{}
-    for _i in 0..512 { leading.push("0") }
+    var zeroIndex = 0
+    while zeroIndex < 512 {
+        leading.push("0")
+        zeroIndex += 1
+    }
     let zeroes = good(leading)
     assert(zeroes[0].kind == .Number && zeroes[0].text == leading)
     var paddedMaximum = leading.clone()
@@ -156,6 +192,22 @@ fn main() {
     interpolation.push("$")
     interpolation.push("{x}\"")
     bad(interpolation, "U0001", 1, 1, 2)
+
+    let forwarded = throughTemporary("\"owned success 汉🙂\"", "success 路径.yv") catch _ {
+        eprintln("expected propagated success")
+        os.exit(1)
+    }
+    assert(forwarded[0].text == "owned success 汉🙂")
+    assert(forwarded[forwarded.len() - 1].text == "success 路径.yv")
+    var round = 0
+    while round < 16 {
+        let diagnostic = detachedFailure()
+        assert(diagnostic.code == "E0020")
+        assert(diagnostic.message == "unknown string escape sequence")
+        assert(diagnostic.offset == 761)
+        assert(diagnostic.line == 34 && diagnostic.column == 19)
+        round += 1
+    }
 
     println("lexer tests passed")
 }
