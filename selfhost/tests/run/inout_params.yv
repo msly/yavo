@@ -1,0 +1,78 @@
+struct Counter {
+    count: int
+    label: String
+    items: Vec[int] = []
+}
+
+fn bump(c: inout Counter, by: int) {
+    c.count += by
+    c.items.push(by)
+}
+
+fn twice(c: inout Counter) {
+    bump(&c, 1)
+    bump(&c, 2)
+}
+
+fn rename(c: inout Counter, name: str) {
+    c.label = name.toString()
+}
+
+fn reset(c: inout Counter) {
+    c = Counter{count: 100, label: "reset".toString()}
+}
+
+fn grow(n: inout int) {
+    n = n * 2 + 1
+}
+
+fn shout(s: inout String) {
+    s.push("!")
+}
+
+fn collect(v: inout Vec[String], text: str) {
+    v.push(text.toString())
+}
+
+fn total(c: Counter) -> int {
+    var sum = 0
+    var i = 0
+    while i < c.items.len() {
+        sum += c.items[i]
+        i += 1
+    }
+    return sum
+}
+
+fn main() {
+    var c = Counter{count: 0, label: "start".toString()}
+    bump(&c, 5)
+    twice(&c)
+    println(c.count)
+    println(total(c))
+    println(c.items.len())
+    rename(&c, "renamed")
+    println(c.label)
+    reset(&c)
+    println(c.count)
+    println(c.label)
+    println(c.items.len())
+    var n = 3
+    grow(&n)
+    grow(&n)
+    println(n)
+    var s = "hi".toString()
+    shout(&s)
+    shout(&s)
+    println(s)
+    var words: Vec[String] = []
+    collect(&words, "a")
+    collect(&words, "bc")
+    println(words.len())
+    println(words[1])
+    var inner = Counter{count: 1, label: "inner".toString()}
+    grow(&inner.count)
+    shout(&inner.label)
+    println(inner.count)
+    println(inner.label)
+}

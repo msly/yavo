@@ -976,7 +976,7 @@
       "file": "run/diagnostic_original_source.yv",
       "batch": "string-ownership",
       "stdout": "E0001\nbad token\n7\n2\n4\nE0001\n",
-      "source_prefix": "diagnostic.yv"
+      "source_prefix": "tests/prefixes/diagnostic-2026-11-23.yv"
     },
     {
       "id": "owned_use_after_move",
@@ -1699,7 +1699,7 @@
       "kind": "run",
       "batch": "owned-vec",
       "file": "run/model_original_source.yv",
-      "source_prefix": "model.yv",
+      "source_prefix": "tests/prefixes/model-2026-11-23.yv",
       "stdout": "10\n4\n3\n1\n2\n3\n0\n3\n"
     },
     {
@@ -1944,7 +1944,7 @@
       "id": "model_original_traversal",
       "kind": "run",
       "batch": "borrow-index",
-      "source_prefix": "model.yv",
+      "source_prefix": "tests/prefixes/model-2026-11-23.yv",
       "stdout": "1546\n1148\n10206\n5694\n18594\n1\n7\n0\n20410\nConstruct\n219\n5\n5700\n228\n",
       "file": "run/model_original_traversal.yv"
     },
@@ -2137,11 +2137,12 @@
       "batch": "byte-text"
     },
     {
-      "id": "unsupported_text_slice",
-      "kind": "unsupported",
-      "diagnostic": "U0001",
-      "file": "unsupported/unsupported_text_slice.yv",
-      "batch": "byte-text"
+      "id": "text_slice_owned_print",
+      "kind": "run",
+      "stdout": "yt\n",
+      "file": "run/text_slice_owned_print.yv",
+      "batch": "bootstrap-fixed-point",
+      "promoted_from": "unsupported_text_slice"
     },
     {
       "id": "byte_arithmetic",
@@ -2202,6 +2203,109 @@
       "example": "lexer_byte_helpers.yv",
       "file": "run/lexer_byte_helpers_original_fragments.yv",
       "batch": "byte-text"
+    },
+    {
+      "id": "inout_params",
+      "kind": "run",
+      "stdout": "8\n8\n3\nrenamed\n100\nreset\n0\n15\nhi!!\n2\nbc\n3\ninner!\n",
+      "file": "run/inout_params.yv",
+      "batch": "bootstrap-fixed-point"
+    },
+    {
+      "id": "text_slices",
+      "kind": "run",
+      "stdout": "hello\nworld\n汉\n字\n🙂\nok\n0\n🙂 bc\n字\ntrue\ntrue\ntrue\n97531\n",
+      "file": "run/text_slices.yv",
+      "batch": "bootstrap-fixed-point"
+    },
+    {
+      "id": "take_places",
+      "kind": "run",
+      "stdout": "first\n0\nsecond\nabc\n0\n1\n2\n0\nagain\n",
+      "file": "run/take_places.yv",
+      "batch": "bootstrap-fixed-point"
+    },
+    {
+      "id": "std_catch_args",
+      "kind": "run",
+      "stdout": "1\ntrue\nhi\né\ninvalid utf8\n?\ncannot write\nmissing\n",
+      "file": "run/std_catch_args.yv",
+      "batch": "bootstrap-fixed-point"
+    },
+    {
+      "id": "text_slice_boundary",
+      "kind": "panic",
+      "stdout": "",
+      "panic": "P-STR-BOUNDARY",
+      "file": "panic/text_slice_boundary.yv",
+      "batch": "bootstrap-fixed-point"
+    },
+    {
+      "id": "text_slice_bounds",
+      "kind": "panic",
+      "stdout": "",
+      "panic": "P-INDEX",
+      "file": "panic/text_slice_bounds.yv",
+      "batch": "bootstrap-fixed-point"
+    },
+    {
+      "id": "inout_missing_borrow",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/inout_missing_borrow.yv",
+      "batch": "bootstrap-fixed-point"
+    },
+    {
+      "id": "inout_later_argument_use",
+      "kind": "reject",
+      "diagnostic": "E0102",
+      "file": "reject/inout_later_argument_use.yv",
+      "batch": "bootstrap-fixed-point"
+    },
+    {
+      "id": "inout_immutable_local",
+      "kind": "reject",
+      "diagnostic": "E0014",
+      "file": "reject/inout_immutable_local.yv",
+      "batch": "bootstrap-fixed-point"
+    },
+    {
+      "id": "inout_move_out",
+      "kind": "reject",
+      "diagnostic": "E0401",
+      "file": "reject/inout_move_out.yv",
+      "batch": "bootstrap-fixed-point"
+    },
+    {
+      "id": "catch_falls_through",
+      "kind": "reject",
+      "diagnostic": "E0601",
+      "file": "reject/catch_falls_through.yv",
+      "batch": "bootstrap-fixed-point"
+    },
+    {
+      "id": "unsupported_inout_index",
+      "kind": "shared_unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/unsupported_inout_index.yv",
+      "batch": "bootstrap-fixed-point",
+      "reason": "stage0 accepts only variables and their fields as inout arguments; both compilers report U0001."
+    },
+    {
+      "id": "unsupported_string_view_binding",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/unsupported_string_view_binding.yv",
+      "batch": "bootstrap-fixed-point",
+      "reason": "stage0 allows a local str view of an owned String; the bootstrap subset keeps such views expression-local."
+    },
+    {
+      "id": "unsupported_catch_binding",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/unsupported_catch_binding.yv",
+      "batch": "bootstrap-fixed-point",
+      "reason": "stage0 binds the error value; the bootstrap subset supports only catch _ handlers."
     }
   ],
   "promotions": [

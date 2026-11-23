@@ -90,3 +90,17 @@ P0 继续完成真实工具链锁和三平台最小链路；P1 使用本版语�
 | 17 元素上的修改方法 | `v[i].push(x)`、`v[i].f.set(k, x)`、`v[i].moveBy(1)` 等：先定位元素（下标求值、越界检查）并可变借用，再求实参；实参不能再使用该容器（E0403，与 Rust 对 `v[i].push(v.len())` 的处理一致）。只读方法不受影响 | V2a；`run_index_methods.yv`、`errors_index_methods.yv` |
 | 18 非 Copy 元素读出即借用 | 保持不变（`let t = v[i]` 是借用，不隐式复制）；只改诊断：E0102 增加 `.clone()` 提示，速查卡规则 7 写明 | 规则 7 |
 | 19 `${` 转义 | 保持 `"\${"`；E0020 增加转义提示，速查卡把这条提到显眼位置 | 词法 |
+
+## 八、2026-11-23 自举路线：先以引导子集证明固定点
+
+依据：第二十六批之前，自举按“原样编译现有编译器源码”推进，每批只增加一项语言能力和一两个函数片段，按依赖估算到 stage2 还需要二三十批。用户选择先快速证明自举闭环。
+
+| 项 | 决定 | 定位 |
+| --- | --- | --- |
+| 20 自举源码可以改写 | `selfhost/` 的编译器源码不再要求原样；源码改写为引导子集（bootstrap dialect），用 stage1 → stage2 → stage3 固定点证明闭环。原样编译完整源码不再是 SH-2 的退出条件 | docs/self-hosting.md |
+| 21 引导子集的边界 | 只读默认参数加 `inout` 参数（实参写 `&变量` 或 `&变量.字段`）；`take(&place)` 限 String/Vec；表达式内文本切片 `s[a..b]`；`use std/{fs, os}`、`os.args()`、`os.exit`；`fs.readText`、`fs.writeNewText`、`String.fromUtf8` 只配 `catch _ { 不落空的块 }`。没有结果类型、optional、for、插值、模块、方法和泛型 | selfhost/README.md |
+| 22 错误处理 | 编译器内部用“首个诊断即退出”代替结果传播：词法器把失败记录在返回结构中，解析、检查与代码生成直接写诊断并以 1 退出。原前端为对齐 stage0 而在循环重检中忽略的非 E0402 错误，现在直接报告；全部 335 个外部用例没有出现行为差异 | selfhost/support.yv、lexer.yv |
+| 23 多文件 | 不实现模块；bootstrap.py 按固定顺序逐字节拼接 `COMPILER_PARTS`，拼接结果同时交给 stage0 和各阶段 Yavo 编译器。拼接只做串联，不改写任何字节 | selfhost/bootstrap.py |
+| 24 接受范围以 stage0 为准 | 引导子集是 stage0 语言的严格子集：新增能力的拒绝码与 stage0 一致（如 inout 后续实参 E0102、`catch` 块可落空 E0601）；stage0 接受而子集不支持的写法报 U0001 | selfhost/tests |
+
+原样组件与函数片段的历史用例保留：model.yv、diagnostic.yv 在改写前的字节冻结在 `selfhost/tests/prefixes/`，原有 prefix 工作负载继续以这些冻结文件为前缀运行。

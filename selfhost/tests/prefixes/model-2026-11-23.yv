@@ -1,0 +1,110 @@
+// Flat, owned AST: edges are indices; source spelling lives in lexer tokens.
+pub enum BasicType {
+    Unknown
+    Unit
+    Int
+    Bool
+    Str
+    String
+    Vec
+    Named
+    Byte
+}
+
+pub struct TypeRef {
+    kind: BasicType
+    name: int = -1
+    elementKind: BasicType
+    elementName: int = -1
+}
+
+pub enum AggregateKind {
+    Struct
+    Enum
+}
+
+pub struct FieldDecl {
+    name: int
+    ty: TypeRef
+    initial: int = -1
+}
+
+pub struct TypeDecl {
+    kind: AggregateKind
+    name: int
+    fields: Vec[FieldDecl] = []
+    variants: Vec[int] = []
+}
+
+pub enum ExprKind {
+    Unit
+    Paren
+    Number
+    Boolean
+    Text
+    Name
+    Unary
+    Binary
+    Call
+    Method
+    Construct
+    Vector
+    Index
+    Field
+    Variant
+    Byte
+}
+
+pub struct Expression {
+    kind: ExprKind
+    token: int
+    elementKind: BasicType
+    elementName: int = -1
+    left: int = -1
+    right: int = -1
+    args: Vec[int] = []
+    names: Vec[int] = []
+}
+
+pub enum StmtKind {
+    Bind
+    Assign
+    Expr
+    Return
+    If
+    While
+    Loop
+    Break
+    Continue
+}
+
+pub struct Statement {
+    kind: StmtKind
+    token: int
+    name: int = -1
+    target: int = -1
+    annotation: TypeRef
+    mutable: bool = false
+    expr: int = -1
+    body: Vec[int] = []
+    otherwise: Vec[int] = []
+}
+
+pub struct Parameter {
+    name: int
+    ty: TypeRef
+}
+
+pub struct Function {
+    name: int
+    result: TypeRef
+    params: Vec[Parameter]
+    body: Vec[int]
+}
+
+pub struct Program {
+    expressions: Vec[Expression] = []
+    statements: Vec[Statement] = []
+    functions: Vec[Function] = []
+    types: Vec[TypeDecl] = []
+}

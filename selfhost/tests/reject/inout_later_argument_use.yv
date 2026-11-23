@@ -1,0 +1,13 @@
+struct State {
+    pos: int
+}
+
+fn step(s: inout State, by: int) {
+    s.pos += by
+}
+
+fn main() {
+    var s = State{pos: 1}
+    step(&s, s.pos)
+    println(s.pos)
+}

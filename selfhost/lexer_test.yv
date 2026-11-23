@@ -1,23 +1,24 @@
-use lexer
+// Built by stage0 from support.yv + lexer.yv + this file (see bootstrap.py).
 
 fn good(source: str) -> Vec[Token] {
-    return lexer.lex(source) catch e {
-        eprintln(e.code)
-        eprintln(e.message)
+    var lexed = lex(source, "test.yv")
+    if lexed.failed {
+        eprintln(lexed.code)
+        eprintln(lexed.message)
         panic("expected lexing to succeed")
     }
+    assert(lexed.tokens[lexed.tokens.len() - 1].text == "test.yv")
+    return take(&lexed.tokens)
 }
 
 fn bad(source: str, code: str, offset: int, line: int, column: int) {
-    match lexer.lex(source) {
-        ok(_tokens) => panic("expected lexing to fail")
-        err(e) => {
-            assert(e.code == code)
-            assert(e.offset == offset)
-            assert(e.line == line)
-            assert(e.column == column)
-        }
-    }
+    let lexed = lex(source, "test.yv")
+    assert(lexed.failed)
+    assert(lexed.tokens.len() == 0)
+    assert(lexed.code == code)
+    assert(lexed.offset == offset)
+    assert(lexed.line == line)
+    assert(lexed.column == column)
 }
 
 fn main() {

@@ -1,4 +1,5 @@
-// Flat, owned AST: edges are indices; source spelling lives in lexer tokens.
+// Flat, Copy AST: edges and child lists are indices into Program pools;
+// source spelling lives in lexer tokens.
 pub enum BasicType {
     Unknown
     Unit
@@ -9,6 +10,7 @@ pub enum BasicType {
     Vec
     Named
     Byte
+    Args
 }
 
 pub struct TypeRef {
@@ -29,11 +31,14 @@ pub struct FieldDecl {
     initial: int = -1
 }
 
+// fieldStart/fieldCount index Program.fields; variants index Program.lists.
 pub struct TypeDecl {
     kind: AggregateKind
     name: int
-    fields: Vec[FieldDecl] = []
-    variants: Vec[int] = []
+    fieldStart: int = 0
+    fieldCount: int = 0
+    variantStart: int = 0
+    variantCount: int = 0
 }
 
 pub enum ExprKind {
@@ -53,8 +58,13 @@ pub enum ExprKind {
     Field
     Variant
     Byte
+    Slice
+    Ref
+    Catch
 }
 
+// args/names index Program.lists. A Slice keeps its end in extra; a Catch
+// keeps its handler statements in args and its binding token in extra.
 pub struct Expression {
     kind: ExprKind
     token: int
@@ -62,8 +72,11 @@ pub struct Expression {
     elementName: int = -1
     left: int = -1
     right: int = -1
-    args: Vec[int] = []
-    names: Vec[int] = []
+    extra: int = -1
+    argStart: int = 0
+    argCount: int = 0
+    nameStart: int = 0
+    nameCount: int = 0
 }
 
 pub enum StmtKind {
@@ -78,6 +91,7 @@ pub enum StmtKind {
     Continue
 }
 
+// body/otherwise index Program.lists.
 pub struct Statement {
     kind: StmtKind
     token: int
@@ -86,20 +100,26 @@ pub struct Statement {
     annotation: TypeRef
     mutable: bool = false
     expr: int = -1
-    body: Vec[int] = []
-    otherwise: Vec[int] = []
+    bodyStart: int = 0
+    bodyCount: int = 0
+    elseStart: int = 0
+    elseCount: int = 0
 }
 
 pub struct Parameter {
     name: int
     ty: TypeRef
+    byRef: bool = false
 }
 
+// params index Program.params; body indexes Program.lists.
 pub struct Function {
     name: int
     result: TypeRef
-    params: Vec[Parameter]
-    body: Vec[int]
+    paramStart: int = 0
+    paramCount: int = 0
+    bodyStart: int = 0
+    bodyCount: int = 0
 }
 
 pub struct Program {
@@ -107,4 +127,9 @@ pub struct Program {
     statements: Vec[Statement] = []
     functions: Vec[Function] = []
     types: Vec[TypeDecl] = []
+    lists: Vec[int] = []
+    params: Vec[Parameter] = []
+    fields: Vec[FieldDecl] = []
+    importsFs: bool = false
+    importsOs: bool = false
 }

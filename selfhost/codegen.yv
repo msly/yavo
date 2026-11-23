@@ -1,10 +1,5 @@
 // Typed C lowering. Every value is materialized in source order.
 // Owned values have one owner; borrowed reads and statement temporaries are explicit.
-use diagnostic
-use lexer
-use model
-use types
-
 
 struct Local {
     token: int
@@ -12,8 +7,10 @@ struct Local {
     mutable: bool
     borrowed: bool = false
     moved: bool = false
+    byRef: bool = false
 }
 
+// transient: a str view into an owned String; it may not outlive its statement.
 struct Value {
     ty: Type
     name: String
@@ -22,6 +19,7 @@ struct Value {
     field: bool = false
     indexedBorrow: bool = false
     temporary: bool = false
+    transient: bool = false
 }
 
 struct Place {
@@ -33,17 +31,26 @@ struct Place {
     indexed: bool = false
 }
 
+// Statement temporaries are always named t_<id>.
 struct Temporary {
     ty: Type
-    name: String
+    id: int
 }
 
+// Exit states live in Generator.exits: localCount break flags, then localCount
+// continue flags, starting at exitBase.
 struct LoopState {
     localCount: int
     tempCount: int
-    breaks: Vec[bool] = []
-    continues: Vec[bool] = []
+    exitBase: int
     hasBreak: bool = false
+    hasContinue: bool = false
+}
+
+struct LoopExit {
+    breaks: Vec[bool]
+    continues: Vec[bool]
+    hasBreak: bool
 }
 
 struct Flow {
@@ -60,7 +67,9 @@ struct Generator {
     binaryLocks: Vec[int] = []
     accessLocks: Vec[int] = []
     reservations: Vec[int] = []
+    inoutLocks: Vec[int] = []
     loopStates: Vec[LoopState] = []
+    exits: Vec[bool] = []
     result: Type
     loops: int = 0
     nesting: int = 0
@@ -68,107 +77,209 @@ struct Generator {
     loopCondition: bool = false
 }
 
-fn problem(ts: Vec[Token], token: int, code: str, message: str) -> Failure {
-    let t = ts[token]
-    return diagnostic.make(code, message, t.start, t.line, t.column)
+fn truncInts(values: Vec[int], count: int) -> Vec[int] {
+    var out: Vec[int] = []
+    var i = 0
+    while i < count {
+        out.push(values[i])
+        i += 1
+    }
+    return out
 }
 
-fn require(reg: Registry, ts: Vec[Token], token: int, actual: Type, expected: Type) -> () ! Failure {
-    if !types.same(actual, expected) {
-        return err(problem(ts, token, "E0001",
-            format("expected ${types.describe(reg, ts, expected)}, found ${types.describe(reg, ts, actual)}")))
+fn truncBools(values: Vec[bool], count: int) -> Vec[bool] {
+    var out: Vec[bool] = []
+    var i = 0
+    while i < count {
+        out.push(values[i])
+        i += 1
+    }
+    return out
+}
+
+fn truncLocals(values: Vec[Local], count: int) -> Vec[Local] {
+    var out: Vec[Local] = []
+    var i = 0
+    while i < count {
+        out.push(values[i])
+        i += 1
+    }
+    return out
+}
+
+fn truncTemps(values: Vec[Temporary], count: int) -> Vec[Temporary] {
+    var out: Vec[Temporary] = []
+    var i = 0
+    while i < count {
+        out.push(values[i])
+        i += 1
+    }
+    return out
+}
+
+fn truncLoops(values: Vec[LoopState], count: int) -> Vec[LoopState] {
+    var out: Vec[LoopState] = []
+    var i = 0
+    while i < count {
+        out.push(values[i])
+        i += 1
+    }
+    return out
+}
+
+fn require(reg: Registry, ts: Vec[Token], token: int, actual: Type, expected: Type) {
+    if !same(actual, expected) {
+        var message = join2("expected ", describe(reg, ts, expected))
+        message.push(", found ")
+        message.push(describe(reg, ts, actual))
+        fail(ts, token, "E0001", message)
     }
 }
 
-fn basic(reg: Registry, ts: Vec[Token], token: int, actual: Type, expected: BasicType) -> () ! Failure {
-    try require(reg, ts, token, actual, types.primitive(expected))
+fn basic(reg: Registry, ts: Vec[Token], token: int, actual: Type, expected: BasicType) {
+    require(reg, ts, token, actual, primitive(expected))
 }
 
 fn integerType(ty: Type) -> bool { return ty.kind == .Int || ty.kind == .Byte }
 
-fn requireInteger(ts: Vec[Token], token: int, ty: Type) -> () ! Failure {
+fn requireInteger(ts: Vec[Token], token: int, ty: Type) {
     if !integerType(ty) {
-        return err(problem(ts, token, "E0001", "expected an integer value"))
+        fail(ts, token, "E0001", "expected an integer value")
     }
+}
+
+fn pushDigit(out: inout String, d: int) {
+    out.push("0123456789"[d..d + 1])
 }
 
 // Three octal digits per byte preserve UTF-8/NUL without C escape ambiguity.
 pub fn cString(text: str) -> String {
     var out = "\"".toString()
-    for i in 0..text.len() {
+    var i = 0
+    while i < text.len() {
         let b = int(text[i])
-        out.push(format("\\${b / 64}${(b / 8) % 8}${b % 8}"))
+        out.push("\\")
+        pushDigit(&out, b / 64)
+        pushDigit(&out, (b / 8) % 8)
+        pushDigit(&out, b % 8)
+        i += 1
     }
     out.push("\"")
     return out
 }
 
-fn line(g: inout Generator, text: str) {
+fn put(g: inout Generator, text: str) {
+    g.out.push(text)
+}
+
+fn emit(g: inout Generator, text: str) {
     g.out.push(text)
     g.out.push("\n")
+}
+
+fn temporaryName(id: int) -> String {
+    return join2("t_", decimal(id))
 }
 
 fn typedValue(g: inout Generator, reg: Registry, ty: Type, expression: str) -> Value {
     let n = g.counter
     g.counter += 1
-    let name = format("t_${n}")
-    line(&g, format("${types.cType(ty)} ${name} = ${expression};"))
-    let owner = types.owned(reg, ty)
-    if owner { g.temps.push(Temporary{ty: ty, name: name.clone()}) }
-    return Value{ty: ty, name: name, temporary: owner}
+    let name = temporaryName(n)
+    put(&g, cType(ty))
+    put(&g, " ")
+    put(&g, name)
+    put(&g, " = ")
+    put(&g, expression)
+    emit(&g, ";")
+    let isOwned = owned(reg, ty)
+    if isOwned { g.temps.push(Temporary{ty: ty, id: n}) }
+    return Value{ty: ty, name: name, temporary: isOwned}
 }
 
-fn value(g: inout Generator, ty: BasicType, expression: str) -> Value {
+fn scalar(g: inout Generator, ty: BasicType, expression: str) -> Value {
     let n = g.counter
     g.counter += 1
-    let name = format("t_${n}")
-    let resolved = types.primitive(ty)
-    line(&g, format("${types.cType(resolved)} ${name} = ${expression};"))
+    let name = temporaryName(n)
+    let resolved = primitive(ty)
+    put(&g, cType(resolved))
+    put(&g, " ")
+    put(&g, name)
+    put(&g, " = ")
+    put(&g, expression)
+    emit(&g, ";")
     return Value{ty: resolved, name: name}
 }
 
 fn vectorHelper(ty: Type) -> String {
     if ty.elementKind == .String { return "string".toString() }
-    return format("type_${ty.elementDecl}")
+    return join2("type_", decimal(ty.elementDecl))
 }
 
 fn dropName(reg: Registry, ty: Type) -> String {
     if ty.kind == .String { return "yv_string_drop".toString() }
     if ty.kind == .Vec {
-        if types.owned(reg, types.element(ty)) {
-            return format("sh_vec_drop_${vectorHelper(ty)}")
+        if owned(reg, element(ty)) {
+            return join2("sh_vec_drop_", vectorHelper(ty))
         }
         return "yv_vec_free".toString()
     }
-    return format("sh_drop_${ty.decl}")
+    return join2("sh_drop_", decimal(ty.decl))
 }
 
 // Struct cloning is internal to collection cloning, not a new user struct method.
 // Copy fields retain their values; each owned field receives a distinct owner.
 fn cloneExpression(reg: Registry, ty: Type, source: str, lineText: str, columnText: str) -> String {
+    var out = String{}
     if ty.kind == .String {
-        return format("yv_string_from(yv_string_view(&(${source})), ${lineText}, ${columnText})")
-    }
-    if ty.kind == .Vec {
-        let elem = types.element(ty)
-        if types.owned(reg, elem) {
-            return format("sh_vec_clone_${vectorHelper(ty)}(&(${source}), ${lineText}, ${columnText})")
+        out.push("yv_string_from(yv_string_view(&(")
+        out.push(source)
+        out.push(")), ")
+    } else if ty.kind == .Vec {
+        let elem = element(ty)
+        if owned(reg, elem) {
+            out.push("sh_vec_clone_")
+            out.push(vectorHelper(ty))
+            out.push("(&(")
+            out.push(source)
+            out.push("), ")
+        } else {
+            out.push("sh_vec_clone_copy(&(")
+            out.push(source)
+            out.push("), (int64_t)sizeof(")
+            out.push(cType(elem))
+            out.push("), ")
         }
-        return format("sh_vec_clone_copy(&(${source}), (int64_t)sizeof(${types.cType(elem)}), ${lineText}, ${columnText})")
+    } else if owned(reg, ty) {
+        out.push("sh_clone_")
+        out.push(decimal(ty.decl))
+        out.push("(&(")
+        out.push(source)
+        out.push("), ")
+    } else {
+        return source.toString()
     }
-    if types.owned(reg, ty) {
-        return format("sh_clone_${ty.decl}(&(${source}), ${lineText}, ${columnText})")
-    }
-    return source.toString()
+    out.push(lineText)
+    out.push(", ")
+    out.push(columnText)
+    out.push(")")
+    return out
 }
 
 fn dropValue(g: inout Generator, reg: Registry, ty: Type, name: str) {
-    if types.owned(reg, ty) { line(&g, format("${dropName(reg, ty)}(&(${name}));")) }
+    if owned(reg, ty) {
+        put(&g, dropName(reg, ty))
+        put(&g, "(&(")
+        put(&g, name)
+        emit(&g, "));")
+    }
 }
 
 fn zeroValue(g: inout Generator, reg: Registry, v: Value) {
-    if types.owned(reg, v.ty) {
-        line(&g, format("${v.name} = (${types.cType(v.ty)}){0};"))
+    if owned(reg, v.ty) {
+        put(&g, v.name)
+        put(&g, " = (")
+        put(&g, cType(v.ty))
+        emit(&g, "){0};")
     }
 }
 
@@ -177,14 +288,19 @@ fn cleanTemps(g: inout Generator, reg: Registry, start: int) {
     while i > start {
         i -= 1
         let ty = g.temps[i].ty
-        let name = g.temps[i].name.clone()
-        dropValue(&g, reg, ty, name)
+        let id = g.temps[i].id
+        dropValue(&g, reg, ty, temporaryName(id))
     }
 }
 
 fn discardTemps(g: inout Generator, reg: Registry, start: int) {
     cleanTemps(&g, reg, start)
-    while g.temps.len() > start { let _removed = g.temps.pop() }
+    if g.temps.len() > start { g.temps = truncTemps(g.temps, start) }
+}
+
+fn localName(local: Local) -> String {
+    if local.byRef { return join3("(*v_", decimal(local.token), ")") }
+    return join2("v_", decimal(local.token))
 }
 
 fn cleanLocals(g: inout Generator, reg: Registry, start: int) {
@@ -193,74 +309,100 @@ fn cleanLocals(g: inout Generator, reg: Registry, start: int) {
         i -= 1
         let local = g.locals[i]
         if !local.borrowed {
-            let name = format("v_${local.token}")
-            dropValue(&g, reg, local.ty, name)
+            dropValue(&g, reg, local.ty, localName(local))
         }
     }
 }
 
 fn movedState(g: Generator) -> Vec[bool] {
     var state: Vec[bool] = []
-    for local in g.locals { state.push(local.moved) }
+    var i = 0
+    while i < g.locals.len() {
+        state.push(g.locals[i].moved)
+        i += 1
+    }
     return state
 }
 
 fn restoreState(g: inout Generator, state: Vec[bool]) {
-    for i in 0..state.len() { g.locals[i].moved = state[i] }
+    var i = 0
+    while i < state.len() {
+        g.locals[i].moved = state[i]
+        i += 1
+    }
 }
 
 fn joinStates(a: Vec[bool], b: Vec[bool]) -> Vec[bool] {
     var out = a.clone()
-    for i in 0..out.len() { if i < b.len() { out[i] = out[i] || b[i] } }
+    var i = 0
+    while i < out.len() {
+        if i < b.len() { out[i] = out[i] || b[i] }
+        i += 1
+    }
     return out
 }
 
-fn readable(g: Generator, ts: Vec[Token], root: int, token: int) -> () ! Failure {
+fn contains(values: Vec[int], wanted: int) -> bool {
+    var i = 0
+    while i < values.len() {
+        if values[i] == wanted { return true }
+        i += 1
+    }
+    return false
+}
+
+fn readable(g: Generator, ts: Vec[Token], root: int, token: int) {
     if root >= 0 && g.locals[root].moved {
-        return err(problem(ts, token, "E0402", "use of a moved value"))
+        fail(ts, token, "E0402", "use of a moved value")
+    }
+    if root >= 0 && contains(g.inoutLocks, root) {
+        fail(ts, token, "E0102", "an earlier call argument has exclusive access to this value")
     }
 }
 
-fn writable(g: Generator, ts: Vec[Token], root: int, token: int) -> () ! Failure {
-    for reserved in g.reservations {
-        if reserved == root { return err(problem(ts, token, "E0403", "mutation conflicts with a reserved receiver")) }
+fn writable(g: Generator, ts: Vec[Token], root: int, token: int) {
+    if contains(g.reservations, root) {
+        fail(ts, token, "E0403", "mutation conflicts with a reserved receiver")
     }
-    for locked in g.locks {
-        if locked == root { return err(problem(ts, token, "E0102", "an earlier expression still borrows this value")) }
+    if contains(g.locks, root) {
+        fail(ts, token, "E0102", "an earlier expression still borrows this value")
     }
-    for locked in g.binaryLocks {
-        if locked == root {
-            return err(problem(ts, token, "U0001", "transferring a comparison operand while it is borrowed is outside this subset"))
-        }
+    if contains(g.binaryLocks, root) {
+        fail(ts, token, "U0001", "transferring a comparison operand while it is borrowed is outside this subset")
     }
-    for locked in g.accessLocks {
-        if locked == root {
-            return err(problem(ts, token, "U0001", "moving or modifying an active index/reserve receiver is outside this subset"))
-        }
+    if contains(g.accessLocks, root) {
+        fail(ts, token, "U0001", "moving or modifying an active index/reserve receiver is outside this subset")
+    }
+    if root >= 0 && contains(g.inoutLocks, root) {
+        fail(ts, token, "E0102", "an earlier call argument has exclusive access to this value")
     }
 }
 
 fn copyValue(v: Value) -> Value {
     return Value{ty: v.ty, name: v.name.clone(), local: v.local,
-        root: v.root, field: v.field, indexedBorrow: v.indexedBorrow, temporary: v.temporary}
+        root: v.root, field: v.field, indexedBorrow: v.indexedBorrow, temporary: v.temporary,
+        transient: v.transient}
 }
 
-fn takeValue(g: inout Generator, reg: Registry, ts: Vec[Token], token: int, v: Value) -> Value ! Failure {
-    if !types.owned(reg, v.ty) { return copyValue(v) }
+fn takeValue(g: inout Generator, reg: Registry, ts: Vec[Token], token: int, v: Value) -> Value {
+    if !owned(reg, v.ty) { return copyValue(v) }
     if v.indexedBorrow && !v.field {
-        return err(problem(ts, token, "E0404", "an indexed element is borrowed; clone it to obtain an owned value"))
+        fail(ts, token, "E0404", "an indexed element is borrowed; clone it to obtain an owned value")
     }
     if v.field {
-        return err(problem(ts, token, "E0401", "cannot move an owned value out of a field; clone it"))
+        fail(ts, token, "E0401", "cannot move an owned value out of a field; clone it")
     }
     if v.local >= 0 {
-        try readable(g, ts, v.local, token)
-        if g.locals[v.local].borrowed {
-            return err(problem(ts, token, "E0401", "cannot move out of a read-only parameter; clone it"))
+        readable(g, ts, v.local, token)
+        if g.locals[v.local].byRef {
+            fail(ts, token, "E0401", "cannot move out of an inout parameter; use take or clone")
         }
-        try writable(g, ts, v.local, token)
+        if g.locals[v.local].borrowed {
+            fail(ts, token, "E0401", "cannot move out of a read-only parameter; clone it")
+        }
+        writable(g, ts, v.local, token)
         if g.loopCondition {
-            return err(problem(ts, token, "U0001", "moving an existing owned value in a loop condition is outside this subset"))
+            fail(ts, token, "U0001", "moving an existing owned value in a loop condition is outside this subset")
         }
         let taken = typedValue(&g, reg, v.ty, v.name)
         zeroValue(&g, reg, v)
@@ -268,7 +410,7 @@ fn takeValue(g: inout Generator, reg: Registry, ts: Vec[Token], token: int, v: V
         return taken
     }
     if !v.temporary {
-        return err(problem(ts, token, "E0401", "cannot move an owned borrowed value"))
+        fail(ts, token, "E0401", "cannot move an owned borrowed value")
     }
     return copyValue(v)
 }
@@ -276,12 +418,12 @@ fn takeValue(g: inout Generator, reg: Registry, ts: Vec[Token], token: int, v: V
 fn stringLike(ty: Type) -> bool { return ty.kind == .Str || ty.kind == .String }
 
 fn view(v: Value) -> String {
-    if v.ty.kind == .String { return format("yv_string_view(&(${v.name}))") }
+    if v.ty.kind == .String { return join3("yv_string_view(&(", v.name, "))") }
     return v.name.clone()
 }
 
 fn releaseLocks(g: inout Generator, start: int) {
-    while g.locks.len() > start { let _removed = g.locks.pop() }
+    if g.locks.len() > start { g.locks = truncInts(g.locks, start) }
 }
 
 fn localIndex(g: Generator, ts: Vec[Token], token: int) -> int {
@@ -293,24 +435,26 @@ fn localIndex(g: Generator, ts: Vec[Token], token: int) -> int {
     return -1
 }
 
-fn declare(g: inout Generator, ts: Vec[Token], token: int, ty: Type, mutable: bool, borrowed: bool) -> () ! Failure {
+fn declare(g: inout Generator, ts: Vec[Token], token: int, ty: Type, mutable: bool, borrowed: bool, mode: bool) {
     if localIndex(g, ts, token) >= 0 {
-        return err(problem(ts, token, "E0011", "Yavo does not allow shadowing an active local"))
+        fail(ts, token, "E0011", "Yavo does not allow shadowing an active local")
     }
     if ty.kind == .Unit || ty.kind == .Unknown {
-        return err(problem(ts, token, "U0001", "unit-valued bindings are outside the selfhost subset"))
+        fail(ts, token, "U0001", "unit-valued bindings are outside the selfhost subset")
     }
-    g.locals.push(Local{token: token, ty: ty, mutable: mutable, borrowed: borrowed})
+    g.locals.push(Local{token: token, ty: ty, mutable: mutable, borrowed: borrowed, byRef: mode})
 }
 
 fn functionIndex(p: Program, ts: Vec[Token], token: int) -> int {
-    for i in 0..p.functions.len() {
+    var i = 0
+    while i < p.functions.len() {
         if ts[p.functions[i].name].text == ts[token].text { return i }
+        i += 1
     }
     return -1
 }
 
-fn builtin(name: str) -> bool {
+fn outputBuiltin(name: str) -> bool {
     return name == "print" || name == "println" || name == "eprintln" || name == "assert"
 }
 
@@ -324,7 +468,6 @@ fn reservedFunction(name: str) -> bool {
 }
 
 fn integerOperation(ts: Vec[Token], token: int, kind: BasicType, op: str, left: str, right: str) -> String {
-    let t = ts[token]
     var suffix = "i64".toString()
     if kind == .Byte { suffix = "u8".toString() }
     var stem = "".toString()
@@ -335,200 +478,436 @@ fn integerOperation(ts: Vec[Token], token: int, kind: BasicType, op: str, left: 
     if op == "%" || op == "%=" { stem = "rem".toString() }
     if op == "<<" { stem = "shl".toString() }
     if op == ">>" { stem = "shr".toString() }
-    if stem.len() > 0 {
-        return format("yv_${stem}_${suffix}(${left}, ${right}, ${t.line}, ${t.column})")
+    var wrapping = false
+    if stem.len() == 0 {
+        if op == "+%" { stem = "addw".toString() }
+        if op == "-%" { stem = "subw".toString() }
+        if op == "*%" { stem = "mulw".toString() }
+        wrapping = true
     }
-    if op == "+%" { stem = "addw".toString() }
-    if op == "-%" { stem = "subw".toString() }
-    if op == "*%" { stem = "mulw".toString() }
-    if stem.len() > 0 { return format("yv_${stem}_${suffix}(${left}, ${right})") }
-    return format("(${left} ${op} ${right})")
+    if stem.len() == 0 { return join5("(", left, join3(" ", op, " "), right, ")") }
+    var out = join4("yv_", stem, "_", suffix)
+    out.push("(")
+    out.push(left)
+    out.push(", ")
+    out.push(right)
+    if !wrapping {
+        out.push(", ")
+        out.push(decimal(ts[token].line))
+        out.push(", ")
+        out.push(decimal(ts[token].column))
+    }
+    out.push(")")
+    return out
 }
 
-fn printValue(g: inout Generator, reg: Registry, ts: Vec[Token], token: int, arg: Value, output: int) -> () ! Failure {
-    if arg.ty.kind == .Int { line(&g, format("yv_out_i64(&o_${output}, ${arg.name});"))
-    } else if arg.ty.kind == .Byte { line(&g, format("yv_out_u64(&o_${output}, (uint64_t)${arg.name});"))
-    } else if arg.ty.kind == .Bool { line(&g, format("yv_out_bool(&o_${output}, ${arg.name});"))
-    } else if stringLike(arg.ty) { line(&g, format("yv_out_str(&o_${output}, ${view(arg)});"))
+fn lineColumn(ts: Vec[Token], token: int) -> String {
+    return join3(decimal(ts[token].line), ", ", decimal(ts[token].column))
+}
+
+fn printValue(g: inout Generator, reg: Registry, ts: Vec[Token], token: int, arg: Value, output: int) {
+    let target = join3("(&o_", decimal(output), ", ")
+    if arg.ty.kind == .Int {
+        put(&g, "yv_out_i64")
+        put(&g, target)
+        put(&g, arg.name)
+        emit(&g, ");")
+    } else if arg.ty.kind == .Byte {
+        put(&g, "yv_out_u64")
+        put(&g, target)
+        put(&g, "(uint64_t)")
+        put(&g, arg.name)
+        emit(&g, ");")
+    } else if arg.ty.kind == .Bool {
+        put(&g, "yv_out_bool")
+        put(&g, target)
+        put(&g, arg.name)
+        emit(&g, ");")
+    } else if stringLike(arg.ty) {
+        put(&g, "yv_out_str")
+        put(&g, target)
+        put(&g, view(arg))
+        emit(&g, ");")
     } else if arg.ty.kind == .Named && reg.entries[arg.ty.decl].kind == .Enum {
-        line(&g, format("switch (${arg.name}) {"))
-        let variants = reg.entries[arg.ty.decl].variants.clone()
-        for i in 0..variants.len() {
-            let text = ts[variants[i]].text.clone()
-            let quoted = cString(text)
-            line(&g, format("case ${i}: yv_out_bytes(&o_${output}, ${quoted}, ${text.len()}); break;"))
+        emit(&g, join3("switch (", arg.name, ") {"))
+        let start = reg.entries[arg.ty.decl].variantStart
+        let count = reg.entries[arg.ty.decl].variantCount
+        var i = 0
+        while i < count {
+            let text = ts[reg.variants[start + i]].text.clone()
+            put(&g, join3("case ", decimal(i), ": yv_out_bytes(&o_"))
+            put(&g, decimal(output))
+            put(&g, ", ")
+            put(&g, cString(text))
+            put(&g, ", ")
+            put(&g, decimal(text.len()))
+            emit(&g, "); break;")
+            i += 1
         }
-        line(&g, "}")
+        emit(&g, "}")
     } else {
-        return err(problem(ts, token, "E0001", "this type cannot be printed"))
+        fail(ts, token, "E0001", "this type cannot be printed")
     }
 }
 
-fn call(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression, id: int) -> Value ! Failure {
+// A borrow argument names a mutable place; its root stays unavailable until the call ends.
+fn refPlace(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, id: int) -> Place {
+    let token = p.expressions[id].token
+    let target = p.expressions[id].left
+    var current = target
+    while p.expressions[current].kind == .Paren || p.expressions[current].kind == .Field {
+        current = p.expressions[current].left
+    }
+    if p.expressions[current].kind != .Name {
+        fail(ts, token, "U0001", "only variables and their fields can be passed as inout for now")
+    }
+    let shape = placeType(g, p, ts, reg, target, 0)
+    if !shape.mutable { fail(ts, token, "E0014", "cannot modify a read-only value") }
+    let target2 = placeOf(&g, p, ts, reg, target, 0)
+    readable(g, ts, target2.root, token)
+    writable(g, ts, target2.root, token)
+    return target2
+}
+
+fn takeCall(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression) -> Value {
+    if e.argCount != 1 { fail(ts, e.token, "E0012", "take requires one argument") }
+    let argId = p.lists[e.argStart]
+    if p.expressions[argId].kind != .Ref {
+        fail(ts, p.expressions[argId].token, "E0001", "take requires a borrowed place written as &place")
+    }
+    let target = refPlace(&g, p, ts, reg, argId)
+    if target.ty.kind != .String && target.ty.kind != .Vec {
+        fail(ts, e.token, "U0001", "take is limited to String and Vec places in this subset")
+    }
+    let taken = typedValue(&g, reg, target.ty, target.name)
+    put(&g, target.name)
+    put(&g, " = (")
+    put(&g, cType(target.ty))
+    emit(&g, "){0};")
+    return taken
+}
+
+fn callValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression, id: int) -> Value {
     let name = ts[e.token].text.clone()
     if localIndex(g, ts, e.token) >= 0 {
-        return err(problem(ts, e.token, "E0001", "a local value cannot be called as a function"))
+        fail(ts, e.token, "E0001", "a local value cannot be called as a function")
     }
     let index = functionIndex(p, ts, e.token)
     if index < 0 && (name == "int" || name == "byte") {
-        if e.args.len() != 1 {
-            return err(problem(ts, e.token, "E0012", "an integer conversion requires one argument"))
+        if e.argCount != 1 {
+            fail(ts, e.token, "E0012", "an integer conversion requires one argument")
         }
         // Conversion arguments have no destination context: byte(256) is a
         // checked run-time conversion, unlike a byte-annotated literal.
-        let arg = try emitExpr(&g, p, ts, reg, e.args[0])
-        try requireInteger(ts, e.token, arg.ty)
+        let arg = emitExpr(&g, p, ts, reg, p.lists[e.argStart])
+        requireInteger(ts, e.token, arg.ty)
         var target: BasicType = .Int
         if name == "byte" { target = .Byte }
         if arg.ty.kind == target { return copyValue(arg) }
-        let t = ts[e.token]
-        var helper = "yv_conv_u8_i64".toString()
-        if target == .Byte { helper = "yv_conv_i64_u8".toString() }
-        return value(&g, target, format("${helper}(${arg.name}, ${t.line}, ${t.column})"))
+        var helper = "yv_conv_u8_i64(".toString()
+        if target == .Byte { helper = "yv_conv_i64_u8(".toString() }
+        return scalar(&g, target, join5(helper, arg.name, ", ", lineColumn(ts, e.token), ")"))
     }
-    if index < 0 && builtin(name) {
+    if index < 0 && name == "take" { return takeCall(&g, p, ts, reg, e) }
+    if index < 0 && outputBuiltin(name) {
         if name != "assert" && g.outputRoot != id {
-            return err(problem(ts, e.token, "E0001", "output calls must be direct statements"))
+            fail(ts, e.token, "E0001", "output calls must be direct statements")
         }
-        if e.args.len() != 1 {
-            return err(problem(ts, e.token, "E0012", "selfhost output/assert calls require one argument"))
+        if e.argCount != 1 {
+            fail(ts, e.token, "E0012", "selfhost output/assert calls require one argument")
         }
-        var expected = types.primitive(.Unknown)
-        if name == "assert" { expected = types.primitive(.Bool) }
-        let arg = try emitExpected(&g, p, ts, reg, e.args[0], expected)
-        let t = ts[e.token]
+        var expected = primitive(.Unknown)
+        if name == "assert" { expected = primitive(.Bool) }
+        let arg = emitExpected(&g, p, ts, reg, p.lists[e.argStart], expected)
         if name == "assert" {
-            try basic(reg, ts, e.token, arg.ty, .Bool)
-            line(&g, format("if (!${arg.name}) yv_panic(\"P-ASSERT\", \"assertion failed\", ${t.line}, ${t.column});"))
+            basic(reg, ts, e.token, arg.ty, .Bool)
+            put(&g, join3("if (!", arg.name, ") yv_panic(\"P-ASSERT\", \"assertion failed\", "))
+            put(&g, lineColumn(ts, e.token))
+            emit(&g, ");")
         } else {
             var fd = 1
             if name == "eprintln" { fd = 2 }
             let outputIndex = g.counter
             g.counter += 1
-            line(&g, format("yv_out o_${outputIndex} = {${fd}, NULL, ${t.line}, ${t.column}};"))
-            line(&g, format("yv_output_at(${t.line}, ${t.column});"))
-            try printValue(&g, reg, ts, e.token, arg, outputIndex)
-            if name != "print" { line(&g, format("yv_out_bytes(&o_${outputIndex}, \"\\n\", 1);")) }
+            put(&g, join3("yv_out o_", decimal(outputIndex), " = {"))
+            put(&g, decimal(fd))
+            put(&g, ", NULL, ")
+            put(&g, lineColumn(ts, e.token))
+            emit(&g, "};")
+            emit(&g, join3("yv_output_at(", lineColumn(ts, e.token), ");"))
+            printValue(&g, reg, ts, e.token, arg, outputIndex)
+            if name != "print" {
+                emit(&g, join3("yv_out_bytes(&o_", decimal(outputIndex), ", \"\\n\", 1);"))
+            }
         }
-        return Value{ty: types.primitive(.Unit), name: "".toString()}
+        return Value{ty: primitive(.Unit), name: "".toString()}
     }
     if index < 0 {
         if name == "format" || name == "bool" || name == "panic" ||
-            name == "some" || name == "take" || name == "replace" || name == "swap" {
-            return err(problem(ts, e.token, "U0001", "builtin is outside the selfhost subset"))
+            name == "some" || name == "replace" || name == "swap" {
+            fail(ts, e.token, "U0001", "builtin is outside the selfhost subset")
         }
-        return err(problem(ts, e.token, "E0010", format("unknown function '${name}'")))
+        fail(ts, e.token, "E0010", join3("unknown function '", name, "'"))
     }
     let f = p.functions[index]
-    if f.params.len() != e.args.len() {
-        return err(problem(ts, e.token, "E0012", "wrong number of function arguments"))
+    if f.paramCount != e.argCount {
+        fail(ts, e.token, "E0012", "wrong number of function arguments")
     }
     let locks = g.locks.len()
-    var args: Vec[String] = []
-    for i in 0..e.args.len() {
-        let expected = try types.resolve(reg, ts, f.params[i].ty)
-        let arg = try emitExpected(&g, p, ts, reg, e.args[i], expected)
-        if expected.kind == .Str && arg.ty.kind == .String {
-            args.push(view(arg))
+    let inoutMark = g.inoutLocks.len()
+    var args = String{}
+    var i = 0
+    while i < e.argCount {
+        let argId = p.lists[e.argStart + i]
+        let argToken = p.expressions[argId].token
+        let param = p.params[f.paramStart + i]
+        let expected = resolve(reg, ts, param.ty)
+        if i > 0 { args.push(", ") }
+        if param.byRef {
+            if p.expressions[argId].kind != .Ref {
+                fail(ts, argToken, "E0001", "an inout argument must be written as &place")
+            }
+            let target = refPlace(&g, p, ts, reg, argId)
+            require(reg, ts, argToken, target.ty, expected)
+            args.push("&(")
+            args.push(target.name)
+            args.push(")")
+            g.inoutLocks.push(target.root)
         } else {
-            try require(reg, ts, p.expressions[e.args[i]].token, arg.ty, expected)
-            args.push(arg.name.clone())
+            if p.expressions[argId].kind == .Ref {
+                fail(ts, argToken, "U0001", "borrow arguments for read-only parameters are outside this subset")
+            }
+            let arg = emitExpected(&g, p, ts, reg, argId, expected)
+            if expected.kind == .Str && arg.ty.kind == .String {
+                args.push(view(arg))
+            } else {
+                require(reg, ts, argToken, arg.ty, expected)
+                args.push(arg.name)
+            }
+            if arg.root >= 0 { g.locks.push(arg.root) }
         }
-        if arg.root >= 0 { g.locks.push(arg.root) }
+        i += 1
     }
-    let expression = format("sh_fn_${index}(${args.join(", ")})")
-    let result = try types.resolve(reg, ts, f.result)
+    let expression = join5("sh_fn_", decimal(index), "(", args, ")")
+    let result = resolve(reg, ts, f.result)
     releaseLocks(&g, locks)
+    if g.inoutLocks.len() > inoutMark { g.inoutLocks = truncInts(g.inoutLocks, inoutMark) }
     if result.kind == .Unit {
-        line(&g, format("${expression};"))
+        emit(&g, join2(expression, ";"))
         return Value{ty: result, name: "".toString()}
     }
     return typedValue(&g, reg, result, expression)
 }
 
-fn method(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression) -> Value ! Failure {
+fn standardModule(g: Generator, p: Program, ts: Vec[Token], receiver: Expression) -> int {
+    // 1: os, 2: fs, 3: String; 0 otherwise.
+    if receiver.kind != .Name || localIndex(g, ts, receiver.token) >= 0 { return 0 }
+    if ts[receiver.token].text == "os" && p.importsOs { return 1 }
+    if ts[receiver.token].text == "fs" && p.importsFs { return 2 }
+    if ts[receiver.token].text == "String" { return 3 }
+    return 0
+}
+
+fn osCall(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression) -> Value {
+    if ts[e.token].text == "exit" {
+        if e.argCount != 1 { fail(ts, e.token, "E0012", "os.exit requires one argument") }
+        let code = emitExpected(&g, p, ts, reg, p.lists[e.argStart], primitive(.Int))
+        basic(reg, ts, e.token, code.ty, .Int)
+        emit(&g, join3("yv_os_exit(", code.name, ");"))
+        return Value{ty: primitive(.Unit), name: "".toString()}
+    }
+    if ts[e.token].text == "args" {
+        if e.argCount != 0 { fail(ts, e.token, "E0012", "os.args takes no arguments") }
+        return typedValue(&g, reg, primitive(.Args), "yv_args")
+    }
+    fail(ts, e.token, "U0001", "this os function is outside the selfhost subset")
+    return Value{ty: primitive(.Unit), name: "".toString()}
+}
+
+fn methodValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression) -> Value {
     let name = ts[e.token].text.clone()
     let receiver = p.expressions[e.left]
+    let module = standardModule(g, p, ts, receiver)
+    if module == 1 { return osCall(&g, p, ts, reg, e) }
+    if module == 2 || (module == 3 && name == "fromUtf8") {
+        fail(ts, e.token, "U0001", "fallible standard calls require `catch _ { ... }` in this subset")
+    }
     if receiver.kind == .Name && localIndex(g, ts, receiver.token) < 0 {
-        let declared = types.lookup(reg, ts, receiver.token)
+        let declared = lookup(reg, ts, receiver.token)
         if declared >= 0 && reg.entries[declared].kind == .Enum {
-            return err(problem(ts, e.token, "U0001", "enum payload construction is outside this subset"))
+            fail(ts, e.token, "U0001", "enum payload construction is outside this subset")
         }
     }
     if name == "push" || name == "reserve" {
-        let target = try place(&g, p, ts, reg, e.left, 0)
-        try readable(g, ts, target.root, e.token)
+        let target = placeOf(&g, p, ts, reg, e.left, 0)
+        readable(g, ts, target.root, e.token)
         if target.ty.kind != .Vec && (name != "push" || target.ty.kind != .String) {
-            return err(problem(ts, e.token, "U0001", "this modifying method is outside the selfhost subset"))
+            fail(ts, e.token, "U0001", "this modifying method is outside the selfhost subset")
         }
-        if !target.mutable { return err(problem(ts, e.token, "E0014", "cannot modify a read-only value")) }
-        if e.args.len() != 1 { return err(problem(ts, e.token, "E0012", "this modifying method requires one argument")) }
-        try writable(g, ts, target.root, e.token)
-        let t = ts[e.token]
+        if !target.mutable { fail(ts, e.token, "E0014", "cannot modify a read-only value") }
+        if e.argCount != 1 { fail(ts, e.token, "E0012", "this modifying method requires one argument") }
+        writable(g, ts, target.root, e.token)
+        let argId = p.lists[e.argStart]
         if name == "reserve" {
             // Stage0 accepts receiver consumption here but then reallocates a moved-from
             // descriptor. Keep that unresolved behavior outside this supported subset.
             let mark = g.accessLocks.len()
             g.accessLocks.push(target.root)
-            let count = try emitExpected(&g, p, ts, reg, e.args[0], types.primitive(.Int))
-            try basic(reg, ts, e.token, count.ty, .Int)
-            while g.accessLocks.len() > mark { let _removed = g.accessLocks.pop() }
-            let elem = types.element(target.ty)
-            line(&g, format("yv_vec_reserve(&(${target.name}), (int64_t)sizeof(${types.cType(elem)}), ${count.name}, ${t.line}, ${t.column});"))
+            let count = emitExpected(&g, p, ts, reg, argId, primitive(.Int))
+            basic(reg, ts, e.token, count.ty, .Int)
+            if g.accessLocks.len() > mark { g.accessLocks = truncInts(g.accessLocks, mark) }
+            let elem = element(target.ty)
+            put(&g, join3("yv_vec_reserve(&(", target.name, "), (int64_t)sizeof("))
+            put(&g, cType(elem))
+            put(&g, join3("), ", count.name, ", "))
+            put(&g, lineColumn(ts, e.token))
+            emit(&g, ");")
         } else {
+            let reservations = g.reservations.len()
             g.reservations.push(target.root)
             if target.ty.kind == .String {
-                let arg = try emitExpr(&g, p, ts, reg, e.args[0])
-                if !stringLike(arg.ty) { return err(problem(ts, e.token, "E0001", "String.push requires str or String")) }
+                let arg = emitExpr(&g, p, ts, reg, argId)
+                if !stringLike(arg.ty) { fail(ts, e.token, "E0001", "String.push requires str or String") }
                 if arg.root == target.root {
-                    return err(problem(ts, e.token, "E0403", "push argument still borrows the receiver's root"))
+                    fail(ts, e.token, "E0403", "push argument still borrows the receiver's root")
                 }
-                let _removed = g.reservations.pop()
-                line(&g, format("yv_string_push(&(${target.name}), ${view(arg)}, ${t.line}, ${t.column});"))
+                g.reservations = truncInts(g.reservations, reservations)
+                put(&g, join5("yv_string_push(&(", target.name, "), ", view(arg), ", "))
+                put(&g, lineColumn(ts, e.token))
+                emit(&g, ");")
             } else {
-                let elem = types.element(target.ty)
-                let arg = try emitExpected(&g, p, ts, reg, e.args[0], elem)
-                try require(reg, ts, p.expressions[e.args[0]].token, arg.ty, elem)
+                let elem = element(target.ty)
+                let arg = emitExpected(&g, p, ts, reg, argId, elem)
+                require(reg, ts, p.expressions[argId].token, arg.ty, elem)
                 // Keep the receiver reserved until consuming the argument has checked
                 // its source root; storing the value transfers ownership to the slot.
-                let taken = try takeValue(&g, reg, ts, p.expressions[e.args[0]].token, arg)
-                let _removed = g.reservations.pop()
-                let et = types.cType(elem)
-                line(&g, format("*(${et} *)yv_vec_push_slot(&(${target.name}), (int64_t)sizeof(${et}), ${t.line}, ${t.column}) = ${taken.name};"))
+                let taken = takeValue(&g, reg, ts, p.expressions[argId].token, arg)
+                g.reservations = truncInts(g.reservations, reservations)
+                let et = cType(elem)
+                put(&g, join5("*(", et, " *)yv_vec_push_slot(&(", target.name, "), (int64_t)sizeof("))
+                put(&g, et)
+                put(&g, "), ")
+                put(&g, lineColumn(ts, e.token))
+                emit(&g, join3(") = ", taken.name, ";"))
                 zeroValue(&g, reg, taken)
             }
         }
-        return Value{ty: types.primitive(.Unit), name: "".toString()}
+        return Value{ty: primitive(.Unit), name: "".toString()}
     }
-    let base = try emitExpr(&g, p, ts, reg, e.left)
+    let base = emitExpr(&g, p, ts, reg, e.left)
     if stringLike(base.ty) {
         if name == "len" || (name == "toString" && base.ty.kind == .Str) ||
             (name == "clone" && base.ty.kind == .String) {
-            if e.args.len() != 0 { return err(problem(ts, e.token, "E0012", "this string method takes no arguments")) }
+            if e.argCount != 0 { fail(ts, e.token, "E0012", "this string method takes no arguments") }
             if name == "len" {
-                return value(&g, .Int, format("(${view(base)}).len"))
+                return scalar(&g, .Int, join3("(", view(base), ").len"))
             }
-            let t = ts[e.token]
-            return typedValue(&g, reg, types.primitive(.String),
-                format("yv_string_from(${view(base)}, ${t.line}, ${t.column})"))
+            return typedValue(&g, reg, primitive(.String),
+                join5("yv_string_from(", view(base), ", ", lineColumn(ts, e.token), ")"))
         }
-        return err(problem(ts, e.token, "U0001", "string method is outside the selfhost subset"))
+        fail(ts, e.token, "U0001", "string method is outside the selfhost subset")
     }
-    if base.ty.kind == .Vec {
-        if name == "len" || name == "clone" {
-            if e.args.len() != 0 { return err(problem(ts, e.token, "E0012", "this vector method takes no arguments")) }
-            if name == "len" { return value(&g, .Int, format("(${base.name}).len")) }
-            let t = ts[e.token]
+    if base.ty.kind == .Vec || base.ty.kind == .Args {
+        if name == "len" || (name == "clone" && base.ty.kind == .Vec) {
+            if e.argCount != 0 { fail(ts, e.token, "E0012", "this vector method takes no arguments") }
+            if name == "len" { return scalar(&g, .Int, join3("(", base.name, ").len")) }
             let cloned = cloneExpression(reg, base.ty, base.name,
-                format("${t.line}"), format("${t.column}"))
+                decimal(ts[e.token].line), decimal(ts[e.token].column))
             return typedValue(&g, reg, base.ty, cloned)
         }
-        return err(problem(ts, e.token, "U0001", "vector method is outside the selfhost subset"))
+        fail(ts, e.token, "U0001", "vector method is outside the selfhost subset")
     }
     if base.ty.kind == .Named && reg.entries[base.ty.decl].kind == .Struct {
-        return err(problem(ts, e.token, "E0010", "unknown struct method"))
+        fail(ts, e.token, "E0010", "unknown struct method")
     }
-    return err(problem(ts, e.token, "U0001", "method is outside the selfhost subset"))
+    fail(ts, e.token, "U0001", "method is outside the selfhost subset")
+    return Value{ty: primitive(.Unit), name: "".toString()}
+}
+
+// `fs.readText`, `fs.writeNewText` and `String.fromUtf8` with a `catch _` handler.
+// The handler must not complete normally (stage0 E0601).
+fn catchValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression) -> Value {
+    let callId = e.left
+    let call = p.expressions[callId]
+    if ts[e.extra].text != "_" {
+        fail(ts, e.extra, "U0001", "error bindings are outside the selfhost subset; use catch _")
+    }
+    var op = 0
+    if call.kind == .Method {
+        let module = standardModule(g, p, ts, p.expressions[call.left])
+        if module == 2 && ts[call.token].text == "readText" { op = 1 }
+        if module == 2 && ts[call.token].text == "writeNewText" { op = 2 }
+        if module == 3 && ts[call.token].text == "fromUtf8" { op = 3 }
+    }
+    if op == 0 {
+        fail(ts, e.token, "U0001", "catch is limited to fs.readText, fs.writeNewText and String.fromUtf8 in this subset")
+    }
+    var arity = 1
+    if op == 2 { arity = 2 }
+    if call.argCount != arity { fail(ts, call.token, "E0012", "wrong number of function arguments") }
+    let n = g.counter
+    g.counter += 1
+    let result = temporaryName(n)
+    let status = join2("c_", decimal(n))
+    let locks = g.locks.len()
+    var resultType = primitive(.String)
+    if op == 3 {
+        let bytesType = Type{kind: .Vec, elementKind: .Byte, elementDecl: -1}
+        let argId = p.lists[call.argStart]
+        let arg = emitExpected(&g, p, ts, reg, argId, bytesType)
+        require(reg, ts, p.expressions[argId].token, arg.ty, bytesType)
+        let taken = takeValue(&g, reg, ts, p.expressions[argId].token, arg)
+        let buffer = join2("b_", decimal(n))
+        emit(&g, join5("yv_vec ", buffer, " = ", taken.name, ";"))
+        zeroValue(&g, reg, taken)
+        put(&g, join5("int64_t ", status, " = yv_utf8_check(", buffer, ".ptr ? (const char *)"))
+        emit(&g, join5(buffer, ".ptr : \"\", (size_t)", buffer, ".len);", ""))
+        emit(&g, join3("yv_string ", result, " = {0};"))
+        emit(&g, join3("if (", status, " >= 0) {"))
+        emit(&g, join3("yv_vec_free(&", buffer, ");"))
+        let before = movedState(g)
+        let flow = emitBlock(&g, p, ts, reg, e.argStart, e.argCount)
+        restoreState(&g, before)
+        if flow.falls { fail(ts, e.token, "E0601", "this catch block can reach its closing brace") }
+        emit(&g, "}")
+        emit(&g, join5(result, " = (yv_string){ (char *)", buffer, ".ptr, ", join5(buffer, ".len, ", buffer, ".cap };", "")))
+    } else {
+        var args = String{}
+        var i = 0
+        while i < arity {
+            let argId = p.lists[call.argStart + i]
+            let arg = emitExpected(&g, p, ts, reg, argId, primitive(.Str))
+            if !stringLike(arg.ty) { require(reg, ts, p.expressions[argId].token, arg.ty, primitive(.Str)) }
+            args.push(view(arg))
+            args.push(", ")
+            if arg.root >= 0 { g.locks.push(arg.root) }
+            i += 1
+        }
+        releaseLocks(&g, locks)
+        emit(&g, join3("int64_t ", status, " = 0;"))
+        if op == 1 {
+            emit(&g, join3("yv_string ", result, " = {0};"))
+            put(&g, join5("if (yv_fs_read_text(", args, "&", result, ", &"))
+        } else {
+            resultType = primitive(.Unit)
+            put(&g, join2("if (yv_fs_write_new_text(", args))
+            put(&g, "&")
+        }
+        put(&g, join3(status, ", ", lineColumn(ts, call.token)))
+        emit(&g, ") != 0) {")
+        if op == 1 {
+            emit(&g, join3("yv_string_drop(&", result, ");"))
+            emit(&g, join2(result, " = (yv_string){0};"))
+        }
+        let before = movedState(g)
+        let flow = emitBlock(&g, p, ts, reg, e.argStart, e.argCount)
+        restoreState(&g, before)
+        if flow.falls { fail(ts, e.token, "E0601", "this catch block can reach its closing brace") }
+        emit(&g, "}")
+    }
+    if resultType.kind == .Unit { return Value{ty: resultType, name: "".toString()} }
+    g.temps.push(Temporary{ty: resultType, id: n})
+    return Value{ty: resultType, name: result, temporary: true}
 }
 
 // Match stage0's contextual integer expression set. These expressions have no
@@ -554,88 +933,89 @@ fn operandHint(reg: Registry, ty: Type, fallback: Type) -> Type {
     return fallback
 }
 
-fn binary(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression, expected: Type) -> Value ! Failure {
+fn binaryValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression, expected: Type) -> Value {
     let op = ts[e.token].text.clone()
     if op == "&&" || op == "||" {
-        let lhs = try emitExpected(&g, p, ts, reg, e.left, types.primitive(.Bool))
-        try basic(reg, ts, e.token, lhs.ty, .Bool)
-        let output = value(&g, .Bool, lhs.name)
+        let lhs = emitExpected(&g, p, ts, reg, e.left, primitive(.Bool))
+        basic(reg, ts, e.token, lhs.ty, .Bool)
+        let output = scalar(&g, .Bool, lhs.name)
         let before = movedState(g)
         let temps = g.temps.len()
-        if op == "&&" { line(&g, format("if (${output.name}) {")) } else {
-            line(&g, format("if (!${output.name}) {"))
+        if op == "&&" { emit(&g, join3("if (", output.name, ") {")) } else {
+            emit(&g, join3("if (!", output.name, ") {"))
         }
-        let rhs = try emitExpected(&g, p, ts, reg, e.right, types.primitive(.Bool))
-        try basic(reg, ts, e.token, rhs.ty, .Bool)
-        line(&g, format("${output.name} = ${rhs.name};"))
+        let rhs = emitExpected(&g, p, ts, reg, e.right, primitive(.Bool))
+        basic(reg, ts, e.token, rhs.ty, .Bool)
+        emit(&g, join4(output.name, " = ", rhs.name, ";"))
         discardTemps(&g, reg, temps)
         let after = movedState(g)
         let joined = joinStates(before, after)
         restoreState(&g, joined)
-        line(&g, "}")
+        emit(&g, "}")
         return output
     }
     let equality = op == "==" || op == "!="
     let comparison = equality || op == "<" || op == "<=" || op == ">" || op == ">="
     let shift = op == "<<" || op == ">>"
     var context = expected
-    if comparison { context = types.primitive(.Unknown) }
-    var lhs = Value{ty: types.primitive(.Unknown), name: String{}}
-    var rhs = Value{ty: types.primitive(.Unknown), name: String{}}
+    if comparison { context = primitive(.Unknown) }
+    var lhs = Value{ty: primitive(.Unknown), name: String{}}
+    var rhs = Value{ty: primitive(.Unknown), name: String{}}
     if !shift && untypedInteger(p, ts, e.left) && !untypedInteger(p, ts, e.right) {
         // Resolve the typed operand once, then place its C after the literal's
         // C. Type inference is bidirectional; run-time evaluation stays left
         // to right, including a literal-expression panic before RHS effects.
         let before = take(&g.out)
-        rhs = try emitExpected(&g, p, ts, reg, e.right, context)
+        rhs = emitExpected(&g, p, ts, reg, e.right, context)
         let rightCode = take(&g.out)
         g.out = before
         let hint = operandHint(reg, rhs.ty, context)
-        lhs = try emitExpected(&g, p, ts, reg, e.left, hint)
+        lhs = emitExpected(&g, p, ts, reg, e.left, hint)
         g.out.push(rightCode)
     } else {
-        lhs = try emitExpected(&g, p, ts, reg, e.left, context)
+        lhs = emitExpected(&g, p, ts, reg, e.left, context)
         let locks = g.binaryLocks.len()
         if lhs.root >= 0 { g.binaryLocks.push(lhs.root) }
         var hint = operandHint(reg, lhs.ty, context)
-        if shift { hint = types.primitive(.Unknown) }
-        rhs = try emitExpected(&g, p, ts, reg, e.right, hint)
-        while g.binaryLocks.len() > locks { let _removed = g.binaryLocks.pop() }
+        if shift { hint = primitive(.Unknown) }
+        rhs = emitExpected(&g, p, ts, reg, e.right, hint)
+        if g.binaryLocks.len() > locks { g.binaryLocks = truncInts(g.binaryLocks, locks) }
     }
     if shift {
-        try requireInteger(ts, e.token, lhs.ty)
-        try requireInteger(ts, e.token, rhs.ty)
+        requireInteger(ts, e.token, lhs.ty)
+        requireInteger(ts, e.token, rhs.ty)
         let code = integerOperation(ts, e.token, lhs.ty.kind, op, lhs.name, rhs.name)
-        return value(&g, lhs.ty.kind, code)
+        return scalar(&g, lhs.ty.kind, code)
     }
     if comparison && stringLike(lhs.ty) && stringLike(rhs.ty) {
-        return value(&g, .Bool, format("(yv_str_cmp(${view(lhs)}, ${view(rhs)}) ${op} 0)"))
+        return scalar(&g, .Bool, join5("(yv_str_cmp(", view(lhs), ", ", view(rhs), join3(") ", op, " 0)")))
     }
-    try require(reg, ts, e.token, rhs.ty, lhs.ty)
+    require(reg, ts, e.token, rhs.ty, lhs.ty)
     if comparison {
         if lhs.ty.kind == .Unit || (lhs.ty.kind == .Bool && !equality) {
-            return err(problem(ts, e.token, "E0001", "operator is not defined for this type"))
+            fail(ts, e.token, "E0001", "operator is not defined for this type")
         }
-        if lhs.ty.kind == .Vec || (lhs.ty.kind == .Named && (reg.entries[lhs.ty.decl].kind == .Struct || !equality)) {
-            return err(problem(ts, e.token, "E0501", "this aggregate does not implement the required comparison"))
+        if lhs.ty.kind == .Vec || lhs.ty.kind == .Args ||
+            (lhs.ty.kind == .Named && (reg.entries[lhs.ty.decl].kind == .Struct || !equality)) {
+            fail(ts, e.token, "E0501", "this aggregate does not implement the required comparison")
         }
-        return value(&g, .Bool, format("(${lhs.name} ${op} ${rhs.name})"))
+        return scalar(&g, .Bool, join5("(", lhs.name, join3(" ", op, " "), rhs.name, ")"))
     }
-    try requireInteger(ts, e.token, lhs.ty)
+    requireInteger(ts, e.token, lhs.ty)
     let code = integerOperation(ts, e.token, lhs.ty.kind, op, lhs.name, rhs.name)
-    return value(&g, lhs.ty.kind, code)
+    return scalar(&g, lhs.ty.kind, code)
 }
 
-fn emitExpr(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, id: int) -> Value ! Failure {
-    return emitExpected(&g, p, ts, reg, id, types.primitive(.Unknown))
+fn emitExpr(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, id: int) -> Value {
+    return emitExpected(&g, p, ts, reg, id, primitive(.Unknown))
 }
 
-fn emitExpected(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, id: int, expected: Type) -> Value ! Failure {
+fn emitExpected(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, id: int, expected: Type) -> Value {
     if g.nesting >= 256 {
-        return err(problem(ts, p.expressions[id].token, "U0001", "selfhost lowering nesting limit (256) exceeded"))
+        fail(ts, p.expressions[id].token, "U0001", "selfhost lowering nesting limit (256) exceeded")
     }
     g.nesting += 1
-    let result = try expression(&g, p, ts, reg, id, expected)
+    let result = expressionValue(&g, p, ts, reg, id, expected)
     g.nesting -= 1
     return result
 }
@@ -652,245 +1032,315 @@ fn unparenthesized(p: Program, id: int) -> int {
     return current
 }
 
-fn enumValue(g: inout Generator, reg: Registry, ts: Vec[Token], token: int, expected: Type) -> Value ! Failure {
+fn enumValue(g: inout Generator, reg: Registry, ts: Vec[Token], token: int, expected: Type) -> Value {
     if expected.kind != .Named || reg.entries[expected.decl].kind != .Enum {
-        return err(problem(ts, token, "E0001", "an enum case requires an expected enum type"))
+        fail(ts, token, "E0001", "an enum case requires an expected enum type")
     }
-    let which = types.variant(reg, ts, expected.decl, token)
-    if which < 0 { return err(problem(ts, token, "E0010", "unknown enum case")) }
-    return typedValue(&g, reg, expected, format("${which}"))
+    let which = variantIndex(reg, ts, expected.decl, token)
+    if which < 0 { fail(ts, token, "E0010", "unknown enum case") }
+    return typedValue(&g, reg, expected, decimal(which))
 }
 
-fn construct(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression) -> Value ! Failure {
+fn constructValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression) -> Value {
     if ts[e.token].text == "String" {
-        if e.names.len() > 0 { return err(problem(ts, e.names[0], "E0010", "String has no constructor fields")) }
-        return typedValue(&g, reg, types.primitive(.String), "(yv_string){0}")
+        if e.nameCount > 0 { fail(ts, p.lists[e.nameStart], "E0010", "String has no constructor fields") }
+        return typedValue(&g, reg, primitive(.String), "(yv_string){0}")
     }
-    let index = types.lookup(reg, ts, e.token)
+    let index = lookup(reg, ts, e.token)
     if index < 0 {
         if ts[e.token].text == "Vec" {
-            return err(problem(ts, e.token, "E0001", "Vec takes exactly one type argument"))
+            fail(ts, e.token, "E0001", "Vec takes exactly one type argument")
         }
         if ts[e.token].text == "Map" || ts[e.token].text == "Set" {
-            return err(problem(ts, e.token, "U0001", "collection construction is outside the selfhost subset"))
+            fail(ts, e.token, "U0001", "collection construction is outside the selfhost subset")
         }
-        return err(problem(ts, e.token, "E0010", "unknown struct type"))
+        fail(ts, e.token, "E0010", "unknown struct type")
     }
     let info = reg.entries[index]
-    if info.kind != .Struct { return err(problem(ts, e.token, "E0001", "struct construction requires a struct type")) }
-    var values: Vec[Value] = []
-    for _i in 0..info.fields.len() { values.push(Value{ty: types.primitive(.Unknown), name: String{}}) }
-    for i in 0..e.names.len() {
-        let f = types.field(reg, ts, index, e.names[i])
-        if f < 0 { return err(problem(ts, e.names[i], "E0010", "unknown struct field")) }
-        if values[f].name.len() > 0 { return err(problem(ts, e.names[i], "E0011", "duplicate constructor field")) }
-        let result = try emitExpected(&g, p, ts, reg, e.args[i], info.fields[f].ty)
-        try require(reg, ts, p.expressions[e.args[i]].token, result.ty, info.fields[f].ty)
-        values[f] = try takeValue(&g, reg, ts, p.expressions[e.args[i]].token, result)
+    if info.kind != .Struct { fail(ts, e.token, "E0001", "struct construction requires a struct type") }
+    // Field values are evaluated in source order; slots records each value's field.
+    var slots: Vec[int] = []
+    var taken: Vec[Value] = []
+    var i = 0
+    while i < e.nameCount {
+        let nameToken = p.lists[e.nameStart + i]
+        let argId = p.lists[e.argStart + i]
+        let f = fieldIndex(reg, ts, index, nameToken)
+        if f < 0 { fail(ts, nameToken, "E0010", "unknown struct field") }
+        if contains(slots, f) { fail(ts, nameToken, "E0011", "duplicate constructor field") }
+        let fieldType = fieldOf(reg, index, f).ty
+        let result = emitExpected(&g, p, ts, reg, argId, fieldType)
+        require(reg, ts, p.expressions[argId].token, result.ty, fieldType)
+        taken.push(takeValue(&g, reg, ts, p.expressions[argId].token, result))
+        slots.push(f)
+        i += 1
     }
-    for i in 0..info.fields.len() {
-        if values[i].name.len() == 0 {
-            let f = info.fields[i]
-            if f.initial < 0 { return err(problem(ts, e.token, "E0018", "missing struct field without a default")) }
-            var initial = try emitExpected(&g, p, ts, reg, f.initial, f.ty)
+    i = 0
+    while i < info.fieldCount {
+        if !contains(slots, i) {
+            let f = fieldOf(reg, index, i)
+            if f.initial < 0 { fail(ts, e.token, "E0018", "missing struct field without a default") }
+            let initialToken = p.expressions[f.initial].token
+            var initial = emitExpected(&g, p, ts, reg, f.initial, f.ty)
             if f.ty.kind == .String && initial.ty.kind == .Str {
-                let t = ts[p.expressions[f.initial].token]
-                initial = typedValue(&g, reg, f.ty, format("yv_string_from(${initial.name}, ${t.line}, ${t.column})"))
+                initial = typedValue(&g, reg, f.ty, join5("yv_string_from(", initial.name, ", ", lineColumn(ts, initialToken), ")"))
             }
-            try require(reg, ts, p.expressions[f.initial].token, initial.ty, f.ty)
-            values[i] = try takeValue(&g, reg, ts, p.expressions[f.initial].token, initial)
+            require(reg, ts, initialToken, initial.ty, f.ty)
+            taken.push(takeValue(&g, reg, ts, initialToken, initial))
+            slots.push(i)
         }
+        i += 1
     }
-    var fields: Vec[String] = []
-    for i in 0..values.len() { fields.push(format(".f_${i} = ${values[i].name}")) }
-    if values.len() == 0 { fields.push(".sh_empty = 0".toString()) }
+    var fields = String{}
+    i = 0
+    while i < info.fieldCount {
+        var k = 0
+        while slots[k] != i { k += 1 }
+        if i > 0 { fields.push(", ") }
+        fields.push(join3(".f_", decimal(i), " = "))
+        fields.push(taken[k].name)
+        i += 1
+    }
+    if info.fieldCount == 0 { fields.push(".sh_empty = 0") }
     let ty = Type{kind: .Named, decl: index, elementKind: .Unknown}
-    let result = typedValue(&g, reg, ty, format("(${types.cType(ty)}){${fields.join(", ")}}"))
-    for item in values { zeroValue(&g, reg, item) }
+    let result = typedValue(&g, reg, ty, join5("(", cType(ty), "){", fields, "}"))
+    i = 0
+    while i < taken.len() {
+        zeroValue(&g, reg, taken[i])
+        i += 1
+    }
     return result
 }
 
-fn fieldValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression) -> Value ! Failure {
+fn fieldValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression) -> Value {
     let baseExpr = p.expressions[e.left]
     if baseExpr.kind == .Name && localIndex(g, ts, baseExpr.token) < 0 {
-        let declared = types.lookup(reg, ts, baseExpr.token)
+        let declared = lookup(reg, ts, baseExpr.token)
         if declared >= 0 && reg.entries[declared].kind == .Enum {
             return enumValue(&g, reg, ts, e.token, Type{kind: .Named, decl: declared, elementKind: .Unknown})
         }
     }
-    let base = try emitExpr(&g, p, ts, reg, e.left)
+    let base = emitExpr(&g, p, ts, reg, e.left)
     if base.ty.kind != .Named || reg.entries[base.ty.decl].kind != .Struct {
-        return err(problem(ts, e.token, "U0001", "member access on this type is outside the selfhost subset"))
+        fail(ts, e.token, "U0001", "member access on this type is outside the selfhost subset")
     }
-    let fieldIndex = types.field(reg, ts, base.ty.decl, e.token)
-    if fieldIndex < 0 { return err(problem(ts, e.token, "E0010", "unknown struct field")) }
-    let ty = reg.entries[base.ty.decl].fields[fieldIndex].ty
-    let name = format("(${base.name}).f_${fieldIndex}")
-    if types.owned(reg, ty) {
+    let index = fieldIndex(reg, ts, base.ty.decl, e.token)
+    if index < 0 { fail(ts, e.token, "E0010", "unknown struct field") }
+    let ty = fieldOf(reg, base.ty.decl, index).ty
+    let name = join4("(", base.name, ").f_", decimal(index))
+    if owned(reg, ty) {
         return Value{ty: ty, name: name, root: base.root, field: true, indexedBorrow: base.indexedBorrow}
     }
     return typedValue(&g, reg, ty, name)
 }
 
-fn vectorValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression, expected: Type) -> Value ! Failure {
-    var elem = types.primitive(.Unknown)
-    if expected.kind == .Vec { elem = types.element(expected) }
+fn vectorValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression, expected: Type) -> Value {
+    var elem = primitive(.Unknown)
+    if expected.kind == .Vec { elem = element(expected) }
     if e.elementKind != .Unknown {
         let annotation = TypeRef{kind: .Vec, name: e.token,
             elementKind: e.elementKind, elementName: e.elementName}
-        let explicit = try types.resolve(reg, ts, annotation)
-        elem = types.element(explicit)
+        let explicit = resolve(reg, ts, annotation)
+        elem = element(explicit)
     }
-    if elem.kind == .Unknown && e.args.len() == 0 {
-        return err(problem(ts, e.token, "E0001", "cannot infer the element type of an empty vector"))
+    if elem.kind == .Unknown && e.argCount == 0 {
+        fail(ts, e.token, "E0001", "cannot infer the element type of an empty vector")
     }
     let n = g.counter
     g.counter += 1
-    let name = format("t_${n}")
+    let name = temporaryName(n)
     // Register the outer owner before lowering its elements. Prefixing the resulting
     // C with the allocation also preserves allocation-before-element evaluation when
     // the element type is inferred from the first expression.
     let temporary = g.temps.len()
-    g.temps.push(Temporary{ty: types.primitive(.Vec), name: name.clone()})
+    g.temps.push(Temporary{ty: primitive(.Vec), id: n})
     let before = take(&g.out)
-    var ty = types.primitive(.Unknown)
-    if elem.kind != .Unknown { ty = try types.vector(reg, ts, e.token, elem) }
-    let t = ts[e.token]
-    for arg in e.args {
-        let item = try emitExpected(&g, p, ts, reg, arg, elem)
+    var ty = primitive(.Unknown)
+    if elem.kind != .Unknown { ty = vector(ts, e.token, elem) }
+    var i = 0
+    while i < e.argCount {
+        let arg = p.lists[e.argStart + i]
+        let argToken = p.expressions[arg].token
+        let item = emitExpected(&g, p, ts, reg, arg, elem)
         if elem.kind == .Unknown {
             if item.indexedBorrow && !item.field {
-                return err(problem(ts, p.expressions[arg].token, "U0001", "vectors of borrowed elements are outside this subset"))
+                fail(ts, argToken, "U0001", "vectors of borrowed elements are outside this subset")
             }
             if item.ty.kind == .Unit {
-                return err(problem(ts, p.expressions[arg].token, "E0001", "a unit-valued call cannot be a vector element"))
+                fail(ts, argToken, "E0001", "a unit-valued call cannot be a vector element")
             }
             elem = item.ty
-            ty = try types.vector(reg, ts, p.expressions[arg].token, elem)
+            ty = vector(ts, argToken, elem)
         }
-        try require(reg, ts, p.expressions[arg].token, item.ty, elem)
-        let taken = try takeValue(&g, reg, ts, p.expressions[arg].token, item)
-        let et = types.cType(elem)
-        line(&g, format("*(${et} *)yv_vec_push_slot(&${name}, (int64_t)sizeof(${et}), ${t.line}, ${t.column}) = ${taken.name};"))
+        require(reg, ts, argToken, item.ty, elem)
+        let taken = takeValue(&g, reg, ts, argToken, item)
+        let et = cType(elem)
+        put(&g, join5("*(", et, " *)yv_vec_push_slot(&", name, ", (int64_t)sizeof("))
+        put(&g, et)
+        put(&g, "), ")
+        put(&g, lineColumn(ts, e.token))
+        emit(&g, join3(") = ", taken.name, ";"))
         zeroValue(&g, reg, taken)
+        i += 1
     }
     // Inferred literals now know their element destructor. Keeping the placeholder
     // type would free only the buffer and leak every owned element.
     g.temps[temporary].ty = ty
     let body = take(&g.out)
     g.out = before
-    let et = types.cType(elem)
-    line(&g, format("yv_vec ${name} = yv_vec_with_cap((int64_t)sizeof(${et}), ${e.args.len()}, ${t.line}, ${t.column});"))
+    put(&g, join5("yv_vec ", name, " = yv_vec_with_cap((int64_t)sizeof(", cType(elem), "), "))
+    put(&g, decimal(e.argCount))
+    put(&g, ", ")
+    put(&g, lineColumn(ts, e.token))
+    emit(&g, ");")
     g.out.push(body)
     return Value{ty: ty, name: name, temporary: true}
 }
 
-fn indexValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression) -> Value ! Failure {
+fn indexValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression) -> Value {
     let receiver = p.expressions[e.left]
     if receiver.kind == .Name && localIndex(g, ts, receiver.token) < 0 {
         let name = ts[receiver.token].text.clone()
         if name == "Vec" || name == "String" || name == "str" || name == "int" || name == "byte" ||
-            name == "bool" || types.lookup(reg, ts, receiver.token) >= 0 {
-            return err(problem(ts, e.token, "U0001", "type arguments without construction are outside this subset"))
+            name == "bool" || lookup(reg, ts, receiver.token) >= 0 {
+            fail(ts, e.token, "U0001", "type arguments without construction are outside this subset")
         }
     }
-    let base = try emitExpr(&g, p, ts, reg, e.left)
-    if base.ty.kind != .Vec && !stringLike(base.ty) {
-        return err(problem(ts, e.token, "E0001", "this value cannot be indexed"))
+    let base = emitExpr(&g, p, ts, reg, e.left)
+    if base.ty.kind != .Vec && base.ty.kind != .Args && !stringLike(base.ty) {
+        fail(ts, e.token, "E0001", "this value cannot be indexed")
     }
     let mark = g.accessLocks.len()
     if base.root >= 0 { g.accessLocks.push(base.root) }
-    let index = try emitExpected(&g, p, ts, reg, e.right, types.primitive(.Int))
-    try requireInteger(ts, e.token, index.ty)
-    while g.accessLocks.len() > mark { let _removed = g.accessLocks.pop() }
-    let t = ts[e.token]
+    let index = emitExpected(&g, p, ts, reg, e.right, primitive(.Int))
+    requireInteger(ts, e.token, index.ty)
+    if g.accessLocks.len() > mark { g.accessLocks = truncInts(g.accessLocks, mark) }
+    let at = join5(", ", index.name, ", ", lineColumn(ts, e.token), ")")
     if stringLike(base.ty) {
         // A text read is a checked UTF-8 byte read, immediately copied away
         // from its receiver. Temporary strings live through this statement.
-        return value(&g, .Byte,
-            format("yv_str_at(${view(base)}, (int64_t)${index.name}, ${t.line}, ${t.column})"))
+        return scalar(&g, .Byte, join5("yv_str_at(", view(base), ", (int64_t)", index.name,
+            join3(", ", lineColumn(ts, e.token), ")")))
     }
-    let elem = types.element(base.ty)
-    let et = types.cType(elem)
-    if types.owned(reg, elem) {
+    if base.ty.kind == .Args {
+        // Command-line arguments are static str values.
+        return scalar(&g, .Str, join4("*(yv_str *)yv_vec_at(&(", base.name, "), (int64_t)sizeof(yv_str)", at))
+    }
+    let elem = element(base.ty)
+    let et = cType(elem)
+    if owned(reg, elem) {
         // Materialize the checked address once. This is a borrowed slot, never a
         // new owner; a temporary receiver stays alive in g.temps for the statement.
         let n = g.counter
         g.counter += 1
-        line(&g, format("const ${et} *borrow_${n} = (const ${et} *)yv_vec_at(&(${base.name}), (int64_t)sizeof(${et}), ${index.name}, ${t.line}, ${t.column});"))
-        return Value{ty: elem, name: format("(*borrow_${n})"), root: base.root, indexedBorrow: true}
+        put(&g, join5("const ", et, " *borrow_", decimal(n), " = (const "))
+        put(&g, join5(et, " *)yv_vec_at(&(", base.name, "), (int64_t)sizeof(", et))
+        emit(&g, join3(")", at, ";"))
+        return Value{ty: elem, name: join3("(*borrow_", decimal(n), ")"), root: base.root, indexedBorrow: true}
     }
     // Copy reads immediately detach from the source container.
     return typedValue(&g, reg, elem,
-        format("*(${et} *)yv_vec_at(&(${base.name}), (int64_t)sizeof(${et}), ${index.name}, ${t.line}, ${t.column})"))
+        join5("*(", et, " *)yv_vec_at(&(", base.name, join4("), (int64_t)sizeof(", et, ")", at)))
 }
 
-fn expression(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, id: int, expected: Type) -> Value ! Failure {
+// An expression-local text slice. A view of an owned String keeps its root
+// borrowed and may not be stored in a binding.
+fn sliceValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression) -> Value {
+    let base = emitExpr(&g, p, ts, reg, e.left)
+    if base.ty.kind == .Vec {
+        fail(ts, e.token, "U0001", "vector slices are outside the selfhost subset")
+    }
+    if !stringLike(base.ty) { fail(ts, e.token, "E0001", "this value cannot be sliced") }
+    let mark = g.accessLocks.len()
+    if base.root >= 0 { g.accessLocks.push(base.root) }
+    let start = emitExpected(&g, p, ts, reg, e.right, primitive(.Int))
+    basic(reg, ts, e.token, start.ty, .Int)
+    let end = emitExpected(&g, p, ts, reg, e.extra, primitive(.Int))
+    basic(reg, ts, e.token, end.ty, .Int)
+    if g.accessLocks.len() > mark { g.accessLocks = truncInts(g.accessLocks, mark) }
+    var code = join5("yv_str_slice(", view(base), ", ", start.name, ", ")
+    code.push(end.name)
+    code.push(", ")
+    code.push(lineColumn(ts, e.token))
+    code.push(")")
+    var result = scalar(&g, .Str, code)
+    if base.ty.kind == .String {
+        result.transient = true
+        result.root = base.root
+    }
+    return result
+}
+
+fn expressionValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, id: int, expected: Type) -> Value {
     let e = p.expressions[id]
-    let t = ts[e.token]
-    if e.kind == .Unit { return Value{ty: types.primitive(.Unit), name: "".toString()} }
+    if e.kind == .Unit { return Value{ty: primitive(.Unit), name: "".toString()} }
     if e.kind == .Paren { return emitExpected(&g, p, ts, reg, e.left, expected) }
     if e.kind == .Number {
-        let number = t.text.parseInt() ?? return err(problem(ts, e.token, "E0003", "integer literal is outside int range"))
+        let number = parseDecimal(ts[e.token].text)
+        if number < 0 { fail(ts, e.token, "E0003", "integer literal is outside int range") }
         if expected.kind == .Byte {
             if number > 255 {
-                return err(problem(ts, e.token, "E0003", "integer literal is outside byte range"))
+                fail(ts, e.token, "E0003", "integer literal is outside byte range")
             }
-            return value(&g, .Byte, format("UINT8_C(${number})"))
+            return scalar(&g, .Byte, join3("UINT8_C(", decimal(number), ")"))
         }
-        return value(&g, .Int, format("INT64_C(${number})"))
+        return scalar(&g, .Int, join3("INT64_C(", decimal(number), ")"))
     }
-    if e.kind == .Byte { return value(&g, .Byte, format("UINT8_C(${t.text})")) }
-    if e.kind == .Boolean { return value(&g, .Bool, t.text) }
+    if e.kind == .Byte { return scalar(&g, .Byte, join3("UINT8_C(", ts[e.token].text, ")")) }
+    if e.kind == .Boolean { return scalar(&g, .Bool, ts[e.token].text) }
     if e.kind == .Text {
-        let quoted = cString(t.text)
-        return value(&g, .Str, format("(yv_str){${quoted}, ${t.text.len()}}"))
+        return scalar(&g, .Str, join5("(yv_str){", cString(ts[e.token].text), ", ", decimal(ts[e.token].text.len()), "}"))
     }
     if e.kind == .Name {
         let index = localIndex(g, ts, e.token)
         if index < 0 {
-            if types.lookup(reg, ts, e.token) >= 0 {
-                return err(problem(ts, e.token, "E0001", "a type name is not a value"))
+            if lookup(reg, ts, e.token) >= 0 {
+                fail(ts, e.token, "E0001", "a type name is not a value")
             }
-            return err(problem(ts, e.token, "E0010", format("unknown local '${t.text}'")))
+            fail(ts, e.token, "E0010", join3("unknown local '", ts[e.token].text, "'"))
         }
-        try readable(g, ts, index, e.token)
+        readable(g, ts, index, e.token)
         let local = g.locals[index]
-        let name = format("v_${local.token}")
-        if types.owned(reg, local.ty) { return Value{ty: local.ty, name: name, local: index, root: index} }
+        let name = localName(local)
+        if owned(reg, local.ty) { return Value{ty: local.ty, name: name, local: index, root: index} }
         return typedValue(&g, reg, local.ty, name)
     }
     if e.kind == .Unary {
         let child = p.expressions[unparenthesized(p, e.left)]
-        if t.text == "-" && child.kind == .Number && expected.kind == .Byte {
-            let number = ts[child.token].text.parseInt() ??
-                return err(problem(ts, e.token, "E0003", "negative literal is outside byte range"))
+        let minus = ts[e.token].text == "-"
+        if minus && child.kind == .Number && expected.kind == .Byte {
+            let number = parseDecimal(ts[child.token].text)
             if number != 0 {
-                return err(problem(ts, e.token, "E0003", "negative literal is outside byte range"))
+                fail(ts, e.token, "E0003", "negative literal is outside byte range")
             }
-            return value(&g, .Byte, "UINT8_C(0)")
+            return scalar(&g, .Byte, "UINT8_C(0)")
         }
-        if t.text == "-" && child.kind == .Number && minimumMagnitude(ts[child.token].text) {
-            return value(&g, .Int, "INT64_MIN")
+        if minus && child.kind == .Number && minimumMagnitude(ts[child.token].text) {
+            return scalar(&g, .Int, "INT64_MIN")
         }
         var context = expected
-        if t.text == "!" { context = types.primitive(.Bool) }
-        let arg = try emitExpected(&g, p, ts, reg, e.left, context)
-        if t.text == "!" {
-            try basic(reg, ts, e.token, arg.ty, .Bool)
-            return value(&g, .Bool, format("(!${arg.name})"))
+        if !minus { context = primitive(.Bool) }
+        let arg = emitExpected(&g, p, ts, reg, e.left, context)
+        if !minus {
+            basic(reg, ts, e.token, arg.ty, .Bool)
+            return scalar(&g, .Bool, join3("(!", arg.name, ")"))
         }
-        try basic(reg, ts, e.token, arg.ty, .Int)
-        return value(&g, .Int, format("yv_neg_i64(${arg.name}, ${t.line}, ${t.column})"))
+        basic(reg, ts, e.token, arg.ty, .Int)
+        return scalar(&g, .Int, join5("yv_neg_i64(", arg.name, ", ", lineColumn(ts, e.token), ")"))
     }
-    if e.kind == .Binary { return binary(&g, p, ts, reg, e, expected) }
+    if e.kind == .Binary { return binaryValue(&g, p, ts, reg, e, expected) }
     if e.kind == .Variant { return enumValue(&g, reg, ts, e.token, expected) }
-    if e.kind == .Construct { return construct(&g, p, ts, reg, e) }
+    if e.kind == .Construct { return constructValue(&g, p, ts, reg, e) }
     if e.kind == .Vector { return vectorValue(&g, p, ts, reg, e, expected) }
     if e.kind == .Index { return indexValue(&g, p, ts, reg, e) }
+    if e.kind == .Slice { return sliceValue(&g, p, ts, reg, e) }
     if e.kind == .Field { return fieldValue(&g, p, ts, reg, e) }
-    if e.kind == .Method { return method(&g, p, ts, reg, e) }
-    return call(&g, p, ts, reg, e, id)
+    if e.kind == .Method { return methodValue(&g, p, ts, reg, e) }
+    if e.kind == .Catch { return catchValue(&g, p, ts, reg, e) }
+    if e.kind == .Ref {
+        fail(ts, e.token, "U0001", "borrow expressions outside inout and take arguments are outside this subset")
+    }
+    return callValue(&g, p, ts, reg, e, id)
 }
 
 fn placeRoot(p: Program, id: int) -> int {
@@ -903,135 +1353,159 @@ fn placeRoot(p: Program, id: int) -> int {
     }
 }
 
+fn fieldPlace(reg: Registry, ts: Vec[Token], e: Expression, base: Place) -> Place {
+    if base.ty.kind != .Named || reg.entries[base.ty.decl].kind != .Struct {
+        fail(ts, e.token, "E0001", "field assignment requires a struct")
+    }
+    let index = fieldIndex(reg, ts, base.ty.decl, e.token)
+    if index < 0 { fail(ts, e.token, "E0010", "unknown struct field") }
+    let ty = fieldOf(reg, base.ty.decl, index).ty
+    return Place{ty: ty, name: join4("(", base.name, ").f_", decimal(index)),
+        mutable: base.mutable, root: base.root, whole: false, indexed: base.indexed}
+}
+
 // Determine assignment context without evaluating the receiver or index. Indexed
 // assignment evaluates the RHS before locating its slot, including compound writes.
-fn placeType(g: Generator, p: Program, ts: Vec[Token], reg: Registry, id: int, depth: int) -> Place ! Failure {
+fn placeType(g: Generator, p: Program, ts: Vec[Token], reg: Registry, id: int, depth: int) -> Place {
     let e = p.expressions[id]
-    if depth >= 256 { return err(problem(ts, e.token, "U0001", "selfhost place nesting limit (256) exceeded")) }
+    if depth >= 256 { fail(ts, e.token, "U0001", "selfhost place nesting limit (256) exceeded") }
     if e.kind == .Paren { return placeType(g, p, ts, reg, e.left, depth + 1) }
     if e.kind == .Name {
         let index = localIndex(g, ts, e.token)
-        if index < 0 { return err(problem(ts, e.token, "E0010", "assignment to an unknown local")) }
+        if index < 0 { fail(ts, e.token, "E0010", "assignment to an unknown local") }
         let local = g.locals[index]
-        return Place{ty: local.ty, name: format("v_${local.token}"), mutable: local.mutable, root: index}
+        return Place{ty: local.ty, name: localName(local), mutable: local.mutable, root: index}
     }
     if e.kind == .Field {
-        let base = try placeType(g, p, ts, reg, e.left, depth + 1)
-        if base.ty.kind != .Named || reg.entries[base.ty.decl].kind != .Struct {
-            return err(problem(ts, e.token, "E0001", "field assignment requires a struct"))
-        }
-        let fieldIndex = types.field(reg, ts, base.ty.decl, e.token)
-        if fieldIndex < 0 { return err(problem(ts, e.token, "E0010", "unknown struct field")) }
-        let ty = reg.entries[base.ty.decl].fields[fieldIndex].ty
-        return Place{ty: ty, name: format("(${base.name}).f_${fieldIndex}"),
-            mutable: base.mutable, root: base.root, whole: false, indexed: base.indexed}
+        let base = placeType(g, p, ts, reg, e.left, depth + 1)
+        return fieldPlace(reg, ts, e, base)
     }
     if e.kind == .Index {
         if placeRoot(p, e.left) < 0 {
-            return err(problem(ts, e.token, "E0014", "cannot assign through a temporary container"))
+            fail(ts, e.token, "E0014", "cannot assign through a temporary container")
         }
-        let base = try placeType(g, p, ts, reg, e.left, depth + 1)
-        if stringLike(base.ty) { return err(problem(ts, e.token, "E0101", "text elements are read-only")) }
-        if base.ty.kind != .Vec { return err(problem(ts, e.token, "E0001", "indexed assignment requires a vector")) }
-        if types.owned(reg, types.element(base.ty)) {
-            return err(problem(ts, e.token, "U0001", "indexed places for owned vector elements are outside this subset"))
+        let base = placeType(g, p, ts, reg, e.left, depth + 1)
+        if stringLike(base.ty) { fail(ts, e.token, "E0101", "text elements are read-only") }
+        if base.ty.kind != .Vec { fail(ts, e.token, "E0001", "indexed assignment requires a vector") }
+        if owned(reg, element(base.ty)) {
+            fail(ts, e.token, "U0001", "indexed places for owned vector elements are outside this subset")
         }
-        return Place{ty: types.element(base.ty), name: String{},
+        return Place{ty: element(base.ty), name: String{},
             mutable: base.mutable, root: base.root, whole: false, indexed: true}
     }
-    return err(problem(ts, e.token, "U0001", "assignment to this form is outside the supported place syntax"))
+    fail(ts, e.token, "U0001", "assignment to this form is outside the supported place syntax")
+    return Place{ty: primitive(.Unknown), name: String{}, mutable: false, root: -1}
 }
 
-fn place(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, id: int, depth: int) -> Place ! Failure {
+fn placeOf(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, id: int, depth: int) -> Place {
     let e = p.expressions[id]
-    if depth >= 256 { return err(problem(ts, e.token, "U0001", "selfhost place nesting limit (256) exceeded")) }
-    if e.kind == .Paren { return place(&g, p, ts, reg, e.left, depth + 1) }
+    if depth >= 256 { fail(ts, e.token, "U0001", "selfhost place nesting limit (256) exceeded") }
+    if e.kind == .Paren { return placeOf(&g, p, ts, reg, e.left, depth + 1) }
     if e.kind == .Field {
-        let base = try place(&g, p, ts, reg, e.left, depth + 1)
-        try readable(g, ts, base.root, e.token)
-        if base.ty.kind != .Named || reg.entries[base.ty.decl].kind != .Struct {
-            return err(problem(ts, e.token, "E0001", "field assignment requires a struct"))
-        }
-        let fieldIndex = types.field(reg, ts, base.ty.decl, e.token)
-        if fieldIndex < 0 { return err(problem(ts, e.token, "E0010", "unknown struct field")) }
-        let ty = reg.entries[base.ty.decl].fields[fieldIndex].ty
-        return Place{ty: ty, name: format("(${base.name}).f_${fieldIndex}"),
-            mutable: base.mutable, root: base.root, whole: false, indexed: base.indexed}
+        let base = placeOf(&g, p, ts, reg, e.left, depth + 1)
+        readable(g, ts, base.root, e.token)
+        return fieldPlace(reg, ts, e, base)
     }
     if e.kind == .Index {
-        let shape = try placeType(g, p, ts, reg, id, depth)
-        if !shape.mutable { return err(problem(ts, e.token, "E0014", "cannot modify a read-only container")) }
-        let base = try place(&g, p, ts, reg, e.left, depth + 1)
-        try readable(g, ts, base.root, e.token)
-        try writable(g, ts, base.root, e.token)
+        let shape = placeType(g, p, ts, reg, id, depth)
+        if !shape.mutable { fail(ts, e.token, "E0014", "cannot modify a read-only container") }
+        let base = placeOf(&g, p, ts, reg, e.left, depth + 1)
+        readable(g, ts, base.root, e.token)
+        writable(g, ts, base.root, e.token)
+        let reservations = g.reservations.len()
         g.reservations.push(base.root)
-        let index = try emitExpected(&g, p, ts, reg, e.right, types.primitive(.Int))
-        try requireInteger(ts, e.token, index.ty)
-        let _removed = g.reservations.pop()
+        let index = emitExpected(&g, p, ts, reg, e.right, primitive(.Int))
+        requireInteger(ts, e.token, index.ty)
+        g.reservations = truncInts(g.reservations, reservations)
         let n = g.counter
         g.counter += 1
-        let et = types.cType(shape.ty)
-        let t = ts[e.token]
-        line(&g, format("${et} *slot_${n} = (${et} *)yv_vec_at(&(${base.name}), (int64_t)sizeof(${et}), ${index.name}, ${t.line}, ${t.column});"))
-        return Place{ty: shape.ty, name: format("(*slot_${n})"),
+        let et = cType(shape.ty)
+        put(&g, join5(et, " *slot_", decimal(n), " = (", et))
+        put(&g, join3(" *)yv_vec_at(&(", base.name, "), (int64_t)sizeof("))
+        put(&g, join4(et, "), ", index.name, ", "))
+        put(&g, lineColumn(ts, e.token))
+        emit(&g, ");")
+        return Place{ty: shape.ty, name: join3("(*slot_", decimal(n), ")"),
             mutable: base.mutable, root: base.root, whole: false, indexed: true}
     }
     return placeType(g, p, ts, reg, id, depth)
 }
 
-
-fn popLoop(g: inout Generator) -> LoopState {
-    assert(g.loopStates.len() > 0)
-    let i = g.loopStates.len() - 1
-    let frame = LoopState{localCount: g.loopStates[i].localCount,
-        tempCount: g.loopStates[i].tempCount,
-        breaks: g.loopStates[i].breaks.clone(),
-        continues: g.loopStates[i].continues.clone(),
-        hasBreak: g.loopStates[i].hasBreak}
-    let _removed = g.loopStates.pop()
-    return frame
+fn pushLoop(g: inout Generator, localCount: int, tempCount: int) {
+    let base = g.exits.len()
+    var i = 0
+    while i < localCount * 2 {
+        g.exits.push(false)
+        i += 1
+    }
+    g.loopStates.push(LoopState{localCount: localCount, tempCount: tempCount, exitBase: base})
 }
 
-fn block(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, body: Vec[int]) -> Flow ! Failure {
+fn popLoop(g: inout Generator) -> LoopExit {
+    assert(g.loopStates.len() > 0)
+    let index = g.loopStates.len() - 1
+    let frame = g.loopStates[index]
+    var breaks: Vec[bool] = []
+    var continues: Vec[bool] = []
+    var i = 0
+    while frame.hasBreak && i < frame.localCount {
+        breaks.push(g.exits[frame.exitBase + i])
+        i += 1
+    }
+    i = 0
+    while frame.hasContinue && i < frame.localCount {
+        continues.push(g.exits[frame.exitBase + frame.localCount + i])
+        i += 1
+    }
+    g.exits = truncBools(g.exits, frame.exitBase)
+    g.loopStates = truncLoops(g.loopStates, index)
+    return LoopExit{breaks: breaks, continues: continues, hasBreak: frame.hasBreak}
+}
+
+fn emitBlock(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, start: int, count: int) -> Flow {
     let localCount = g.locals.len()
     var flow = Flow{}
-    line(&g, "{")
-    for id in body {
+    emit(&g, "{")
+    var i = 0
+    while i < count {
         let tempCount = g.temps.len()
-        let next = try statement(&g, p, ts, reg, id)
+        let next = emitStatement(&g, p, ts, reg, p.lists[start + i])
         discardTemps(&g, reg, tempCount)
         // Stage0 counts syntactic breaks, including after a terminating statement.
         flow.breaks = flow.breaks || next.breaks
         if flow.falls { flow.falls = next.falls }
+        i += 1
     }
     cleanLocals(&g, reg, localCount)
-    while g.locals.len() > localCount { let _removed = g.locals.pop() }
-    line(&g, "}")
+    if g.locals.len() > localCount { g.locals = truncLocals(g.locals, localCount) }
+    emit(&g, "}")
     return flow
 }
 
 fn recordExit(g: inout Generator, breaking: bool) {
     let index = g.loopStates.len() - 1
-    let count = g.loopStates[index].localCount
-    var state: Vec[bool] = []
-    for i in 0..count { state.push(g.locals[i].moved) }
-    if breaking {
-        if g.loopStates[index].hasBreak {
-            let previous = g.loopStates[index].breaks.clone()
-            state = joinStates(previous, state)
-        }
-        g.loopStates[index].breaks = state
-        g.loopStates[index].hasBreak = true
-    } else {
-        let previous = g.loopStates[index].continues.clone()
-        if previous.len() > 0 { state = joinStates(previous, state) }
-        g.loopStates[index].continues = state
+    let frame = g.loopStates[index]
+    var offset = frame.exitBase
+    var had = frame.hasBreak
+    if !breaking {
+        offset = frame.exitBase + frame.localCount
+        had = frame.hasContinue
+    }
+    var i = 0
+    while i < frame.localCount {
+        var moved = g.locals[i].moved
+        if had { moved = moved || g.exits[offset + i] }
+        g.exits[offset + i] = moved
+        i += 1
+    }
+    if breaking { g.loopStates[index].hasBreak = true } else {
+        g.loopStates[index].hasContinue = true
     }
 }
 
-// Recheck only the body, as stage0 does. Only newly exposed move errors escape;
-// generated C and transient analysis state belong to this disposable generator.
-fn replayBody(parent: Generator, p: Program, ts: Vec[Token], reg: Registry, s: Statement, next: Vec[bool]) -> Vec[bool] ! Failure {
+// Recheck only the body, as stage0 does, with the moved state of a repeated
+// iteration. Generated C and transient analysis state belong to this probe.
+fn replayBody(parent: Generator, p: Program, ts: Vec[Token], reg: Registry, s: Statement, next: Vec[bool]) -> Vec[bool] {
     var probe = Generator{
         counter: parent.counter,
         locals: parent.locals.clone(),
@@ -1040,40 +1514,38 @@ fn replayBody(parent: Generator, p: Program, ts: Vec[Token], reg: Registry, s: S
         binaryLocks: parent.binaryLocks.clone(),
         accessLocks: parent.accessLocks.clone(),
         reservations: parent.reservations.clone(),
+        inoutLocks: parent.inoutLocks.clone(),
         loopStates: parent.loopStates.clone(),
+        exits: parent.exits.clone(),
         result: parent.result,
         loops: parent.loops + 1
     }
     restoreState(&probe, next)
     let count = probe.locals.len()
     let tempCount = probe.temps.len()
-    probe.loopStates.push(LoopState{localCount: count, tempCount: tempCount})
-    let _flow = block(&probe, p, ts, reg, s.body) catch failure {
-        if failure.code == "E0402" { return err(failure) }
-        let empty: Vec[bool] = []
-        return empty
-    }
+    pushLoop(&probe, count, tempCount)
+    let _flow = emitBlock(&probe, p, ts, reg, s.bodyStart, s.bodyCount)
     let frame = popLoop(&probe)
     return frame.breaks.clone()
 }
 
-fn loopStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, s: Statement) -> Flow ! Failure {
-    line(&g, "for (;;) {")
+fn loopStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, s: Statement) -> Flow {
+    emit(&g, "for (;;) {")
     if s.kind == .While {
         let tempCount = g.temps.len()
         g.loopCondition = true
-        let condition = try emitExpected(&g, p, ts, reg, s.expr, types.primitive(.Bool))
+        let condition = emitExpected(&g, p, ts, reg, s.expr, primitive(.Bool))
         g.loopCondition = false
-        try basic(reg, ts, s.token, condition.ty, .Bool)
+        basic(reg, ts, s.token, condition.ty, .Bool)
         discardTemps(&g, reg, tempCount)
-        line(&g, format("if (!${condition.name}) break;"))
+        emit(&g, join3("if (!", condition.name, ") break;"))
     }
     let before = movedState(g)
     let count = g.locals.len()
     let tempCount = g.temps.len()
-    g.loopStates.push(LoopState{localCount: count, tempCount: tempCount})
+    pushLoop(&g, count, tempCount)
     g.loops += 1
-    let inner = try block(&g, p, ts, reg, s.body)
+    let inner = emitBlock(&g, p, ts, reg, s.bodyStart, s.bodyCount)
     g.loops -= 1
     let frame = popLoop(&g)
     let ended = movedState(g)
@@ -1081,11 +1553,13 @@ fn loopStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, 
     let next = joinStates(before, end)
     var exits = frame.breaks.clone()
     var grew = false
-    for i in 0..before.len() {
+    var i = 0
+    while i < before.len() {
         if next[i] && !before[i] { grew = true }
+        i += 1
     }
     if grew {
-        let repeated = try replayBody(g, p, ts, reg, s, next)
+        let repeated = replayBody(g, p, ts, reg, s, next)
         if exits.len() == 0 { exits = repeated } else { exits = joinStates(exits, repeated) }
     }
     if s.kind == .Loop && frame.hasBreak {
@@ -1094,109 +1568,126 @@ fn loopStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, 
         let after = joinStates(next, exits)
         restoreState(&g, after)
     }
-    line(&g, "}")
+    emit(&g, "}")
     return Flow{falls: s.kind == .While || inner.breaks}
 }
 
-fn statement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, id: int) -> Flow ! Failure {
+fn exitsProcess(g: Generator, p: Program, ts: Vec[Token], id: int) -> bool {
+    let e = p.expressions[id]
+    return e.kind == .Method && ts[e.token].text == "exit" &&
+        standardModule(g, p, ts, p.expressions[e.left]) == 1
+}
+
+fn emitStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, id: int) -> Flow {
     let s = p.statements[id]
     if s.kind == .Bind {
-        var ty = try types.resolve(reg, ts, s.annotation)
-        let initial = try emitExpected(&g, p, ts, reg, s.expr, ty)
+        var ty = resolve(reg, ts, s.annotation)
+        let initial = emitExpected(&g, p, ts, reg, s.expr, ty)
         if ty.kind == .Unknown && initial.indexedBorrow && !initial.field {
             if ts[s.name].text == "_" { return Flow{} }
-            return err(problem(ts, s.token, "U0001", "persistent indexed-element borrows are outside this subset"))
+            fail(ts, s.token, "U0001", "persistent indexed-element borrows are outside this subset")
+        }
+        if initial.transient && ts[s.name].text != "_" {
+            fail(ts, s.token, "U0001", "persistent views of owned strings are outside this subset")
         }
         if ty.kind == .Unknown { ty = initial.ty }
-        try require(reg, ts, s.token, initial.ty, ty)
-        let taken = try takeValue(&g, reg, ts, s.token, initial)
+        require(reg, ts, s.token, initial.ty, ty)
+        let taken = takeValue(&g, reg, ts, s.token, initial)
         if ts[s.name].text != "_" {
-            try declare(&g, ts, s.name, ty, s.mutable, false)
-            line(&g, format("${types.cType(ty)} v_${s.name} = ${taken.name};"))
+            declare(&g, ts, s.name, ty, s.mutable, false, false)
+            put(&g, cType(ty))
+            put(&g, join3(" v_", decimal(s.name), " = "))
+            emit(&g, join2(taken.name, ";"))
             zeroValue(&g, reg, taken)
         }
         return Flow{}
     }
     if s.kind == .Assign {
-        var target = try placeType(g, p, ts, reg, s.target, 0)
+        var target = placeType(g, p, ts, reg, s.target, 0)
         if !target.indexed {
-            if !target.mutable { return err(problem(ts, s.token, "E0014", "cannot assign through an immutable local or parameter")) }
-            if !target.whole { try readable(g, ts, target.root, s.token) }
-            try writable(g, ts, target.root, s.token)
+            if !target.mutable { fail(ts, s.token, "E0014", "cannot assign through an immutable local or parameter") }
+            if !target.whole { readable(g, ts, target.root, s.token) }
+            writable(g, ts, target.root, s.token)
         }
-        let rhs = try emitExpected(&g, p, ts, reg, s.expr, target.ty)
-        try require(reg, ts, s.token, rhs.ty, target.ty)
+        let rhs = emitExpected(&g, p, ts, reg, s.expr, target.ty)
+        require(reg, ts, s.token, rhs.ty, target.ty)
+        if rhs.transient {
+            fail(ts, s.token, "U0001", "persistent views of owned strings are outside this subset")
+        }
         if ts[s.token].text == "=" {
-            let taken = try takeValue(&g, reg, ts, s.token, rhs)
-            if target.indexed { target = try place(&g, p, ts, reg, s.target, 0) }
-            if !target.whole { try readable(g, ts, target.root, s.token) }
+            let taken = takeValue(&g, reg, ts, s.token, rhs)
+            if target.indexed { target = placeOf(&g, p, ts, reg, s.target, 0) }
+            if !target.whole { readable(g, ts, target.root, s.token) }
             dropValue(&g, reg, target.ty, target.name)
-            line(&g, format("${target.name} = ${taken.name};"))
+            emit(&g, join4(target.name, " = ", taken.name, ";"))
             zeroValue(&g, reg, taken)
             if target.whole { g.locals[target.root].moved = false }
         } else {
-            if target.indexed { target = try place(&g, p, ts, reg, s.target, 0) }
-            try readable(g, ts, target.root, s.token)
-            try requireInteger(ts, s.token, target.ty)
+            if target.indexed { target = placeOf(&g, p, ts, reg, s.target, 0) }
+            readable(g, ts, target.root, s.token)
+            requireInteger(ts, s.token, target.ty)
             let code = integerOperation(ts, s.token, target.ty.kind, ts[s.token].text, target.name, rhs.name)
-            line(&g, format("${target.name} = ${code};"))
+            emit(&g, join4(target.name, " = ", code, ";"))
         }
         return Flow{}
     }
     if s.kind == .Expr {
         let kind = p.expressions[s.expr].kind
-        if kind != .Call && kind != .Method {
-            return err(problem(ts, s.token, "E0001", "only a direct call may stand alone as a statement"))
+        if kind != .Call && kind != .Method && kind != .Catch {
+            fail(ts, s.token, "E0001", "only a direct call may stand alone as a statement")
         }
         g.outputRoot = s.expr
-        let _ignored = try emitExpr(&g, p, ts, reg, s.expr)
+        let _ignored = emitExpr(&g, p, ts, reg, s.expr)
         g.outputRoot = -1
+        if exitsProcess(g, p, ts, s.expr) { return Flow{falls: false} }
         return Flow{}
     }
     if s.kind == .Return {
         if s.expr < 0 {
-            try require(reg, ts, s.token, types.primitive(.Unit), g.result)
+            require(reg, ts, s.token, primitive(.Unit), g.result)
             cleanTemps(&g, reg, 0)
             cleanLocals(&g, reg, 0)
-            line(&g, "return;")
+            emit(&g, "return;")
         } else {
             if g.result.kind == .Unit && p.expressions[s.expr].kind != .Unit {
-                return err(problem(ts, s.token, "E0001", "a unit-returning function cannot return a value"))
+                fail(ts, s.token, "E0001", "a unit-returning function cannot return a value")
             }
             let resultType = g.result
-            let returned = try emitExpected(&g, p, ts, reg, s.expr, resultType)
-            try require(reg, ts, s.token, returned.ty, resultType)
+            let returned = emitExpected(&g, p, ts, reg, s.expr, resultType)
+            require(reg, ts, s.token, returned.ty, resultType)
             if returned.ty.kind == .Unit {
                 cleanTemps(&g, reg, 0)
                 cleanLocals(&g, reg, 0)
-                line(&g, "return;")
+                emit(&g, "return;")
             } else {
-                let taken = try takeValue(&g, reg, ts, s.token, returned)
+                let taken = takeValue(&g, reg, ts, s.token, returned)
                 let n = g.counter
                 g.counter += 1
-                line(&g, format("${types.cType(taken.ty)} return_${n} = ${taken.name};"))
+                put(&g, cType(taken.ty))
+                put(&g, join3(" return_", decimal(n), " = "))
+                emit(&g, join2(taken.name, ";"))
                 zeroValue(&g, reg, taken)
                 cleanTemps(&g, reg, 0)
                 cleanLocals(&g, reg, 0)
-                line(&g, format("return return_${n};"))
+                emit(&g, join3("return return_", decimal(n), ";"))
             }
         }
         return Flow{falls: false}
     }
     if s.kind == .If {
         let tempCount = g.temps.len()
-        let condition = try emitExpected(&g, p, ts, reg, s.expr, types.primitive(.Bool))
-        try basic(reg, ts, s.token, condition.ty, .Bool)
+        let condition = emitExpected(&g, p, ts, reg, s.expr, primitive(.Bool))
+        basic(reg, ts, s.token, condition.ty, .Bool)
         discardTemps(&g, reg, tempCount)
         let before = movedState(g)
-        line(&g, format("if (${condition.name})"))
-        let yes = try block(&g, p, ts, reg, s.body)
+        emit(&g, join3("if (", condition.name, ")"))
+        let yes = emitBlock(&g, p, ts, reg, s.bodyStart, s.bodyCount)
         let yesState = movedState(g)
         restoreState(&g, before)
         var no = Flow{}
-        if s.otherwise.len() > 0 {
-            line(&g, "else")
-            no = try block(&g, p, ts, reg, s.otherwise)
+        if s.elseCount > 0 {
+            emit(&g, "else")
+            no = emitBlock(&g, p, ts, reg, s.elseStart, s.elseCount)
         }
         let noState = movedState(g)
         if yes.falls && !no.falls { restoreState(&g, yesState)
@@ -1208,7 +1699,7 @@ fn statement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, id: 
         return Flow{falls: yes.falls || no.falls, breaks: yes.breaks || no.breaks}
     }
     if s.kind == .While || s.kind == .Loop { return loopStatement(&g, p, ts, reg, s) }
-    if g.loops == 0 { return err(problem(ts, s.token, "E0015", "break/continue requires an enclosing loop")) }
+    if g.loops == 0 { fail(ts, s.token, "E0015", "break/continue requires an enclosing loop") }
     let index = g.loopStates.len() - 1
     let localCount = g.loopStates[index].localCount
     let tempCount = g.loopStates[index].tempCount
@@ -1216,164 +1707,200 @@ fn statement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, id: 
     cleanTemps(&g, reg, tempCount)
     cleanLocals(&g, reg, localCount)
     if s.kind == .Break {
-        line(&g, "break;")
+        emit(&g, "break;")
         return Flow{falls: false, breaks: true}
     }
-    line(&g, "continue;")
+    emit(&g, "continue;")
     return Flow{falls: false}
 }
 
-fn signature(p: Program, ts: Vec[Token], reg: Registry, index: int) -> String ! Failure {
+fn signature(p: Program, ts: Vec[Token], reg: Registry, index: int) -> String {
     let f = p.functions[index]
-    var params: Vec[String] = []
-    for param in f.params {
-        let ty = try types.resolve(reg, ts, param.ty)
-        if ty.kind == .Unit { return err(problem(ts, param.name, "U0001", "unit parameters are outside the selfhost subset")) }
-        params.push(format("${types.cType(ty)} v_${param.name}"))
+    var params = String{}
+    var i = 0
+    while i < f.paramCount {
+        let param = p.params[f.paramStart + i]
+        let ty = resolve(reg, ts, param.ty)
+        if ty.kind == .Unit { fail(ts, param.name, "U0001", "unit parameters are outside the selfhost subset") }
+        if i > 0 { params.push(", ") }
+        params.push(cType(ty))
+        if param.byRef { params.push(" *v_") } else { params.push(" v_") }
+        params.push(decimal(param.name))
+        i += 1
     }
-    var args = params.join(", ")
-    if params.len() == 0 { args = "void".toString() }
-    let result = try types.resolve(reg, ts, f.result)
-    return format("static ${types.cType(result)} sh_fn_${index}(${args})")
+    if f.paramCount == 0 { params.push("void") }
+    let result = resolve(reg, ts, f.result)
+    return join5(join3("static ", cType(result), " sh_fn_"), decimal(index), "(", params, ")")
 }
 
 fn vectorLifecycle(g: inout Generator, reg: Registry, elem: Type) {
     let ty = Type{kind: .Vec, elementKind: elem.kind, elementDecl: elem.decl}
-    let et = types.cType(elem)
+    let et = cType(elem)
     let stem = vectorHelper(ty)
-    line(&g, format("static void sh_vec_drop_${stem}(yv_vec *p) {"))
-    line(&g, format("${et} *items = (${et} *)p->ptr;"))
-    line(&g, "for (int64_t i = 0; i < p->len; ++i) {")
-    line(&g, format("${dropName(reg, elem)}(&items[i]);"))
-    line(&g, "}")
-    line(&g, "yv_vec_free(p);")
-    line(&g, "}")
-    line(&g, format("static yv_vec sh_vec_clone_${stem}(const yv_vec *p, uint32_t line, uint32_t col) {"))
-    line(&g, format("const ${et} *items = (const ${et} *)p->ptr;"))
-    line(&g, format("yv_vec out = yv_vec_with_cap((int64_t)sizeof(${et}), p->len, line, col);"))
-    line(&g, "for (int64_t i = 0; i < p->len; ++i) {")
+    emit(&g, join3("static void sh_vec_drop_", stem, "(yv_vec *p) {"))
+    emit(&g, join5(et, " *items = (", et, " *)p->ptr;", ""))
+    emit(&g, "for (int64_t i = 0; i < p->len; ++i) {")
+    emit(&g, join2(dropName(reg, elem), "(&items[i]);"))
+    emit(&g, "}")
+    emit(&g, "yv_vec_free(p);")
+    emit(&g, "}")
+    emit(&g, join3("static yv_vec sh_vec_clone_", stem, "(const yv_vec *p, uint32_t line, uint32_t col) {"))
+    emit(&g, join5("const ", et, " *items = (const ", et, " *)p->ptr;"))
+    emit(&g, join3("yv_vec out = yv_vec_with_cap((int64_t)sizeof(", et, "), p->len, line, col);"))
+    emit(&g, "for (int64_t i = 0; i < p->len; ++i) {")
     let cloned = cloneExpression(reg, elem, "items[i]", "line", "col")
-    line(&g, format("((${et} *)out.ptr)[i] = ${cloned};"))
-    line(&g, "out.len = i + 1;")
-    line(&g, "}")
-    line(&g, "return out;")
-    line(&g, "}")
+    emit(&g, join5("((", et, " *)out.ptr)[i] = ", cloned, ";"))
+    emit(&g, "out.len = i + 1;")
+    emit(&g, "}")
+    emit(&g, "return out;")
+    emit(&g, "}")
 }
 
 fn declarations(g: inout Generator, reg: Registry) {
-    for i in 0..reg.entries.len() {
-        if reg.entries[i].kind == .Enum { line(&g, format("typedef int64_t sh_type_${i};")) }
+    var i = 0
+    while i < reg.entries.len() {
+        if reg.entries[i].kind == .Enum { emit(&g, join3("typedef int64_t sh_type_", decimal(i), ";")) }
+        i += 1
     }
-    for i in reg.order {
-        let item = reg.entries[i]
+    var k = 0
+    while k < reg.order.len() {
+        let index = reg.order[k]
+        let item = reg.entries[index]
         if item.kind == .Struct {
-            line(&g, format("typedef struct sh_type_${i} {"))
-            if item.fields.len() == 0 { line(&g, "char sh_empty;") }
-            for j in 0..item.fields.len() { line(&g, format("${types.cType(item.fields[j].ty)} f_${j};")) }
-            line(&g, format("} sh_type_${i};"))
+            emit(&g, join3("typedef struct sh_type_", decimal(index), " {"))
+            if item.fieldCount == 0 { emit(&g, "char sh_empty;") }
+            var j = 0
+            while j < item.fieldCount {
+                emit(&g, join4(cType(fieldOf(reg, index, j).ty), " f_", decimal(j), ";"))
+                j += 1
+            }
+            emit(&g, join3("} sh_type_", decimal(index), ";"))
         }
+        k += 1
     }
 
     // Every named C layout is complete. Lifecycle prototypes break indirect
     // dependency cycles such as Node -> Vec[Node] without recursive discovery.
-    line(&g, "static void sh_vec_drop_string(yv_vec *p);")
-    line(&g, "static yv_vec sh_vec_clone_string(const yv_vec *p, uint32_t line, uint32_t col);")
-    for i in reg.order {
-        if reg.entries[i].owned {
-            line(&g, format("static void sh_drop_${i}(sh_type_${i} *p);"))
-            line(&g, format("static sh_type_${i} sh_clone_${i}(const sh_type_${i} *p, uint32_t line, uint32_t col);"))
-            line(&g, format("static void sh_vec_drop_type_${i}(yv_vec *p);"))
-            line(&g, format("static yv_vec sh_vec_clone_type_${i}(const yv_vec *p, uint32_t line, uint32_t col);"))
+    emit(&g, "static void sh_vec_drop_string(yv_vec *p);")
+    emit(&g, "static yv_vec sh_vec_clone_string(const yv_vec *p, uint32_t line, uint32_t col);")
+    k = 0
+    while k < reg.order.len() {
+        let index = reg.order[k]
+        if reg.entries[index].owned {
+            let n = decimal(index)
+            emit(&g, join5("static void sh_drop_", n, "(sh_type_", n, " *p);"))
+            emit(&g, join5(join3("static sh_type_", n, " sh_clone_"), n, "(const sh_type_", n,
+                " *p, uint32_t line, uint32_t col);"))
+            emit(&g, join3("static void sh_vec_drop_type_", n, "(yv_vec *p);"))
+            emit(&g, join3("static yv_vec sh_vec_clone_type_", n, "(const yv_vec *p, uint32_t line, uint32_t col);"))
         }
+        k += 1
     }
-    line(&g, "static yv_vec sh_vec_clone_copy(const yv_vec *p, int64_t elem, uint32_t line, uint32_t col) {")
-    line(&g, "yv_vec out = yv_vec_with_cap(elem, p->len, line, col);")
-    line(&g, "if (p->len > 0) memcpy(out.ptr, p->ptr, (size_t)p->len * (size_t)elem);")
-    line(&g, "out.len = p->len;")
-    line(&g, "return out;")
-    line(&g, "}")
-    vectorLifecycle(&g, reg, types.primitive(.String))
-    for i in reg.order {
-        if reg.entries[i].owned {
-            vectorLifecycle(&g, reg, Type{kind: .Named, decl: i, elementKind: .Unknown})
+    emit(&g, "static yv_vec sh_vec_clone_copy(const yv_vec *p, int64_t elem, uint32_t line, uint32_t col) {")
+    emit(&g, "yv_vec out = yv_vec_with_cap(elem, p->len, line, col);")
+    emit(&g, "if (p->len > 0) memcpy(out.ptr, p->ptr, (size_t)p->len * (size_t)elem);")
+    emit(&g, "out.len = p->len;")
+    emit(&g, "return out;")
+    emit(&g, "}")
+    vectorLifecycle(&g, reg, primitive(.String))
+    k = 0
+    while k < reg.order.len() {
+        let index = reg.order[k]
+        if reg.entries[index].owned {
+            vectorLifecycle(&g, reg, Type{kind: .Named, decl: index, elementKind: .Unknown})
         }
+        k += 1
     }
-    for i in reg.order {
-        if reg.entries[i].owned {
-            line(&g, format("static void sh_drop_${i}(sh_type_${i} *p) {"))
-            let item = reg.entries[i]
-            var j = item.fields.len()
+    k = 0
+    while k < reg.order.len() {
+        let index = reg.order[k]
+        if reg.entries[index].owned {
+            let n = decimal(index)
+            emit(&g, join5("static void sh_drop_", n, "(sh_type_", n, " *p) {"))
+            var j = reg.entries[index].fieldCount
             while j > 0 {
                 j -= 1
-                let ty = item.fields[j].ty
-                if types.owned(reg, ty) { line(&g, format("${dropName(reg, ty)}(&p->f_${j});")) }
+                let ty = fieldOf(reg, index, j).ty
+                if owned(reg, ty) { emit(&g, join4(dropName(reg, ty), "(&p->f_", decimal(j), ");")) }
             }
-            line(&g, format("*p = (sh_type_${i}){0};"))
-            line(&g, "}")
-            line(&g, format("static sh_type_${i} sh_clone_${i}(const sh_type_${i} *p, uint32_t line, uint32_t col) {"))
-            line(&g, format("sh_type_${i} out = *p;"))
-            for field in 0..item.fields.len() {
-                let ty = item.fields[field].ty
-                if types.owned(reg, ty) {
-                    let cloned = cloneExpression(reg, ty, format("p->f_${field}"), "line", "col")
-                    line(&g, format("out.f_${field} = ${cloned};"))
+            emit(&g, join3("*p = (sh_type_", n, "){0};"))
+            emit(&g, "}")
+            emit(&g, join5(join3("static sh_type_", n, " sh_clone_"), n, "(const sh_type_", n,
+                " *p, uint32_t line, uint32_t col) {"))
+            emit(&g, join3("sh_type_", n, " out = *p;"))
+            var field = 0
+            while field < reg.entries[index].fieldCount {
+                let ty = fieldOf(reg, index, field).ty
+                if owned(reg, ty) {
+                    let cloned = cloneExpression(reg, ty, join2("p->f_", decimal(field)), "line", "col")
+                    emit(&g, join5("out.f_", decimal(field), " = ", cloned, ";"))
                 }
+                field += 1
             }
-            line(&g, "return out;")
-            line(&g, "}")
+            emit(&g, "return out;")
+            emit(&g, "}")
         }
+        k += 1
     }
 }
 
-pub fn generate(p: Program, ts: Vec[Token], filename: str) -> String ! Failure {
-    let reg = try types.collect(p, ts)
+pub fn generate(p: Program, ts: Vec[Token], filename: str) -> String {
+    let reg = collect(p, ts)
     var entry = -1
-    for i in 0..p.functions.len() {
+    var i = 0
+    while i < p.functions.len() {
         let f = p.functions[i]
         let name = ts[f.name].text.clone()
-        if reservedFunction(name) { return err(problem(ts, f.name, "E0011", "cannot redefine a builtin")) }
-        for j in 0..i {
+        if reservedFunction(name) { fail(ts, f.name, "E0011", "cannot redefine a builtin") }
+        var j = 0
+        while j < i {
             if ts[p.functions[j].name].text == name {
-                return err(problem(ts, f.name, "E0011", "duplicate function"))
+                fail(ts, f.name, "E0011", "duplicate function")
             }
+            j += 1
         }
         if name == "main" {
-            if f.params.len() != 0 || f.result.kind != .Unit {
-                return err(problem(ts, f.name, "E0016", "entry point must be fn main()"))
+            if f.paramCount != 0 || f.result.kind != .Unit {
+                fail(ts, f.name, "E0016", "entry point must be fn main()")
             }
             entry = i
         }
+        i += 1
     }
-    if entry < 0 { return err(problem(ts, 0, "E0016", "no fn main() entry point")) }
-    var g = Generator{result: types.primitive(.Unit)}
-    line(&g, "/* Generated by Yavo selfhost (byte and read-only indexed element subset). */")
-    line(&g, "#include \"yavo_rt.h\"")
+    if entry < 0 { fail(ts, 0, "E0016", "no fn main() entry point") }
+    var g = Generator{result: primitive(.Unit)}
+    emit(&g, "/* Generated by Yavo selfhost (bootstrap subset). */")
+    emit(&g, "#include \"yavo_rt.h\"")
     declarations(&g, reg)
-    for i in 0..p.functions.len() {
-        let header = try signature(p, ts, reg, i)
-        line(&g, format("${header};"))
+    i = 0
+    while i < p.functions.len() {
+        emit(&g, join2(signature(p, ts, reg, i), ";"))
+        i += 1
     }
-    for i in 0..p.functions.len() {
+    i = 0
+    while i < p.functions.len() {
         let f = p.functions[i]
-        g.result = try types.resolve(reg, ts, f.result)
-        for param in f.params {
-            let ty = try types.resolve(reg, ts, param.ty)
-            try declare(&g, ts, param.name, ty, false, types.owned(reg, ty))
+        g.result = resolve(reg, ts, f.result)
+        var k = 0
+        while k < f.paramCount {
+            let param = p.params[f.paramStart + k]
+            let ty = resolve(reg, ts, param.ty)
+            declare(&g, ts, param.name, ty, param.byRef, param.byRef || owned(reg, ty), param.byRef)
+            k += 1
         }
-        let header = try signature(p, ts, reg, i)
-        line(&g, header)
-        let flow = try block(&g, p, ts, reg, f.body)
+        emit(&g, signature(p, ts, reg, i))
+        let flow = emitBlock(&g, p, ts, reg, f.bodyStart, f.bodyCount)
         if g.result.kind != .Unit && flow.falls {
-            return err(problem(ts, f.name, "E0013", "not every path returns a value"))
+            fail(ts, f.name, "E0013", "not every path returns a value")
         }
-        while g.locals.len() > 0 { let _removed = g.locals.pop() }
+        g.locals = []
+        i += 1
     }
-    let file = cString(filename)
-    line(&g, "int main(int argc, char **argv) {")
-    line(&g, format("yv_rt_init(${file});"))
-    line(&g, "yv_rt_args(argc, argv);")
-    line(&g, format("sh_fn_${entry}();"))
-    line(&g, "return yv_rt_exit();")
-    line(&g, "}")
+    emit(&g, "int main(int argc, char **argv) {")
+    emit(&g, join3("yv_rt_init(", cString(filename), ");"))
+    emit(&g, "yv_rt_args(argc, argv);")
+    emit(&g, join3("sh_fn_", decimal(entry), "();"))
+    emit(&g, "return yv_rt_exit();")
+    emit(&g, "}")
     return take(&g.out)
 }

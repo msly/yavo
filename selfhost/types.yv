@@ -1,8 +1,5 @@
 // Resolved aggregates for the bootstrap compiler. Type identity is a
 // registry index; source names remain lexer token indices throughout checking.
-use diagnostic
-use lexer
-use model
 
 pub struct Type {
     kind: BasicType
@@ -17,22 +14,22 @@ pub struct Field {
     initial: int = -1
 }
 
+// fieldStart/fieldCount index Registry.fields; variants index Registry.variants.
 pub struct Info {
     kind: AggregateKind
     name: int
-    fields: Vec[Field] = []
-    variants: Vec[int] = []
+    fieldStart: int = 0
+    fieldCount: int = 0
+    variantStart: int = 0
+    variantCount: int = 0
     owned: bool = false
 }
 
 pub struct Registry {
     entries: Vec[Info] = []
+    fields: Vec[Field] = []
+    variants: Vec[int] = []
     order: Vec[int] = []
-}
-
-fn problem(ts: Vec[Token], token: int, code: str, message: str) -> Failure {
-    let t = ts[token]
-    return diagnostic.make(code, message, t.start, t.line, t.column)
 }
 
 pub fn primitive(kind: BasicType) -> Type {
@@ -58,14 +55,18 @@ pub fn owned(reg: Registry, ty: Type) -> bool {
     return ty.kind == .Named && reg.entries[ty.decl].owned
 }
 
+pub fn fieldOf(reg: Registry, decl: int, index: int) -> Field {
+    return reg.fields[reg.entries[decl].fieldStart + index]
+}
+
 pub fn cType(t: Type) -> String {
     if t.kind == .Int { return "int64_t".toString() }
     if t.kind == .Byte { return "uint8_t".toString() }
     if t.kind == .Bool { return "bool".toString() }
     if t.kind == .Str { return "yv_str".toString() }
     if t.kind == .String { return "yv_string".toString() }
-    if t.kind == .Vec { return "yv_vec".toString() }
-    if t.kind == .Named { return format("sh_type_${t.decl}") }
+    if t.kind == .Vec || t.kind == .Args { return "yv_vec".toString() }
+    if t.kind == .Named { return join2("sh_type_", decimal(t.decl)) }
     return "void".toString()
 }
 
@@ -75,7 +76,8 @@ pub fn describe(reg: Registry, ts: Vec[Token], t: Type) -> String {
     if t.kind == .Bool { return "bool".toString() }
     if t.kind == .Str { return "str".toString() }
     if t.kind == .String { return "String".toString() }
-    if t.kind == .Vec { return format("Vec[${describe(reg, ts, element(t))}]") }
+    if t.kind == .Vec { return join3("Vec[", describe(reg, ts, element(t)), "]") }
+    if t.kind == .Args { return "[]str".toString() }
     if t.kind == .Unit { return "()".toString() }
     if t.kind == .Named { return ts[reg.entries[t.decl].name].text.clone() }
     return "<unknown>".toString()
@@ -90,19 +92,21 @@ pub fn lookup(reg: Registry, ts: Vec[Token], nameToken: int) -> int {
     return -1
 }
 
-pub fn field(reg: Registry, ts: Vec[Token], decl: int, nameToken: int) -> int {
+pub fn fieldIndex(reg: Registry, ts: Vec[Token], decl: int, nameToken: int) -> int {
+    let start = reg.entries[decl].fieldStart
     var i = 0
-    while i < reg.entries[decl].fields.len() {
-        if ts[reg.entries[decl].fields[i].name].text == ts[nameToken].text { return i }
+    while i < reg.entries[decl].fieldCount {
+        if ts[reg.fields[start + i].name].text == ts[nameToken].text { return i }
         i += 1
     }
     return -1
 }
 
-pub fn variant(reg: Registry, ts: Vec[Token], decl: int, nameToken: int) -> int {
+pub fn variantIndex(reg: Registry, ts: Vec[Token], decl: int, nameToken: int) -> int {
+    let start = reg.entries[decl].variantStart
     var i = 0
-    while i < reg.entries[decl].variants.len() {
-        if ts[reg.entries[decl].variants[i]].text == ts[nameToken].text { return i }
+    while i < reg.entries[decl].variantCount {
+        if ts[reg.variants[start + i]].text == ts[nameToken].text { return i }
         i += 1
     }
     return -1
@@ -110,7 +114,7 @@ pub fn variant(reg: Registry, ts: Vec[Token], decl: int, nameToken: int) -> int 
 
 // Keep this list aligned with check_declaration_names in the Rust checker.
 // Some collection names are special only in annotations, not declarations.
-fn reserved(name: str) -> bool {
+fn reservedType(name: str) -> bool {
     return name == "int" || name == "i8" || name == "i16" || name == "i32" ||
         name == "i64" || name == "u8" || name == "byte" || name == "u16" ||
         name == "u32" || name == "u64" || name == "f32" || name == "f64" ||
@@ -120,143 +124,144 @@ fn reserved(name: str) -> bool {
         name == "Ordering" || name == "Utf8Error"
 }
 
-fn unsupported(name: str) -> bool {
-    return reserved(name) || name == "Map" || name == "Rc" || name == "Arc" ||
+fn unsupportedType(name: str) -> bool {
+    return reservedType(name) || name == "Map" || name == "Rc" || name == "Arc" ||
         name == "Mutex" || name == "Guard" || name == "Channel" ||
         name == "Heap" || name == "Deque"
 }
 
-pub fn vector(_reg: Registry, ts: Vec[Token], token: int, elem: Type) -> Type ! Failure {
+pub fn vector(ts: Vec[Token], token: int, elem: Type) -> Type {
     if elem.kind == .Unknown {
-        return err(problem(ts, token, "E0001", "cannot infer the vector element type"))
+        fail(ts, token, "E0001", "cannot infer the vector element type")
     }
     if elem.kind != .Int && elem.kind != .Byte && elem.kind != .Bool && elem.kind != .String && elem.kind != .Named {
-        return err(problem(ts, token, "U0001", "this vector element type is outside the selfhost subset"))
+        fail(ts, token, "U0001", "this vector element type is outside the selfhost subset")
     }
     return Type{kind: .Vec, elementKind: elem.kind, elementDecl: elem.decl}
 }
 
-pub fn resolve(reg: Registry, ts: Vec[Token], syn: TypeRef) -> Type ! Failure {
+pub fn resolve(reg: Registry, ts: Vec[Token], syn: TypeRef) -> Type {
     if syn.kind == .Vec {
-        let elem = try resolve(reg, ts, TypeRef{kind: syn.elementKind,
+        let elem = resolve(reg, ts, TypeRef{kind: syn.elementKind,
             name: syn.elementName, elementKind: .Unknown})
-        return vector(reg, ts, syn.elementName, elem)
+        return vector(ts, syn.elementName, elem)
     }
     if syn.kind != .Named { return primitive(syn.kind) }
-    let name = ts[syn.name].text.clone()
-    if name == "String" { return primitive(.String) }
-    if name == "Vec" {
-        return err(problem(ts, syn.name, "E0001", "Vec takes exactly one type argument"))
+    if ts[syn.name].text == "String" { return primitive(.String) }
+    if ts[syn.name].text == "Vec" {
+        fail(ts, syn.name, "E0001", "Vec takes exactly one type argument")
     }
-    if unsupported(name) {
-        return err(problem(ts, syn.name, "U0001", format("type '${name}' is outside the selfhost subset")))
+    if unsupportedType(ts[syn.name].text) {
+        fail(ts, syn.name, "U0001", join3("type '", ts[syn.name].text, "' is outside the selfhost subset"))
     }
     let decl = lookup(reg, ts, syn.name)
     if decl < 0 {
-        return err(problem(ts, syn.name, "E0010", format("unknown type '${name}'")))
+        fail(ts, syn.name, "E0010", join3("unknown type '", ts[syn.name].text, "'"))
     }
     return Type{elementKind: .Unknown, kind: .Named, decl: decl}
 }
 
-fn checkDefault(p: Program, reg: Registry, ts: Vec[Token], value: Field) -> () ! Failure {
-    if value.initial < 0 { return }
-    var id = value.initial
+fn checkDefault(p: Program, reg: Registry, ts: Vec[Token], item: Field) {
+    if item.initial < 0 { return }
+    var id = item.initial
     while p.expressions[id].kind == .Paren { id = p.expressions[id].left }
     let e = p.expressions[id]
     var actual = primitive(.Unknown)
     if e.kind == .Number {
-        if value.ty.kind == .Byte { actual = primitive(.Byte) } else {
+        if item.ty.kind == .Byte { actual = primitive(.Byte) } else {
             actual = primitive(.Int)
         }
     } else if e.kind == .Byte {
         // Stage0 permits any integer field declaration here. Instantiating a
         // default still checks its fixed byte type against the field type.
-        if value.ty.kind == .Int { actual = primitive(.Int) } else {
+        if item.ty.kind == .Int { actual = primitive(.Int) } else {
             actual = primitive(.Byte)
         }
     } else if e.kind == .Boolean {
         actual = primitive(.Bool)
     } else if e.kind == .Text {
-        if value.ty.kind == .String { actual = primitive(.String) } else {
+        if item.ty.kind == .String { actual = primitive(.String) } else {
             actual = primitive(.Str)
         }
-    } else if e.kind == .Vector && e.args.len() == 0 && e.elementKind == .Unknown {
-        if value.ty.kind == .Vec { actual = value.ty }
+    } else if e.kind == .Vector && e.argCount == 0 && e.elementKind == .Unknown {
+        if item.ty.kind == .Vec { actual = item.ty }
     } else if e.kind == .Unary && ts[e.token].text == "-" && p.expressions[e.left].kind == .Number {
         // FieldDefault::of accepts a directly negated numeric token only.
         // Integer range is checked when a constructor instantiates the default.
-        if value.ty.kind == .Byte { actual = primitive(.Byte) } else {
+        if item.ty.kind == .Byte { actual = primitive(.Byte) } else {
             actual = primitive(.Int)
         }
     } else {
-        return err(problem(ts, p.expressions[value.initial].token, "E0001",
-            "a field default must be a constant literal"))
+        fail(ts, p.expressions[item.initial].token, "E0001",
+            "a field default must be a constant literal")
     }
-    if !same(value.ty, actual) {
-        let name = ts[value.name].text.clone()
-        let expected = describe(reg, ts, value.ty)
-        return err(problem(ts, p.expressions[value.initial].token, "E0001",
-            format("default for field '${name}' does not have type '${expected}'")))
+    if !same(item.ty, actual) {
+        var message = join3("default for field '", ts[item.name].text, "' does not have type '")
+        message.push(describe(reg, ts, item.ty))
+        message.push("'")
+        fail(ts, p.expressions[item.initial].token, "E0001", message)
     }
 }
 
-pub fn collect(p: Program, ts: Vec[Token]) -> Registry ! Failure {
+pub fn collect(p: Program, ts: Vec[Token]) -> Registry {
     var reg = Registry{}
     var i = 0
     // Register all names before resolving fields to support forward references.
     while i < p.types.len() {
         let d = p.types[i]
-        let name = ts[d.name].text.clone()
-        if reserved(name) {
-            return err(problem(ts, d.name, "E0011", format("'${name}' is a built-in name and cannot be redefined")))
+        if reservedType(ts[d.name].text) {
+            fail(ts, d.name, "E0011", join3("'", ts[d.name].text, "' is a built-in name and cannot be redefined"))
         }
         if lookup(reg, ts, d.name) >= 0 {
-            return err(problem(ts, d.name, "E0011", format("type '${name}' is already declared")))
+            fail(ts, d.name, "E0011", join3("type '", ts[d.name].text, "' is already declared"))
         }
         reg.entries.push(Info{kind: d.kind, name: d.name})
         i += 1
     }
     i = 0
     while i < p.types.len() {
-        var fields: Vec[Field] = []
+        let d = p.types[i]
+        let fieldStart = reg.fields.len()
         var j = 0
-        while j < p.types[i].fields.len() {
-            let f = p.types[i].fields[j]
-            var k = 0
-            while k < fields.len() {
-                if ts[fields[k].name].text == ts[f.name].text {
-                    return err(problem(ts, f.name, "E0011", format("field '${ts[f.name].text}' is already declared")))
+        while j < d.fieldCount {
+            let f = p.fields[d.fieldStart + j]
+            var k = fieldStart
+            while k < reg.fields.len() {
+                if ts[reg.fields[k].name].text == ts[f.name].text {
+                    fail(ts, f.name, "E0011", join3("field '", ts[f.name].text, "' is already declared"))
                 }
                 k += 1
             }
-            let ty = try resolve(reg, ts, f.ty)
+            let ty = resolve(reg, ts, f.ty)
             if ty.kind == .Str {
-                return err(problem(ts, f.name, "E0301", "a struct field cannot store a borrowed str; use an owned value"))
+                fail(ts, f.name, "E0301", "a struct field cannot store a borrowed str; use an owned value")
             }
             if ty.kind == .Unit {
-                return err(problem(ts, f.name, "U0001", "unit fields are outside the selfhost subset"))
+                fail(ts, f.name, "U0001", "unit fields are outside the selfhost subset")
             }
-            let value = Field{name: f.name, ty: ty, initial: f.initial}
-            try checkDefault(p, reg, ts, value)
-            fields.push(value)
+            let item = Field{name: f.name, ty: ty, initial: f.initial}
+            checkDefault(p, reg, ts, item)
+            reg.fields.push(item)
             j += 1
         }
-        reg.entries[i].fields = fields
-        var variants: Vec[int] = []
+        reg.entries[i].fieldStart = fieldStart
+        reg.entries[i].fieldCount = d.fieldCount
+        let variantStart = reg.variants.len()
         j = 0
-        while j < p.types[i].variants.len() {
-            let name = p.types[i].variants[j]
-            var k = 0
-            while k < variants.len() {
-                if ts[variants[k]].text == ts[name].text {
-                    return err(problem(ts, name, "E0011", format("enum case '${ts[name].text}' is already declared")))
+        while j < d.variantCount {
+            let name = p.lists[d.variantStart + j]
+            var k = variantStart
+            while k < reg.variants.len() {
+                if ts[reg.variants[k]].text == ts[name].text {
+                    fail(ts, name, "E0011", join3("enum case '", ts[name].text, "' is already declared"))
                 }
                 k += 1
             }
-            variants.push(name)
+            reg.variants.push(name)
             j += 1
         }
-        reg.entries[i].variants = variants
+        reg.entries[i].variantStart = variantStart
+        reg.entries[i].variantCount = d.variantCount
         i += 1
     }
 
@@ -275,8 +280,8 @@ pub fn collect(p: Program, ts: Vec[Token]) -> Registry ! Failure {
             if !done[i] {
                 var ready = true
                 var j = 0
-                while j < reg.entries[i].fields.len() {
-                    let ty = reg.entries[i].fields[j].ty
+                while j < reg.entries[i].fieldCount {
+                    let ty = fieldOf(reg, i, j).ty
                     if ty.kind == .Named && !done[ty.decl] { ready = false }
                     j += 1
                 }
@@ -292,7 +297,7 @@ pub fn collect(p: Program, ts: Vec[Token]) -> Registry ! Failure {
             i = 0
             while done[i] { i += 1 }
             let name = reg.entries[i].name
-            return err(problem(ts, name, "E0017", format("type '${ts[name].text}' has a recursive by-value dependency")))
+            fail(ts, name, "E0017", join3("type '", ts[name].text, "' has a recursive by-value dependency"))
         }
     }
     // Layout order is sufficient for by-value ownership propagation.
@@ -301,8 +306,10 @@ pub fn collect(p: Program, ts: Vec[Token]) -> Registry ! Failure {
     while i < reg.order.len() {
         let index = reg.order[i]
         var hasOwned = false
-        for field in reg.entries[index].fields {
-            if owned(reg, field.ty) { hasOwned = true }
+        var j = 0
+        while j < reg.entries[index].fieldCount {
+            if owned(reg, fieldOf(reg, index, j).ty) { hasOwned = true }
+            j += 1
         }
         reg.entries[index].owned = hasOwned
         i += 1

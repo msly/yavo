@@ -1,0 +1,38 @@
+use std/{fs, os}
+
+fn decode(bytes: Vec[byte]) -> String {
+    var copy: Vec[byte] = []
+    var i = 0
+    while i < bytes.len() {
+        copy.push(bytes[i])
+        i += 1
+    }
+    let text = String.fromUtf8(copy) catch _ {
+        println("invalid utf8")
+        return "?".toString()
+    }
+    return text
+}
+
+fn tryWrite() {
+    fs.writeNewText("missing-dir-for-catch/output.txt", "x") catch _ {
+        println("cannot write")
+        return
+    }
+    println("written")
+}
+
+fn main() {
+    let args = os.args()
+    println(args.len())
+    println(args[0].len() > 0)
+    println(decode([104, 105]))
+    println(decode([195, 169]))
+    println(decode([255]))
+    tryWrite()
+    let missing = fs.readText("missing-dir-for-catch/input.txt") catch _ {
+        println("missing")
+        os.exit(0)
+    }
+    println(missing)
+}

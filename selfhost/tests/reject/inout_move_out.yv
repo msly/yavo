@@ -1,0 +1,9 @@
+fn steal(s: inout String) -> String {
+    let t = s
+    return t
+}
+
+fn main() {
+    var s = "x".toString()
+    println(steal(&s))
+}

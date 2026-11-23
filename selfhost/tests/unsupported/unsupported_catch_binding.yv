@@ -1,0 +1,9 @@
+use std/{fs, os}
+
+fn main() {
+    let text = fs.readText("missing-dir-for-catch/input.txt") catch e {
+        println("missing")
+        os.exit(0)
+    }
+    println(text)
+}

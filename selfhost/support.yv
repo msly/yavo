@@ -1,0 +1,88 @@
+use std/{fs, os}
+
+// Shared text helpers and the fatal diagnostic path of the bootstrap compiler.
+// Locations are UTF-8 byte offsets with one-based lines and Unicode scalar columns.
+
+pub fn decimal(n: int) -> String {
+    var out = String{}
+    var value = n
+    if value < 0 {
+        // The compiler only prints counters, positions and literal magnitudes.
+        out.push("-")
+        value = 0 - value
+    }
+    var digits: Vec[int] = []
+    if value == 0 { digits.push(0) }
+    while value > 0 {
+        digits.push(value % 10)
+        value = value / 10
+    }
+    var i = digits.len()
+    while i > 0 {
+        i -= 1
+        out.push("0123456789"[digits[i]..digits[i] + 1])
+    }
+    return out
+}
+
+// Decimal digits only; returns -1 when the magnitude exceeds int.
+pub fn parseDecimal(text: str) -> int {
+    let maximum = "9223372036854775807"
+    var first = 0
+    while first + 1 < text.len() && text[first] == '0' { first += 1 }
+    let length = text.len() - first
+    if length > maximum.len() { return -1 }
+    if length == maximum.len() && text[first..text.len()] > maximum { return -1 }
+    var value = 0
+    var i = first
+    while i < text.len() {
+        value = value * 10 + (int(text[i]) - int('0'))
+        i += 1
+    }
+    return value
+}
+
+pub fn join2(a: str, b: str) -> String {
+    var out = a.toString()
+    out.push(b)
+    return out
+}
+
+pub fn join3(a: str, b: str, c: str) -> String {
+    var out = a.toString()
+    out.push(b)
+    out.push(c)
+    return out
+}
+
+pub fn join4(a: str, b: str, c: str, d: str) -> String {
+    var out = a.toString()
+    out.push(b)
+    out.push(c)
+    out.push(d)
+    return out
+}
+
+pub fn join5(a: str, b: str, c: str, d: str, e: str) -> String {
+    var out = a.toString()
+    out.push(b)
+    out.push(c)
+    out.push(d)
+    out.push(e)
+    return out
+}
+
+// Prints `path:line:column: code: message` and stops; no output file is open yet.
+pub fn report(path: str, line: int, column: int, code: str, message: str) {
+    var text = path.toString()
+    text.push(":")
+    text.push(decimal(line))
+    text.push(":")
+    text.push(decimal(column))
+    text.push(": ")
+    text.push(code)
+    text.push(": ")
+    text.push(message)
+    eprintln(text)
+    os.exit(1)
+}

@@ -1,0 +1,29 @@
+struct Buffer {
+    text: String
+    count: int = 0
+    parts: Vec[String] = []
+}
+
+fn drain(b: inout Buffer) -> String {
+    b.count += 1
+    return take(&b.text)
+}
+
+fn main() {
+    var text = "first".toString()
+    let old = take(&text)
+    println(old)
+    println(text.len())
+    text.push("second")
+    println(text)
+    var b = Buffer{text: "abc".toString(), parts: ["x".toString(), "y".toString()]}
+    let drained = drain(&b)
+    println(drained)
+    println(b.text.len())
+    println(b.count)
+    let parts = take(&b.parts)
+    println(parts.len())
+    println(b.parts.len())
+    b.text.push("again")
+    println(drain(&b))
+}

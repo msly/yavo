@@ -1,0 +1,9 @@
+fn grow(n: inout int) {
+    n += 1
+}
+
+fn main() {
+    var values = [1, 2, 3]
+    grow(&values[1])
+    println(values[1])
+}

@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""Build and independently validate the Yavo-written subset frontend.
+"""Build and independently validate the Yavo-written compiler and its fixed point.
 
-This is a stage-0-built frontend, not a self-hosting success claim. Python only
-orchestrates commands. All subset parsing, checking and C generation happen in
-the Yavo binary; Rust is used separately as a behavioral reference.
+stage0 (Rust) builds stage1 from the assembled Yavo sources. stage1 compiles the
+same sources to stage2 C, stage2 compiles them again to stage3 C, and the two
+generated C files must be byte-identical. Python only concatenates the listed
+source files and orchestrates commands; all parsing, checking and C generation
+happen in the Yavo binaries. Rust is used separately as a behavioral reference.
 """
 from __future__ import annotations
 
@@ -29,6 +31,11 @@ EXE = ".exe" if os.name == "nt" else ""
 PANIC = re.compile(rb"yavo panic \[(P-[A-Z-]+)\]")
 DIAGNOSTIC = re.compile(rb"\b([EU][0-9]{4})\b")
 LOCATION = re.compile(rb":[1-9][0-9]*:[1-9][0-9]*:")
+# The compiler is one program: these files are concatenated in this order, byte for byte.
+COMPILER_PARTS = ["support.yv", "lexer.yv", "model.yv", "parser.yv", "types.yv", "codegen.yv", "main.yv"]
+LEXER_UNIT_PARTS = ["support.yv", "lexer.yv", "lexer_test.yv"]
+CC_FLAGS = {"debug": ["-std=c17", "-fno-strict-aliasing", "-DYV_ALLOC_CHECK", "-O0", "-g"],
+            "release": ["-std=c17", "-fno-strict-aliasing", "-DYV_ALLOC_CHECK", "-O2", "-s"]}
 
 
 def digest(path):
@@ -123,6 +130,13 @@ def locked_zig(explicit):
     return home / "toolchains" / ("zig-" + arch + "-" + host + "-" + version) / ("zig" + EXE), version
 
 
+def assemble(parts, target):
+    data = b"".join((SELFHOST / part).read_bytes() for part in parts)
+    target.write_bytes(data)
+    return {"path": str(target), "parts": [{"file": part, "sha256": digest(SELFHOST / part)} for part in parts],
+            "bytes": len(data), "sha256": hashlib.sha256(data).hexdigest()}
+
+
 def prefix_path(case):
     relative = Path(case["source_prefix"])
     source = (SELFHOST / relative).resolve()
@@ -182,7 +196,7 @@ def main():
     frontend_env = dict(environment, PATH="")
     report = {"schema": "yavo-selfhost-bootstrap/1", "status": "running",
               "achieved": "not_yet_validated", "self_hosted": False,
-              "scope": "independent subset compiler; no stage2/stage3 self-compilation",
+              "scope": "bootstrap-subset compiler written in Yavo; stage1 -> stage2 -> stage3 fixed point",
               "host": {"platform": platform.platform(), "machine": platform.machine()},
               "work": str(work), "checks": [], "cases": []}
 
@@ -232,16 +246,57 @@ def main():
         if not report["checks"][-1]["passed"]:
             raise RuntimeError("Zig version does not match compiler/toolchain.lock")
 
+        bundle = work / "yavo-selfhost.yv"
+        report["inputs"]["compiler_bundle"] = assemble(COMPILER_PARTS, bundle)
+        unit_source = work / "lexer-test.yv"
+        report["inputs"]["lexer_unit_bundle"] = assemble(LEXER_UNIT_PARTS, unit_source)
         binary = work / ("yavo-selfhost" + EXE)
-        build = command("build-selfhost", [stage0, "build", SELFHOST / "main.yv",
+        build = command("build-selfhost", [stage0, "build", bundle,
                                          "--release", "-o", binary], timeout=240)
         check("build_yavo_frontend", succeeded(build) and binary.is_file(), command=build["record"])
         if not report["checks"][-1]["passed"]:
-            raise RuntimeError("stage0 could not compile selfhost/main.yv")
+            raise RuntimeError("stage0 could not compile the assembled selfhost compiler")
         report["inputs"]["subset_compiler"] = {"path": str(binary), "sha256": digest(binary)}
 
+        # Self-compilation: stage1 (built by stage0) -> stage2 C -> stage2 -> stage3 C.
+        stages = work / "stages"
+        stages.mkdir()
+        stage2_c, stage3_c = stages / "stage2.c", stages / "stage3.c"
+        stage2, stage3 = stages / ("stage2" + EXE), stages / ("stage3" + EXE)
+        self_check = command("stage1-check-self", [binary, "check", bundle], frontend=True, timeout=60)
+        emit2 = command("stage1-emit-stage2", [binary, "emit-c", bundle, "-o", stage2_c], frontend=True, timeout=60)
+        build2 = command("build-stage2", [zig, "cc", *CC_FLAGS["release"], "-I", COMPILER / "runtime",
+                                          stage2_c, "-o", stage2], timeout=600) if succeeded(emit2) else None
+        emit3 = (command("stage2-emit-stage3", [stage2, "emit-c", bundle, "-o", stage3_c], frontend=True, timeout=60)
+                 if build2 is not None and succeeded(build2) else None)
+        build3 = (command("build-stage3", [zig, "cc", *CC_FLAGS["release"], "-I", COMPILER / "runtime",
+                                           stage3_c, "-o", stage3], timeout=600)
+                  if emit3 is not None and succeeded(emit3) else None)
+        fixed_point = (succeeded(self_check) and succeeded(emit2) and emit3 is not None and succeeded(emit3)
+                       and stage2_c.read_bytes() == stage3_c.read_bytes())
+        stage_record = {
+            "stage1_check": self_check["record"], "stage1_emit": emit2["record"],
+            "stage2_build": build2["record"] if build2 else None,
+            "stage2_emit": emit3["record"] if emit3 else None,
+            "stage3_build": build3["record"] if build3 else None,
+        }
+        if stage2_c.is_file():
+            stage_record["stage2_c"] = {"bytes": stage2_c.stat().st_size, "sha256": digest(stage2_c)}
+        if stage3_c.is_file():
+            stage_record["stage3_c"] = {"bytes": stage3_c.stat().st_size, "sha256": digest(stage3_c)}
+        if stage2.is_file():
+            stage_record["stage2_sha256"] = digest(stage2)
+        if stage3.is_file():
+            stage_record["stage3_sha256"] = digest(stage3)
+        report["stages"] = stage_record
+        check("self_compilation_fixed_point", fixed_point, stage2_c_equals_stage3_c=fixed_point)
+        check("stage3_binary_reproduces_stage2", build3 is not None and succeeded(build3) and stage2.is_file()
+              and stage3.is_file() and digest(stage2) == digest(stage3))
+        if not fixed_point:
+            stage2 = None
+
         unit = work / ("lexer-test" + EXE)
-        unit_build = command("build-lexer-unit", [stage0, "build", SELFHOST / "lexer_test.yv",
+        unit_build = command("build-lexer-unit", [stage0, "build", unit_source,
                                                 "-o", unit], timeout=240)
         unit_run = command("run-lexer-unit", [unit], frontend=True, timeout=15) if succeeded(unit_build) else None
         check("lexer_units", succeeded(unit_build) and unit_run is not None and succeeded(unit_run),
@@ -273,6 +328,13 @@ def main():
             oracle = command(name + "-reference-check", [stage0, "check", source, "--json"])
             checked = command(name + "-subset-check", [binary, "check", source], frontend=True, timeout=15)
             item.update(reference_check=oracle["record"], subset_check=checked["record"])
+            # stage2 is the compiler that compiled itself; it must agree with stage1 exactly.
+            stage2_agrees = False
+            if stage2 is not None:
+                again = command(name + "-stage2-check", [stage2, "check", source], frontend=True, timeout=15)
+                stage2_agrees = (again["record"]["exit_code"] == checked["record"]["exit_code"]
+                                 and again["stdout"] == checked["stdout"] and again["stderr"] == checked["stderr"])
+                item["stage2_check"] = again["record"]
             if kind in ("reject", "unsupported", "shared_unsupported"):
                 diagnostic_codes = codes(checked)
                 expected_code = case.get("diagnostic")
@@ -297,7 +359,7 @@ def main():
                             reference_diagnostics=codes(oracle),
                             emit_rejected_new=emitted["record"], emit_rejected_existing=preserved["record"],
                             no_output_created=no_new_file, existing_output_preserved=target.read_bytes() == sentinel)
-                item["passed"] = (oracle_matches and rejected(checked) and wanted_code
+                item["passed"] = (stage2_agrees and oracle_matches and rejected(checked) and wanted_code
                                   and bool(LOCATION.search(checked["stderr"]))
                                   and checked["stdout"] == b"" and rejected(emitted) and rejected(preserved)
                                   and no_new_file and target.read_bytes() == sentinel)
@@ -309,6 +371,14 @@ def main():
                                  frontend=True, timeout=15)
                 deterministic = (succeeded(emit) and succeeded(repeat) and c_file.is_file()
                                  and repeated.is_file() and c_file.read_bytes() == repeated.read_bytes())
+                if stage2 is not None and deterministic:
+                    stage2_file = directory / "stage2.c"
+                    stage2_emit = command(name + "-stage2-emit", [stage2, "emit-c", source, "-o", stage2_file],
+                                          frontend=True, timeout=15)
+                    stage2_agrees = (stage2_agrees and succeeded(stage2_emit) and stage2_file.is_file()
+                                     and stage2_file.read_bytes() == c_file.read_bytes())
+                    item["stage2_emit"] = stage2_emit["record"]
+                deterministic = deterministic and stage2_agrees
                 item.update(emit=emit["record"], emit_repeat=repeat["record"],
                             deterministic_c=deterministic, modes=[])
                 if c_file.exists():
@@ -321,8 +391,7 @@ def main():
                     flags = ["--release"] if mode == "release" else []
                     reference_build = command(name + "-" + mode + "-reference-build",
                                               [stage0, "build", source, *flags, "-o", reference])
-                    cc_flags = ["-std=c17", "-fno-strict-aliasing", "-DYV_ALLOC_CHECK"]
-                    cc_flags += ["-O2", "-s"] if mode == "release" else ["-O0", "-g"]
+                    cc_flags = CC_FLAGS[mode]
                     candidate_build = command(name + "-" + mode + "-candidate-build",
                                               [zig, "cc", *cc_flags, "-I", COMPILER / "runtime",
                                                c_file, "-o", candidate])
@@ -398,11 +467,6 @@ def main():
             check("symlink_output_guard", guard["record"]["exit_code"] == 3
                   and not guard["record"]["timed_out"] and guard_source.read_bytes() == original
                   and symlink.is_symlink() and symlink.read_bytes() == original, command=guard["record"])
-        own_source = command("self-source-boundary", [binary, "check", SELFHOST / "main.yv"],
-                             frontend=True, timeout=15)
-        check("self_compilation_not_yet_supported", own_source["record"]["exit_code"] == 1
-              and not own_source["record"]["timed_out"] and "U0001" in codes(own_source),
-              command=own_source["record"])
         # A receipt must not attribute binaries to a source tree edited during the run.
         bound_paths = {
             str(stage0): report["inputs"]["stage0"]["sha256"],
@@ -432,7 +496,8 @@ def main():
         passed = (len(report["cases"]) == len(cases) and report["failed"] == 0
                   and report["checks_failed"] == 0)
         report["status"] = "passed" if passed else "failed"
-        report["achieved"] = "subset-compiler" if passed else "not_yet_validated"
+        report["achieved"] = "self-hosted-fixed-point" if passed else "not_yet_validated"
+        report["self_hosted"] = bool(passed)
     except (OSError, ValueError, KeyError, RuntimeError, subprocess.SubprocessError) as error:
         report.update(status="failed", error=str(error))
     checkpoint()
