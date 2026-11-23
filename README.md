@@ -14,9 +14,10 @@ preserves those results separately from the original local fixed-point receipt.
 frontend.** Rust stage0 remains the daily compiler and supports substantially
 more of the language. The [roadmap](docs/self-hosting.md) keeps SH-3 compiler
 replacement and SH-4 non-compiler application acceptance separate from the
-completed SH-2 fixed point. The first application is
+completed SH-2 fixed point. The first application,
 [yavo-test-summary](examples/test-summary/README.md), a verifier for existing
-experiment logs; it uses stage0 rather than waiting for selfhost feature parity.
+experiment logs, has passed independent acceptance on all three native platforms.
+This completes **one of the three SH-4 applications**; it uses stage0.
 
 The specification starts from **v0.5**, with dated revisions in [docs/decisions.md](docs/decisions.md). Historical revisions remain unchanged under `history/v0.x/` and Git tags `v0.1` through `v0.5`.
 
@@ -52,7 +53,17 @@ Source modules support top-level exports, per-file imports, cyclic imports and o
 
 ### GitHub CI
 
-The current byte increment passed **321/321 local selfhost cases and
+[CI run 45174913978](https://github.com/msly/yavo/actions/runs/45174913978) passed
+**six of six jobs** at `2a64808`. Each native platform passed **335 selfhost cases,
+11 auxiliary checks and 213 test-summary executions** (71 scenarios in Debug,
+Release and an exit-cleanup helper), with reproducible Release C/binaries.
+Linux also passed the complete GCC ASan/UBSan adapter: **126 generated programs,
+stage2 self-compilation, 335 compiler checks, 126 emissions and 8 malformed inputs**.
+All three native archives were downloaded, matched to GitHub's size/SHA-256 and
+inspected against their committed source and execution receipts. See the
+[batch-28 native index](compiler/validation/batch28-native-2026-11-23.json).
+
+The earlier byte increment passed **321/321 local selfhost cases and
 10/10 auxiliary checks**, with all **119 executable inputs** passing both
 frontends in Debug/Release against fixed oracles. Repeated C, normal-exit
 allocation checks and all **476 mode-binary identities** were verified.
@@ -236,9 +247,9 @@ and [module/thread audit](experiments/coldstart-2026-11-22-r5/evidence/manual-re
 
 ## Next work and acceptance gates
 
-1. Validate the first non-compiler CLI with stage0, independent input/output oracles, resource checks and native Linux/Windows/macOS execution. Record actual compile/repair attempts and concrete language/library blockers.
-2. Preserve the completed [SH-2 fixed point](docs/self-hosting.md) as a regression gate and validate the stage2 compiler itself with independent ASan/UBSan. Expand selfhost in order: Result/try, Optional/pop, for, formatting and source modules; use each addition in the compiler itself and reestablish the fixed point.
-3. Complete SH-3 before making it the default compiler, and validate at least three non-compiler CLI projects for SH-4. Preserve frozen conformance, native platform checks, diagnostics and resource validation.
+1. Add user-function Result/try to selfhost and migrate `lex → compile → main` to typed error propagation while preserving current first-error diagnostics. Validate owned payloads, early-return cleanup and partially initialized containers; detailed scope is in [HANDOFF.md](HANDOFF.md).
+2. Preserve the completed [SH-2 fixed point](docs/self-hosting.md) and the established stage2 ASan/UBSan gate. Expand selfhost next through Optional/pop, for, formatting and source modules, using each addition in the compiler itself.
+3. Complete SH-3 before making it the default compiler. SH-4 has one accepted application; add independent structured-text validation and multi-file dependency/index projects, retaining frozen conformance, native checks, diagnostics and resource validation.
 4. Resume the qualified [per-request executor](tools/agent_eval/README.md), [prepared document experiment](experiments/docs-ab-2026-11-22-r6/README.md), 60-task pilot and formal cost study as later product evidence. Live API qualification is still **blocked**, with **0 round-six participant sessions**; it no longer blocks compiler development.
 5. Remaining v1 functionality includes user test blocks and `yavo test`, local/Git dependencies and a lockfile, FFI/unsafe/audit, general closures/higher-order parameters, public movable Join and `spawn inout`. Prioritize these only when required by the declared application scope or a concrete bootstrap blocker.
 

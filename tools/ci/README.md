@@ -20,6 +20,13 @@ not the stage2 compiler itself.
 
 ## Batch 28 application and compiler checks
 
+[Run 45174913978](https://github.com/msly/yavo/actions/runs/45174913978) passed
+all six jobs at `2a64808`. Each native platform passed 71 application scenarios
+across 213 executions and 335 bootstrap cases with 11 auxiliary checks. Linux
+also passed the complete stage2 ASan/UBSan adapter. All three native archives
+were downloaded and inspected; the [final index](../../compiler/validation/batch28-native-2026-11-23.json)
+binds the source, jobs, archive digests and inspected receipt identities.
+
 Every native job now runs `python3 tools/ci/test_summary.py`. It compiles the
 first non-compiler application from four modules in three independent empty-cache
 builds, compares Release C and binary identities, and executes the frozen log

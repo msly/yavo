@@ -51,12 +51,17 @@ verification-log grammar in SPEC.md.
 ## Development evidence
 
 [evidence/DEVELOPMENT.md](evidence/DEVELOPMENT.md) records the initial authoring
-and compile sequence. Each complete-source compiler invocation is preserved in
+and compile sequence. Each authoring compiler invocation is preserved in
 `evidence/compile-attempts/` with the four source snapshots, command, diagnostics,
 exit status, elapsed time and source/compiler/runtime/toolchain identities.
 Provider token usage and cost were unavailable and remain unknown.
 
-The author's real-input smoke result is
-`evidence/real-input-smoke.json`. Independent contract tests, platform execution
-and reproducibility evidence are separate from the authoring check; consult
-their final receipts for the tested source identity and scope.
+The author's real-input smoke result is `evidence/real-input-smoke.json`.
+Independent acceptance passed on Linux x86-64, Windows x86-64 and macOS arm64:
+each platform ran 71 applicable scenarios in Debug, Release and an exit-cleanup
+helper, for **213 successful executions** (142 normal plus 71 cleanup checks).
+Two independent Release builds produced identical C and binaries within each
+platform. The cleanup helper checks tracked heap balances; it is not ASan.
+See the [local summary](../../compiler/validation/test-summary-2026-11-23.json)
+and [native CI index](../../compiler/validation/batch28-native-2026-11-23.json)
+for source identities, output checks, reproducibility and archived evidence.

@@ -35,3 +35,23 @@ subsequent repairs must be appended rather than replacing this authoring record.
 Token usage, serving-model identity, sampling parameters and monetary cost were
 not exposed by this authoring environment. They are unknown; the compile count
 is not a substitute for these metrics.
+
+## Independent acceptance
+
+The same four application modules subsequently passed the independent local
+gate and all three native platforms in
+[CI run 45174913978](https://github.com/msly/yavo/actions/runs/45174913978),
+at `2a6480802bc222fae139b8f9458b4b9eee60a5d4`. Each platform passed 71 applicable
+scenarios across Debug, Release and a separate exit-cleanup helper (213
+executions), with two independent Release C/binary identities matching.
+The three downloaded native archives were checked against their GitHub
+size/SHA-256 and committed application sources; actual outputs and exit codes
+were inspected. The [native index](../../../compiler/validation/batch28-native-2026-11-23.json)
+retains the final evidence and the initial artifact-upload failure separately.
+
+That upload failure came from deliberate CR/LF fixture filenames. Packaging
+their original names, bytes and empty directories inside tar.gz fixed the
+artifact-service restriction; application source and the frozen oracle did not
+change. Independent acceptance builds are separate from the three authoring
+compiler invocations above. The authoring count remains one source version and
+zero compile-repair rounds; usage and monetary cost remain unknown.

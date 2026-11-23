@@ -6,9 +6,9 @@
 
 **SH-2 引导子集自举固定点已完成，下一阶段是 SH-3 编译器接替与 SH-4 真实 CLI 交付。** `4739ffc` 的 [CI run 45150424099](https://github.com/msly/yavo/actions/runs/45150424099) 三平台原生固定点通过，6/6 jobs 成功；[独立原生索引](compiler/validation/selfhost-fixed-point-native-2026-11-23.json) 保存 run、job/step 与工件元数据，原 `67794d9` 本机回执不改写。
 
-**第二十八批新增首个真实应用 `examples/test-summary/` 和 stage2 编译器自身的 GCC ASan/UBSan 门。** CLI 用现有 Rust stage0，读取仓库真实测试日志，核验逐用例结果与末行汇总，输出稳定 TSV。四模块首次 check、Debug、Release 均通过，1 个源码版本、3 次作者编译调用、0 编译修复；独立应用门已在 Linux 通过 71 个适用场景的 Debug/Release 142 次执行、退出清理辅助产物 71 次执行（合计 213/213），以及两次独立 Release 的 C/二进制一致性。真实 String clean/leak 探针分别保持 exit 2 和检测为 exit 102；本批三平台 CI 结果在完成后补充。
+**第二十八批完成首个真实应用 `examples/test-summary/` 和 stage2 编译器自身的 GCC ASan/UBSan 门。** CLI 用现有 Rust stage0，读取仓库真实测试日志，核验逐用例结果与末行汇总，输出稳定 TSV。四模块首次 check、Debug、Release 均通过，1 个源码版本、3 次作者编译调用、0 编译修复。`2a64808` 的 [CI run 45174913978](https://github.com/msly/yavo/actions/runs/45174913978) **6/6 jobs 成功**；三个原生平台分别通过 71 个适用场景的 Debug/Release 142 次执行、退出清理辅助产物 71 次执行（各 213/213），以及两次独立 Release 的 C/二进制一致性。真实 String clean/leak 探针分别保持 exit 2 和检测为 exit 102；三份原生归档已下载并核对大小、SHA-256、源码和执行证据，见[最终索引](compiler/validation/batch28-native-2026-11-23.json)。
 
-本批本机固定点复验 **335/335 cases、11/11 checks、0 skip**。独立 Linux/GCC 14.2 的 stage2 检查已通过：自编译、335 checks、126 emits、8 个固定坏输入；原有 126 程序 sanitizer 与 3 项能力探针也通过。完整 adapter 及本批应用的三平台原生执行尚待本批推送后的 CI 确认。
+本批三个原生平台均复验固定点 **335/335 cases、11/11 checks、0 skip**。Linux CI 的 GCC 13.3 完整 adapter 已通过：stage2 自编译、335 checks、126 emits、8 个固定坏输入，原有 126 程序 sanitizer 与 3 项能力探针。本机独立 GCC 14.2 的分项验证保留在原摘要中；其历史 pending/not_run 字段不改写，由本批最终 CI 索引补充后续确认。
 
 Rust stage0 仍是日常编译器，编译器/运行时/冻结规格未因本批改变；已有 Rust Debug/Release 各 145/0/1，冻结 129 项为 124 pass、3 unsupported、2 superseded。第六轮文档实验仍 0 会话、0 交付，真实 usage 资格未取得。SH-4 需要三个独立应用，首个应用不能替代整阶段验收。
 
@@ -193,7 +193,7 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 ## 10. 下一个会话的第一步
 
 1. 检查 Git 状态、最新提交与 CI；先读本批第 12 节，再读 [自举路线](docs/self-hosting.md)、[selfhost 说明](selfhost/README.md)及首个[应用契约](examples/test-summary/SPEC.md)。已有固定点和首个 CLI 的工作无需从头重做。
-2. **下一个编译器功能是 Result 与 `try`。** 先在外部正负例中与 stage0 接受范围、错误码对齐，再让编译器自身替换首错即退出的内部处理；覆盖临时对象和部分初始化 Vec 元素的提前退出清理，然后重新达到固定点。
+2. **下一个编译器功能是用户函数 Result 与 `try`，真实迁移限于 `lex → compile → main`。** 先在外部正负例中对齐 stage0 的 `T ! E`、成功包装、`err`、`try` 与有名/匿名 `catch`；词法器改为返回 `Vec[Token] ! Diagnostic`，compile 传播，main 捕获并保留当前首个诊断、错误码和位置。parser/types/codegen 的首错退出暂不改写。重点验收拥有载荷的移动、内外作用域临时值、部分初始化 Vec/struct、实参求值顺序及 catch 的 return/break/continue；Vec 字面量临时值须及早登记真实元素类型，长度只计已初始化元素。用正常返回的入口接住错误，让堆块检查实际运行，再重新达到固定点。
 3. 之后按 Optional/`pop` → `for` → 插值/`format` → 源模块顺序扩大引导子集。每项让编译器源码实际使用；现有 stage0 支持某能力不等于 selfhost 已移植。
 4. SH-4 应用线继续用 stage0，后续选择结构化文本校验和多文件依赖/索引工具；用真实阻塞决定最小 `yavo test`、文件/进程 API、依赖锁定与分发的顺序。第一款应用完整入口是 `python3 tools/ci/test_summary.py`，本机 Python 路径见第 2 节。
 5. 自举改动保持 stage2.c = stage3.c、stage2 与 stage1 全用例一致；Linux 的 `tools/ci/selfhost_sanitize.py` 同时要求生成程序门和编译器自身门通过。保持冻结规格、Debug/Release 和三平台原生回归；不要同时运行共用临时目录的两条 cargo test。
@@ -209,7 +209,7 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - 行为差异只有一处：原前端在循环重检（replayBody）里为对齐 stage0 吞掉非 E0402 错误，首错即退出后不再吞掉。全部旧用例未出现差异；若以后遇到 stage0 接受而子集在循环重检中报错的程序，先查这里。
 - 性能：stage1 编译自身约 0.03 s，生成 C 574 KB；Zig 构建约 5 s。完整门约 2 分 40 秒（4 核服务器）。
 - CI：`67794d9` 的 [run 45147299836](https://github.com/msly/yavo/actions/runs/45147299836) 中 Linux x86-64（含 Rust 全量与独立 ASan/UBSan 作业）、Windows x86-64 及其余三项通过；macOS arm64 的 selfhost receipt 显示固定点成立（stage2.c = stage3.c，574,333 字节；335/335），唯一失败是 `stage3_binary_reproduces_stage2`：Mach-O 的 ad-hoc 签名写入输出文件名，stage2/stage3 用了不同文件名。修正为两代都输出为各自目录下的 `yavo-selfhost`（`4739ffc`），其 [run 45150424099](https://github.com/msly/yavo/actions/runs/45150424099) **6/6 jobs 成功**：Linux x86-64、Windows x86-64、macOS arm64 原生 selfhost 步骤全部通过，固定点在三平台原生确认。下载 macOS 归档用的是本机 git 凭据调用 artifacts API。
-- 未覆盖：stage2 本身未跑 GCC ASan/UBSan（sanitizer 作业仍覆盖 stage1 生成的程序 C）。
+- 第二十七批当时未覆盖：stage2 本身未跑 GCC ASan/UBSan（sanitizer 作业仅覆盖 stage1 生成的程序 C）。第二十八批补齐，见第 12 节。
 
 ## 12. 第二十八批：真实 CLI 与 stage2 内存检查（2026-11-23）
 
@@ -219,7 +219,8 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - 应用最终 Linux 门为 213/213（Debug/Release 142，加退出检查辅助产物 71）；原始 C/runtime 不改写，通过独立 forced-include shim 在显式退出前检查堆块。clean/leak 两个真实 String 探针先验证辅助检查有效。runtime、shim、probe、生成 C 均从全新目录的哈希绑定副本编译；三次原生构建的源副本、C、binary 及辅助产物运行后全部复验，避免同名头遮蔽或工件在执行中变化。见 `compiler/validation/test-summary-2026-11-23.json`。
 - `tools/ci/selfhost_sanitize.py` 保留原 126 个生成程序门；新增 `selfhost_compiler_sanitize.py` 只额外 GCC 编译一次实际 stage2 C，随后执行自编译、335 checks、126 emits 与 8 个坏输入压力用例。当前 stage2 C 与 runtime 复制到全新构建目录并逐字节核对，防止同目录同名头遮蔽已绑定 runtime。
 - 独立 GCC 14.2 本机验证通过，详细范围及来源绑定见 `compiler/validation/stage2-sanitizer-2026-11-23.json`；正常编译器退出有分配检查，首错 `os.exit` 路径不声称泄漏检查。LSan、TSan 和其他平台 sanitizer 不在本批范围。
-- 初始提交 `aa8eb56` 的 run 45172624540 中，macOS 全部测试（含应用 213/213）成功，唯独 artifact 上传拒绝测试有意构造的 CR/LF 文件名。已补 `package_test_summary.py`：原始名字与字节打入 tar.gz，仅省略可重建缓存；workflow 排除直接上传原目录并上传容器。应用与 oracle 未改，1,324 个本机包成员逐字节核对通过。初始失败保留在 `compiler/validation/batch28-ci-initial-2026-11-23.json`；修正后重新运行三平台 CI，最终结果在完成后补充。
+- 初始提交 `aa8eb56` 的 run 45172624540 中，macOS 全部测试（含应用 213/213）成功，唯独 artifact 上传拒绝测试有意构造的 CR/LF 文件名。修正提交 `2a64808` 增加 `package_test_summary.py`：原始名字与字节打入 tar.gz，保留空目录，仅省略可重建缓存；workflow 排除直接上传原目录并上传容器。应用与 oracle 未改，本机封装检查覆盖 1,324 个文件及 453 个目录。初始失败保留在 `compiler/validation/batch28-ci-initial-2026-11-23.json`。
+- 修正后的 [run 45174913978](https://github.com/msly/yavo/actions/runs/45174913978) **6/6 jobs 成功**。三平台应用各 213/213，自举各 335/335、11/11；Linux 完整 stage2 sanitizer adapter 通过。三份原生 ZIP 已下载并匹配 GitHub 大小/SHA-256，离线复核实际应用输出、源副本、Release 产物、固定点 C/二进制与 Linux stage2 命令流；runner 原始 stage0/Zig/GCC 库未包含在 ZIP 中的身份仅按回执记录。最终来源与结果在 `compiler/validation/batch28-native-2026-11-23.json`。SH-4 目前完成 1/3 个独立应用，Rust stage0 继续承担日常编译。
 
 ## 历史批次（已移出）
 
