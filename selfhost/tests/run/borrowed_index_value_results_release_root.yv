@@ -1,0 +1,26 @@
+struct Words { values: Vec[String] }
+struct Pair { first: int, second: int }
+struct Entry { text: String, position: Pair, numbers: Vec[int] }
+struct Entries { values: Vec[Entry] }
+fn wordCount(words: Words) -> int { return words.values.len() }
+fn entryCount(entries: Entries) -> int { return entries.values.len() }
+fn showSize(size: int, count: int) { println(size)
+    println(count)
+}
+fn showText(text: String, count: int) { println(text)
+    println(count)
+}
+fn showPair(pair: Pair, count: int) { println(pair.first)
+    println(pair.second)
+    println(count)
+}
+fn main() {
+    let words = ["left".toString(), "right".toString()]
+    showSize(words[0].len(), wordCount(Words{values: words}))
+    let text = ["copy".toString()]
+    showText(text[0].clone(), wordCount(Words{values: text}))
+    let entries = [Entry{text: "entry".toString(), position: Pair{first: 3, second: 4}, numbers: [6, 7]}]
+    showPair(entries[0].position, entryCount(Entries{values: entries}))
+    let nested = [Entry{text: "nested".toString(), position: Pair{first: 0, second: 0}, numbers: [6, 7]}]
+    showSize(nested[0].numbers[1], entryCount(Entries{values: nested}))
+}

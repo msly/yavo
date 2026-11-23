@@ -1,0 +1,25 @@
+fn find(words: Vec[String], wanted: str) -> int {
+    var i = 0
+    while i < words.len() {
+        if words[i] == wanted { return i }
+        i += 1
+    }
+    return -1
+}
+fn main() {
+    var words = ["skip".toString(), "stop".toString(), "tail".toString()]
+    var i = 0
+    loop {
+        if i >= words.len() { break }
+        if words[i] == "skip" { i += 1
+            continue
+        }
+        println(words[i])
+        break
+    }
+    words.push("added".toString())
+    println(find(words, "tail"))
+    println(find(words, "missing"))
+    println(words[3])
+    println(find(["temporary".toString(), "tail".toString()], "tail"))
+}

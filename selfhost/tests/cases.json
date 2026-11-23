@@ -1542,11 +1542,11 @@
       "diagnostic": "E0014"
     },
     {
-      "id": "unsupported_vec_string_element",
-      "kind": "unsupported",
-      "batch": "vec-copy",
-      "file": "unsupported/unsupported_vec_string_element.yv",
-      "diagnostic": "U0001"
+      "id": "borrowed_index_string_storage",
+      "kind": "run",
+      "batch": "borrow-index",
+      "stdout": "owned\n",
+      "file": "run/borrowed_index_string_storage.yv"
     },
     {
       "id": "unsupported_vec_str_element",
@@ -1760,11 +1760,11 @@
       "diagnostic": "E0402"
     },
     {
-      "id": "unsupported_owned_vec_index_copy_field",
-      "kind": "unsupported",
-      "batch": "owned-vec",
-      "file": "unsupported/unsupported_owned_vec_index_copy_field.yv",
-      "diagnostic": "U0001"
+      "id": "borrowed_index_token_copy_field",
+      "kind": "run",
+      "batch": "borrow-index",
+      "stdout": "1\n",
+      "file": "run/borrowed_index_token_copy_field.yv"
     },
     {
       "id": "unsupported_owned_vec_index_field_write",
@@ -1779,6 +1779,173 @@
       "batch": "owned-vec",
       "file": "unsupported/unsupported_owned_vec_index_replace.yv",
       "diagnostic": "U0001"
+    },
+    {
+      "id": "borrowed_index_string_expressions",
+      "kind": "run",
+      "batch": "borrow-index",
+      "stdout": "alpha\n4\ntrue\ntrue\ntrue\ntrue\n4\nlast\n",
+      "file": "run/borrowed_index_string_expressions.yv"
+    },
+    {
+      "id": "borrowed_index_string_clone_independent",
+      "kind": "run",
+      "batch": "borrow-index",
+      "stdout": "first\nfirst-copy\nsource\nfirst\nsecond\n",
+      "file": "run/borrowed_index_string_clone_independent.yv"
+    },
+    {
+      "id": "borrowed_index_token_scan",
+      "kind": "run",
+      "batch": "borrow-index",
+      "stdout": "0:fn\n3:main\n7:(\n8:)\n10:{\n12:return\n19:42\n22:}\n2\n18\ntrue\n",
+      "example": "borrowed_token_scan.yv",
+      "file": "run/borrowed_index_token_scan.yv"
+    },
+    {
+      "id": "borrowed_index_nested_fields",
+      "kind": "run",
+      "batch": "borrow-index",
+      "stdout": "root\nentry\nsecond\n8\nentry\nfirst\nsecond\nentry\n",
+      "file": "run/borrowed_index_nested_fields.yv"
+    },
+    {
+      "id": "borrowed_index_temporary_lifetimes",
+      "kind": "run",
+      "batch": "borrow-index",
+      "stdout": "later\n7\nmade:inline\n12value\nlater\nitem\n",
+      "file": "run/borrowed_index_temporary_lifetimes.yv"
+    },
+    {
+      "id": "borrowed_index_value_results_release_root",
+      "kind": "run",
+      "batch": "borrow-index",
+      "stdout": "4\n2\ncopy\n1\n3\n4\n1\n7\n1\n",
+      "file": "run/borrowed_index_value_results_release_root.yv"
+    },
+    {
+      "id": "borrowed_index_loop_borrows",
+      "kind": "run",
+      "batch": "borrow-index",
+      "stdout": "stop\n2\n-1\nadded\n1\n",
+      "file": "run/borrowed_index_loop_borrows.yv"
+    },
+    {
+      "id": "borrowed_index_negative_bounds",
+      "kind": "panic",
+      "batch": "borrow-index",
+      "stdout": "before",
+      "panic": "P-INDEX",
+      "file": "panic/borrowed_index_negative_bounds.yv"
+    },
+    {
+      "id": "borrowed_index_upper_bounds",
+      "kind": "panic",
+      "batch": "borrow-index",
+      "stdout": "",
+      "panic": "P-INDEX",
+      "file": "panic/borrowed_index_upper_bounds.yv"
+    },
+    {
+      "id": "borrowed_index_owned_annotation",
+      "kind": "reject",
+      "batch": "borrow-index",
+      "diagnostic": "E0404",
+      "file": "reject/borrowed_index_owned_annotation.yv"
+    },
+    {
+      "id": "borrowed_index_owned_return",
+      "kind": "reject",
+      "batch": "borrow-index",
+      "diagnostic": "E0404",
+      "file": "reject/borrowed_index_owned_return.yv"
+    },
+    {
+      "id": "borrowed_index_push_owner",
+      "kind": "reject",
+      "batch": "borrow-index",
+      "diagnostic": "E0404",
+      "file": "reject/borrowed_index_push_owner.yv"
+    },
+    {
+      "id": "borrowed_index_typed_literal_owner",
+      "kind": "reject",
+      "batch": "borrow-index",
+      "diagnostic": "E0404",
+      "file": "reject/borrowed_index_typed_literal_owner.yv"
+    },
+    {
+      "id": "borrowed_index_owned_field_move",
+      "kind": "reject",
+      "batch": "borrow-index",
+      "diagnostic": "E0401",
+      "file": "reject/borrowed_index_owned_field_move.yv"
+    },
+    {
+      "id": "borrowed_index_struct_clone",
+      "kind": "reject",
+      "batch": "borrow-index",
+      "diagnostic": "E0010",
+      "file": "reject/borrowed_index_struct_clone.yv"
+    },
+    {
+      "id": "borrowed_index_call_owner_move",
+      "kind": "reject",
+      "batch": "borrow-index",
+      "diagnostic": "E0102",
+      "file": "reject/borrowed_index_call_owner_move.yv"
+    },
+    {
+      "id": "unsupported_borrowed_index_string_binding",
+      "kind": "unsupported",
+      "batch": "borrow-index",
+      "diagnostic": "U0001",
+      "file": "unsupported/unsupported_borrowed_index_string_binding.yv"
+    },
+    {
+      "id": "unsupported_borrowed_index_token_binding",
+      "kind": "unsupported",
+      "batch": "borrow-index",
+      "diagnostic": "U0001",
+      "file": "unsupported/unsupported_borrowed_index_token_binding.yv"
+    },
+    {
+      "id": "unsupported_borrowed_index_reference_vector",
+      "kind": "unsupported",
+      "batch": "borrow-index",
+      "diagnostic": "U0001",
+      "file": "unsupported/unsupported_borrowed_index_reference_vector.yv"
+    },
+    {
+      "id": "unsupported_borrowed_index_element_push",
+      "kind": "unsupported",
+      "batch": "borrow-index",
+      "diagnostic": "U0001",
+      "file": "unsupported/unsupported_borrowed_index_element_push.yv"
+    },
+    {
+      "id": "unsupported_borrowed_index_comparison_owner",
+      "kind": "unsupported",
+      "batch": "borrow-index",
+      "diagnostic": "U0001",
+      "reason": "The subset conservatively forbids consuming the outer owner while an indexed borrow is live. Stage0 accepts this source; this case only verifies the explicit U0001 boundary and does not use stage0 runtime behavior as an oracle.",
+      "file": "unsupported/unsupported_borrowed_index_comparison_owner.yv"
+    },
+    {
+      "id": "unsupported_borrowed_index_nested_owner",
+      "kind": "unsupported",
+      "batch": "borrow-index",
+      "diagnostic": "U0001",
+      "reason": "The subset conservatively forbids consuming the outer owner while an indexed borrow is live. Stage0 accepts this source; this case only verifies the explicit U0001 boundary and does not use stage0 runtime behavior as an oracle.",
+      "file": "unsupported/unsupported_borrowed_index_nested_owner.yv"
+    },
+    {
+      "id": "model_original_traversal",
+      "kind": "run",
+      "batch": "borrow-index",
+      "source_prefix": "model.yv",
+      "stdout": "1546\n1148\n10206\n5694\n18594\n1\n7\n0\n20410\nConstruct\n219\n5\n5700\n228\n",
+      "file": "run/model_original_traversal.yv"
     }
   ],
   "promotions": [
@@ -1836,6 +2003,28 @@
       "kind": "run",
       "source_sha256": "c851bf3b5a32ec91e19b76918a275445b987bc113897ec51a66db6de63d6f4f9",
       "reason": "Vectors may own struct elements containing String; the original source uses storage and push without borrowed indexing and is unchanged."
+    },
+    {
+      "previous_id": "unsupported_vec_string_element",
+      "previous_file": "unsupported/unsupported_vec_string_element.yv",
+      "previous_kind": "unsupported",
+      "baseline_commit": "2604318bd1e45fd8e1d515c6604e0f291c8bd581",
+      "id": "borrowed_index_string_storage",
+      "file": "run/borrowed_index_string_storage.yv",
+      "kind": "run",
+      "source_sha256": "2886147e161a16e7434e634ceca378faf2c784a4dd428381b3b7d6d26a22b2dd",
+      "reason": "Expression-scoped read-only borrowing now permits the original indexed String print or Copy field read; the original source bytes are unchanged."
+    },
+    {
+      "previous_id": "unsupported_owned_vec_index_copy_field",
+      "previous_file": "unsupported/unsupported_owned_vec_index_copy_field.yv",
+      "previous_kind": "unsupported",
+      "baseline_commit": "2604318bd1e45fd8e1d515c6604e0f291c8bd581",
+      "id": "borrowed_index_token_copy_field",
+      "file": "run/borrowed_index_token_copy_field.yv",
+      "kind": "run",
+      "source_sha256": "c7e148b1e616b1ff7b44bb21537071b127da9a0fa7a158c8c8f823f9cd25bdb5",
+      "reason": "Expression-scoped read-only borrowing now permits the original indexed String print or Copy field read; the original source bytes are unchanged."
     }
   ]
 }

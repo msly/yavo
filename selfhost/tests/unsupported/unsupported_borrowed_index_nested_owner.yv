@@ -1,0 +1,7 @@
+struct Row { names: Vec[String] }
+struct Store { values: Vec[Row] }
+fn selected(store: Store) -> int { return store.values.len() - 1 }
+fn main() {
+    let values = [Row{names: ["first".toString()]}]
+    println(values[0].names[selected(Store{values: values})])
+}

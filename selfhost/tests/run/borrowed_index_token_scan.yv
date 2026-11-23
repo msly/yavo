@@ -1,0 +1,32 @@
+enum TokenKind { Keyword, Identifier, Symbol, Number }
+struct Token { kind: TokenKind, text: String, offset: int }
+fn keyword(token: Token) -> bool { return token.kind == .Keyword }
+fn show(token: Token) {
+    print(token.offset)
+    print(":")
+    println(token.text)
+}
+fn main() {
+    let tokens = [
+        Token{kind: .Keyword, text: "fn".toString(), offset: 0},
+        Token{kind: .Identifier, text: "main".toString(), offset: 3},
+        Token{kind: .Symbol, text: "(".toString(), offset: 7},
+        Token{kind: .Symbol, text: ")".toString(), offset: 8},
+        Token{kind: .Symbol, text: "{".toString(), offset: 10},
+        Token{kind: .Keyword, text: "return".toString(), offset: 12},
+        Token{kind: .Number, text: "42".toString(), offset: 19},
+        Token{kind: .Symbol, text: "}".toString(), offset: 22},
+    ]
+    var i = 0
+    var keywords = 0
+    var bytes = 0
+    while i < tokens.len() {
+        show(tokens[i])
+        if keyword(tokens[i]) { keywords += 1 }
+        bytes += tokens[i].text.len()
+        i += 1
+    }
+    println(keywords)
+    println(bytes)
+    println(tokens[5].text == "return")
+}

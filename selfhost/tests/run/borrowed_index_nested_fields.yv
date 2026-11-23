@@ -1,0 +1,22 @@
+struct Entry { label: String, metadata: Vec[String], numbers: Vec[int] }
+struct Group { title: String, entries: Vec[Entry] }
+fn lastLabel(entries: Vec[Entry]) -> String {
+    return entries[entries.len() - 1].label.clone()
+}
+fn main() {
+    var groups = [Group{title: "root".toString(), entries: [
+        Entry{label: "entry".toString(), metadata: ["first".toString(), "second".toString()], numbers: [7, 8]},
+    ]}]
+    println(groups[0].title)
+    println(groups[0].entries[0].label)
+    println(groups[0].entries[0].metadata[1])
+    println(groups[0].entries[0].numbers[1])
+    let entries = groups[0].entries.clone()
+    let metadata = groups[0].entries[0].metadata.clone()
+    let label = groups[0].entries[0].label.clone()
+    groups = []
+    println(lastLabel(entries))
+    println(entries[0].metadata[0])
+    println(metadata[1])
+    println(label)
+}

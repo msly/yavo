@@ -1,0 +1,164 @@
+// Appended to the exact model.yv source by source_prefix.
+fn basicCode(kind: BasicType) -> int {
+    if kind == .Unknown { return 0 }
+    if kind == .Unit { return 1 }
+    if kind == .Int { return 2 }
+    if kind == .Bool { return 3 }
+    if kind == .Str { return 4 }
+    if kind == .String { return 5 }
+    if kind == .Vec { return 6 }
+    return 7
+}
+fn typeScore(ty: TypeRef) -> int {
+    return 100 * basicCode(ty.kind) + 10 * (ty.name + 1) + basicCode(ty.elementKind) + ty.elementName + 1
+}
+fn weighted(values: Vec[int]) -> int {
+    var total = 0
+    var i = 0
+    while i < values.len() {
+        total = total + (i + 1) * values[i]
+        i = i + 1
+    }
+    return total
+}
+fn expressionCode(kind: ExprKind) -> int {
+    if kind == .Number { return 2 }
+    if kind == .Binary { return 7 }
+    if kind == .Construct { return 10 }
+    return -1
+}
+fn expressionScore(value: Expression) -> int {
+    return value.token + 10 * expressionCode(value.kind) + 3 * (value.left + 1) + 5 * (value.right + 1) + weighted(value.args) + weighted(value.names) + 7 * basicCode(value.elementKind) + 11 * (value.elementName + 1)
+}
+fn expressionScores(values: Vec[Expression]) -> int {
+    var total = 0
+    var i = 0
+    while i < values.len() {
+        total = total + (i + 1) * expressionScore(values[i])
+        i = i + 1
+    }
+    return total
+}
+fn statementCode(kind: StmtKind) -> int {
+    if kind == .Return { return 3 }
+    if kind == .If { return 4 }
+    return -1
+}
+fn statementScore(value: Statement) -> int {
+    return value.token + 10 * statementCode(value.kind) + typeScore(value.annotation) + 7 * (value.expr + 1) + weighted(value.body) + weighted(value.otherwise)
+}
+fn statementScores(values: Vec[Statement]) -> int {
+    var total = 0
+    var i = 0
+    while i < values.len() {
+        total = total + (i + 1) * statementScore(values[i])
+        i = i + 1
+    }
+    return total
+}
+fn parameterScore(value: Parameter) -> int {
+    return value.name + 3 * typeScore(value.ty)
+}
+fn parameterScores(values: Vec[Parameter]) -> int {
+    var total = 0
+    var i = 0
+    while i < values.len() {
+        total = total + (i + 1) * parameterScore(values[i])
+        i = i + 1
+    }
+    return total
+}
+fn functionScore(value: Function) -> int {
+    return value.name + typeScore(value.result) + parameterScores(value.params) + weighted(value.body)
+}
+fn functionScores(values: Vec[Function]) -> int {
+    var total = 0
+    var i = 0
+    while i < values.len() {
+        total = total + (i + 1) * functionScore(values[i])
+        i = i + 1
+    }
+    return total
+}
+fn fieldScore(value: FieldDecl) -> int {
+    return value.name + typeScore(value.ty) + 5 * (value.initial + 1)
+}
+fn fieldScores(values: Vec[FieldDecl]) -> int {
+    var total = 0
+    var i = 0
+    while i < values.len() {
+        total = total + (i + 1) * fieldScore(values[i])
+        i = i + 1
+    }
+    return total
+}
+fn declarationScore(value: TypeDecl) -> int {
+    var kind = 1
+    if value.kind == .Enum { kind = 2 }
+    return value.name + 10 * kind + fieldScores(value.fields) + weighted(value.variants)
+}
+fn declarationScores(values: Vec[TypeDecl]) -> int {
+    var total = 0
+    var i = 0
+    while i < values.len() {
+        total = total + (i + 1) * declarationScore(values[i])
+        i = i + 1
+    }
+    return total
+}
+fn programScore(program: Program) -> int {
+    return expressionScores(program.expressions) + statementScores(program.statements) + functionScores(program.functions) + declarationScores(program.types)
+}
+fn makeProgram() -> Program {
+    let integer = TypeRef{kind: .Int, elementKind: .Unknown}
+    let boolean = TypeRef{kind: .Bool, elementKind: .Unknown}
+    let named = TypeRef{kind: .Named, name: 7, elementKind: .Unknown}
+    let vector = TypeRef{kind: .Vec, elementKind: .Int, elementName: 5}
+    let unknown = TypeRef{kind: .Unknown, elementKind: .Unknown}
+    let first = Expression{kind: .Number, token: 11, elementKind: .Unknown}
+    let second = Expression{kind: .Number, token: 13, elementKind: .Unknown}
+    let constructed = Expression{kind: .Construct, token: 17, elementKind: .Unknown, args: [0, 1, 0], names: [31, 37, 41]}
+    let binary = Expression{kind: .Binary, token: 19, elementKind: .Unknown, left: 0, right: 1}
+    let firstReturn = Statement{kind: .Return, token: 23, annotation: integer, expr: 0}
+    let secondReturn = Statement{kind: .Return, token: 29, annotation: integer, expr: 1}
+    let branch = Statement{kind: .If, token: 43, annotation: unknown, expr: 3, body: [0, 1], otherwise: [1]}
+    let firstParam = Parameter{name: 53, ty: integer}
+    let secondParam = Parameter{name: 59, ty: named}
+    let thirdParam = Parameter{name: 67, ty: vector}
+    let firstFunction = Function{name: 47, result: integer, params: [firstParam, secondParam], body: [2, 0]}
+    let secondFunction = Function{name: 61, result: boolean, params: [thirdParam], body: [1]}
+    let firstField = FieldDecl{name: 79, ty: integer, initial: 0}
+    let secondField = FieldDecl{name: 83, ty: named, initial: 1}
+    let thirdField = FieldDecl{name: 89, ty: vector}
+    let structure = TypeDecl{kind: .Struct, name: 73, fields: [firstField, secondField, thirdField]}
+    let enumeration = TypeDecl{kind: .Enum, name: 97, variants: [101, 103, 107]}
+    return Program{expressions: [first, second, constructed, binary], statements: [firstReturn, secondReturn, branch], functions: [firstFunction, secondFunction], types: [structure, enumeration]}
+}
+fn main() {
+    var program = makeProgram()
+    println(expressionScores(program.expressions))
+    println(statementScores(program.statements))
+    println(functionScores(program.functions))
+    println(declarationScores(program.types))
+    println(programScore(makeProgram()))
+    println(program.expressions[2].args[1])
+    println(program.functions[0].params[1].ty.name)
+    let savedKind = program.expressions[2].kind
+    let savedResult = program.functions[0].result
+    let savedToken = program.expressions[3].token
+    let args = program.expressions[2].args.clone()
+    let branches = program.statements[2].body.clone()
+    let params = program.functions[0].params.clone()
+    let fields = program.types[0].fields.clone()
+    let variants = program.types[1].variants.clone()
+    let functions = program.functions.clone()
+    program = Program{}
+    println(programScore(program))
+    println(weighted(args) + weighted(branches) + parameterScores(params) + fieldScores(fields) + weighted(variants) + functionScores(functions))
+    println(savedKind)
+    println(typeScore(savedResult) + savedToken)
+    println(makeProgram().functions[1].params[0].ty.elementName)
+    println(functionScore(makeProgram().functions[0]))
+    let clonedNames = makeProgram().expressions[2].names.clone()
+    println(weighted(clonedNames))
+}

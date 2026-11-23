@@ -1,0 +1,24 @@
+struct Item { text: String }
+fn items() -> Vec[Item] { return [Item{text: "item".toString()}] }
+fn words() -> Vec[String] { return ["made".toString(), "later".toString()] }
+fn word(n: int) -> String {
+    print(n)
+    return "value".toString()
+}
+fn selected() -> int { print(2)
+    return 0
+}
+fn show(left: String, right: String) {
+    print(left)
+    print(":")
+    println(right)
+}
+fn main() {
+    println(words()[1])
+    println(["literal".toString()][0].len())
+    show(words()[0], ["inline".toString()][0])
+    println([word(1)][selected()])
+    let copied = words()[1].clone()
+    println(copied)
+    println(items()[0].text)
+}

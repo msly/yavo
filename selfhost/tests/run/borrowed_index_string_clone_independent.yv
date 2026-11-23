@@ -1,0 +1,18 @@
+fn detached() -> String {
+    let words = ["source".toString()]
+    return words[0].clone()
+}
+fn main() {
+    var words = ["first".toString(), "second".toString()]
+    var copied = words[0].clone()
+    let snapshot = words.clone()
+    words.reserve(words[1].len())
+    words.push(words[0].clone())
+    println(words[2])
+    words = []
+    copied.push("-copy")
+    println(copied)
+    println(detached())
+    println(snapshot[0])
+    println(snapshot[1])
+}

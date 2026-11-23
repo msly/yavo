@@ -1,0 +1,9 @@
+struct Store { values: Vec[String] }
+fn replacement(store: Store) -> String {
+    if store.values.len() == 1 { return "first".toString() }
+    return "other".toString()
+}
+fn main() {
+    let values = ["first".toString()]
+    println(values[0] == replacement(Store{values: values}))
+}

@@ -1,0 +1,6 @@
+struct Store { values: Vec[String] }
+fn count(store: Store) -> int { return store.values.len() }
+fn show(text: String, n: int) { println(text)
+ println(n) }
+fn main() { let values = ["hello".toString()]
+ show(values[0], count(Store{values: values})) }
