@@ -62,7 +62,9 @@ SH-1 的结果只标为“子集编译器”。SH-2 可以标为“子集自举�
 
 本机扩展用例已通过 **372/372 cases、140 个可执行输入的 C 生成**：112 run、28 panic、190 reject、33 unsupported、9 shared_unsupported。Rust Debug/Release 各 **145 通过、0 失败、1 个既有忽略**。本批同时修复 Rust 和自举端的返回完备性缺陷：catch 表达式中的 `break` 必须算作目标循环的退出；18 个缺少返回的拒绝样本均报 E0013，6 个合法循环/闭包边界保留。
 
-真实词法器单元已纳入自举门：直接拼接当前 `support.yv + lexer.yv + lexer_test.yv`，比较 stage1/stage2 C，在 Zig Debug/Release 执行正常退出的堆检查。最终本机门 **372/372 cases、12/12 checks、0 skip**，固定点 C 为 623,204 字节，两代 Linux 二进制均为 293,640 字节；420 份用例 C 与 560 个模式二进制均按回执复核哈希，见[本机验收摘要](../compiler/validation/selfhost-result-2026-11-24.json)。Linux 独立 GCC 应用门将执行 140 个 fixture 加 1 个真实词法器单元；stage2 编译器自身门为 372 checks、140 emits、8 个坏输入压力样本。第二十九批三平台原生结果在提交后确认。
+真实词法器单元已纳入自举门：直接拼接当前 `support.yv + lexer.yv + lexer_test.yv`，比较 stage1/stage2 C，在 Zig Debug/Release 执行正常退出的堆检查。最终本机门 **372/372 cases、12/12 checks、0 skip**，固定点 C 为 623,204 字节，两代 Linux 二进制均为 293,640 字节；420 份用例 C 与 560 个模式二进制均按回执复核哈希，见[本机验收摘要](../compiler/validation/selfhost-result-2026-11-24.json)。
+
+`e355cb3` 的 [CI run 45226925936](https://github.com/msly/yavo/actions/runs/45226925936) **6/6 jobs 成功**：Linux x86-64、Windows x86-64、macOS arm64 各通过 372 cases、12 checks、0 skip，两代 C/二进制一致，真实 lexer 两模式正常返回检查通过。Linux GCC ASan/UBSan 通过 **141 程序（140 fixture + 1 lexer）**，stage2 自编译、372 checks、140 emits、8 个坏输入；三个平台各通过既有 CLI 的 213 次执行。三份原生归档已按 API 大小/哈希、提交源码与实际执行字节完成核验，见[第二十九批原生索引](../compiler/validation/batch29-native-2026-11-24.json)。
 
 ### 第二十七批固定点（历史记录）
 
@@ -96,8 +98,8 @@ SH-1 的结果只标为“子集编译器”。SH-2 可以标为“子集自举�
 | --- | --- | --- |
 | 已完成 | 三平台确认固定点 | `4739ffc` 的 run 45150424099 六项成功，三平台原生固定点通过；见[独立 CI 索引](../compiler/validation/selfhost-fixed-point-native-2026-11-23.json)。原历史本机回执保留原样 |
 | 已完成 | 第一个非编译器 CLI（SH-4 线） | [test-summary](../examples/test-summary/README.md) 使用 stage0，四模块首次 check/Debug/Release 通过，0 编译修复；独立输出、资源、可复现及三平台门已通过 |
-| 本批收尾 | Result/try 与真实词法器验收 | 372 cases、12 checks、固定点、真实 lexer 单元和 stage2 sanitizer 形成源码绑定回执；提交后确认三平台原生结果 |
-| 下一批 | Optional 与 `Vec.pop` | 先对齐空/非空结果及拥有元素的取出、析构和提前退出，再替换 `trunc*` 重建辅助函数，重新通过固定点及资源门 |
+| 已完成 | Result/try 与真实词法器验收 | `e355cb3` 的 run 45226925936 六项成功；三平台各372/12、零跳过，真实 lexer 与 Linux stage2 sanitizer 通过，归档已核验 |
+| 下一批 | Optional 与 `Vec.pop` | 先支持 Copy 元素 pop、可写字段/inout 接收者、推断 `?T` 与显式丢弃，替换五类 Copy 栈的 `trunc*` helper；拥有元素若开放须独立验收转移/析构，否则报 U0001。再通过固定点及资源门 |
 | 后续 | 继续扩大引导子集 | `for`、插值/`format`、模块（替换拼接）。每项先在外部用例中与 stage0 对齐，再迁移编译器源码并重新达到固定点 |
 | 接替阶段 | SH-3 接替 | 子集覆盖既有回归与冻结规格后，再讨论让 Yavo 编译器承担日常 `check`/`build` |
 

@@ -72,10 +72,22 @@ retain the original failures and corrected observations. The
 [final local bootstrap receipt](compiler/validation/selfhost-result-2026-11-24.json)
 passes **372/372 cases, 12/12 checks and zero skips**, including the real lexer
 unit in Debug/Release. Stage2/stage3 C (623,204 bytes) and binaries match exactly.
-Batch 29 native CI is pending submission.
 
 ### GitHub CI
 
+Batch 29 [run 45226925936](https://github.com/msly/yavo/actions/runs/45226925936)
+passed **six of six jobs** at `e355cb3`. Linux x86-64, Windows x86-64 and macOS
+arm64 each passed **372 selfhost cases, 12 auxiliary checks, zero skips**, the
+real lexer unit in Debug/Release, and **213 test-summary executions**. Rust
+Debug/Release each report 145/0/1 on full Linux, 81/0/1 on selected Windows and
+84/0/1 on selected macOS suites. Linux GCC ASan/UBSan passed **141 generated
+programs**, stage2 self-compilation, **372 checks, 140 emissions and 8 malformed
+inputs**. All three native archives were downloaded and checked against their
+API digests, committed sources and actual command/output files; the
+[batch-29 native index](compiler/validation/batch29-native-2026-11-24.json)
+preserves the platform counts and binds 685 local test-input paths to this commit.
+
+The preceding batch-28
 [CI run 45174913978](https://github.com/msly/yavo/actions/runs/45174913978) passed
 **six of six jobs** at `2a64808`. Each native platform passed **335 selfhost cases,
 11 auxiliary checks and 213 test-summary executions** (71 scenarios in Debug,

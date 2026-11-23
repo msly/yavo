@@ -8,7 +8,9 @@
 
 **第二十九批实现用户函数 Result/try，并把真实 `lex → compile → main` 改为拥有型 Diagnostic 传播。** 支持 `T ! E`、成功包装、`ok`/`err`、`try` 和终止式有名/匿名 `catch`；拥有载荷、实参临时值、部分初始化 Vec/struct 在提前退出时清理。原 335 个用例保留，新增 37 个，当前 **372 cases、140 个可执行输入**。Rust 与 selfhost 同时修复 catch 表达式内 break 漏入返回完备性分析的旧缺陷，18 个 E0013 回归及 6 个合法边界保留独立证据。
 
-本批 Rust Debug/Release 全量各 **145/0/1**，冻结 129 项维持 **124 pass、3 unsupported、2 superseded**。最终完整自举 **372/372 cases、12/12 checks、0 skip**，包含真实 lexer 单元的两代 C 一致与 Debug/Release 堆块检查；固定点 C 为 623,204 字节，两代 Linux 二进制均为 293,640 字节。420 份用例 C 与 560 个模式二进制已复验哈希，见[本机回执](compiler/validation/selfhost-result-2026-11-24.json)。Linux sanitizer 将覆盖 140 个 manifest 程序加真实 lexer 单元，共 141 个；stage2 自身仍检查/生成全部 372/140 输入及 8 个坏输入。三平台 CI 在提交后确认。
+本批 Rust Debug/Release 全量各 **145/0/1**，冻结 129 项维持 **124 pass、3 unsupported、2 superseded**。最终完整自举 **372/372 cases、12/12 checks、0 skip**，包含真实 lexer 单元的两代 C 一致与 Debug/Release 堆块检查；固定点 C 为 623,204 字节，两代 Linux 二进制均为 293,640 字节。420 份用例 C 与 560 个模式二进制已复验哈希，见[本机回执](compiler/validation/selfhost-result-2026-11-24.json)。
+
+实现 `e355cb3` 的 [CI run 45226925936](https://github.com/msly/yavo/actions/runs/45226925936) **6/6 jobs 全部通过**。三平台各 372/372、12/12、0 skip，两代 C/二进制一致，真实 lexer 两模式及 CLI 各 213 次执行通过。Linux GCC ASan/UBSan 通过 141 程序，stage2 自编译、372 checks、140 emits、8 个坏输入；Windows/macOS 选定 Rust 套件各模式分别为 81/0/1、84/0/1。三份原生归档已下载并核验，共重哈希 35,461 个文件、核对 19,908 条嵌入流记录，见[最终原生索引](compiler/validation/batch29-native-2026-11-24.json)。
 
 Rust stage0 仍是日常编译器；本批改动 Rust 检查器，运行时和冻结规格未变。SH-4 已有首个真实应用 `examples/test-summary/`，第二十八批 [run 45174913978](https://github.com/msly/yavo/actions/runs/45174913978) 六项通过、每原生平台 213/213 次应用执行并完成归档核验，见第 12 节；阶段进度仍为 **1/3 个应用**。第六轮文档实验仍 0 会话、0 交付，真实 usage 资格未取得。
 
@@ -194,7 +196,7 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 ## 10. 下一个会话的第一步
 
 1. 检查 Git 状态、最新提交与 CI；先读本批第 13 节，再读 [自举路线](docs/self-hosting.md)、[selfhost 说明](selfhost/README.md)及首个[应用契约](examples/test-summary/SPEC.md)。已有固定点、Result 词法传播与首个 CLI 的工作无需从头重做。
-2. **下一批是 Optional 与 `Vec.pop`，落地目标是删除五类复制式 trunc 辅助函数。** 先对齐 stage0 的 `T?`、some/none、匹配/解包以及 pop 的空/非空行为，确定最小可用语法；覆盖 Copy、String、拥有型 struct 元素的移动、丢弃、空值与借用冲突。再把 `truncInts`、`truncBools`、`truncLocals`、`truncTemps`、`truncLoops` 的调用改为原地 pop，保留析构与作用域语义，减少栈回退时的分配和复制。验收真实编译器路径、固定点、stage1/stage2 差分及独立 sanitizer，不凭 helper 删除推断性能提升。
+2. **下一批是 Optional 与 `Vec.pop`，落地目标是删除五类复制式 trunc 辅助函数。** 五类内部栈的元素均为 Copy；最小迁移需要零参 pop、可写字段/inout 接收者、推断的 `?T` 返回值及显式丢弃，用 `while v.len() > n { let _ = v.pop() }` 原地截断。先对齐 stage0 的空/非空语义及借用/预留锁，再替换 `truncInts`、`truncBools`、`truncLocals`、`truncTemps`、`truncLoops`，保留 cleanTemps/cleanLocals 先清理再删除记录的顺序。拥有元素的 pop 若开放，必须另验 Optional 丢弃、载荷转移和提前退出的恰好一次析构；未开放则明确 U0001。完整 Optional 表层语法和泛型枚举不是删除 helper 的前置条件。验收真实编译器路径、固定点、stage1/stage2 差分及独立 sanitizer，不凭 helper 删除推断性能提升。
 3. 随后按 `for` → 插值/`format` → 源模块顺序扩大引导子集。parser/types/codegen 的多错误恢复、Result 字段/容器、临时 String view 装 Result 均不夹带进下一批；每项必须有实际需求和独立语义验收。
 4. SH-4 应用线继续用 stage0，后续选择结构化文本校验和多文件依赖/索引工具；用真实阻塞决定最小 `yavo test`、文件/进程 API、依赖锁定与分发的顺序。第一款应用完整入口是 `python3 tools/ci/test_summary.py`，本机 Python 路径见第 2 节。
 5. 自举改动保持 stage2.c = stage3.c、stage2 与 stage1 全用例一致；Linux 的 `tools/ci/selfhost_sanitize.py` 同时要求生成程序门和编译器自身门通过。保持冻结规格、Debug/Release 和三平台原生回归；不要同时运行共用临时目录的两条 cargo test。
@@ -230,8 +232,10 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - 新增 37 项：14 run、18 reject、4 subset unsupported、1 shared unsupported；总计 112 run、28 panic、190 reject、33 unsupported、9 shared。原用例源码保留；`fs.Error` 的有名 catch 不因用户 Result 功能而晋升。独立 stage0 正例执行 28/28，早期 stage1 Debug 实际执行 14/14；原始失败尝试和 6 个首错位置差异保留在 `selfhost/tests/evidence/batch29-result-oracle/`。
 - 审查修复两个边界：Result 的聚合比较报 E0501；把拥有 String 的 transient view 包装到 Result 报 U0001，避免丢失借用来源。静态 str 成功载荷仍可用；arrow catch、Vec[Result]、Result 字段、嵌套 Result 保留各自明确边界。
 - 修复 Rust 与旧 subset 的 catch-break 缺陷：break 隐藏在表达式中不能把可退出 loop 误判为永久循环。`compiler/tests/p0/errors_catch_break_return.yv` 覆盖 18 个 E0013 与 6 个合法边界；`compiler/validation/catch-break-return-2026-11-24.json` 记录旧 C 的可达落空路径，未执行缺少返回的程序。
-- 真实 lexer 单元现由 stage0 与 selfhost 构建。原断言保留，三个 for 改为 while 以满足已声明子集；预期坏输入被捕获，16 轮 32 个拥有 token 后的 escape 失败保留第一错误，source/path 释放后 Diagnostic 仍可读。测试成功路径正常返回，stage1/stage2 C 一致，Debug/Release 堆块检查通过；Linux GCC 将同一源码和 C 加入第 141 个程序门。
-- Rust 完整 Debug/Release 各 145/0/1、冻结 124/3/2 通过；最终自举 372/372、12/12、0 skip 已记录在 `compiler/validation/selfhost-result-2026-11-24.json`，implementation_commit 暂为 null，以源码哈希绑定本机测试，基线 HEAD 不冒充被测试提交。三平台 CI 与原生归档索引在提交后补录。SH-3 仍进行中，SH-4 为 1/3；下一步 Optional/pop 的具体范围见第 10 节。
+- 真实 lexer 单元现由 stage0 与 selfhost 构建。原断言保留，三个 for 改为 while 以满足已声明子集；预期坏输入被捕获，16 轮 32 个拥有 token 后的 escape 失败保留第一错误，source/path 释放后 Diagnostic 仍可读。测试成功路径正常返回，stage1/stage2 C 一致，Debug/Release 堆块检查通过；同一源码和 C 作为第 141 个 Linux GCC sanitizer 程序通过。
+- Rust 完整 Debug/Release 各 145/0/1、冻结 124/3/2 通过；本机自举 372/372、12/12、0 skip 记录在 `compiler/validation/selfhost-result-2026-11-24.json`。原摘要的 implementation_commit=null 及 native pending 保留原时点语义，后续 `e355cb3` 的 run 45226925936 六项成功与归档核验写入 `compiler/validation/batch29-native-2026-11-24.json`，685 个本机测试输入路径已与该提交逐项对照。
+- Windows 归档中 36 对 reject-new/reject-existing 记录内容（含耗时 0.0）相同。离线审计器原“记录内容唯一”假设误报，改为 3,140 条嵌入/保存记录多重集完全一致、逐份核验实际流；首失败与完整证明已保留于最终索引。三平台最终审计通过；未改编译器或重跑 CI 来处理这项审计器问题。
+- SH-3 仍进行中，SH-4 为 1/3；下一步 Optional/pop 的具体范围见第 10 节。
 
 ## 历史批次（已移出）
 

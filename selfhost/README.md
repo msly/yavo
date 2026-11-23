@@ -82,11 +82,17 @@ C is 623,204 bytes and the identical Linux stage2/stage3 binaries are 293,640
 bytes. The new `lexer_units_selfhost` check passes stage1/stage2 C equality and
 Zig Debug/Release allocation checks on the whole production lexer unit.
 All 420 fixture C files and 560 mode binaries were rehashed against the receipt.
-The GCC application gate now has
-140 fixture inputs plus this whole-lexer unit; the stage2 compiler gate has
-372 checks, 140 emissions and 8 malformed-input stress cases. Batch 29 native
-Linux/Windows/macOS results are **pending submission and CI confirmation**;
-the historical fixed-point and [batch 28 native records](../compiler/validation/batch28-native-2026-11-23.json)
+The [native index](../compiler/validation/batch29-native-2026-11-24.json) binds
+`e355cb3` to [run 45226925936](https://github.com/msly/yavo/actions/runs/45226925936),
+**six of six jobs passed**. Linux, Windows and macOS each pass 372 cases,
+12 checks and no skips, with identical stage2/stage3 C and binaries within
+each native build. The whole lexer passes both modes on every platform.
+Linux GCC ASan/UBSan passes 140 fixture programs plus that lexer unit; the
+instrumented stage2 compiler passes self-compilation, 372 checks, 140 emissions
+and 8 malformed inputs. Three downloaded native archives were independently
+checked against GitHub's size/digest, committed sources and execution bytes.
+The historical local pending fields and
+[batch 28 native records](../compiler/validation/batch28-native-2026-11-23.json)
 retain their original scope.
 
 ## Historical fixed-point snapshot (2026-11-23, batch 27)
@@ -389,8 +395,8 @@ executable fixtures from earlier increments.
 
 ## Next steps
 
-Self-hosting is a regression gate. After confirming batch 29 on native
-Linux/Windows/macOS, the next language increment is Optional and `Vec.pop`
+Self-hosting is a regression gate. Batch 29 is confirmed on native
+Linux/Windows/macOS; the next language increment is Optional and `Vec.pop`
 to replace the compiler's `trunc*` rebuilding helpers. Later increments cover
 `for`, interpolation/`format` and modules, each with compiler-source migration
 and a renewed fixed point. [SH-3](../docs/self-hosting.md) remains incomplete;

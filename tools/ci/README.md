@@ -20,6 +20,15 @@ not the stage2 compiler itself.
 
 ## Batch 29 Result and real lexer checks
 
+[Run 45226925936](https://github.com/msly/yavo/actions/runs/45226925936) passed
+all six jobs at `e355cb3`. All three native platforms pass 372 cases and
+12 auxiliary checks with zero skips; the Linux integrated sanitizer gate passes
+all 141 generated programs and the stage2 compiler checks below. Each platform
+also passes the existing application's 213 executions. The
+[native index](../../compiler/validation/batch29-native-2026-11-24.json)
+records exact platform Rust selections/counts, three downloaded archive digests,
+and independent source/artifact/output inspection.
+
 The current manifest has 372 cases and 140 executable inputs. Bootstrap retains
 the stage0 lexer unit and adds `lexer_units_selfhost`: stage1 and stage2 must emit
 identical C from the current `support.yv + lexer.yv + lexer_test.yv`, and that C
