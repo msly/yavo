@@ -9,13 +9,18 @@ artifact actions are pinned to reviewed full commits; workflow permissions are
 read-only. Debug and Release are sequential within each job because the existing
 test runners share temporary paths.
 
-The current String/PCH validation is
-[45044246299](https://github.com/msly/yavo/actions/runs/45044246299) at
-`81614a95bd24bef83afa2e0e654b8e55739f5f7f`: **all six jobs passed**.
-The [String receipt](../../compiler/validation/selfhost-string-2026-11-22.json)
-records both CI attempts, all job/step results, the downloaded native Linux
-archive's verified size/SHA-256, and actual selfhost/sanitizer receipt contents.
-The other five artifacts have metadata checks only. The historical
+The current Copy-vector validation is
+[45103511821](https://github.com/msly/yavo/actions/runs/45103511821) at
+`7881db94f1509baa317d9bf84fae2ae28f402a80`: **all six jobs passed**.
+The [Vec receipt](../../compiler/validation/selfhost-vec-2026-11-23.json)
+records all job/step results and the downloaded native Linux archive's verified
+size/SHA-256. Its three original receipts and actual source/C/frontend/program/
+output bytes were independently checked; all 78 selfhost sanitizer programs
+and 3 capability probes passed. The other five archives have metadata checks only.
+
+The preceding [String receipt](../../compiler/validation/selfhost-string-2026-11-22.json)
+retains both of that increment's CI attempts and the PCH concurrency fix.
+The historical
 [45002067581 receipt](../../compiler/validation/github-ci-agent-eval-2026-11-22.json)
 retains its separate six-archive download verification. Round-six live
 qualification remains blocked with zero participant sessions and deliveries.
@@ -45,7 +50,7 @@ scenarios remain excluded because the current conformance runner explicitly
 requires Linux x86_64 for those scenarios.
 
 All native jobs run `selfhost/bootstrap.py`: the Yavo-written frontend is built
-by stage0, then independently checks/emits C for 181 fixed cases. The 55 executable
+by stage0, then independently checks/emits C for 242 fixed cases. The 78 executable
 inputs run in both C modes against fixed oracles and a Rust differential
 reference. The original diagnostic source is verified as an unchanged prefix
 of an executable component test. This remains a subset gate, not stage2/stage3
@@ -54,7 +59,7 @@ self-compilation.
 The Linux native job additionally runs `selfhost_sanitize.py`. It verifies the
 bootstrap receipt, manifest, source identities and the candidate frontend's
 actual repeated C outputs before reusing the independent GCC sanitizer runner.
-All 55 programs and clean/UAF/signed-overflow capability probes are mandatory.
+All 78 programs and clean/UAF/signed-overflow capability probes are mandatory.
 C is not regenerated through the Rust frontend. This step is separate from
 the existing P0 sanitizer job. LSan is disabled; normal exits use YV_ALLOC_CHECK.
 
