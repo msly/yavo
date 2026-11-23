@@ -1,6 +1,6 @@
 # Yavo 自举路线与实用验收
 
-2026-11-23 · 拥有元素 Vec 存储与只读遍历目标
+2026-11-23 · 表达式内只读索引与 AST 内容遍历
 
 近期主目标改为：**用 Yavo 实现 Yavo 编译器，完成可重放的自举闭环，再让它承担日常编译工作。** 自举用于暴露真实工程中的语言和工具链缺口；实用验收继续独立执行。
 
@@ -36,8 +36,8 @@
 
 | 里程碑 | 交付范围 | 退出条件 | 当前状态 |
 | --- | --- | --- | --- |
-| SH-1：可用的子集编译器 | 在 `selfhost/` 中实现真实词法器、解析器、最小语义检查和 C 生成；公布精确输入子集 | stage0 构建成功；外部正向程序运行结果正确；负向程序在前端拒绝；未实现语法明确报错；支持的行为与 stage0 差分一致 | 基础路径已完成，继续扩大输入子集 |
-| SH-2：最小自举闭环 | 输入子集覆盖编译器全部 Yavo 源码；可由外部驱动构建 | 在独立目录、清空产物的条件下完成 stage0 → stage1 → stage2 → stage3；stage2/3 对固定输入生成的 C 一致，独立程序结果一致；记录所有源码、运行时、工具链和构建参数的身份 | 当前主线，尚未产出 stage2/3；完整编译器源码仍不属于可接受输入 |
+| SH-1：可用的子集编译器 | 在 `selfhost/` 中实现真实词法器、解析器、最小语义检查和 C 生成；公布精确输入子集 | stage0 构建成功；外部正向程序运行结果正确；负向程序在前端拒绝；未实现语法明确报错；支持的行为与 stage0 差分一致 | 已扩大到拥有 Vec 存储、表达式内只读索引与 AST 内容遍历；继续按源码依赖推进 |
+| SH-2：最小自举闭环 | 输入子集覆盖编译器全部 Yavo 源码；可由外部驱动构建 | 在独立目录、清空产物的条件下完成 stage0 → stage1 → stage2 → stage3；stage2/3 对固定输入生成的 C 一致，独立程序结果一致；记录所有源码、运行时、工具链和构建参数的身份 | 当前主线，已有 2 份原样源码与 3 个 prefix 工作负载；尚无 stage2/3，完整编译器源码仍不属于可接受输入 |
 | SH-3：主编译器接替 | 逐步覆盖当前 Rust 前端支持的语义、模块与诊断；承接正常构建入口 | 现有回归与冻结规格报告无未解释退步；独立错误输入与资源测试通过；Linux、Windows、macOS 原生执行相应验收；日常开发默认用自举编译器 | 尚未接替，Rust stage0 仍是主编译器 |
 | SH-4：声明范围内的实用交付 | 以非编译器应用验证语言、库、工具和分发 | 下节中的应用、诊断、可重放构建、资源和平台门槛通过，明确支持范围与仍缺能力 | 与自举分开验收，不能由子集测试或固定点代替 |
 
@@ -47,35 +47,41 @@ SH-1 的结果只标为“子集编译器”。SH-2 可以标为“子集自举�
 
 ## 当前进度
 
-| 范围 | 已验证能力与边界 |
+| 范围 | 已实现能力与边界 |
 | --- | --- |
 | 标量与 Copy 聚合 | 基本值、函数、控制流、结构体、无载荷枚举及字段读写已接入子集前端 |
 | String 拥有值 | String 和包含 String 的结构支持构造、移动、普通参数只读借用、重赋值及析构 |
 | Copy 元素 Vec | 支持 int、bool、Copy 结构及无载荷枚举元素；空构造、字面量、push/len/reserve/clone、带边界检查的索引读写及 Copy 元素字段修改；容器本身支持移动和释放 |
-| 拥有元素 Vec 存储 | String、含 String/Vec 字段的结构及通过 Vec 间接递归的结构可作为元素；支持构造、push 消费、len/reserve、容器移动/返回/重赋值、递归 clone 与析构；非 Copy 元素的索引读取和修改仍在子集外 |
-| 原样资源组件 | `diagnostic.yv` 的 438 字节、`model.yv` 的 1,581 字节保持原样，只追加独立入口。model 覆盖四类非空 Program 向量的存储与生命周期，尚未验证拥有元素的读取和遍历 |
+| 拥有元素 Vec 存储 | String、含 String/Vec 字段的结构及通过 Vec 间接递归的结构可作为元素；支持构造、push 消费、len/reserve、容器移动/返回/重赋值、递归 clone 与析构 |
+| 非 Copy 元素的表达式内读取 | 索引产生只读借用，支持连续字段与嵌套索引、普通只读实参、String 输出和比较，以及 String/Vec 的 len 与显式 clone；Copy 结果与 clone 结果及时脱离原根，临时 owner 保持到使用完成 |
+| 原样组件与工作负载 | **2 份原样源码、3 个 prefix 工作负载**：`diagnostic.yv` 的 438 字节用于诊断资源入口；`model.yv` 的 1,581 字节分别追加存储入口与内容遍历入口。model 已读取四类非空 Program 向量及内部 Vec，并验证独立 clone 在原容器重置后仍可读取 |
 | 完整自举 | 验证记录仍为 `self_hosted: false`；stage1 尚不能接受自己的完整源码，没有 stage2/3，SH-2 未闭合 |
 
-本批拥有元素 Vec 存储增量的完整验收结果：本机 **263/263 用例、90 个可执行输入、10/10 辅助检查、0 跳过**；Rust Debug/Release 各 **145 通过、0 失败、1 个既有忽略项**。[CI 45116399319](https://github.com/msly/yavo/actions/runs/45116399319) **6/6 任务成功**，三平台 selfhost 步骤全部通过；Linux 新前端生成 C 的独立 ASan/UBSan 为 **90/90 程序、3/3 能力探针**。Linux 归档已下载并独立核验源码、生成 C、程序和输出；其他五份归档核对元数据。完整身份与逐例结果见[本轮验收记录](../compiler/validation/selfhost-owned-vec-2026-11-23.json)。
+本轮实现提交为 `b5dfe9feb5c48bd22defd73b01f0b917dfbc2baf`；冻结验收规模为 **286 个用例、102 个可执行输入、10 项辅助检查**。完整本机、原生 CI 与归档核验结果：本机 **286/286 用例、10/10 辅助检查、0 跳过**，Rust Debug/Release 各 **145 通过、0 失败、1 个既有忽略项**；[CI 45121072503](https://github.com/msly/yavo/actions/runs/45121072503) **6/6 任务成功**，三平台 selfhost 全部通过。Linux 新前端生成 C 的独立 ASan/UBSan 为 **102/102 程序、3/3 能力探针**。Linux 归档已下载并独立核验源码、生成 C、程序和输出；其他五份归档核对元数据。最终身份与逐例结果记录于[本轮验收记录](../compiler/validation/selfhost-borrow-index-2026-11-23.json)。
 
-此前 Copy Vec 增量的本地与原生 CI 结果保留于 [Copy Vec 验收记录](../compiler/validation/selfhost-vec-2026-11-23.json)和 [CI 45103511821](https://github.com/msly/yavo/actions/runs/45103511821)。精确支持边界与独立预期见 [selfhost 说明](../selfhost/README.md)。测试数量与原样组件数量不换算为自举完成百分比。
+此前拥有元素 Vec 存储增量的完整结果保留于[拥有 Vec 验收记录](../compiler/validation/selfhost-owned-vec-2026-11-23.json)和 [CI 45116399319](https://github.com/msly/yavo/actions/runs/45116399319)；Copy Vec 结果保留于 [Copy Vec 验收记录](../compiler/validation/selfhost-vec-2026-11-23.json)和 [CI 45103511821](https://github.com/msly/yavo/actions/runs/45103511821)。精确支持边界与独立预期见 [selfhost 说明](../selfhost/README.md)。测试数量与原样组件数量不换算为自举完成百分比。
 
-当前 model 追加入口构造 `Vec[Expression]`、`Vec[Statement]`、`Vec[Function]`、`Vec[TypeDecl]`，实际填充节点的 args/names、body/otherwise、params、fields/variants，并向 Program 字段 push。工作负载覆盖元素消费、返回、重赋值、跨作用域存活，以及通过 `Vec[Program].clone()` 递归复制内部资源。用户结构直接调用 `.clone()` 仍不受支持。
+当前 model 的内容遍历入口为 **6,769 字节**，与原样源码合成 **8,350 字节**输入。它读取 `Vec[Expression]`、`Vec[Statement]`、`Vec[Function]`、`Vec[TypeDecl]` 的标量与 Copy 字段，并遍历 args/names、body/otherwise、params、fields/variants，事先固定的 Program 内容摘要为 **18,594**。另对六组 Vec 字段显式 clone，将原 Program 重置为空后读取副本，固定合成摘要为 **20,410**。存储入口继续覆盖元素消费、返回、重赋值和 `Vec[Program].clone()`；用户结构直接调用 `.clone()` 仍不受支持。
 
-## 下一最小增量：表达式内只读索引
+## 下一最小增量：byte 与文本单字节索引
 
-目标是让**原样 model 加追加入口完成实际只读遍历**。非 Copy `v[i]` 在当前表达式内借用元素，支持字段投影、传给普通只读参数，以及对投影得到的 String/Vec 显式调用 `.clone()`。索引本身不复制拥有值；Copy 字段读取形成独立值，显式 clone 形成新 owner。
+目标是补齐 **byte 类型、byte 字面量、上下文整数常量转 byte、String/str 的单字节索引、`int(byte)` / `byte(int)` 与 `Vec[byte]`**，用词法器中实际需要这些能力的原样函数片段验收。byte 是 Copy 值；`source[i]` 返回字节，不是 Unicode 标量，也不引入持久元素借用。
 
 本增量的退出条件：
 
-1. `model.yv` 原始字节继续保持不变；追加工作负载用索引遍历 Program 的四类向量，读取节点标量字段，并遍历其 args/names、body/otherwise、params、fields/variants，计算事先确定的计数与校验摘要。
-2. 借用的字段和元素可作为普通只读实参；String/Vec 的 len 与显式 clone 按既有语义工作。clone 后的值可独立移动、存活和释放，不能把隐式深复制当成索引读取。
-3. 容器及临时 owner 在表达式和调用所需的范围内保持存活；仍被借用的根不能被移动或通过 push/reserve 使槽位失效。Copy 结果或 clone 结果不应继续锁住原根，后续合法操作必须可用。
-4. 覆盖普通参数与临时容器、嵌套字段、同一次调用中的参数求值顺序、边界失败和根冲突；结果通过 Debug/Release 的固定预期、stage0 差分及资源检查，既有存储验收继续通过。
+1. byte 字面量、参数、返回与上下文类型检查遵守既有语义，包含 `scalarWidth` 的 `c < 128`、`c < 224`、`c < 240` 所需的上下文整数常量转 byte。`byte(int)` 越界行为完全遵循 stage0 既有语义，不预设新规则；非法字面量及错误码与冻结规格对齐，不把 C 的隐式提升或截断直接当成语言规则。
+2. String/str 单字节索引检查上下界，读取完成即得到独立 Copy 值；覆盖临时 String、普通只读参数、索引求值顺序及接收者根保护。文本切片和借用返回不混入本增量。
+3. `Vec[byte]` 接入现有 Copy 元素路径，验证空构造、字面量、push/len/reserve/clone、带边界检查的索引与容器移动、析构。
+4. 从 `lexer.yv` 保留 `wordStart`、`digit`、`exponentAhead`、`scalarWidth`、`hexDigit`、`twoSymbol`、`oneSymbol` 七个函数的原始字节，只追加独立入口。记录原文件 SHA-256、每段起止字节与 SHA-256、拼接顺序、追加入口与最终合成输入 SHA-256；不手工改写函数以绕过未实现语义。
+5. 在候选执行前固定字节分类、UTF-8 前导字节分类、数值转换和边界失败的预期；Debug/Release、stage0 差分、资源与原生平台门继续执行。既有三个原样 prefix 工作负载保持独立回归。
+
+这七个函数片段不等于整份 lexer 原样接入。完整 `lexer.yv` 还依赖 `inout Cursor`、文本切片、结果与 err/try/catch、`String.fromUtf8`、pop/optional/if let 和模块；`exponentAhead` 中的局部索引结果是 byte Copy 值，不依赖非 Copy 元素的持久借用。
 
 ### 后继边界
 
-持久局部借用（如 `let e = v[i]`）、借用返回或存入其他值、拥有元素的索引赋值与字段修改、通过元素调用修改方法，分别留给后继增量。显式引用、`inout`、`sink` 和 `take` 也不纳入这个最小范围。只读表达式可以完成 model 的摘要遍历；parser/types/codegen 当前源码还使用持久元素借用和状态修改，不能据此标为已原样接入。
+持久局部借用（如 `let e = v[i]`）、借用返回或存入其他值、拥有元素的索引赋值与字段修改、通过元素调用修改方法，分别留给后继增量。持久绑定需要保存别名槽位与原始 owner 根，分析作用域、最后使用、分支和循环回边；不能仅移除当前 Bind 的 U0001。显式引用、`inout`、`sink`、`take` 和切片也继续按依赖分批实现。
+
+原有 **4 条 known_gap** 保持不变。本轮新增的“索引借用作比较操作数时消费外根”和“嵌套索引求值时消费外根”仅验证当前按根保护的保守 U0001 边界；stage0 接受这些源程序，不将它们登记为新的 stage0 缺陷；两项仅检查和生成 C，不使用运行结果作固定预期。
 
 ## 后续原样组件的依赖
 
@@ -83,14 +89,14 @@ SH-1 的结果只标为“子集编译器”。SH-2 可以标为“子集自举�
 
 | 组件 | 主要剩余直接依赖 |
 | --- | --- |
-| `model.yv` | 数据声明和拥有存储组件已接入；下一步以追加入口验证只读索引遍历。文件本身不使用模块或显式参数模式 |
-| `lexer.yv` | byte、字符字面量、字符串字节索引与切片、int/byte 转换、`String.fromUtf8`；`inout Cursor`；结果、err/try/catch；pop、optional、if let；模块。Token 的拥有存储已具备，lexer 主要构造 Token 向量 |
-| `parser.yv` | 非 Copy 元素的表达式内与持久局部借用、字段投影和索引字段修改；`inout State`、sink、take；结果与错误传播；格式化/插值；字节索引与字符字面量；模块 |
-| `types.yv` | 非 Copy 索引、持久局部借用与拥有字段替换；结果与错误传播；集合 for；格式化；模块。其修改发生在本地可变 Registry，文件自身没有显式 inout 函数 |
-| `codegen.yv` | 拥有元素的表达式内与持久局部借用、嵌套字段修改；`inout Generator`、take；结果与 catch；集合/区间 for；pop、optional、parseInt、`??`；join、格式化；字节索引、转换和切片；模块 |
+| `model.yv` | 数据声明原样接入；独立入口已覆盖拥有存储与内容遍历。文件本身不使用模块或显式参数模式 |
+| `lexer.yv` | byte、byte 字面量、文本字节索引与切片、int/byte 转换、`String.fromUtf8`；`inout Cursor`；结果、err/try/catch；pop、optional、if let；模块。Token 的拥有存储与表达式内读取已具备，下一增量只接入七个原样函数片段 |
+| `parser.yv` | 持久局部索引借用和索引字段修改；`inout State`、sink、take；结果与错误传播；格式化/插值；字节索引与 byte 字面量；模块 |
+| `types.yv` | 持久局部索引借用与拥有字段替换；结果与错误传播；集合 for；格式化；模块。其修改发生在本地可变 Registry，文件自身没有显式 inout 函数 |
+| `codegen.yv` | 持久局部索引借用、嵌套字段修改；`inout Generator`、take；结果与 catch；集合/区间 for；pop、optional、parseInt、`??`；join、格式化；字节索引、转换和切片；模块 |
 | `main.yv` | 全部前端模块；结果与 catch；`os.args()` 的静态 str 切片；文件读写及错误、`os.exit`；错误格式化 |
 
-模块支持必须在接收带导入的原样组件前完成。组件路径从已完成的 model 存储推进到追加入口的只读遍历，再按实际依赖接入 lexer → parser/types → codegen → main，最后执行完整源码的 stage1 → stage2 → stage3 固定点验收。当前 main 生成 C，由外部驱动调用锁定的 Zig；进程 API、完整包管理和 Rust 工具入口的全部重写不属于这一最小闭环的前置条件。
+模块支持必须在接收带导入的原样组件前完成。组件路径从已完成的 model 存储与内容遍历推进到 byte 及词法器原样函数片段，再补齐依赖接入完整 lexer → parser/types → codegen → main，最后执行完整源码的 stage1 → stage2 → stage3 固定点验收。当前 main 生成 C，由外部驱动调用锁定的 Zig；进程 API、完整包管理和 Rust 工具入口的全部重写不属于这一最小闭环的前置条件。
 
 ## 实现次序与约束
 

@@ -6,9 +6,11 @@ Yavo is a systems-language prototype for coding agents: ownership and determinis
 [Yavo-written subset compiler](selfhost/README.md) implements parsing, checking
 and C generation for independent programs, including owned String values,
 vectors of Copy or owned elements, nested structs and payload-free enums.
-It compiles the original diagnostic and AST-model components with appended
-test entry points. The model workload constructs and manages nonempty owned
-AST storage; borrowing and traversing its elements is the next increment.
+Non-Copy vector elements now support expression-scoped read-only indexing,
+field projection and ordinary read-only arguments. The original diagnostic
+and AST-model components compile with appended test entry points. The model
+workloads cover owned storage and content traversal, including reading cloned
+buffers after releasing the original owner. Byte/text primitives are next.
 Full self-compilation is pending. The [roadmap](docs/self-hosting.md) separates the first subset,
 stage0 → stage1 → stage2 → stage3 bootstrap, replacement of the Rust frontend,
 and practical acceptance using non-compiler applications.
@@ -35,7 +37,7 @@ Recent changes implement index assignment, two-phase variable/field receivers, S
 
 | Check | Recorded local result | Scope |
 | --- | --- | --- |
-| Release suite | **145 passed, 0 failed, 1 ignored** | Current owned-vector increment, all 19 Cargo test groups; Rust sources are unchanged |
+| Release suite | **145 passed, 0 failed, 1 ignored** | Current borrowed-index increment, all 19 Cargo test groups; Rust sources are unchanged |
 | Debug suite | **145 passed, 0 failed, 1 ignored** | Same source, all 19 groups, independent completed local log |
 | Frozen specification | **124 pass, 0 wrong, 3 unsupported, 0 not_run, 2 superseded** | 129 frozen cases; a different counting unit from Cargo test functions |
 | Cross-compilation | Six target formats/architectures build | Linux (static musl), Windows and macOS on x86-64/aarch64; native CI now covers Linux x86-64 plus the Windows x86-64/macOS arm64 selections below |
@@ -47,7 +49,21 @@ Source modules support top-level exports, per-file imports, cyclic imports and o
 
 ### GitHub CI
 
-The current owned-vector increment passed **263/263 selfhost cases and
+The current borrowed-index increment passed **286/286 selfhost cases and
+10/10 auxiliary checks**, with all 102 executable inputs passing Debug/Release
+fixed oracles, Rust differential checks and repeated-C comparisons.
+[CI run 45121072503](https://github.com/msly/yavo/actions/runs/45121072503) passed **six of six jobs** at `b5dfe9f`,
+including the selfhost gate on Linux, Windows and macOS. The native Linux gate
+passed **102/102 Yavo-generated C programs with GCC 13.3 ASan/UBSan and
+3/3 capability probes**.
+The [borrowed-index receipt](compiler/validation/selfhost-borrow-index-2026-11-23.json)
+binds the source, complete local Rust suites, two unchanged original sources
+across three workloads, and CI results. The native Linux archive matched
+GitHub's size/SHA-256; actual source, C, frontend/program binaries and outputs
+were independently verified. The other five archives have metadata checks only.
+LSan is disabled; normal exits use YV_ALLOC_CHECK.
+
+The preceding owned-vector increment passed **263/263 selfhost cases and
 10/10 auxiliary checks**, with all 90 executable inputs passing Debug/Release
 fixed oracles, Rust differential checks and repeated-C comparisons.
 [CI run 45116399319](https://github.com/msly/yavo/actions/runs/45116399319) passed **six of six jobs** at `c7be682`,
