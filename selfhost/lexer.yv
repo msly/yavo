@@ -9,6 +9,7 @@ pub enum TokenKind {
     Symbol
     Newline
     Eof
+    Byte
 }
 
 pub struct Token {
@@ -176,6 +177,44 @@ fn stringToken(cursor: inout Cursor, source: str) -> String ! Failure {
     return err(diagnostic.make("E0020", "unterminated string literal", start, line, column))
 }
 
+// Byte token text is a canonical decimal value, independent of source escapes.
+fn byteToken(cursor: inout Cursor, source: str) -> String ! Failure {
+    let start = cursor.pos
+    let line = cursor.line
+    let column = cursor.column
+    bump(&cursor, source)
+    var value = -1
+    if cursor.pos < source.len() {
+        let c = source[cursor.pos]
+        bump(&cursor, source)
+        if c == '\\' {
+            if cursor.pos < source.len() {
+                let e = source[cursor.pos]
+                bump(&cursor, source)
+                if e == 'n' { value = 10
+                } else if e == 't' { value = 9
+                } else if e == 'r' { value = 13
+                } else if e == '0' { value = 0
+                } else if e == '\\' { value = 92
+                } else if e == '\'' { value = 39
+                } else if e == '"' { value = 34
+                }
+            }
+        } else if c < 128 && c != '\'' && c != '\n' {
+            value = int(c)
+        }
+    }
+    var closed = false
+    if cursor.pos < source.len() && source[cursor.pos] == '\'' {
+        bump(&cursor, source)
+        closed = true
+    }
+    if value < 0 || !closed {
+        return err(diagnostic.make("E0020", "invalid byte literal; expected one ASCII character or a byte escape", start, line, column))
+    }
+    return format("${value}")
+}
+
 fn twoSymbol(a: byte, b: byte) -> bool {
     if a == '+' || a == '-' || a == '*' {
         if b == '=' || b == '%' { return true }
@@ -277,7 +316,8 @@ pub fn lex(source: str) -> Vec[Token] ! Failure {
             kind = .Text
             text = try stringToken(&cursor, source)
         } else if c == '\'' {
-            return err(diagnostic.make("U0001", "byte literals are not in the bootstrap subset", start, line, column))
+            kind = .Byte
+            text = try byteToken(&cursor, source)
         } else if oneSymbol(c) {
             bump(&cursor, source)
             if cursor.pos < source.len() && twoSymbol(c, source[cursor.pos]) {
@@ -287,7 +327,7 @@ pub fn lex(source: str) -> Vec[Token] ! Failure {
         } else {
             return err(diagnostic.make("E0020", "unexpected character", start, line, column))
         }
-        endsStatement = kind == .Word || kind == .Number || kind == .Text ||
+        endsStatement = kind == .Word || kind == .Number || kind == .Text || kind == .Byte ||
             text == ")" || text == "]" || text == "}"
         if kind == .Symbol {
             if text == "(" || text == "[" { delimiters.push('(')

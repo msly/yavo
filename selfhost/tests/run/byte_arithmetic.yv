@@ -1,0 +1,30 @@
+fn byteValue(value: byte) -> byte { return value }
+fn main() {
+    let high: byte = 250
+    println(high +% 10)
+    println(high -% 255)
+    println(high *% 2)
+    let small: byte = 6
+    println(small + 9)
+    println(small - 3)
+    println(small * 3)
+    println(small / 2)
+    println(small % 4)
+    println(small | 9)
+    println(small & 3)
+    println(small ^ 12)
+    println(byte(1) << 3)
+    println(byte(128) >> byte(2))
+    println(1 << byte(3))
+    println((1 + 2) + byteValue(4))
+    println(255 - byteValue(3))
+    let zero: byte = -0
+    println(zero)
+    var values: Vec[byte] = [10]
+    values[byte(0)] += 2
+    values[0] *= 3
+    values[0] -= 6
+    values[0] /= 2
+    values[0] %= 4
+    println(values[0])
+}

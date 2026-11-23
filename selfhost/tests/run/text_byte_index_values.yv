@@ -1,0 +1,14 @@
+fn first(text: str) -> byte { return text[0] }
+fn last(text: String) -> byte { return text[text.len() - 1] }
+fn main() {
+    let source = "A\0é中😀"
+    println(source.len())
+    var i = 0
+    while i < source.len() { println(source[i])
+        i += 1
+    }
+    let owned = source.toString()
+    println(first(owned))
+    println(last(owned))
+    println("z"[byte(0)] == 'z')
+}

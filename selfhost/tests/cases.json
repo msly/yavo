@@ -1,6 +1,6 @@
 {
   "schema": "yavo-selfhost-cases/1",
-  "description": "Independent fixed-oracle probes for the Yavo-written scalar, aggregate, String and owned-vector storage subset; not the frozen full-language conformance suite.",
+  "description": "Independent fixed-oracle probes for the Yavo-written scalar, byte, aggregate, String and owned-vector subset; not the frozen full-language conformance suite.",
   "cases": [
     {
       "id": "arithmetic",
@@ -301,10 +301,11 @@
       "file": "unsupported/unsupported_float.yv"
     },
     {
-      "id": "unsupported_byte",
-      "kind": "unsupported",
-      "diagnostic": "U0001",
-      "file": "unsupported/unsupported_byte.yv"
+      "id": "byte_literal_basic",
+      "kind": "run",
+      "batch": "byte-text",
+      "stdout": "97\n",
+      "file": "run/byte_literal_basic.yv"
     },
     {
       "id": "unsupported_interpolation",
@@ -1946,6 +1947,261 @@
       "source_prefix": "model.yv",
       "stdout": "1546\n1148\n10206\n5694\n18594\n1\n7\n0\n20410\nConstruct\n219\n5\n5700\n228\n",
       "file": "run/model_original_traversal.yv"
+    },
+    {
+      "id": "byte_literals_contexts",
+      "kind": "run",
+      "stdout": "97\n10\n9\n13\n0\n92\n39\n34\n127\n128\n255\n65\n255\ntrue\ntrue\ntrue\n",
+      "file": "run/byte_literals_contexts.yv",
+      "batch": "byte-text"
+    },
+    {
+      "id": "byte_conversions",
+      "kind": "run",
+      "stdout": "0\n255\n65\n9\n128\n128\n0\n255\n",
+      "file": "run/byte_conversions.yv",
+      "batch": "byte-text"
+    },
+    {
+      "id": "byte_vector_lifecycle",
+      "kind": "run",
+      "stdout": "320\n321\n320\n329\n321\n3\n329\n320\n255\n42\n241\n",
+      "file": "run/byte_vector_lifecycle.yv",
+      "batch": "byte-text"
+    },
+    {
+      "id": "text_byte_index_values",
+      "kind": "run",
+      "stdout": "11\n65\n0\n195\n169\n228\n184\n173\n240\n159\n152\n128\n65\n128\ntrue\n",
+      "file": "run/text_byte_index_values.yv",
+      "batch": "byte-text"
+    },
+    {
+      "id": "text_byte_index_lifetimes",
+      "kind": "run",
+      "stdout": "116\n101\n118\n4\n114\n2\n65\n116\n109\nfalse\ntrue\n",
+      "file": "run/text_byte_index_lifetimes.yv",
+      "batch": "byte-text"
+    },
+    {
+      "id": "text_byte_index_evaluation_order",
+      "kind": "run",
+      "stdout": "1266\n90\n",
+      "file": "run/text_byte_index_evaluation_order.yv",
+      "batch": "byte-text"
+    },
+    {
+      "id": "byte_convert_negative",
+      "kind": "panic",
+      "stdout": "before",
+      "panic": "P-CONVERT",
+      "file": "panic/byte_convert_negative.yv",
+      "batch": "byte-text"
+    },
+    {
+      "id": "byte_convert_upper",
+      "kind": "panic",
+      "stdout": "",
+      "panic": "P-CONVERT",
+      "file": "panic/byte_convert_upper.yv",
+      "batch": "byte-text"
+    },
+    {
+      "id": "text_byte_index_negative",
+      "kind": "panic",
+      "stdout": "before",
+      "panic": "P-INDEX",
+      "file": "panic/text_byte_index_negative.yv",
+      "batch": "byte-text"
+    },
+    {
+      "id": "text_byte_index_upper",
+      "kind": "panic",
+      "stdout": "12",
+      "panic": "P-INDEX",
+      "file": "panic/text_byte_index_upper.yv",
+      "batch": "byte-text"
+    },
+    {
+      "id": "text_byte_index_empty",
+      "kind": "panic",
+      "stdout": "",
+      "panic": "P-INDEX",
+      "file": "panic/text_byte_index_empty.yv",
+      "batch": "byte-text"
+    },
+    {
+      "id": "byte_literal_empty",
+      "kind": "reject",
+      "diagnostic": "E0020",
+      "file": "reject/byte_literal_empty.yv",
+      "batch": "byte-text"
+    },
+    {
+      "id": "byte_literal_many",
+      "kind": "reject",
+      "diagnostic": "E0020",
+      "file": "reject/byte_literal_many.yv",
+      "batch": "byte-text"
+    },
+    {
+      "id": "byte_literal_non_ascii",
+      "kind": "reject",
+      "diagnostic": "E0020",
+      "file": "reject/byte_literal_non_ascii.yv",
+      "batch": "byte-text"
+    },
+    {
+      "id": "byte_literal_escape",
+      "kind": "reject",
+      "diagnostic": "E0020",
+      "file": "reject/byte_literal_escape.yv",
+      "batch": "byte-text"
+    },
+    {
+      "id": "byte_literal_unterminated",
+      "kind": "reject",
+      "diagnostic": "E0020",
+      "file": "reject/byte_literal_unterminated.yv",
+      "batch": "byte-text"
+    },
+    {
+      "id": "byte_literal_to_int",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/byte_literal_to_int.yv",
+      "batch": "byte-text"
+    },
+    {
+      "id": "byte_context_range",
+      "kind": "reject",
+      "diagnostic": "E0003",
+      "file": "reject/byte_context_range.yv",
+      "batch": "byte-text"
+    },
+    {
+      "id": "byte_context_negative",
+      "kind": "reject",
+      "diagnostic": "E0003",
+      "file": "reject/byte_context_negative.yv",
+      "batch": "byte-text"
+    },
+    {
+      "id": "byte_context_variable",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/byte_context_variable.yv",
+      "batch": "byte-text"
+    },
+    {
+      "id": "byte_convert_type",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/byte_convert_type.yv",
+      "batch": "byte-text"
+    },
+    {
+      "id": "byte_convert_arity",
+      "kind": "reject",
+      "diagnostic": "E0012",
+      "file": "reject/byte_convert_arity.yv",
+      "batch": "byte-text"
+    },
+    {
+      "id": "text_byte_index_type",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/text_byte_index_type.yv",
+      "batch": "byte-text"
+    },
+    {
+      "id": "text_byte_index_write",
+      "kind": "reject",
+      "diagnostic": "E0101",
+      "file": "reject/text_byte_index_write.yv",
+      "batch": "byte-text"
+    },
+    {
+      "id": "byte_vector_push_type",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/byte_vector_push_type.yv",
+      "batch": "byte-text"
+    },
+    {
+      "id": "unsupported_text_byte_index_owner",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "reason": "The subset conservatively forbids consuming the text owner while its index expression is evaluated. Stage0 accepts this input; only the explicit U0001 boundary is checked, without using its runtime behavior as an oracle.",
+      "file": "unsupported/unsupported_text_byte_index_owner.yv",
+      "batch": "byte-text"
+    },
+    {
+      "id": "unsupported_text_slice",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/unsupported_text_slice.yv",
+      "batch": "byte-text"
+    },
+    {
+      "id": "byte_arithmetic",
+      "kind": "run",
+      "stdout": "4\n251\n244\n15\n3\n18\n3\n2\n15\n2\n10\n8\n32\n8\n7\n252\n0\n3\n",
+      "file": "run/byte_arithmetic.yv",
+      "batch": "byte-text"
+    },
+    {
+      "id": "byte_literal_left_overflow_order",
+      "kind": "panic",
+      "stdout": "",
+      "panic": "P-OVERFLOW",
+      "file": "panic/byte_literal_left_overflow_order.yv",
+      "batch": "byte-text"
+    },
+    {
+      "id": "byte_division_zero",
+      "kind": "panic",
+      "stdout": "",
+      "panic": "P-DIV-ZERO",
+      "file": "panic/byte_division_zero.yv",
+      "batch": "byte-text"
+    },
+    {
+      "id": "byte_shift_width",
+      "kind": "panic",
+      "stdout": "",
+      "panic": "P-SHIFT",
+      "file": "panic/byte_shift_width.yv",
+      "batch": "byte-text"
+    },
+    {
+      "id": "byte_unsigned_negation",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/byte_unsigned_negation.yv",
+      "batch": "byte-text"
+    },
+    {
+      "id": "byte_default_range",
+      "kind": "reject",
+      "diagnostic": "E0003",
+      "file": "reject/byte_default_range.yv",
+      "batch": "byte-text"
+    },
+    {
+      "id": "byte_default_to_int",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/byte_default_to_int.yv",
+      "batch": "byte-text"
+    },
+    {
+      "id": "lexer_byte_helpers_original_fragments",
+      "kind": "run",
+      "stdout": "53\n10\n22\n7066600\n20\n272301\n8\n",
+      "example": "lexer_byte_helpers.yv",
+      "file": "run/lexer_byte_helpers_original_fragments.yv",
+      "batch": "byte-text"
     }
   ],
   "promotions": [

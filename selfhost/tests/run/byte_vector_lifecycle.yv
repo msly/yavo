@@ -1,0 +1,38 @@
+struct Buffer { bytes: Vec[byte] = [] }
+fn make() -> Vec[byte] { return [byte(0), 'A', byte(255)] }
+fn sum(values: Vec[byte]) -> int {
+    var total = 0
+    var i = 0
+    while i < values.len() { total += int(values[i])
+        i += 1
+    }
+    return total
+}
+fn main() {
+    var values: Vec[byte] = []
+    values.reserve(12)
+    values.push(0)
+    values.push('A')
+    values.push(255)
+    println(sum(values))
+    var copy = values.clone()
+    values[1] = 'B'
+    values.push(values[0])
+    println(sum(values))
+    println(sum(copy))
+    copy[0] = 9
+    println(sum(copy))
+    let moved = values
+    values = [1, 2]
+    println(sum(moved))
+    println(sum(values))
+    let holder = Buffer{bytes: copy}
+    println(sum(holder.bytes))
+    println(sum(make()))
+    println(make()[2])
+    var empty = Buffer{}
+    empty.bytes.push(42)
+    println(empty.bytes[0])
+    let inferred = ['x', 'y']
+    println(sum(inferred))
+}

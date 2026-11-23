@@ -1,0 +1,25 @@
+struct UnusedByte { tooLarge: byte = 256, negative: byte = -1 }
+struct UnusedInt { character: int = 'A' }
+struct Header { mark: byte = 'A', limit: byte = 255 }
+fn choose(value: byte) -> byte { return value }
+fn maximum() -> byte { return 255 }
+fn main() {
+    println('a')
+    println('\n')
+    println('\t')
+    println('\r')
+    println('\0')
+    println('\\')
+    println('\'')
+    println('\"')
+    var low: byte = 0
+    low = 127
+    println(low)
+    println(choose(128))
+    println(maximum())
+    println(Header{}.mark)
+    println(Header{}.limit)
+    println(low < 128)
+    println(128 > low)
+    println(choose('Z') == 'Z')
+}

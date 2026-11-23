@@ -87,6 +87,7 @@ fn typeName(s: inout State, ts: Vec[Token]) -> TypeRef ! Failure {
     try enter(&s, ts)
     var result = TypeRef{elementKind: .Unknown, kind: .Unknown}
     if eat(&s, ts, "int") { result = TypeRef{elementKind: .Unknown, kind: .Int}
+    } else if eat(&s, ts, "byte") { result = TypeRef{elementKind: .Unknown, kind: .Byte}
     } else if eat(&s, ts, "bool") { result = TypeRef{elementKind: .Unknown, kind: .Bool}
     } else if eat(&s, ts, "str") { result = TypeRef{elementKind: .Unknown, kind: .Str}
     } else if eat(&s, ts, "String") { result = TypeRef{elementKind: .Unknown, kind: .String}
@@ -183,6 +184,10 @@ fn primary(s: inout State, ts: Vec[Token]) -> int ! Failure {
     if ts[p].kind == .Number {
         s.pos += 1
         return pushExpr(&s, Expression{elementKind: .Unknown, kind: .Number, token: p})
+    }
+    if ts[p].kind == .Byte {
+        s.pos += 1
+        return pushExpr(&s, Expression{elementKind: .Unknown, kind: .Byte, token: p})
     }
     if ts[p].kind == .Text {
         s.pos += 1

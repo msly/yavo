@@ -1,0 +1,36 @@
+struct Text { value: String }
+struct Words { values: Vec[String] }
+fn consume(text: Text) -> int { return text.value.len() }
+fn wordCount(words: Words) -> int { return words.values.len() }
+fn show(value: byte, length: int) { println(value)
+    println(length)
+}
+fn suffix(value: byte) -> String {
+    if value == 'A' { return "!".toString() }
+    return "".toString()
+}
+fn make() -> String { return "temporary".toString() }
+fn main() {
+    let first = make()[0]
+    println(first)
+    var text = "read".toString()
+    let saved = text[1]
+    text = String{}
+    println(saved)
+    let moved = "move".toString()
+    show(moved[2], consume(Text{value: moved}))
+    let words = ["root".toString(), "second".toString()]
+    show(words[0][0], wordCount(Words{values: words}))
+    var again = "A".toString()
+    again.push(suffix(again[0]))
+    println(again[0])
+    var i = 0
+    while i < 3 {
+        let value = make()[i]
+        i += 1
+        if value == 'e' { continue }
+        println(value)
+    }
+    println(false && make()[0] == 'x')
+    println(true || make()[0] == 'x')
+}

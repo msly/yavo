@@ -1,0 +1,129 @@
+fn wordStart(c: byte) -> bool {
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_'
+}
+
+fn digit(c: byte) -> bool {
+    return c >= '0' && c <= '9'
+}
+
+fn exponentAhead(source: str, pos: int) -> bool {
+    if pos + 1 >= source.len() { return false }
+    let next = source[pos + 1]
+    if digit(next) { return true }
+    return (next == '+' || next == '-') &&
+        pos + 2 < source.len() && digit(source[pos + 2])
+}
+
+fn scalarWidth(c: byte) -> int {
+    if c < 128 { return 1 }
+    if c < 224 { return 2 }
+    if c < 240 { return 3 }
+    return 4
+}
+
+fn hexDigit(c: byte) -> int {
+    if c >= '0' && c <= '9' { return int(c) - int('0') }
+    if c >= 'a' && c <= 'f' { return int(c) - int('a') + 10 }
+    if c >= 'A' && c <= 'F' { return int(c) - int('A') + 10 }
+    return -1
+}
+
+fn twoSymbol(a: byte, b: byte) -> bool {
+    if a == '+' || a == '-' || a == '*' {
+        if b == '=' || b == '%' { return true }
+        return a == '-' && b == '>'
+    }
+    if a == '/' || a == '%' || a == '!' { return b == '=' }
+    if a == '=' { return b == '=' || b == '>' }
+    if a == '<' { return b == '=' || b == '<' }
+    if a == '>' { return b == '=' || b == '>' }
+    if a == '&' { return b == '&' }
+    if a == '|' { return b == '|' }
+    if a == '.' { return b == '.' }
+    if a == '?' { return b == '?' }
+    return false
+}
+
+fn oneSymbol(c: byte) -> bool {
+    return c == '+' || c == '-' || c == '*' || c == '/' || c == '%' ||
+        c == '<' || c == '>' || c == '=' || c == '!' || c == '&' ||
+        c == '|' || c == '^' || c == '(' || c == ')' || c == '{' ||
+        c == '}' || c == '[' || c == ']' || c == ',' || c == ':' ||
+        c == '.' || c == '?'
+}
+
+fn main() {
+    let expected: Vec[int] = [
+        100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
+        100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
+        100, 104, 100, 100, 100, 104, 104, 100, 104, 104, 104, 104, 104, 104, 104, 104,
+        110, 118, 126, 134, 142, 150, 158, 166, 174, 182, 104, 100, 104, 104, 104, 104,
+        100, 189, 197, 205, 213, 221, 229, 101, 101, 101, 101, 101, 101, 101, 101, 101,
+        101, 101, 101, 101, 101, 101, 101, 101, 101, 101, 101, 104, 100, 104, 104, 101,
+        100, 189, 197, 205, 213, 221, 229, 101, 101, 101, 101, 101, 101, 101, 101, 101,
+        101, 101, 101, 101, 101, 101, 101, 101, 101, 101, 101, 104, 104, 104, 100, 100,
+        200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200,
+        200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200,
+        200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200,
+        200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200,
+        200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200,
+        200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200,
+        300, 300, 300, 300, 300, 300, 300, 300, 300, 300, 300, 300, 300, 300, 300, 300,
+        400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400,
+    ]
+    var words = 0
+    var digits = 0
+    var symbols = 0
+    var checksum = 0
+    var i = 0
+    while i < 256 {
+        let c = byte(i)
+        var mask = scalarWidth(c) * 100 + (hexDigit(c) + 1) * 8
+        if wordStart(c) { mask += 1
+            words += 1
+        }
+        if digit(c) { mask += 2
+            digits += 1
+        }
+        if oneSymbol(c) { mask += 4
+            symbols += 1
+        }
+        assert(mask == expected[i])
+        checksum += (i + 1) * mask
+        i += 1
+    }
+    println(words)
+    println(digits)
+    println(symbols)
+    println(checksum)
+    let pairs: Vec[int] = [8509, 9533, 9766, 10789, 10813, 11045, 11069, 11557, 11581, 11582, 11822, 12093, 15420, 15421, 15677, 15678, 15933, 15934, 16191, 31868]
+    var next = 0
+    var pairScore = 0
+    i = 0
+    while i < 65536 {
+        let expectedPair = next < pairs.len() && pairs[next] == i
+        assert(twoSymbol(byte(i / 256), byte(i % 256)) == expectedPair)
+        if expectedPair { next += 1
+            pairScore += i + 1
+        }
+        i += 1
+    }
+    assert(next == pairs.len())
+    println(next)
+    println(pairScore)
+    let sources = ["1e2".toString(), "1e+2".toString(), "1e-2".toString(),
+        "1e".toString(), "1e+".toString(), "1e-a".toString(), "e9".toString(),
+        "e-9".toString(), "e+9".toString(), "e0".toString(), "x".toString(),
+        "e\0".toString(), "eé".toString(), "1E2".toString(), "".toString()]
+    let positions = [1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0]
+    let answers = [true, true, true, false, false, false, true, true, true, true, false, false, false, true, false]
+    var found = 0
+    i = 0
+    while i < sources.len() {
+        let answer = exponentAhead(sources[i], positions[i])
+        assert(answer == answers[i])
+        if answer { found += 1 }
+        i += 1
+    }
+    println(found)
+}

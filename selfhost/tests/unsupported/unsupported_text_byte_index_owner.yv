@@ -1,0 +1,6 @@
+struct Text { value: String }
+fn selected(text: Text) -> int { return text.value.len() - 1 }
+fn main() {
+    let text = "x".toString()
+    println(text[selected(Text{value: text})])
+}

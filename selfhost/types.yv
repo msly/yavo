@@ -60,6 +60,7 @@ pub fn owned(reg: Registry, ty: Type) -> bool {
 
 pub fn cType(t: Type) -> String {
     if t.kind == .Int { return "int64_t".toString() }
+    if t.kind == .Byte { return "uint8_t".toString() }
     if t.kind == .Bool { return "bool".toString() }
     if t.kind == .Str { return "yv_str".toString() }
     if t.kind == .String { return "yv_string".toString() }
@@ -70,6 +71,7 @@ pub fn cType(t: Type) -> String {
 
 pub fn describe(reg: Registry, ts: Vec[Token], t: Type) -> String {
     if t.kind == .Int { return "int".toString() }
+    if t.kind == .Byte { return "byte".toString() }
     if t.kind == .Bool { return "bool".toString() }
     if t.kind == .Str { return "str".toString() }
     if t.kind == .String { return "String".toString() }
@@ -128,7 +130,7 @@ pub fn vector(_reg: Registry, ts: Vec[Token], token: int, elem: Type) -> Type ! 
     if elem.kind == .Unknown {
         return err(problem(ts, token, "E0001", "cannot infer the vector element type"))
     }
-    if elem.kind != .Int && elem.kind != .Bool && elem.kind != .String && elem.kind != .Named {
+    if elem.kind != .Int && elem.kind != .Byte && elem.kind != .Bool && elem.kind != .String && elem.kind != .Named {
         return err(problem(ts, token, "U0001", "this vector element type is outside the selfhost subset"))
     }
     return Type{kind: .Vec, elementKind: elem.kind, elementDecl: elem.decl}
@@ -163,7 +165,15 @@ fn checkDefault(p: Program, reg: Registry, ts: Vec[Token], value: Field) -> () !
     let e = p.expressions[id]
     var actual = primitive(.Unknown)
     if e.kind == .Number {
-        actual = primitive(.Int)
+        if value.ty.kind == .Byte { actual = primitive(.Byte) } else {
+            actual = primitive(.Int)
+        }
+    } else if e.kind == .Byte {
+        // Stage0 permits any integer field declaration here. Instantiating a
+        // default still checks its fixed byte type against the field type.
+        if value.ty.kind == .Int { actual = primitive(.Int) } else {
+            actual = primitive(.Byte)
+        }
     } else if e.kind == .Boolean {
         actual = primitive(.Bool)
     } else if e.kind == .Text {
@@ -175,7 +185,9 @@ fn checkDefault(p: Program, reg: Registry, ts: Vec[Token], value: Field) -> () !
     } else if e.kind == .Unary && ts[e.token].text == "-" && p.expressions[e.left].kind == .Number {
         // FieldDefault::of accepts a directly negated numeric token only.
         // Integer range is checked when a constructor instantiates the default.
-        actual = primitive(.Int)
+        if value.ty.kind == .Byte { actual = primitive(.Byte) } else {
+            actual = primitive(.Int)
+        }
     } else {
         return err(problem(ts, p.expressions[value.initial].token, "E0001",
             "a field default must be a constant literal"))
