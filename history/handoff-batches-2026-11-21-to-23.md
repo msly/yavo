@@ -1,0 +1,529 @@
+# Yavo 交接文档历史批次（2026-11-21 至 2026-11-23）
+
+从 HANDOFF.md 移出的第十二批至第二十六批原始记录（原第 18–31 节），以及第二十七批之前的“一句话状态”。内容未改写，现行状态以 HANDOFF.md 为准。
+
+## 移出前的第 1 节
+
+### 原第 1 节：一句话状态（截至第二十六批）
+
+**第二十六批完成 byte、文本单字节索引与七个原样词法器函数片段。** 新前端支持 byte 字面量、上下文整数表达式、参数/返回、checked/wrapping 算术、按位与位移、int/byte 转换和 Vec[byte]；文本索引复制出独立 byte，保留索引求值期间的 owner 根保护。七个 lexer 函数共 **1,671 字节**原样提取，加 **3,302 字节**独立入口及分隔符合成 **4,980 字节**输入，验证 256 种单字节分类、65,536 组双字符组合和 15 个指数前瞻。当前仍是 **2 份完整源码、3 个 prefix 工作负载，另有 7 个函数片段**；model 新增两个 Byte 枚举项，从 1,581 增至 **1,599 字节**，原存储/遍历入口继续使用当前完整文件原样拼接。实现提交 `aecdfe58e6f81b794c48827fa2e49905a59331e5`；冻结规模 **321/119/10**，完整门状态见第 31.2 节。仍 `self_hosted=false`，没有 stage2/stage3。下一增量是文本显式双端切片与表达式内 str 视图，以原样 `lexer.integerLiteralFits`、`codegen.minimumMagnitude` 验收；累计将为 8 个 lexer 和 1 个 codegen 函数片段，完整 lexer/codegen 仍未接入。
+
+**第二十五批完成表达式内只读元素索引与原样 AST 内容遍历。** 非 Copy Vec 元素通过只读槽借用访问，支持连续字段、嵌套索引、普通只读实参、String 输出/比较与 String/Vec 显式 clone；Copy/len/clone 结果及时脱离原根。原样 model 的 **1,581 字节**加 **6,769 字节**遍历入口，合成 **8,350 字节**输入，读取四类 Program 向量及内部 Vec，固定内容摘要 **18,594**；原 Program 重置后独立 clone 的合成摘要为 **20,410**。当前为 **2 份原样源码、3 个 prefix 工作负载**，仍 `self_hosted=false`，没有 stage2/stage3。实现提交 `b5dfe9feb5c48bd22defd73b01f0b917dfbc2baf`；冻结验收规模 286/102/10，完整本机与 CI 状态见第 30.2 节。下一增量是 byte、文本单字节索引、int/byte 转换与 Vec[byte]，以七个词法器原样函数片段验收；持久借用和整份 lexer 接入仍有独立依赖。
+
+**第二十四批完成拥有元素 Vec 与原样 AST 存储。** 新前端支持 Vec[String] 和元素含 String/Vec 的拥有结构，构造与 push 消费元素，递归 clone/drop 保持独立拥有权；间接递归类型由完整布局与前置 helper 声明处理。原样 model.yv 的 **1,581 字节未改**，追加入口构造 Program 四类非空向量及内部数据，覆盖字段 push、移动、返回、重赋值与资源清理；原样 diagnostic 的 438 字节验收继续保留。实现提交 `c7be68216129dc9f1dad5aad668e2f1382142c1d`。本机总结果与 CI 状态见第 29.2 节；当前仍 `self_hosted=false`。本批只验证 AST 存储长度与资源管理，尚未读取拥有元素内容。下一步是非 Copy 索引的表达式内只读借用、字段投影、普通只读实参与 String/Vec 显式 clone，以原样 model 的遍历摘要作为退出条件。
+
+**第二十三批完成 Copy 元素的 Vec。** 新前端支持 int/bool/无载荷枚举/Copy struct 的向量字面量、类型化空构造、len/push/reserve/clone、边界检查、索引读取与赋值、容器移动及析构；新增可增长的 token 元数据表示例。补齐 stage0 已有契约中的 Vec[T]{} 空构造分派并增加回归。实现提交 `7881db94f1509baa317d9bf84fae2ae28f402a80`；本机完整 Debug/Release 各 **145/0/1**，自举门 **242/242 cases、10/10 checks、0 skip**，78 个可执行输入的两模式固定预期与差分全部通过。原 181 个输入源码字节全部保留，61 个新例，1 个旧向量例原样迁为 run。当前 `self_hosted=false`，尚无 stage2/stage3。下一增量是 **拥有元素 Vec → 原样 model.yv 的 AST 构造与资源管理**，CI 及完整验收见第 28 节。
+
+**第二十二批完成 String / Failure 所有权闭环。** 自举前端支持 String 与拥有字符串的嵌套结构、移动/借用读取、内建字符串方法、语句临时值与控制流析构；现有 diagnostic.yv 的 **438 原始字节未改**，追加独立 main 后由新前端编译并执行。最终本机 **181/181 cases、10/10 checks、0 skip**，55 个可执行输入的 Debug/Release 固定输出、Rust 差分及重复 C 全部通过。两项 stage0 接受但存在行为缺口的转移边界明确 U0001；尚未产出 stage2/stage3。本批 [CI 45044246299](https://github.com/msly/yavo/actions/runs/45044246299) 6/6 jobs 通过，三平台 selfhost gate 与新 Linux selfhost C 的 GCC ASan/UBSan 门均成功；详细结果与首轮失败记录见第 27 节。下一步为 Vec 的 Copy 元素，再拥有元素及参数模式。
+
+**第二十一批完成自举前端的 Copy 聚合类型。** 新前端支持名义结构体、无载荷枚举、前向/嵌套字段、构造与默认值、只读/可变字段访问、按值参数与返回、枚举上下文推断和输出。最终本机 **138/138 cases、10/10 checks、0 skip**，39 个可运行输入在 Debug/Release 与固定预期、Rust 参照一致，重复 C 一致。原 72 条输入源码字节保留，新增 66 条；旧 unsupported_struct 原样转为正例。Rust/运行时/冻结规格未改。[本批 CI 45025445954](https://github.com/msly/yavo/actions/runs/45025445954) 在实现提交 `fbb322e` 上 6/6 jobs 通过，三平台 selfhost gate 全部成功。**仍是子集编译器，`self_hosted=false`；下一步先闭合 String / Failure 所有权，再推进 Vec。** 详见第 26 节。
+
+**第二十批按用户授权把近期主目标调整为自举。** `selfhost/` 已有用 Yavo 编写的词法器、AST/parser、基础类型/名字/返回检查及 C 生成；72 个外部用例通过（14 正常、9 panic、39 拒绝、10 明确 unsupported），23 个可运行输入在 Debug/Release 均与固定预期和 Rust 参照一致，重复生成 C 字节一致。10 项辅助检查通过，含源码输出别名保护和输入哈希稳定性。**当前是 SH-1 子集编译器，不能编译自己的源码，`self_hosted=false`。** 同批修复 stage0 对用户 `panic` 的退出路径误判，新增 `fs.writeNewText` 原子独占创建文件；细节见第 25 节。
+
+**上一批（第十九批）新增后端优化，不修改任何 Yavo 语言语义。** 在已有完整二进制内容寻址缓存之外，正常 `build`/`run` 的 pinned Zig 路径可把 1931 行运行时头文件缓存为按目标/模式/插桩划分的 SHA-256 校验 PCH，源文件改动后也复用。两轮四程序×每程序七配对 Release 构建测得 1.27–1.45x 加速，全部配对二进制 SHA-256 一致；每轮三项 ≤200 ms，超标程序并不一致，正式的代表性 200 ms 门尚未闭合。最新 Debug/Release 全套各 **133/0/1**（17 测试组，服务器完整退出码均 0）。细节见第 24 节。
+
+规范以 v0.5 冻结版为基础，2026-11-21 按第三轮实验修订了 V2（两阶段借用）、K1（`String`/`str` 比较），新增 V6a（字段默认值）、V14（P-STACK），见 `docs/decisions.md` 第六节；冻结测试包 `yavo-tests/` 不改。Rust 编译器与 C 运行时覆盖 P0 链路及 P1—P3 的主要功能：结构体、枚举、`T ! E`、`match`、`String`/`Vec`/`Map`/`Set`、切片、移动与析构、视图与 `of`、`&T`/`&inout T`、`?T`、方法、`Drop`、元组、不逃逸闭包、`Eq`/`Ord`、`Box`、接口、泛型、浮点；并发（`Rc`/`Arc`/`Mutex`/`with`/`scope`/`spawn`/`Channel`/`Send`/`Sync`）；Heap/Deque、`Arena[T]`/`Id[T]`、源文件模块；`yavo fix`/`allocations`/`verify`；后端构建缓存；六个目标的交叉编译。第十五批补入 V2a（元素上的修改方法），见 `docs/decisions.md` 第七节。**P0—P3 主体功能已实现，完整 v1 尚未验收，P4 仍为小规模试验。** 三平台 CI 已落地；Windows/macOS 为明确选定的原生套件。完整 v1 的工具/语言缺口、Agent 成本和正式性能门尚未闭合。各批次细节见第 4 节和 `history/`。
+规范一致性：**129 项中通过 124、判错 0、不支持 3、未运行 0、被新决定取代 2**（T-V1、T-GF2 断言旧 V2，登记在 `compiler/tests/conformance_superseded.txt`；不支持的 3 项需要锁定工具链无法链接的 ASan 运行时）。该统计只表示既有用例覆盖，不是完整 v1 完成比例。
+**2026-11-22 用户已授权推送 `msly/yavo` 并使用 GitHub CI。** 以下保留第十八批 `073003d` 六项任务通过的历史证据；最新自举 CI 见第 31 节。历史 [run 45002067581](https://github.com/msly/yavo/actions/runs/45002067581) 同时覆盖三平台、独立 ASan/UBSan、第五轮证据审计及第六轮准备检查；六份产物均已下载并核对内容、字节数与 SHA-256，回执在 [github-ci-agent-eval-2026-11-22.json](compiler/validation/github-ci-agent-eval-2026-11-22.json)。Linux 另有 12 项文档程序/诊断检查通过。第 21、22 节保留前两批 CI 历史；旧“暂不推送”约定已被本次授权取代。
+本地测试基准 `b3c27a6`：第十五批完整单条命令 Release **129 通过 / 0 失败 / 1 忽略**、Debug **129/0/1**；这是 Cargo 测试函数数，和上面的 129 项规范用例是不同计数单位。忽略的是旧 P0 探索性报告，当前 conformance 套件会执行。第十四批 `1af1f69` 为 123/0/1，新增 6 项为 `index_assignment.rs`；六个交叉目标能构建含 P-STACK 运行时的程序，最新原生 CI 覆盖 Linux x86-64 全套与 Windows x86-64/macOS arm64 选定套件。
+**最新已完成 agent 实验（第五轮，第 22 节）**：12 份新规格，4 个不继承父会话的独立会话，每语言 2 次；Yavo、Rust 均 **24/24 首编与完整题目要求通过**，包括公开、隐藏用例及模块/线程结构。48 份交付的首稿与终稿完全相同，0 次修复；96 个首/终稿快照合计 1,344 次重放全部通过。Yavo/Rust 的受控 lab 操作为 138/132（1.0455 倍），端到端时间为 671.2876/557.0373 秒（1.2051 倍）；多出的 6 次操作全是两批各 3 次速查卡读取。token、精确模型 ID、采样参数缺失并保留 `null`，正式成本门仍 blocked。三题是旧题型的新规则，模型配置也不同于历史 Sonnet，不能将跨轮首编提升归因于编译器修改。第四轮原始结果与 T10 前导零失败保留在第 20 节。
+
+**第六轮准备（第 23 节）**：短版启动卡与按需索引已实现，12 项程序/诊断检查通过；逐请求 Responses 执行器、资格验证、八题文档对照及证据审计已准备。当前 CLI 状态数据库不可写，环境无可用 API key；真实资格 `blocked`，**0 次受试模型请求、0 会话、0 交付**。该实验保留为后续产品证据；有授权计量环境后再完成资格，不再作为当前自举开发的前置步骤。
+
+
+## 18. 第十二批：后端构建缓存、run 信号报告与上一批复核（2026-11-21）
+
+### 18.1 对第十一批的复核结论
+
+- **实现与测试结论可信。** 在 `68024e2` 上单条命令复跑：Release 113/0/1（55 s）、Debug 113/0/1（117 s），与记录一致。另写了 21 个对抗程序，其中 16 个真正触及目标检查（其余 5 个是我自己的语法错误、漏写 `use std/sync` 或用了未实现的 `Vec.clear`）：迭代中修改 Vec/Map/Arena、借用期间扩容、跨函数返回借用、视图写进 inout、可变/只读借用冲突、线程可变借用、`Rc` 跨线程、溢出、越界、Drop 次序，15 个得到正确的拒绝或 panic，诊断定位准确、提示可操作；第 16 个发现了下面的栈溢出问题。
+- **更正 1：测试不需要分批。** 记录里 Debug 超时、Release 分四批是执行环境时限所致；空闲机器上单命令即可跑完。
+- **更正 2：缓存键的范围。** 第 10 节原写法要求把“完整源图、编译器”纳入键。实际只需对后端真正的输入取键：生成的 C 字节、运行时头、实际编译参数（含目标）、工具链锁与编译器路径、本机构建的 CPU 特征。源图或编译器的任何变化只要改变生成的 C 就自动改变键；不改变 C 的变化（如不移动行号的注释）复用产物是正确的。前端只要约 3 ms，不需要缓存。
+- **更正 3：缓存不能把编辑循环降到 200 ms 以下。** 路径对照（36 ms 对 226 ms）测的是“相同 C 换路径”；agent 每次编辑都会改变 C，必然未命中。实测见 18.3。
+- **新发现：栈溢出与崩溃时丢失输出**（见第 7 节）；`yavo run` 原先把被信号终止的程序当作内部错误以退出码 4 静默退出，与“编译器内部错误”混淆。
+- **方向性问题：** 六批以来工作集中在功能和证据完备性（哈希绑定的工件、数百项引用复核），而语言的核心指标——agent 编程效率——仍停留在第二轮结果，且该结果落后 Rust。第 10 节已把第三轮实验提到第一优先。另：本文件已约 65 KB，每个新会话读一遍成本不低，后续宜把第 11–17 节历史批次压缩为摘要并移到 `history/`。
+
+### 18.2 实现
+
+- `src/cache.rs`：内容寻址后端缓存。布局 `<root>/build/<key>/{main.c, yavo_rt.h, out, out.sha256}`；C 输入放在每个键的稳定路径上，缓存条目被淘汰后 zig 自身缓存仍能命中。命中前校验产物 SHA-256，不符或校验和缺失按未命中重建并覆盖；发布顺序为“写唯一临时文件 → 改名为 out → 原子写校验和”，并发写同一键结果一致。复制而非链接到用户输出，用户修改输出不影响缓存。条目数上限 256（`YAVO_CACHE_MAX_ENTRIES`），按最后使用时间淘汰。
+- 只在固定 zig 工具链下启用；`YAVO_CC` 覆盖没有可哈希的身份，照旧不缓存。缓存目录不可用时回退为无缓存构建，不让构建失败。`yavo verify` 走自己的构建路径与全新 zig 缓存，不读写本缓存，可复现检查不受影响。
+- `toolchain.rs`：编译参数集中到 `Toolchain::flags`，缓存键与实际命令用同一份列表，不会漂移。
+- `yavo run`：程序被信号终止时打印信号名，SIGSEGV/SIGBUS 附“多半是栈溢出、未刷新输出已丢失”的提示，退出码 128+N（原为 4）。USAGE 写明退出码与缓存环境变量。
+
+### 18.3 测量（`benchmarks/small-c-v1/results/build-cache.json`）
+
+空闲 4 核服务器，固定 zig 0.17.1，每项 7 次取中位数。
+
+| 场景 | Release | Debug |
+| --- | ---: | ---: |
+| 未改源码重建（命中） | 2–3 ms | 10 ms |
+| 编辑后重建（未命中，四项基准） | 214–247 ms | 159 ms（vec_transform） |
+| `YAVO_NO_CACHE=1` | 215–240 ms | — |
+| 前端 `check` | 3 ms | 3 ms |
+
+只编译空 C 并链接约 47 ms；只含运行时头约 105 ms（`-O2`）/ 96 ms（`-O0 -g`）。每次未命中约 50–60 ms 花在运行时头上，预编译运行时 `.o` 是下一步（第 10 节第 5 项）。完整测试套件在缓存加入后用时基本不变（Release 58–65 s）：大头是 verify/conformance（按设计绕过缓存）和实际运行程序。
+
+### 18.4 验证
+
+- `tests/build_cache.rs` 9 项，连续 8 次运行全部通过（并发用例无抖动）。
+- 完整套件单命令：Release 122/0/1（冷缓存 65 s、热缓存 58 s），Debug 122/0/1（135 s）。冻结 conformance 统计不变（126/0/3/0）。
+- 本批未改代码生成与运行时，第十一批的 ASan+UBSan、可复现构建与运行性能结果仍然适用，未重跑。
+
+## 19. 第十三批：速查卡对齐与第三轮冷启动实验（2026-11-21）
+
+### 19.1 速查卡对齐（开跑前，`642e8be`、`7cc377c`）
+
+逐项实测速查卡与编译器：删除“编译器还不存在”的过时说明、6 个不存在的命令（`test/fmt/outline/doc/explain/audit`）、`test` 块、`std/time`、`std/rand`；补多文件模块写法、Arena 方法与“不能遍历”、Deque、字符串转义 `\$`、`ch.close()` 与多线程共用 channel；新增第 9 节“尚未实现”。
+
+### 19.2 实验与结果
+
+完整报告 `experiments/coldstart-2026-11-21/README.md`。12 道不点名特性的新题（图删除、树移动、表达式树、哈夫曼树、两道多文件、两道并发、修复题等），Sonnet 受试者，Yavo 只给速查卡，Rust 对照；Python 参考实现生成期望输出；`verify.sh` 独立复核含结构要求。
+
+| 指标 | Yavo | Rust |
+| --- | --- | --- |
+| 独立复核 | 18/18 用例、4/4 结构要求、堆块检查干净 | 18/18、4/4 |
+| 第一次编译即正确（11 题，不含修复题） | 3/11 | 11/11 |
+| 有效代码编译失败 | 8 | 0 |
+| token / 工具调用 / 用时 | 165k / 52 / 308 s | 125k / 22 / 167 s |
+
+Yavo 8 次失败：实现缺口 2（字段默认值、`v[i] = x`）；与直觉相反的设计 4（不做两阶段借用 ×2、`String == str`、非 Copy 用 `getCopy`）；文档写了但没看到 2（`"\${"`、已有变量 `if let` 只借用）。图、树、并发、多文件题没有所有权类失败。修复题 Yavo 一次报全 7 条错误，rustc 分阶段只先报 E0106，这是 Yavo 唯一明显占优之处。受试者从未用 `yavo fix`/`check`。
+
+### 19.3 实验后修改（本批提交）
+
+速查卡：字段默认值与下标赋值列入第 9 节并给替代写法；规则 7 改为“实参里任何读接收者的表达式都会被拒绝”；第 3 节区分对临时值与已有变量的 `if let`；`Map` 行补非 Copy 值取法。编译器未改。HANDOFF 压缩：第 4 节完整提交表和第 11–17 节移到 `history/handoff-batches-2026-11-19-to-21.md`，本文件从 72 KB 降到约 37 KB。
+
+### 19.4 结论
+
+“agent 写起来比 Rust 高效”目前**不成立**：最终正确率持平，但一次写对率和成本都落后，且差距没有随功能完善而缩小。好消息是失败几乎全部集中在少数可消除的点上，而不是所有权模型本身；所以下一步应先消除这些点（第 10 节第 2、3 项），再用新题重测，而不是继续扩功能。
+
+## 20. 第十四、十五批：语言决定、下标赋值与第四轮复测（2026-11-21—22）
+
+### 20.1 第十四批（`1af1f69`）：按第三轮实验的四项语言决定
+
+用户同意按开发者建议执行（`docs/decisions.md` 第六节，第 12–16 项）：
+
+- **两阶段接收者（V2 修订）**：修改接收者的调用和 `v[i] = x` 中，接收者在实参求值期间只是预留；实参可以读，不能修改、移动，值也不能在调用开始后仍指着它（E0403）。实现：`FnCx.call_reserved`、`with_reservation`、`reserved_conflict`。T-V1、T-GF2 登记为 superseded。
+- **`String`/`str` 比较（K1）**：比较时把 `String` 一侧包成 `StrView`。
+- **字段默认值（V6a）**：只允许常量，见 `FieldDefault`。
+- **P-STACK（V14）**：备用信号栈（mmap），保护区内的故障报为 `P-STACK at file:0:0` 并刷新 stdout，退出码 101；主线程用 RLIMIT_STACK 定界，Windows 用 VEH。不运行用户代码的 `Box` 内容走 `yv_box_release` 工作列表释放，20 万层的树、30 万长的链表都能正常释放。
+- **下标赋值（C2、V5）**：先求新值，再求下标、做越界检查，再析构旧元素并写入；降级为 `{ let $value; let $slot = &place; *$slot = $value }`。
+
+### 20.2 第四轮复测（`experiments/coldstart-2026-11-21-r4/`）
+
+同一题包，`1af1f69` 编译器。首编正确（11 题，不含修复题）：Yavo 8/11（第三轮 3/11），Rust 11/11；18 个运行用例两组都通过。成本：Yavo 162,464 token、38 次工具调用、276.8 s；Rust 127,801、24、170 s（比值 1.27、1.58、1.63）。剩下 3 次失败：T03 非 Copy 元素读出即借用（E0102）、T04 `${` 未转义、T05 `dependents[pi].push(i)` 报 U0001。交卷后另一位 agent 审计发现 T10 的 Yavo 解答拒绝前导零输入，这是解答的 bug，不是编译器的问题。报告初稿里 Yavo 成本写成“缺失”，2026-11-22 按编排会话的记录补上。
+
+### 20.3 第十五批（2026-11-22）
+
+- **另一位 agent 补的下标赋值求值顺序**（`check.rs`，配套 `compiler/tests/index_assignment.rs`，6 项）：
+  - 新值先求，它持有的借用记在 `FnCx.assignment_shared` / `assignment_mut` 里；目标地址求值时若修改或移动这些借用源，报 E0102。
+  - 目标的上下文类型由 `assignment_target_ty` 在不产生副作用的情况下提前确定，泛型调用只实例化一次（抽出了 `prepare_generic_fn`）。
+  - 无法提前确定类型的复杂目标报 U0001，而不是重排副作用。
+  - 本批复核：Release、Debug 全绿。
+- **决定 17：元素上的修改方法**：`v[i].push(x)`、`ms[i].set(k, v)`、`ps[i].tags.push(s)`、`ps[i].moveBy(1)`、`g[r][c].push(x)`。`method_call` 里的 `indexed_receiver` 加 `mutating_method`（只看类型：内建修改方法表，以及 `inout self` 的用户方法）。先 `mutable_address` 取得元素的 `&inout`，绑定到 `$receiver`，再走已有的方法路径。实参使用容器报 E0403，与 Rust 一致；只读方法不变。测试：`run_index_methods.yv`、`errors_index_methods.yv`。语义表新增 V2a。
+- **决定 18、19（只改诊断和文档）**：
+  - E0102 在借用者是 `&T`（非 Copy 元素读出）时提示 `.clone()`。
+  - 词法 E0020 未闭合的 `${` 提示写 `\${`。
+  - 速查卡规则 7、第 1 节转义说明、第 7 节新增两行。
+- 第四轮 README / results.json 补 Yavo 成本，并注明 T03–T05 的后续处理。
+
+### 20.4 结论
+
+首编差距大幅缩小（3/11 → 8/11，第四轮的三处障碍本批已处理），但成本差距仍在，同题复测也不能说明泛化。下一步是用新题、多次独立运行、完整计时的第五轮（第 10 节第 2、3 项），而不是继续扩功能。
+
+## 21. 第十六批：GitHub 发布与 CI 接入（2026-11-22）
+
+**[第三次 CI 44991523612](https://github.com/msly/yavo/actions/runs/44991523612) 的四项任务全部通过，统一验证提交为 `8a65228f31139a4b07e256fec70ccd6aaff06176`。** GitHub 仓库为 [msly/yavo](https://github.com/msly/yavo)。语言功能基准仍是 `b3c27a6`：解析、类型/借用检查、代码生成、运行时与冻结测试未改；本批修改了 Windows `verify` 构建驱动、CI、平台测试、sanitizer 导出与文档。
+
+### 21.1 当前验证结果
+
+| 平台/范围 | Debug | Release | 证据 |
+| --- | --- | --- | --- |
+| Linux x86-64 完整 Cargo 套件 | **129/0/1** | **129/0/1** | [工件](https://github.com/msly/yavo/actions/runs/44991523612/artifacts/14742107791)；含六目标构建与冻结规范 |
+| Windows x86-64 选定原生套件 | **71/0/1** | **71/0/1** | [工件](https://github.com/msly/yavo/actions/runs/44991523612/artifacts/14741324499)；空格/Unicode 模块快照与重放通过 |
+| macOS arm64 选定原生套件 | **74/0/1** | **74/0/1** | [工件](https://github.com/msly/yavo/actions/runs/44991523612/artifacts/14741947108) |
+| 独立 Linux ASan+UBSan | **60 通过 / 0 失败** | — | [工件](https://github.com/msly/yavo/actions/runs/44991523612/artifacts/14742196791)；GCC 13.3，全部导出的 P0 run/panic fixtures |
+
+原生套件数字为通过/失败/忽略。Windows 比 macOS 少 3 项是 `cfg` 排除了 2 个 Unix 进程单元测试和 1 个 Unix symlink 模块测试；各平台均无运行时过滤。Linux 的 Debug/Release 规范报告均为 **124 pass / 0 wrong / 3 unsupported / 0 not_run / 2 superseded**；P0 在 C `-O0` 与 `-O2` 各执行 101 个 fixtures。
+
+Windows/macOS 执行 [CI 说明](tools/ci/README.md) 列出的 `NATIVE_TESTS` 与编译器单元测试，其范围小于 Linux 全量。独立 GCC 的 clean、故意 UAF、带符号溢出能力探针均通过；该配置启用 Yavo 堆块检查、关闭 LeakSanitizer，不改变固定 Zig 的 3 个 ASan unsupported 项。
+
+项目服务器此前也分别完整复跑 Release、Debug，均 **129/0/1**、各 17 组；首个合并驱动在 Debug 遭执行时限终止后，已独立完整重跑。各次 CI 的版本、范围、计数、工件与关键哈希已固化到 [验证收据](compiler/validation/github-ci-2026-11-22.json)。
+
+### 21.2 首跑、复跑与修复
+
+[首次运行 44989988675](https://github.com/msly/yavo/actions/runs/44989988675) 绑定 `47b5880`，Linux 全量通过，其他三项失败。[第二次运行 44990668032](https://github.com/msly/yavo/actions/runs/44990668032) 绑定 `8b49e61`，Linux、macOS、独立 sanitizer 通过，Windows 在模块验证构建中失败。第三次同一提交的四项任务全部通过后，才记录本批 CI 接入完成。
+
+| 提交 | 修复与验证范围 |
+| --- | --- |
+| `c8f06ff` | 修正 clean checkout 下 Perl 读取空 Git 状态时的空值上下文，恢复 sanitizer bundle；实际导出 60 个程序并核对哈希 |
+| `26378ba` | Darwin 故障注入 C fixture 的 feature macro 移到系统头之前；Markdown/验证 JSON 单独变化不重复触发 CI |
+| `8b49e61` | Windows panic 路径期望兼容分隔符；全新 C 工具链顺序预热 Debug/Release，每 fixture 120 秒时限不变 |
+| `8a65228` | Windows `verify` 使用经边界校验的工件目录相对路径，避免 Zig 无法识别扩展格式绝对路径；记录 cwd，现有模块快照回归加入空格/Unicode；本地 verify 15/0、模块回归 1/0，随后三平台 CI 通过 |
+
+历史 `0a69e75` 的 58 例 sanitizer（含当时额外的 Arena/模块程序）、四项 C pilot 与可复现结果保持原版本/日期；它们与本次 60 个 P0 fixtures 的范围不同。本批未重测运行性能或 Agent 编程成本，下一步是第 10 节的新题第五轮。
+
+## 22. 第十七批：第五轮新规格实验与成本分解（2026-11-22）
+
+**Yavo、Rust 各 24/24 首次编译、公开用例、隐藏用例和必需结构要求通过。** 本轮有 12 份新规格、4 个独立 `fork_turns="none"` 会话，每语言两批；首波 Yavo A/Rust A 并发，次波交换启动次序为 Rust B/Yavo B。全部 48 份首稿与终稿逐字节相同，没有编译失败、公开样例失败或修复。实验包冻结提交为 `8c200aa`，语言/编译器基准为 `5cd916b`，最后编译器代码改动为 `8a65228`；本批未改编译器、运行时、语言规范或冻结 129 项规范输入。
+
+### 22.1 正确性与证据
+
+每题 2 个公开用例和 12 个隐藏用例（8 个明确边界、4 个固定种子随机用例），共 168 个不同输入。四批全部交卷封存后才运行隐藏裁判，结果不反馈受试者修复。96 个首/终稿快照分别重放，**公开 192/192、隐藏 1,152/1,152，合计 1,344/1,344**；48 对首/终稿源码相同，这些重放不增加独立题目或会话数。Yavo 重放启用 `YAVO_ALLOC_CHECK=1`。
+
+行为复核逐条核对输入 hash、完整输出字节、落盘输出、退出状态、104 个源文件 hash 和 96 个工件 hash；未发现行为失败可归因于解答算法或编译器。T04 全部解析/精确换算位于非入口模块，T06 三个真实 OS 线程先启动再等待、分别编码指定片段后有序合并，两项结构要求均逐份源码审计通过。
+
+原始受试操作、每次源码写入、首编前源图、实际构建命令、退出状态与单调时钟已直接保存在实验目录。来源：[报告](experiments/coldstart-2026-11-22-r5/README.md)、[结果](experiments/coldstart-2026-11-22-r5/results.json)、[行为复核](experiments/coldstart-2026-11-22-r5/evidence/behavior-review.json)、[结构复核](experiments/coldstart-2026-11-22-r5/evidence/manual-review.json)。
+
+### 22.2 操作与时间
+
+| 会话 | 首编且完整题目通过 | 受控 lab 操作 | 端到端秒数 |
+| --- | ---: | ---: | ---: |
+| Yavo A | 12/12 | 69 | 337.8823 |
+| Yavo B | 12/12 | 69 | 333.4053 |
+| Rust A | 12/12 | 66 | 282.2978 |
+| Rust B | 12/12 | 66 | 274.7395 |
+| Yavo 合计 | 24/24 | 138 | 671.2876 |
+| Rust 合计 | 24/24 | 132 | 557.0373 |
+
+Yavo/Rust 操作比 **1.0455**，时间比 **1.2051**。多出的 6 次操作全部来自 Yavo 两批各 3 次读取冻结速查卡（32,889 字节）；读题、写代码、构建、公开运行等其他类别计数完全相同。该指标是单请求单操作的受控 lab 计数，不是平台总工具调用，不能直接与旧轮 38/24 求改善比例。
+
+实际编译进程累计 Yavo 5.3451 秒、Rust 3.8910 秒，差 1.4541 秒，只占端到端差 114.2503 秒的一小部分。会话区间还包含模型处理、操作等待与并发影响，现有记录未分离其各自贡献。完整边界与类别见 [成本分解](experiments/coldstart-2026-11-22-r5/evidence/cost-analysis.json)。
+
+### 22.3 保留的缺口与后续动作
+
+token、精确服务模型 ID 和 sampling 无可核验来源，均为 `null`；协作工具未暴露 usage，只读 CLI 初始化探针失败。正式“单位成功交付成本至少低 20%”门仍为 blocked，不估算 token 或货币成本。当前会话配置不同于历史报告中的 Sonnet，且题包更换，不能把第四轮到第五轮的首编变化归因于语言/诊断修改。
+
+三题沿用旧题型并加入新规则：T01 账本增加原子批处理，T06 游程编码增加三线程切分与边界归并，T07 LRU 增加 TTL；其余九题是其他新规格。本轮是新规格诊断，不是严格的全题型留出。
+
+下一步依次为：可记录真实 usage 的执行器、同模型完整/最小速查卡对照、60 题 pilot。未出现新失败，不据此扩大语言语义。完整 v1 缺口、正式不少于 400 题设计与验收门保持第 7、10 节及 `docs/plan.md` 的原口径。
+
+本批增加第五项 CI 任务检查实验证据；**`0bad3d2` 已推送，[run 44996118634](https://github.com/msly/yavo/actions/runs/44996118634) 五项全部通过**。Linux Debug/Release 均 129/0/1，Windows 选定套件均 71/0/1，macOS 选定套件均 74/0/1；独立 ASan/UBSan 为 60 通过、0 失败；实验归档的 1,344 条判定、96 个源码阶段、16 项结构审查、43 个冻结文件及 28 个题包文件全部核验通过。Linux 两种模式的一致性均为 124/0/3/0/2。五份下载产物的大小与 SHA-256 均匹配 GitHub API；完整来源、命令记录和范围在 [CI 回执](compiler/validation/github-ci-round5-2026-11-22.json)。第 21 节保留 `8a65228` 的历史 CI 结果。最终文档与回执提交沿用上述已验证实现，不改变编译器或实验证据检查程序。
+
+## 23. 第十八批：计量执行器、短版文档与第六轮准备（2026-11-22）
+
+### 23.1 可用产物与实际验证
+
+- `docs/agent-start.md`：134 行、8,936 字节；`docs/agent-api-index.md`：33 行、3,607 字节。合计比 32,889 字节完整卡少 61.9%。四个文档项目、四个规则正例和四个诊断反例全部通过，见 `compiler/validation/agent-start-2026-11-22.json`。字节下降尚未转化为受试 token 成本证据。
+- `tools/agent_eval/`：每次 provider 请求保存原始请求/响应、唯一标识、usage、返回模型及参数；严格区分请求模型和返回模型、显式设置和服务默认值。API key 不传给 lab/编译器/受试程序。资格链必须消费真实只读 probe 的结果，合成 fixture 不可进入参与者运行。
+- `experiments/docs-ab-2026-11-22-r6/`：8 道新规格，16 公开、96 隐藏输入；两次重建一致，独立替代算法复核 112/112。两组共用索引与十八个按需 API 主题，分别提供完整卡和短卡。协议计划 32 份交付，当前为 0。
+- 新记录器保留首次实际编译前源图；缺入口文件不占首编编号、不允许空提交；模型设置/执行器身份、文档页字节和源码漂移均有针对性检查。汇总须从原始 provider 与 lab 链重算，缺失量保留 null。
+
+### 23.2 资格阻塞与接手条件
+
+已有 Codex 0.172.0-alpha.2 的新 stdio 初始化路径，在打开 `/home/agent/.codex/state_5.sqlite` 时失败。当前环境没有 API key；没有移动 HOME/CODEX_HOME、复制认证或更改权限。CLI turn 汇总与 thread/turn usage 通知也不能单独证明逐 provider 请求身份。原始错误和导出 schema 观察在第六轮 `evidence/executor-probe.json` 及其子目录。
+
+当前配置模型与 freeze 字段为 null，实际模板调用在网络前拒绝，provider 请求 0；默认 `launch-qualification.json` 为 blocked。准备清单绑定当前源文件，但尚未创建带实际模型/主机工具身份的 runtime freeze。必须先选择并冻结可计量模型，完成真实资格，再开始受试；不能把离线测试或 CI 绿灯当作第六轮完成。
+
+服务器已安装 Python 3.13.18 独立运行时，官方发布包的 35,596,130 字节及 SHA-256 已核对；SSL 默认 CA 验证 HTTPS、urllib 和 Perl 均可用。服务器实跑 33 项执行器、25 项 lab/audit/freeze、11 项裁判/汇总场景，94 个准备文件与 112 个独立 oracle 输入全部通过；启动状态仍 blocked，0 模型请求/会话/交付。环境部署回执为 `compiler/validation/agent-eval-runtime-2026-11-22.json`，没有为绕过认证而修改 HOME、CODEX_HOME 或系统权限。
+
+### 23.3 CI 与未完成验收
+
+本批实现提交 **`073003dff72de36dfb9fd7b33afb774dea24eebc`** 已推送；[run 45002067581](https://github.com/msly/yavo/actions/runs/45002067581) **六项任务全部通过**。Linux Debug/Release 均 129/0/1，Windows 选定原生套件均 71/0/1，macOS 选定原生套件均 74/0/1；Linux 两种模式规范一致性均为 124/0/3/0/2；独立 ASan+UBSan 为 60 通过、0 失败。Linux 重编短卡示例和规则程序、检查预期诊断，12/12 通过，单独计数。
+
+新增 Agent evaluation preparation 检查通过 33 项执行器测试、25 项 lab/audit/freeze 测试、11 项裁判/汇总场景，核对 94 个准备文件及 112/112 个独立 oracle 输入；第五轮 1,344 条判定、96 个源码阶段、16 项结构审查继续通过。六份产物的下载字节数和 SHA-256 均匹配 GitHub API，实际报告、来源提交与范围见 [CI 回执](compiler/validation/github-ci-agent-eval-2026-11-22.json)。这些检查没有发起真实模型请求；第六轮仍为 0 会话、0 交付。
+
+最后的文档与回执提交仅记录上述已验证实现。编译器、运行时、语言语义和 R5 冻结输入均未修改；完整 v1、Agent 正式成本门和正式 C 性能门继续未验收。
+
+## 24. 第十九批：运行时 PCH 内容缓存与构建性能（2026-11-22）
+
+### 24.1 实现范围
+
+- `compiler/src/toolchain.rs`：保持原 `compile` 接口；新增 `precompile_header`（以真实的 target/Release/Debug/`YV_ALLOC_CHECK` 参数执行 `zig cc -x c-header`）和 `compile_with_pch`。保留原 `verify` 编译路径；PCH 不更改运行时 C 代码、ABI 或 Yavo 语言规则。
+- `compiler/src/cache.rs`：独立 `<root>/pch/<key>/`，PCH key 包括整个运行时头、完整工具链锁、Zig 程序路径、C flags、目标和原生 CPU 指纹，不包括用户代码。PCH 与 checksum 原子发布，使用前检查 SHA-256，损坏或缺失时重建；并发构建用独立临时文件。默认只保留最近 32 个 PCH 条目，`YAVO_PCH_MAX_ENTRIES` 可覆盖。
+- `compiler/src/main.rs`：仅在固定 Zig、已启用构建缓存且二进制缓存未命中时尝试运行时 PCH；`YAVO_NO_PCH=1` 可关闭。创建或加载 PCH 失败，以及使用 PCH 编译失败，均回退到完整直接 C 编译；`YAVO_CACHE_TRACE=1` 输出 PCH 命中/缺失/回退。`YAVO_NO_CACHE=1`、`YAVO_CC`、`verify` 不走 PCH。
+- `compiler/tests/build_cache.rs`：缓存复用、跨模式/跨目标/插桩隔离、损坏恢复、PCH LRU；6 路并发检验增查 PCH 临时文件。缓存套件从 10 个测试增加到 14 个。
+
+### 24.2 证据与界限
+
+- 本轮 Release、Debug 各完整跑过 **17 个测试组，合计 133 通过、0 失败、1 忽略**，退出码均为 0。两个先前的 Debug 驱动被单次命令执行时限截断，未形成完整成绩；第三次通过服务器端独立日志执行完成。这 133 是 Cargo 测试函数数，冻结规范仍另按 129 项计数。
+- 初步 pinned Zig 0.17.1 实探 6 个目标（Linux x86-64/aarch64，Windows x86-64/aarch64，macOS x86-64/aarch64）全部可进行 `-x c-header`/`-include-pch` 的交叉编译；该探针在项目 Linux 主机执行，不等于原生 Windows/macOS PCH 测速。
+- `benchmarks/small-c-v1/pch_probe.py`：独立二进制缓存，每次修改增加源文件前置注释的**行数**使生成 C 变化，两个编译路径使用完全相同的源码文件，顺序交替；每程序 7 个配对 Release 样本，校验每次二进制 SHA-256 相同。`results/runtime-pch-2026-11-22.json` 保留原始毫秒数组、每组 P50、工具/运行时哈希。
+
+| 题目 | 首轮直接/PCH P50 | 最终编译器直接/PCH P50 | 后轮加速比 |
+| --- | ---: | ---: | ---: |
+| integer_recurrence | 253.8 / 179.8 ms | 252.5 / 180.8 ms | 1.40x |
+| vec_transform | 260.3 / 204.1 ms | 256.1 / 190.6 ms | 1.34x |
+| mutref_scatter | 264.8 / 196.9 ms | 271.0 / 193.0 ms | 1.40x |
+| deque_ring | 283.8 / 195.3 ms | 271.2 / 213.8 ms | 1.27x |
+
+上述是构建时间，不是生成程序的执行时间。两轮各有三项满足 200 ms 门，但首轮 `vec_transform` 204.1 ms、第二轮 `deque_ring` 213.8 ms；只有改进的趋势在这两轮内得到支持。PCH 免去重复解析运行时头，但不能避免每次重新编译用户生成 C 和链接；继续优化若要覆盖所有代表性程序，应先拆解余下的 Zig 启动、C 优化与链接耗时，而不是增加语言特性。初轮回执 `results/runtime-pch-2026-11-22-initial.json`、最终编译器回执 `results/runtime-pch-2026-11-22.json`；路径相对 `benchmarks/small-c-v1/`。
+
+### 24.3 接手与剩余门
+
+本轮代码提交 [`7877015`](https://github.com/msly/yavo/commit/7877015ae5df2dda02ca22d1f2b621f3c3611fe8) 已推送至 `origin/main`；独立 [GitHub CI 运行 45015772252](https://github.com/msly/yavo/actions/runs/45015772252) **最终 `completed/success`、六项全部通过**：Linux x86-64、Windows x86-64、macOS arm64 原生套件、独立 ASan+UBSan、第五轮实验归档核验及第六轮计量准备。此处已验证的是 GitHub job 级最终结果，尚未按上一批方式独立下载、重算六项工件 SHA-256。随后追加的基准数据与交接文档不改变编译器实现。
+
+新优化不改变冻结 129 项规范输入或 agent 实验题包；旧第 17/18 批 CI 回执继续作为对应提交的历史证据，不能移用为本次改动的 CI 通过证明。第六轮真实计量仍因模型凭据与 CLI 状态数据库问题 blocked，0 真实模型请求、0 会话、0 交付。优先执行获授权的 runtime freeze 和真实 provider usage 资格检查，之后才能做 8 题短卡 A/B，接 60 题 pilot；`yavo test`、审核/包/FFI 等完整 v1 缺口不变。
+
+
+## 25. 第二十批：自举目标与 Yavo-written SH-1 前端（2026-11-22）
+
+用户明确将近期目标从继续扩功能/成本实验调整为“让语言编译自己”，最终以实用为准。目标文件为 [docs/self-hosting.md](docs/self-hosting.md)，原产品性能、无 GC 和平台要求保留；冻结测试与历史实验不改。
+
+### 25.1 本批实现
+
+- `selfhost/` 的六个生产 Yavo 文件共 1,216 物理行：UTF-8 词法、拥有型扁平 AST、parser、类型/名字/返回路径检查、按从左到右顺序降低的 C 生成及 CLI；另有 108 行 lexer 自测。行数只是实现规模，不是自举完成度。
+- 输入子集支持 int/bool/str、具名函数和递归、局部变量、分支、循环、短路、受检查整数运算、输出和 assert；完整边界见 selfhost/README.md。模块、结构体/集合/拥有型语义等尚未迁入新前端，因此不能编译自身。
+- CLI 提供 check 与 emit-c；失败前不写输出，成功输出须新路径。已有文件和源码的路径别名、硬/符号链接均通过 fs.writeNewText 拒绝覆盖。
+- stage0 新增 `fs.writeNewText`，复用原文本写循环，POSIX O_EXCL / Windows CREATE_NEW 独占创建。创建后写入失败仍可能留下部分新文件，非事务性写入。
+- stage0 控制流不再按名字猜测 panic/os.exit；只有类型检查确认为实际内建退出调用才参与发散判定。修复返回值漏报以及分支移动状态合并错误；保留用户定义同名普通函数的正常语义。
+
+### 25.2 本机验证
+
+- 最终 bootstrap：**72/72 cases、10/10 checks，0 skip**，独立 run 目录 `compiler/target/ci/selfhost/run-ly2plkxz`。14 run、9 panic 在两种模式下各与固定 oracle 及 Rust 参照比对；39 reject、10 unsupported；23 份 C 重复生成字节一致。用例不是 72 个真实业务项目。
+- Lexer：11 组正例、24 个失败/unsupported 输入；UTF-8/NUL、换行、转义、词法位置均有断言，分配检查开启。
+- fs_create_new：Debug/Release 各 3/0/0，内部覆盖两种 Yavo 模式、已有文件/路径别名、错误清理和八进程竞争恰好一个胜者；已有 stdlib_io Release 4/4；Windows x86-64/macOS arm64 交叉编译通过。
+- selfhost_blockers：Debug/Release 各 6/0/0，12 个检查程序覆盖用户 panic、局部/参数、普通 exit 方法、closure、catch、match、移动状态和真实退出调用。
+- stage0 全量 Debug/Release：各 **142/0/1**，19 个测试组，完整日志及退出码均 0；最新冻结规格报告仍为 124 pass、0 wrong、3 unsupported、0 not_run、2 superseded。实现已推送 `353523a`；[本批 CI run 45019581088](https://github.com/msly/yavo/actions/runs/45019581088) **completed/success，6/6 jobs 通过**，Linux x86-64、Windows x86-64、macOS arm64 的 selfhost 步骤全部成功。本批核验 job/step 与 artifact metadata，未下载重哈希六份归档。
+- [本机源身份与逐例摘要](compiler/validation/selfhost-sh1-2026-11-22.json)；详细本机回执在 `compiler/target/ci/selfhost/receipt.json`，验证器可复跑。验收明确 `achieved=subset-compiler`、`self_hosted=false`。
+
+### 25.3 下一步
+
+优先实现结构体/枚举和字段，使新前端能够表达自身 Token/AST/状态；随后是拥有字符串/容器、修改借用、结果和模块。每次扩大支持范围先冻结对应外部正/负例，再推进 stage1 → stage2；自举成功后仍需 SH-3 旧能力接替和 SH-4 独立应用验收。
+
+## 26. 第二十一批：Copy 聚合类型与自举数据模型（2026-11-22）
+
+### 26.1 实现范围
+
+- `model/parser` 引入具名类型、结构/枚举声明、字段/default、构造、bare/qualified case，赋值保留完整左侧 AST；构造表达式保持源码字段顺序。
+- 新 `types.yv` 用 registry index 表达名义身份；先收集名字再解析字段，支持前向引用，以稳定拓扑序生成完整 C 布局。拒绝重名、未知类型、直接/间接按值循环及错误默认值。
+- `codegen.yv` 支持 Copy 值传递、返回、整个及嵌套字段复制、可变 place、参数只读和 enum 上下文；显式构造字段按源码顺序求值。字段仅覆盖 int/bool/无载荷 enum/其他 Copy struct。str 字段 E0301，owned/unit 字段及方法/generics/payload enum 为 U0001。
+- 独立审查修复：type name 作值 E0001、临时/运算表达式赋值按 stage0 U0001；数字词法 u128 容量在扫描时检查，int64 范围仍在实际使用时检查；循环返回检查计入同层不可达 break，内层 break 不外传，保持 stage0 的保守行为。
+- `examples/token_metadata.yv` 用 SourceSpan、TokenKind、OperationKind、TokenMetadata、Operation、Statistics 处理固定 token 元数据并统计，固定输出验证 6 tokens、5 operations、checksum 215 和复制前 seed 不变。示例与正式 fixture 相同并绑定哈希；尚无 owned lexeme 或动态 AST。
+- 当前 7 个生产 Yavo 文件共 1,754 物理行；行数仅描述实现规模。stage0 编译当前入口 check 为 0 errors / 0 warnings。
+
+### 26.2 验收证据
+
+- [本机源身份与逐例摘要](compiler/validation/selfhost-aggregates-2026-11-22.json)：**138/138 cases、10/10 checks、0 skip**。29 run、10 panic、81 reject、14 stage0 支持但 selfhost 未实现、4 两侧均 U0001。39 个可执行输入各运行 Debug/Release，检查固定 stdout/退出码/panic 类别、Rust 差分与重复 C 字节。
+- 72 条原 fixture 源码字节全部保留；71 条 manifest 记录不变；原 unsupported_struct 因支持范围扩大原样迁为 run/struct_basic，manifest 保存原因和原始哈希。新增 66 条外部用例，没有修改冻结的 `yavo-tests/`。
+- 最终 gate 独立目录 `compiler/target/ci/selfhost-aggregates-final/run-pwpweo43`，实际路径、完整回执字节数/SHA、所有源/runtime/stage0/Zig/manifest/harness/example 哈希见摘要；退出码文件为 0。完整原始回执保留在本机产物目录，公开入口 `python3 selfhost/bootstrap.py` 可重放。
+- Rust 源码、C 运行时、Cargo 配置/锁、工具链锁、CI workflow 和冻结规格与 `d367797` 相同；本机未重复全套 Rust suite。前批本机 Debug/Release 各 142/0/1 的历史结果见第 25 节。实现提交 [`fbb322e`](https://github.com/msly/yavo/commit/fbb322e7f1eb7342f69fb19c6a6f76d01a8ee76f) 的 [CI run 45025445954](https://github.com/msly/yavo/actions/runs/45025445954) 已 completed/success，6/6 jobs 成功，Linux x86-64、Windows x86-64、macOS arm64 的 selfhost 步骤均 completed/success。root 独立重查 run/jobs/artifacts 并绑定摘要；此批核验六份 artifact 元数据，未下载归档/重算哈希。
+- 验收仍明确 `achieved=subset-compiler`、`self_hosted=false`，自身输入仍 U0001；没有产出 stage2/stage3。
+
+### 26.3 下一步
+
+**下一增量先闭合 String / Failure，Vec 随后实现。** 真实验收入口是 `selfhost/diagnostic.yv`：复制该文件完整原始字节作为临时测试文件前缀，只追加独立 main，断言前缀字节一致。它没有 use、Vec 或 result 依赖；原有 Failure.code/message 和 make 已要求 str.toString、拥有字段构造、结构返回和调用方字段读取。
+
+| 退出条件 | 必须覆盖的机制 |
+| --- | --- |
+| 原样诊断源码执行 | make 构造的 String/整数成员输出正确，整个 Failure 转移后仍可用；stage0 和新前端 Debug/Release 固定输出一致 |
+| String 最小操作 | String{}、toString、len、clone、push、打印/比较；UTF-8 与 NUL；独立副本修改不影响原值 |
+| 读与消费分开 | 绑定/赋值/构造/返回转移 owned 值，普通参数/打印/比较/len/clone 借用；禁止移动后使用，以及从只读参数或字段直接移出拥有值 |
+| 控制流清理 | 作用域退出、return、break/continue、分支和重赋值正确析构；返回值不提前释放，借用临时值活至语句结束；分配检查无泄漏/重复释放 |
+| 修改边界 | 内建方法保留 receiver 和参数，push 只接受可写 place，按 stage0 拒绝冲突别名；未实现的持久/返回借用继续 U0001 |
+
+类型系统需推导包含 String 的结构为非 Copy，不能继续用当前 Name/Field 的无条件 C 值复制产生多个 owner。运行时已有 String from/view/push/drop；主工作在所有权检查与清理生成。无需为这一切片提前实现用户自定义方法、完整模块或通用泛型。
+
+随后 Vec 先 Copy 元素，再 String/Token 等拥有元素，同时处理元素析构/clone、索引借用及失效借用；不能以所有索引结果深复制代替语言语义。再接入 inout/sink/take、optional、result/try/catch、模块与 std 文件/进程接口，以及自身使用的其他字面量/内建形式。全部编译器源文件进入支持子集后，执行 stage1 → stage2 → stage3。
+
+## 27. 第二十二批：String / Failure 所有权闭环（2026-11-22）
+
+### 27.1 实现与真实源码出口
+
+- model/parser 新增 String 类型和 Method 节点，保留 receiver/args；仅开放内建方法调用，用户 methods、impl、inout/sink 等仍未接入。
+- types 支持 String 字段与常量默认值，按布局拓扑顺序传播结构体 owned 属性。普通字面量仍为 str，绑定/赋值/返回/实参/显式字段不会隐式转成 String；字段缺省值是独立转换规则。
+- codegen 区分拥有局部值、新临时值、字段借用与只读参数借用。消费后清零原值；函数参数、输出、比较和 len/clone 只读。通过语句临时值列表与作用域局部值列表，在正常退出、return、break/continue、重赋值及短路分支清理资源。C 的只读参数按值传递描述符，callee 不取得 owner、不析构参数。
+- 分支只合并后续可达的移动状态；两分支均发散时仍合并。循环按 stage0 二遍 body 检查并合并 continue/break 状态，包含 break/return 前移动的保守判定；重新赋值恢复拥有值。
+- 普通调用早参数借用与晚参数消费冲突 E0102；字段/只读参数移出 E0401、移动后用 E0402、只读修改 E0014、push 根别名冲突 E0403。String 与 str 可双向比较；普通 struct 没有 clone，E0010。
+- 原样源码测试将 selfhost/diagnostic.yv 完整 **438 字节**作为临时源文件前缀，仅追加独立 main。原文件与上批 f08c38f 一致；源前缀、后缀和组装结果独立绑定哈希。固定输出为 E0001 / bad token / 7 / 2 / 4 / E0001，Debug/Release 均通过。验证的是此组件，完整编译器入口仍 U0001。
+- 当前 7 个生产 Yavo 文件共 2,165 物理行；整体 stage0 check 为 0 errors / 0 warnings。
+
+### 27.2 验收与资源证据
+
+- [本机逐例摘要](compiler/validation/selfhost-string-2026-11-22.json)：**181/181 cases、10/10 checks、0 skip**；45 run、10 panic、105 reject、14 stage0 接受而新前端未实现、7 两侧均 U0001。55 个可执行输入各执行 Debug/Release，固定输出/退出/panic、Rust 差分与重复 C 均通过；分配检查开启。
+- 原 138 条输入字节全部保留，136 条 manifest 项完全相同；两个 owned String/field 用例原样迁为 run，新增 43 条。冻结 yavo-tests 未改。source_prefix 验收同时检查原文件和组装文件的结束时哈希稳定性。
+- 独立审查另比较 23 个循环移动检查、20 组两模式循环执行；临时值/借用路径的 14 个正例在两编译器两模式共执行 56 次，固定输出、exit0、stderr 空。探针位于 ignored selfhost-string-types / selfhost-string-review；已将发现的边界纳入正式集。
+- 首轮 CI 暴露 Rust stage0 的 PCH 缓存并发发布问题：两个 miss 生产者覆盖同字节运行时头文件，mtime 改变，使另一生产者的 PCH 失效。修复改为完整临时文件原子 no-replace 发布、已有头文件只读复用，并升级 PCH key 版本。Rust 语言语义、C 运行时、Cargo 配置/锁、工具链锁与冻结规格未改；两条确定性回归在旧实现均失败，修复后缓存 16/16 与空缓存跨目标 6/6 通过。完整 Debug/Release 各 144/0/1，重建 stage0 后 selfhost 再次 181/181 + 10/10；源码哈希在整个验证期间稳定。原有 ASan job 只覆盖旧 Rust 生成路径；此批新增 Linux native 后的 selfhost C sanitizer 步骤，绑定本次实际生成 C，并使用独立 GCC ASan/UBSan 和能力探针。
+- String 实现提交 `44e1895` 的[首轮 CI 45042371720](https://github.com/msly/yavo/actions/runs/45042371720) 为 5/6 jobs；Windows/macOS selfhost 已通过，Linux 在原生回归的 PCH mtime 错误处失败，后续 selfhost/sanitizer 被跳过。失败日志、哈希、测试名及当轮元数据保留在摘要，未覆盖为成功。
+- 缓存修复提交 `81614a95bd24bef83afa2e0e654b8e55739f5f7f` 的[第二轮 CI 45044246299](https://github.com/msly/yavo/actions/runs/45044246299) 为 **6/6 jobs 成功**；三平台 selfhost gate 均成功，Linux 新增 Yavo-frontend GCC 13.3 ASan/UBSan 为 **55/55 程序、3/3 能力探针、0 failed/not_run**。两项故障探针分别实际捕获 heap-use-after-free 和 signed integer overflow。该结果来自 CI；本机仍无独立 GCC/ASan 环境。
+- 原生 Linux 归档 ID 14762829369，149,837,923 字节，SHA-256 `ad833c57c7587a402ccc0c0840a437a2a9fdbc74bfc18dcd60935f69fa9ff854`；下载后与 GitHub 大小/哈希一致。已读取 Rust、selfhost、selfhost-sanitizers 三份原始 receipt，并重算 55 份源码/C/stdout/stderr 及能力探针日志哈希；C 逐例匹配 Yavo bootstrap 的生成结果。LSan 关闭，正常退出使用 YV_ALLOC_CHECK；未运行 TSan。其余五份归档只验证元数据，未下载重算。
+
+### 27.3 保留的边界与下一步
+
+两条 stage0 已接受的拥有转移边界仍待统一正确行为：while 条件消费外部 owner 时，第二次条件可观察已清零的 String；比较左侧借用后在右侧转移同根，也可能观察被清零描述符。新前端对此明确 U0001，manifest 保存最小复现与 known_gap，未将既有异常输出设为新的正确性预期。本批未修改 Rust 语义或冻结规格。
+
+下一增量为 Vec 的 Copy 元素：类型参数解析、空构造、push/len/index、边界检查、容器移动与正常/异常路径清理、clone 独立缓冲区。Vec 本体非 Copy；索引是否复制取决于元素类型。随后支持 String/Token 拥有元素的元素析构和借用索引，并接入显式 inout/sink/take、optional、result/try/catch、源模块和标准库接口。全部编译器源码可接受后再执行 stage1 → stage2 → stage3。
+
+## 28. 第二十三批：Copy Vec 与 AST 存储前置（2026-11-23）
+
+### 28.1 实现范围与语义
+
+- model/parser/types 新增 Vec 类型参数、向量字面量、类型化空构造与索引节点。元素允许 int、bool、无载荷枚举以及不含拥有字段的 struct；名义元素类型参与类型相等性。Vec 本体始终 owned，结构中的 Vec 字段继续传播 owned 属性。仅空字面量 [] 可作 Vec 字段默认值，非空值与 Vec[T]{} 默认值保持 E0001。
+- codegen 支持 len、push、reserve、clone、索引读取、直接/复合索引赋值及嵌套 Copy 字段更新。reserve 的参数为最小总容量；负容量/溢出报 P-CAPACITY，越界报 P-INDEX。clone 分配独立缓冲区并复制 Copy 元素。
+- Copy 索引读取立即物化为独立值，结束该次容器借用；v.push(v[0]) 与同根 Copy 读取合法。索引赋值先求右值，再求索引与目标位置；复合赋值也在右值之后读取旧槽位。索引求值期间的根保护与移动状态分别检查，E0403 与 E0402 分开验收。
+- Vec 的移动清零源描述符；作用域、语句临时值、返回、break/continue 和重赋值清理路径执行 yv_vec_free。字面量先注册临时容器并分配，再依次求元素，保留既定求值顺序。普通参数维持只读借用。
+- 新增 selfhost/examples/token_table.yv，和正式 fixture 字节一致，覆盖 token 种类/源码范围存储、reserve/push、索引字段更新、clone 独立性与扫描。其元素不含 String；真实 Token 和完整 lexer 尚未由新前端编译。
+- stage0 的 Vec[T]{} 原来在结构构造分派处误报“不是 struct”，与现有文档契约不一致。本批将其接入既有空 Vec 检查路径；新增一项回归覆盖 Copy/owned/nested/generic 合法类型及错误字段、参数数目、裸构造、未知类型和非法字段默认值。只改 compiler/src/check.rs 与 compiler/tests/selfhost_blockers.rs；运行时、工具链/Cargo 锁和冻结规格未改。
+
+### 28.2 已完成验收
+
+- [本机与 CI 汇总](compiler/validation/selfhost-vec-2026-11-23.json)绑定实现提交 `7881db94f1509baa317d9bf84fae2ae28f402a80`。本机 **242/242 cases、10/10 checks、0 skip**：63 run、15 panic、136 reject、21 stage0 接受而新前端未实现、7 两侧均 U0001。78 个可执行输入均通过 Debug/Release 固定输出/退出/panic、Rust 差分、重复 C 字节比较和正常退出的分配检查。
+- 完整 Rust Debug/Release 各 **145 passed、0 failed、1 ignored**，各 19 个测试组；冻结 129 项继续为 124 pass、3 unsupported、2 superseded、0 wrong/not_run。完整验证期间生产输入哈希稳定，最终候选由最终源码重新构建。
+- 原 181 个输入源码字节全部保留，180 个旧 manifest 项未变；unsupported_vector 原样迁为 vector_basic 并验证输出，新增 61 个用例。原样 diagnostic.yv 的 438 字节前缀与原有组件验收保留。
+- 独立开发探针补查解析/类型、Copy 读取后的借用释放、索引赋值顺序与根保护。开发候选有独立二进制身份，不替代最终 242 例验收。
+- [CI 45103511821](https://github.com/msly/yavo/actions/runs/45103511821) 在实现提交上 **6/6 jobs 成功**，Linux x86-64、Windows x86-64、macOS arm64 的 selfhost 步骤全部成功。Linux native 的新前端生成 C 通过独立 GCC 13.3 ASan/UBSan：**78/78 程序、3/3 能力探针、0 failed/not_run**；故障探针分别捕获 heap-use-after-free 和 signed integer overflow。既有独立 Rust/P0 sanitizer job 是另一验收路径。
+- 原生 Linux 归档 ID **14786493855**，**204,781,117 字节**，SHA-256 `01bcfc3b4879543156c0c6e16c9ddf8b5fb3a1bb3add4160923affeb3bde2d56`；下载后与 GitHub 大小/哈希一致。独立核验三份原始收据、78 组实际源码/C/程序/输出、bootstrap 312 次记录执行的固定预期、原样 diagnostic 合成输入，以及 frontend 与 runtime 实际字节。stage0/Zig/GCC 仅核对收据身份链；其余五份归档只验证元数据。LSan 关闭，正常退出使用 YV_ALLOC_CHECK；未运行 TSan。
+
+### 28.3 明确保留的边界
+
+本批新发现两条 stage0 接受而行为不一致的接收者边界：普通索引表达式求值期间消费容器根；reserve 参数求值期间转移同一根。新前端明确报 U0001，manifest 保存最小复现与 known_gap；未采用异常行为作为预期结果。加上前批 while 条件转移 owner、借用比较操作数后转移同根的两条记录，当前保留四条 known_gap。
+
+拥有元素（String/含拥有字段的 struct）、嵌套 Vec、str 元素、pop 所需 optional、切片、显式参数模式仍未接入。Vec 相等/输出继续按既有契约拒绝。包含七个生产 Yavo 文件的完整编译器仍不能由新前端接受，receipt 明确 `self_hosted=false`。
+
+### 28.4 整体进度与下一步
+
+| 层级 | 当前结果 | 剩余门槛 |
+| --- | --- | --- |
+| Rust 引导编译器 | P0—P3 主体能力已实现；本批完整回归通过 | 完整 v1、正式性能/成本及其余工程缺口仍按原规划验收 |
+| SH-1 子集编译器 | 标量、函数/控制流、Copy 聚合、String、Copy Vec；外部程序、拒绝与资源门持续扩展 | 已达到这一阶段；后续扩展以自身源码依赖为依据 |
+| SH-2 自举闭环 | 原样 diagnostic 组件可编译运行；token 表为独立负载 | 拥有 AST 存储、元素借用/修改、参数模式、字节文本、结果/optional、模块与文件接口；尚未产生 stage2/3 |
+| SH-3 主编译器接替 | 默认入口仍为 Rust | 覆盖既有语言/诊断、平台验收并切换日常入口 |
+| SH-4 实用交付 | 目标为本地 CLI 与批处理 | 三个独立非编译器项目及失败路径、资源、跨平台、性能与成本门 |
+
+**下一步退出条件：原样 model.yv 的 AST 拥有存储与生命周期。** model 当前只有声明；Program 的 Expression/Statement/Function/TypeDecl 四类元素因内部 Vec 字段而 owned。实现拥有元素 Vec 的 push 消费、递归析构与独立 clone、整容器移动/返回/重赋值，并以原样源前缀加入口构造四类非空向量。加入 Vec[String] 与含 String 的 Token 型结构作为通用路径检查；Debug/Release、差分、分配检查及独立 sanitizer 都通过。该验收可以只读取长度，AST 借用索引与遍历随后单列，禁止隐式深复制冒充借用语义。
+
+后续按真实依赖推进 lexer 的字节文本/错误传播/参数模式与模块，再扩 parser/types 的拥有元素位置与遍历，补 codegen 剩余循环、格式化、join 等形式，接 main 的参数切片与文件接口。输入子集覆盖全编译器后，在独立目录执行 stage1 → stage2 → stage3 并比较生成 C 与外部程序结果。每个增量完成后更新整体状态与下一步退出条件。
+
+## 29. 第二十四批：拥有元素 Vec 与原样 AST 模型（2026-11-23）
+
+### 29.1 实现范围与所有权语义
+
+- 新前端允许 `Vec[String]` 和元素含 String/Vec 的拥有结构，包括 `Node { children: Vec[Node] }` 这样的间接递归。类型布局仍只沿按值结构依赖排序；全部布局完成后声明所有相关 drop/clone helper，再生成定义，避免 Vec 元素依赖造成循环声明问题。
+- 向量字面量和 push 消费拥有元素，转移后清零来源；普通参数继续只读借用。容器与包含容器的结构支持本地移动、返回、重赋值及作用域/正常控制流退出清理。
+- Vec.clone 对 Copy 元素复制，对 String 和拥有结构递归生成独立资源；结构 helper 递归复制拥有字段。Vec 按已初始化的 len 升序析构元素，结构字段按声明逆序析构。clone 每完成一个元素才增加结果 len；字面量临时值最终记录准确的元素析构类型。用户结构直接调用 `.clone()` 仍不受支持。
+- 原样 `selfhost/model.yv` 的 **1,581 字节**保持不变，SHA-256 为 `15e075cc0126ecbbefa922dc1e24ea806986ed1625d9d4eb6387ea8cde1c848e`。仅追加 `selfhost/tests/run/model_original_source.yv` 中的辅助函数与入口；合成输入 SHA-256 为 `fdba5b09b90e45aa0cba055ac9df6f4420b2bfc4fbffa1d3b3ebae3b5fc603e1`。
+- model 工作负载构造四类非空 Program 向量：Expression、Statement、Function、TypeDecl；填充 args/names、body/otherwise、params、fields/variants，并实际向 Program 字段 push。通过 `Vec[Program].clone()`、移动、返回、重赋值及跨作用域清理验证拥有存储。**本批固定输出验证长度与存储结果，未读取拥有元素内容，也未完成 AST 遍历。**
+- 原样 diagnostic 的 **438 字节**组件继续保留；新增 `selfhost/examples/owned_token_store.yv` 与对应 fixture 字节一致。Rust 前端、运行时、工具链锁、Cargo 锁和冻结规格未在本批修改。
+
+### 29.2 验收身份与结果
+
+- [本轮汇总](compiler/validation/selfhost-owned-vec-2026-11-23.json)绑定实现提交 `c7be68216129dc9f1dad5aad668e2f1382142c1d`。本轮验收规模为 **263 cases、90 个可执行输入、10 项辅助检查**；可执行输入覆盖 Debug/Release 固定输出、退出码/panic 分类、stage0 差分、重复生成 C 与正常退出资源检查。panic 用例不作为栈展开或析构完整性的证明。
+- 原 **242 个输入源码字节全部保留，241 个旧 manifest 项不变**；旧 `unsupported_vec_owned_struct_element` 原样迁为 `owned_vec_struct_declaration`，新增 **21 个用例**。promotion 的原始来源、源码身份与分类变化单独记录。
+- 本机串行完整验证驱动退出码已确认为 **0**；各套件总结果与最终内容复核：**263/263 cases、10/10 checks、0 skip**：74 run、16 panic、143 reject、23 stage0 接受而新前端未实现、7 两侧均 U0001。90 个可执行输入通过两前端的 Debug/Release 固定预期与差分；360 个对应二进制已重算身份。完整 Rust Debug/Release 各 **145 passed、0 failed、1 ignored**，各 19 个测试组；冻结 129 项保持 124 pass、3 unsupported、2 superseded、0 wrong/not_run。最终候选由冻结源码重新构建，完整验证期间生产输入哈希稳定。
+- 原生 CI、独立 sanitizer 与归档核验结果：[CI 45116399319](https://github.com/msly/yavo/actions/runs/45116399319) 在实现提交上 **6/6 jobs 成功**，Linux x86-64、Windows x86-64、macOS arm64 的 selfhost 步骤全部成功。Linux native 的新前端生成 C 通过独立 GCC 13.3 ASan/UBSan：**90/90 程序、3/3 能力探针、0 failed/not_run**；故障探针分别捕获 heap-use-after-free 和 signed integer overflow。既有独立 Rust/P0 sanitizer job 是另一验收路径。
+- 原生 Linux 归档 ID **14792570849**，**243,500,405 字节**，SHA-256 `95e6bb2f93e9416234d73ddf596241172c3a321c5af929f43ae8004fb4b0e7bf`；下载后与 GitHub 大小/哈希一致。独立核验三份原始回执、90 组实际源码/C/程序/输出、bootstrap 360 次记录执行的固定预期、两个原样组件合成输入，以及 frontend 与 runtime 实际字节。stage0/Zig/GCC 仅核对回执身份链；其余五份归档只验证元数据。LSan 关闭，正常退出使用 YV_ALLOC_CHECK；未运行 TSan。
+- 开发阶段的定向探针另行验证递归 helper、clone 后的根释放、receiver 保护、临时向量清理和析构次序；其候选二进制身份独立，不替代本轮最终源码验收。
+
+### 29.3 明确保留的边界
+
+拥有元素的索引读取、元素字段读取和索引位置修改仍明确报 U0001；不把缓冲区中的拥有描述符浅复制为新 owner。String/Vec 的内部递归复制已实现，用户结构方法、持久局部借用、显式引用/inout/sink/take、借用返回、一般嵌套 Vec 类型、str 元素、切片及 pop 所需 optional 均按现有边界处理。
+
+既有 **4 条 known_gap** 保留：while 条件消费现有 owner、借用比较操作数后转移同根、普通索引求值期间消费容器根、reserve 参数求值期间转移接收者根。对应 manifest ID 为 `unsupported_loop_condition_move`、`unsupported_comparison_borrow_move`、`unsupported_vec_index_receiver_move`、`unsupported_vec_reserve_receiver_move`；stage0 的异常行为不作为固定预期。本轮没有通过放宽这些边界完成拥有存储。
+
+### 29.4 整体进度
+
+| 阶段 | 当前结果 | 尚需完成 |
+| --- | --- | --- |
+| SH-1 子集编译器 | 标量、函数/控制流、Copy 聚合、String、Copy Vec 和拥有元素 Vec 存储；外部正负程序与资源门持续执行 | 基础阶段已达到，继续按编译器源码依赖扩大输入子集 |
+| SH-2 最小自举闭环 | 原样 diagnostic 与 model 资源组件已接入；`self_hosted=false`，没有 stage2/stage3 | 元素借用与遍历、修改与参数模式、字节文本、结果/optional、模块和入口依赖；最后执行完整源码的 stage1 → stage2 → stage3 固定点 |
+| SH-3 主编译器接替 | 默认入口仍是 Rust stage0 | 既有语言与诊断覆盖、原生平台和回归门通过后接替日常入口 |
+| SH-4 声明范围内的实用交付 | 面向本地 CLI 与批处理，独立于自举验收 | 三个非编译器 CLI、真实失败路径、资源与平台门，以及既定性能和成本目标 |
+
+原样组件数量、用例数量和实现行数不换算为自举完成百分比。model 存储组件扩大了已验证的数据结构范围；完整编译器仍不能作为新前端的可接受输入。
+
+### 29.5 下一步与退出条件
+
+**下一最小增量：非 Copy 索引的表达式内只读借用。** 范围限定为元素读取、连续字段投影、普通只读实参，以及 String/Vec 的 len 和显式 clone；直接结构 clone 不在范围内。
+
+1. 保留 model 原始字节，以追加入口遍历 Program 的四类非空向量及其内部 Vec，读取标量/Copy 字段，计算事先固定的计数与校验摘要；不能只复用本批长度输出代替内容遍历。
+2. 索引产生的借用、拥有字段和独立 owner 在检查与生成代码中保持区分。借用元素可传给普通只读参数；显式 String/Vec clone 的结果可独立移动和释放，不能隐式深复制索引结果。
+3. 容器和临时 owner 在整个表达式及调用需要的范围内存活；借用实参保持到调用完成。Copy 读取、len 和 clone 完成后释放相应根依赖，合法后续移动可用；仍被借用时，移动、push/reserve 和同根冲突必须受保护。
+4. 验收覆盖嵌套字段、临时容器、普通参数、同次调用的求值顺序、边界失败及借用冲突；固定预期、stage0 差分、Debug/Release 和资源检查均通过，既有存储用例和 known_gap 边界继续保留。
+5. 持久 `let e = v[i]`、拥有元素赋值/字段修改/修改方法、显式引用/inout/sink/take、借用返回和切片留给后继。parser/types/codegen 原源码仍使用这些能力，完成表达式内遍历不等于这些组件已原样接入。
+
+后续接入元素内 `try` 时，应在元素类型确定后立即更新 Vec 字面量临时值的类型，使后续元素提前退出时按正确类型清理已初始化部分。当前该 `try` 路径仍在输入子集外；这是后继结果传播的实现依赖，不是本轮失败。
+
+## 30. 第二十五批：只读元素索引与原样 AST 遍历（2026-11-23）
+
+### 30.1 实现范围与原样内容工作负载
+
+- 实现提交为 `b5dfe9feb5c48bd22defd73b01f0b917dfbc2baf`。非 Copy Vec 索引生成带边界检查的只读槽指针，保留原 owner 根和索引借用来源；槽位不登记为独立 owner。连续字段投影和嵌套索引保留根，普通只读实参在后续参数求值期间保持保护。
+- 支持借用 String 的输出与比较、普通只读函数参数、String/Vec 的 len 与显式 clone。Copy 字段、Copy 索引、len 和 clone 的结果立即物化并清除原根依赖；临时容器保持到表达式与调用使用完成，再由原 owner 清理。clone 产生新 owner，索引本身不隐式深复制。
+- 原样源码仍是 **2 份**：`diagnostic.yv` 的 **438 字节**与 `model.yv` 的 **1,581 字节**；共有 **3 个 source_prefix 工作负载**：原诊断入口、原 AST 存储入口、新 AST 内容遍历入口。新增工作负载不新增一份原样组件，也没有改写 model 声明。
+- model 原始 SHA-256 为 `15e075cc0126ecbbefa922dc1e24ea806986ed1625d9d4eb6387ea8cde1c848e`；遍历后缀 `selfhost/tests/run/model_original_traversal.yv` 为 **6,769 字节**，SHA-256 `8b30d27854859c807286efad62f931523f5b3a7acfe25a02b4973bd78765bf71`；合成输入 **8,350 字节**，SHA-256 `2cfc689fb80ce853c221b892c8631030e24401de45b7d6aa31afa15a22aed3b9`。旧 model 存储合成输入的 `fdba5b09…` 身份继续保留。
+- 遍历读取 Expression、Statement、Function、TypeDecl 四类非空 Program 向量的标量/Copy 字段与内部 args/names、body/otherwise、params、fields/variants。四类固定摘要分别为 **1,546、1,148、10,206、5,694**，Program 总摘要为 **18,594**。克隆 args、body、params、fields、variants、functions 六组 Vec 字段后把原 Program 重置为空，副本的固定合成摘要为 **20,410**，同时验证脱离原 owner 后的内容可读性。
+- 新增 `selfhost/examples/borrowed_token_scan.yv` 与同名工作负载验证 Token 内容读取。原存储入口继续验证 `Vec[Program].clone()`；用户结构直接调用 `.clone()` 仍拒绝，不因内部 clone helper 存在而新增用户结构方法。
+
+### 30.2 验收身份与状态
+
+- [本轮汇总](compiler/validation/selfhost-borrow-index-2026-11-23.json)绑定上述实现提交。冻结输入为 **286 cases、102 个可执行输入、10 项辅助检查**：84 run、18 panic、150 reject、27 unsupported、7 shared_unsupported；完整结果以最终冻结源码重建的回执为准。
+- 基线 263 个用例的源码保留；两项原样迁为正例：`unsupported_vec_string_element` → `borrowed_index_string_storage`、`unsupported_owned_vec_index_copy_field` → `borrowed_index_token_copy_field`。另增 **23 个用例**，包括原样 model 内容遍历。新迁类与新增的 **12 个可执行输入**在开发候选上完成双模式固定预期和 stage0 对照；这不替代完整门。
+- 完整本机串行门（含 Rust Debug/Release、全部 selfhost 用例/辅助检查、零跳过与冻结输入复核）：**286/286 cases、10/10 checks、0 skip**：84 run、18 panic、150 reject、27 stage0 接受而新前端未实现、7 两侧均 U0001。102 个可执行输入通过两前端的 Debug/Release 固定预期、差分、重复 C 与正常退出分配检查；408 个对应二进制已重算身份。完整 Rust Debug/Release 各 **145 passed、0 failed、1 ignored**，各 19 个测试组，0 filtered；冻结 129 项保持 124 pass、3 unsupported、2 superseded、0 wrong/not_run。最终候选由冻结源码重新构建，完整验证期间输入哈希稳定。
+- 原生 CI、独立 sanitizer 及实际归档内容核验：[CI 45121072503](https://github.com/msly/yavo/actions/runs/45121072503) 在实现提交上 **6/6 jobs 成功**，Linux x86-64、Windows x86-64、macOS arm64 的 selfhost 步骤全部成功。Linux native 的新前端生成 C 通过独立 GCC 13.3 ASan/UBSan：**102/102 程序、3/3 能力探针、0 failed/not_run**；故障探针分别捕获 heap-use-after-free 和 signed integer overflow。既有独立 Rust/P0 sanitizer job 是另一验收路径。
+- 原生 Linux 归档 ID **14793164785**，**268,118,936 字节**，SHA-256 `872001571ec9db9932069d80b4a3aa7677c9f95e194dafbd3f593eb62ce3331d`；下载后与 GitHub 大小/哈希一致。独立核验三份原始回执、102 组实际源码/C/程序/输出、bootstrap 408 次记录执行的固定预期、两份原样源码的三个合成工作负载，以及 frontend 与 runtime 实际字节。stage0/Zig/GCC 仅核对回执身份链；其余五份归档只验证元数据。LSan 关闭，正常退出使用 YV_ALLOC_CHECK；未运行 TSan。
+- 独立开发审查回执为 `compiler/target/selfhost-borrow-index-review/candidate1-d5dkyu49/receipt.json`：候选 SHA-256 `1e0a0abacedbbb0142c77b19b64798953cbef75932ddc15fec86e5e2bb42f4b6`，8 个定向检查及 2 程序 × 两前端 × Debug/Release 的 8 次运行通过；固定输出、正常退出资源检查与 stderr 一致。生成 C 中 29 个只读槽没有被登记为 owner、析构或清零。该早期候选身份独立于本轮完整重建。
+
+### 30.3 诊断与支持边界
+
+直接把索引借用作为 owned 值绑定、返回、push 或放入类型化拥有 Vec 时拒绝 `E0404`；从借用元素的 owned 字段直接移动仍为 `E0401`。同一调用中后续实参消费仍被前一实参借用的原根为 `E0102`；用户结构 `.clone()` 为 `E0010`。未注释的持久非 Copy 索引绑定仍为 `U0001`，`let _ = values[i]` 可仅执行检查并丢弃借用；无上下文借用元素 Vec 推断、拥有元素赋值/字段修改/修改方法、显式引用/inout/sink/take、借用返回、一般嵌套 Vec 与切片仍在子集外。
+
+原有 **4 条 known_gap** 与其记录保持不变：`unsupported_loop_condition_move`、`unsupported_comparison_borrow_move`、`unsupported_vec_index_receiver_move`、`unsupported_vec_reserve_receiver_move`。本轮新增 `unsupported_borrowed_index_comparison_owner` 与 `unsupported_borrowed_index_nested_owner` 只记录当前根保护的保守 U0001 范围；stage0 接受这两个源程序，不把它们登记为新缺陷；两项仅检查和生成 C，不使用运行结果作 oracle。独立 stage0 检查与生成 C 身份保存在 `compiler/target/selfhost-borrow-index-review/stage0-root-boundaries.json`。
+
+### 30.4 整体进度
+
+| 阶段 | 当前结果 | 尚需完成 |
+| --- | --- | --- |
+| SH-1 子集编译器 | 标量/控制流、Copy 聚合、String、Copy 与拥有元素 Vec 存储；新增非 Copy 元素的表达式内只读索引、字段与内容遍历 | 基础路径已达到，按实际源码依赖继续扩大输入子集并保持外部正负与资源验收 |
+| SH-2 最小自举闭环 | 2 份原样源码、3 个 prefix 工作负载；model 已覆盖存储与内容，仍 `self_hosted=false`，没有 stage2/stage3 | byte/文本、持久借用与修改/参数模式、结果/optional、模块和完整入口；最后执行完整源码的 stage1 → stage2 → stage3 固定点 |
+| SH-3 主编译器接替 | 日常入口仍为 Rust stage0 | 覆盖既有语言、诊断、回归和原生平台门后接替正常开发入口 |
+| SH-4 声明范围内的实用交付 | 面向本地 CLI 与批处理，独立于自举 | 三个非编译器 CLI、真实输入与失败路径、资源和跨平台门，以及既定性能与成本目标 |
+
+当前 parser/types/codegen 仍使用持久索引别名及可变状态，完整源码尚不是新前端可接受输入。原样来源数量、prefix 工作负载数量和测试数量分别记录，不换算为自举完成百分比。
+
+### 30.5 下一步：byte 与七个词法器原样函数片段
+
+下一增量限定为 **byte 类型与字面量、上下文整数常量转 byte、String/str 单字节索引、`int(byte)` / `byte(int)`、`Vec[byte]`**。验收选用 `lexer.yv` 中的 `wordStart`、`digit`、`exponentAhead`、`scalarWidth`、`hexDigit`、`twoSymbol`、`oneSymbol`；这些函数的输入类型、字节分类与转换是实际词法器依赖。`scalarWidth` 的 `c < 128`、`c < 224`、`c < 240` 需要按 byte 上下文处理整数常量；`exponentAhead` 的 `let next = source[pos + 1]` 得到 Copy byte，不需要持久非 Copy 元素借用。
+
+1. 七个函数按源码字节片段原样提取，只追加 harness。保存来源文件 hash、起止字节、逐片段 hash、拼接顺序、harness 与合成输入 hash；原始片段与执行输入必须能逐字节重建。
+2. 先冻结 ASCII 分类、UTF-8 前导字节分类、int/byte 转换、索引边界与非法字面量的独立预期，再执行两前端、Debug/Release 与资源检查。`byte(int)` 越界行为遵循 stage0 既有语义，不预设新规则；C 的隐式类型提升、截断或未检查内存访问不能替代语言规则。
+3. byte 索引结果及时脱根；覆盖临时 String、只读实参及接收者求值顺序。Vec[byte] 沿用 Copy 元素的构造、push/len/reserve/clone、索引、移动与析构规则；既有三个 prefix 工作负载和四条 known_gap 继续回归。
+4. 本出口是**词法器函数片段**，不写成整份 lexer 接入。完整 lexer 仍需文本切片、`inout Cursor` 与 `&cursor`、结果/err/try/catch、`String.fromUtf8`、pop/optional/if let 及模块。随后按实际依赖接入完整 lexer → parser/types → codegen → main，再做 stage2/stage3。
+5. 持久 `let e = v[i]` 留给独立增量：Local 必须保存借用槽位和原根，结合作用域、最后使用、分支合并与循环回边判断根何时可变更；只删除 Bind 的 U0001 会丢失生命期约束。拥有元素写入/修改方法和显式参数模式继续单列。
+
+结果传播接入前继续保留 Vec 字面量的工程约束：元素类型一旦确定，立即更新临时值的准确类型，使后续元素内 `try` 提前退出时按正确 helper 只清理已初始化元素。这仍是后继依赖，不是本轮失败。
+
+## 31. 第二十六批：byte 与原样词法器函数片段（2026-11-23）
+
+### 31.1 实现范围与原样源码出口
+
+- 实现提交 `aecdfe58e6f81b794c48827fa2e49905a59331e5`。lexer/parser/model/types/codegen 接入 byte 类型与固定 byte 字面量、上下文整数表达式、字段默认值、参数/返回和 Vec[byte]。byte 在 C 中为 uint8_t，输出为无符号十进制；算术使用既有 u8 checked/wrapping/shift helper，不改 Rust、C runtime 或冻结规格。
+- 两侧数值上下文沿用 stage0 规则：纯整数常量表达式可由另一侧 byte 决定类型；为取得类型而先处理右侧时，缓存其 C，再按左→右顺序输出。左侧溢出或除零必须在右侧函数输出之前发生。byte 字面量本身固定为 byte，不隐式变为 int；无符号变量不能取负。
+- `int(byte)` / `byte(int)` 采用既有 checked conversion。`byte(256)`、`byte(-1)` 通过前端后运行触发 `P-CONVERT`；byte 上下文中的越界整数常量为 `E0003`。未使用字段默认值保留 stage0 的延期检查，实例化时才校验范围和固定字面量类型。
+- String/str 单字节索引由 `yv_str_at` 检查边界，返回 Copy byte；可读取 UTF-8 编码的任意一个字节。临时 String、只读参数和嵌套拥有元素的读取保持原根至索引求值完成，复制结果随后脱离原根。Vec[byte] 沿用 Copy 容器构造、push/len/reserve/clone、索引读写、复合赋值、移动与析构路径。
+- `lexer.yv` 的 wordStart、digit、exponentAhead、scalarWidth、hexDigit、twoSymbol、oneSymbol 共 **1,671 字节**按原字节提取，七个片段均与上一实现基线一致。追加 **3,302 字节**独立 harness 和 7 个 LF，形成 **4,980 字节**的 `lexer_byte_helpers_original_fragments`，示例 `selfhost/examples/lexer_byte_helpers.yv` 与 fixture 相同。来源文件哈希、逐片段起止字节/哈希、拼接顺序、harness/合成输入哈希均独立记录。
+- 独立预期先于执行冻结：遍历 **256 个 byte 值、65,536 组 byte 对、15 个 exponentAhead 输入**；输出固定为 `53 / 10 / 22 / 7066600 / 20 / 272301 / 8`。该出口验证七个函数片段，整份 lexer 仍不是支持输入。
+- **2 份完整原样源码、3 个 prefix 工作负载继续保留**。diagnostic.yv 仍为 438 字节；model.yv 为实现 byte 在 BasicType/ExprKind 各追加一个 Byte 项，当前 **1,599 字节**，不是上一批 1,581 字节原文未改。两个 model 入口仍将当前完整文件原样作为前缀；遍历后缀 **6,769 字节**不变，当前合成 **8,368 字节**。Program 内容和 clone 独立预期仍为 **18,594 / 20,410**。
+
+### 31.2 验收身份与状态
+
+- [本轮汇总](compiler/validation/selfhost-byte-2026-11-23.json)绑定实现提交。冻结规模为 **321 cases、119 个可执行输入、10 项辅助检查**：93 run、26 panic、167 reject、28 unsupported、7 shared_unsupported。
+- 基线 **286 个输入源码字节全部保留、285 条 manifest 项完全相同**；`unsupported_byte` 原样迁为 `byte_literal_basic`，新增 **35 个用例**。三个 prefix 工作负载的后缀、四条 known_gap 及其历史证据继续保留；model 前缀按本轮真实生产文件更新身份。
+- 开发候选 `a02794272428293e6986acd0d6ef0a8b7fe4a87208a045b62db23ad04f23a9aa` 完成 **321 项检查**及新增/晋升的 **17 个可执行输入 × 两前端 × Debug/Release = 68 次运行**，固定预期、差分、重复 C 和分配检查通过。独立审核另完成 **51 个契约检查**、**4 程序 × 两前端 × 两模式 = 16 次运行**，覆盖左侧纯常量表达式先 panic、字节位移/复合赋值、文本 Copy 脱根和临时 owner；审核前后生产哈希一致。这些开发回执与完整冻结重建分别记录。
+- 完整本机门：**321/321 cases、10/10 checks、0 skip**；119 个可执行输入完成两前端 Debug/Release 固定预期、差分、重复 C 与正常退出分配检查，476 个模式二进制已重算身份。完整 Rust Debug/Release 各 **145 passed、0 failed、1 ignored**，各 19 个测试组，0 filtered；冻结 129 项维持 124 pass、3 unsupported、2 superseded、0 wrong/not_run。完整验证期间冻结输入哈希稳定。
+- 原生 CI、独立 sanitizer 与归档核验：[CI 45126097965](https://github.com/msly/yavo/actions/runs/45126097965) 在实现提交上 **6/6 jobs 成功**；Linux x86-64、Windows x86-64、macOS arm64 的 selfhost 步骤全部成功。Linux native 的新前端生成 C 通过独立 GCC ASan/UBSan：**119/119 程序、3/3 能力探针、0 failed/not_run**。原生 Linux 归档已下载并与 GitHub 大小/SHA-256 对上；实际源码/C/frontend/程序/输出、476 次 bootstrap 模式执行记录和三个原样 prefix 工作负载已独立核验。其余五份归档核对元数据；LSan 关闭，正常退出使用 YV_ALLOC_CHECK。
+- 原生 Linux 归档 ID **14795972640**，**318,163,047 字节**，SHA-256 `2498ed6dd31fd6b26d68f799a8b584ff569015d6d912c7df6210af50da71ee77`；独立复核读取归档实际字节及三份原始回执，没有重新运行归档程序。stage0/Zig/GCC 仅核对回执身份链。
+
+### 31.3 诊断与支持边界
+
+非法单引号字面量为 `E0020`；只接受单个 ASCII 字符及 n/t/r/0/反斜杠/单引号/双引号转义，ASCII 的 raw TAB/CR/NUL/DEL 合法。byte 字面量赋给 int、不同整数变量的隐式混用、转换非整数参数、unsigned 取负为 `E0001`；转换参数个数错误为 `E0012`。checked byte 加减乘越界为 `P-OVERFLOW`，除/余零为 `P-DIV-ZERO`，位移量越界为 `P-SHIFT`，文本索引越界为 `P-INDEX`；文本元素赋值拒绝 `E0101`。Vec reserve 参数仍严格为 int，byte 索引和 Int/Byte 不同类型的位移量则合法。
+
+`unsupported_text_byte_index_owner` 保留索引求值期间转移文本根的保守 U0001 边界：stage0 接受该源程序，本轮不把它登记为新 stage0 缺陷，不用运行行为作为固定预期。文本切片、持久借用、拥有元素索引写入/修改方法、显式参数模式、结果/optional、模块等仍按后继依赖推进。原有四条 known_gap 保持原记录：`unsupported_loop_condition_move`、`unsupported_comparison_borrow_move`、`unsupported_vec_index_receiver_move`、`unsupported_vec_reserve_receiver_move`。
+
+### 31.4 整体进度
+
+| 阶段 | 当前结果 | 尚需完成 |
+| --- | --- | --- |
+| SH-1 子集编译器 | 标量/控制流、Copy 聚合、String、Copy 与拥有 Vec、表达式内只读索引；本轮新增 byte、文本字节索引、转换与字节运算 | 按实际编译器源码依赖扩大子集，维持外部正负、固定预期及资源门 |
+| SH-2 最小自举闭环 | 2 份完整源码、3 个 prefix 工作负载，另有 7 个原样 lexer 函数片段；仍 `self_hosted=false`，没有 stage2/stage3 | 文本切片、持久借用与修改、参数模式、结果/optional、模块与完整入口；再执行完整源码固定点 |
+| SH-3 主编译器接替 | 日常入口仍为 Rust stage0 | 覆盖既有语言、诊断、回归和原生平台门后接替正常开发入口 |
+| SH-4 声明范围内的实用交付 | 本地 CLI 与批处理应用继续独立验收 | 至少三个非编译器 CLI，真实输入/失败路径、资源、跨平台及既定性能/成本门 |
+
+自举工作已能直接复用词法器的字节分类与前瞻函数。完整 parser/types/codegen 仍需要持久索引别名、可变状态与错误传播，完整 lexer 也尚未被新前端编译；组件、prefix 工作负载和函数片段分别计数。
+
+### 31.5 下一步：文本显式双端切片与两个原样函数
+
+下一增量限定为 **`str/String[start..end]` 的 int 双端点切片、表达式内 str 视图及消费它的比较/普通只读参数/`.toString()`**。原样验收对象为 `lexer.integerLiteralFits` 和 `codegen.minimumMagnitude`；二者已有字节扫描与整数比较支持，剩余直接依赖是显式双端文本切片。累计将达到 **8 个 lexer 函数片段 + 1 个 codegen 函数片段**，不声明完整 lexer 或 codegen 模块接入。
+
+1. 按 source → start → end 顺序求值，先保存文本视图并保护其原始 owner 根，直到该视图使用完毕。端点采用 stage0 的 int 契约；越界触发 `P-INDEX`，非 UTF-8 字符边界触发 `P-STR-BOUNDARY`。字节索引允许读取编码内部字节，文本切片则必须保持合法 str 边界。
+2. 支持临时 String、普通只读 str/String 参数、嵌套拥有字段和多次切片的表达式内使用；`.toString()` 产生独立 owner 后应解除原根约束。参数求值、比较、起止端点中的转移/修改都不能使活跃视图失效。
+3. 持久视图绑定、赋值存储、返回与其他逃逸形式继续 U0001；不能因为 str 的 C 表示可复制就丢失来源根。缺省端点、Vec 切片、显式引用/inout、结果传播及模块不混入本增量。
+4. 两个函数从当前生产源码按字节范围提取，只追加独立 harness；绑定文件身份、范围、逐片段、拼接输入与预期。先固定空串/前导零、u128 上限与溢出、int64 最小值幅度的独立预期，再执行两前端/两模式与资源检查。原有七个 lexer helper、三个 prefix 工作负载及四条 known_gap 继续回归。
+5. 该增量闭合后，再按实际依赖推进完整 lexer 所需的 inout Cursor、结果/err/try/catch、String.fromUtf8、pop/optional/if let、格式化与模块。持久局部借用仍需 Local 保存槽位和 owner 根，并处理最后使用、作用域、分支与循环回边；不能仅移除现有 U0001。

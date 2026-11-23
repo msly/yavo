@@ -1,0 +1,116 @@
+{
+  "schema": "yavo-selfhost-summary/1",
+  "date": "2026-11-23",
+  "batch": "27: bootstrap dialect and stage2/stage3 fixed point",
+  "source_commit": "67794d9",
+  "baseline_commit": "1b65c72",
+  "status": "passed",
+  "achieved": "self-hosted-fixed-point",
+  "self_hosted": true,
+  "cases": {
+    "total": 335,
+    "passed": 335,
+    "failed": 0,
+    "by_kind": {
+      "panic": 28,
+      "reject": 172,
+      "run": 98,
+      "shared_unsupported": 8,
+      "unsupported": 29
+    }
+  },
+  "checks": {
+    "passed": 11,
+    "failed": 0,
+    "skipped": 0,
+    "ids": [
+      "locked_zig",
+      "build_yavo_frontend",
+      "self_compilation_fixed_point",
+      "stage3_binary_reproduces_stage2",
+      "lexer_units",
+      "input_output_guard",
+      "existing_output_guard",
+      "dot_alias_output_guard",
+      "hardlink_output_guard",
+      "symlink_output_guard",
+      "inputs_unchanged_during_run"
+    ]
+  },
+  "compiler_bundle": {
+    "parts": [
+      {
+        "file": "support.yv",
+        "sha256": "244b13598621ec3d0e7a8163f15636156473a96d4a9d533f925a91108e6f7380"
+      },
+      {
+        "file": "lexer.yv",
+        "sha256": "90001fb929ad14d269169c47ec176f42d24012a3259bc99649f37925dad2ed3d"
+      },
+      {
+        "file": "model.yv",
+        "sha256": "497327c9270915bb6e7c0f2c23f4f5b6c224a06561810e28cf32722a7f846c28"
+      },
+      {
+        "file": "parser.yv",
+        "sha256": "9cd138b48fa9206cfad028d9f619a065c742744cf220b971168980156bc9d700"
+      },
+      {
+        "file": "types.yv",
+        "sha256": "d37846190d57514dee86715adfdb3478d4169f59bc9bd57bd37137236bcea779"
+      },
+      {
+        "file": "codegen.yv",
+        "sha256": "853017d3d1067196081eec8e16ed41ef62fff31b99586f5658e730e601d7b668"
+      },
+      {
+        "file": "main.yv",
+        "sha256": "04f60f0f88d1c9a2f702fef5395009796b28a9f2df185b066d59371ae40a98ea"
+      }
+    ],
+    "bytes": 134212,
+    "sha256": "b5a6e193bec7498a164f31567f437eaca3b2f390fc3a639a5775d8281862fc1d"
+  },
+  "stage0_sha256": "4482658b76d489863bdd16d1bc4263e87cdabf2fda0b3557cba16944ff1aaab8",
+  "zig_sha256": "58959f01285c05a74276f09327b551d42ed6006bf325a78dc661a024e314987b",
+  "runtime_sha256": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+  "stage1_sha256": "0372d807e8b0fac59559d1bca5c988427c21de3156d15603944371fee36ed505",
+  "fixed_point": {
+    "stage2_c": {
+      "bytes": 574149,
+      "sha256": "794fc02b25926cf5bbfea88a22912adc6fdea5da33db87ab7ac802ebb9a3335d"
+    },
+    "stage3_c": {
+      "bytes": 574149,
+      "sha256": "794fc02b25926cf5bbfea88a22912adc6fdea5da33db87ab7ac802ebb9a3335d"
+    },
+    "stage2_c_equals_stage3_c": true,
+    "stage2_sha256": "87a971ecb4e33d0945cce9a8825ae91d1338224ba15b1110eae608290305825c",
+    "stage3_sha256": "87a971ecb4e33d0945cce9a8825ae91d1338224ba15b1110eae608290305825c",
+    "stage2_equals_stage3": true,
+    "cc_flags": [
+      "-std=c17",
+      "-fno-strict-aliasing",
+      "-DYV_ALLOC_CHECK",
+      "-O2",
+      "-s"
+    ],
+    "elapsed_seconds": {
+      "stage1_check": 0.033,
+      "stage1_emit": 0.033,
+      "stage2_build": 5.234,
+      "stage2_emit": 0.032,
+      "stage3_build": 6.035
+    }
+  },
+  "stage2_differential": "every case: stage2 check exit code, stdout and stderr equal stage1; every executable case: stage2 emitted C byte-identical to stage1",
+  "host": {
+    "machine": "x86_64",
+    "platform": "Linux-6.1.0-50-cloud-amd64-x86_64-with-glibc2.36"
+  },
+  "not_covered": [
+    "native Windows/macOS fixed point awaits CI",
+    "GCC ASan/UBSan of stage2 itself not run",
+    "Rust suites not rerun: compiler/ unchanged since 1b65c72"
+  ]
+}

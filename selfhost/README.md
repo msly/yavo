@@ -1,25 +1,19 @@
-# Yavo-written compiler: byte and text-index subset
+# Yavo-written compiler: self-hosted bootstrap subset
 
-This directory starts the [self-hosting roadmap](../docs/self-hosting.md).
-It contains a real subset compiler written in Yavo: source is tokenized,
-parsed into an AST, checked, and lowered to C17. Rust is used to build this
-compiler and as a separate test reference. The Yavo frontend never delegates
-an input program back to the Rust frontend.
+This directory implements the [self-hosting roadmap](../docs/self-hosting.md).
+It contains a compiler written in Yavo: source is tokenized, parsed into an
+AST, checked, and lowered to C17. **It compiles its own source.** stage0
+(the Rust compiler) builds stage1 from these files; stage1 compiles the same
+files to stage2 C; stage2 compiles them again to stage3 C, and the stage2 and
+stage3 C files are byte-identical. Rust is used to build stage1 and as a
+separate behavioral reference; no stage delegates an input back to Rust.
 
-**Current status: subset compiler; self-compilation is not implemented.**
-The input subset includes Copy aggregates, payload-free enums, owned String
-values, vectors of Copy or owned String/struct elements, and Copy `byte`
-values. It supports byte literals, contextual integer arithmetic, int/byte
-conversions and single-byte text indexing. Non-Copy vector indices support
-expression-local read-only access, field projection, ordinary read-only
-arguments and explicit String/Vec clone. The complete current
-`diagnostic.yv` and `model.yv` are compiled with appended workloads, while
-seven unchanged lexer function fragments have independent execution oracles.
-Full compiler sources still require text slices, persistent element borrows,
-mutation through those borrows, explicit parameter modes, options/results,
-formatting, modules and other forms outside the accepted input subset.
-The validation receipt explicitly records `self_hosted: false` and tests that
-checking its own entry point reports `U0001`.
+**Status: SH-2 fixed point reached for the bootstrap subset (2026-11-23).**
+The compiler sources were rewritten into a *bootstrap dialect*: a strict
+subset of the stage0 language that the compiler itself implements (see
+[decision 20–24](../docs/decisions.md)). It is not yet the default compiler:
+stage0 accepts far more of the language (results, optionals, `for`,
+interpolation, modules, methods, generics, Map/Set, closures, threads...).
 
 ## Build and validate
 
@@ -30,29 +24,293 @@ cargo build --manifest-path compiler/Cargo.toml --locked --release
 python3 selfhost/bootstrap.py
 ```
 
+The compiler is one program assembled from `COMPILER_PARTS` in
+`bootstrap.py`: `support.yv`, `lexer.yv`, `model.yv`, `parser.yv`,
+`types.yv`, `codegen.yv`, `main.yv`, concatenated byte for byte (there are no
+modules in the bootstrap dialect). The lexer unit test is assembled from
+`support.yv`, `lexer.yv` and `lexer_test.yv` and built by stage0.
+
 `bootstrap.py` accepts `--stage0`, `--zig` and `--output`. Defaults use the
 Release compiler, the toolchain installation described by `compiler/toolchain.lock`,
 and `compiler/target/ci/selfhost/`. Windows executable suffixes and the configured
 `YAVO_HOME` are handled automatically. It uses Python's standard library.
 
-Each run creates a fresh directory, builds the Yavo frontend, runs its lexer
-checks, and tests independently specified programs. Successful programs and
-panic cases are compiled through both frontends and executed in Debug and
-Release; each result must match its fixed expected output/exit/panic category.
-Each successful input is emitted twice to check deterministic C. Invalid inputs
-must fail before creating or changing output, and supported-language constructs
-outside the subset must report `U0001`. Boundaries that stage0 also rejects as
-unimplemented are counted separately as `shared_unsupported`; these must report
-only `U0001` in both frontends. Each published example is byte-identical to its
-executable fixture and included in the receipt hashes.
+Each run creates a fresh directory and:
 
-The runner clears `PATH` when executing the Yavo frontend, retains complete
-commands/stdout/stderr, records source/runtime/compiler/toolchain hashes, and
-checks that inputs did not change during the run. `receipt.json` identifies the
-achieved stage and each individual result. Native CI runs this gate on Linux,
-Windows and macOS; a configured job is not itself a passing result.
+1. assembles the compiler and builds stage1 with stage0;
+2. has stage1 check and emit its own source as `stage2.c`, builds stage2 with
+   the locked Zig (`-O2`, `YV_ALLOC_CHECK`), has stage2 emit `stage3.c`, and
+   requires byte-identical C and identical stage2/stage3 binaries;
+3. runs every fixture: stage1 and stage2 must report identical exit codes,
+   stdout and stderr, and emit byte-identical C; successful and panic
+   programs are compiled through stage0 and stage1 in Debug and Release and
+   must match fixed expected output, exit status or panic category;
+   invalid inputs must fail before creating or changing output, and
+   constructs outside the subset must report `U0001` (`shared_unsupported`
+   inputs must report only `U0001` in both compilers);
+4. checks the output guards and that no input changed during the run.
 
-## Validation snapshot (2026-11-23)
+The runner clears `PATH` when executing Yavo-built compilers, retains complete
+commands/stdout/stderr, records source/bundle/runtime/compiler/toolchain hashes,
+and writes `receipt.json` with `achieved: "self-hosted-fixed-point"` and
+`self_hosted: true` only when everything passes. Native CI runs this gate on
+Linux, Windows and macOS; a configured job is not itself a passing result.
+
+## Validation snapshot (2026-11-23, fixed point)
+
+The [fixed-point summary](../compiler/validation/selfhost-fixpoint-2026-11-23.json)
+binds source `67794d9` and records **335/335 cases and 11/11 checks**, no skips:
+
+| Case category | Passed |
+| --- | ---: |
+| Normal programs | 98 |
+| Panic programs | 28 |
+| Rejected programs | 172 |
+| Inputs accepted by stage0 but outside this subset | 29 |
+| Boundaries unsupported by both compilers | 8 |
+
+| Fixed point | Value |
+| --- | --- |
+| Assembled compiler source | 134,212 bytes, 3,600 lines |
+| stage2.c = stage3.c | 574,149 bytes, SHA-256 `794fc02b…a3335d` |
+| stage2 = stage3 binary | 261,272 bytes (Linux x86-64, `-O2 -s`) |
+| stage1 self-compile | 0.03 s; stage2 C build with Zig ≈ 5 s |
+
+stage2 exits through the allocation checker after compiling itself, so the
+self-compilation path frees every heap block. All 335 fixture checks and all
+126 executable emissions agree byte for byte between stage1 and stage2.
+
+All 321 preceding fixtures are retained; `unsupported_text_slice` is promoted
+to `text_slice_owned_print` with unchanged source, and 14 cases are new
+(inout, take, text slices, `std/{fs, os}` with `catch _`, and their stage0
+rejection codes). The historical prefix workloads now use the pre-rewrite
+`diagnostic.yv` and `model.yv` frozen in `tests/prefixes/`.
+
+## CLI
+
+```sh
+cat selfhost/{support,lexer,model,parser,types,codegen,main}.yv > yavo-selfhost.yv
+compiler/target/release/yavo build yavo-selfhost.yv --release -o yavo-selfhost
+./yavo-selfhost check selfhost/examples/gcd.yv
+./yavo-selfhost emit-c selfhost/examples/gcd.yv -o gcd.c
+```
+
+The output path must be new: successful emission uses `fs.writeNewText`, which
+creates exclusively and refuses an existing path, including a link to the input.
+The frontend completes checking before opening that output. A write failure
+after creation can leave a partial new output file; remove that failed artifact
+before retrying. Compiling generated C requires `compiler/runtime/yavo_rt.h`
+and the locked Zig C compiler, as demonstrated by `bootstrap.py`.
+
+Exit codes: `0` success, `1` frontend rejection, `2` CLI usage, `3` I/O failure.
+Diagnostics currently report the first error as
+`path:line:column: CODE: message`; columns count Unicode scalars and stored spans
+use UTF-8 byte offsets. `E0020` is syntax, `U0001` is an unimplemented construct
+or explicit implementation limit, and other `E` codes indicate semantic errors.
+JSON diagnostics, suggestions and recovery remain future work.
+
+## Accepted input subset
+
+| Area | Implemented |
+| --- | --- |
+| Files | One source file; function and aggregate declarations, including `pub`; required `fn main()`; optional leading `use std/{fs, os}` (other imports are `U0001`) |
+| Types | `int` (signed 64-bit), `byte` (unsigned 8-bit), `bool`, borrowed `str`, owned `String`, `Vec[T]` with Copy or owned String/struct elements, unit return; nominal structs and payload-free enums |
+| String | Empty construction, str.toString, len, clone, push, output, String/str equality and ordering, UTF-8/NUL; checked single-byte indexing returns Copy byte |
+| Vec | Typed empty construction, empty/nonempty literals including Vec[byte], len, consuming push, reserve, recursive clone/drop; checked reads and index/field/compound assignments for Copy elements; expression-local read-only indexing and field projection for owned elements |
+| Aggregates | Forward/nested fields, construction, reads and mutable fields; Copy values or owned String/Vec/nested struct fields; constant defaults and empty aggregates; by-value cycles rejected |
+| Enums | Qualified and context-inferred cases, nominal type checks, equality/inequality, case-name output |
+| Literals | Decimal integers including negative `INT64_MIN`, contextual byte-range integers, single-quoted ASCII byte literals and seven escapes, booleans, unit, non-interpolated UTF-8 strings with supported escapes and NUL; vector literals with contextual or first-element type inference |
+| Functions | Typed parameters, scalar/String/Vec/struct/unit returns, forward calls and recursion; owned ordinary parameters borrow read-only; `inout` parameters with `&variable` or `&variable.field` arguments (later arguments may not use that root, E0102); str returns remain outside the subset |
+| Text slices | Expression-local `s[start..end]` on str/String with int bounds, P-INDEX and P-STR-BOUNDARY checks; usable in comparisons, read-only arguments, `push` and `toString()`; a view of an owned String cannot be bound or assigned (U0001) |
+| Standard calls | `take(&place)` for String/Vec places; `os.args()` (len, indexing to static str), `os.exit(code)`; `fs.readText`, `fs.writeNewText` and `String.fromUtf8` only with a `catch _ { ... }` handler that cannot fall through (E0601) |
+| Locals | `let`/`var`, inferred or explicit types, assignment and arithmetic compound assignment; active locals cannot be shadowed |
+| Control flow | `if`/`else if`/`else`, `while`, `loop`, `break`, `continue`, explicit return and return-path checks |
+| Expressions | Parentheses, int unary minus, boolean not, checked int/byte arithmetic, wrapping arithmetic, bit operations/shifts, contextual integer arithmetic, equality/order, short-circuit boolean operators |
+| Builtins | Single-argument `print`/`println`/`eprintln` as direct statements including decimal byte output, `assert(bool)`, explicit `int(...)`/`byte(...)` conversions; user functions take precedence over the assert prelude |
+| Ownership | Consuming bindings/assignment/construction/returns; moved-value checking, read-only parameters, expression-local element borrows, root-based argument/receiver protection |
+| Runtime behavior | Checked arithmetic/panic/output, ordered evaluation, moved-source zeroing and cleanup on scope/statement/control-flow exits |
+
+Non-unit values require an explicit return. Only a direct function/method call may stand alone
+as an expression statement, and unit-returning functions allow `return` or
+`return ()`, matching the existing language. The parser bounds syntactic nesting
+at 128 and expression lowering at 256; exceeding either returns `U0001`.
+
+Aggregate fields may hold int, byte, bool, String, supported vectors, payload-free
+enums or nested structs. Borrowed `str` fields are rejected with E0301;
+unit fields remain outside this subset. Struct equality/printing/clone and enum ordering are
+rejected consistently with stage0. Explicit constructor fields are evaluated
+in source order. Bare enum cases use annotation/parameter/return/field/
+assignment/RHS comparison context.
+
+### Byte values and text reads
+
+`byte` is a Copy unsigned 8-bit value. A single-quoted literal has a fixed
+byte type; it is one ASCII character or one of `\n`, `\t`, `\r`, `\0`,
+`\\`, `\'` and `\"`. Raw TAB, CR, NUL and DEL are accepted; raw newline,
+non-ASCII characters, empty/multiple characters and other escapes are E0020.
+Byte output is the decimal numeric value.
+
+Integer literals and supported literal arithmetic expressions take byte
+context from annotations, parameters, returns, fields, vector elements or
+a typed comparison/arithmetic operand. Ordinary int variables and byte
+literals do not implicitly change type. Type inference can inspect a typed
+right operand without moving its runtime effects before the left operand.
+A byte-context literal outside 0..255 is E0003. Constant field declarations
+defer numeric range checks and fixed byte-to-int fitting until constructor
+instantiation, matching stage0.
+
+`int(byte)` widens explicitly; `byte(int)` checks its value and panics
+P-CONVERT outside 0..255. Identity `int(int)` and `byte(byte)` conversions
+are supported. Arithmetic uses the existing checked/wrapping u8 runtime
+operations; overflow, division by zero and invalid shift width retain the
+stage0 panic categories in both modes.
+
+String/str indexing checks bounds and copies one UTF-8 **byte**, including
+a continuation byte or NUL. It does not decode a Unicode scalar. Index
+arguments accept int or byte, while `Vec.reserve` still requires int.
+The receiver remains protected during index evaluation. The materialized
+byte immediately detaches from its owner and can survive later movement or
+replacement of that owner. Temporary String receivers live through the
+access. Text indexing is read-only; text slices remain outside this subset.
+
+### Ownership boundaries
+
+Ordinary string literals are `str`. Binding, assigning, returning or explicitly
+initializing a String field from a literal requires `.toString()`; only a
+String field's constant default has a special literal conversion. String
+arguments may borrow a str view for a call, but persistent String-to-str
+bindings and borrowed return values are not introduced by this increment.
+
+Owned locals move into bindings, assignments, constructors and returns.
+Ordinary parameters, output, comparison, len and clone borrow. Moving out of
+a field or a read-only parameter is E0401; moved-value reuse is E0402.
+Modification through a read-only place is E0014; a conflicting push receiver
+is E0403, including sibling fields of the same root. Earlier call arguments
+retain their borrows until the call and conflicting later moves are E0102.
+String temporaries remain alive through the statement; short-circuit branch
+temporaries are cleaned inside their branch. Locals are cleaned on return,
+break/continue and scope exit; moved sources are zeroed before later cleanup.
+
+Loop move checks reproduce stage0's conservative second body pass, including
+moves before a syntactic break/return. Reinitialization restores availability.
+
+Vectors accept `int`, `byte`, `bool`, payload-free enums, `String` and named structs,
+including structs with String or supported Vec fields. Nominal enum/struct
+identity is preserved in the element type. A vector owns its buffer even
+when its elements are Copy; a struct containing a vector is therefore owned.
+Whole vectors move into bindings, assignments, fields and returns, while
+ordinary vector parameters borrow read-only.
+
+Owned elements move into vector literals and push; the transferred source is
+cleared and later reuse is rejected. A `Vec[String]` element must already be a
+`String`; no `str`-to-`String` conversion is implicit. Drop recursively releases
+initialized elements before the buffer, and clone creates independent element storage
+through String, Vec and struct fields. Indirect recursive types such as
+`Node { children: Vec[Node] = [] }` are supported; direct by-value cycles
+remain E0017. Internal struct clone helpers do not add a public built-in
+`struct.clone()` method.
+
+Reading a Copy element returns an independent value. Copy-element writes,
+including nested struct-field and arithmetic compound assignments, require
+a mutable place and check bounds.
+
+Reading an owned element produces expression-local read-only access. It can
+be projected through fields, read by output/comparison/len, passed to an
+ordinary read-only parameter, or explicitly cloned when the selected value
+is String or Vec. The borrowed slot is not an owning temporary and is never
+independently dropped or cleared. Indexing never implicitly clones its
+element. Its original root remains protected while
+the borrow is needed; a temporary owning receiver remains alive through the
+statement. Copy field reads, len and completed clone results detach from the
+root, allowing later mutation such as `v.push(v[0].clone())`.
+
+Persistent bindings of a non-Copy indexed borrow, such as
+`let element = v[i]`, remain U0001.
+Using that borrowed result as an owned annotation, return, push argument or
+typed vector element is E0404; moving an owned field out of it is E0401.
+An arbitrary user struct still has no built-in clone method (E0010).
+Owned-element replacement, indexed-field mutation and mutation methods
+through an owned element remain outside the subset. Explicit references,
+inout/sink/take and borrowed returns are separate dependencies.
+
+Out-of-range index operations raise P-INDEX. `reserve` requests a minimum
+total capacity without changing length; negative or overflowing capacities
+raise P-CAPACITY. Copy reads materialize a value before later operations,
+so `v.push(v[0])` does not retain an element borrow across the push.
+
+`Vec[T]{}` supplies the element type explicitly. Empty `[]` requires type
+context; a nonempty literal uses context or its first element. Enum cases
+receive vector-element context in literals and push arguments. A vector field
+may default to `[]` or `([])`; nonempty literals and typed constructors are not
+constant field defaults. Literal storage is allocated before evaluating its
+elements, and indexed assignment evaluates the RHS before the target, matching
+stage0's evaluation order. Receiver/argument checks preserve root ownership
+during calls and assignments.
+
+Four accepted stage0 boundaries remain explicitly U0001 here:
+
+| Manifest case | Unresolved stage0 behavior |
+| --- | --- |
+| `unsupported_loop_condition_move` | A repeated while condition consumes an outer owner; a later evaluation can read the cleared owner. |
+| `unsupported_comparison_borrow_move` | The right comparison operand consumes the owner borrowed by the left operand. |
+| `unsupported_vec_index_receiver_move` | Evaluating an index consumes its vector; bounds checking can then observe the moved-from descriptor. |
+| `unsupported_vec_reserve_receiver_move` | Evaluating a reserve argument consumes its vector; reserve then operates on the moved-from descriptor. |
+
+The manifest and summary retain all four minimal sources and reasons.
+Stage0's observed results at these boundaries are not correctness oracles.
+
+Three additional conservative U0001 fixtures protect an outer owner while
+an indexed borrow is used in a comparison, a nested index is evaluated, or
+a text index expression consumes its receiver. Stage0 accepts those inputs;
+the fixtures do not execute these programs or add new known_gap records.
+
+Unsupported input includes persistent bindings of borrowed elements and
+mutation through non-Copy indexes, direct nested Vec elements, borrowed `str`
+or unit elements, pop, slices, other collections, imports,
+enum payloads, explicit user inout/sink/references/take, options/results,
+user-defined methods, generics, interpolation, float/nondecimal literals,
+integer separators, for loops, closures and concurrency. String temporary
+receivers cannot be modified. This list describes the new frontend's input,
+not the broader Rust frontend.
+
+## Implementation
+
+| File | Responsibility |
+| --- | --- |
+| `support.yv` | Decimal formatting/parsing, small string joins, fatal `path:line:column: CODE: message` reporting |
+| `lexer.yv` | UTF-8-aware tokens, escapes, source spans, newline termination; failures are returned in `Lexed` |
+| `model.yv` | Copy AST nodes; child lists are ranges in shared Program pools |
+| `parser.yv` | Aggregate/function/statement/expression grammar, imports, slices, borrows, catch, unsupported boundaries |
+| `types.yv` | Nominal and vector-element types, field/default checks, cycles/layout order, transitive ownership |
+| `codegen.yv` | Places, borrowed/consuming values, inout/take, vector operations, move-state joins, cleanup, loop replay and ordered C |
+| `main.yv` | CLI, input and exclusive output creation |
+| `lexer_test.yv` | Lexer boundary assertions (built by stage0) |
+| `tests/` and `bootstrap.py` | Independent behavior/rejection oracles, fixed point and reproducible execution |
+
+Inside the compiler the first diagnostic is fatal: parsing, checking and
+lowering call `fail`, which prints and exits with status 1. The lexer records
+its failure in the returned `Lexed` value so that its unit test can inspect
+it. Two compiler-internal workarounds follow from the dialect: owned vectors
+cannot be truncated without `pop`, so small `trunc*` helpers rebuild them,
+and loop exit states live in one flat `Vec[bool]` pool.
+
+The [token metadata](examples/token_metadata.yv), [token table](examples/token_table.yv),
+[owned token store](examples/owned_token_store.yv), [borrowed token scan](examples/borrowed_token_scan.yv)
+and [lexer byte helpers](examples/lexer_byte_helpers.yv) examples remain
+executable fixtures from earlier increments.
+
+## Next steps
+
+Self-hosting is now a regression gate rather than the next feature. The
+order of work is in [docs/self-hosting.md](../docs/self-hosting.md): native
+three-platform confirmation of the fixed point, then widening the dialect
+toward SH-3 by moving the compiler's own source onto features as they land
+(results and `try`, optionals, `for`, interpolation, modules), each with the
+fixed point re-established.
+
+## Historical snapshots
+
+### Historical byte and text-index snapshot (2026-11-23)
 
 The [byte and text-index summary](../compiler/validation/selfhost-byte-2026-11-23.json)
 binds source `aecdfe58e6f81b794c48827fa2e49905a59331e5` to baseline
@@ -362,258 +620,3 @@ retains its 138-case baseline and
 The earlier [SH-1 summary](../compiler/validation/selfhost-sh1-2026-11-22.json)
 retains the 72-case baseline. These counts are tested behaviors, not a
 self-hosting completion percentage.
-
-## CLI
-
-```sh
-compiler/target/release/yavo build selfhost/main.yv --release -o yavo-selfhost
-./yavo-selfhost check selfhost/examples/gcd.yv
-./yavo-selfhost emit-c selfhost/examples/gcd.yv -o gcd.c
-```
-
-The output path must be new: successful emission uses `fs.writeNewText`, which
-creates exclusively and refuses an existing path, including a link to the input.
-The frontend completes checking before opening that output. A write failure
-after creation can leave a partial new output file; remove that failed artifact
-before retrying. Compiling generated C requires `compiler/runtime/yavo_rt.h`
-and the locked Zig C compiler, as demonstrated by `bootstrap.py`.
-
-Exit codes: `0` success, `1` frontend rejection, `2` CLI usage, `3` I/O failure.
-Diagnostics currently report the first error as
-`path:line:column: CODE: message`; columns count Unicode scalars and stored spans
-use UTF-8 byte offsets. `E0020` is syntax, `U0001` is an unimplemented construct
-or explicit implementation limit, and other `E` codes indicate semantic errors.
-JSON diagnostics, suggestions and recovery remain future work.
-
-## Accepted input subset
-
-| Area | Implemented |
-| --- | --- |
-| Files | One source file; function and aggregate declarations, including `pub`; required `fn main()` |
-| Types | `int` (signed 64-bit), `byte` (unsigned 8-bit), `bool`, borrowed `str`, owned `String`, `Vec[T]` with Copy or owned String/struct elements, unit return; nominal structs and payload-free enums |
-| String | Empty construction, str.toString, len, clone, push, output, String/str equality and ordering, UTF-8/NUL; checked single-byte indexing returns Copy byte |
-| Vec | Typed empty construction, empty/nonempty literals including Vec[byte], len, consuming push, reserve, recursive clone/drop; checked reads and index/field/compound assignments for Copy elements; expression-local read-only indexing and field projection for owned elements |
-| Aggregates | Forward/nested fields, construction, reads and mutable fields; Copy values or owned String/Vec/nested struct fields; constant defaults and empty aggregates; by-value cycles rejected |
-| Enums | Qualified and context-inferred cases, nominal type checks, equality/inequality, case-name output |
-| Literals | Decimal integers including negative `INT64_MIN`, contextual byte-range integers, single-quoted ASCII byte literals and seven escapes, booleans, unit, non-interpolated UTF-8 strings with supported escapes and NUL; vector literals with contextual or first-element type inference |
-| Functions | Typed parameters, scalar/String/Vec/struct/unit returns, forward calls and recursion; owned ordinary parameters borrow read-only; str returns remain outside the subset |
-| Locals | `let`/`var`, inferred or explicit types, assignment and arithmetic compound assignment; active locals cannot be shadowed |
-| Control flow | `if`/`else if`/`else`, `while`, `loop`, `break`, `continue`, explicit return and return-path checks |
-| Expressions | Parentheses, int unary minus, boolean not, checked int/byte arithmetic, wrapping arithmetic, bit operations/shifts, contextual integer arithmetic, equality/order, short-circuit boolean operators |
-| Builtins | Single-argument `print`/`println`/`eprintln` as direct statements including decimal byte output, `assert(bool)`, explicit `int(...)`/`byte(...)` conversions; user functions take precedence over the assert prelude |
-| Ownership | Consuming bindings/assignment/construction/returns; moved-value checking, read-only parameters, expression-local element borrows, root-based argument/receiver protection |
-| Runtime behavior | Checked arithmetic/panic/output, ordered evaluation, moved-source zeroing and cleanup on scope/statement/control-flow exits |
-
-Non-unit values require an explicit return. Only a direct function/method call may stand alone
-as an expression statement, and unit-returning functions allow `return` or
-`return ()`, matching the existing language. The parser bounds syntactic nesting
-at 128 and expression lowering at 256; exceeding either returns `U0001`.
-
-Aggregate fields may hold int, byte, bool, String, supported vectors, payload-free
-enums or nested structs. Borrowed `str` fields are rejected with E0301;
-unit fields remain outside this subset. Struct equality/printing/clone and enum ordering are
-rejected consistently with stage0. Explicit constructor fields are evaluated
-in source order. Bare enum cases use annotation/parameter/return/field/
-assignment/RHS comparison context.
-
-### Byte values and text reads
-
-`byte` is a Copy unsigned 8-bit value. A single-quoted literal has a fixed
-byte type; it is one ASCII character or one of `\n`, `\t`, `\r`, `\0`,
-`\\`, `\'` and `\"`. Raw TAB, CR, NUL and DEL are accepted; raw newline,
-non-ASCII characters, empty/multiple characters and other escapes are E0020.
-Byte output is the decimal numeric value.
-
-Integer literals and supported literal arithmetic expressions take byte
-context from annotations, parameters, returns, fields, vector elements or
-a typed comparison/arithmetic operand. Ordinary int variables and byte
-literals do not implicitly change type. Type inference can inspect a typed
-right operand without moving its runtime effects before the left operand.
-A byte-context literal outside 0..255 is E0003. Constant field declarations
-defer numeric range checks and fixed byte-to-int fitting until constructor
-instantiation, matching stage0.
-
-`int(byte)` widens explicitly; `byte(int)` checks its value and panics
-P-CONVERT outside 0..255. Identity `int(int)` and `byte(byte)` conversions
-are supported. Arithmetic uses the existing checked/wrapping u8 runtime
-operations; overflow, division by zero and invalid shift width retain the
-stage0 panic categories in both modes.
-
-String/str indexing checks bounds and copies one UTF-8 **byte**, including
-a continuation byte or NUL. It does not decode a Unicode scalar. Index
-arguments accept int or byte, while `Vec.reserve` still requires int.
-The receiver remains protected during index evaluation. The materialized
-byte immediately detaches from its owner and can survive later movement or
-replacement of that owner. Temporary String receivers live through the
-access. Text indexing is read-only; text slices remain outside this subset.
-
-### Ownership boundaries
-
-Ordinary string literals are `str`. Binding, assigning, returning or explicitly
-initializing a String field from a literal requires `.toString()`; only a
-String field's constant default has a special literal conversion. String
-arguments may borrow a str view for a call, but persistent String-to-str
-bindings and borrowed return values are not introduced by this increment.
-
-Owned locals move into bindings, assignments, constructors and returns.
-Ordinary parameters, output, comparison, len and clone borrow. Moving out of
-a field or a read-only parameter is E0401; moved-value reuse is E0402.
-Modification through a read-only place is E0014; a conflicting push receiver
-is E0403, including sibling fields of the same root. Earlier call arguments
-retain their borrows until the call and conflicting later moves are E0102.
-String temporaries remain alive through the statement; short-circuit branch
-temporaries are cleaned inside their branch. Locals are cleaned on return,
-break/continue and scope exit; moved sources are zeroed before later cleanup.
-
-Loop move checks reproduce stage0's conservative second body pass, including
-moves before a syntactic break/return. Reinitialization restores availability.
-
-Vectors accept `int`, `byte`, `bool`, payload-free enums, `String` and named structs,
-including structs with String or supported Vec fields. Nominal enum/struct
-identity is preserved in the element type. A vector owns its buffer even
-when its elements are Copy; a struct containing a vector is therefore owned.
-Whole vectors move into bindings, assignments, fields and returns, while
-ordinary vector parameters borrow read-only.
-
-Owned elements move into vector literals and push; the transferred source is
-cleared and later reuse is rejected. A `Vec[String]` element must already be a
-`String`; no `str`-to-`String` conversion is implicit. Drop recursively releases
-initialized elements before the buffer, and clone creates independent element storage
-through String, Vec and struct fields. Indirect recursive types such as
-`Node { children: Vec[Node] = [] }` are supported; direct by-value cycles
-remain E0017. Internal struct clone helpers do not add a public built-in
-`struct.clone()` method.
-
-Reading a Copy element returns an independent value. Copy-element writes,
-including nested struct-field and arithmetic compound assignments, require
-a mutable place and check bounds.
-
-Reading an owned element produces expression-local read-only access. It can
-be projected through fields, read by output/comparison/len, passed to an
-ordinary read-only parameter, or explicitly cloned when the selected value
-is String or Vec. The borrowed slot is not an owning temporary and is never
-independently dropped or cleared. Indexing never implicitly clones its
-element. Its original root remains protected while
-the borrow is needed; a temporary owning receiver remains alive through the
-statement. Copy field reads, len and completed clone results detach from the
-root, allowing later mutation such as `v.push(v[0].clone())`.
-
-Persistent bindings of a non-Copy indexed borrow, such as
-`let element = v[i]`, remain U0001.
-Using that borrowed result as an owned annotation, return, push argument or
-typed vector element is E0404; moving an owned field out of it is E0401.
-An arbitrary user struct still has no built-in clone method (E0010).
-Owned-element replacement, indexed-field mutation and mutation methods
-through an owned element remain outside the subset. Explicit references,
-inout/sink/take and borrowed returns are separate dependencies.
-
-Out-of-range index operations raise P-INDEX. `reserve` requests a minimum
-total capacity without changing length; negative or overflowing capacities
-raise P-CAPACITY. Copy reads materialize a value before later operations,
-so `v.push(v[0])` does not retain an element borrow across the push.
-
-`Vec[T]{}` supplies the element type explicitly. Empty `[]` requires type
-context; a nonempty literal uses context or its first element. Enum cases
-receive vector-element context in literals and push arguments. A vector field
-may default to `[]` or `([])`; nonempty literals and typed constructors are not
-constant field defaults. Literal storage is allocated before evaluating its
-elements, and indexed assignment evaluates the RHS before the target, matching
-stage0's evaluation order. Receiver/argument checks preserve root ownership
-during calls and assignments.
-
-Four accepted stage0 boundaries remain explicitly U0001 here:
-
-| Manifest case | Unresolved stage0 behavior |
-| --- | --- |
-| `unsupported_loop_condition_move` | A repeated while condition consumes an outer owner; a later evaluation can read the cleared owner. |
-| `unsupported_comparison_borrow_move` | The right comparison operand consumes the owner borrowed by the left operand. |
-| `unsupported_vec_index_receiver_move` | Evaluating an index consumes its vector; bounds checking can then observe the moved-from descriptor. |
-| `unsupported_vec_reserve_receiver_move` | Evaluating a reserve argument consumes its vector; reserve then operates on the moved-from descriptor. |
-
-The manifest and summary retain all four minimal sources and reasons.
-Stage0's observed results at these boundaries are not correctness oracles.
-
-Three additional conservative U0001 fixtures protect an outer owner while
-an indexed borrow is used in a comparison, a nested index is evaluated, or
-a text index expression consumes its receiver. Stage0 accepts those inputs;
-the fixtures do not execute these programs or add new known_gap records.
-
-Unsupported input includes persistent bindings of borrowed elements and
-mutation through non-Copy indexes, direct nested Vec elements, borrowed `str`
-or unit elements, pop, slices, other collections, imports,
-enum payloads, explicit user inout/sink/references/take, options/results,
-user-defined methods, generics, interpolation, float/nondecimal literals,
-integer separators, for loops, closures and concurrency. String temporary
-receivers cannot be modified. This list describes the new frontend's input,
-not the broader Rust frontend.
-
-## Implementation and next dependency chain
-
-| File | Responsibility |
-| --- | --- |
-| `lexer.yv` | UTF-8-aware tokens, escapes, source spans, newline termination |
-| `model.yv` | Owned AST nodes; graph edges and spellings use indices |
-| `parser.yv` | Aggregate/function/statement/expression grammar, vector literals/indexes, precedence, unsupported boundaries |
-| `types.yv` | Nominal and vector-element types, field/default checks, cycles/layout order, transitive ownership |
-| `codegen.yv` | Places, borrowed/consuming values, vector operations, move-state joins, cleanup, loop replay and ordered C |
-| `diagnostic.yv` | Shared diagnostic data |
-| `main.yv` | CLI, input and exclusive output creation |
-| `lexer_test.yv` | Lexer boundary assertions |
-| `tests/` and `bootstrap.py` | Independent behavior/rejection oracles and reproducible execution |
-
-The [token metadata example](examples/token_metadata.yv) exercises Copy
-aggregate data. The [token-table example](examples/token_table.yv) adds a
-`Vec[TokenMeta]` field, reserve/push, checked reads and updates, read-only
-parameters and clone independence. The
-[owned token store](examples/owned_token_store.yv) covers String-bearing
-Token-shaped storage, consuming push, returns, clone and reassignment.
-The [borrowed token scan](examples/borrowed_token_scan.yv) adds expression-local
-element reads, String-field access and explicit clones. These examples do
-not compile the original lexer.
-
-The String/Failure component, Copy-element Vec, **owned AST storage and
-read-only AST content traversal** paths are implemented. The complete
-original `model.yv` is preserved in two appended workloads. They populate
-and read the `expressions`, `statements`, `functions` and `types` vectors,
-including Expression arguments/names, Statement branches, Function
-parameters/body and TypeDecl fields/variants. Explicit clone results and
-Copy fields remain readable after replacing the original Program.
-
-The byte increment also accepts the seven original lexer helpers in
-[lexer_byte_helpers.yv](examples/lexer_byte_helpers.yv). This adds classification,
-UTF-8 leading-byte width and exponent-lookahead execution alongside the
-existing AST workloads.
-
-The next increment is **explicit bounded text slices with expression-local
-str borrows**. It should accept String/str `base[start..end]`, with both
-bounds exactly int, source-order receiver/start/end evaluation, and
-P-INDEX/P-STR-BOUNDARY checks through the existing runtime. A slice must
-retain its originating owner root and lifetime through comparisons,
-read-only arguments and chained accesses; `len`, byte indexing, comparison
-results and `toString()` produce independent results. Both bound
-expressions and later call arguments must respect the active borrow.
-Same-root `String.push(slice)` remains E0403; an explicit `toString()`
-copy can detach before push.
-
-Acceptance will extract unchanged original byte ranges for
-`lexer.integerLiteralFits` and `codegen.minimumMagnitude` and append
-independent workloads. Freeze u128 maximum/overflow, int64 minimum magnitude,
-long leading-zero and empty/ASCII/UTF-8/NUL expectations before candidate
-execution. Test negative/reversed/high bounds, non-scalar UTF-8 boundaries,
-byte-bound type rejection, evaluation order, temporary owners, root conflicts
-and detached owned/copy results. Preserve all existing fixed-oracle,
-original-prefix, resource, regression and native CI gates.
-
-Persistent `let`/`var` slice bindings, borrowed returns, Vec slices and
-open-ended slices remain separate work. Current Local records do not retain
-origin roots or view lifetimes; merely allowing a str descriptor to be
-stored would lose the relationship to its owner. After this increment the
-original function-fragment gate would contain **nine functions: eight from
-lexer and one from codegen**.
-
-Full lexer acceptance still needs `inout Cursor` and explicit `&` arguments,
-results and err/try/catch, `String.fromUtf8`, pop/optional/if let and modules.
-The new `byteToken` helper also uses format/interpolation, which remains an
-input-language dependency. Parser, types and codegen additionally need
-persistent owned-element borrows, indexed owned-field mutation and the
-remaining collection, formatting and module operations.
