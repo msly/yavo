@@ -31,6 +31,15 @@ This is one application's acceptance, not completion of all three SH-4 projects.
 Each run writes a new attempt and a current receipt under
 `compiler/target/ci/test-summary/`.
 
+The gate creates real CR/LF filenames on POSIX. `package_test_summary.py` keeps
+all application evidence with its original bytes and names in
+`compiler/target/ci/test-summary.tar.gz`, omitting only reproducible
+`empty-caches` directories. The upload excludes the original application tree
+and includes this portable container; readers inspect its tar members without
+renaming the tested paths. The first batch-28 run failed at macOS artifact upload
+after its application gate passed, as preserved in the
+[initial-run note](../../compiler/validation/batch28-ci-initial-2026-11-23.json).
+
 The existing Linux `selfhost_sanitize.py` step now requires both the generated
 program gate and `selfhost_compiler_sanitize.py` to pass. The latter builds one
 GCC ASan/UBSan compiler from the actual stage2 C and exercises self-compilation,

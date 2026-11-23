@@ -219,7 +219,7 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - 应用最终 Linux 门为 213/213（Debug/Release 142，加退出检查辅助产物 71）；原始 C/runtime 不改写，通过独立 forced-include shim 在显式退出前检查堆块。clean/leak 两个真实 String 探针先验证辅助检查有效。runtime、shim、probe、生成 C 均从全新目录的哈希绑定副本编译；三次原生构建的源副本、C、binary 及辅助产物运行后全部复验，避免同名头遮蔽或工件在执行中变化。见 `compiler/validation/test-summary-2026-11-23.json`。
 - `tools/ci/selfhost_sanitize.py` 保留原 126 个生成程序门；新增 `selfhost_compiler_sanitize.py` 只额外 GCC 编译一次实际 stage2 C，随后执行自编译、335 checks、126 emits 与 8 个坏输入压力用例。当前 stage2 C 与 runtime 复制到全新构建目录并逐字节核对，防止同目录同名头遮蔽已绑定 runtime。
 - 独立 GCC 14.2 本机验证通过，详细范围及来源绑定见 `compiler/validation/stage2-sanitizer-2026-11-23.json`；正常编译器退出有分配检查，首错 `os.exit` 路径不声称泄漏检查。LSan、TSan 和其他平台 sanitizer 不在本批范围。
-- 已把应用验收接入 Linux x86-64、Windows x86-64、macOS arm64 原生 CI；本批 CI 尚待推送后运行。最终结果与回执索引在 CI 完成后补充。
+- 初始提交 `aa8eb56` 的 run 45172624540 中，macOS 全部测试（含应用 213/213）成功，唯独 artifact 上传拒绝测试有意构造的 CR/LF 文件名。已补 `package_test_summary.py`：原始名字与字节打入 tar.gz，仅省略可重建缓存；workflow 排除直接上传原目录并上传容器。应用与 oracle 未改，1,324 个本机包成员逐字节核对通过。初始失败保留在 `compiler/validation/batch28-ci-initial-2026-11-23.json`；修正后重新运行三平台 CI，最终结果在完成后补充。
 
 ## 历史批次（已移出）
 

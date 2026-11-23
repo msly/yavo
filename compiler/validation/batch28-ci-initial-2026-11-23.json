@@ -1,0 +1,35 @@
+{
+  "schema": "yavo-ci-attempt-note/1",
+  "run_id": 45172624540,
+  "source_commit": "aa8eb5677afe0414d8ad29f0a78705aa88053454",
+  "url": "https://github.com/msly/yavo/actions/runs/45172624540",
+  "observed_job": {
+    "id": 137685730197,
+    "name": "Native macOS arm64",
+    "conclusion": "failure",
+    "test_steps": "Rust suites, selfhost fixed point and test-summary application all succeeded",
+    "application": {
+      "applicable_scenarios": 71,
+      "application_executions": 213,
+      "passed": 213,
+      "failed": 0
+    },
+    "failed_step": "Preserve logs and per-platform receipts"
+  },
+  "failure": "GitHub artifact service rejects the intentional POSIX CR/LF filename created by the accepted path-escaping test. The failure occurred during artifact validation, after all application checks passed.",
+  "job_log_sha256": "12ab138d4e821bcd1bdd62245af5d9d2ab919a84db8f02d2a4dfc9ba0d763698",
+  "fix": {
+    "script": "tools/ci/package_test_summary.py",
+    "script_sha256": "e9f74046ceab057796a41027148773df17af57fda0f0a4832b7f4c9b340afe83",
+    "behavior": "Preserve exact evidence names/content inside test-summary.tar.gz; omit only reproducible empty-caches; exclude original test-summary tree from direct artifact upload. Application source, oracle and gate remain unchanged.",
+    "local_archive_check": {
+      "package_files_verified": 1324,
+      "package_directories_verified": 453,
+      "adversarial_names_preserved": true,
+      "empty_directory_preserved": true,
+      "cache_files_excluded": true,
+      "archive_sha256": "e6d05c1108fa93917850ce5e5b41ea0243c929c3b2bccc58df7185aad22500eb"
+    }
+  },
+  "remaining": "The corrective commit must pass a fresh native CI run; this note does not turn the failed run into a pass."
+}
