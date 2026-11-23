@@ -259,10 +259,15 @@ def main():
         report["inputs"]["subset_compiler"] = {"path": str(binary), "sha256": digest(binary)}
 
         # Self-compilation: stage1 (built by stage0) -> stage2 C -> stage2 -> stage3 C.
+        # Each generation is built under the same file name in its own directory:
+        # Mach-O ad-hoc signatures embed the output name, so differing names would
+        # make otherwise identical builds differ.
         stages = work / "stages"
-        stages.mkdir()
-        stage2_c, stage3_c = stages / "stage2.c", stages / "stage3.c"
-        stage2, stage3 = stages / ("stage2" + EXE), stages / ("stage3" + EXE)
+        (stages / "stage2").mkdir(parents=True)
+        (stages / "stage3").mkdir()
+        stage2_c, stage3_c = stages / "stage2" / "yavo-selfhost.c", stages / "stage3" / "yavo-selfhost.c"
+        stage2 = stages / "stage2" / ("yavo-selfhost" + EXE)
+        stage3 = stages / "stage3" / ("yavo-selfhost" + EXE)
         self_check = command("stage1-check-self", [binary, "check", bundle], frontend=True, timeout=60)
         emit2 = command("stage1-emit-stage2", [binary, "emit-c", bundle, "-o", stage2_c], frontend=True, timeout=60)
         build2 = command("build-stage2", [zig, "cc", *CC_FLAGS["release"], "-I", COMPILER / "runtime",
