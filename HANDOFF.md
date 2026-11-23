@@ -6,7 +6,7 @@
 
 **Yavo 编写的编译器已经能编译自己：stage1 → stage2 → stage3 的生成 C 逐字节一致（第二十七批，提交 `67794d9`）。** 用户在 2026-11-23 选择“先快速证明”路线（docs/decisions.md 第八节，决定 20–24）：`selfhost/` 的源码改写为编译器自己实现的引导子集，不再原样编译旧源码。新增语言能力全部是 stage0 的严格子集：inout 参数与 `&变量`/`&变量.字段` 实参、`take(&place)`、表达式内文本切片、`use std/{fs, os}`、`os.args`/`os.exit`、配 `catch _` 的 `fs.readText`/`fs.writeNewText`/`String.fromUtf8`。编译器内部改用 Copy AST 加列表池、首个诊断即退出，多文件由 bootstrap.py 逐字节拼接。
 
-本机完整门 **335/335 cases、11/11 checks、0 skip**；stage2.c = stage3.c（574,149 字节），stage2/stage3 二进制一致，stage2 在全部用例上与 stage1 的诊断和生成 C 相同，stage2 编译自身后通过分配检查。摘要见 `compiler/validation/selfhost-fixpoint-2026-11-23.json`。Rust 编译器、运行时、冻结规格未改（Rust 套件沿用第二十六批：Debug/Release 各 145/0/1，冻结 129 项 124 pass、3 unsupported、2 superseded）。CI 结果见第 11 节：实现提交的 run 在 Linux、Windows 通过，macOS 上固定点 C 一致、335/335 通过，只有二进制身份检查因输出文件名不同而失败，已在后续提交修正。
+本机完整门 **335/335 cases、11/11 checks、0 skip**；stage2.c = stage3.c（574,149 字节），stage2/stage3 二进制一致，stage2 在全部用例上与 stage1 的诊断和生成 C 相同，stage2 编译自身后通过分配检查。摘要见 `compiler/validation/selfhost-fixpoint-2026-11-23.json`。Rust 编译器、运行时、冻结规格未改（Rust 套件沿用第二十六批：Debug/Release 各 145/0/1，冻结 129 项 124 pass、3 unsupported、2 superseded）。CI 结果见第 11 节：实现提交的 run 在 Linux、Windows 通过，macOS 上固定点 C 一致、335/335 通过，只有二进制身份检查因输出文件名不同而失败，`4739ffc` 修正后 run 45150424099 三平台 6/6 通过。
 
 自举之外的状态不变：Rust stage0 仍是日常编译器；第六轮文档实验仍为 0 会话（缺可计量环境）；完整 v1 缺口见第 7、9 节。
 
@@ -207,7 +207,7 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - 新增 14 例：run `inout_params`、`text_slices`、`take_places`、`std_catch_args`、`text_slice_owned_print`（由 `unsupported_text_slice` 原样晋升）；panic `text_slice_boundary`、`text_slice_bounds`；reject `inout_missing_borrow`(E0001)、`inout_later_argument_use`(E0102)、`inout_immutable_local`(E0014)、`inout_move_out`(E0401)、`catch_falls_through`(E0601)；unsupported `unsupported_string_view_binding`、`unsupported_catch_binding`；shared_unsupported `unsupported_inout_index`。错误码全部先用 stage0 实测。
 - 行为差异只有一处：原前端在循环重检（replayBody）里为对齐 stage0 吞掉非 E0402 错误，首错即退出后不再吞掉。全部旧用例未出现差异；若以后遇到 stage0 接受而子集在循环重检中报错的程序，先查这里。
 - 性能：stage1 编译自身约 0.03 s，生成 C 574 KB；Zig 构建约 5 s。完整门约 2 分 40 秒（4 核服务器）。
-- CI：`67794d9` 的 [run 45147299836](https://github.com/msly/yavo/actions/runs/45147299836) 中 Linux x86-64（含 Rust 全量与独立 ASan/UBSan 作业）、Windows x86-64 及其余三项通过；macOS arm64 的 selfhost receipt 显示固定点成立（stage2.c = stage3.c，574,333 字节；335/335），唯一失败是 `stage3_binary_reproduces_stage2`：Mach-O 的 ad-hoc 签名写入输出文件名，stage2/stage3 用了不同文件名。修正为两代都输出为各自目录下的 `yavo-selfhost`，本机门重跑通过，随下一次推送复验。下载 macOS 归档用的是本机 git 凭据调用 artifacts API。
+- CI：`67794d9` 的 [run 45147299836](https://github.com/msly/yavo/actions/runs/45147299836) 中 Linux x86-64（含 Rust 全量与独立 ASan/UBSan 作业）、Windows x86-64 及其余三项通过；macOS arm64 的 selfhost receipt 显示固定点成立（stage2.c = stage3.c，574,333 字节；335/335），唯一失败是 `stage3_binary_reproduces_stage2`：Mach-O 的 ad-hoc 签名写入输出文件名，stage2/stage3 用了不同文件名。修正为两代都输出为各自目录下的 `yavo-selfhost`（`4739ffc`），其 [run 45150424099](https://github.com/msly/yavo/actions/runs/45150424099) **6/6 jobs 成功**：Linux x86-64、Windows x86-64、macOS arm64 原生 selfhost 步骤全部通过，固定点在三平台原生确认。下载 macOS 归档用的是本机 git 凭据调用 artifacts API。
 - 未覆盖：stage2 本身未跑 GCC ASan/UBSan（sanitizer 作业仍覆盖 stage1 生成的程序 C）。
 
 ## 历史批次（已移出）
