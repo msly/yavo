@@ -1,0 +1,12 @@
+struct Span { start: int, end: int }
+fn main() {
+    var spans = [Span{start: 1, end: 3}, Span{start: 4, end: 9}]
+    let copied = spans[0]
+    spans[0].start = 7
+    spans[1] = copied
+    spans[1].end += 2
+    println(copied.start)
+    println(copied.end)
+    println(spans[0].start)
+    println(spans[1].end)
+}

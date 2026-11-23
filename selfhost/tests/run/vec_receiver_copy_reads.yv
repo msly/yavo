@@ -1,0 +1,18 @@
+struct Pair { left: Vec[int], right: Vec[int] }
+fn total(values: Vec[int]) -> int { return values[0] + values[1] }
+fn main() {
+    var values = [1, 2]
+    values.push(values[0] + values[1])
+    values.push(total(values))
+    values.reserve(values.len() + 10)
+    values.push(values.clone()[0])
+    println(values[2])
+    println(values[3])
+    println(values[4])
+    var pair = Pair{left: [4], right: [7, 8]}
+    pair.left.push(pair.right[0])
+    pair.left.reserve(pair.right.len() + 6)
+    pair.left[0] = pair.right[1]
+    println(pair.left[0])
+    println(pair.left[1])
+}

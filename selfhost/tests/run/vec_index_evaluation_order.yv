@@ -1,0 +1,14 @@
+fn value() -> int { print(1)
+    return 7 }
+fn index() -> int { print(2)
+    return 0 }
+fn make() -> Vec[int] { print(3)
+    return [4] }
+fn main() {
+    var values = [1]
+    values[index()] = value()
+    println(values[0])
+    values[index()] += value()
+    println(values[0])
+    println(make()[index()])
+}

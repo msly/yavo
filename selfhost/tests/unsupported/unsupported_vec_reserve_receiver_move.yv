@@ -1,0 +1,6 @@
+struct Store { values: Vec[int] }
+fn count(store: Store) -> int { return store.values.len() }
+fn main() {
+    var values = [1, 2, 3]
+    values.reserve(count(Store{values: values}))
+}

@@ -1,0 +1,17 @@
+enum Kind { Word, End }
+struct Span { start: int }
+fn empty() -> Vec[int] { return Vec[int]{} }
+fn main() {
+    var values = empty()
+    var flags = Vec[bool]{}
+    var kinds = Vec[Kind]{}
+    var spans = Vec[Span]{}
+    values.push(8)
+    flags.push(true)
+    kinds.push(.End)
+    spans.push(Span{start: 4})
+    println(values[0])
+    println(flags[0])
+    println(kinds[0])
+    println(spans[0].start)
+}

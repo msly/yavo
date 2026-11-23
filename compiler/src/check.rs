@@ -1812,6 +1812,15 @@ impl Checker<'_> {
         if name == "String" && inits.is_empty() {
             return HExpr { kind: HExprKind::EmptyString, ty: Ty::String, span, at: span };
         }
+        // The built-in empty constructor has the same element rules as a typed [].
+        if name == "Vec" {
+            let ty = self.resolve_ty(&TypeExpr { name: name.into(), span: name_span, args: targs.to_vec() });
+            if let Some(init) = inits.first() {
+                self.diags.error("E0001", init.value.span, "`Vec[T]{}` takes no fields; insert elements with `push`");
+                return err_expr(span);
+            }
+            return self.vec_lit(&[], Some(ty), span, cx);
+        }
         if name == "Deque" {
             let ty = self.resolve_ty(&TypeExpr { name: name.into(), span: name_span, args: targs.to_vec() });
             if let Some(init) = inits.first() {

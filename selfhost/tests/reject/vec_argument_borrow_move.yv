@@ -1,0 +1,4 @@
+struct Store { values: Vec[int] }
+fn both(values: Vec[int], store: Store) -> int { return values.len() + store.values.len() }
+fn main() { let values = [1]
+ println(both(values, Store{values: values})) }

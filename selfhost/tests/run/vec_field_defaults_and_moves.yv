@@ -1,0 +1,14 @@
+struct Store { values: Vec[int] = [], flags: Vec[bool] = ([]) }
+struct Boxed { store: Store }
+fn main() {
+    var first = Store{}
+    var second = Store{}
+    first.values.push(3)
+    first.flags.push(true)
+    second.values.push(8)
+    let boxed = Boxed{store: first}
+    println(boxed.store.values[0])
+    println(boxed.store.flags[0])
+    println(second.values[0])
+    println(second.flags.len())
+}

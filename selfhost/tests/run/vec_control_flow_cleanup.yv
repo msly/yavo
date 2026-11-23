@@ -1,0 +1,20 @@
+fn choose(flag: bool) -> Vec[int] {
+    let first = [1]
+    let second = [2]
+    if flag { return first } else { return second }
+}
+fn main() {
+    var values: Vec[int] = []
+    var i = 0
+    while i < 8 {
+        let temporary = [i, i + 1]
+        i += 1
+        if i == 2 { continue }
+        if i == 5 { break }
+        values.push(temporary[0])
+    }
+    println(values.len())
+    println(values[0] + values[1] + values[2])
+    println(choose(true)[0])
+    println(choose(false)[0])
+}

@@ -1,0 +1,9 @@
+struct Span { start: int, end: int }
+fn make() -> Vec[Span] { return [Span{start: 3, end: 8}] }
+fn main() {
+    println(make()[0].end)
+    let values = make().clone()
+    println(values[0].start)
+    if true && make()[0].start > 0 { println(1) }
+    if false && make()[1].start > 0 { println(9) }
+}

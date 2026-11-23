@@ -1,6 +1,6 @@
 {
   "schema": "yavo-selfhost-cases/1",
-  "description": "Independent fixed-oracle probes for the Yavo-written scalar and Copy-aggregate subset; not the frozen full-language conformance suite.",
+  "description": "Independent fixed-oracle probes for the Yavo-written scalar, aggregate, String and Copy-element Vec subset; not the frozen full-language conformance suite.",
   "cases": [
     {
       "id": "arithmetic",
@@ -275,10 +275,11 @@
       "file": "unsupported/unsupported_module.yv"
     },
     {
-      "id": "unsupported_vector",
-      "kind": "unsupported",
-      "diagnostic": "U0001",
-      "file": "unsupported/unsupported_vector.yv"
+      "id": "vector_basic",
+      "kind": "run",
+      "file": "run/vector_basic.yv",
+      "stdout": "2\n",
+      "batch": "vec-copy"
     },
     {
       "id": "owned_string_empty",
@@ -1190,6 +1191,443 @@
       "diagnostic": "U0001",
       "known_gap": "stage0-comparison-borrow-then-consume",
       "reason": "Stage0 accepts borrowing a String for the left comparison operand and consuming its owner while evaluating the right operand. The subset rejects this ownership boundary; the observed stage0 false result is not adopted as a positive oracle."
+    },
+    {
+      "id": "vec_empty_annotations",
+      "kind": "run",
+      "batch": "vec-copy",
+      "file": "run/vec_empty_annotations.yv",
+      "stdout": "0\n0\n7\nfalse\n"
+    },
+    {
+      "id": "vec_typed_empty",
+      "kind": "run",
+      "batch": "vec-copy",
+      "file": "run/vec_typed_empty.yv",
+      "stdout": "8\ntrue\nEnd\n4\n"
+    },
+    {
+      "id": "vec_scalar_literals",
+      "kind": "run",
+      "batch": "vec-copy",
+      "file": "run/vec_scalar_literals.yv",
+      "stdout": "6\ntrue\n4\n"
+    },
+    {
+      "id": "vec_enum_contexts",
+      "kind": "run",
+      "batch": "vec-copy",
+      "file": "run/vec_enum_contexts.yv",
+      "stdout": "Word\nEnd\nWord\n2\n"
+    },
+    {
+      "id": "vec_struct_copy_and_fields",
+      "kind": "run",
+      "batch": "vec-copy",
+      "file": "run/vec_struct_copy_and_fields.yv",
+      "stdout": "1\n3\n7\n5\n"
+    },
+    {
+      "id": "vec_field_defaults_and_moves",
+      "kind": "run",
+      "batch": "vec-copy",
+      "file": "run/vec_field_defaults_and_moves.yv",
+      "stdout": "3\ntrue\n8\n0\n"
+    },
+    {
+      "id": "vec_params_returns",
+      "kind": "run",
+      "batch": "vec-copy",
+      "file": "run/vec_params_returns.yv",
+      "stdout": "30\n5\n17\n"
+    },
+    {
+      "id": "vec_clone_independence",
+      "kind": "run",
+      "batch": "vec-copy",
+      "file": "run/vec_clone_independence.yv",
+      "stdout": "1\n9\n3\n4\n2\n6\n8\n"
+    },
+    {
+      "id": "vec_receiver_copy_reads",
+      "kind": "run",
+      "batch": "vec-copy",
+      "file": "run/vec_receiver_copy_reads.yv",
+      "stdout": "3\n3\n1\n8\n7\n"
+    },
+    {
+      "id": "vec_index_evaluation_order",
+      "kind": "run",
+      "batch": "vec-copy",
+      "file": "run/vec_index_evaluation_order.yv",
+      "stdout": "127\n1214\n324\n"
+    },
+    {
+      "id": "vec_temporary_reads",
+      "kind": "run",
+      "batch": "vec-copy",
+      "file": "run/vec_temporary_reads.yv",
+      "stdout": "8\n3\n1\n"
+    },
+    {
+      "id": "vec_moves_and_reinitialization",
+      "kind": "run",
+      "batch": "vec-copy",
+      "file": "run/vec_moves_and_reinitialization.yv",
+      "stdout": "2\n3\n7\n"
+    },
+    {
+      "id": "vec_control_flow_cleanup",
+      "kind": "run",
+      "batch": "vec-copy",
+      "file": "run/vec_control_flow_cleanup.yv",
+      "stdout": "3\n5\n1\n2\n"
+    },
+    {
+      "id": "vec_loop_move_reinitialize",
+      "kind": "run",
+      "batch": "vec-copy",
+      "file": "run/vec_loop_move_reinitialize.yv",
+      "stdout": "0\n1\n2\n3\n"
+    },
+    {
+      "id": "vec_reserve_preserves_values",
+      "kind": "run",
+      "batch": "vec-copy",
+      "file": "run/vec_reserve_preserves_values.yv",
+      "stdout": "0\n1\n1\n30\n"
+    },
+    {
+      "id": "vec_token_table",
+      "kind": "run",
+      "batch": "vec-copy",
+      "file": "run/vec_token_table.yv",
+      "stdout": "4\n7\n5\n6\n1\n2\nEnd\n",
+      "example": "token_table.yv"
+    },
+    {
+      "id": "vec_negative_index",
+      "kind": "panic",
+      "batch": "vec-copy",
+      "file": "panic/vec_negative_index.yv",
+      "panic": "P-INDEX",
+      "stdout": "7\n"
+    },
+    {
+      "id": "vec_upper_index",
+      "kind": "panic",
+      "batch": "vec-copy",
+      "file": "panic/vec_upper_index.yv",
+      "panic": "P-INDEX",
+      "stdout": ""
+    },
+    {
+      "id": "vec_assignment_bounds_order",
+      "kind": "panic",
+      "batch": "vec-copy",
+      "file": "panic/vec_assignment_bounds_order.yv",
+      "panic": "P-INDEX",
+      "stdout": "12"
+    },
+    {
+      "id": "vec_reserve_negative",
+      "kind": "panic",
+      "batch": "vec-copy",
+      "file": "panic/vec_reserve_negative.yv",
+      "panic": "P-CAPACITY",
+      "stdout": "0\n"
+    },
+    {
+      "id": "vec_reserve_overflow",
+      "kind": "panic",
+      "batch": "vec-copy",
+      "file": "panic/vec_reserve_overflow.yv",
+      "panic": "P-CAPACITY",
+      "stdout": ""
+    },
+    {
+      "id": "vec_empty_inference",
+      "kind": "reject",
+      "batch": "vec-copy",
+      "file": "reject/vec_empty_inference.yv",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "vec_mixed_literal",
+      "kind": "reject",
+      "batch": "vec-copy",
+      "file": "reject/vec_mixed_literal.yv",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "vec_nominal_element_mismatch",
+      "kind": "reject",
+      "batch": "vec-copy",
+      "file": "reject/vec_nominal_element_mismatch.yv",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "vec_push_element_mismatch",
+      "kind": "reject",
+      "batch": "vec-copy",
+      "file": "reject/vec_push_element_mismatch.yv",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "vec_push_arity",
+      "kind": "reject",
+      "batch": "vec-copy",
+      "file": "reject/vec_push_arity.yv",
+      "diagnostic": "E0012"
+    },
+    {
+      "id": "vec_len_arity",
+      "kind": "reject",
+      "batch": "vec-copy",
+      "file": "reject/vec_len_arity.yv",
+      "diagnostic": "E0012"
+    },
+    {
+      "id": "vec_reserve_type",
+      "kind": "reject",
+      "batch": "vec-copy",
+      "file": "reject/vec_reserve_type.yv",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "vec_index_type",
+      "kind": "reject",
+      "batch": "vec-copy",
+      "file": "reject/vec_index_type.yv",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "vec_assignment_element_mismatch",
+      "kind": "reject",
+      "batch": "vec-copy",
+      "file": "reject/vec_assignment_element_mismatch.yv",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "vec_compound_noninteger",
+      "kind": "reject",
+      "batch": "vec-copy",
+      "file": "reject/vec_compound_noninteger.yv",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "vec_immutable_index",
+      "kind": "reject",
+      "batch": "vec-copy",
+      "file": "reject/vec_immutable_index.yv",
+      "diagnostic": "E0014"
+    },
+    {
+      "id": "vec_readonly_push",
+      "kind": "reject",
+      "batch": "vec-copy",
+      "file": "reject/vec_readonly_push.yv",
+      "diagnostic": "E0014"
+    },
+    {
+      "id": "vec_readonly_reserve",
+      "kind": "reject",
+      "batch": "vec-copy",
+      "file": "reject/vec_readonly_reserve.yv",
+      "diagnostic": "E0014"
+    },
+    {
+      "id": "vec_borrowed_parameter_move",
+      "kind": "reject",
+      "batch": "vec-copy",
+      "file": "reject/vec_borrowed_parameter_move.yv",
+      "diagnostic": "E0401"
+    },
+    {
+      "id": "vec_use_after_move",
+      "kind": "reject",
+      "batch": "vec-copy",
+      "file": "reject/vec_use_after_move.yv",
+      "diagnostic": "E0402"
+    },
+    {
+      "id": "vec_field_move",
+      "kind": "reject",
+      "batch": "vec-copy",
+      "file": "reject/vec_field_move.yv",
+      "diagnostic": "E0401"
+    },
+    {
+      "id": "vec_argument_borrow_move",
+      "kind": "reject",
+      "batch": "vec-copy",
+      "file": "reject/vec_argument_borrow_move.yv",
+      "diagnostic": "E0102"
+    },
+    {
+      "id": "vec_push_receiver_move",
+      "kind": "reject",
+      "batch": "vec-copy",
+      "file": "reject/vec_push_receiver_move.yv",
+      "diagnostic": "E0403"
+    },
+    {
+      "id": "vec_index_assignment_receiver_move",
+      "kind": "reject",
+      "batch": "vec-copy",
+      "file": "reject/vec_index_assignment_receiver_move.yv",
+      "diagnostic": "E0403"
+    },
+    {
+      "id": "vec_loop_repeated_move",
+      "kind": "reject",
+      "batch": "vec-copy",
+      "file": "reject/vec_loop_repeated_move.yv",
+      "diagnostic": "E0402"
+    },
+    {
+      "id": "vec_nonempty_field_default",
+      "kind": "reject",
+      "batch": "vec-copy",
+      "file": "reject/vec_nonempty_field_default.yv",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "vec_typed_field_default",
+      "kind": "reject",
+      "batch": "vec-copy",
+      "file": "reject/vec_typed_field_default.yv",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "vec_unknown_element_field",
+      "kind": "reject",
+      "batch": "vec-copy",
+      "file": "reject/vec_unknown_element_field.yv",
+      "diagnostic": "E0010"
+    },
+    {
+      "id": "vec_extra_type_argument",
+      "kind": "reject",
+      "batch": "vec-copy",
+      "file": "reject/vec_extra_type_argument.yv",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "vec_missing_type_argument",
+      "kind": "reject",
+      "batch": "vec-copy",
+      "file": "reject/vec_missing_type_argument.yv",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "vec_print_rejected",
+      "kind": "reject",
+      "batch": "vec-copy",
+      "file": "reject/vec_print_rejected.yv",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "vec_equality_rejected",
+      "kind": "reject",
+      "batch": "vec-copy",
+      "file": "reject/vec_equality_rejected.yv",
+      "diagnostic": "E0501"
+    },
+    {
+      "id": "vec_temporary_index_write",
+      "kind": "reject",
+      "batch": "vec-copy",
+      "file": "reject/vec_temporary_index_write.yv",
+      "diagnostic": "E0014"
+    },
+    {
+      "id": "unsupported_vec_string_element",
+      "kind": "unsupported",
+      "batch": "vec-copy",
+      "file": "unsupported/unsupported_vec_string_element.yv",
+      "diagnostic": "U0001"
+    },
+    {
+      "id": "unsupported_vec_str_element",
+      "kind": "unsupported",
+      "batch": "vec-copy",
+      "file": "unsupported/unsupported_vec_str_element.yv",
+      "diagnostic": "U0001"
+    },
+    {
+      "id": "unsupported_vec_nested_element",
+      "kind": "unsupported",
+      "batch": "vec-copy",
+      "file": "unsupported/unsupported_vec_nested_element.yv",
+      "diagnostic": "U0001"
+    },
+    {
+      "id": "unsupported_vec_owned_struct_element",
+      "kind": "unsupported",
+      "batch": "vec-copy",
+      "file": "unsupported/unsupported_vec_owned_struct_element.yv",
+      "diagnostic": "U0001"
+    },
+    {
+      "id": "unsupported_vec_pop",
+      "kind": "unsupported",
+      "batch": "vec-copy",
+      "file": "unsupported/unsupported_vec_pop.yv",
+      "diagnostic": "U0001"
+    },
+    {
+      "id": "unsupported_vec_slice",
+      "kind": "unsupported",
+      "batch": "vec-copy",
+      "file": "unsupported/unsupported_vec_slice.yv",
+      "diagnostic": "U0001"
+    },
+    {
+      "id": "unsupported_vec_index_receiver_move",
+      "kind": "unsupported",
+      "batch": "vec-copy",
+      "file": "unsupported/unsupported_vec_index_receiver_move.yv",
+      "known_gap": "stage0-index-receiver-consumed-by-index",
+      "reason": "Stage0 accepts consuming the indexed vector while evaluating its index; the checked descriptor can then be the moved-from zero value. The subset explicitly rejects this boundary and does not use the observed P-INDEX as a correct oracle.",
+      "diagnostic": "U0001"
+    },
+    {
+      "id": "unsupported_vec_reserve_receiver_move",
+      "kind": "unsupported",
+      "batch": "vec-copy",
+      "file": "unsupported/unsupported_vec_reserve_receiver_move.yv",
+      "known_gap": "stage0-reserve-receiver-consumed-by-argument",
+      "reason": "Stage0 accepts consuming a vector while evaluating its reserve argument, then reserving the moved-from descriptor. The subset rejects the ownership boundary; stage0 runtime output is not adopted as a correctness oracle.",
+      "diagnostic": "U0001"
+    },
+    {
+      "id": "vec_copy_reads_release_borrows",
+      "kind": "run",
+      "batch": "vec-copy",
+      "file": "run/vec_copy_reads_release_borrows.yv",
+      "stdout": "8\n9\n1\n6\n"
+    },
+    {
+      "id": "vec_index_assignment_rhs_move",
+      "kind": "reject",
+      "batch": "vec-copy",
+      "file": "reject/vec_index_assignment_rhs_move.yv",
+      "diagnostic": "E0402"
+    },
+    {
+      "id": "vec_unit_first_element",
+      "kind": "reject",
+      "batch": "vec-copy",
+      "file": "reject/vec_unit_first_element.yv",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "vec_bare_constructor",
+      "kind": "reject",
+      "batch": "vec-copy",
+      "file": "reject/vec_bare_constructor.yv",
+      "diagnostic": "E0001"
     }
   ],
   "promotions": [
@@ -1225,6 +1663,17 @@
       "kind": "run",
       "source_sha256": "52078819944f290f410a6575869c1fa732c2da17dbddbbcfe5181eea2795645b",
       "reason": "Owned String values and fields are now in the accepted input subset; source bytes are unchanged."
+    },
+    {
+      "previous_id": "unsupported_vector",
+      "previous_file": "unsupported/unsupported_vector.yv",
+      "previous_kind": "unsupported",
+      "baseline_commit": "ec1d3b7",
+      "id": "vector_basic",
+      "file": "run/vector_basic.yv",
+      "kind": "run",
+      "source_sha256": "9c952e792150eac509273fba91dd4198c103581575c396b3c20df3a622544fe3",
+      "reason": "Copy-element vector literals and len are now accepted; source bytes are unchanged."
     }
   ]
 }

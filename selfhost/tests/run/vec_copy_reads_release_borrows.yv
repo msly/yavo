@@ -1,0 +1,17 @@
+struct Store { values: Vec[int] }
+struct Item { value: int }
+struct Items { values: Vec[Item] }
+fn count(store: Store) -> int { return store.values.len() }
+fn countItems(store: Items) -> int { return store.values.len() }
+fn add(first: int, second: int) -> int { return first + second }
+fn itemValue(item: Item, second: int) -> int { return item.value + second }
+fn main() {
+    let first = [7]
+    println(add(first[0], count(Store{values: first})))
+    let second = [9]
+    let combined = [second[0], count(Store{values: second})]
+    println(combined[0])
+    println(combined[1])
+    let third = [Item{value: 5}]
+    println(itemValue(third[0], countItems(Items{values: third})))
+}

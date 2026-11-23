@@ -62,22 +62,50 @@ fn identifier(s: inout State, ts: Vec[Token]) -> int ! Failure {
     return p
 }
 
+fn vectorType(s: inout State, ts: Vec[Token], name: int) -> TypeRef ! Failure {
+    try expect(&s, ts, "[")
+    let token = s.pos
+    let elem = try typeName(&s, ts)
+    var count = 1
+    while eat(&s, ts, ",") {
+        let _extra = try typeName(&s, ts)
+        count += 1
+    }
+    try expect(&s, ts, "]")
+    if count != 1 {
+        let t = ts[name]
+        return err(diagnostic.make("E0001", "Vec takes exactly one type argument", t.start, t.line, t.column))
+    }
+    if elem.kind == .Vec {
+        let t = ts[token]
+        return err(diagnostic.make("U0001", "nested Vec elements are outside the selfhost subset", t.start, t.line, t.column))
+    }
+    return TypeRef{kind: .Vec, name: name, elementKind: elem.kind, elementName: token}
+}
+
 fn typeName(s: inout State, ts: Vec[Token]) -> TypeRef ! Failure {
-    var result = TypeRef{kind: .Unknown}
-    if eat(&s, ts, "int") { result = TypeRef{kind: .Int}
-    } else if eat(&s, ts, "bool") { result = TypeRef{kind: .Bool}
-    } else if eat(&s, ts, "str") { result = TypeRef{kind: .Str}
-    } else if eat(&s, ts, "String") { result = TypeRef{kind: .String}
+    try enter(&s, ts)
+    var result = TypeRef{elementKind: .Unknown, kind: .Unknown}
+    if eat(&s, ts, "int") { result = TypeRef{elementKind: .Unknown, kind: .Int}
+    } else if eat(&s, ts, "bool") { result = TypeRef{elementKind: .Unknown, kind: .Bool}
+    } else if eat(&s, ts, "str") { result = TypeRef{elementKind: .Unknown, kind: .Str}
+    } else if eat(&s, ts, "String") { result = TypeRef{elementKind: .Unknown, kind: .String}
+    } else if at(s, ts, "Vec") {
+        let name = s.pos
+        s.pos += 1
+        if at(s, ts, "[") { result = try vectorType(&s, ts, name) } else {
+            result = TypeRef{elementKind: .Unknown, kind: .Named, name: name}
+        }
     } else if eat(&s, ts, "(") {
         if !at(s, ts, ")") {
             return err(problem(s, ts, "U0001", "tuple types are outside the selfhost subset"))
         }
         try expect(&s, ts, ")")
-        result = TypeRef{kind: .Unit}
+        result = TypeRef{elementKind: .Unknown, kind: .Unit}
     } else if ts[s.pos].kind == .Word && !reserved(ts[s.pos].text) {
         let name = s.pos
         s.pos += 1
-        result = TypeRef{kind: .Named, name: name}
+        result = TypeRef{elementKind: .Unknown, kind: .Named, name: name}
     } else if at(s, ts, "inout") || at(s, ts, "sink") || at(s, ts, "Self") ||
         at(s, ts, "[") || at(s, ts, "?") || at(s, ts, "??") || at(s, ts, "&") {
         return err(problem(s, ts, "U0001", "type is outside the selfhost subset"))
@@ -87,6 +115,7 @@ fn typeName(s: inout State, ts: Vec[Token]) -> TypeRef ! Failure {
     if at(s, ts, "[") || at(s, ts, ".") || at(s, ts, "!") || at(s, ts, "->") || at(s, ts, "+") {
         return err(problem(s, ts, "U0001", "type suffix is outside the selfhost subset"))
     }
+    s.nesting -= 1
     return result
 }
 
@@ -123,40 +152,67 @@ fn precedence(op: str) -> int {
     return 0
 }
 
+fn vectorLiteral(s: inout State, ts: Vec[Token]) -> int ! Failure {
+    try enter(&s, ts)
+    let token = try expect(&s, ts, "[")
+    var args: Vec[int] = []
+    loop {
+        while ts[s.pos].kind == .Newline || at(s, ts, ",") { s.pos += 1 }
+        if eat(&s, ts, "]") { break }
+        if at(s, ts, ":") {
+            return err(problem(s, ts, "U0001", "map literals are outside the selfhost subset"))
+        }
+        if ts[s.pos].kind == .Eof {
+            return err(problem(s, ts, "E0020", "unclosed vector literal"))
+        }
+        let item = try expression(&s, ts)
+        if at(s, ts, ":") {
+            return err(problem(s, ts, "U0001", "map literals are outside the selfhost subset"))
+        }
+        args.push(item)
+        if ts[s.pos].kind != .Newline && !at(s, ts, ",") && !at(s, ts, "]") {
+            return err(problem(s, ts, "E0020", "expected a newline or comma after the vector element"))
+        }
+    }
+    s.nesting -= 1
+    return pushExpr(&s, Expression{elementKind: .Unknown, kind: .Vector, token: token, args: args})
+}
+
 fn primary(s: inout State, ts: Vec[Token]) -> int ! Failure {
     let p = s.pos
     if ts[p].kind == .Number {
         s.pos += 1
-        return pushExpr(&s, Expression{kind: .Number, token: p})
+        return pushExpr(&s, Expression{elementKind: .Unknown, kind: .Number, token: p})
     }
     if ts[p].kind == .Text {
         s.pos += 1
-        return pushExpr(&s, Expression{kind: .Text, token: p})
+        return pushExpr(&s, Expression{elementKind: .Unknown, kind: .Text, token: p})
     }
     if at(s, ts, "true") || at(s, ts, "false") {
         s.pos += 1
-        return pushExpr(&s, Expression{kind: .Boolean, token: p})
+        return pushExpr(&s, Expression{elementKind: .Unknown, kind: .Boolean, token: p})
     }
     if eat(&s, ts, "(") {
         if eat(&s, ts, ")") {
-            return pushExpr(&s, Expression{kind: .Unit, token: p})
+            return pushExpr(&s, Expression{elementKind: .Unknown, kind: .Unit, token: p})
         }
         let inner = try expression(&s, ts)
         if at(s, ts, ",") {
             return err(problem(s, ts, "U0001", "tuple expressions are outside the selfhost subset"))
         }
         try expect(&s, ts, ")")
-        return pushExpr(&s, Expression{kind: .Paren, token: p, left: inner})
+        return pushExpr(&s, Expression{elementKind: .Unknown, kind: .Paren, token: p, left: inner})
     }
     if ts[p].kind == .Word && !reserved(ts[p].text) {
         s.pos += 1
-        return pushExpr(&s, Expression{kind: .Name, token: p})
+        return pushExpr(&s, Expression{elementKind: .Unknown, kind: .Name, token: p})
     }
     if eat(&s, ts, ".") {
         let variant = try identifier(&s, ts)
-        return pushExpr(&s, Expression{kind: .Variant, token: variant})
+        return pushExpr(&s, Expression{elementKind: .Unknown, kind: .Variant, token: variant})
     }
-    if at(s, ts, "[") || at(s, ts, "&") ||
+    if at(s, ts, "[") { return vectorLiteral(&s, ts) }
+    if at(s, ts, "&") ||
         at(s, ts, "match") || at(s, ts, "try") || at(s, ts, "none") ||
         at(s, ts, "spawn") || at(s, ts, "err") {
         return err(problem(s, ts, "U0001", "expression is outside the selfhost SH-1 subset"))
@@ -185,7 +241,29 @@ fn construction(s: inout State, ts: Vec[Token], name: int) -> int ! Failure {
         }
     }
     s.nesting -= 1
-    return pushExpr(&s, Expression{kind: .Construct, token: name, args: args, names: names})
+    return pushExpr(&s, Expression{elementKind: .Unknown, kind: .Construct, token: name, args: args, names: names})
+}
+
+// Match stage0's distinction between an index and explicit generic arguments.
+fn typeArgumentsAhead(s: State, ts: Vec[Token]) -> bool {
+    var depth = 0
+    var i = s.pos
+    while i < ts.len() {
+        if ts[i].kind == .Symbol && ts[i].text == "[" { depth += 1
+        } else if ts[i].kind == .Symbol && ts[i].text == "]" {
+            depth -= 1
+            if depth == 0 {
+                if i + 1 >= ts.len() { return false }
+                if ts[i + 1].text == "(" { return true }
+                return ts[i + 1].text == "{" && ts[i + 1].start == ts[i].end
+            }
+        } else if ts[i].kind == .Eof || ts[i].kind == .Newline ||
+            ts[i].text == "{" || ts[i].text == "}" || ts[i].text == "=" {
+            return false
+        }
+        i += 1
+    }
+    return false
 }
 
 fn postfix(s: inout State, ts: Vec[Token]) -> int ! Failure {
@@ -193,7 +271,7 @@ fn postfix(s: inout State, ts: Vec[Token]) -> int ! Failure {
     loop {
         if eat(&s, ts, ".") {
             let field = try identifier(&s, ts)
-            current = pushExpr(&s, Expression{kind: .Field, token: field, left: current})
+            current = pushExpr(&s, Expression{elementKind: .Unknown, kind: .Field, token: field, left: current})
         } else if at(s, ts, "(") {
             let target = s.expressions[current].token
             let targetKind = s.expressions[current].kind
@@ -210,9 +288,44 @@ fn postfix(s: inout State, ts: Vec[Token]) -> int ! Failure {
             }
             try expect(&s, ts, ")")
             if targetKind == .Field {
-                current = pushExpr(&s, Expression{kind: .Method, token: target, left: receiver, args: args})
+                current = pushExpr(&s, Expression{elementKind: .Unknown, kind: .Method, token: target, left: receiver, args: args})
             } else {
-                current = pushExpr(&s, Expression{kind: .Call, token: target, args: args})
+                current = pushExpr(&s, Expression{elementKind: .Unknown, kind: .Call, token: target, args: args})
+            }
+        } else if at(s, ts, "[") {
+            let target = s.expressions[current].token
+            if s.expressions[current].kind == .Name && typeArgumentsAhead(s, ts) {
+                if ts[target].text != "Vec" {
+                    return err(problem(s, ts, "U0001", "generic expressions are outside the selfhost subset"))
+                }
+                let ty = try vectorType(&s, ts, target)
+                if !at(s, ts, "{") {
+                    return err(problem(s, ts, "U0001", "generic calls are outside the selfhost subset"))
+                }
+                let constructed = try construction(&s, ts, target)
+                if s.expressions[constructed].args.len() > 0 {
+                    let t = ts[target]
+                    return err(diagnostic.make("E0001", "Vec construction takes no fields; use push", t.start, t.line, t.column))
+                }
+                s.expressions[constructed].kind = .Vector
+                s.expressions[constructed].elementKind = ty.elementKind
+                s.expressions[constructed].elementName = ty.elementName
+                current = constructed
+            } else {
+                let token = try expect(&s, ts, "[")
+                if at(s, ts, "..") {
+                    return err(problem(s, ts, "U0001", "slices are outside the selfhost subset"))
+                }
+                let index = try expression(&s, ts)
+                if at(s, ts, "..") {
+                    return err(problem(s, ts, "U0001", "slices are outside the selfhost subset"))
+                }
+                if at(s, ts, ",") {
+                    return err(problem(s, ts, "U0001", "type arguments in expressions are outside the selfhost subset"))
+                }
+                try expect(&s, ts, "]")
+                current = pushExpr(&s, Expression{elementKind: .Unknown, kind: .Index,
+                    token: token, left: current, right: index})
             }
         } else if at(s, ts, "{") && s.expressions[current].kind == .Name {
             let name = s.expressions[current].token
@@ -234,7 +347,7 @@ fn unary(s: inout State, ts: Vec[Token]) -> int ! Failure {
         s.pos += 1
         let operand = try unary(&s, ts)
         s.nesting -= 1
-        return pushExpr(&s, Expression{kind: .Unary, token: p, left: operand})
+        return pushExpr(&s, Expression{elementKind: .Unknown, kind: .Unary, token: p, left: operand})
     }
     return postfix(&s, ts)
 }
@@ -248,7 +361,7 @@ fn binary(s: inout State, ts: Vec[Token], minimum: int) -> int ! Failure {
         let op = s.pos
         s.pos += 1
         let rhs = try binary(&s, ts, level + 1)
-        lhs = pushExpr(&s, Expression{kind: .Binary, token: op, left: lhs, right: rhs})
+        lhs = pushExpr(&s, Expression{elementKind: .Unknown, kind: .Binary, token: op, left: lhs, right: rhs})
         if level == 3 && ts[s.pos].kind == .Symbol && precedence(ts[s.pos].text) == 3 {
             return err(problem(s, ts, "E0020", "comparison operators cannot be chained"))
         }
@@ -260,7 +373,7 @@ fn expression(s: inout State, ts: Vec[Token]) -> int ! Failure {
     try enter(&s, ts)
     let value = try binary(&s, ts, 1)
     s.nesting -= 1
-    if at(s, ts, "[") || at(s, ts, "??") ||
+    if at(s, ts, "??") ||
         at(s, ts, "catch") || at(s, ts, "=>") || at(s, ts, "(") {
         return err(problem(s, ts, "U0001", "expression suffix is outside the selfhost SH-1 subset"))
     }
@@ -306,7 +419,7 @@ fn ifStatement(s: inout State, ts: Vec[Token]) -> int ! Failure {
         }
     }
     s.nesting -= 1
-    return pushStmt(&s, Statement{kind: .If, annotation: TypeRef{kind: .Unknown}, token: p, expr: condition, body: body, otherwise: other})
+    return pushStmt(&s, Statement{kind: .If, annotation: TypeRef{elementKind: .Unknown, kind: .Unknown}, token: p, expr: condition, body: body, otherwise: other})
 }
 
 fn statement(s: inout State, ts: Vec[Token]) -> int ! Failure {
@@ -315,7 +428,7 @@ fn statement(s: inout State, ts: Vec[Token]) -> int ! Failure {
         let mutable = at(s, ts, "var")
         s.pos += 1
         let name = try identifier(&s, ts)
-        var annotation = TypeRef{kind: .Unknown}
+        var annotation = TypeRef{elementKind: .Unknown, kind: .Unknown}
         if eat(&s, ts, ":") { annotation = try typeName(&s, ts) }
         try expect(&s, ts, "=")
         let value = try expression(&s, ts)
@@ -327,7 +440,7 @@ fn statement(s: inout State, ts: Vec[Token]) -> int ! Failure {
         if ts[s.pos].kind != .Newline && !at(s, ts, "}") {
             value = try expression(&s, ts)
         }
-        return pushStmt(&s, Statement{kind: .Return, annotation: TypeRef{kind: .Unknown}, token: p, expr: value})
+        return pushStmt(&s, Statement{kind: .Return, annotation: TypeRef{elementKind: .Unknown, kind: .Unknown}, token: p, expr: value})
     }
     if at(s, ts, "if") { return ifStatement(&s, ts) }
     if eat(&s, ts, "while") {
@@ -336,14 +449,14 @@ fn statement(s: inout State, ts: Vec[Token]) -> int ! Failure {
         }
         let condition = try expression(&s, ts)
         let body = try block(&s, ts)
-        return pushStmt(&s, Statement{kind: .While, annotation: TypeRef{kind: .Unknown}, token: p, expr: condition, body: body})
+        return pushStmt(&s, Statement{kind: .While, annotation: TypeRef{elementKind: .Unknown, kind: .Unknown}, token: p, expr: condition, body: body})
     }
     if eat(&s, ts, "loop") {
         let body = try block(&s, ts)
-        return pushStmt(&s, Statement{kind: .Loop, annotation: TypeRef{kind: .Unknown}, token: p, body: body})
+        return pushStmt(&s, Statement{kind: .Loop, annotation: TypeRef{elementKind: .Unknown, kind: .Unknown}, token: p, body: body})
     }
-    if eat(&s, ts, "break") { return pushStmt(&s, Statement{kind: .Break, annotation: TypeRef{kind: .Unknown}, token: p}) }
-    if eat(&s, ts, "continue") { return pushStmt(&s, Statement{kind: .Continue, annotation: TypeRef{kind: .Unknown}, token: p}) }
+    if eat(&s, ts, "break") { return pushStmt(&s, Statement{kind: .Break, annotation: TypeRef{elementKind: .Unknown, kind: .Unknown}, token: p}) }
+    if eat(&s, ts, "continue") { return pushStmt(&s, Statement{kind: .Continue, annotation: TypeRef{elementKind: .Unknown, kind: .Unknown}, token: p}) }
     if at(s, ts, "for") || at(s, ts, "with") || at(s, ts, "scope") ||
         at(s, ts, "defer") || at(s, ts, "unsafe") {
         return err(problem(s, ts, "U0001", "statement is outside the selfhost SH-1 subset"))
@@ -355,9 +468,9 @@ fn statement(s: inout State, ts: Vec[Token]) -> int ! Failure {
         let name = s.expressions[lhs].token
         s.pos += 1
         let rhs = try expression(&s, ts)
-        return pushStmt(&s, Statement{kind: .Assign, annotation: TypeRef{kind: .Unknown}, token: op, name: name, target: lhs, expr: rhs})
+        return pushStmt(&s, Statement{kind: .Assign, annotation: TypeRef{elementKind: .Unknown, kind: .Unknown}, token: op, name: name, target: lhs, expr: rhs})
     }
-    return pushStmt(&s, Statement{kind: .Expr, annotation: TypeRef{kind: .Unknown}, token: p, expr: lhs})
+    return pushStmt(&s, Statement{kind: .Expr, annotation: TypeRef{elementKind: .Unknown, kind: .Unknown}, token: p, expr: lhs})
 }
 
 fn function(s: inout State, ts: Vec[Token]) -> Function ! Failure {
@@ -376,7 +489,7 @@ fn function(s: inout State, ts: Vec[Token]) -> Function ! Failure {
         if !eat(&s, ts, ",") { break }
     }
     try expect(&s, ts, ")")
-    var result = TypeRef{kind: .Unit}
+    var result = TypeRef{elementKind: .Unknown, kind: .Unit}
     if eat(&s, ts, "->") { result = try typeName(&s, ts) }
     if result.kind == .Str || at(s, ts, "of") || at(s, ts, "!") {
         return err(problem(s, ts, "U0001", "borrowed returns and result types are outside the selfhost SH-1 subset"))

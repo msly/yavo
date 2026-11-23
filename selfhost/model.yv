@@ -6,12 +6,15 @@ pub enum BasicType {
     Bool
     Str
     String
+    Vec
     Named
 }
 
 pub struct TypeRef {
     kind: BasicType
     name: int = -1
+    elementKind: BasicType
+    elementName: int = -1
 }
 
 pub enum AggregateKind {
@@ -44,6 +47,8 @@ pub enum ExprKind {
     Call
     Method
     Construct
+    Vector
+    Index
     Field
     Variant
 }
@@ -51,6 +56,8 @@ pub enum ExprKind {
 pub struct Expression {
     kind: ExprKind
     token: int
+    elementKind: BasicType
+    elementName: int = -1
     left: int = -1
     right: int = -1
     args: Vec[int] = []

@@ -1,0 +1,13 @@
+enum Kind { Word, Symbol, End }
+fn kinds() -> Vec[Kind] { return [.Word, .Symbol, .End] }
+fn count(values: Vec[Kind]) -> int { return values.len() }
+fn main() {
+    let values = kinds()
+    var copied = values.clone()
+    copied[0] = .End
+    copied.push(.Word)
+    println(values[0])
+    println(copied[0])
+    println(copied[3])
+    println(count([.Word, .End]))
+}

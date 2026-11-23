@@ -173,3 +173,36 @@ fn fail() -> int {
 fn main() {}
 "#, &[]);
 }
+
+#[test]
+fn typed_empty_vectors_follow_the_builtin_constructor_contract() {
+    check(r#"
+struct Point { x: int }
+enum Kind { Word, End }
+fn empty[T]() -> Vec[T] { return Vec[T]{} }
+fn main() {
+    var numbers = Vec[int]{}
+    numbers.push(7)
+    var flags = Vec[bool]{}
+    flags.push(true)
+    var points = Vec[Point]{}
+    points.push(Point{x: 2})
+    var kinds = Vec[Kind]{}
+    kinds.push(.Word)
+    var text = Vec[String]{}
+    text.push("owned".toString())
+    let nested = Vec[Vec[int]]{}
+    let generic = empty[int]()
+    println(numbers[0])
+    println(flags[0])
+    println(points[0].x)
+    println(kinds[0])
+    println(text.len() + nested.len() + generic.len())
+}
+"#, &[]);
+    check("fn main() { let v = Vec[int]{value: 1} }", &["E0001"]);
+    check("fn main() { let v = Vec[int, bool]{} }", &["E0001"]);
+    check("fn main() { let v = Vec{} }", &["E0001"]);
+    check("fn main() { let v = Vec[Missing]{} }", &["E0010"]);
+    check("struct Bag { values: Vec[int] = Vec[int]{} }\nfn main() {}", &["E0001"]);
+}

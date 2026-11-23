@@ -1,0 +1,32 @@
+enum Kind { Word, Symbol, End }
+struct Span { start: int, end: int }
+struct TokenMeta { kind: Kind, span: Span, line: int }
+struct TokenTable { tokens: Vec[TokenMeta] = [] }
+fn width(tokens: Vec[TokenMeta]) -> int {
+    var result = 0
+    var i = 0
+    while i < tokens.len() {
+        result += tokens[i].span.end - tokens[i].span.start
+        i += 1
+    }
+    return result
+}
+fn main() {
+    var table = TokenTable{}
+    table.tokens.reserve(4)
+    table.tokens.push(TokenMeta{kind: .Word, span: Span{start: 0, end: 3}, line: 1})
+    table.tokens.push(TokenMeta{kind: .Symbol, span: Span{start: 4, end: 5}, line: 1})
+    table.tokens.push(TokenMeta{kind: .Word, span: Span{start: 6, end: 8}, line: 1})
+    table.tokens.push(TokenMeta{kind: .End, span: Span{start: 8, end: 8}, line: 1})
+    let before = table.tokens[1]
+    table.tokens[1].span.end += 1
+    var copied = table.tokens.clone()
+    copied[0].line = 2
+    println(table.tokens.len())
+    println(width(table.tokens))
+    println(before.span.end)
+    println(table.tokens[1].span.end)
+    println(table.tokens[0].line)
+    println(copied[0].line)
+    println(copied[3].kind)
+}

@@ -1,0 +1,18 @@
+struct Span { start: int, end: int }
+fn main() {
+    var original = [1, 2]
+    var copied = original.clone()
+    copied[0] = 9
+    original.push(3)
+    copied.push(4)
+    println(original[0])
+    println(copied[0])
+    println(original[2])
+    println(copied[2])
+    let spans = [Span{start: 2, end: 8}]
+    var cloned = spans.clone()
+    cloned[0].start = 6
+    println(spans[0].start)
+    println(cloned[0].start)
+    println(cloned[0].end)
+}
