@@ -1,0 +1,10 @@
+fn duplicate(words: Vec[String]) -> Vec[String] { return words.clone() }
+fn count(words: Vec[String]) -> int { return words.len() }
+fn main() {
+    let original = ["a".toString(), "b".toString()]
+    println(count(duplicate(original)))
+    println(original.len())
+    println(count(["temporary".toString()]))
+    println(count(duplicate(duplicate(original))))
+    original.clone()
+}

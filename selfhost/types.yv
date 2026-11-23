@@ -124,15 +124,12 @@ fn unsupported(name: str) -> bool {
         name == "Heap" || name == "Deque"
 }
 
-pub fn vector(reg: Registry, ts: Vec[Token], token: int, elem: Type) -> Type ! Failure {
+pub fn vector(_reg: Registry, ts: Vec[Token], token: int, elem: Type) -> Type ! Failure {
     if elem.kind == .Unknown {
         return err(problem(ts, token, "E0001", "cannot infer the vector element type"))
     }
-    if elem.kind != .Int && elem.kind != .Bool && elem.kind != .Named {
-        return err(problem(ts, token, "U0001", "this vector element type is outside the Copy-element subset"))
-    }
-    if owned(reg, elem) {
-        return err(problem(ts, token, "U0001", "owned vector elements are outside the selfhost subset"))
+    if elem.kind != .Int && elem.kind != .Bool && elem.kind != .String && elem.kind != .Named {
+        return err(problem(ts, token, "U0001", "this vector element type is outside the selfhost subset"))
     }
     return Type{kind: .Vec, elementKind: elem.kind, elementDecl: elem.decl}
 }
@@ -286,8 +283,8 @@ pub fn collect(p: Program, ts: Vec[Token]) -> Registry ! Failure {
             return err(problem(ts, name, "E0017", format("type '${ts[name].text}' has a recursive by-value dependency")))
         }
     }
-    // Layout order is also dependency order for deterministic destruction.
-    // By-value cycles were rejected above, so each nested owned flag is final.
+    // Layout order is sufficient for by-value ownership propagation.
+    // Vec is owned independently of its element, including recursive Vec edges.
     i = 0
     while i < reg.order.len() {
         let index = reg.order[i]
@@ -296,21 +293,6 @@ pub fn collect(p: Program, ts: Vec[Token]) -> Registry ! Failure {
             if owned(reg, field.ty) { hasOwned = true }
         }
         reg.entries[index].owned = hasOwned
-        i += 1
-    }
-    // A Vec field makes its enclosing struct owned. Defer this final element check
-    // until ownership is propagated, including through forward and recursive Vec edges.
-    i = 0
-    while i < reg.entries.len() {
-        var j = 0
-        while j < reg.entries[i].fields.len() {
-            let ty = reg.entries[i].fields[j].ty
-            if ty.kind == .Vec {
-                let token = p.types[i].fields[j].ty.elementName
-                let _checked = try vector(reg, ts, token, element(ty))
-            }
-            j += 1
-        }
         i += 1
     }
     return reg

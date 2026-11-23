@@ -1,0 +1,21 @@
+fn build() -> Vec[String] {
+    let first = "first".toString()
+    let second = "second".toString()
+    var words = [first, second]
+    words.push("third".toString())
+    return words
+}
+fn count(words: Vec[String]) -> int { return words.len() }
+fn main() {
+    var words = build()
+    println(count(words))
+    let moved = words
+    words = ["replacement".toString()]
+    println(words.len())
+    println(moved.len())
+    words = moved.clone()
+    println(words.len())
+    words = []
+    let empty = words.clone()
+    println(empty.len())
+}

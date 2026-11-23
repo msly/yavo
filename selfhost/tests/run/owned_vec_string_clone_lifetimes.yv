@@ -1,0 +1,15 @@
+fn detached() -> Vec[String] {
+    var original = ["alpha".toString(), "beta".toString()]
+    original.reserve(12)
+    return original.clone()
+}
+fn main() {
+    var copied = detached()
+    copied.push("gamma".toString())
+    println(copied.len())
+    let again = copied.clone()
+    copied = []
+    println(copied.len())
+    println(again.len())
+    let _ = detached()
+}

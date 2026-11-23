@@ -1,0 +1,60 @@
+fn scalarType() -> TypeRef {
+    return TypeRef{kind: .Int, elementKind: .Unknown}
+}
+fn noType() -> TypeRef {
+    return TypeRef{kind: .Unknown, elementKind: .Unknown}
+}
+fn makeProgram() -> Program {
+    let first = Expression{kind: .Number, token: 0, elementKind: .Unknown}
+    let second = Expression{kind: .Number, token: 1, elementKind: .Unknown}
+    let constructed = Expression{kind: .Construct, token: 2, elementKind: .Unknown, args: [0, 1], names: [3, 4]}
+    let condition = Expression{kind: .Boolean, token: 8, elementKind: .Unknown}
+    let leftReturn = Statement{kind: .Return, token: 5, annotation: noType(), expr: 0}
+    let rightReturn = Statement{kind: .Return, token: 6, annotation: noType(), expr: 1}
+    let branch = Statement{kind: .If, token: 7, annotation: noType(), expr: 3, body: [0], otherwise: [1]}
+    let parameter = Parameter{name: 10, ty: TypeRef{kind: .Named, name: 2, elementKind: .Unknown}}
+    let function = Function{name: 9, result: scalarType(), params: [parameter], body: [2]}
+    let firstField = FieldDecl{name: 3, ty: scalarType()}
+    let secondField = FieldDecl{name: 4, ty: scalarType()}
+    let structure = TypeDecl{kind: .Struct, name: 2, fields: [firstField, secondField]}
+    let enumeration = TypeDecl{kind: .Enum, name: 11, variants: [12, 13]}
+    var program = Program{expressions: [first, second], statements: [leftReturn, rightReturn]}
+    program.expressions.push(constructed)
+    program.expressions.push(condition)
+    program.statements.push(branch)
+    program.functions.push(function)
+    program.types.push(structure)
+    program.types.push(enumeration)
+    return program
+}
+fn detachedProgram() -> Program {
+    let result = makeProgram()
+    return result
+}
+fn componentCount(program: Program) -> int {
+    return program.expressions.len() + program.statements.len() + program.functions.len() + program.types.len()
+}
+fn detachedPrograms() -> Vec[Program] {
+    let first = makeProgram()
+    var programs = [first]
+    programs.push(makeProgram())
+    return programs.clone()
+}
+fn main() {
+    var original = detachedProgram()
+    println(componentCount(original))
+    let moved = original
+    original = makeProgram()
+    original = makeProgram()
+    println(original.expressions.len())
+    println(moved.statements.len())
+    println(moved.functions.len())
+    println(moved.types.len())
+    var programs = detachedPrograms()
+    programs.push(makeProgram())
+    println(programs.len())
+    let copied = programs.clone()
+    programs = []
+    println(programs.len())
+    println(copied.len())
+}

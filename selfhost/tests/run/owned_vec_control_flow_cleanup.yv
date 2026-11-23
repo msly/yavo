@@ -1,0 +1,16 @@
+fn choose(first: bool) -> Vec[String] {
+    let left = ["one".toString()]
+    let right = ["two".toString(), "three".toString()]
+    if first { return left } else { return right }
+}
+fn main() {
+    var i = 0
+    while i < 6 {
+        let words = choose(i < 3)
+        i += 1
+        if i == 2 { continue }
+        if i == 5 { break }
+        println(words.len())
+    }
+    println(choose(false).len())
+}

@@ -1,0 +1,21 @@
+enum Kind { Word, End }
+struct Token { kind: Kind, text: String, offset: int }
+struct Tokens { items: Vec[Token] = [] }
+fn detached() -> Vec[Token] {
+    let word = Token{kind: .Word, text: "word".toString(), offset: 0}
+    var values: Vec[Token] = []
+    values.push(word)
+    values.push(Token{kind: .End, text: String{}, offset: 4})
+    let store = Tokens{items: values}
+    return store.items.clone()
+}
+fn main() {
+    var values = detached()
+    println(values.len())
+    values.reserve(8)
+    values.push(Token{kind: .Word, text: "later".toString(), offset: 5})
+    let copied = values.clone()
+    values = []
+    println(values.len())
+    println(copied.len())
+}

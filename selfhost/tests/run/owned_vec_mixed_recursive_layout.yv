@@ -1,0 +1,16 @@
+struct Frame { branch: Branch, id: int }
+struct Branch { frames: Vec[Frame] = [], label: String }
+fn detached() -> Vec[Frame] {
+    let leaf = Frame{branch: Branch{label: "leaf".toString()}, id: 1}
+    let outer = Frame{branch: Branch{frames: [leaf], label: "outer".toString()}, id: 2}
+    let values = [outer]
+    return values.clone()
+}
+fn main() {
+    var values = detached()
+    println(values.len())
+    let copied = values.clone()
+    values = []
+    println(values.len())
+    println(copied.len())
+}

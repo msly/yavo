@@ -1,0 +1,15 @@
+struct Node { label: String, children: Vec[Node] = [] }
+fn detached() -> Vec[Node] {
+    let leaf = Node{label: "leaf".toString()}
+    let root = Node{label: "root".toString(), children: [leaf]}
+    let forest = [root]
+    return forest.clone()
+}
+fn main() {
+    var forest = detached()
+    forest.push(Node{label: "sibling".toString()})
+    let copied = forest.clone()
+    forest = []
+    println(forest.len())
+    println(copied.len())
+}

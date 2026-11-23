@@ -1,0 +1,24 @@
+struct Payload {
+    label: String
+    numbers: Vec[int]
+    words: Vec[String]
+    enabled: bool
+    count: int
+}
+struct Group { entries: Vec[Payload] = [] }
+struct Envelope { group: Group }
+fn detached() -> Vec[Payload] {
+    let first = Payload{label: "first".toString(), numbers: [1, 2], words: ["a".toString(), "b".toString()], enabled: true, count: 2}
+    var values = [first]
+    values.push(Payload{label: "second".toString(), numbers: [3], words: ["c".toString()], enabled: false, count: 1})
+    let envelope = Envelope{group: Group{entries: values}}
+    return envelope.group.entries.clone()
+}
+fn main() {
+    var values = detached()
+    println(values.len())
+    let copied = values.clone()
+    values = []
+    println(values.len())
+    println(copied.len())
+}

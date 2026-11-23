@@ -118,14 +118,43 @@ fn value(g: inout Generator, ty: BasicType, expression: str) -> Value {
     return Value{ty: resolved, name: name}
 }
 
-fn dropName(ty: Type) -> String {
+fn vectorHelper(ty: Type) -> String {
+    if ty.elementKind == .String { return "string".toString() }
+    return format("type_${ty.elementDecl}")
+}
+
+fn dropName(reg: Registry, ty: Type) -> String {
     if ty.kind == .String { return "yv_string_drop".toString() }
-    if ty.kind == .Vec { return "yv_vec_free".toString() }
+    if ty.kind == .Vec {
+        if types.owned(reg, types.element(ty)) {
+            return format("sh_vec_drop_${vectorHelper(ty)}")
+        }
+        return "yv_vec_free".toString()
+    }
     return format("sh_drop_${ty.decl}")
 }
 
+// Struct cloning is internal to collection cloning, not a new user struct method.
+// Copy fields retain their values; each owned field receives a distinct owner.
+fn cloneExpression(reg: Registry, ty: Type, source: str, lineText: str, columnText: str) -> String {
+    if ty.kind == .String {
+        return format("yv_string_from(yv_string_view(&(${source})), ${lineText}, ${columnText})")
+    }
+    if ty.kind == .Vec {
+        let elem = types.element(ty)
+        if types.owned(reg, elem) {
+            return format("sh_vec_clone_${vectorHelper(ty)}(&(${source}), ${lineText}, ${columnText})")
+        }
+        return format("sh_vec_clone_copy(&(${source}), (int64_t)sizeof(${types.cType(elem)}), ${lineText}, ${columnText})")
+    }
+    if types.owned(reg, ty) {
+        return format("sh_clone_${ty.decl}(&(${source}), ${lineText}, ${columnText})")
+    }
+    return source.toString()
+}
+
 fn dropValue(g: inout Generator, reg: Registry, ty: Type, name: str) {
-    if types.owned(reg, ty) { line(&g, format("${dropName(ty)}(&(${name}));")) }
+    if types.owned(reg, ty) { line(&g, format("${dropName(reg, ty)}(&(${name}));")) }
 }
 
 fn zeroValue(g: inout Generator, reg: Registry, v: Value) {
@@ -429,9 +458,13 @@ fn method(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expr
                 let elem = types.element(target.ty)
                 let arg = try emitExpected(&g, p, ts, reg, e.args[0], elem)
                 try require(reg, ts, p.expressions[e.args[0]].token, arg.ty, elem)
+                // Keep the receiver reserved until consuming the argument has checked
+                // its source root; storing the value transfers ownership to the slot.
+                let taken = try takeValue(&g, reg, ts, p.expressions[e.args[0]].token, arg)
                 let _removed = g.reservations.pop()
                 let et = types.cType(elem)
-                line(&g, format("*(${et} *)yv_vec_push_slot(&(${target.name}), (int64_t)sizeof(${et}), ${t.line}, ${t.column}) = ${arg.name};"))
+                line(&g, format("*(${et} *)yv_vec_push_slot(&(${target.name}), (int64_t)sizeof(${et}), ${t.line}, ${t.column}) = ${taken.name};"))
+                zeroValue(&g, reg, taken)
             }
         }
         return Value{ty: types.primitive(.Unit), name: "".toString()}
@@ -455,12 +488,9 @@ fn method(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expr
             if e.args.len() != 0 { return err(problem(ts, e.token, "E0012", "this vector method takes no arguments")) }
             if name == "len" { return value(&g, .Int, format("(${base.name}).len")) }
             let t = ts[e.token]
-            let et = types.cType(types.element(base.ty))
-            let copied = typedValue(&g, reg, base.ty,
-                format("yv_vec_with_cap((int64_t)sizeof(${et}), (${base.name}).len, ${t.line}, ${t.column})"))
-            line(&g, format("if ((${base.name}).len > 0) memcpy((${copied.name}).ptr, (${base.name}).ptr, (size_t)(${base.name}).len * sizeof(${et}));"))
-            line(&g, format("(${copied.name}).len = (${base.name}).len;"))
-            return copied
+            let cloned = cloneExpression(reg, base.ty, base.name,
+                format("${t.line}"), format("${t.column}"))
+            return typedValue(&g, reg, base.ty, cloned)
         }
         return err(problem(ts, e.token, "U0001", "vector method is outside the selfhost subset"))
     }
@@ -637,6 +667,7 @@ fn vectorValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
     // Register the outer owner before lowering its elements. Prefixing the resulting
     // C with the allocation also preserves allocation-before-element evaluation when
     // the element type is inferred from the first expression.
+    let temporary = g.temps.len()
     g.temps.push(Temporary{ty: types.primitive(.Vec), name: name.clone()})
     let before = take(&g.out)
     var ty = types.primitive(.Unknown)
@@ -652,9 +683,14 @@ fn vectorValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
             ty = try types.vector(reg, ts, p.expressions[arg].token, elem)
         }
         try require(reg, ts, p.expressions[arg].token, item.ty, elem)
+        let taken = try takeValue(&g, reg, ts, p.expressions[arg].token, item)
         let et = types.cType(elem)
-        line(&g, format("*(${et} *)yv_vec_push_slot(&${name}, (int64_t)sizeof(${et}), ${t.line}, ${t.column}) = ${item.name};"))
+        line(&g, format("*(${et} *)yv_vec_push_slot(&${name}, (int64_t)sizeof(${et}), ${t.line}, ${t.column}) = ${taken.name};"))
+        zeroValue(&g, reg, taken)
     }
+    // Inferred literals now know their element destructor. Keeping the placeholder
+    // type would free only the buffer and leak every owned element.
+    g.temps[temporary].ty = ty
     let body = take(&g.out)
     g.out = before
     let et = types.cType(elem)
@@ -679,15 +715,18 @@ fn indexValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: 
     if base.ty.kind != .Vec {
         return err(problem(ts, e.token, "E0001", "this value cannot be indexed"))
     }
+    let elem = types.element(base.ty)
+    if types.owned(reg, elem) {
+        return err(problem(ts, e.token, "U0001", "borrowed indexing of owned vector elements is outside this subset"))
+    }
     let mark = g.accessLocks.len()
     if base.root >= 0 { g.accessLocks.push(base.root) }
     let index = try emitExpected(&g, p, ts, reg, e.right, types.primitive(.Int))
     try basic(reg, ts, e.token, index.ty, .Int)
     while g.accessLocks.len() > mark { let _removed = g.accessLocks.pop() }
-    let elem = types.element(base.ty)
     let et = types.cType(elem)
     let t = ts[e.token]
-    // Elements in this increment are Copy: read the value now, retaining no slot borrow.
+    // Copy reads retain no slot borrow; owned element access is rejected above.
     return typedValue(&g, reg, elem,
         format("*(${et} *)yv_vec_at(&(${base.name}), (int64_t)sizeof(${et}), ${index.name}, ${t.line}, ${t.column})"))
 }
@@ -783,6 +822,9 @@ fn placeType(g: Generator, p: Program, ts: Vec[Token], reg: Registry, id: int, d
         let base = try placeType(g, p, ts, reg, e.left, depth + 1)
         if stringLike(base.ty) { return err(problem(ts, e.token, "U0001", "text indexing is outside this subset")) }
         if base.ty.kind != .Vec { return err(problem(ts, e.token, "E0001", "indexed assignment requires a vector")) }
+        if types.owned(reg, types.element(base.ty)) {
+            return err(problem(ts, e.token, "U0001", "indexed places for owned vector elements are outside this subset"))
+        }
         return Place{ty: types.element(base.ty), name: String{},
             mutable: base.mutable, root: base.root, whole: false, indexed: true}
     }
@@ -1080,6 +1122,29 @@ fn signature(p: Program, ts: Vec[Token], reg: Registry, index: int) -> String ! 
     return format("static ${types.cType(result)} sh_fn_${index}(${args})")
 }
 
+fn vectorLifecycle(g: inout Generator, reg: Registry, elem: Type) {
+    let ty = Type{kind: .Vec, elementKind: elem.kind, elementDecl: elem.decl}
+    let et = types.cType(elem)
+    let stem = vectorHelper(ty)
+    line(&g, format("static void sh_vec_drop_${stem}(yv_vec *p) {"))
+    line(&g, format("${et} *items = (${et} *)p->ptr;"))
+    line(&g, "for (int64_t i = 0; i < p->len; ++i) {")
+    line(&g, format("${dropName(reg, elem)}(&items[i]);"))
+    line(&g, "}")
+    line(&g, "yv_vec_free(p);")
+    line(&g, "}")
+    line(&g, format("static yv_vec sh_vec_clone_${stem}(const yv_vec *p, uint32_t line, uint32_t col) {"))
+    line(&g, format("const ${et} *items = (const ${et} *)p->ptr;"))
+    line(&g, format("yv_vec out = yv_vec_with_cap((int64_t)sizeof(${et}), p->len, line, col);"))
+    line(&g, "for (int64_t i = 0; i < p->len; ++i) {")
+    let cloned = cloneExpression(reg, elem, "items[i]", "line", "col")
+    line(&g, format("((${et} *)out.ptr)[i] = ${cloned};"))
+    line(&g, "out.len = i + 1;")
+    line(&g, "}")
+    line(&g, "return out;")
+    line(&g, "}")
+}
+
 fn declarations(g: inout Generator, reg: Registry) {
     for i in 0..reg.entries.len() {
         if reg.entries[i].kind == .Enum { line(&g, format("typedef int64_t sh_type_${i};")) }
@@ -1093,6 +1158,31 @@ fn declarations(g: inout Generator, reg: Registry) {
             line(&g, format("} sh_type_${i};"))
         }
     }
+
+    // Every named C layout is complete. Lifecycle prototypes break indirect
+    // dependency cycles such as Node -> Vec[Node] without recursive discovery.
+    line(&g, "static void sh_vec_drop_string(yv_vec *p);")
+    line(&g, "static yv_vec sh_vec_clone_string(const yv_vec *p, uint32_t line, uint32_t col);")
+    for i in reg.order {
+        if reg.entries[i].owned {
+            line(&g, format("static void sh_drop_${i}(sh_type_${i} *p);"))
+            line(&g, format("static sh_type_${i} sh_clone_${i}(const sh_type_${i} *p, uint32_t line, uint32_t col);"))
+            line(&g, format("static void sh_vec_drop_type_${i}(yv_vec *p);"))
+            line(&g, format("static yv_vec sh_vec_clone_type_${i}(const yv_vec *p, uint32_t line, uint32_t col);"))
+        }
+    }
+    line(&g, "static yv_vec sh_vec_clone_copy(const yv_vec *p, int64_t elem, uint32_t line, uint32_t col) {")
+    line(&g, "yv_vec out = yv_vec_with_cap(elem, p->len, line, col);")
+    line(&g, "if (p->len > 0) memcpy(out.ptr, p->ptr, (size_t)p->len * (size_t)elem);")
+    line(&g, "out.len = p->len;")
+    line(&g, "return out;")
+    line(&g, "}")
+    vectorLifecycle(&g, reg, types.primitive(.String))
+    for i in reg.order {
+        if reg.entries[i].owned {
+            vectorLifecycle(&g, reg, Type{kind: .Named, decl: i, elementKind: .Unknown})
+        }
+    }
     for i in reg.order {
         if reg.entries[i].owned {
             line(&g, format("static void sh_drop_${i}(sh_type_${i} *p) {"))
@@ -1101,9 +1191,20 @@ fn declarations(g: inout Generator, reg: Registry) {
             while j > 0 {
                 j -= 1
                 let ty = item.fields[j].ty
-                if types.owned(reg, ty) { line(&g, format("${dropName(ty)}(&p->f_${j});")) }
+                if types.owned(reg, ty) { line(&g, format("${dropName(reg, ty)}(&p->f_${j});")) }
             }
             line(&g, format("*p = (sh_type_${i}){0};"))
+            line(&g, "}")
+            line(&g, format("static sh_type_${i} sh_clone_${i}(const sh_type_${i} *p, uint32_t line, uint32_t col) {"))
+            line(&g, format("sh_type_${i} out = *p;"))
+            for field in 0..item.fields.len() {
+                let ty = item.fields[field].ty
+                if types.owned(reg, ty) {
+                    let cloned = cloneExpression(reg, ty, format("p->f_${field}"), "line", "col")
+                    line(&g, format("out.f_${field} = ${cloned};"))
+                }
+            }
+            line(&g, "return out;")
             line(&g, "}")
         }
     }
@@ -1130,7 +1231,7 @@ pub fn generate(p: Program, ts: Vec[Token], filename: str) -> String ! Failure {
     }
     if entry < 0 { return err(problem(ts, 0, "E0016", "no fn main() entry point")) }
     var g = Generator{result: types.primitive(.Unit)}
-    line(&g, "/* Generated by Yavo selfhost (Copy vector ownership subset). */")
+    line(&g, "/* Generated by Yavo selfhost (owned vector storage subset). */")
     line(&g, "#include \"yavo_rt.h\"")
     declarations(&g, reg)
     for i in 0..p.functions.len() {

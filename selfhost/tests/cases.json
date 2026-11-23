@@ -1,6 +1,6 @@
 {
   "schema": "yavo-selfhost-cases/1",
-  "description": "Independent fixed-oracle probes for the Yavo-written scalar, aggregate, String and Copy-element Vec subset; not the frozen full-language conformance suite.",
+  "description": "Independent fixed-oracle probes for the Yavo-written scalar, aggregate, String and owned-vector storage subset; not the frozen full-language conformance suite.",
   "cases": [
     {
       "id": "arithmetic",
@@ -1563,11 +1563,11 @@
       "diagnostic": "U0001"
     },
     {
-      "id": "unsupported_vec_owned_struct_element",
-      "kind": "unsupported",
-      "batch": "vec-copy",
-      "file": "unsupported/unsupported_vec_owned_struct_element.yv",
-      "diagnostic": "U0001"
+      "id": "owned_vec_struct_declaration",
+      "kind": "run",
+      "batch": "owned-vec",
+      "file": "run/owned_vec_struct_declaration.yv",
+      "stdout": ""
     },
     {
       "id": "unsupported_vec_pop",
@@ -1628,6 +1628,157 @@
       "batch": "vec-copy",
       "file": "reject/vec_bare_constructor.yv",
       "diagnostic": "E0001"
+    },
+    {
+      "id": "owned_vec_string_moves",
+      "kind": "run",
+      "batch": "owned-vec",
+      "file": "run/owned_vec_string_moves.yv",
+      "stdout": "3\n1\n3\n3\n0\n"
+    },
+    {
+      "id": "owned_vec_string_clone_lifetimes",
+      "kind": "run",
+      "batch": "owned-vec",
+      "file": "run/owned_vec_string_clone_lifetimes.yv",
+      "stdout": "3\n0\n3\n"
+    },
+    {
+      "id": "owned_vec_token_fields",
+      "kind": "run",
+      "batch": "owned-vec",
+      "file": "run/owned_vec_token_fields.yv",
+      "stdout": "2\n0\n3\n",
+      "example": "owned_token_store.yv"
+    },
+    {
+      "id": "owned_vec_mixed_payload_fields",
+      "kind": "run",
+      "batch": "owned-vec",
+      "file": "run/owned_vec_mixed_payload_fields.yv",
+      "stdout": "2\n0\n2\n"
+    },
+    {
+      "id": "owned_vec_control_flow_cleanup",
+      "kind": "run",
+      "batch": "owned-vec",
+      "file": "run/owned_vec_control_flow_cleanup.yv",
+      "stdout": "1\n1\n2\n2\n"
+    },
+    {
+      "id": "owned_vec_borrowed_params_temporaries",
+      "kind": "run",
+      "batch": "owned-vec",
+      "file": "run/owned_vec_borrowed_params_temporaries.yv",
+      "stdout": "2\n2\n1\n2\n"
+    },
+    {
+      "id": "owned_vec_recursive_node",
+      "kind": "run",
+      "batch": "owned-vec",
+      "file": "run/owned_vec_recursive_node.yv",
+      "stdout": "0\n2\n"
+    },
+    {
+      "id": "owned_vec_mixed_recursive_layout",
+      "kind": "run",
+      "batch": "owned-vec",
+      "file": "run/owned_vec_mixed_recursive_layout.yv",
+      "stdout": "1\n0\n1\n"
+    },
+    {
+      "id": "owned_vec_literal_temporaries",
+      "kind": "run",
+      "batch": "owned-vec",
+      "file": "run/owned_vec_literal_temporaries.yv",
+      "stdout": "120\n342\n"
+    },
+    {
+      "id": "model_original_source",
+      "kind": "run",
+      "batch": "owned-vec",
+      "file": "run/model_original_source.yv",
+      "source_prefix": "model.yv",
+      "stdout": "10\n4\n3\n1\n2\n3\n0\n3\n"
+    },
+    {
+      "id": "owned_vec_partial_literal_panic",
+      "kind": "panic",
+      "batch": "owned-vec",
+      "file": "panic/owned_vec_partial_literal_panic.yv",
+      "panic": "P-ASSERT",
+      "reason": "Checks left-to-right evaluation and panic outcome after a first owned element was constructed. Panic does not unwind; this is not an element-destruction or leak-free-panic claim.",
+      "stdout": "12"
+    },
+    {
+      "id": "owned_vec_literal_moved_string",
+      "kind": "reject",
+      "batch": "owned-vec",
+      "file": "reject/owned_vec_literal_moved_string.yv",
+      "diagnostic": "E0402"
+    },
+    {
+      "id": "owned_vec_literal_duplicate_owner",
+      "kind": "reject",
+      "batch": "owned-vec",
+      "file": "reject/owned_vec_literal_duplicate_owner.yv",
+      "diagnostic": "E0402"
+    },
+    {
+      "id": "owned_vec_push_moved_token",
+      "kind": "reject",
+      "batch": "owned-vec",
+      "file": "reject/owned_vec_push_moved_token.yv",
+      "diagnostic": "E0402"
+    },
+    {
+      "id": "owned_vec_literal_borrowed_parameter",
+      "kind": "reject",
+      "batch": "owned-vec",
+      "file": "reject/owned_vec_literal_borrowed_parameter.yv",
+      "diagnostic": "E0401"
+    },
+    {
+      "id": "owned_vec_push_field_move",
+      "kind": "reject",
+      "batch": "owned-vec",
+      "file": "reject/owned_vec_push_field_move.yv",
+      "diagnostic": "E0401"
+    },
+    {
+      "id": "owned_vec_push_str_requires_conversion",
+      "kind": "reject",
+      "batch": "owned-vec",
+      "file": "reject/owned_vec_push_str_requires_conversion.yv",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "owned_vec_loop_repeated_element_move",
+      "kind": "reject",
+      "batch": "owned-vec",
+      "file": "reject/owned_vec_loop_repeated_element_move.yv",
+      "diagnostic": "E0402"
+    },
+    {
+      "id": "unsupported_owned_vec_index_copy_field",
+      "kind": "unsupported",
+      "batch": "owned-vec",
+      "file": "unsupported/unsupported_owned_vec_index_copy_field.yv",
+      "diagnostic": "U0001"
+    },
+    {
+      "id": "unsupported_owned_vec_index_field_write",
+      "kind": "unsupported",
+      "batch": "owned-vec",
+      "file": "unsupported/unsupported_owned_vec_index_field_write.yv",
+      "diagnostic": "U0001"
+    },
+    {
+      "id": "unsupported_owned_vec_index_replace",
+      "kind": "unsupported",
+      "batch": "owned-vec",
+      "file": "unsupported/unsupported_owned_vec_index_replace.yv",
+      "diagnostic": "U0001"
     }
   ],
   "promotions": [
@@ -1674,6 +1825,17 @@
       "kind": "run",
       "source_sha256": "9c952e792150eac509273fba91dd4198c103581575c396b3c20df3a622544fe3",
       "reason": "Copy-element vector literals and len are now accepted; source bytes are unchanged."
+    },
+    {
+      "previous_id": "unsupported_vec_owned_struct_element",
+      "previous_file": "unsupported/unsupported_vec_owned_struct_element.yv",
+      "previous_kind": "unsupported",
+      "baseline_commit": "5f3c2f0",
+      "id": "owned_vec_struct_declaration",
+      "file": "run/owned_vec_struct_declaration.yv",
+      "kind": "run",
+      "source_sha256": "c851bf3b5a32ec91e19b76918a275445b987bc113897ec51a66db6de63d6f4f9",
+      "reason": "Vectors may own struct elements containing String; the original source uses storage and push without borrowed indexing and is unchanged."
     }
   ]
 }
