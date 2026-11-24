@@ -35,9 +35,16 @@ function bodies. The GCC input loader validates **173 programs** (172 fixtures
 plus lexer); the native job must additionally run stage2 self-compilation,
 **490 checks, 172 emissions and 8 malformed inputs**.
 
-Batch 31 native CI is pending the implementation push. Each platform must
-retain the same fixed-point, real lexer and independent test-summary gates;
-successful local input loading is not GCC execution evidence.
+[Run 45354873591](https://github.com/msly/yavo/actions/runs/45354873591) passed all six jobs at `046ccc6`.
+All three native platforms pass 490/12 with zero skips, within-platform C and
+binary fixed points, the real lexer in both modes and 213 test-summary
+executions each. Linux GCC executed the complete 173-program and stage2 gate
+described above. Rust totals per mode are Linux 145/0/1, Windows 81/0/1 and
+macOS 84/0/1, preserving each platform's documented selection.
+The [batch-31 native index](../../compiler/validation/batch31-native-2026-11-24.json)
+binds three API-matched archives, 44,165 rehashed files, 25,476 embedded
+streams and 837 local input identities to the implementation commit. It
+supplements the local receipt without rewriting its historical pending status.
 
 ## Batch 30 Copy Optional and pop checks (historical)
 
@@ -51,7 +58,7 @@ Bootstrap still requires 12 auxiliary checks, including real lexer stage1/stage2
 C equality and Debug/Release allocation checks. The Linux adapter requires
 **156 generated programs** (155 fixtures plus the real lexer), instrumented
 stage2 self-compilation, **439 checks, 155 emissions and 8 malformed inputs**.
-These are separate counting units, derived from the current manifest and source.
+These are separate counting units, derived from that batch's manifest and sources.
 
 The [local receipt](../../compiler/validation/selfhost-optional-pop-2026-11-24.json)
 passes 439/439 cases, 12/12 checks and zero skips, with identical stage2/stage3

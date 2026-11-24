@@ -76,8 +76,9 @@ Full Rust suites remain 145/0/1 per mode and frozen conformance remains 124/3/2.
 See the [oracle index](selfhost/tests/evidence/batch31-for-oracle/oracle-index.json)
 for source identities and the reference correction.
 
-Batch 31 native CI is pending the implementation push; the following batch-30
-record remains the last completed native archive review.
+Batch 31 [run 45354873591](https://github.com/msly/yavo/actions/runs/45354873591) passed all six jobs at `046ccc6`.
+The [native index](compiler/validation/batch31-native-2026-11-24.json) binds
+all three platform archives and their actual outputs to this implementation.
 
 ### Selfhost Copy Optional and pop (batch 30, historical)
 
@@ -127,6 +128,18 @@ passes **372/372 cases, 12/12 checks and zero skips**, including the real lexer
 unit in Debug/Release. Stage2/stage3 C (623,204 bytes) and binaries match exactly.
 
 ### GitHub CI
+
+Batch 31 [run 45354873591](https://github.com/msly/yavo/actions/runs/45354873591)
+passed **six of six jobs** at `046ccc6`. Linux x86-64, Windows x86-64 and macOS
+arm64 each pass **490 selfhost cases, 12 checks and zero skips**, with matching
+stage2/stage3 C and binaries within each platform, the real lexer in both modes,
+and 213 existing CLI executions. Rust Debug/Release each report 145/0/1 on full
+Linux, 81/0/1 on selected Windows and 84/0/1 on selected macOS suites. Linux GCC
+ASan/UBSan passes **173 generated programs**, stage2 self-compilation,
+**490 checks, 172 emissions and 8 malformed inputs**. The
+[batch-31 native index](compiler/validation/batch31-native-2026-11-24.json)
+binds all three API-matched archives, 44,165 rehashed files, 25,476 checked
+embedded streams and 837 local input identities to the implementation commit.
 
 Batch 30 [run 45345384747](https://github.com/msly/yavo/actions/runs/45345384747)
 passed **six of six jobs** at `7297e3b`. Linux x86-64, Windows x86-64 and macOS

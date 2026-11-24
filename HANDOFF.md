@@ -10,7 +10,7 @@
 
 本机完整自举 **490/490 cases、12/12 checks、0 skip**；stage2/stage3 的 C（685,990 字节）和 Linux 二进制（321,368 字节）分别逐字节一致；真实 lexer 的两代 C、Debug/Release 正常返回堆检查通过。见[本批本机回执](compiler/validation/selfhost-for-2026-11-24.json)及[独立 oracle](selfhost/tests/evidence/batch31-for-oracle/oracle-index.json)。
 
-第三十一批原生验收等待本批实现提交的 CI。已确认的上一批为 `7297e3b` 的 [run 45345384747](https://github.com/msly/yavo/actions/runs/45345384747)，记录保持在[第三十批原生索引](compiler/validation/batch30-native-2026-11-24.json)。本批本机回执保留其当时 native pending / GCC 未在本机运行的状态，后续另存原生索引。
+实现 `046ccc6` 的 [CI run 45354873591](https://github.com/msly/yavo/actions/runs/45354873591) **6/6 jobs 成功**。Linux x86-64、Windows x86-64、macOS arm64 各通过 490/490、12/12、0 skip，平台内 stage2/stage3 C 与二进制一致，真实 lexer 两模式及 CLI 各 213 次执行通过。Linux GCC ASan/UBSan 通过 173 程序，stage2 自编译、490 checks、172 emits、8 个坏输入。三份归档按 API 大小/摘要、提交源码与实际输出复核，合计重哈希 44,165 个文件、核对 25,476 条嵌入流；837 个本机输入绑定与提交一致，见[第三十一批原生索引](compiler/validation/batch31-native-2026-11-24.json)。本机原始回执的 native pending / GCC 未在本机运行字段保持原样。
 
 **SH-3 尚未接替，Rust stage0 仍承担日常编译；SH-4 完成 1/3 个独立应用。** 下一批先实现现有可打印类型的插值与 `format`，使用于诊断和 C 名称/位置串生成，再推进源模块。
 
@@ -261,4 +261,4 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - 独立对照发现 Rust For lowering 延迟读取 local/field/byte 起点。仅新增 self.bind(start.ty, &a)，在右端副作用前快照；新增 compiler/tests/p0/run_for_range_capture.yv。旧 Debug/Release 的 local/field/index/byte/cached 和为 0/0/6/0/6 并 P-ASSERT；修后五项均为 6、exit 0。原失败与修后证据保留在本批 oracle。
 - 52 项本批语料包括 17 run、25 reject、10 unsupported；旧 for fixture 原样晋升，净新增 51。总表 490 = 144 run + 28 panic + 243 reject + 61 unsupported + 14 shared unsupported；172 个可执行输入。修后 Rust 独立 oracle 34 次运行通过。字段/临时/拥有/可变借用/双绑定集合/slice/Map/Set 保持 U0001；双绑定 range 为 E0020，不可迭代标量为 E0001。
 - 本机回执 selfhost-for-2026-11-24.json：490/490、12/12、0 skip，stage2/stage3 C 685,990 字节、Linux 二进制 321,368 字节分别一致；真实 lexer 两模式通过。修后完整 Rust Debug/Release 各145/0/1，冻结规格124/3/2；生成程序 sanitizer 输入为173（172 fixtures + lexer），实际 GCC 门由本批 CI 提供。
-- 本批原生 CI 与归档核验待实现提交后补充；保留本机原始回执，不把后续原生结果倒写进其历史字段。
+- 实现 `046ccc6` 的 [run 45354873591](https://github.com/msly/yavo/actions/runs/45354873591) 六项全过；三平台各490/12/0、平台内C/二进制固定点、真实lexer与CLI各213次执行通过。Linux GCC生成程序173、stage2自编译及490checks/172emits/8坏输入通过。三份原生归档复核44,165文件、25,476嵌入流，837个本机输入绑定到提交；详见[原生索引](compiler/validation/batch31-native-2026-11-24.json)，原本机回执历史字段未改。

@@ -15,8 +15,8 @@ subset of the stage0 language that the compiler itself implements (see
 stage0 accepts far more of the language (owned optionals, reference iteration,
 interpolation, modules, methods, generics, Map/Set, closures, threads...).
 Batch 31 implements int/byte range `for` and read-only Copy Vec traversal,
-with four migrations in the compiler and production lexer unit; local acceptance
-has passed and native CI is pending. Batch 30's Copy Optional, `Vec.pop`, value-form `??`
+with four migrations in the compiler and production lexer unit; local and three-platform native
+acceptance have passed. Batch 30's Copy Optional, `Vec.pop`, value-form `??`
 and removal of five copying truncation helpers remain part of the subset,
 along with batch 29's user-function results and `lex → compile → main`
 propagation. SH-3 is still incomplete.
@@ -85,8 +85,16 @@ first. A new P0 fixture verifies local, field, index, byte and cached-end cases;
 old Debug/Release failures and fixed runs are retained. Runtime and frozen
 specification inputs are unchanged.
 
-Batch 31 native CI is pending the implementation push. Its final native index
-will supplement this local receipt without rewriting the original pending fields.
+[Run 45354873591](https://github.com/msly/yavo/actions/runs/45354873591) passed all six jobs at `046ccc6`.
+Linux x86-64, Windows x86-64 and macOS arm64 each pass 490 cases, 12 checks,
+zero skips, within-platform C/binary fixed points and the real lexer in both
+modes. Each also passes 213 executions of the existing test-summary application.
+Linux GCC ASan/UBSan passes 173 generated programs plus stage2 self-compilation,
+490 checks, 172 emissions and 8 malformed inputs. The
+[native index](../compiler/validation/batch31-native-2026-11-24.json) records
+three API-matched archives, 44,165 rehashed files, 25,476 verified embedded
+streams and 837 committed local input bindings. The original local receipt's
+pending fields remain historical, supplemented by this native index.
 
 ## Historical validation: batch 30 (2026-11-24)
 
@@ -269,7 +277,7 @@ assignment/RHS comparison context.
 
 ### Range and Copy Vec loops
 
-Batch 31 implementation is present; acceptance validation is in progress.
+Batch 31 local and three-platform native acceptance have passed.
 `for i in start..end` accepts matching `int` or `byte` bounds, with contextual
 integer literals. Both bounds are evaluated once, left to right, before the
 loop binding exists. The lower value is captured before upper-bound side
@@ -531,8 +539,8 @@ executable fixtures from earlier increments.
 ## Next steps
 
 Self-hosting remains a regression gate. Batch 31's range and Copy Vec loops
-are implemented, and their local and native acceptance gates are in progress.
-After this gate closes, the next increment is interpolation/`format`, followed
+have passed local and three-platform native acceptance.
+The next increment is interpolation/`format`, followed
 by modules. Each increment must replace real compiler-source workarounds,
 retain independent behavior and cleanup oracles, and renew the fixed point
 on Linux, Windows and macOS. [SH-3](../docs/self-hosting.md) remains incomplete;
