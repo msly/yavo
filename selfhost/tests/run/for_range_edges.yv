@@ -1,0 +1,11 @@
+fn main() {
+    for value in -2..1 { println(value) }
+    for value in 3..1 { println("bad") }
+    for value in 0..0 { println("bad") }
+    for value in byte(254)..byte(255) { println(int(value)) }
+    let maximum = 9223372036854775807
+    for value in (maximum - 1)..maximum { println(value) }
+    for value in maximum..maximum { println("bad") }
+    let minimum = -9223372036854775808
+    for value in minimum..(minimum + 1) { println(value) }
+}

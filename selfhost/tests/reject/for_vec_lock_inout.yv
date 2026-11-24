@@ -1,0 +1,7 @@
+fn touch(values: inout Vec[int]) { values.push(3) }
+fn main() {
+    var values = [1, 2]
+    for value in values {
+        touch(&values)
+    }
+}

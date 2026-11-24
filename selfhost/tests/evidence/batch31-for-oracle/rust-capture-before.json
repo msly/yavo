@@ -1,0 +1,81 @@
+{
+  "scope": "Independent old-stage0 behavior before the For lower-bound snapshot fix",
+  "source": {
+    "path": "/data1/workspace/github/workspace/yavo/compiler/tests/p0/run_for_range_capture.yv",
+    "sha256": "2abbbc94df68727cb33b4492357b94aba43500f876a079650158b6de9b53c52e"
+  },
+  "compiler": {
+    "path": "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+    "sha256": "bcbbbf91215b81ad628329320ca9b18b0c924f9735a006af2597d77d4640c2c0"
+  },
+  "runtime_sha256": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+  "expected_stdout": "local 6\nfield 6\nindex 6\nbyte 6\ncached 6\nrange capture ok\n",
+  "checks": [
+    {
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+        "check",
+        "/data1/workspace/github/workspace/yavo/compiler/tests/p0/run_for_range_capture.yv",
+        "--json"
+      ],
+      "exit_code": 0,
+      "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/tests/p0/run_for_range_capture.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"2abbbc94df68727cb33b4492357b94aba43500f876a079650158b6de9b53c52e\",\"warning_count\":0}\n",
+      "stderr": ""
+    }
+  ],
+  "builds": [
+    {
+      "mode": "debug",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+        "build",
+        "/data1/workspace/github/workspace/yavo/compiler/tests/p0/run_for_range_capture.yv",
+        "-o",
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-range-capture-before/debug",
+        "--emit-c",
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-range-capture-before/debug.c"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "c_sha256": "29a621d0394ac1d5eb1843ef324ae8d4cc086e8959b937d1e6011bff866f1ec4",
+      "binary_sha256": "24890e25a52d0590bdc4352073299de726d67cee2f18a90fff14a02cd8176b72",
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-range-capture-before/debug"
+        ],
+        "exit_code": 101,
+        "stdout": "local 0\nfield 0\nindex 6\nbyte 0\ncached 6\n",
+        "stderr": "yavo panic [P-ASSERT] at /data1/workspace/github/workspace/yavo/compiler/tests/p0/run_for_range_capture.yv:86:5: assertion failed\n",
+        "matches_expected": false
+      }
+    },
+    {
+      "mode": "release",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+        "build",
+        "/data1/workspace/github/workspace/yavo/compiler/tests/p0/run_for_range_capture.yv",
+        "-o",
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-range-capture-before/release",
+        "--emit-c",
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-range-capture-before/release.c",
+        "--release"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "c_sha256": "29a621d0394ac1d5eb1843ef324ae8d4cc086e8959b937d1e6011bff866f1ec4",
+      "binary_sha256": "b11b45b28179b2551b918857b2c1821bf46b4738b77b048a5d9b0640def479f7",
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-range-capture-before/release"
+        ],
+        "exit_code": 101,
+        "stdout": "local 0\nfield 0\nindex 6\nbyte 0\ncached 6\n",
+        "stderr": "yavo panic [P-ASSERT] at /data1/workspace/github/workspace/yavo/compiler/tests/p0/run_for_range_capture.yv:86:5: assertion failed\n",
+        "matches_expected": false
+      }
+    }
+  ]
+}

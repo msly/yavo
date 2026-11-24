@@ -1289,6 +1289,7 @@ impl Gen {
             HStmtKind::For { local, start, end, body } => {
                 let ty = f.locals[*local].ty.c_name();
                 let a = self.expr(start, f);
+                let a = self.bind(start.ty, &a);
                 let b = self.expr(end, f);
                 let end_tmp = self.fresh();
                 let name = local_name(&f.locals, *local);

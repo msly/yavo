@@ -105,9 +105,12 @@ pub enum StmtKind {
     Loop
     Break
     Continue
+    ForRange
+    ForEach
 }
 
-// body/otherwise index Program.lists.
+// body/otherwise index Program.lists. For loops keep the binding token in name;
+// expr is the range start or iterable, and a ForRange keeps its end in target.
 pub struct Statement {
     kind: StmtKind
     token: int

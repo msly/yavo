@@ -1,0 +1,42 @@
+fn check(value: int) -> int ! String {
+    if value == 2 { return err("fail".toString()) }
+    return value
+}
+fn byReturn() -> int {
+    let values = [1, 2, 3]
+    for value in values {
+        let guard = ["return".toString()]
+        if value == 2 { return value }
+    }
+    return 0
+}
+fn byTry() -> int ! String {
+    let values = [1, 2, 3]
+    for value in values {
+        let guard = ["try".toString()]
+        println(try check(value))
+    }
+    return 0
+}
+fn catchTry() {
+    let _ = byTry() catch error {
+        println(error)
+        return
+    }
+}
+fn byCatch() -> int {
+    for value in 1..4 {
+        let guard = ["catch".toString()]
+        let chosen = check(value) catch error {
+            println(error)
+            return 7
+        }
+        println(chosen)
+    }
+    return 0
+}
+fn main() {
+    println(byReturn())
+    catchTry()
+    println(byCatch())
+}

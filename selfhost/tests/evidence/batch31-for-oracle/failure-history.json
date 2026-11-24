@@ -1,0 +1,40 @@
+{
+  "initial_stage0_probe_failures": [
+    {
+      "id": "for_range_lower_snapshot",
+      "expected_stdout": "0\n1\n2\n5\n",
+      "observed_stdout": "5\n",
+      "resolution": "Rust For lowering now binds the start value before evaluating the end. Final fixed Debug and Release pass the same source."
+    },
+    {
+      "id": "for_move_once",
+      "observed_first_error": {
+        "code": "E0402",
+        "line": 4,
+        "column": 21
+      },
+      "resolution": "The unchanged source is registered as reject/for_move_break_replay.yv. A break after the move does not bypass Rust loop replay rejection."
+    }
+  ],
+  "fixed_debug_candidate_failures": [
+    {
+      "id": "for_vec_nested_control",
+      "change": "expected stdout corrected from 54 to 36; three outer values and three inner values yield 9+12+15=36; source unchanged"
+    },
+    {
+      "id": "unsupported_for_mutable",
+      "change": "remove invalid assignment to readonly loop binding; retain explicit &Vec iterator shape with observable read"
+    },
+    {
+      "id": "unsupported_for_set",
+      "change": "replace Vec literal in Set context with supported Set constructor and add methods"
+    }
+  ],
+  "stage1_review_failure": {
+    "id": "for_scalar_iterable",
+    "expected": "E0001",
+    "observed": "U0001",
+    "snapshot": "selfhost-for31-smoke2",
+    "resolution": "Root changed ForEach to check iterable type before applying the stable-Name subset restriction. The supplied smoke2 receipt is preserved; the final full bootstrap owns validation of that correction."
+  }
+}

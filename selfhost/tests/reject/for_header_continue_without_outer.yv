@@ -1,0 +1,4 @@
+fn fail() -> int ! int { return err(1) }
+fn main() {
+    for value in 0..fail() catch _ { continue } { println(value) }
+}

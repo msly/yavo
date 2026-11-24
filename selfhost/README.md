@@ -12,12 +12,14 @@ separate behavioral reference; no stage delegates an input back to Rust.
 The compiler sources were rewritten into a *bootstrap dialect*: a strict
 subset of the stage0 language that the compiler itself implements (see
 [decision 20–24](../docs/decisions.md)). It is not yet the default compiler:
-stage0 accepts far more of the language (owned optionals, `for`,
+stage0 accepts far more of the language (owned optionals, reference iteration,
 interpolation, modules, methods, generics, Map/Set, closures, threads...).
-Batch 30 adds Copy Optional, `Vec.pop` and value-form `??`, and uses pop to
-replace all five copying truncation helpers in the compiler. Batch 29's
-user-function results and `lex → compile → main` propagation remain covered;
-SH-3 is still incomplete.
+Batch 31 implements int/byte range `for` and read-only Copy Vec traversal,
+with four migrations in the compiler and production lexer unit; local acceptance
+has passed and native CI is pending. Batch 30's Copy Optional, `Vec.pop`, value-form `??`
+and removal of five copying truncation helpers remain part of the subset,
+along with batch 29's user-function results and `lex → compile → main`
+propagation. SH-3 is still incomplete.
 
 ## Build and validate
 
@@ -61,7 +63,32 @@ and writes `receipt.json` with `achieved: "self-hosted-fixed-point"` and
 `self_hosted: true` only when everything passes. Native CI runs this gate on
 Linux, Windows and macOS; a configured job is not itself a passing result.
 
-## Current validation: batch 30 (2026-11-24)
+## Current validation: batch 31 (2026-11-24)
+
+The matrix contains **490 cases / 172 executable inputs**: 144 run, 28 panic,
+243 reject, 61 unsupported and 14 shared unsupported. There are 51 new cases;
+the old for fixture was promoted without changing its bytes. All 52 batch
+cases have independent fixed Rust oracles; 17 run programs pass 34 Debug/Release
+executions with normal-return allocation checking.
+
+The [local receipt](../compiler/validation/selfhost-for-2026-11-24.json) records
+**490/490 cases, 12/12 checks and no skips**. Stage2/stage3 C is byte-identical
+(685,990 bytes), as are the Linux binaries (321,368 bytes). The real lexer unit
+passes stage1/stage2 C equality and Debug/Release heap checks. Full Rust suites
+pass 145/0/1 per mode; frozen conformance remains 124 pass / 3 unsupported /
+2 superseded. The sanitizer adapter binds 173 programs: 172 fixtures plus lexer.
+
+The [oracle index](tests/evidence/batch31-for-oracle/oracle-index.json) preserves
+a reference correction. Rust formerly read local/field/byte range starts after
+the end expression's inout effects; its For lowering now snapshots the start
+first. A new P0 fixture verifies local, field, index, byte and cached-end cases;
+old Debug/Release failures and fixed runs are retained. Runtime and frozen
+specification inputs are unchanged.
+
+Batch 31 native CI is pending the implementation push. Its final native index
+will supplement this local receipt without rewriting the original pending fields.
+
+## Historical validation: batch 30 (2026-11-24)
 
 The frozen manifest has **439 cases and 155 executable inputs**: 127 run,
 28 panic, 218 reject, 52 subset-unsupported and 14 shared-unsupported cases.
@@ -221,7 +248,7 @@ JSON diagnostics, suggestions and recovery remain future work.
 | Text slices | Expression-local `s[start..end]` on str/String with int bounds, P-INDEX and P-STR-BOUNDARY checks; usable in comparisons, read-only arguments, `push` and `toString()`; a view of an owned String cannot be bound or assigned (U0001) |
 | Standard calls | `take(&place)` for String/Vec places; `os.args()` (len, indexing to static str), `os.exit(code)`; `fs.readText`, `fs.writeNewText` and `String.fromUtf8` only with a `catch _ { ... }` handler that cannot fall through (E0601) |
 | Locals | `let`/`var`, inferred or explicit types, assignment and arithmetic compound assignment; active locals cannot be shadowed |
-| Control flow | `if`/`else if`/`else`, `while`, `loop`, `break`, `continue`, explicit return and return-path checks |
+| Control flow | `if`/`else if`/`else`, `while`, `loop`, int/byte half-open range `for`, read-only traversal of a stable named Copy Vec, `break`, `continue`, explicit return and return-path checks |
 | Expressions | Parentheses, int unary minus, boolean not, checked int/byte arithmetic, wrapping arithmetic, bit operations/shifts, contextual integer arithmetic, equality/order, short-circuit boolean operators |
 | Builtins | Single-argument `print`/`println`/`eprintln` as direct statements including decimal byte output, `assert(bool)`, explicit `int(...)`/`byte(...)` conversions; user functions take precedence over the assert prelude |
 | Ownership | Consuming bindings/assignment/construction/returns; moved-value checking, read-only parameters, expression-local element borrows, root-based argument/receiver protection |
@@ -239,6 +266,49 @@ unit fields remain outside this subset. Struct equality/printing/clone and enum 
 rejected consistently with stage0. Explicit constructor fields are evaluated
 in source order. Bare enum cases use annotation/parameter/return/field/
 assignment/RHS comparison context.
+
+### Range and Copy Vec loops
+
+Batch 31 implementation is present; acceptance validation is in progress.
+`for i in start..end` accepts matching `int` or `byte` bounds, with contextual
+integer literals. Both bounds are evaluated once, left to right, before the
+loop binding exists. The lower value is captured before upper-bound side
+effects. The range is half-open: an equal or descending pair executes no
+iterations. The binding is read-only, and `continue` still advances it.
+Finite loops retain a possible zero-iteration path in return and ownership
+analysis, even when their body always returns.
+
+`for item in items` accepts a stable Vec local, ordinary parameter or `inout`
+parameter, including parentheses around that name. Elements may be `int`,
+`byte`, `bool`, Copy structs or payload-free enums. Each iteration copies an
+element into a read-only binding; it does not consume the vector. The vector
+root remains borrowed throughout the body, including nested loops and calls.
+An otherwise permitted mutation, move, `take` or inout access to that root
+fails with E0102. Reads and nested read-only traversal remain allowed, and
+the loop releases its borrow when it ends.
+
+Headers run before entering the new loop's control context. A `break` or
+`continue` inside a terminating header `catch` targets an enclosing loop.
+Owned header temporaries survive `continue` in the new loop's body and are
+cleaned when that loop completes or breaks; an enclosing jump, return or
+propagation also cleans the temporaries whose scope it exits.
+
+Owned-element traversal, explicit reference/mutable traversal (`in &items`),
+field or temporary iterables, two-binding collection loops (`for i, item in
+items`), Map/Set traversal and slices remain U0001. A range with two bindings
+is invalid syntax (E0020); an existing non-iterable scalar name is E0001.
+
+Four real loops now use the new syntax:
+
+| Source function | Migration |
+| --- | --- |
+| [`lexer_test.detachedFailure`](lexer_test.yv) | `0..32` builds the owned token text before an escaping diagnostic |
+| [`lexer_test.main`](lexer_test.yv) | `0..512` builds the leading-zero integer input |
+| [`lexer_test.main`](lexer_test.yv) | `0..16` repeats owned diagnostic creation and the existing code/message/position assertions |
+| [`parser.store`](parser.yv) | Read-only Copy Vec traversal appends child IDs to the shared list pool |
+
+The migrations preserve the original input strings, loop bodies and assertions;
+`parser.store` replaces the indexed element read with the copied loop binding.
 
 ### Copy Optional and pop
 
@@ -426,7 +496,8 @@ enum payloads, sink parameters and general references, owned/nested Optionals,
 Optional fields/container/Result combinations, Result fields,
 `Vec[Result]`, nested Results, arrow catch,
 user-defined methods, generics, interpolation, float/nondecimal literals,
-integer separators, for loops, closures and concurrency. String temporary
+integer separators, owned/reference/two-binding collection iteration,
+field or temporary iterables, closures and concurrency. String temporary
 receivers cannot be modified. This list describes the new frontend's input,
 not the broader Rust frontend.
 
@@ -459,12 +530,12 @@ executable fixtures from earlier increments.
 
 ## Next steps
 
-Self-hosting is a regression gate. Batch 30 is confirmed on native
-Linux/Windows/macOS. The next increment is `for`, starting with int/byte
-half-open ranges and read-only Copy Vec traversal, with migration of real
-lexer stress loops and `parser.store`. Later increments cover
-interpolation/`format` and modules, each with compiler-source migration and
-a renewed fixed point. [SH-3](../docs/self-hosting.md) remains incomplete;
+Self-hosting remains a regression gate. Batch 31's range and Copy Vec loops
+are implemented, and their local and native acceptance gates are in progress.
+After this gate closes, the next increment is interpolation/`format`, followed
+by modules. Each increment must replace real compiler-source workarounds,
+retain independent behavior and cleanup oracles, and renew the fixed point
+on Linux, Windows and macOS. [SH-3](../docs/self-hosting.md) remains incomplete;
 SH-4 has one of three independent applications validated.
 
 ## Historical snapshots

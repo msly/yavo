@@ -1,0 +1,12 @@
+fn fail() -> int ! String { return err("start".toString()) }
+fn upper() -> int { println("bad")
+    return 3 }
+fn main() {
+    loop {
+        let guard = ["outer".toString()]
+        for value in fail() catch error { println(error)
+            break } .. upper() { println(value) }
+        println("bad")
+    }
+    println("after")
+}

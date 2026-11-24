@@ -41,7 +41,7 @@ Recent changes implement index assignment, two-phase variable/field receivers, S
 
 | Check | Recorded local result | Scope |
 | --- | --- | --- |
-| Release suite | **145 passed, 0 failed, 1 ignored** | Batch 30: complete suite; Rust sources, runtime and frozen cases unchanged |
+| Release suite | **145 passed, 0 failed, 1 ignored** | Batch 31: complete suite after the range-bound snapshot fix; runtime and frozen cases unchanged |
 | Debug suite | **145 passed, 0 failed, 1 ignored** | Same source, all 19 groups, independent completed local log |
 | Frozen specification | **124 pass, 0 wrong, 3 unsupported, 0 not_run, 2 superseded** | 129 frozen cases; a different counting unit from Cargo test functions |
 | Cross-compilation | Six target formats/architectures build | Linux (static musl), Windows and macOS on x86-64/aarch64; native CI now covers Linux x86-64 plus the Windows x86-64/macOS arm64 selections below |
@@ -51,7 +51,35 @@ The ignored Cargo test is the old exploratory P0 conformance report; the current
 
 Source modules support top-level exports, per-file imports, cyclic imports and original-file diagnostics. Package dependencies and a program lockfile remain open. Multi-file `fix` returns `U0001` without writing; symlink module aliases are unsupported.
 
-### Selfhost Copy Optional and pop (2026-11-24)
+### Selfhost for loops and compiler traversal (batch 31, 2026-11-24)
+
+The bootstrap compiler now accepts int/byte half-open ranges and read-only
+Copy-element traversal of stable Vec locals and parameters, including inout
+parameters and parenthesized names. Bounds are evaluated once from left to
+right, loop bindings are read-only, continue performs the increment, and an
+iteration lock protects the container root. Owned elements, mutable iteration,
+field/temporary iterables and two-binding collection loops remain outside this subset.
+
+Three lexer stress loops and `parser.store` now use for; their inputs and
+assertions are unchanged. Independent comparison exposed a Rust range-bound
+bug: an end expression could modify a local/field/byte start before it was
+read. A typed snapshot now captures the start before evaluating the end;
+the added P0 fixture passes Debug and Release, with the old failure retained.
+
+The matrix is **490 cases and 172 executable inputs**: 51 new inputs plus one
+unchanged promotion. All 52 batch cases have independent Rust oracles; the
+17 run programs pass 34 Debug/Release executions. The
+[local receipt](compiler/validation/selfhost-for-2026-11-24.json) passes
+**490/490 cases, 12/12 checks and zero skips**, with equal stage2/stage3 C
+(685,990 bytes) and Linux binaries (321,368 bytes), plus the real lexer unit.
+Full Rust suites remain 145/0/1 per mode and frozen conformance remains 124/3/2.
+See the [oracle index](selfhost/tests/evidence/batch31-for-oracle/oracle-index.json)
+for source identities and the reference correction.
+
+Batch 31 native CI is pending the implementation push; the following batch-30
+record remains the last completed native archive review.
+
+### Selfhost Copy Optional and pop (batch 30, historical)
 
 The Yavo compiler now accepts Copy `?T`, `some`/`none`, implicit wrapping,
 `isSome`/`isNone`, mutable-place `Vec.pop()` and lazy value-form `??`.
@@ -319,8 +347,8 @@ and [module/thread audit](experiments/coldstart-2026-11-22-r5/evidence/manual-re
 
 ## Next work and acceptance gates
 
-1. Add `for` with a concrete compiler migration: int/byte half-open ranges and read-only Copy-element traversal of stable Vec locals/parameters are the initial scope. Migrate lexer stress loops and `parser.store`, validating single evaluation, iteration permissions, continue stepping and early-exit cleanup; details are in [HANDOFF.md](HANDOFF.md).
-2. Preserve the completed [SH-2 fixed point](docs/self-hosting.md), Copy Optional/pop, real lexer normal-return allocation checks and stage2 ASan/UBSan gate. Continue with formatting and source modules, using each addition in the compiler itself.
+1. Add interpolation and `format` for the existing printable types. Migrate diagnostic `report` and C-name/location construction in `temporaryName`, `localName` and `lineColumn`; preserve exact output bytes, expression order and ownership cleanup. See [HANDOFF.md](HANDOFF.md).
+2. Preserve the completed [SH-2 fixed point](docs/self-hosting.md), Result, Copy Optional/pop, for, real lexer allocation checks and stage2 ASan/UBSan gate. Follow formatting with source modules: file identity, import graphs, per-file visibility and original-file diagnostics must move together.
 3. Complete SH-3 before making it the default compiler. SH-4 has one accepted application; add independent structured-text validation and multi-file dependency/index projects, retaining frozen conformance, native checks, diagnostics and resource validation.
 4. Resume the qualified [per-request executor](tools/agent_eval/README.md), [prepared document experiment](experiments/docs-ab-2026-11-22-r6/README.md), 60-task pilot and formal cost study as later product evidence. Live API qualification is still **blocked**, with **0 round-six participant sessions**; it no longer blocks compiler development.
 5. Remaining v1 functionality includes user test blocks and `yavo test`, local/Git dependencies and a lockfile, FFI/unsafe/audit, general closures/higher-order parameters, public movable Join and `spawn inout`. Prioritize these only when required by the declared application scope or a concrete bootstrap blocker.

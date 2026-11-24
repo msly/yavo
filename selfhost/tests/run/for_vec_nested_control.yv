@@ -1,0 +1,28 @@
+fn choose(value: int) -> int ! int {
+    if value % 2 == 0 { return err(value) }
+    return value
+}
+fn main() {
+    var values = [1, 2, 3, 4]
+    var total = 0
+    for value in ((values)) {
+        let guard = ["iteration".toString()]
+        let chosen = choose(value) catch _ { continue }
+        total += chosen
+        if value == 3 { break }
+    }
+    println(total)
+    values.push(5)
+    println(values.len())
+    var pairs = 0
+    for outer in values {
+        for inner in values {
+            if inner == 4 { break }
+            pairs += outer + inner
+        }
+        if outer == 3 { break }
+    }
+    println(pairs)
+    values = [7]
+    println(values.len())
+}

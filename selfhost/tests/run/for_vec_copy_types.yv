@@ -1,0 +1,22 @@
+enum Mark {
+    Cold
+    Hot
+}
+struct Point {
+    x: int
+    y: int
+}
+fn main() {
+    let integers = [1, 2]
+    for value in integers { println(value) }
+    let bytes: Vec[byte] = ['A', 'B']
+    for value in bytes { println(int(value)) }
+    let flags = [true, false]
+    for value in flags { println(value) }
+    let points = [Point{x: 2, y: 3}]
+    for point in points { println(point.x + point.y) }
+    let marks: Vec[Mark] = [.Cold, .Hot]
+    for mark in marks { println(mark == .Cold) }
+    let empty: Vec[int] = []
+    for value in empty { println(value) }
+}

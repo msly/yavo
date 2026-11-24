@@ -69,10 +69,8 @@ fn identifier(s: inout State, ts: Vec[Token]) -> int {
 // Child lists are copied contiguously into the shared pool once complete.
 fn store(s: inout State, items: Vec[int]) -> int {
     let start = s.lists.len()
-    var i = 0
-    while i < items.len() {
-        s.lists.push(items[i])
-        i += 1
+    for item in items {
+        s.lists.push(item)
     }
     return start
 }
@@ -557,6 +555,34 @@ fn ifStatement(s: inout State, ts: Vec[Token]) -> int {
     return id
 }
 
+fn forStatement(s: inout State, ts: Vec[Token]) -> int {
+    let token = expect(&s, ts, "for")
+    let name = identifier(&s, ts)
+    var second = -1
+    if eat(&s, ts, ",") { second = identifier(&s, ts) }
+    expect(&s, ts, "in")
+    // Both inputs use the ordinary expression parser: a terminating catch may
+    // consume its own block before the range delimiter or the loop body.
+    let value = parseExpression(&s, ts)
+    var kind: StmtKind = .ForEach
+    var end = -1
+    if eat(&s, ts, "..") {
+        if second >= 0 {
+            fail(ts, second, "E0020", "a range loop has one variable")
+        }
+        kind = .ForRange
+        end = parseExpression(&s, ts)
+    } else if second >= 0 {
+        fail(ts, second, "U0001", "indexed iteration is outside the selfhost subset")
+    }
+    let body = parseBlock(&s, ts)
+    let id = pushStmt(&s, kind, token, value)
+    s.statements[id].name = name
+    s.statements[id].target = end
+    setBody(&s, id, body)
+    return id
+}
+
 fn parseStatement(s: inout State, ts: Vec[Token]) -> int {
     let p = s.pos
     if at(s, ts, "let") || at(s, ts, "var") {
@@ -596,9 +622,10 @@ fn parseStatement(s: inout State, ts: Vec[Token]) -> int {
         setBody(&s, id, body)
         return id
     }
+    if at(s, ts, "for") { return forStatement(&s, ts) }
     if eat(&s, ts, "break") { return pushStmt(&s, .Break, p, -1) }
     if eat(&s, ts, "continue") { return pushStmt(&s, .Continue, p, -1) }
-    if at(s, ts, "for") || at(s, ts, "with") || at(s, ts, "scope") ||
+    if at(s, ts, "with") || at(s, ts, "scope") ||
         at(s, ts, "defer") || at(s, ts, "unsafe") {
         syntax(s, ts, "U0001", "statement is outside the selfhost SH-1 subset")
     }

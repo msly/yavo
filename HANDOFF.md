@@ -1,18 +1,18 @@
-# Yavo 交接文档（2026-11-24，第三十批：Copy Optional 与原地退栈）
+# Yavo 交接文档（2026-11-24，第三十一批：for 与真实遍历迁移）
 
-给下一个会话：先读第 1、2、10、14 节及 docs/self-hosting.md、selfhost/README.md 再开工。第十二至第二十六批的原始记录在 `history/handoff-batches-2026-11-21-to-23.md`，第六至第十一批在 `history/handoff-batches-2026-11-19-to-21.md`。
+给下一个会话：先读第 1、2、10、15 节及 docs/self-hosting.md、selfhost/README.md 再开工。第十二至第二十六批的原始记录在 `history/handoff-batches-2026-11-21-to-23.md`，第六至第十一批在 `history/handoff-batches-2026-11-19-to-21.md`。
 
 ## 1. 一句话状态
 
-**SH-2 引导子集固定点已完成；第三十批实现 Copy Optional、Vec.pop 与普通值 `??`，并把编译器五类栈的 14 个截断点改为原地退栈。** 支持 int/byte/bool/Copy struct/enum 的 `?T`、some/none、边界处隐式包装、isSome/isNone；pop 沿用可写 local/field/inout place 与借用/预留锁。拥有型 Optional、嵌套与容器组合保持 U0001。
+**SH-2 引导子集固定点已完成；第三十一批加入 int/byte 半开区间 `for` 与稳定具名 Copy Vec 只读遍历，迁移 lexer 三个压力循环及 `parser.store`。** 循环变量只读，端点按左到右只求值一次；遍历期间锁住容器根，continue 执行步进，break/return/try 沿既有清理路径退出。字段/临时容器、拥有元素、可变借用和双绑定集合遍历保持 U0001。
 
-当前语料 **439 cases、155 个可执行输入**，净新增 67 例并原样晋升旧 pop fixture；本批 68 项先由 Rust 独立定标，15 个运行程序的 Debug/Release 共 30 次执行通过。完整 Rust Debug/Release 各 **145/0/1**，冻结 129 项仍为 **124 pass、3 unsupported、2 superseded**。本批没有改 Rust 编译器、运行时或冻结规格。
+当前语料 **490 cases、172 个可执行输入**：净新增 51 例，旧 for fixture 原字节晋升；本批 52 项独立定标，17 个运行程序的 Debug/Release 共 34 次正常返回与堆检查通过。完整 Rust Debug/Release 各 **145/0/1**；冻结 129 项仍为 **124 pass、3 unsupported、2 superseded**。本批同时修复 Rust range 左端读取延迟：右端求值前快照左端；新增 P0 回归，不修改运行时或冻结规格。
 
-本机完整自举 **439/439 cases、12/12 checks、0 skip**；stage2/stage3 的 C（668,302 字节）和 Linux 二进制（308,504 字节）分别逐字节一致。真实 lexer 两代 C 与 Debug/Release 正常返回堆检查通过。详见[第三十批本机回执](compiler/validation/selfhost-optional-pop-2026-11-24.json)及[独立 oracle](selfhost/tests/evidence/batch30-optional-oracle/oracle-index.json)。
+本机完整自举 **490/490 cases、12/12 checks、0 skip**；stage2/stage3 的 C（685,990 字节）和 Linux 二进制（321,368 字节）分别逐字节一致；真实 lexer 的两代 C、Debug/Release 正常返回堆检查通过。见[本批本机回执](compiler/validation/selfhost-for-2026-11-24.json)及[独立 oracle](selfhost/tests/evidence/batch31-for-oracle/oracle-index.json)。
 
-实现 `7297e3b` 的 [CI run 45345384747](https://github.com/msly/yavo/actions/runs/45345384747) **6/6 jobs 全部成功**。Linux x86-64、Windows x86-64、macOS arm64 各通过 439/439、12/12、0 skip，平台内 stage2/stage3 C 与二进制一致，真实 lexer 两模式及 CLI 各 213 次执行通过。Linux GCC ASan/UBSan 通过 156 程序，stage2 自编译、439 checks、155 emits、8 个坏输入。三份归档按 API 大小/摘要、提交源码与实际输出复核，合计重哈希 40,102 个文件、核对 22,892 条嵌入流；783 个本机输入绑定与提交一致，见[第三十批最终原生索引](compiler/validation/batch30-native-2026-11-24.json)。
+第三十一批原生验收等待本批实现提交的 CI。已确认的上一批为 `7297e3b` 的 [run 45345384747](https://github.com/msly/yavo/actions/runs/45345384747)，记录保持在[第三十批原生索引](compiler/validation/batch30-native-2026-11-24.json)。本批本机回执保留其当时 native pending / GCC 未在本机运行的状态，后续另存原生索引。
 
-Rust stage0 仍是日常编译器，SH-3 尚未接替；SH-4 保持 **1/3 个独立应用**。首个 `examples/test-summary/` 已通过三平台各 213 次执行。下一批以 `for` 支持和真实遍历迁移为主，随后格式化、源模块；第六轮文档实验仍 0 会话，真实 usage 资格未取得。
+**SH-3 尚未接替，Rust stage0 仍承担日常编译；SH-4 完成 1/3 个独立应用。** 下一批先实现现有可打印类型的插值与 `format`，使用于诊断和 C 名称/位置串生成，再推进源模块。
 
 ## 2. 仓库与环境
 
@@ -196,11 +196,11 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 
 ## 10. 下一个会话的第一步
 
-1. 检查 Git 状态、最新提交与 CI；先读本批第 14 节，再读 [自举路线](docs/self-hosting.md)、[selfhost 说明](selfhost/README.md)及首个[应用契约](examples/test-summary/SPEC.md)。固定点、Result 词法传播、Copy Optional/pop 与首个 CLI 已有独立记录。
-2. **下一批是 `for` 与真实遍历迁移。** 最小范围先考虑 int/byte 半开区间及稳定 Vec 局部/参数的单绑定 Copy 元素只读遍历；迁移 lexer_test 的 32 次 token 构造、512 次前导零、16 轮 Diagnostic 清理及 parser.store 的 Vec[int] 复制。先独立对齐端点/容器单次求值、循环变量只读、容器循环期间禁止修改/移动、continue 步进、break/return/try 的清理。范围表达式里的 catch break 属于外层循环，须在建立新 loop frame 前求值。拥有元素、可变借用遍历、临时/字段容器和双绑定等能力按实际需求另定，未开放则 U0001。
-3. 然后按插值/`format` → 源模块顺序扩大引导子集。拥有型 Optional/pop、if let/match、跳转式 `??`、Result 字段/容器与多错误恢复不自动夹带进 for 批次；每项先有实际需求和独立语义验收。
-4. SH-4 应用线继续用 stage0，后续选择结构化文本校验和多文件依赖/索引工具；用真实阻塞决定最小 `yavo test`、文件/进程 API、依赖锁定与分发的顺序。第一款应用完整入口是 `python3 tools/ci/test_summary.py`，本机 Python 路径见第 2 节。
-5. 自举改动保持 stage2.c = stage3.c、stage2 与 stage1 全用例一致；Linux 的 `tools/ci/selfhost_sanitize.py` 同时要求生成程序门和编译器自身门通过。保持冻结规格、Debug/Release 和三平台原生回归；不要同时运行共用临时目录的两条 cargo test。
+1. 检查 Git 状态、最新提交与 CI；先读本批第 15 节、[自举路线](docs/self-hosting.md)、[selfhost 说明](selfhost/README.md)及[应用契约](examples/test-summary/SPEC.md)。固定点、Result、Copy Optional/pop、for 和首个 CLI 均有独立证据。
+2. **下一批为现有打印类型的插值与 `format`。** 支持 `${expr}` 在 print/println/eprintln/format 的直接参数中使用，类型限 int/byte/bool/str/String/无载荷 enum；format 返回拥有 String，并保留用户函数覆盖 prelude。先定标 UTF-8/NUL/转义、嵌套分隔符、各表达式单次求值、先求值后外层输出、临时拥有值及 try/catch 清理。普通绑定/返回/任意参数中的裸插值按 stage0 拒绝；格式说明符按实际诊断划界，不同批加入 float 或通用格式化协议。
+3. 真实迁移限定四点：support.report 的完整诊断行、codegen.temporaryName、localName、lineColumn。诊断与生成 C 的对应字符串保持逐字节一致，再跑完整固定点、真实 lexer 与独立 sanitizer 门；不要顺带重写全部 join/decimal 调用。
+4. 然后推进源模块，成套处理文件身份、导入图、逐文件名字/可见性及原文件诊断。拥有型 Optional/pop、if let/match、跳转式 ??、Result 字段/容器继续按实际阻塞另列。
+5. SH-4 继续用 stage0，后续选结构化文本校验和多文件依赖/索引工具；用真实阻塞决定 yavo test、文件/进程 API、依赖锁定与分发顺序。保持冻结规格、Debug/Release、三平台原生及 stage2 ASan/UBSan；不要同时运行共用临时目录的两条 cargo test。
 6. 第六轮文档实验有可计量环境才恢复，随后执行 60 题 pilot 及正式成本研究；当前工程推进不受它阻塞。
 
 正式门槛仍按 `docs/plan.md`：配对通过率差的单侧 95% 下界至少 −5 个百分点，单位成功交付成本较 Rust 低至少 20% 并独立复现；冻结运行基准几何均值不超过 C 的 1.5 倍。工程目标包括小程序编译 P50 ≤200 ms、Linux strip 后 ≤250 KB、Windows 原生测试及可复现产物。
@@ -251,3 +251,14 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 ## 历史批次（已移出）
 
 第六至第十一批在 `history/handoff-batches-2026-11-19-to-21.md`；第十二至第二十六批（原第 18–31 节：构建缓存、第三到第五轮实验、CI、计量执行器、PCH、SH-1 各批）在 `history/handoff-batches-2026-11-21-to-23.md`。
+
+
+## 15. 第三十一批：for 与真实遍历迁移（2026-11-24）
+
+- AST 追加 ForRange/ForEach，复用 name/expr/target/body 池。range 支持 int/byte 半开区间、双向字面量上下文、空/逆向/极值；两个端点在新 loop frame 前物化，头部 catch break/continue 归属外层循环。C for 第三子句步进，有限循环保留零次路径。
+- Copy Vec 支持名称及括号形式的局部、普通参数和 inout 参数；元素限 int/byte/bool/非拥有 struct/enum。独立 iterationLocks 防止遍历根的写入、push/pop/reserve、替换、take、移动和 inout 调用；嵌套退出仅撤销本层锁，所有权回放保留循环变量和锁。循环头拥有临时值在外层 C 作用域关闭前释放。
+- 四处迁移：lexer_test 的 32 次 token 构造、512 个前导零、16 轮 Diagnostic 清理，以及 parser.store 的 Vec[int] 复制。结构复核要求三个受影响函数除这些机械替换外保持原文，输入字符串及断言原样。
+- 独立对照发现 Rust For lowering 延迟读取 local/field/byte 起点。仅新增 self.bind(start.ty, &a)，在右端副作用前快照；新增 compiler/tests/p0/run_for_range_capture.yv。旧 Debug/Release 的 local/field/index/byte/cached 和为 0/0/6/0/6 并 P-ASSERT；修后五项均为 6、exit 0。原失败与修后证据保留在本批 oracle。
+- 52 项本批语料包括 17 run、25 reject、10 unsupported；旧 for fixture 原样晋升，净新增 51。总表 490 = 144 run + 28 panic + 243 reject + 61 unsupported + 14 shared unsupported；172 个可执行输入。修后 Rust 独立 oracle 34 次运行通过。字段/临时/拥有/可变借用/双绑定集合/slice/Map/Set 保持 U0001；双绑定 range 为 E0020，不可迭代标量为 E0001。
+- 本机回执 selfhost-for-2026-11-24.json：490/490、12/12、0 skip，stage2/stage3 C 685,990 字节、Linux 二进制 321,368 字节分别一致；真实 lexer 两模式通过。修后完整 Rust Debug/Release 各145/0/1，冻结规格124/3/2；生成程序 sanitizer 输入为173（172 fixtures + lexer），实际 GCC 门由本批 CI 提供。
+- 本批原生 CI 与归档核验待实现提交后补充；保留本机原始回执，不把后续原生结果倒写进其历史字段。

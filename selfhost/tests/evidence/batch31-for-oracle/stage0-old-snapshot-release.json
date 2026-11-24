@@ -1,0 +1,79 @@
+{
+  "schema": "yavo-batch31-stage0-oracle/1",
+  "baseline": "0ae3b856bae5e795dd15ac6d74ebbfcfee539146",
+  "profile": "Release",
+  "environment_overrides": {
+    "YAVO_ALLOC_CHECK": "1",
+    "YAVO_NO_CACHE": "1",
+    "YAVO_CC": null
+  },
+  "inputs": {
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-stage0/yavo": "bcbbbf91215b81ad628329320ca9b18b0c924f9735a006af2597d77d4640c2c0",
+    "/data1/workspace/github/workspace/yavo/compiler/runtime/yavo_rt.h": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+    "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig": "58959f01285c05a74276f09327b551d42ed6006bf325a78dc661a024e314987b",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-oracle/run_oracle.py": "42f708cc32ba974059884103c1e422bf1b77d91d4e1aab3d44abb3e5726a7937",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-oracle/old-reference-bug-candidates.json": "2e39ff34e742c31e0a3d61964a01e31c5341d1cd683cf31906e938ce2139f87f",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-oracle/old-reference-bug-release/for_range_lower_snapshot/source.yv": "eb3d1c61cbbef3b8e3c9be3248793aa6674ba513121cb01e189892d49c8b67ba",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-oracle/old-reference-bug-release/for_range_lower_snapshot/program.c": "cdbf0a5e96582443253605d941efc158a1bc68d5a5687f6f9a4a55005914f75b",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-oracle/old-reference-bug-release/for_range_lower_snapshot/program": "c2abdb51611e6ccb50c232bb16c9696fb6176d7f52171f91d0bfd0a253479ad2"
+  },
+  "records": [
+    {
+      "id": "for_range_lower_snapshot",
+      "kind": "run",
+      "source": "fn upper(start: inout int) -> int {\n    start = 5\n    return 3\n}\nfn main() {\n    var start = 0\n    for value in start..upper(&start) { println(value) }\n    println(start)\n}\n",
+      "source_sha256": "eb3d1c61cbbef3b8e3c9be3248793aa6674ba513121cb01e189892d49c8b67ba",
+      "expected_exit": 0,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-stage0/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-oracle/old-reference-bug-release/for_range_lower_snapshot/source.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-oracle/old-reference-bug-release/for_range_lower_snapshot/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"eb3d1c61cbbef3b8e3c9be3248793aa6674ba513121cb01e189892d49c8b67ba\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.003,
+        "timed_out": false
+      },
+      "first_error": null,
+      "passed": false,
+      "expected_stdout": "0\n1\n2\n5\n",
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-stage0/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-oracle/old-reference-bug-release/for_range_lower_snapshot/source.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-oracle/old-reference-bug-release/for_range_lower_snapshot/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-oracle/old-reference-bug-release/for_range_lower_snapshot/program.c",
+          "--json",
+          "--release"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-oracle/old-reference-bug-release/for_range_lower_snapshot/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"eb3d1c61cbbef3b8e3c9be3248793aa6674ba513121cb01e189892d49c8b67ba\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.224,
+        "timed_out": false
+      },
+      "generated_c_sha256": "cdbf0a5e96582443253605d941efc158a1bc68d5a5687f6f9a4a55005914f75b",
+      "binary_sha256": "c2abdb51611e6ccb50c232bb16c9696fb6176d7f52171f91d0bfd0a253479ad2",
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-oracle/old-reference-bug-release/for_range_lower_snapshot/program"
+        ],
+        "exit_code": 0,
+        "stdout": "5\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      }
+    }
+  ],
+  "inputs_changed": [],
+  "passed": 0,
+  "total": 1,
+  "status": "failed"
+}

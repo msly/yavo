@@ -320,12 +320,6 @@
       "file": "unsupported/unsupported_generic.yv"
     },
     {
-      "id": "unsupported_for",
-      "kind": "unsupported",
-      "diagnostic": "U0001",
-      "file": "unsupported/unsupported_for.yv"
-    },
-    {
       "id": "quoted_function_keyword",
       "kind": "reject",
       "diagnostic": "E0020",
@@ -3065,6 +3059,380 @@
       "reason": "Both Rust stage0 and the subset reject direct Optional printing with U0001.",
       "file": "unsupported/unsupported_optional_print.yv",
       "batch": "copy-optional-pop"
+    },
+    {
+      "id": "for_parameter_plain",
+      "kind": "run",
+      "stdout": "1\n2\n2\n",
+      "file": "run/for_parameter_plain.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "for_parameter_inout",
+      "kind": "run",
+      "stdout": "1\n2\n3\n",
+      "file": "run/for_parameter_inout.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "for_range_endpoint_order",
+      "kind": "run",
+      "stdout": "L\nU\n1\n2\nL\nU\ndone\n",
+      "file": "run/for_range_endpoint_order.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "for_range_upper_cached",
+      "kind": "run",
+      "stdout": "0\n1\n2\n0\n",
+      "file": "run/for_range_upper_cached.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "for_range_lower_snapshot",
+      "kind": "run",
+      "stdout": "0\n1\n2\n5\n",
+      "file": "run/for_range_lower_snapshot.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "for_range_edges",
+      "kind": "run",
+      "stdout": "-2\n-1\n0\n254\n9223372036854775806\n-9223372036854775808\n",
+      "file": "run/for_range_edges.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "for_range_byte_hint",
+      "kind": "run",
+      "stdout": "1\n2\n1\n2\n",
+      "file": "run/for_range_byte_hint.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "for_range_continue",
+      "kind": "run",
+      "stdout": "1\n3\n2\n",
+      "file": "run/for_range_continue.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "for_range_owned_header",
+      "kind": "run",
+      "stdout": "0\n2\n0\n",
+      "file": "run/for_range_owned_header.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "for_header_start_break",
+      "kind": "run",
+      "stdout": "start\nafter\n",
+      "file": "run/for_header_start_break.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "for_header_end_break",
+      "kind": "run",
+      "stdout": "left\nend\nafter\n",
+      "file": "run/for_header_end_break.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "for_move_break_replay",
+      "kind": "reject",
+      "diagnostic": "E0402",
+      "file": "reject/for_move_break_replay.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "for_inout_locked",
+      "kind": "reject",
+      "diagnostic": "E0102",
+      "file": "reject/for_inout_locked.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "for_loop_var_range_readonly",
+      "kind": "reject",
+      "diagnostic": "E0014",
+      "file": "reject/for_loop_var_range_readonly.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "for_loop_var_vec_readonly",
+      "kind": "reject",
+      "diagnostic": "E0014",
+      "file": "reject/for_loop_var_vec_readonly.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "for_header_break_without_outer",
+      "kind": "reject",
+      "diagnostic": "E0015",
+      "file": "reject/for_header_break_without_outer.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "for_range_missing_return",
+      "kind": "reject",
+      "diagnostic": "E0013",
+      "file": "reject/for_range_missing_return.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "for_vec_missing_return",
+      "kind": "reject",
+      "diagnostic": "E0013",
+      "file": "reject/for_vec_missing_return.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "for_move_replay",
+      "kind": "reject",
+      "diagnostic": "E0402",
+      "file": "reject/for_move_replay.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "for_vec_lock_push",
+      "kind": "reject",
+      "diagnostic": "E0102",
+      "file": "reject/for_vec_lock_push.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "for_vec_lock_pop",
+      "kind": "reject",
+      "diagnostic": "E0102",
+      "file": "reject/for_vec_lock_pop.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "for_vec_lock_reserve",
+      "kind": "reject",
+      "diagnostic": "E0102",
+      "file": "reject/for_vec_lock_reserve.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "for_vec_lock_assign",
+      "kind": "reject",
+      "diagnostic": "E0102",
+      "file": "reject/for_vec_lock_assign.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "for_vec_lock_take",
+      "kind": "reject",
+      "diagnostic": "E0102",
+      "file": "reject/for_vec_lock_take.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "for_vec_lock_move",
+      "kind": "reject",
+      "diagnostic": "E0102",
+      "file": "reject/for_vec_lock_move.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "for_vec_lock_inout",
+      "kind": "reject",
+      "diagnostic": "E0102",
+      "file": "reject/for_vec_lock_inout.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "for_nested_lock",
+      "kind": "reject",
+      "diagnostic": "E0102",
+      "file": "reject/for_nested_lock.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "for_vec_copy_types",
+      "kind": "run",
+      "stdout": "1\n2\n65\n66\ntrue\nfalse\n5\ntrue\nfalse\n",
+      "file": "run/for_vec_copy_types.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "for_vec_nested_control",
+      "kind": "run",
+      "stdout": "4\n5\n36\n1\n",
+      "file": "run/for_vec_nested_control.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "for_iteration_exit_cleanup",
+      "kind": "run",
+      "stdout": "2\n1\nfail\n1\nfail\n7\n",
+      "file": "run/for_iteration_exit_cleanup.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "for_header_outer_continue",
+      "kind": "run",
+      "stdout": "skip\nskip\n3\n",
+      "file": "run/for_header_outer_continue.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "for_header_owned_exit",
+      "kind": "run",
+      "stdout": "header\nheader\n7\nheader\ndone\n",
+      "file": "run/for_header_owned_exit.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "for_scalar_iterable",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/for_scalar_iterable.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "for_range_bool",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/for_range_bool.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "for_range_mixed_types",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/for_range_mixed_types.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "for_range_two_bindings",
+      "kind": "reject",
+      "diagnostic": "E0020",
+      "file": "reject/for_range_two_bindings.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "for_range_second_delimiter",
+      "kind": "reject",
+      "diagnostic": "E0020",
+      "file": "reject/for_range_second_delimiter.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "for_header_continue_without_outer",
+      "kind": "reject",
+      "diagnostic": "E0015",
+      "file": "reject/for_header_continue_without_outer.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "for_binding_scope",
+      "kind": "reject",
+      "diagnostic": "E0010",
+      "file": "reject/for_binding_scope.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "for_vec_lock_index",
+      "kind": "reject",
+      "diagnostic": "E0102",
+      "file": "reject/for_vec_lock_index.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "for_loop_field_readonly",
+      "kind": "reject",
+      "diagnostic": "E0014",
+      "file": "reject/for_loop_field_readonly.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "unsupported_for_field",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "reason": "The subset accepts stable Vec names; field iteration remains outside this batch.",
+      "file": "unsupported/unsupported_for_field.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "unsupported_for_temporary",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "reason": "Temporary iterable ownership and lifetime are outside this stable-name iteration batch.",
+      "file": "unsupported/unsupported_for_temporary.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "unsupported_for_literal",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "reason": "Vector literal iterables are temporary containers, outside this stable-name iteration batch.",
+      "file": "unsupported/unsupported_for_literal.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "unsupported_for_owned_string",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "reason": "Iteration over owned elements yields borrowed elements in Rust and remains outside this Copy-only batch.",
+      "file": "unsupported/unsupported_for_owned_string.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "unsupported_for_owned_struct",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "reason": "Struct elements owning String require borrowed iteration; this batch only copies nonowning elements.",
+      "file": "unsupported/unsupported_for_owned_struct.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "unsupported_for_mutable",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "reason": "Explicit mutable iterator borrowing remains outside this read-only Copy iteration batch.",
+      "file": "unsupported/unsupported_for_mutable.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "unsupported_for_two_bindings",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "reason": "Index/value dual bindings are outside this single-binding Vec iteration batch.",
+      "file": "unsupported/unsupported_for_two_bindings.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "unsupported_for_slice",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "reason": "Slice iteration and its borrow lifetime are outside this Vec-name iteration batch.",
+      "file": "unsupported/unsupported_for_slice.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "unsupported_for_map",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "reason": "Map iteration is outside this Vec and integer-range batch.",
+      "file": "unsupported/unsupported_for_map.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "unsupported_for_set",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "reason": "Set iteration is outside this Vec and integer-range batch.",
+      "file": "unsupported/unsupported_for_set.yv",
+      "batch": "range-copy-for"
+    },
+    {
+      "id": "for_basic",
+      "kind": "run",
+      "stdout": "0\n1\n2\n",
+      "file": "run/for_basic.yv",
+      "batch": "range-copy-for"
     }
   ],
   "promotions": [
@@ -3155,6 +3523,17 @@
       "kind": "run",
       "source_sha256": "f9566d147e9c04e4a97153cc74aa7fbbf79fd5d6498df8a2b50e7e11f65e2446",
       "reason": "Copy-element Vec.pop and inferred Optional values are now accepted; the original source bytes are unchanged."
+    },
+    {
+      "previous_id": "unsupported_for",
+      "previous_file": "unsupported/unsupported_for.yv",
+      "previous_kind": "unsupported",
+      "baseline_commit": "0ae3b856bae5e795dd15ac6d74ebbfcfee539146",
+      "id": "for_basic",
+      "file": "run/for_basic.yv",
+      "kind": "run",
+      "source_sha256": "b4a1117d580f90847b30eff44cc678e2bbfeeb4c9baf79039fb7563d47f1dc5d",
+      "reason": "Half-open integer ranges are now accepted; the original source bytes are unchanged."
     }
   ]
 }

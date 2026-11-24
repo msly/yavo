@@ -1,0 +1,29 @@
+fn fail() -> int ! String { return err("header".toString()) }
+fn byTry() -> () ! String {
+    for value in ("abc".toString().len())..(try fail()) { println(value) }
+}
+fn catchTry() {
+    let _ = byTry() catch error {
+        println(error)
+        return
+    }
+}
+fn byReturn() -> int {
+    for value in ("abc".toString().len())..fail() catch error {
+        println(error)
+        return 7
+    } { println(value) }
+    return 0
+}
+fn main() {
+    catchTry()
+    println(byReturn())
+    loop {
+        for value in ("abc".toString().len())..fail() catch error {
+            println(error)
+            break
+        } { println(value) }
+        println("bad")
+    }
+    println("done")
+}

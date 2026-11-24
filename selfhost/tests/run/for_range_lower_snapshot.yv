@@ -1,0 +1,9 @@
+fn upper(start: inout int) -> int {
+    start = 5
+    return 3
+}
+fn main() {
+    var start = 0
+    for value in start..upper(&start) { println(value) }
+    println(start)
+}

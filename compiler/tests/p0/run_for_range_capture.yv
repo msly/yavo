@@ -1,0 +1,92 @@
+// expect-stdout:
+// | local 6
+// | field 6
+// | index 6
+// | byte 6
+// | cached 6
+// | range capture ok
+
+struct Bound {
+    start: int
+}
+
+fn changeLocal(start: inout int, calls: inout int) -> int {
+    start = 9
+    calls += 1
+    return 4
+}
+
+fn changeField(bound: inout Bound, calls: inout int) -> int {
+    bound.start = 9
+    calls += 1
+    return 4
+}
+
+fn changeIndex(values: inout Vec[int], calls: inout int) -> int {
+    values[0] = 9
+    calls += 1
+    return 4
+}
+
+fn changeByte(start: inout byte, calls: inout int) -> byte {
+    start = 9
+    calls += 1
+    return 4
+}
+
+fn main() {
+    // Each left bound is 1 before its right bound changes the source to 9.
+    // All four ranges must therefore visit 1, 2 and 3, whose sum is 6.
+    var local = 1
+    var localCalls = 0
+    var localSum = 0
+    for value in local..changeLocal(&local, &localCalls) {
+        localSum += value
+    }
+
+    var bound = Bound{start: 1}
+    var fieldCalls = 0
+    var fieldSum = 0
+    for value in bound.start..changeField(&bound, &fieldCalls) {
+        fieldSum += value
+    }
+
+    var values = [1]
+    var indexCalls = 0
+    var indexSum = 0
+    for value in values[0]..changeIndex(&values, &indexCalls) {
+        indexSum += value
+    }
+
+    var small: byte = 1
+    var byteCalls = 0
+    var byteSum = 0
+    for value in small..changeByte(&small, &byteCalls) {
+        byteSum += int(value)
+    }
+
+    var upper = 4
+    var cachedSum = 0
+    for value in 1..upper {
+        cachedSum += value
+        upper = 1
+    }
+
+    // Print every result before asserting, so a failure exposes all variants.
+    print("local ")
+    println(localSum)
+    print("field ")
+    println(fieldSum)
+    print("index ")
+    println(indexSum)
+    print("byte ")
+    println(byteSum)
+    print("cached ")
+    println(cachedSum)
+    assert(localSum == 6 && local == 9 && localCalls == 1)
+    assert(fieldSum == 6 && bound.start == 9 && fieldCalls == 1)
+    assert(indexSum == 6 && values[0] == 9 && indexCalls == 1)
+    assert(byteSum == 6 && small == 9 && byteCalls == 1)
+    assert(cachedSum == 6 && upper == 1)
+    println("range capture ok")
+}

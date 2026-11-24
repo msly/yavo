@@ -1,0 +1,127 @@
+{
+  "schema": "yavo-batch31-stage0-oracle/1",
+  "baseline": "0ae3b856bae5e795dd15ac6d74ebbfcfee539146",
+  "profile": "Debug",
+  "environment_overrides": {
+    "YAVO_ALLOC_CHECK": "1",
+    "YAVO_NO_CACHE": "1",
+    "YAVO_CC": null
+  },
+  "inputs": {
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-stage0-fixed/yavo": "2f5e7da56f11898371b0243e1d14cd9f57cd666266e3939f86811991dbac4814",
+    "/data1/workspace/github/workspace/yavo/compiler/runtime/yavo_rt.h": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+    "/data1/workspace/github/workspace/yavo/compiler/toolchain.lock": "a9bbe83e644b0e1cee19c8dba8b5157eaed3e9ddc71b96d8aab2b2d2bb15f53c",
+    "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig": "58959f01285c05a74276f09327b551d42ed6006bf325a78dc661a024e314987b",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-oracle/run_oracle.py": "fb7fadedee770997d4ce64ce6db3fae2c3e83e0d278ff4f3b4210aef1e46c45e",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-oracle/candidates-v2.json": "c6627bde1106f9674950be8304e82179443c2cf6298b7fe4752c9a20cf7cb1d3",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-oracle/fixed-debug-2/for_vec_nested_control/source.yv": "bcc9c2b69ef441b468942f1fe57d9993d677ec2babc8515e60112720e5cc1ece",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-oracle/fixed-debug-2/for_vec_nested_control/program.c": "a39606655ca7117f7a6cfeae4cda49868a985e988dea0fe3336daba18d79ef52",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-oracle/fixed-debug-2/for_vec_nested_control/program": "e81c78d5ec28bc983eebff41a314ac07bf6e0d9ce789ab9d6cf41d3a9cf95966",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-oracle/fixed-debug-2/unsupported_for_mutable/source.yv": "82d931d85587c7c6c64137eebf8a066c00ddcabf304aa3666d647a520911893b",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-oracle/fixed-debug-2/unsupported_for_set/source.yv": "dcb0f7d622ebeea406fae2f79d4cfdee68cb771df1bd62b8d724ef0eb7467ded"
+  },
+  "records": [
+    {
+      "id": "for_vec_nested_control",
+      "kind": "run",
+      "source": "fn choose(value: int) -> int ! int {\n    if value % 2 == 0 { return err(value) }\n    return value\n}\nfn main() {\n    var values = [1, 2, 3, 4]\n    var total = 0\n    for value in ((values)) {\n        let guard = [\"iteration\".toString()]\n        let chosen = choose(value) catch _ { continue }\n        total += chosen\n        if value == 3 { break }\n    }\n    println(total)\n    values.push(5)\n    println(values.len())\n    var pairs = 0\n    for outer in values {\n        for inner in values {\n            if inner == 4 { break }\n            pairs += outer + inner\n        }\n        if outer == 3 { break }\n    }\n    println(pairs)\n    values = [7]\n    println(values.len())\n}\n",
+      "source_sha256": "bcc9c2b69ef441b468942f1fe57d9993d677ec2babc8515e60112720e5cc1ece",
+      "expected_exit": 0,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-stage0-fixed/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-oracle/fixed-debug-2/for_vec_nested_control/source.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[{\"code\":\"W0001\",\"column\":13,\"end_column\":18,\"end_line\":9,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-oracle/fixed-debug-2/for_vec_nested_control/source.yv\",\"fixes\":[{\"applicability\":\"automatic\",\"edits\":[{\"end\":207,\"replacement\":\"_guard\",\"start\":202}],\"id\":\"rename-unused\",\"impact\":\"Keeps the same binding, writes and destruction time; only suppresses the unused-binding warning.\",\"patch_id\":\"rename-unused:9ec9a6ef8ebc75f82fb0fa9ff447b048ea7eb59289441011fff28e78a9c8f75b\",\"preconditions\":[\"All edited identifiers resolve to this binding.\",\"The new name does not capture any existing name in the function.\"],\"recheck\":\"passed\",\"recheck_scope\":\"automatic-set\",\"title\":\"Rename guard to _guard\"}],\"line\":9,\"message\":\"unused variable `guard`\",\"notes\":[\"rename it to `_guard` if this is intentional\"],\"primary\":{\"column\":13,\"end\":207,\"end_column\":18,\"end_line\":9,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-oracle/fixed-debug-2/for_vec_nested_control/source.yv\",\"line\":9,\"start\":202},\"severity\":\"WARN\"}],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-oracle/fixed-debug-2/for_vec_nested_control/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"bcc9c2b69ef441b468942f1fe57d9993d677ec2babc8515e60112720e5cc1ece\",\"warning_count\":1}\n",
+        "stderr": "",
+        "seconds": 0.003,
+        "timed_out": false
+      },
+      "first_error": null,
+      "passed": true,
+      "expected_stdout": "4\n5\n36\n1\n",
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-stage0-fixed/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-oracle/fixed-debug-2/for_vec_nested_control/source.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-oracle/fixed-debug-2/for_vec_nested_control/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-oracle/fixed-debug-2/for_vec_nested_control/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[{\"code\":\"W0001\",\"column\":13,\"end_column\":18,\"end_line\":9,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-oracle/fixed-debug-2/for_vec_nested_control/source.yv\",\"fixes\":[{\"applicability\":\"automatic\",\"edits\":[{\"end\":207,\"replacement\":\"_guard\",\"start\":202}],\"id\":\"rename-unused\",\"impact\":\"Keeps the same binding, writes and destruction time; only suppresses the unused-binding warning.\",\"patch_id\":\"rename-unused:9ec9a6ef8ebc75f82fb0fa9ff447b048ea7eb59289441011fff28e78a9c8f75b\",\"preconditions\":[\"All edited identifiers resolve to this binding.\",\"The new name does not capture any existing name in the function.\"],\"recheck\":\"passed\",\"recheck_scope\":\"automatic-set\",\"title\":\"Rename guard to _guard\"}],\"line\":9,\"message\":\"unused variable `guard`\",\"notes\":[\"rename it to `_guard` if this is intentional\"],\"primary\":{\"column\":13,\"end\":207,\"end_column\":18,\"end_line\":9,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-oracle/fixed-debug-2/for_vec_nested_control/source.yv\",\"line\":9,\"start\":202},\"severity\":\"WARN\"}],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-oracle/fixed-debug-2/for_vec_nested_control/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"bcc9c2b69ef441b468942f1fe57d9993d677ec2babc8515e60112720e5cc1ece\",\"warning_count\":1}\n",
+        "stderr": "",
+        "seconds": 0.198,
+        "timed_out": false
+      },
+      "generated_c_sha256": "a39606655ca7117f7a6cfeae4cda49868a985e988dea0fe3336daba18d79ef52",
+      "binary_sha256": "e81c78d5ec28bc983eebff41a314ac07bf6e0d9ce789ab9d6cf41d3a9cf95966",
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-oracle/fixed-debug-2/for_vec_nested_control/program"
+        ],
+        "exit_code": 0,
+        "stdout": "4\n5\n36\n1\n",
+        "stderr": "",
+        "seconds": 0.002,
+        "timed_out": false
+      }
+    },
+    {
+      "id": "unsupported_for_mutable",
+      "kind": "unsupported",
+      "source": "fn main() {\n    var values = [1, 2]\n    for value in &values { println(value) }\n    println(values[0])\n}\n",
+      "source_sha256": "82d931d85587c7c6c64137eebf8a066c00ddcabf304aa3666d647a520911893b",
+      "expected_exit": 0,
+      "expected_diagnostic": null,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-stage0-fixed/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-oracle/fixed-debug-2/unsupported_for_mutable/source.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-oracle/fixed-debug-2/unsupported_for_mutable/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"82d931d85587c7c6c64137eebf8a066c00ddcabf304aa3666d647a520911893b\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.002,
+        "timed_out": false
+      },
+      "first_error": null,
+      "passed": true
+    },
+    {
+      "id": "unsupported_for_set",
+      "kind": "unsupported",
+      "source": "fn main() {\n    var values = Set[int]{}\n    values.add(1)\n    values.add(2)\n    for value in values { println(value) }\n}\n",
+      "source_sha256": "dcb0f7d622ebeea406fae2f79d4cfdee68cb771df1bd62b8d724ef0eb7467ded",
+      "expected_exit": 0,
+      "expected_diagnostic": null,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-stage0-fixed/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-oracle/fixed-debug-2/unsupported_for_set/source.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch31-oracle/fixed-debug-2/unsupported_for_set/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"dcb0f7d622ebeea406fae2f79d4cfdee68cb771df1bd62b8d724ef0eb7467ded\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      },
+      "first_error": null,
+      "passed": true
+    }
+  ],
+  "inputs_changed": [],
+  "passed": 3,
+  "total": 3,
+  "status": "passed"
+}

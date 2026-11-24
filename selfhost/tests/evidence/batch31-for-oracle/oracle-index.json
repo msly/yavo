@@ -1,0 +1,1478 @@
+{
+  "schema": "yavo-for-oracle-index/1",
+  "baseline": "0ae3b856bae5e795dd15ac6d74ebbfcfee539146",
+  "scope": "Independent fixed Rust stage0 checks and first-error positions for all 52 registered Batch 31 cases, plus source-matched Debug and Release native runs for all 17 run cases. Initial failed probes and candidate corrections remain explicit historical evidence.",
+  "manifest_sha256": "6297cd871ff1a360e1f50fb880ababf98bd1fba731ce843c2852a7973dcf9498",
+  "candidates_sha256": "c6627bde1106f9674950be8304e82179443c2cf6298b7fe4752c9a20cf7cb1d3",
+  "manifest_counts": {
+    "run": 144,
+    "panic": 28,
+    "reject": 243,
+    "unsupported": 61,
+    "shared_unsupported": 14
+  },
+  "registered_cases": 52,
+  "registered_counts": {
+    "run": 17,
+    "reject": 25,
+    "unsupported": 10
+  },
+  "stage0_reference": {
+    "path": "compiler/target/ci/batch31-stage0-fixed/yavo",
+    "sha256": "2f5e7da56f11898371b0243e1d14cd9f57cd666266e3939f86811991dbac4814"
+  },
+  "stage0_initial_reference": {
+    "path": "compiler/target/ci/batch31-stage0/yavo",
+    "sha256": "bcbbbf91215b81ad628329320ca9b18b0c924f9735a006af2597d77d4640c2c0"
+  },
+  "stage0_runtime_final_source_profiles": 34,
+  "reference_oracle_complete": true,
+  "stage1_check_snapshot": {
+    "receipt": "stage1-smoke2-checks.json",
+    "checked": 52,
+    "code_passed": 51,
+    "known_stale_cases": {
+      "for_scalar_iterable": "The supplied smoke2 binary predates the root fix that diagnoses a scalar iterable as E0001 before checking the stable-Name subset boundary."
+    },
+    "unexpected_code_failures": [],
+    "position_differences": [
+      "for_inout_locked",
+      "for_loop_var_range_readonly",
+      "for_loop_var_vec_readonly",
+      "for_range_missing_return",
+      "for_vec_missing_return",
+      "for_vec_lock_push",
+      "for_vec_lock_pop",
+      "for_vec_lock_reserve",
+      "for_vec_lock_assign",
+      "for_vec_lock_take",
+      "for_vec_lock_move",
+      "for_vec_lock_inout",
+      "for_nested_lock",
+      "for_scalar_iterable",
+      "for_range_bool",
+      "for_range_mixed_types",
+      "for_vec_lock_index",
+      "for_loop_field_readonly"
+    ]
+  },
+  "cases": [
+    {
+      "id": "for_parameter_plain",
+      "kind": "run",
+      "file": "run/for_parameter_plain.yv",
+      "source_sha256": "67957f791cb56b2145dcdd9b6f6277301b9959b9904d947a1bcb5170d8944c77",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "for_parameter_plain",
+          "profile": "Debug",
+          "runtime": true,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "for_parameter_plain",
+          "profile": "Release",
+          "runtime": true,
+          "record_passed": true
+        }
+      ]
+    },
+    {
+      "id": "for_parameter_inout",
+      "kind": "run",
+      "file": "run/for_parameter_inout.yv",
+      "source_sha256": "d5b0484633e9dbeb37fbc81bdb667d224ad3425fcd3bd912d18697f2158ac6cd",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "for_parameter_inout",
+          "profile": "Debug",
+          "runtime": true,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "for_parameter_inout",
+          "profile": "Release",
+          "runtime": true,
+          "record_passed": true
+        }
+      ]
+    },
+    {
+      "id": "for_range_endpoint_order",
+      "kind": "run",
+      "file": "run/for_range_endpoint_order.yv",
+      "source_sha256": "4c94cf59075b150ca9928050e0251eb4e729abec11d6bbbdcdecf4362b4ba9c2",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "for_range_endpoint_order",
+          "profile": "Debug",
+          "runtime": true,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "for_range_endpoint_order",
+          "profile": "Release",
+          "runtime": true,
+          "record_passed": true
+        }
+      ]
+    },
+    {
+      "id": "for_range_upper_cached",
+      "kind": "run",
+      "file": "run/for_range_upper_cached.yv",
+      "source_sha256": "6b11bad9dc72e3abe9976823f2459c843146b478aa76518081d7a386f51f476b",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "for_range_upper_cached",
+          "profile": "Debug",
+          "runtime": true,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "for_range_upper_cached",
+          "profile": "Release",
+          "runtime": true,
+          "record_passed": true
+        }
+      ]
+    },
+    {
+      "id": "for_range_lower_snapshot",
+      "kind": "run",
+      "file": "run/for_range_lower_snapshot.yv",
+      "source_sha256": "eb3d1c61cbbef3b8e3c9be3248793aa6674ba513121cb01e189892d49c8b67ba",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "for_range_lower_snapshot",
+          "profile": "Debug",
+          "runtime": true,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "for_range_lower_snapshot",
+          "profile": "Release",
+          "runtime": true,
+          "record_passed": true
+        }
+      ],
+      "reference_correction": "The initial frozen Rust binary returned only 5\\n; the final fixed reference snapshots the left bound before evaluating the right bound, producing 0\\n1\\n2\\n5\\n. Old raw failure receipts remain in this directory."
+    },
+    {
+      "id": "for_range_edges",
+      "kind": "run",
+      "file": "run/for_range_edges.yv",
+      "source_sha256": "46e6001f48760dce1ee490d039c3db8f3bb99f74dbfa2a4fc75692fd1fbe5684",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "for_range_edges",
+          "profile": "Debug",
+          "runtime": true,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "for_range_edges",
+          "profile": "Release",
+          "runtime": true,
+          "record_passed": true
+        }
+      ]
+    },
+    {
+      "id": "for_range_byte_hint",
+      "kind": "run",
+      "file": "run/for_range_byte_hint.yv",
+      "source_sha256": "6b5e998cd2d051b1c141b35861c1f768f46dfd15b6ee7f7de1c5085b60900482",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "for_range_byte_hint",
+          "profile": "Debug",
+          "runtime": true,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "for_range_byte_hint",
+          "profile": "Release",
+          "runtime": true,
+          "record_passed": true
+        }
+      ]
+    },
+    {
+      "id": "for_range_continue",
+      "kind": "run",
+      "file": "run/for_range_continue.yv",
+      "source_sha256": "c1d01ab7a0782636d6c7db939fb131241919af4228f1c7c9dd552442bea9a165",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "for_range_continue",
+          "profile": "Debug",
+          "runtime": true,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "for_range_continue",
+          "profile": "Release",
+          "runtime": true,
+          "record_passed": true
+        }
+      ]
+    },
+    {
+      "id": "for_range_owned_header",
+      "kind": "run",
+      "file": "run/for_range_owned_header.yv",
+      "source_sha256": "a19c76081a34d9b366845ce57b8e8a5b1030b279c2279d22e969b57dac9e4b86",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "for_range_owned_header",
+          "profile": "Debug",
+          "runtime": true,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "for_range_owned_header",
+          "profile": "Release",
+          "runtime": true,
+          "record_passed": true
+        }
+      ]
+    },
+    {
+      "id": "for_header_start_break",
+      "kind": "run",
+      "file": "run/for_header_start_break.yv",
+      "source_sha256": "b29f07ba5be3c113c00c2ab8d172abd804bc3c36cb12d7f85fafed48138a84c8",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "for_header_start_break",
+          "profile": "Debug",
+          "runtime": true,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "for_header_start_break",
+          "profile": "Release",
+          "runtime": true,
+          "record_passed": true
+        }
+      ]
+    },
+    {
+      "id": "for_header_end_break",
+      "kind": "run",
+      "file": "run/for_header_end_break.yv",
+      "source_sha256": "75657db8048c8ffad31d3e219a5afd18ea9827864ed5ed4a3bd8342235f2f23e",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "for_header_end_break",
+          "profile": "Debug",
+          "runtime": true,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "for_header_end_break",
+          "profile": "Release",
+          "runtime": true,
+          "record_passed": true
+        }
+      ]
+    },
+    {
+      "id": "for_move_break_replay",
+      "kind": "reject",
+      "file": "reject/for_move_break_replay.yv",
+      "source_sha256": "e4c01c7f51240e42d0e1f82a19a6a4a8e96e050c5f3da8a784443ea113970a7c",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "for_move_break_replay",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "for_move_break_replay",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0402",
+        "message": "use of moved value `owner`",
+        "line": 4,
+        "column": 21
+      }
+    },
+    {
+      "id": "for_inout_locked",
+      "kind": "reject",
+      "file": "reject/for_inout_locked.yv",
+      "source_sha256": "23eb1920bd33ffbcdb9e542ca6e9bf17b486ac717763ddd92929aa5b60e25b04",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "for_inout_locked",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "for_inout_locked",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0102",
+        "message": "cannot modify `values` while a `for` loop is iterating over it",
+        "line": 2,
+        "column": 35
+      }
+    },
+    {
+      "id": "for_loop_var_range_readonly",
+      "kind": "reject",
+      "file": "reject/for_loop_var_range_readonly.yv",
+      "source_sha256": "97aa03da6ef047be18013b93dbb4bb8c775c5ac340673e2d4d34cc4dd68ace4d",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "for_loop_var_range_readonly",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "for_loop_var_range_readonly",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0014",
+        "message": "cannot assign to loop variable `value`",
+        "line": 2,
+        "column": 25
+      }
+    },
+    {
+      "id": "for_loop_var_vec_readonly",
+      "kind": "reject",
+      "file": "reject/for_loop_var_vec_readonly.yv",
+      "source_sha256": "7fd5417c2cd65c621f20b41ca15710545da412f22562f08cb343e15b87329492",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "for_loop_var_vec_readonly",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "for_loop_var_vec_readonly",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0014",
+        "message": "cannot assign to loop variable `value`",
+        "line": 3,
+        "column": 27
+      }
+    },
+    {
+      "id": "for_header_break_without_outer",
+      "kind": "reject",
+      "file": "reject/for_header_break_without_outer.yv",
+      "source_sha256": "783246a95c3b70cd5cdcf760471957fbd16752070cccbb1d918b86f60634feeb",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "for_header_break_without_outer",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "for_header_break_without_outer",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0015",
+        "message": "`break` can only be used inside a loop",
+        "line": 3,
+        "column": 38
+      }
+    },
+    {
+      "id": "for_range_missing_return",
+      "kind": "reject",
+      "file": "reject/for_range_missing_return.yv",
+      "source_sha256": "fef8ef7a705a0524cbe64819064c3fde1076db96b77cf07e70aa3634f2d28864",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "for_range_missing_return",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "for_range_missing_return",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0013",
+        "message": "function `source` can reach its end without returning a value of type `int`",
+        "line": 3,
+        "column": 1
+      }
+    },
+    {
+      "id": "for_vec_missing_return",
+      "kind": "reject",
+      "file": "reject/for_vec_missing_return.yv",
+      "source_sha256": "a8e3cc1ad8e6dfca54ea636b73d6f68f01ea6e5b092049e4d0db2d58fad34296",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "for_vec_missing_return",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "for_vec_missing_return",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0013",
+        "message": "function `source` can reach its end without returning a value of type `int`",
+        "line": 3,
+        "column": 1
+      }
+    },
+    {
+      "id": "for_move_replay",
+      "kind": "reject",
+      "file": "reject/for_move_replay.yv",
+      "source_sha256": "a5125f314a51686b76ffa432da3f9406c1cefaa6a07d534213fd12405e848e48",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "for_move_replay",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "for_move_replay",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0402",
+        "message": "use of moved value `owner`",
+        "line": 4,
+        "column": 21
+      }
+    },
+    {
+      "id": "for_vec_lock_push",
+      "kind": "reject",
+      "file": "reject/for_vec_lock_push.yv",
+      "source_sha256": "a155fa055338db5d41a8ceea5b339aca42894a3d74d2c95f03c397f53249278e",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "for_vec_lock_push",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "for_vec_lock_push",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0102",
+        "message": "cannot modify `values` while a `for` loop is iterating over it",
+        "line": 4,
+        "column": 9
+      }
+    },
+    {
+      "id": "for_vec_lock_pop",
+      "kind": "reject",
+      "file": "reject/for_vec_lock_pop.yv",
+      "source_sha256": "25a8beb23b3a6fd7b86a67d3841421151c09e3ae9a68c7d1c1476bc9c9fc3952",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "for_vec_lock_pop",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "for_vec_lock_pop",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0102",
+        "message": "cannot modify `values` while a `for` loop is iterating over it",
+        "line": 4,
+        "column": 17
+      }
+    },
+    {
+      "id": "for_vec_lock_reserve",
+      "kind": "reject",
+      "file": "reject/for_vec_lock_reserve.yv",
+      "source_sha256": "b8be6b0c27712c42374e420b02ca214245203bbd442b47333701d9aa2591d696",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "for_vec_lock_reserve",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "for_vec_lock_reserve",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0102",
+        "message": "cannot modify `values` while a `for` loop is iterating over it",
+        "line": 4,
+        "column": 9
+      }
+    },
+    {
+      "id": "for_vec_lock_assign",
+      "kind": "reject",
+      "file": "reject/for_vec_lock_assign.yv",
+      "source_sha256": "b9df24080d08e7d34b1c9dccd0dd7e64cf44408fcee7199b5701872f7b9bacbc",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "for_vec_lock_assign",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "for_vec_lock_assign",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0102",
+        "message": "cannot assign to `values` while a `for` loop is iterating over it",
+        "line": 4,
+        "column": 9
+      }
+    },
+    {
+      "id": "for_vec_lock_take",
+      "kind": "reject",
+      "file": "reject/for_vec_lock_take.yv",
+      "source_sha256": "b910b91515379b1db3b6f16c9493842712b185f307c5da99699bf9785e33e334",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "for_vec_lock_take",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "for_vec_lock_take",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0102",
+        "message": "cannot modify `values` while a `for` loop is iterating over it",
+        "line": 4,
+        "column": 23
+      }
+    },
+    {
+      "id": "for_vec_lock_move",
+      "kind": "reject",
+      "file": "reject/for_vec_lock_move.yv",
+      "source_sha256": "37d752debaeb830c4fd5ad81122875e569838a9f6f38603a8dca4e67b5be1b41",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "for_vec_lock_move",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "for_vec_lock_move",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0102",
+        "message": "cannot move `values` while a `for` loop is iterating over it",
+        "line": 4,
+        "column": 21
+      }
+    },
+    {
+      "id": "for_vec_lock_inout",
+      "kind": "reject",
+      "file": "reject/for_vec_lock_inout.yv",
+      "source_sha256": "7a33d9ff5d088808de6715ea7142fcc4f34cb0c8baa92eb4a46911062c56c238",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "for_vec_lock_inout",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "for_vec_lock_inout",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0102",
+        "message": "cannot borrow mutably `values` while a `for` loop is iterating over it",
+        "line": 5,
+        "column": 16
+      }
+    },
+    {
+      "id": "for_nested_lock",
+      "kind": "reject",
+      "file": "reject/for_nested_lock.yv",
+      "source_sha256": "c28b12161ca86d0ac8d79632d12a24bc43a389ed9363cb0a8377cb0c25a70b04",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "for_nested_lock",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "for_nested_lock",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0102",
+        "message": "cannot modify `values` while a `for` loop is iterating over it",
+        "line": 5,
+        "column": 9
+      }
+    },
+    {
+      "id": "for_vec_copy_types",
+      "kind": "run",
+      "file": "run/for_vec_copy_types.yv",
+      "source_sha256": "c788b4d7b9a99f0064266847d3b5b1fcb2f6f1ef930e8c0f554f45b47ab2ce72",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "for_vec_copy_types",
+          "profile": "Debug",
+          "runtime": true,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "for_vec_copy_types",
+          "profile": "Release",
+          "runtime": true,
+          "record_passed": true
+        }
+      ]
+    },
+    {
+      "id": "for_vec_nested_control",
+      "kind": "run",
+      "file": "run/for_vec_nested_control.yv",
+      "source_sha256": "bcc9c2b69ef441b468942f1fe57d9993d677ec2babc8515e60112720e5cc1ece",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-2.json",
+          "receipt_status": "passed",
+          "record_id": "for_vec_nested_control",
+          "profile": "Debug",
+          "runtime": true,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "for_vec_nested_control",
+          "profile": "Release",
+          "runtime": true,
+          "record_passed": true
+        }
+      ]
+    },
+    {
+      "id": "for_iteration_exit_cleanup",
+      "kind": "run",
+      "file": "run/for_iteration_exit_cleanup.yv",
+      "source_sha256": "2e73dfc146a05db99b62da3534674a0e85cb46bdc858e97ef6bf71213874e8ec",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "for_iteration_exit_cleanup",
+          "profile": "Debug",
+          "runtime": true,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "for_iteration_exit_cleanup",
+          "profile": "Release",
+          "runtime": true,
+          "record_passed": true
+        }
+      ]
+    },
+    {
+      "id": "for_header_outer_continue",
+      "kind": "run",
+      "file": "run/for_header_outer_continue.yv",
+      "source_sha256": "69609dbcea69ff17bf4bf81125d969c74fc1b9dd761bba3698bae0691575e698",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "for_header_outer_continue",
+          "profile": "Debug",
+          "runtime": true,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "for_header_outer_continue",
+          "profile": "Release",
+          "runtime": true,
+          "record_passed": true
+        }
+      ]
+    },
+    {
+      "id": "for_header_owned_exit",
+      "kind": "run",
+      "file": "run/for_header_owned_exit.yv",
+      "source_sha256": "ccc8177fd9dcd1124bac671f147d0018c356bc2b40d9614da79965c967118aa4",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "for_header_owned_exit",
+          "profile": "Debug",
+          "runtime": true,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "for_header_owned_exit",
+          "profile": "Release",
+          "runtime": true,
+          "record_passed": true
+        }
+      ]
+    },
+    {
+      "id": "for_scalar_iterable",
+      "kind": "reject",
+      "file": "reject/for_scalar_iterable.yv",
+      "source_sha256": "8583971f7bb4da97a35d24c1176ad3253d5cb0b3ab693f7352e82565cd303a85",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "for_scalar_iterable",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "for_scalar_iterable",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0001",
+        "message": "cannot iterate over a value of type `int`",
+        "line": 2,
+        "column": 18
+      }
+    },
+    {
+      "id": "for_range_bool",
+      "kind": "reject",
+      "file": "reject/for_range_bool.yv",
+      "source_sha256": "0cd74e627d0f5839553f2232277a3942cdce457cda9d364413892a652b48f6e4",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "for_range_bool",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "for_range_bool",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0001",
+        "message": "range bounds must be integers, found `bool`",
+        "line": 2,
+        "column": 18
+      }
+    },
+    {
+      "id": "for_range_mixed_types",
+      "kind": "reject",
+      "file": "reject/for_range_mixed_types.yv",
+      "source_sha256": "3d548af7a4cea1eeea8c4c2987791b02d50da0826fdb6b581781b97623afa5f7",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "for_range_mixed_types",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "for_range_mixed_types",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0001",
+        "message": "mismatched types: expected `u8`, found `int`",
+        "line": 4,
+        "column": 25
+      }
+    },
+    {
+      "id": "for_range_two_bindings",
+      "kind": "reject",
+      "file": "reject/for_range_two_bindings.yv",
+      "source_sha256": "7b1c9e7ab4a29149d390da17e400293db526b9926244a4d2f48cfe4bd58319c0",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "for_range_two_bindings",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "for_range_two_bindings",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0020",
+        "message": "a range loop has one variable: `for i in a..b`",
+        "line": 2,
+        "column": 16
+      }
+    },
+    {
+      "id": "for_range_second_delimiter",
+      "kind": "reject",
+      "file": "reject/for_range_second_delimiter.yv",
+      "source_sha256": "afa16e877154faf3202ccd13d2f64582ed54f0a7624a27d6b8876896d24cac51",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "for_range_second_delimiter",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "for_range_second_delimiter",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0020",
+        "message": "expected `{`, found `..`",
+        "line": 2,
+        "column": 22
+      }
+    },
+    {
+      "id": "for_header_continue_without_outer",
+      "kind": "reject",
+      "file": "reject/for_header_continue_without_outer.yv",
+      "source_sha256": "77f6f5bf5c2aba237c04d88504c6ea619ffaa255150eeecdf927036e424bf456",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "for_header_continue_without_outer",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "for_header_continue_without_outer",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0015",
+        "message": "`continue` can only be used inside a loop",
+        "line": 3,
+        "column": 38
+      }
+    },
+    {
+      "id": "for_binding_scope",
+      "kind": "reject",
+      "file": "reject/for_binding_scope.yv",
+      "source_sha256": "c219fce5320e2475e6afa04330056ad269c55f845ed72184c6258325f96c6a1c",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "for_binding_scope",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "for_binding_scope",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0010",
+        "message": "cannot find `value` in this scope",
+        "line": 3,
+        "column": 13
+      }
+    },
+    {
+      "id": "for_vec_lock_index",
+      "kind": "reject",
+      "file": "reject/for_vec_lock_index.yv",
+      "source_sha256": "445e9cb6fc03a9152ec3526e3813cb9b0b913d0c6fb1e676186f176a1e1c20cc",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "for_vec_lock_index",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "for_vec_lock_index",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0102",
+        "message": "cannot modify `values` while a `for` loop is iterating over it",
+        "line": 4,
+        "column": 9
+      }
+    },
+    {
+      "id": "for_loop_field_readonly",
+      "kind": "reject",
+      "file": "reject/for_loop_field_readonly.yv",
+      "source_sha256": "15b837e4c960c7228322f47627530ba5e8f1a8a1ae7a05361c8d9fba3b497797",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "for_loop_field_readonly",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "for_loop_field_readonly",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0014",
+        "message": "cannot assign to loop variable `point`",
+        "line": 6,
+        "column": 27
+      }
+    },
+    {
+      "id": "unsupported_for_field",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_for_field.yv",
+      "source_sha256": "65df56d7b9e0321c42709d50af9a6a233f56e5d1dcaa5cc3cb63cb6472d1793c",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "unsupported_for_field",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "unsupported_for_field",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ]
+    },
+    {
+      "id": "unsupported_for_temporary",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_for_temporary.yv",
+      "source_sha256": "7300a1e650183b5237bc8d410c7a9fe78be600a944c2b47d4d198d4fbfcc4ae2",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "unsupported_for_temporary",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "unsupported_for_temporary",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ]
+    },
+    {
+      "id": "unsupported_for_literal",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_for_literal.yv",
+      "source_sha256": "f8f8e62095f346e3627a502404cff8e64cc805188b36febd5f564fdb62b671e0",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "unsupported_for_literal",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "unsupported_for_literal",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ]
+    },
+    {
+      "id": "unsupported_for_owned_string",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_for_owned_string.yv",
+      "source_sha256": "b50520cc18c6425628771f1219dc21ffdcd1190887d2730fb0ebc41234a03b59",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "unsupported_for_owned_string",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "unsupported_for_owned_string",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ]
+    },
+    {
+      "id": "unsupported_for_owned_struct",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_for_owned_struct.yv",
+      "source_sha256": "411ac080ff2d8fcf01456bc692be25ed9934d98a27f8a0164d98b584a5b5436d",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "unsupported_for_owned_struct",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "unsupported_for_owned_struct",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ]
+    },
+    {
+      "id": "unsupported_for_mutable",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_for_mutable.yv",
+      "source_sha256": "82d931d85587c7c6c64137eebf8a066c00ddcabf304aa3666d647a520911893b",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-2.json",
+          "receipt_status": "passed",
+          "record_id": "unsupported_for_mutable",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "unsupported_for_mutable",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ]
+    },
+    {
+      "id": "unsupported_for_two_bindings",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_for_two_bindings.yv",
+      "source_sha256": "60ac53bc4320fabecc3e19b38d5c2fbd715a7c1de54fe8c8559e17e1f4a3cd93",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "unsupported_for_two_bindings",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "unsupported_for_two_bindings",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ]
+    },
+    {
+      "id": "unsupported_for_slice",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_for_slice.yv",
+      "source_sha256": "4c151fb133923b98180c0ba1a71b22776bbf9007714e6640f05f9f62276de28a",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "unsupported_for_slice",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "unsupported_for_slice",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ]
+    },
+    {
+      "id": "unsupported_for_map",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_for_map.yv",
+      "source_sha256": "df1423353130bf24d1b9291e13b22ea24f3943e18e03055d4f6e6e4b2b4ca468",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "unsupported_for_map",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "unsupported_for_map",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ]
+    },
+    {
+      "id": "unsupported_for_set",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_for_set.yv",
+      "source_sha256": "dcb0f7d622ebeea406fae2f79d4cfdee68cb771df1bd62b8d724ef0eb7467ded",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-2.json",
+          "receipt_status": "passed",
+          "record_id": "unsupported_for_set",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "unsupported_for_set",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ]
+    },
+    {
+      "id": "for_basic",
+      "kind": "run",
+      "file": "run/for_basic.yv",
+      "source_sha256": "b4a1117d580f90847b30eff44cc678e2bbfeeb4c9baf79039fb7563d47f1dc5d",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "failed",
+          "record_id": "for_basic",
+          "profile": "Debug",
+          "runtime": true,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "for_basic",
+          "profile": "Release",
+          "runtime": true,
+          "record_passed": true
+        }
+      ]
+    }
+  ],
+  "evidence": {
+    "candidate-history.json": "fd62511f2e36d05ae13be68cebc9ede0b8c45d2cf5a65f70af98200736b7fc01",
+    "candidates-initial.json": "a00a36834b181e8d5c4cb2608170b6b43f29f05e42301e76ae9b52890e32dd50",
+    "candidates.json": "c6627bde1106f9674950be8304e82179443c2cf6298b7fe4752c9a20cf7cb1d3",
+    "driver-history.json": "5b7df81216b469d56f90e6edf89e5b843392f89023519ccfc7405ca9cb3ef95d",
+    "failure-history.json": "249883c6660124ad761ba57ea9e61ba960e9b4ab22cebc4b0f670cd58e7ee84d",
+    "rust-capture-after.json": "d8f5e180cf3cc51250427a99cb7679d6f4ce897c4e87ca17ecad240702d37064",
+    "rust-capture-before.json": "f2486900cba3614ad1600b9d7807829459e481d0683bb89ce6655ceba1438d04",
+    "rust-capture-source.json": "75e18792e4398c676d2e91e99344886a16fdd9ce42ea7d9b3e1ca0efb5ce9cdc",
+    "stage0-driver-initial.py": "42f708cc32ba974059884103c1e422bf1b77d91d4e1aab3d44abb3e5726a7937",
+    "stage0-driver.py": "fb7fadedee770997d4ce64ce6db3fae2c3e83e0d278ff4f3b4210aef1e46c45e",
+    "stage0-fixed-debug-1.json": "f186264fb48739fafc84218d23ded16ff68e8d9fc335664b30db4a48c4715b4b",
+    "stage0-fixed-debug-2.json": "b7e0424642cefc43776f6b76880a5615640e20fb707ca19b31d33230155720e9",
+    "stage0-fixed-release-1.json": "c8f88b91d7e0ad4be743ded6f09e671fc5fd79bfa7764833882d0c226492db3b",
+    "stage0-initial-debug.json": "ee431e3f5d7445b1cca471ac28ce7c0ffac0e64fbd7e95180a7ec058d197781b",
+    "stage0-old-snapshot-release.json": "aa509f26b1a75736758c00196b5309020819fa93497654fb8cae573189d467bd",
+    "stage1-smoke2-checks.json": "5e8052353d5865fdbd4bc1bd28396359fb8b0f0e66afcfb7965ffd383e43d2e5"
+  }
+}

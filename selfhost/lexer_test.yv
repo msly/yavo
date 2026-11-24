@@ -38,10 +38,8 @@ fn throughTemporary(source: str, path: str) -> Vec[Token] ! Diagnostic {
 // final @ must not replace the earlier escape error or its scalar position.
 fn detachedFailure() -> Diagnostic {
     var source = "(\n".toString()
-    var tokenIndex = 0
-    while tokenIndex < 32 {
+    for _tokenIndex in 0..32 {
         source.push("\"owned token 汉🙂\",\n")
-        tokenIndex += 1
     }
     source.push("  \"decoded text 汉🙂\\q\" @")
     var path = "temporary ".toString()
@@ -144,10 +142,8 @@ fn main() {
     let intOverflow = good("9223372036854775808")
     assert(intOverflow[0].kind == .Number)
     var leading = String{}
-    var zeroIndex = 0
-    while zeroIndex < 512 {
+    for _zeroIndex in 0..512 {
         leading.push("0")
-        zeroIndex += 1
     }
     let zeroes = good(leading)
     assert(zeroes[0].kind == .Number && zeroes[0].text == leading)
@@ -199,14 +195,12 @@ fn main() {
     }
     assert(forwarded[0].text == "owned success 汉🙂")
     assert(forwarded[forwarded.len() - 1].text == "success 路径.yv")
-    var round = 0
-    while round < 16 {
+    for _round in 0..16 {
         let diagnostic = detachedFailure()
         assert(diagnostic.code == "E0020")
         assert(diagnostic.message == "unknown string escape sequence")
         assert(diagnostic.offset == 761)
         assert(diagnostic.line == 34 && diagnostic.column == 19)
-        round += 1
     }
 
     println("lexer tests passed")

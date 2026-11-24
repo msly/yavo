@@ -1,0 +1,9 @@
+fn scan(values: inout Vec[int]) {
+    for value in values { println(value) }
+    values.push(3)
+}
+fn main() {
+    var values = [1, 2]
+    scan(&values)
+    println(values.len())
+}

@@ -1,0 +1,1265 @@
+{
+  "schema": "yavo-stage1-oracle-differential/1",
+  "inputs": {
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost": "92e8c993a4acfc8dc838844cca4a54b5e476ef77ef0b3c3999a0de398f15349c",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/cases.json": "6297cd871ff1a360e1f50fb880ababf98bd1fba731ce843c2852a7973dcf9498",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/for_parameter_plain.yv": "67957f791cb56b2145dcdd9b6f6277301b9959b9904d947a1bcb5170d8944c77",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/for_parameter_inout.yv": "d5b0484633e9dbeb37fbc81bdb667d224ad3425fcd3bd912d18697f2158ac6cd",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/for_range_endpoint_order.yv": "4c94cf59075b150ca9928050e0251eb4e729abec11d6bbbdcdecf4362b4ba9c2",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/for_range_upper_cached.yv": "6b11bad9dc72e3abe9976823f2459c843146b478aa76518081d7a386f51f476b",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/for_range_lower_snapshot.yv": "eb3d1c61cbbef3b8e3c9be3248793aa6674ba513121cb01e189892d49c8b67ba",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/for_range_edges.yv": "46e6001f48760dce1ee490d039c3db8f3bb99f74dbfa2a4fc75692fd1fbe5684",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/for_range_byte_hint.yv": "6b5e998cd2d051b1c141b35861c1f768f46dfd15b6ee7f7de1c5085b60900482",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/for_range_continue.yv": "c1d01ab7a0782636d6c7db939fb131241919af4228f1c7c9dd552442bea9a165",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/for_range_owned_header.yv": "a19c76081a34d9b366845ce57b8e8a5b1030b279c2279d22e969b57dac9e4b86",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/for_header_start_break.yv": "b29f07ba5be3c113c00c2ab8d172abd804bc3c36cb12d7f85fafed48138a84c8",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/for_header_end_break.yv": "75657db8048c8ffad31d3e219a5afd18ea9827864ed5ed4a3bd8342235f2f23e",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_move_break_replay.yv": "e4c01c7f51240e42d0e1f82a19a6a4a8e96e050c5f3da8a784443ea113970a7c",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_inout_locked.yv": "23eb1920bd33ffbcdb9e542ca6e9bf17b486ac717763ddd92929aa5b60e25b04",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_loop_var_range_readonly.yv": "97aa03da6ef047be18013b93dbb4bb8c775c5ac340673e2d4d34cc4dd68ace4d",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_loop_var_vec_readonly.yv": "7fd5417c2cd65c621f20b41ca15710545da412f22562f08cb343e15b87329492",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_header_break_without_outer.yv": "783246a95c3b70cd5cdcf760471957fbd16752070cccbb1d918b86f60634feeb",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_range_missing_return.yv": "fef8ef7a705a0524cbe64819064c3fde1076db96b77cf07e70aa3634f2d28864",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_vec_missing_return.yv": "a8e3cc1ad8e6dfca54ea636b73d6f68f01ea6e5b092049e4d0db2d58fad34296",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_move_replay.yv": "a5125f314a51686b76ffa432da3f9406c1cefaa6a07d534213fd12405e848e48",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_vec_lock_push.yv": "a155fa055338db5d41a8ceea5b339aca42894a3d74d2c95f03c397f53249278e",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_vec_lock_pop.yv": "25a8beb23b3a6fd7b86a67d3841421151c09e3ae9a68c7d1c1476bc9c9fc3952",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_vec_lock_reserve.yv": "b8be6b0c27712c42374e420b02ca214245203bbd442b47333701d9aa2591d696",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_vec_lock_assign.yv": "b9df24080d08e7d34b1c9dccd0dd7e64cf44408fcee7199b5701872f7b9bacbc",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_vec_lock_take.yv": "b910b91515379b1db3b6f16c9493842712b185f307c5da99699bf9785e33e334",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_vec_lock_move.yv": "37d752debaeb830c4fd5ad81122875e569838a9f6f38603a8dca4e67b5be1b41",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_vec_lock_inout.yv": "7a33d9ff5d088808de6715ea7142fcc4f34cb0c8baa92eb4a46911062c56c238",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_nested_lock.yv": "c28b12161ca86d0ac8d79632d12a24bc43a389ed9363cb0a8377cb0c25a70b04",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/for_vec_copy_types.yv": "c788b4d7b9a99f0064266847d3b5b1fcb2f6f1ef930e8c0f554f45b47ab2ce72",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/for_vec_nested_control.yv": "bcc9c2b69ef441b468942f1fe57d9993d677ec2babc8515e60112720e5cc1ece",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/for_iteration_exit_cleanup.yv": "2e73dfc146a05db99b62da3534674a0e85cb46bdc858e97ef6bf71213874e8ec",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/for_header_outer_continue.yv": "69609dbcea69ff17bf4bf81125d969c74fc1b9dd761bba3698bae0691575e698",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/for_header_owned_exit.yv": "ccc8177fd9dcd1124bac671f147d0018c356bc2b40d9614da79965c967118aa4",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_scalar_iterable.yv": "8583971f7bb4da97a35d24c1176ad3253d5cb0b3ab693f7352e82565cd303a85",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_range_bool.yv": "0cd74e627d0f5839553f2232277a3942cdce457cda9d364413892a652b48f6e4",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_range_mixed_types.yv": "3d548af7a4cea1eeea8c4c2987791b02d50da0826fdb6b581781b97623afa5f7",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_range_two_bindings.yv": "7b1c9e7ab4a29149d390da17e400293db526b9926244a4d2f48cfe4bd58319c0",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_range_second_delimiter.yv": "afa16e877154faf3202ccd13d2f64582ed54f0a7624a27d6b8876896d24cac51",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_header_continue_without_outer.yv": "77f6f5bf5c2aba237c04d88504c6ea619ffaa255150eeecdf927036e424bf456",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_binding_scope.yv": "c219fce5320e2475e6afa04330056ad269c55f845ed72184c6258325f96c6a1c",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_vec_lock_index.yv": "445e9cb6fc03a9152ec3526e3813cb9b0b913d0c6fb1e676186f176a1e1c20cc",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_loop_field_readonly.yv": "15b837e4c960c7228322f47627530ba5e8f1a8a1ae7a05361c8d9fba3b497797",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_for_field.yv": "65df56d7b9e0321c42709d50af9a6a233f56e5d1dcaa5cc3cb63cb6472d1793c",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_for_temporary.yv": "7300a1e650183b5237bc8d410c7a9fe78be600a944c2b47d4d198d4fbfcc4ae2",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_for_literal.yv": "f8f8e62095f346e3627a502404cff8e64cc805188b36febd5f564fdb62b671e0",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_for_owned_string.yv": "b50520cc18c6425628771f1219dc21ffdcd1190887d2730fb0ebc41234a03b59",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_for_owned_struct.yv": "411ac080ff2d8fcf01456bc692be25ed9934d98a27f8a0164d98b584a5b5436d",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_for_mutable.yv": "82d931d85587c7c6c64137eebf8a066c00ddcabf304aa3666d647a520911893b",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_for_two_bindings.yv": "60ac53bc4320fabecc3e19b38d5c2fbd715a7c1de54fe8c8559e17e1f4a3cd93",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_for_slice.yv": "4c151fb133923b98180c0ba1a71b22776bbf9007714e6640f05f9f62276de28a",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_for_map.yv": "df1423353130bf24d1b9291e13b22ea24f3943e18e03055d4f6e6e4b2b4ca468",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_for_set.yv": "dcb0f7d622ebeea406fae2f79d4cfdee68cb771df1bd62b8d724ef0eb7467ded",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/for_basic.yv": "b4a1117d580f90847b30eff44cc678e2bbfeeb4c9baf79039fb7563d47f1dc5d"
+  },
+  "records": [
+    {
+      "id": "for_parameter_plain",
+      "kind": "run",
+      "source_sha256": "67957f791cb56b2145dcdd9b6f6277301b9959b9904d947a1bcb5170d8944c77",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/run/for_parameter_plain.yv"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "first_error": null,
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "for_parameter_inout",
+      "kind": "run",
+      "source_sha256": "d5b0484633e9dbeb37fbc81bdb667d224ad3425fcd3bd912d18697f2158ac6cd",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/run/for_parameter_inout.yv"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "first_error": null,
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "for_range_endpoint_order",
+      "kind": "run",
+      "source_sha256": "4c94cf59075b150ca9928050e0251eb4e729abec11d6bbbdcdecf4362b4ba9c2",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/run/for_range_endpoint_order.yv"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "first_error": null,
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "for_range_upper_cached",
+      "kind": "run",
+      "source_sha256": "6b11bad9dc72e3abe9976823f2459c843146b478aa76518081d7a386f51f476b",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/run/for_range_upper_cached.yv"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "first_error": null,
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "for_range_lower_snapshot",
+      "kind": "run",
+      "source_sha256": "eb3d1c61cbbef3b8e3c9be3248793aa6674ba513121cb01e189892d49c8b67ba",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/run/for_range_lower_snapshot.yv"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "first_error": null,
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "for_range_edges",
+      "kind": "run",
+      "source_sha256": "46e6001f48760dce1ee490d039c3db8f3bb99f74dbfa2a4fc75692fd1fbe5684",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/run/for_range_edges.yv"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "first_error": null,
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "for_range_byte_hint",
+      "kind": "run",
+      "source_sha256": "6b5e998cd2d051b1c141b35861c1f768f46dfd15b6ee7f7de1c5085b60900482",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/run/for_range_byte_hint.yv"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "first_error": null,
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "for_range_continue",
+      "kind": "run",
+      "source_sha256": "c1d01ab7a0782636d6c7db939fb131241919af4228f1c7c9dd552442bea9a165",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/run/for_range_continue.yv"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "first_error": null,
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "for_range_owned_header",
+      "kind": "run",
+      "source_sha256": "a19c76081a34d9b366845ce57b8e8a5b1030b279c2279d22e969b57dac9e4b86",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/run/for_range_owned_header.yv"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "first_error": null,
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "for_header_start_break",
+      "kind": "run",
+      "source_sha256": "b29f07ba5be3c113c00c2ab8d172abd804bc3c36cb12d7f85fafed48138a84c8",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/run/for_header_start_break.yv"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "first_error": null,
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "for_header_end_break",
+      "kind": "run",
+      "source_sha256": "75657db8048c8ffad31d3e219a5afd18ea9827864ed5ed4a3bd8342235f2f23e",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/run/for_header_end_break.yv"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "first_error": null,
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "for_move_break_replay",
+      "kind": "reject",
+      "source_sha256": "e4c01c7f51240e42d0e1f82a19a6a4a8e96e050c5f3da8a784443ea113970a7c",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_move_break_replay.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_move_break_replay.yv:4:21: E0402: use of a moved value\n",
+      "timed_out": false,
+      "first_error": {
+        "code": "E0402",
+        "line": 4,
+        "column": 21
+      },
+      "expected_stage0_first_error": {
+        "code": "E0402",
+        "message": "use of moved value `owner`",
+        "line": 4,
+        "column": 21
+      },
+      "code_passed": true,
+      "position_agrees": true
+    },
+    {
+      "id": "for_inout_locked",
+      "kind": "reject",
+      "source_sha256": "23eb1920bd33ffbcdb9e542ca6e9bf17b486ac717763ddd92929aa5b60e25b04",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_inout_locked.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_inout_locked.yv:2:42: E0102: cannot modify a collection while iterating over it\n",
+      "timed_out": false,
+      "first_error": {
+        "code": "E0102",
+        "line": 2,
+        "column": 42
+      },
+      "expected_stage0_first_error": {
+        "code": "E0102",
+        "message": "cannot modify `values` while a `for` loop is iterating over it",
+        "line": 2,
+        "column": 35
+      },
+      "code_passed": true,
+      "position_agrees": false
+    },
+    {
+      "id": "for_loop_var_range_readonly",
+      "kind": "reject",
+      "source_sha256": "97aa03da6ef047be18013b93dbb4bb8c775c5ac340673e2d4d34cc4dd68ace4d",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_loop_var_range_readonly.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_loop_var_range_readonly.yv:2:31: E0014: cannot assign through an immutable local or parameter\n",
+      "timed_out": false,
+      "first_error": {
+        "code": "E0014",
+        "line": 2,
+        "column": 31
+      },
+      "expected_stage0_first_error": {
+        "code": "E0014",
+        "message": "cannot assign to loop variable `value`",
+        "line": 2,
+        "column": 25
+      },
+      "code_passed": true,
+      "position_agrees": false
+    },
+    {
+      "id": "for_loop_var_vec_readonly",
+      "kind": "reject",
+      "source_sha256": "7fd5417c2cd65c621f20b41ca15710545da412f22562f08cb343e15b87329492",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_loop_var_vec_readonly.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_loop_var_vec_readonly.yv:3:33: E0014: cannot assign through an immutable local or parameter\n",
+      "timed_out": false,
+      "first_error": {
+        "code": "E0014",
+        "line": 3,
+        "column": 33
+      },
+      "expected_stage0_first_error": {
+        "code": "E0014",
+        "message": "cannot assign to loop variable `value`",
+        "line": 3,
+        "column": 27
+      },
+      "code_passed": true,
+      "position_agrees": false
+    },
+    {
+      "id": "for_header_break_without_outer",
+      "kind": "reject",
+      "source_sha256": "783246a95c3b70cd5cdcf760471957fbd16752070cccbb1d918b86f60634feeb",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_header_break_without_outer.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_header_break_without_outer.yv:3:38: E0015: break/continue requires an enclosing loop\n",
+      "timed_out": false,
+      "first_error": {
+        "code": "E0015",
+        "line": 3,
+        "column": 38
+      },
+      "expected_stage0_first_error": {
+        "code": "E0015",
+        "message": "`break` can only be used inside a loop",
+        "line": 3,
+        "column": 38
+      },
+      "code_passed": true,
+      "position_agrees": true
+    },
+    {
+      "id": "for_range_missing_return",
+      "kind": "reject",
+      "source_sha256": "fef8ef7a705a0524cbe64819064c3fde1076db96b77cf07e70aa3634f2d28864",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_range_missing_return.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_range_missing_return.yv:1:4: E0013: not every path returns a value\n",
+      "timed_out": false,
+      "first_error": {
+        "code": "E0013",
+        "line": 1,
+        "column": 4
+      },
+      "expected_stage0_first_error": {
+        "code": "E0013",
+        "message": "function `source` can reach its end without returning a value of type `int`",
+        "line": 3,
+        "column": 1
+      },
+      "code_passed": true,
+      "position_agrees": false
+    },
+    {
+      "id": "for_vec_missing_return",
+      "kind": "reject",
+      "source_sha256": "a8e3cc1ad8e6dfca54ea636b73d6f68f01ea6e5b092049e4d0db2d58fad34296",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_vec_missing_return.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_vec_missing_return.yv:1:4: E0013: not every path returns a value\n",
+      "timed_out": false,
+      "first_error": {
+        "code": "E0013",
+        "line": 1,
+        "column": 4
+      },
+      "expected_stage0_first_error": {
+        "code": "E0013",
+        "message": "function `source` can reach its end without returning a value of type `int`",
+        "line": 3,
+        "column": 1
+      },
+      "code_passed": true,
+      "position_agrees": false
+    },
+    {
+      "id": "for_move_replay",
+      "kind": "reject",
+      "source_sha256": "a5125f314a51686b76ffa432da3f9406c1cefaa6a07d534213fd12405e848e48",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_move_replay.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_move_replay.yv:4:21: E0402: use of a moved value\n",
+      "timed_out": false,
+      "first_error": {
+        "code": "E0402",
+        "line": 4,
+        "column": 21
+      },
+      "expected_stage0_first_error": {
+        "code": "E0402",
+        "message": "use of moved value `owner`",
+        "line": 4,
+        "column": 21
+      },
+      "code_passed": true,
+      "position_agrees": true
+    },
+    {
+      "id": "for_vec_lock_push",
+      "kind": "reject",
+      "source_sha256": "a155fa055338db5d41a8ceea5b339aca42894a3d74d2c95f03c397f53249278e",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_vec_lock_push.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_vec_lock_push.yv:4:16: E0102: cannot modify a collection while iterating over it\n",
+      "timed_out": false,
+      "first_error": {
+        "code": "E0102",
+        "line": 4,
+        "column": 16
+      },
+      "expected_stage0_first_error": {
+        "code": "E0102",
+        "message": "cannot modify `values` while a `for` loop is iterating over it",
+        "line": 4,
+        "column": 9
+      },
+      "code_passed": true,
+      "position_agrees": false
+    },
+    {
+      "id": "for_vec_lock_pop",
+      "kind": "reject",
+      "source_sha256": "25a8beb23b3a6fd7b86a67d3841421151c09e3ae9a68c7d1c1476bc9c9fc3952",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_vec_lock_pop.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_vec_lock_pop.yv:4:24: E0102: cannot modify a collection while iterating over it\n",
+      "timed_out": false,
+      "first_error": {
+        "code": "E0102",
+        "line": 4,
+        "column": 24
+      },
+      "expected_stage0_first_error": {
+        "code": "E0102",
+        "message": "cannot modify `values` while a `for` loop is iterating over it",
+        "line": 4,
+        "column": 17
+      },
+      "code_passed": true,
+      "position_agrees": false
+    },
+    {
+      "id": "for_vec_lock_reserve",
+      "kind": "reject",
+      "source_sha256": "b8be6b0c27712c42374e420b02ca214245203bbd442b47333701d9aa2591d696",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_vec_lock_reserve.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_vec_lock_reserve.yv:4:16: E0102: cannot modify a collection while iterating over it\n",
+      "timed_out": false,
+      "first_error": {
+        "code": "E0102",
+        "line": 4,
+        "column": 16
+      },
+      "expected_stage0_first_error": {
+        "code": "E0102",
+        "message": "cannot modify `values` while a `for` loop is iterating over it",
+        "line": 4,
+        "column": 9
+      },
+      "code_passed": true,
+      "position_agrees": false
+    },
+    {
+      "id": "for_vec_lock_assign",
+      "kind": "reject",
+      "source_sha256": "b9df24080d08e7d34b1c9dccd0dd7e64cf44408fcee7199b5701872f7b9bacbc",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_vec_lock_assign.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_vec_lock_assign.yv:4:16: E0102: cannot modify a collection while iterating over it\n",
+      "timed_out": false,
+      "first_error": {
+        "code": "E0102",
+        "line": 4,
+        "column": 16
+      },
+      "expected_stage0_first_error": {
+        "code": "E0102",
+        "message": "cannot assign to `values` while a `for` loop is iterating over it",
+        "line": 4,
+        "column": 9
+      },
+      "code_passed": true,
+      "position_agrees": false
+    },
+    {
+      "id": "for_vec_lock_take",
+      "kind": "reject",
+      "source_sha256": "b910b91515379b1db3b6f16c9493842712b185f307c5da99699bf9785e33e334",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_vec_lock_take.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_vec_lock_take.yv:4:22: E0102: cannot modify a collection while iterating over it\n",
+      "timed_out": false,
+      "first_error": {
+        "code": "E0102",
+        "line": 4,
+        "column": 22
+      },
+      "expected_stage0_first_error": {
+        "code": "E0102",
+        "message": "cannot modify `values` while a `for` loop is iterating over it",
+        "line": 4,
+        "column": 23
+      },
+      "code_passed": true,
+      "position_agrees": false
+    },
+    {
+      "id": "for_vec_lock_move",
+      "kind": "reject",
+      "source_sha256": "37d752debaeb830c4fd5ad81122875e569838a9f6f38603a8dca4e67b5be1b41",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_vec_lock_move.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_vec_lock_move.yv:4:9: E0102: cannot modify a collection while iterating over it\n",
+      "timed_out": false,
+      "first_error": {
+        "code": "E0102",
+        "line": 4,
+        "column": 9
+      },
+      "expected_stage0_first_error": {
+        "code": "E0102",
+        "message": "cannot move `values` while a `for` loop is iterating over it",
+        "line": 4,
+        "column": 21
+      },
+      "code_passed": true,
+      "position_agrees": false
+    },
+    {
+      "id": "for_vec_lock_inout",
+      "kind": "reject",
+      "source_sha256": "7a33d9ff5d088808de6715ea7142fcc4f34cb0c8baa92eb4a46911062c56c238",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_vec_lock_inout.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_vec_lock_inout.yv:5:15: E0102: cannot modify a collection while iterating over it\n",
+      "timed_out": false,
+      "first_error": {
+        "code": "E0102",
+        "line": 5,
+        "column": 15
+      },
+      "expected_stage0_first_error": {
+        "code": "E0102",
+        "message": "cannot borrow mutably `values` while a `for` loop is iterating over it",
+        "line": 5,
+        "column": 16
+      },
+      "code_passed": true,
+      "position_agrees": false
+    },
+    {
+      "id": "for_nested_lock",
+      "kind": "reject",
+      "source_sha256": "c28b12161ca86d0ac8d79632d12a24bc43a389ed9363cb0a8377cb0c25a70b04",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_nested_lock.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_nested_lock.yv:5:16: E0102: cannot modify a collection while iterating over it\n",
+      "timed_out": false,
+      "first_error": {
+        "code": "E0102",
+        "line": 5,
+        "column": 16
+      },
+      "expected_stage0_first_error": {
+        "code": "E0102",
+        "message": "cannot modify `values` while a `for` loop is iterating over it",
+        "line": 5,
+        "column": 9
+      },
+      "code_passed": true,
+      "position_agrees": false
+    },
+    {
+      "id": "for_vec_copy_types",
+      "kind": "run",
+      "source_sha256": "c788b4d7b9a99f0064266847d3b5b1fcb2f6f1ef930e8c0f554f45b47ab2ce72",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/run/for_vec_copy_types.yv"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "first_error": null,
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "for_vec_nested_control",
+      "kind": "run",
+      "source_sha256": "bcc9c2b69ef441b468942f1fe57d9993d677ec2babc8515e60112720e5cc1ece",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/run/for_vec_nested_control.yv"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "first_error": null,
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "for_iteration_exit_cleanup",
+      "kind": "run",
+      "source_sha256": "2e73dfc146a05db99b62da3534674a0e85cb46bdc858e97ef6bf71213874e8ec",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/run/for_iteration_exit_cleanup.yv"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "first_error": null,
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "for_header_outer_continue",
+      "kind": "run",
+      "source_sha256": "69609dbcea69ff17bf4bf81125d969c74fc1b9dd761bba3698bae0691575e698",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/run/for_header_outer_continue.yv"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "first_error": null,
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "for_header_owned_exit",
+      "kind": "run",
+      "source_sha256": "ccc8177fd9dcd1124bac671f147d0018c356bc2b40d9614da79965c967118aa4",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/run/for_header_owned_exit.yv"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "first_error": null,
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "for_scalar_iterable",
+      "kind": "reject",
+      "source_sha256": "8583971f7bb4da97a35d24c1176ad3253d5cb0b3ab693f7352e82565cd303a85",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_scalar_iterable.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_scalar_iterable.yv:2:5: U0001: iteration requires a stable Vec local or parameter in this subset\n",
+      "timed_out": false,
+      "first_error": {
+        "code": "U0001",
+        "line": 2,
+        "column": 5
+      },
+      "expected_stage0_first_error": {
+        "code": "E0001",
+        "message": "cannot iterate over a value of type `int`",
+        "line": 2,
+        "column": 18
+      },
+      "code_passed": false,
+      "position_agrees": false
+    },
+    {
+      "id": "for_range_bool",
+      "kind": "reject",
+      "source_sha256": "0cd74e627d0f5839553f2232277a3942cdce457cda9d364413892a652b48f6e4",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_range_bool.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_range_bool.yv:2:5: E0001: expected an integer value\n",
+      "timed_out": false,
+      "first_error": {
+        "code": "E0001",
+        "line": 2,
+        "column": 5
+      },
+      "expected_stage0_first_error": {
+        "code": "E0001",
+        "message": "range bounds must be integers, found `bool`",
+        "line": 2,
+        "column": 18
+      },
+      "code_passed": true,
+      "position_agrees": false
+    },
+    {
+      "id": "for_range_mixed_types",
+      "kind": "reject",
+      "source_sha256": "3d548af7a4cea1eeea8c4c2987791b02d50da0826fdb6b581781b97623afa5f7",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_range_mixed_types.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_range_mixed_types.yv:4:5: E0001: expected byte, found int\n",
+      "timed_out": false,
+      "first_error": {
+        "code": "E0001",
+        "line": 4,
+        "column": 5
+      },
+      "expected_stage0_first_error": {
+        "code": "E0001",
+        "message": "mismatched types: expected `u8`, found `int`",
+        "line": 4,
+        "column": 25
+      },
+      "code_passed": true,
+      "position_agrees": false
+    },
+    {
+      "id": "for_range_two_bindings",
+      "kind": "reject",
+      "source_sha256": "7b1c9e7ab4a29149d390da17e400293db526b9926244a4d2f48cfe4bd58319c0",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_range_two_bindings.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_range_two_bindings.yv:2:16: E0020: a range loop has one variable\n",
+      "timed_out": false,
+      "first_error": {
+        "code": "E0020",
+        "line": 2,
+        "column": 16
+      },
+      "expected_stage0_first_error": {
+        "code": "E0020",
+        "message": "a range loop has one variable: `for i in a..b`",
+        "line": 2,
+        "column": 16
+      },
+      "code_passed": true,
+      "position_agrees": true
+    },
+    {
+      "id": "for_range_second_delimiter",
+      "kind": "reject",
+      "source_sha256": "afa16e877154faf3202ccd13d2f64582ed54f0a7624a27d6b8876896d24cac51",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_range_second_delimiter.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_range_second_delimiter.yv:2:22: E0020: expected '{'\n",
+      "timed_out": false,
+      "first_error": {
+        "code": "E0020",
+        "line": 2,
+        "column": 22
+      },
+      "expected_stage0_first_error": {
+        "code": "E0020",
+        "message": "expected `{`, found `..`",
+        "line": 2,
+        "column": 22
+      },
+      "code_passed": true,
+      "position_agrees": true
+    },
+    {
+      "id": "for_header_continue_without_outer",
+      "kind": "reject",
+      "source_sha256": "77f6f5bf5c2aba237c04d88504c6ea619ffaa255150eeecdf927036e424bf456",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_header_continue_without_outer.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_header_continue_without_outer.yv:3:38: E0015: break/continue requires an enclosing loop\n",
+      "timed_out": false,
+      "first_error": {
+        "code": "E0015",
+        "line": 3,
+        "column": 38
+      },
+      "expected_stage0_first_error": {
+        "code": "E0015",
+        "message": "`continue` can only be used inside a loop",
+        "line": 3,
+        "column": 38
+      },
+      "code_passed": true,
+      "position_agrees": true
+    },
+    {
+      "id": "for_binding_scope",
+      "kind": "reject",
+      "source_sha256": "c219fce5320e2475e6afa04330056ad269c55f845ed72184c6258325f96c6a1c",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_binding_scope.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_binding_scope.yv:3:13: E0010: unknown local 'value'\n",
+      "timed_out": false,
+      "first_error": {
+        "code": "E0010",
+        "line": 3,
+        "column": 13
+      },
+      "expected_stage0_first_error": {
+        "code": "E0010",
+        "message": "cannot find `value` in this scope",
+        "line": 3,
+        "column": 13
+      },
+      "code_passed": true,
+      "position_agrees": true
+    },
+    {
+      "id": "for_vec_lock_index",
+      "kind": "reject",
+      "source_sha256": "445e9cb6fc03a9152ec3526e3813cb9b0b913d0c6fb1e676186f176a1e1c20cc",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_vec_lock_index.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_vec_lock_index.yv:4:15: E0102: cannot modify a collection while iterating over it\n",
+      "timed_out": false,
+      "first_error": {
+        "code": "E0102",
+        "line": 4,
+        "column": 15
+      },
+      "expected_stage0_first_error": {
+        "code": "E0102",
+        "message": "cannot modify `values` while a `for` loop is iterating over it",
+        "line": 4,
+        "column": 9
+      },
+      "code_passed": true,
+      "position_agrees": false
+    },
+    {
+      "id": "for_loop_field_readonly",
+      "kind": "reject",
+      "source_sha256": "15b837e4c960c7228322f47627530ba5e8f1a8a1ae7a05361c8d9fba3b497797",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_loop_field_readonly.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/for_loop_field_readonly.yv:6:35: E0014: cannot assign through an immutable local or parameter\n",
+      "timed_out": false,
+      "first_error": {
+        "code": "E0014",
+        "line": 6,
+        "column": 35
+      },
+      "expected_stage0_first_error": {
+        "code": "E0014",
+        "message": "cannot assign to loop variable `point`",
+        "line": 6,
+        "column": 27
+      },
+      "code_passed": true,
+      "position_agrees": false
+    },
+    {
+      "id": "unsupported_for_field",
+      "kind": "unsupported",
+      "source_sha256": "65df56d7b9e0321c42709d50af9a6a233f56e5d1dcaa5cc3cb63cb6472d1793c",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_for_field.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_for_field.yv:6:5: U0001: iteration requires a stable Vec local or parameter in this subset\n",
+      "timed_out": false,
+      "first_error": {
+        "code": "U0001",
+        "line": 6,
+        "column": 5
+      },
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "unsupported_for_temporary",
+      "kind": "unsupported",
+      "source_sha256": "7300a1e650183b5237bc8d410c7a9fe78be600a944c2b47d4d198d4fbfcc4ae2",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_for_temporary.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_for_temporary.yv:3:5: U0001: iteration requires a stable Vec local or parameter in this subset\n",
+      "timed_out": false,
+      "first_error": {
+        "code": "U0001",
+        "line": 3,
+        "column": 5
+      },
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "unsupported_for_literal",
+      "kind": "unsupported",
+      "source_sha256": "f8f8e62095f346e3627a502404cff8e64cc805188b36febd5f564fdb62b671e0",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_for_literal.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_for_literal.yv:2:5: U0001: iteration requires a stable Vec local or parameter in this subset\n",
+      "timed_out": false,
+      "first_error": {
+        "code": "U0001",
+        "line": 2,
+        "column": 5
+      },
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "unsupported_for_owned_string",
+      "kind": "unsupported",
+      "source_sha256": "b50520cc18c6425628771f1219dc21ffdcd1190887d2730fb0ebc41234a03b59",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_for_owned_string.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_for_owned_string.yv:3:5: U0001: iteration over this vector element type is outside the Copy subset\n",
+      "timed_out": false,
+      "first_error": {
+        "code": "U0001",
+        "line": 3,
+        "column": 5
+      },
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "unsupported_for_owned_struct",
+      "kind": "unsupported",
+      "source_sha256": "411ac080ff2d8fcf01456bc692be25ed9934d98a27f8a0164d98b584a5b5436d",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_for_owned_struct.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_for_owned_struct.yv:6:5: U0001: iteration over this vector element type is outside the Copy subset\n",
+      "timed_out": false,
+      "first_error": {
+        "code": "U0001",
+        "line": 6,
+        "column": 5
+      },
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "unsupported_for_mutable",
+      "kind": "unsupported",
+      "source_sha256": "82d931d85587c7c6c64137eebf8a066c00ddcabf304aa3666d647a520911893b",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_for_mutable.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_for_mutable.yv:3:5: U0001: iteration requires a stable Vec local or parameter in this subset\n",
+      "timed_out": false,
+      "first_error": {
+        "code": "U0001",
+        "line": 3,
+        "column": 5
+      },
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "unsupported_for_two_bindings",
+      "kind": "unsupported",
+      "source_sha256": "60ac53bc4320fabecc3e19b38d5c2fbd715a7c1de54fe8c8559e17e1f4a3cd93",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_for_two_bindings.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_for_two_bindings.yv:3:16: U0001: indexed iteration is outside the selfhost subset\n",
+      "timed_out": false,
+      "first_error": {
+        "code": "U0001",
+        "line": 3,
+        "column": 16
+      },
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "unsupported_for_slice",
+      "kind": "unsupported",
+      "source_sha256": "4c151fb133923b98180c0ba1a71b22776bbf9007714e6640f05f9f62276de28a",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_for_slice.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_for_slice.yv:3:22: U0001: vector slices are outside the selfhost subset\n",
+      "timed_out": false,
+      "first_error": {
+        "code": "U0001",
+        "line": 3,
+        "column": 22
+      },
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "unsupported_for_map",
+      "kind": "unsupported",
+      "source_sha256": "df1423353130bf24d1b9291e13b22ea24f3943e18e03055d4f6e6e4b2b4ca468",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_for_map.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_for_map.yv:2:20: U0001: type suffix is outside the selfhost subset\n",
+      "timed_out": false,
+      "first_error": {
+        "code": "U0001",
+        "line": 2,
+        "column": 20
+      },
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "unsupported_for_set",
+      "kind": "unsupported",
+      "source_sha256": "dcb0f7d622ebeea406fae2f79d4cfdee68cb771df1bd62b8d724ef0eb7467ded",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_for_set.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_for_set.yv:2:21: U0001: generic expressions are outside the selfhost subset\n",
+      "timed_out": false,
+      "first_error": {
+        "code": "U0001",
+        "line": 2,
+        "column": 21
+      },
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "for_basic",
+      "kind": "run",
+      "source_sha256": "b4a1117d580f90847b30eff44cc678e2bbfeeb4c9baf79039fb7563d47f1dc5d",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-for31-smoke2/yavo-selfhost",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/run/for_basic.yv"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "first_error": null,
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    }
+  ],
+  "checked": 52,
+  "code_passed": 51,
+  "inputs_changed": []
+}

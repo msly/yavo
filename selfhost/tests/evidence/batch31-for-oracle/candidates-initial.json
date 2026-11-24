@@ -1,0 +1,377 @@
+[
+  {
+    "id": "for_parameter_plain",
+    "kind": "run",
+    "stdout": "1\n2\n2\n",
+    "source": "fn scan(values: Vec[int]) {\n    for value in values { println(value) }\n}\nfn main() {\n    var values = [1, 2]\n    scan(values)\n    println(values.len())\n}\n",
+    "file": "run/for_parameter_plain.yv"
+  },
+  {
+    "id": "for_parameter_inout",
+    "kind": "run",
+    "stdout": "1\n2\n3\n",
+    "source": "fn scan(values: inout Vec[int]) {\n    for value in values { println(value) }\n    values.push(3)\n}\nfn main() {\n    var values = [1, 2]\n    scan(&values)\n    println(values.len())\n}\n",
+    "file": "run/for_parameter_inout.yv"
+  },
+  {
+    "id": "for_range_endpoint_order",
+    "kind": "run",
+    "stdout": "L\nU\n1\n2\nL\nU\ndone\n",
+    "source": "fn lower(value: int) -> int { println(\"L\")\n    return value }\nfn upper(value: int) -> int { println(\"U\")\n    return value }\nfn main() {\n    for value in lower(1)..upper(3) { println(value) }\n    for value in lower(3)..upper(1) { println(value) }\n    println(\"done\")\n}\n",
+    "file": "run/for_range_endpoint_order.yv"
+  },
+  {
+    "id": "for_range_upper_cached",
+    "kind": "run",
+    "stdout": "0\n1\n2\n0\n",
+    "source": "fn main() {\n    var limit = 3\n    for value in 0..limit {\n        println(value)\n        limit = 0\n    }\n    println(limit)\n}\n",
+    "file": "run/for_range_upper_cached.yv"
+  },
+  {
+    "id": "for_range_lower_snapshot",
+    "kind": "run",
+    "stdout": "0\n1\n2\n5\n",
+    "source": "fn upper(start: inout int) -> int {\n    start = 5\n    return 3\n}\nfn main() {\n    var start = 0\n    for value in start..upper(&start) { println(value) }\n    println(start)\n}\n",
+    "file": "run/for_range_lower_snapshot.yv"
+  },
+  {
+    "id": "for_range_edges",
+    "kind": "run",
+    "stdout": "-2\n-1\n0\n254\n9223372036854775806\n-9223372036854775808\n",
+    "source": "fn main() {\n    for value in -2..1 { println(value) }\n    for value in 3..1 { println(\"bad\") }\n    for value in 0..0 { println(\"bad\") }\n    for value in byte(254)..byte(255) { println(int(value)) }\n    let maximum = 9223372036854775807\n    for value in (maximum - 1)..maximum { println(value) }\n    for value in maximum..maximum { println(\"bad\") }\n    let minimum = -9223372036854775808\n    for value in minimum..(minimum + 1) { println(value) }\n}\n",
+    "file": "run/for_range_edges.yv"
+  },
+  {
+    "id": "for_range_byte_hint",
+    "kind": "run",
+    "stdout": "1\n2\n1\n2\n",
+    "source": "fn main() {\n    for value in 1..byte(3) { println(int(value)) }\n    for value in byte(1)..3 { println(int(value)) }\n}\n",
+    "file": "run/for_range_byte_hint.yv"
+  },
+  {
+    "id": "for_range_continue",
+    "kind": "run",
+    "stdout": "1\n3\n2\n",
+    "source": "fn main() {\n    var count = 0\n    for value in 0..5 {\n        if value % 2 == 0 { continue }\n        println(value)\n        count += 1\n    }\n    println(count)\n}\n",
+    "file": "run/for_range_continue.yv"
+  },
+  {
+    "id": "for_range_owned_header",
+    "kind": "run",
+    "stdout": "0\n2\n0\n",
+    "source": "fn main() {\n    for value in 0..(\"abc\".toString().len()) {\n        let guard = [\"body\".toString()]\n        if value == 1 { continue }\n        println(value)\n    }\n    for value in 0..(\"abc\".toString().len()) {\n        let guard = \"body\".toString()\n        println(value)\n        break\n    }\n}\n",
+    "file": "run/for_range_owned_header.yv"
+  },
+  {
+    "id": "for_header_start_break",
+    "kind": "run",
+    "stdout": "start\nafter\n",
+    "source": "fn fail() -> int ! String { return err(\"start\".toString()) }\nfn upper() -> int { println(\"bad\")\n    return 3 }\nfn main() {\n    loop {\n        let guard = [\"outer\".toString()]\n        for value in fail() catch error { println(error)\n            break } .. upper() { println(value) }\n        println(\"bad\")\n    }\n    println(\"after\")\n}\n",
+    "file": "run/for_header_start_break.yv"
+  },
+  {
+    "id": "for_header_end_break",
+    "kind": "run",
+    "stdout": "left\nend\nafter\n",
+    "source": "fn lower(label: String) -> int { println(label)\n    return 0 }\nfn fail() -> int ! String { return err(\"end\".toString()) }\nfn main() {\n    loop {\n        let guard = [\"outer\".toString()]\n        for value in lower(\"left\".toString()) .. fail() catch error { println(error)\n            break } { println(value) }\n        println(\"bad\")\n    }\n    println(\"after\")\n}\n",
+    "file": "run/for_header_end_break.yv"
+  },
+  {
+    "id": "for_move_break_replay",
+    "kind": "reject",
+    "diagnostic": "E0402",
+    "source": "fn work(count: int) {\n    let owner = \"owned\".toString()\n    for index in 0..count {\n        let moved = owner\n        println(moved)\n        break\n    }\n}\nfn main() { work(0)\n    work(2) }\n",
+    "file": "reject/for_move_break_replay.yv"
+  },
+  {
+    "id": "for_inout_locked",
+    "kind": "reject",
+    "diagnostic": "E0102",
+    "source": "fn scan(values: inout Vec[int]) {\n    for value in values { let _ = values.pop() }\n}\nfn main() {}\n",
+    "file": "reject/for_inout_locked.yv"
+  },
+  {
+    "id": "for_loop_var_range_readonly",
+    "kind": "reject",
+    "diagnostic": "E0014",
+    "source": "fn main() {\n    for value in 0..2 { value += 1 }\n}\n",
+    "file": "reject/for_loop_var_range_readonly.yv"
+  },
+  {
+    "id": "for_loop_var_vec_readonly",
+    "kind": "reject",
+    "diagnostic": "E0014",
+    "source": "fn main() {\n    let values = [1, 2]\n    for value in values { value += 1 }\n}\n",
+    "file": "reject/for_loop_var_vec_readonly.yv"
+  },
+  {
+    "id": "for_header_break_without_outer",
+    "kind": "reject",
+    "diagnostic": "E0015",
+    "source": "fn fail() -> int ! int { return err(1) }\nfn main() {\n    for value in 0..fail() catch _ { break } { println(value) }\n}\n",
+    "file": "reject/for_header_break_without_outer.yv"
+  },
+  {
+    "id": "for_range_missing_return",
+    "kind": "reject",
+    "diagnostic": "E0013",
+    "source": "fn source() -> int {\n    for value in 0..1 { return value }\n}\nfn main() {}\n",
+    "file": "reject/for_range_missing_return.yv"
+  },
+  {
+    "id": "for_vec_missing_return",
+    "kind": "reject",
+    "diagnostic": "E0013",
+    "source": "fn source(values: Vec[int]) -> int {\n    for value in values { return value }\n}\nfn main() {}\n",
+    "file": "reject/for_vec_missing_return.yv"
+  },
+  {
+    "id": "for_move_replay",
+    "kind": "reject",
+    "diagnostic": "E0402",
+    "source": "fn main() {\n    let owner = \"owned\".toString()\n    for value in 0..2 {\n        let moved = owner\n        println(moved)\n    }\n}\n",
+    "file": "reject/for_move_replay.yv"
+  },
+  {
+    "id": "for_vec_lock_push",
+    "kind": "reject",
+    "diagnostic": "E0102",
+    "source": "fn main() {\n    var values = [1, 2]\n    for value in values {\n        values.push(3)\n    }\n}\n",
+    "file": "reject/for_vec_lock_push.yv"
+  },
+  {
+    "id": "for_vec_lock_pop",
+    "kind": "reject",
+    "diagnostic": "E0102",
+    "source": "fn main() {\n    var values = [1, 2]\n    for value in values {\n        let _ = values.pop()\n    }\n}\n",
+    "file": "reject/for_vec_lock_pop.yv"
+  },
+  {
+    "id": "for_vec_lock_reserve",
+    "kind": "reject",
+    "diagnostic": "E0102",
+    "source": "fn main() {\n    var values = [1, 2]\n    for value in values {\n        values.reserve(8)\n    }\n}\n",
+    "file": "reject/for_vec_lock_reserve.yv"
+  },
+  {
+    "id": "for_vec_lock_assign",
+    "kind": "reject",
+    "diagnostic": "E0102",
+    "source": "fn main() {\n    var values = [1, 2]\n    for value in values {\n        values = []\n    }\n}\n",
+    "file": "reject/for_vec_lock_assign.yv"
+  },
+  {
+    "id": "for_vec_lock_take",
+    "kind": "reject",
+    "diagnostic": "E0102",
+    "source": "fn main() {\n    var values = [1, 2]\n    for value in values {\n        let _ = take(&values)\n    }\n}\n",
+    "file": "reject/for_vec_lock_take.yv"
+  },
+  {
+    "id": "for_vec_lock_move",
+    "kind": "reject",
+    "diagnostic": "E0102",
+    "source": "fn main() {\n    var values = [1, 2]\n    for value in values {\n        let moved = values\n        println(moved.len())\n    }\n}\n",
+    "file": "reject/for_vec_lock_move.yv"
+  },
+  {
+    "id": "for_vec_lock_inout",
+    "kind": "reject",
+    "diagnostic": "E0102",
+    "source": "fn touch(values: inout Vec[int]) { values.push(3) }\nfn main() {\n    var values = [1, 2]\n    for value in values {\n        touch(&values)\n    }\n}\n",
+    "file": "reject/for_vec_lock_inout.yv"
+  },
+  {
+    "id": "for_nested_lock",
+    "kind": "reject",
+    "diagnostic": "E0102",
+    "source": "fn main() {\n    var values = [1, 2]\n    for outer in values {\n        for inner in values { break }\n        values.push(3)\n    }\n}\n",
+    "file": "reject/for_nested_lock.yv"
+  },
+  {
+    "id": "for_vec_copy_types",
+    "kind": "run",
+    "stdout": "1\n2\n65\n66\ntrue\nfalse\n5\ntrue\nfalse\n",
+    "source": "enum Mark {\n    Cold\n    Hot\n}\nstruct Point {\n    x: int\n    y: int\n}\nfn main() {\n    let integers = [1, 2]\n    for value in integers { println(value) }\n    let bytes: Vec[byte] = ['A', 'B']\n    for value in bytes { println(int(value)) }\n    let flags = [true, false]\n    for value in flags { println(value) }\n    let points = [Point{x: 2, y: 3}]\n    for point in points { println(point.x + point.y) }\n    let marks: Vec[Mark] = [.Cold, .Hot]\n    for mark in marks { println(mark == .Cold) }\n    let empty: Vec[int] = []\n    for value in empty { println(value) }\n}\n",
+    "file": "run/for_vec_copy_types.yv"
+  },
+  {
+    "id": "for_vec_nested_control",
+    "kind": "run",
+    "stdout": "4\n5\n54\n1\n",
+    "source": "fn choose(value: int) -> int ! int {\n    if value % 2 == 0 { return err(value) }\n    return value\n}\nfn main() {\n    var values = [1, 2, 3, 4]\n    var total = 0\n    for value in ((values)) {\n        let guard = [\"iteration\".toString()]\n        let chosen = choose(value) catch _ { continue }\n        total += chosen\n        if value == 3 { break }\n    }\n    println(total)\n    values.push(5)\n    println(values.len())\n    var pairs = 0\n    for outer in values {\n        for inner in values {\n            if inner == 4 { break }\n            pairs += outer + inner\n        }\n        if outer == 3 { break }\n    }\n    println(pairs)\n    values = [7]\n    println(values.len())\n}\n",
+    "file": "run/for_vec_nested_control.yv"
+  },
+  {
+    "id": "for_iteration_exit_cleanup",
+    "kind": "run",
+    "stdout": "2\n1\nfail\n1\nfail\n7\n",
+    "source": "fn check(value: int) -> int ! String {\n    if value == 2 { return err(\"fail\".toString()) }\n    return value\n}\nfn byReturn() -> int {\n    let values = [1, 2, 3]\n    for value in values {\n        let guard = [\"return\".toString()]\n        if value == 2 { return value }\n    }\n    return 0\n}\nfn byTry() -> int ! String {\n    let values = [1, 2, 3]\n    for value in values {\n        let guard = [\"try\".toString()]\n        println(try check(value))\n    }\n    return 0\n}\nfn catchTry() {\n    let _ = byTry() catch error {\n        println(error)\n        return\n    }\n}\nfn byCatch() -> int {\n    for value in 1..4 {\n        let guard = [\"catch\".toString()]\n        let chosen = check(value) catch error {\n            println(error)\n            return 7\n        }\n        println(chosen)\n    }\n    return 0\n}\nfn main() {\n    println(byReturn())\n    catchTry()\n    println(byCatch())\n}\n",
+    "file": "run/for_iteration_exit_cleanup.yv"
+  },
+  {
+    "id": "for_header_outer_continue",
+    "kind": "run",
+    "stdout": "skip\nskip\n3\n",
+    "source": "fn fail() -> int ! String { return err(\"skip\".toString()) }\nfn main() {\n    var turns = 0\n    loop {\n        turns += 1\n        if turns > 2 { break }\n        let guard = [\"outer\".toString()]\n        for value in 0..fail() catch error {\n            println(error)\n            continue\n        } { println(value) }\n        println(\"bad\")\n    }\n    println(turns)\n}\n",
+    "file": "run/for_header_outer_continue.yv"
+  },
+  {
+    "id": "for_header_owned_exit",
+    "kind": "run",
+    "stdout": "header\nheader\n7\nheader\ndone\n",
+    "source": "fn fail() -> int ! String { return err(\"header\".toString()) }\nfn byTry() -> () ! String {\n    for value in (\"abc\".toString().len())..(try fail()) { println(value) }\n}\nfn catchTry() {\n    let _ = byTry() catch error {\n        println(error)\n        return\n    }\n}\nfn byReturn() -> int {\n    for value in (\"abc\".toString().len())..fail() catch error {\n        println(error)\n        return 7\n    } { println(value) }\n    return 0\n}\nfn main() {\n    catchTry()\n    println(byReturn())\n    loop {\n        for value in (\"abc\".toString().len())..fail() catch error {\n            println(error)\n            break\n        } { println(value) }\n        println(\"bad\")\n    }\n    println(\"done\")\n}\n",
+    "file": "run/for_header_owned_exit.yv"
+  },
+  {
+    "id": "for_scalar_iterable",
+    "kind": "reject",
+    "diagnostic": "E0001",
+    "source": "fn main() {\n    for value in 7 { println(value) }\n}\n",
+    "file": "reject/for_scalar_iterable.yv"
+  },
+  {
+    "id": "for_range_bool",
+    "kind": "reject",
+    "diagnostic": "E0001",
+    "source": "fn main() {\n    for value in false..true { println(value) }\n}\n",
+    "file": "reject/for_range_bool.yv"
+  },
+  {
+    "id": "for_range_mixed_types",
+    "kind": "reject",
+    "diagnostic": "E0001",
+    "source": "fn main() {\n    let start: byte = 1\n    let end: int = 3\n    for value in start..end { println(value) }\n}\n",
+    "file": "reject/for_range_mixed_types.yv"
+  },
+  {
+    "id": "for_range_two_bindings",
+    "kind": "reject",
+    "diagnostic": "E0020",
+    "source": "fn main() {\n    for index, value in 0..2 { println(value) }\n}\n",
+    "file": "reject/for_range_two_bindings.yv"
+  },
+  {
+    "id": "for_range_second_delimiter",
+    "kind": "reject",
+    "diagnostic": "E0020",
+    "source": "fn main() {\n    for value in 0..2..3 { println(value) }\n}\n",
+    "file": "reject/for_range_second_delimiter.yv"
+  },
+  {
+    "id": "for_header_continue_without_outer",
+    "kind": "reject",
+    "diagnostic": "E0015",
+    "source": "fn fail() -> int ! int { return err(1) }\nfn main() {\n    for value in 0..fail() catch _ { continue } { println(value) }\n}\n",
+    "file": "reject/for_header_continue_without_outer.yv"
+  },
+  {
+    "id": "for_binding_scope",
+    "kind": "reject",
+    "diagnostic": "E0010",
+    "source": "fn main() {\n    for value in 0..2 { println(value) }\n    println(value)\n}\n",
+    "file": "reject/for_binding_scope.yv"
+  },
+  {
+    "id": "for_vec_lock_index",
+    "kind": "reject",
+    "diagnostic": "E0102",
+    "source": "fn main() {\n    var values = [1, 2]\n    for value in values {\n        values[0] = value\n    }\n}\n",
+    "file": "reject/for_vec_lock_index.yv"
+  },
+  {
+    "id": "for_loop_field_readonly",
+    "kind": "reject",
+    "diagnostic": "E0014",
+    "source": "struct Point {\n    x: int\n}\nfn main() {\n    let points = [Point{x: 1}]\n    for point in points { point.x += 1 }\n}\n",
+    "file": "reject/for_loop_field_readonly.yv"
+  },
+  {
+    "id": "unsupported_for_field",
+    "kind": "unsupported",
+    "diagnostic": "U0001",
+    "reason": "The subset accepts stable Vec names; field iteration remains outside this batch.",
+    "source": "struct Bag {\n    values: Vec[int]\n}\nfn main() {\n    let bag = Bag{values: [1, 2]}\n    for value in bag.values { println(value) }\n}\n",
+    "file": "unsupported/unsupported_for_field.yv"
+  },
+  {
+    "id": "unsupported_for_temporary",
+    "kind": "unsupported",
+    "diagnostic": "U0001",
+    "reason": "Temporary iterable ownership and lifetime are outside this stable-name iteration batch.",
+    "source": "fn values() -> Vec[int] { return [1, 2] }\nfn main() {\n    for value in values() { println(value) }\n}\n",
+    "file": "unsupported/unsupported_for_temporary.yv"
+  },
+  {
+    "id": "unsupported_for_literal",
+    "kind": "unsupported",
+    "diagnostic": "U0001",
+    "reason": "Vector literal iterables are temporary containers, outside this stable-name iteration batch.",
+    "source": "fn main() {\n    for value in [1, 2] { println(value) }\n}\n",
+    "file": "unsupported/unsupported_for_literal.yv"
+  },
+  {
+    "id": "unsupported_for_owned_string",
+    "kind": "unsupported",
+    "diagnostic": "U0001",
+    "reason": "Iteration over owned elements yields borrowed elements in Rust and remains outside this Copy-only batch.",
+    "source": "fn main() {\n    let values = [\"one\".toString(), \"two\".toString()]\n    for value in values { println(value) }\n}\n",
+    "file": "unsupported/unsupported_for_owned_string.yv"
+  },
+  {
+    "id": "unsupported_for_owned_struct",
+    "kind": "unsupported",
+    "diagnostic": "U0001",
+    "reason": "Struct elements owning String require borrowed iteration; this batch only copies nonowning elements.",
+    "source": "struct Item {\n    text: String\n}\nfn main() {\n    let values = [Item{text: \"one\".toString()}]\n    for value in values { println(value.text) }\n}\n",
+    "file": "unsupported/unsupported_for_owned_struct.yv"
+  },
+  {
+    "id": "unsupported_for_mutable",
+    "kind": "unsupported",
+    "diagnostic": "U0001",
+    "reason": "Explicit mutable iterator borrowing remains outside this read-only Copy iteration batch.",
+    "source": "fn main() {\n    var values = [1, 2]\n    for value in &values { value += 1 }\n    println(values[0])\n}\n",
+    "file": "unsupported/unsupported_for_mutable.yv"
+  },
+  {
+    "id": "unsupported_for_two_bindings",
+    "kind": "unsupported",
+    "diagnostic": "U0001",
+    "reason": "Index/value dual bindings are outside this single-binding Vec iteration batch.",
+    "source": "fn main() {\n    let values = [1, 2]\n    for index, value in values { println(index + value) }\n}\n",
+    "file": "unsupported/unsupported_for_two_bindings.yv"
+  },
+  {
+    "id": "unsupported_for_slice",
+    "kind": "unsupported",
+    "diagnostic": "U0001",
+    "reason": "Slice iteration and its borrow lifetime are outside this Vec-name iteration batch.",
+    "source": "fn main() {\n    let values = [1, 2]\n    let view = values[0..2]\n    for value in view { println(value) }\n}\n",
+    "file": "unsupported/unsupported_for_slice.yv"
+  },
+  {
+    "id": "unsupported_for_map",
+    "kind": "unsupported",
+    "diagnostic": "U0001",
+    "reason": "Map iteration is outside this Vec and integer-range batch.",
+    "source": "fn main() {\n    let values: Map[int, int] = [1: 2]\n    for key, value in values { println(key + value) }\n}\n",
+    "file": "unsupported/unsupported_for_map.yv"
+  },
+  {
+    "id": "unsupported_for_set",
+    "kind": "unsupported",
+    "diagnostic": "U0001",
+    "reason": "Set iteration is outside this Vec and integer-range batch.",
+    "source": "fn main() {\n    let values: Set[int] = [1, 2]\n    for value in values { println(value) }\n}\n",
+    "file": "unsupported/unsupported_for_set.yv"
+  },
+  {
+    "id": "for_basic",
+    "kind": "run",
+    "stdout": "0\n1\n2\n",
+    "source": "fn main() {\n    for i in 0..3 { println(i) }\n}\n",
+    "promotes": "unsupported_for",
+    "file": "run/for_basic.yv"
+  }
+]

@@ -18,9 +18,30 @@ binds the run, job/step results and artifact metadata. It preserves the original
 platform status. That historical run sanitized stage1-generated applications,
 not the stage2 compiler itself.
 
-## Batch 30 Copy Optional and pop checks
+## Batch 31 for and traversal checks
 
-The current manifest contains **439 cases and 155 executable inputs**. Its 68
+The manifest has **490 cases and 172 executable inputs**. Its 52 batch cases
+(51 new plus the unchanged for promotion) cover int/byte ranges, Copy Vec
+iteration, bounds and exit control, container locks, replay and explicit subset
+boundaries. All have independent Rust oracles; 17 run programs pass both modes.
+The reference range-start snapshot fix has an additional automatically enumerated
+P0 fixture, with old failures and fixed outputs retained in the oracle index.
+
+The [local receipt](../../compiler/validation/selfhost-for-2026-11-24.json)
+passes 490/490, 12/12 and zero skips, including fixed C/binaries and the real
+lexer unit. Full Rust Debug/Release each pass 145/0/1; frozen conformance is
+124/3/2. The four compiler/lexer migrations are checked against the baseline
+function bodies. The GCC input loader validates **173 programs** (172 fixtures
+plus lexer); the native job must additionally run stage2 self-compilation,
+**490 checks, 172 emissions and 8 malformed inputs**.
+
+Batch 31 native CI is pending the implementation push. Each platform must
+retain the same fixed-point, real lexer and independent test-summary gates;
+successful local input loading is not GCC execution evidence.
+
+## Batch 30 Copy Optional and pop checks (historical)
+
+That manifest contains **439 cases and 155 executable inputs**. Its 68
 targeted cases comprise 67 additions and the byte-for-byte promotion of the
 existing pop input. They cover Copy payloads, receiver permissions, lazy
 coalesce, contextual typing, branch cleanup and explicit unsupported boundaries.

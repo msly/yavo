@@ -1,0 +1,15 @@
+fn fail() -> int ! String { return err("skip".toString()) }
+fn main() {
+    var turns = 0
+    loop {
+        turns += 1
+        if turns > 2 { break }
+        let guard = ["outer".toString()]
+        for value in 0..fail() catch error {
+            println(error)
+            continue
+        } { println(value) }
+        println("bad")
+    }
+    println(turns)
+}

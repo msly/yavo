@@ -79,6 +79,7 @@ struct Generator {
     locks: Vec[int] = []
     binaryLocks: Vec[int] = []
     accessLocks: Vec[int] = []
+    iterationLocks: Vec[int] = []
     reservations: Vec[int] = []
     inoutLocks: Vec[int] = []
     loopStates: Vec[LoopState] = []
@@ -330,6 +331,9 @@ fn writable(g: Generator, ts: Vec[Token], root: int, token: int) {
     }
     if contains(g.locks, root) {
         fail(ts, token, "E0102", "an earlier expression still borrows this value")
+    }
+    if contains(g.iterationLocks, root) {
+        fail(ts, token, "E0102", "cannot modify a collection while iterating over it")
     }
     if contains(g.binaryLocks, root) {
         fail(ts, token, "U0001", "transferring a comparison operand while it is borrowed is outside this subset")
@@ -1741,6 +1745,7 @@ fn replayBody(parent: Generator, p: Program, ts: Vec[Token], reg: Registry, s: S
         locks: parent.locks.clone(),
         binaryLocks: parent.binaryLocks.clone(),
         accessLocks: parent.accessLocks.clone(),
+        iterationLocks: parent.iterationLocks.clone(),
         reservations: parent.reservations.clone(),
         inoutLocks: parent.inoutLocks.clone(),
         loopStates: parent.loopStates.clone(),
@@ -1757,17 +1762,7 @@ fn replayBody(parent: Generator, p: Program, ts: Vec[Token], reg: Registry, s: S
     return frame.breaks.clone()
 }
 
-fn loopStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, s: Statement) -> Flow {
-    emit(&g, "for (;;) {")
-    if s.kind == .While {
-        let tempCount = g.temps.len()
-        g.loopCondition = true
-        let condition = emitExpected(&g, p, ts, reg, s.expr, primitive(.Bool))
-        g.loopCondition = false
-        basic(reg, ts, s.token, condition.ty, .Bool)
-        discardTemps(&g, reg, tempCount)
-        emit(&g, join3("if (!", condition.name, ") break;"))
-    }
+fn emitLoopBody(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, s: Statement) -> Flow {
     let before = movedState(g)
     let count = g.locals.len()
     let tempCount = g.temps.len()
@@ -1799,7 +1794,87 @@ fn loopStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, 
     emit(&g, "}")
     // recordExit also sees break inside expression handlers. A syntactically
     // nested catch must not make an escapable loop look non-terminating.
-    return Flow{falls: s.kind == .While || frame.hasBreak}
+    return Flow{falls: s.kind != .Loop || frame.hasBreak}
+}
+
+fn loopStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, s: Statement) -> Flow {
+    emit(&g, "for (;;) {")
+    if s.kind == .While {
+        let tempCount = g.temps.len()
+        g.loopCondition = true
+        let condition = emitExpected(&g, p, ts, reg, s.expr, primitive(.Bool))
+        g.loopCondition = false
+        basic(reg, ts, s.token, condition.ty, .Bool)
+        discardTemps(&g, reg, tempCount)
+        emit(&g, join3("if (!", condition.name, ") break;"))
+    }
+    return emitLoopBody(&g, p, ts, reg, s)
+}
+
+fn forLoopStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, s: Statement) -> Flow {
+    let localCount = g.locals.len()
+    let lockCount = g.iterationLocks.len()
+    let tempCount = g.temps.len()
+    emit(&g, "{")
+    if s.kind == .ForRange {
+        var start = Value{ty: primitive(.Unknown), name: String{}}
+        var end = Value{ty: primitive(.Unknown), name: String{}}
+        if untypedInteger(p, ts, s.expr) && !untypedInteger(p, ts, s.target) {
+            // Infer a literal start from the end's type, without changing the
+            // observable left-to-right evaluation of the two bounds.
+            let before = take(&g.out)
+            end = emitContext(&g, p, ts, reg, s.target, primitive(.Unknown))
+            let endCode = take(&g.out)
+            g.out = before
+            let hint = operandHint(reg, end.ty, primitive(.Unknown))
+            start = emitContext(&g, p, ts, reg, s.expr, hint)
+            g.out.push(endCode)
+        } else {
+            start = emitContext(&g, p, ts, reg, s.expr, primitive(.Unknown))
+            let hint = operandHint(reg, start.ty, primitive(.Unknown))
+            end = emitContext(&g, p, ts, reg, s.target, hint)
+        }
+        requireInteger(ts, s.token, start.ty)
+        require(reg, ts, s.token, end.ty, start.ty)
+        declare(&g, ts, s.name, start.ty, false, false, false)
+        let name = join2("v_", decimal(s.name))
+        put(&g, join5("for (", cType(start.ty), " ", name, " = "))
+        put(&g, join5(start.name, "; ", name, " < ", end.name))
+        // The half-open comparison guarantees the increment cannot overflow.
+        emit(&g, join3("; ", name, "++) {"))
+    } else {
+        let iterable = p.expressions[unparenthesized(p, s.expr)]
+        let value = emitExpr(&g, p, ts, reg, s.expr)
+        if value.ty.kind != .Vec {
+            fail(ts, s.token, "E0001", "iteration requires a vector or an integer range")
+        }
+        if iterable.kind != .Name {
+            fail(ts, s.token, "U0001", "iteration requires a stable Vec local or parameter in this subset")
+        }
+        let elem = element(value.ty)
+        if owned(reg, elem) ||
+            (elem.kind != .Int && elem.kind != .Byte && elem.kind != .Bool && elem.kind != .Named) {
+            fail(ts, s.token, "U0001", "iteration over this vector element type is outside the Copy subset")
+        }
+        g.iterationLocks.push(value.root)
+        declare(&g, ts, s.name, elem, false, false, false)
+        let index = join2("iter_", decimal(g.counter))
+        g.counter += 1
+        put(&g, join5("for (int64_t ", index, " = 0; ", index, " < ("))
+        emit(&g, join5(value.name, ").len; ", index, "++", ") {"))
+        put(&g, join5(cType(elem), " v_", decimal(s.name), " = ((", cType(elem)))
+        emit(&g, join5(" *)(", value.name, ").ptr)[", index, "];"))
+    }
+    // A header catch still targets the enclosing loop. Enter this loop only
+    // after its input expressions and read-only binding have been checked.
+    let flow = emitLoopBody(&g, p, ts, reg, s)
+    while g.locals.len() > localCount { let _ = g.locals.pop() }
+    while g.iterationLocks.len() > lockCount { let _ = g.iterationLocks.pop() }
+    // Header owners live across continue, then drop while their C declarations
+    // are still in scope. Abrupt outer exits use the existing cleanup edges.
+    discardTemps(&g, reg, tempCount)
+    emit(&g, "}")
+    return flow
 }
 
 fn exitsProcess(g: Generator, p: Program, ts: Vec[Token], id: int) -> bool {
@@ -1941,6 +2016,7 @@ fn emitStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, 
         return Flow{falls: yes.falls || no.falls, breaks: yes.breaks || no.breaks}
     }
     if s.kind == .While || s.kind == .Loop { return loopStatement(&g, p, ts, reg, s) }
+    if s.kind == .ForRange || s.kind == .ForEach { return forLoopStatement(&g, p, ts, reg, s) }
     if g.loops == 0 { fail(ts, s.token, "E0015", "break/continue requires an enclosing loop") }
     let index = g.loopStates.len() - 1
     let localCount = g.loopStates[index].localCount
