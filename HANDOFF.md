@@ -8,9 +8,9 @@
 
 当前语料 **439 cases、155 个可执行输入**，净新增 67 例并原样晋升旧 pop fixture；本批 68 项先由 Rust 独立定标，15 个运行程序的 Debug/Release 共 30 次执行通过。完整 Rust Debug/Release 各 **145/0/1**，冻结 129 项仍为 **124 pass、3 unsupported、2 superseded**。本批没有改 Rust 编译器、运行时或冻结规格。
 
-本机完整自举 **439/439 cases、12/12 checks、0 skip**；stage2/stage3 的 C（668,302 字节）和 Linux 二进制（308,504 字节）分别逐字节一致。真实 lexer 两代 C 与 Debug/Release 正常返回堆检查通过。详见[第三十批本机回执](compiler/validation/selfhost-optional-pop-2026-11-24.json)及[独立 oracle](selfhost/tests/evidence/batch30-optional-oracle/oracle-index.json)。本批三平台原生 CI 尚待提交后确认。
+本机完整自举 **439/439 cases、12/12 checks、0 skip**；stage2/stage3 的 C（668,302 字节）和 Linux 二进制（308,504 字节）分别逐字节一致。真实 lexer 两代 C 与 Debug/Release 正常返回堆检查通过。详见[第三十批本机回执](compiler/validation/selfhost-optional-pop-2026-11-24.json)及[独立 oracle](selfhost/tests/evidence/batch30-optional-oracle/oracle-index.json)。
 
-上一批 `e355cb3` 的 [run 45226925936](https://github.com/msly/yavo/actions/runs/45226925936) 已六项成功并完成三平台归档审计，见[第二十九批原生索引](compiler/validation/batch29-native-2026-11-24.json)。本批源码的验证单独记录，不沿用旧 run 作为新源码证明。
+实现 `7297e3b` 的 [CI run 45345384747](https://github.com/msly/yavo/actions/runs/45345384747) **6/6 jobs 全部成功**。Linux x86-64、Windows x86-64、macOS arm64 各通过 439/439、12/12、0 skip，平台内 stage2/stage3 C 与二进制一致，真实 lexer 两模式及 CLI 各 213 次执行通过。Linux GCC ASan/UBSan 通过 156 程序，stage2 自编译、439 checks、155 emits、8 个坏输入。三份归档按 API 大小/摘要、提交源码与实际输出复核，合计重哈希 40,102 个文件、核对 22,892 条嵌入流；783 个本机输入绑定与提交一致，见[第三十批最终原生索引](compiler/validation/batch30-native-2026-11-24.json)。
 
 Rust stage0 仍是日常编译器，SH-3 尚未接替；SH-4 保持 **1/3 个独立应用**。首个 `examples/test-summary/` 已通过三平台各 213 次执行。下一批以 `for` 支持和真实遍历迁移为主，随后格式化、源模块；第六轮文档实验仍 0 会话，真实 usage 资格未取得。
 
@@ -185,7 +185,7 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 | 14–15 | Arena/Id；多文件源模块 | 已实现；包依赖与程序锁文件待做 |
 | 已落地 | 自举固定点 | `67794d9`：引导子集编译自身，stage2.c = stage3.c，335/335 例，stage2 与 stage1 全用例一致（第 11 节） |
 | 已落地 | Result 与真实词法传播 | 第二十九批：372 个自举用例，用户 Result/try 与拥有型 Diagnostic；真实 lexer 正常返回清理门（第 13 节） |
-| 当前批次 | Copy Optional 与原地退栈 | 第三十批：439 个语料用例，14 处 pop 替换五个截断 helper（第 14 节） |
+| 已落地 | Copy Optional 与原地退栈 | 第三十批：439 个自举用例、14 处 pop 替换五个 helper；run 45345384747 六项成功并完成三平台归档审计（第 14 节） |
 | 冷启动实验 | 五轮 | 第五轮两语言各 24/24 首编、公开、隐藏及结构通过；受控操作/时间比 1.0455/1.2051，token 缺失；4 会话、12 题（第 22 节） |
 | 已落地 | 三平台 CI | `073003d` 的 run 45002067581 六项全通过：Linux 全量、Windows/macOS 选定原生套件、独立 ASan+UBSan，以及两项实验检查（第 23 节） |
 | 已落地 | 第五项 CI | `0bad3d2` 的 run 44996118634 通过，核验 1,344 条判定、96 个源码阶段、16 项结构审查和冻结题包 |
@@ -236,7 +236,7 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - 真实 lexer 单元现由 stage0 与 selfhost 构建。原断言保留，三个 for 改为 while 以满足已声明子集；预期坏输入被捕获，16 轮 32 个拥有 token 后的 escape 失败保留第一错误，source/path 释放后 Diagnostic 仍可读。测试成功路径正常返回，stage1/stage2 C 一致，Debug/Release 堆块检查通过；同一源码和 C 作为第 141 个 Linux GCC sanitizer 程序通过。
 - Rust 完整 Debug/Release 各 145/0/1、冻结 124/3/2 通过；本机自举 372/372、12/12、0 skip 记录在 `compiler/validation/selfhost-result-2026-11-24.json`。原摘要的 implementation_commit=null 及 native pending 保留原时点语义，后续 `e355cb3` 的 run 45226925936 六项成功与归档核验写入 `compiler/validation/batch29-native-2026-11-24.json`，685 个本机测试输入路径已与该提交逐项对照。
 - Windows 归档中 36 对 reject-new/reject-existing 记录内容（含耗时 0.0）相同。离线审计器原“记录内容唯一”假设误报，改为 3,140 条嵌入/保存记录多重集完全一致、逐份核验实际流；首失败与完整证明已保留于最终索引。三平台最终审计通过；未改编译器或重跑 CI 来处理这项审计器问题。
-- SH-3 仍进行中，SH-4 为 1/3；下一步 Optional/pop 的具体范围见第 10 节。
+- SH-3 仍进行中，SH-4 为 1/3；当批提出的 Optional/pop 已在第三十批完成，后续范围见第 10 节。
 
 ## 14. 第三十批：Copy Optional 与编译器原地退栈（2026-11-24）
 
@@ -246,7 +246,7 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - 删除五个 trunc helper，14 处改为 while + pop。`cleanTemps`、`cleanLocals`、`readable`、`writable`、`takeValue`、`refPlace`、`recordExit` 与基线逐函数字节相同；锁栈保留外层 mark，循环状态先复制再缩短。消除保留前缀的重复复制，尚无性能测量结论。
 - 正式语料 439：127 run、28 panic、218 reject、52 unsupported、14 shared。净新增 67 例，原 unsupported_vec_pop 原字节晋升为 vec_pop_basic；本批覆盖 68 项，15 个 run 的独立 Rust Debug/Release 共 30 次执行通过。首轮输入修正与诊断位置差异保留在独立 oracle 中，不按 selfhost 输出修改预期。
 - 拥有型/String/Vec/str/unit Optional、嵌套/字段/容器/Result 组合、owned pop、if let、match、跳转式 ?? 均继续明确 U0001；Optional 比较和直接打印与 stage0 一样为 U0001。
-- 完整本机与原生验收结果见第 1 节及本批验收索引。SH-3 未接替、SH-4 保持 1/3，下一步见第 10 节。
+- `7297e3b` 的 run 45345384747 六项成功；三平台原生与归档审计通过，详见 [batch30-native-2026-11-24.json](compiler/validation/batch30-native-2026-11-24.json)。原本机回执的 implementation_commit=null/native pending 保留原时点语义。SH-3 未接替、SH-4 保持 1/3，下一步见第 10 节。
 
 ## 历史批次（已移出）
 

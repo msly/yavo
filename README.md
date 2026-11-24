@@ -100,8 +100,17 @@ unit in Debug/Release. Stage2/stage3 C (623,204 bytes) and binaries match exactl
 
 ### GitHub CI
 
-Batch 30 native confirmation will be recorded against its implementation commit;
-the following runs remain historical evidence for their own source revisions.
+Batch 30 [run 45345384747](https://github.com/msly/yavo/actions/runs/45345384747)
+passed **six of six jobs** at `7297e3b`. Linux x86-64, Windows x86-64 and macOS
+arm64 each pass **439 selfhost cases, 12 checks and zero skips**, with matching
+stage2/stage3 C and binaries within each platform, the real lexer in both modes,
+and 213 existing CLI executions. Rust Debug/Release each report 145/0/1 on full
+Linux, 81/0/1 on selected Windows and 84/0/1 on selected macOS suites. Linux GCC
+ASan/UBSan passes **156 generated programs**, stage2 self-compilation,
+**439 checks, 155 emissions and 8 malformed inputs**. The
+[batch-30 native index](compiler/validation/batch30-native-2026-11-24.json)
+binds all three API-matched archives, 40,102 rehashed files, 22,892 checked
+embedded streams and 783 local input identities to the implementation commit.
 
 Batch 29 [run 45226925936](https://github.com/msly/yavo/actions/runs/45226925936)
 passed **six of six jobs** at `e355cb3`. Linux x86-64, Windows x86-64 and macOS

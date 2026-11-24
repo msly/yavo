@@ -37,7 +37,7 @@
 | 里程碑 | 交付范围 | 退出条件 | 当前状态 |
 | --- | --- | --- | --- |
 | SH-1：可用的子集编译器 | 在 `selfhost/` 中实现真实词法器、解析器、最小语义检查和 C 生成；公布精确输入子集 | stage0 构建成功；外部正向程序运行结果正确；负向程序在前端拒绝；未实现语法明确报错；支持的行为与 stage0 差分一致 | 已完成：子集覆盖编译器自身源码；第三十批语料扩展到 439 例，当前验收见下节 |
-| SH-2：最小自举闭环 | 输入子集覆盖编译器全部 Yavo 源码；可由外部驱动构建 | 在独立目录、清空产物的条件下完成 stage0 → stage1 → stage2 → stage3；stage2/3 对固定输入生成的 C 一致，独立程序结果一致；记录所有源码、运行时、工具链和构建参数的身份 | **已闭合（引导子集）**：stage2.c 与 stage3.c 逐字节一致，stage2/stage3 二进制一致，stage2 在全部用例上与 stage1 输出相同；三平台原生固定点基线与第二十九批扩展均已确认，当前批次证据见下节 |
+| SH-2：最小自举闭环 | 输入子集覆盖编译器全部 Yavo 源码；可由外部驱动构建 | 在独立目录、清空产物的条件下完成 stage0 → stage1 → stage2 → stage3；stage2/3 对固定输入生成的 C 一致，独立程序结果一致；记录所有源码、运行时、工具链和构建参数的身份 | **已闭合（引导子集）**：stage2.c 与 stage3.c 逐字节一致，stage2/stage3 二进制一致，stage2 在全部用例上与 stage1 输出相同；三平台原生固定点基线及第三十批扩展均已确认，当前证据见下节 |
 | SH-3：主编译器接替 | 逐步覆盖当前 Rust 前端支持的语义、模块与诊断；承接正常构建入口 | 现有回归与冻结规格报告无未解释退步；独立错误输入与资源测试通过；Linux、Windows、macOS 原生执行相应验收；日常开发默认用自举编译器 | 尚未接替，Rust stage0 仍是主编译器 |
 | SH-4：声明范围内的实用交付 | 以非编译器应用验证语言、库、工具和分发 | 下节中的应用、诊断、可重放构建、资源和平台门槛通过，明确支持范围与仍缺能力 | 首个 test-summary 已通过三平台验收，三个独立应用完成 1 个；SH-4 整体未完成 |
 
@@ -62,7 +62,9 @@ SH-1 的结果只标为“子集编译器”。SH-2 可以标为“子集自举�
 
 正式语料为 **439 cases、155 个可执行输入**：127 run、28 panic、218 reject、52 unsupported、14 shared_unsupported。净新增 67 例，原 `unsupported_vec_pop` 按原字节晋升；本批 68 项均先由独立 Rust oracle 确定结果，15 个运行程序的 Debug/Release 共 30 次执行通过。
 
-本机完整门 **439/439 cases、12/12 checks、0 skip**，stage2.c = stage3.c（668,302 字节），Linux stage2/stage3 二进制逐字节一致（308,504 字节）；真实 lexer 的两代 C 与 Debug/Release 正常返回堆检查通过。Rust 完整 Debug/Release 各 145/0/1，冻结 124/3/2。来源、命令与哈希见[本机验收摘要](../compiler/validation/selfhost-optional-pop-2026-11-24.json)和[独立 oracle](../selfhost/tests/evidence/batch30-optional-oracle/oracle-index.json)。本批三平台原生 CI 尚待提交后确认。
+本机完整门 **439/439 cases、12/12 checks、0 skip**，stage2.c = stage3.c（668,302 字节），Linux stage2/stage3 二进制逐字节一致（308,504 字节）；真实 lexer 的两代 C 与 Debug/Release 正常返回堆检查通过。Rust 完整 Debug/Release 各 145/0/1，冻结 124/3/2。来源、命令与哈希见[本机验收摘要](../compiler/validation/selfhost-optional-pop-2026-11-24.json)和[独立 oracle](../selfhost/tests/evidence/batch30-optional-oracle/oracle-index.json)。
+
+`7297e3b` 的 [CI run 45345384747](https://github.com/msly/yavo/actions/runs/45345384747) **6/6 jobs 成功**。Linux、Windows、macOS 各通过 439 cases、12 checks、0 skip，平台内 stage2/stage3 C 与二进制相同，真实 lexer 两模式及 CLI 各 213 次执行通过。Linux GCC ASan/UBSan 通过 156 程序（155 fixture + 1 lexer），stage2 自编译、439 checks、155 emits 和 8 个坏输入。三份归档已按 GitHub 大小/摘要、提交源码与实际输出核验，共 40,102 个文件、22,892 条嵌入流；783 个本机输入绑定与提交一致，见[第三十批原生索引](../compiler/validation/batch30-native-2026-11-24.json)。
 
 ### 第二十九批：Result/try 与词法错误传播（历史记录）
 
@@ -116,7 +118,7 @@ SH-1 的结果只标为“子集编译器”。SH-2 可以标为“子集自举�
 | 已完成 | 三平台确认固定点 | `4739ffc` 的 run 45150424099 六项成功，三平台原生固定点通过；见[独立 CI 索引](../compiler/validation/selfhost-fixed-point-native-2026-11-23.json)。原历史本机回执保留原样 |
 | 已完成 | 第一个非编译器 CLI（SH-4 线） | [test-summary](../examples/test-summary/README.md) 使用 stage0，四模块首次 check/Debug/Release 通过，0 编译修复；独立输出、资源、可复现及三平台门已通过 |
 | 已完成 | Result/try 与真实词法器验收 | `e355cb3` 的 run 45226925936 六项成功；三平台各372/12、零跳过，真实 lexer 与 Linux stage2 sanitizer 通过，归档已核验 |
-| 当前批次 | Copy Optional 与 `Vec.pop` | 439 例语料，14 个真实截断点已迁移并删除五个 helper；验收结果见本批记录，拥有型 Optional/pop 保持 U0001 |
+| 已完成 | Copy Optional 与 `Vec.pop` | `7297e3b` 的 run 45345384747 六项成功；三平台各439/12，14 个真实截断点已迁移并删除五个 helper；拥有型 Optional/pop 保持 U0001 |
 | 下一批 | `for` 与真实遍历迁移 | 以编译器和 lexer 单元中的只读遍历为切口，先对齐迭代对象单次求值、元素权限、break/continue 和提前退出清理，再迁移可直接替换的 while；保留固定点及独立资源门 |
 | 后续 | 格式化与源模块 | 插值/`format`、模块（替换拼接）。每项先在外部用例中与 stage0 对齐，再迁移编译器源码并重新达到固定点 |
 | 接替阶段 | SH-3 接替 | 子集覆盖既有回归与冻结规格后，再讨论让 Yavo 编译器承担日常 `check`/`build` |

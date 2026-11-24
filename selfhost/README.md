@@ -83,7 +83,16 @@ The real lexer passes both modes and both compiler generations. Full Rust
 Debug/Release each pass 145/0/1 with frozen conformance 124/3/2.
 [Independent oracles](tests/evidence/batch30-optional-oracle/oracle-index.json)
 preserve the original attempts, source identities and diagnostic differences.
-Native CI confirmation for this batch is pending submission.
+[Native run 45345384747](https://github.com/msly/yavo/actions/runs/45345384747)
+passes **six of six jobs** at `7297e3b`. Linux, Windows and macOS each pass
+439 cases, 12 checks and zero skips, with stage2/stage3 C and binaries equal
+within each platform. Each platform passes the real lexer and 213 existing
+application executions. Linux GCC ASan/UBSan passes 156 generated programs
+and instrumented stage2 self-compilation, 439 checks, 155 emissions and 8
+malformed inputs. The [native index](../compiler/validation/batch30-native-2026-11-24.json)
+records the three API-matched archives, 40,102 rehashed files, 22,892 checked
+embedded streams and 783 local input bindings matched to the implementation
+commit. The local receipt retains its original pending fields.
 
 ## Historical validation: batch 29 (2026-11-24)
 
@@ -412,8 +421,9 @@ the fixtures do not execute these programs or add new known_gap records.
 
 Unsupported input includes persistent bindings of borrowed elements and
 mutation through non-Copy indexes, direct nested Vec elements, borrowed `str`
-or unit vector elements, pop, vector slices, other collections, user modules,
-enum payloads, sink parameters and general references, optionals, Result fields,
+or unit vector elements, owned-element pop, vector slices, other collections, user modules,
+enum payloads, sink parameters and general references, owned/nested Optionals,
+Optional fields/container/Result combinations, Result fields,
 `Vec[Result]`, nested Results, arrow catch,
 user-defined methods, generics, interpolation, float/nondecimal literals,
 integer separators, for loops, closures and concurrency. String temporary
@@ -428,8 +438,8 @@ not the broader Rust frontend.
 | `lexer.yv` | UTF-8-aware tokens, escapes, source spans, newline termination; returns `Vec[Token] ! Diagnostic` |
 | `model.yv` | Copy AST nodes; child lists are ranges in shared Program pools |
 | `parser.yv` | Aggregate/function/statement/expression grammar, imports, slices, borrows, catch, unsupported boundaries |
-| `types.yv` | Nominal/vector/Result type pools, field/default checks, cycles/layout order, transitive ownership |
-| `codegen.yv` | Places, borrowed/consuming values, Result wrapping/propagation, inout/take, vector operations, move-state joins, cleanup, loop replay and ordered C |
+| `types.yv` | Resolved nominal/vector/Copy Optional types, Result pool, field/default checks, cycles/layout order, transitive ownership |
+| `codegen.yv` | Places, borrowed/consuming values, Optional/Result wrapping, lazy coalesce, Result propagation, inout/take/pop, move-state joins, cleanup, loop replay and ordered C |
 | `main.yv` | `compile` returns `String ! Diagnostic`; CLI reports errors, reads input and creates output exclusively |
 | `lexer_test.yv` | Lexer boundary assertions, including owned error propagation and cleanup on normal test returns |
 | `tests/` and `bootstrap.py` | Independent behavior/rejection oracles, fixed point and reproducible execution |
@@ -438,10 +448,9 @@ Inside the compiler, parsing, checking and lowering still call `fail`, which
 prints the first diagnostic and exits with status 1. Lexing returns an owned
 `Diagnostic` containing code, message and byte/line/column location; `compile`
 uses `try`, and `main` catches, reports and exits. Lexer tests catch failures
-and return normally so allocation checks can observe cleanup. Two
-compiler-internal workarounds remain: owned vectors
-cannot be truncated without `pop`, so small `trunc*` helpers rebuild them,
-and loop exit states live in one flat `Vec[bool]` pool.
+and return normally so allocation checks can observe cleanup. Copy metadata
+stacks retain capacity and pop only their discarded suffix. Loop exit states
+remain in one flat `Vec[bool]` pool.
 
 The [token metadata](examples/token_metadata.yv), [token table](examples/token_table.yv),
 [owned token store](examples/owned_token_store.yv), [borrowed token scan](examples/borrowed_token_scan.yv)
@@ -450,11 +459,12 @@ executable fixtures from earlier increments.
 
 ## Next steps
 
-Self-hosting is a regression gate. Batch 29 is confirmed on native
-Linux/Windows/macOS; the next language increment is Optional and `Vec.pop`
-to replace the compiler's `trunc*` rebuilding helpers. Later increments cover
-`for`, interpolation/`format` and modules, each with compiler-source migration
-and a renewed fixed point. [SH-3](../docs/self-hosting.md) remains incomplete;
+Self-hosting is a regression gate. Batch 30 is confirmed on native
+Linux/Windows/macOS. The next increment is `for`, starting with int/byte
+half-open ranges and read-only Copy Vec traversal, with migration of real
+lexer stress loops and `parser.store`. Later increments cover
+interpolation/`format` and modules, each with compiler-source migration and
+a renewed fixed point. [SH-3](../docs/self-hosting.md) remains incomplete;
 SH-4 has one of three independent applications validated.
 
 ## Historical snapshots

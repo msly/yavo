@@ -35,8 +35,15 @@ These are separate counting units, derived from the current manifest and source.
 The [local receipt](../../compiler/validation/selfhost-optional-pop-2026-11-24.json)
 passes 439/439 cases, 12/12 checks and zero skips, with identical stage2/stage3
 C and binaries. Full Rust Debug/Release each pass 145/0/1 and frozen
-conformance remains 124/3/2. Native CI confirmation for this batch is pending
-submission; local source validation alone does not claim GCC execution.
+conformance remains 124/3/2. [Run 45345384747](https://github.com/msly/yavo/actions/runs/45345384747)
+passed all six jobs at `7297e3b`. Each native platform passes 439 cases,
+12 checks, zero skips and the existing application's 213 executions. Linux
+passes the complete 156-program and stage2 GCC sanitizer gates above.
+The [native index](../../compiler/validation/batch30-native-2026-11-24.json)
+records three downloaded archives matched to GitHub size/digest, 40,102
+rehashed files, 22,892 checked embedded streams and 783 local input bindings
+matched to the implementation commit. The historical local pending fields
+remain unchanged.
 
 ## Batch 29 Result and real lexer checks (historical)
 
