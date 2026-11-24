@@ -18,7 +18,27 @@ binds the run, job/step results and artifact metadata. It preserves the original
 platform status. That historical run sanitized stage1-generated applications,
 not the stage2 compiler itself.
 
-## Batch 29 Result and real lexer checks
+## Batch 30 Copy Optional and pop checks
+
+The current manifest contains **439 cases and 155 executable inputs**. Its 68
+targeted cases comprise 67 additions and the byte-for-byte promotion of the
+existing pop input. They cover Copy payloads, receiver permissions, lazy
+coalesce, contextual typing, branch cleanup and explicit unsupported boundaries.
+The compiler itself uses pop at all 14 former truncation sites.
+
+Bootstrap still requires 12 auxiliary checks, including real lexer stage1/stage2
+C equality and Debug/Release allocation checks. The Linux adapter requires
+**156 generated programs** (155 fixtures plus the real lexer), instrumented
+stage2 self-compilation, **439 checks, 155 emissions and 8 malformed inputs**.
+These are separate counting units, derived from the current manifest and source.
+
+The [local receipt](../../compiler/validation/selfhost-optional-pop-2026-11-24.json)
+passes 439/439 cases, 12/12 checks and zero skips, with identical stage2/stage3
+C and binaries. Full Rust Debug/Release each pass 145/0/1 and frozen
+conformance remains 124/3/2. Native CI confirmation for this batch is pending
+submission; local source validation alone does not claim GCC execution.
+
+## Batch 29 Result and real lexer checks (historical)
 
 [Run 45226925936](https://github.com/msly/yavo/actions/runs/45226925936) passed
 all six jobs at `e355cb3`. All three native platforms pass 372 cases and
@@ -29,7 +49,7 @@ also passes the existing application's 213 executions. The
 records exact platform Rust selections/counts, three downloaded archive digests,
 and independent source/artifact/output inspection.
 
-The current manifest has 372 cases and 140 executable inputs. Bootstrap retains
+The batch-29 manifest had 372 cases and 140 executable inputs. Bootstrap retains
 the stage0 lexer unit and adds `lexer_units_selfhost`: stage1 and stage2 must emit
 identical C from the current `support.yv + lexer.yv + lexer_test.yv`, and that C
 runs in Debug/Release with `YV_ALLOC_CHECK`. Expected lexical errors are caught;
@@ -40,7 +60,7 @@ Together with the existing guards this makes 12 auxiliary checks.
 The Linux adapter requires the same exact source concatenation, stage1/stage2
 emission commands, C hashes, two mode binaries and successful output before
 adding `lexer_selfhost_unit` to the GCC sanitizer bundle. The generated-program
-gate therefore has 141 programs (140 manifest programs plus the real lexer unit).
+gate therefore had 141 programs (140 manifest programs plus the real lexer unit).
 The separately instrumented stage2 compiler still covers every manifest check
 and executable emission (372/140), self-compilation and eight malformed inputs.
 The source-bound local and native receipts distinguish these counting units.

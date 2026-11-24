@@ -1,0 +1,20 @@
+fn step(index: int) -> int ! String {
+    if index == 1 { return err("skip".toString()) }
+    if index == 3 { return err("stop".toString()) }
+    return index
+}
+fn main() {
+    var index = 0
+    while index < 5 {
+        index += 1
+        let guard = ["inside".toString()]
+        let empty: ?int = none
+        let number = empty ?? (step(index) catch error {
+            println(error)
+            if index == 1 { continue }
+            break
+        })
+        println(number)
+    }
+    println(index)
+}

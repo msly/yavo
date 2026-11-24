@@ -1,0 +1,2080 @@
+{
+  "schema": "yavo-batch30-stage0-oracle/1",
+  "baseline": "e3222d87e6220f2447ec2b9e8d458b6f02e60a21",
+  "profile": "Debug",
+  "inputs": {
+    "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo": "bcbbbf91215b81ad628329320ca9b18b0c924f9735a006af2597d77d4640c2c0",
+    "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig": "58959f01285c05a74276f09327b551d42ed6006bf325a78dc661a024e314987b",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/candidates.json": "30766d6928721339b986960407117a2fd6863875ca1fe0c1672276082912d27d",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/verify_stage0.py": "bbded9feb0fdb7dacf1b127df03519092ad3032a4d1e57aea96daac6ecfa14a9",
+    "/data1/workspace/github/workspace/yavo/compiler/runtime/yavo_rt.h": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+    "/data1/workspace/github/workspace/yavo/compiler/toolchain.lock": "a9bbe83e644b0e1cee19c8dba8b5157eaed3e9ddc71b96d8aab2b2d2bb15f53c",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_primitives.yv": "b256da1be1aadd7e41f266380ebcaab6345ddc715c4c4138971dded6e5ea7cae",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/vec_pop_primitives/program.c": "a1ff9a378c535aa7084518d0682262b28dc0262be4e9e33b0557dd2f438d256a",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/vec_pop_primitives/program": "bee52b22b3baf978d0e5beac84f88d71de6e479e49fb6e671137787ee200b319",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_copy_nominal.yv": "a268bb8b24ff0ba2305950fc2de15fc63becd2d58ae7d8c6029fdf790c6e3930",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_receivers.yv": "6510fb8248a2ebb35f15e66ffb9d14ff9026a27230dfaa9d44c7ef2dce506171",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/vec_pop_receivers/program.c": "1c52763240452189acf327467f5c82f54304acc14dd636fe4bf10bb520ec3a6f",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/vec_pop_receivers/program": "80460fe589479c8cadae61b924d4f1857da1d78f66ca3b256f22b980b720538e",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_rewind.yv": "6fa8844fb15a88867c5ff3f0f231b0a0297ccdd0117d8bb4befbf57c5e73cef8",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_copy_forms.yv": "0d8046f50165200867d393c9c34a8636a7f695f2df152f93dcb6a9a222a2aefc",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/optional_copy_forms/program.c": "4a34354781b4dfeb681fedcf1e23cc6e58a769ec62190e86f86d62347985ea67",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/optional_copy_forms/program": "3baeac5718fc032ee11b929011b2116b0037e73d033047dd0447b445b472353a",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_coalesce_order.yv": "e416b505420f1bb9499e7be299e38c280c1653c67f1e82c0c72e3a979b079068",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/optional_coalesce_order/program.c": "bd8501371a0d520592028f9fe745708ff4fa54097b96394e0f34269e761fac4c",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/optional_coalesce_order/program": "b0cb6e6433ff3a022ad359f990d9e0fb6a0f5075c63b87e4a310418fc201bb9d",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_some_shadow.yv": "626beb790b733bcb74693d8f4b3520964532e9e40235169ed497e7fb752afabf",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/optional_some_shadow/program.c": "f2222b89a3518c90a3c2abba4d677cd5b4442b1308815f0399b28204958f789b",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/optional_some_shadow/program": "2ef919a26a6157e13b3c73c3e06e46952f8477815811a9a0160ef5edafb495b9",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_fallback_temporaries.yv": "1ad733ed42b3f8b9d72aeb6c076b06dc89d8b6983adfe437802bef26e2ab469f",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/optional_fallback_temporaries/program.c": "c08852c68d5d6acf644ed25c90903ae3d6dda48ea9e21912fe2c612f51a7e4d1",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/optional_fallback_temporaries/program": "9441fa062a52a249f3906d1ab381e21453c7a43e20b7cbab88aae932db73a1d2",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_conditional_move.yv": "7d2d3cb2a8f27b83fe98429dbd828456c550c65750f53072b55aac8b1f77e01e",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/optional_conditional_move/program.c": "e1ab0107060d93cd162fb4f7a98103ce69d25b219933f48b077ffc29cd4f93ea",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/optional_conditional_move/program": "699d65f5efce0de4fc323d9fe7aad8cb8e974308002bc29b607c60b1558c7c3b",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_try_fallback.yv": "75c05bc3b3001f1ee1684c39c862509dc6ed833d28a9cb019482df89cd943c78",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/optional_try_fallback/program.c": "0fc1a497a26009c7f48e8a42919da9d551a811c936a7ee961cf10dfdb9ffdc64",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/optional_try_fallback/program": "862728b2115ce0dd6912c58d37be6a56266f4bf2d3c22f0c095f14bd950fbe85",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_catch_return_fallback.yv": "7dfb161fcef0ab055c05722ea04718e737cba81a0d6f81215b6d70bdc2aee795",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/optional_catch_return_fallback/program.c": "948b0906a0bd05a431c4bcebdc09002ac9c4abae9cef0106b207f7699546f7b9",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/optional_catch_return_fallback/program": "042fb48dab7545f84b771831eb7c5abd5741a11f1c9dddb17a7567a9c7abe982",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_catch_loop_fallback.yv": "ffa79310e3b7a2130dc797130deb7b3a036ef30e1bca14682e38349d80e11a81",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/optional_catch_loop_fallback/program.c": "90e9ba0bcc37bdf730cb9d17be48954189dce1f3238d570070095b3b01291630",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/optional_catch_loop_fallback/program": "d3dd910c953f8624841cdc632cb9ec4197e0eb1a62e1a0a6875f4d158948d163",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_byte_context.yv": "487d744ecc81b6cff3c4a6697a1f18387d1ca020c198d02f4c2aa15949f577cb",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/optional_byte_context/program.c": "1761b28efb005c147f1273ea442ece5f82f3acab2b971b2104fbd4447e00c35f",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/optional_byte_context/program": "8093cd1046c9c432c2e7c90d52c5a70a70c546e27deef155cb5dfff44637e819",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_none_untyped.yv": "91938d1767c7214aeb2242db8cbef89b4c49986d35ad693a2ae664a5f13c6a84",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_some_empty.yv": "6f982924c79c91dc3877517cb525d973cfe3f0ff41e3b862c22874b95ed48700",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_some_extra.yv": "1e4e3d794a60db5c925fd95080214571420b5376c7824b532fe48c0964ed25ce",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_some_unit.yv": "7437562264b866f63aad2fa3d8e804310fb8d433e8a2d1179697d59ee04fcf2b",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_some_none.yv": "098d4f3091b7d700184d57946a73483a4e81dd545fcdf4a2045308e84541a929",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_wrong_payload.yv": "b45b654ce5ca18762eb9c19f032387a5aea05a00f6ff1dbfc69af82dde841466",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_wrong_fallback.yv": "a16f3d5e9d7f4550898bbb9b926b0d7ac1584df5337c88204252d85c75b720e5",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_nonoptional_coalesce.yv": "bdd8295927942456e4cb92b2be3f2ad52eaffaa1d43bfc6ba0848ae0a2f3b5d5",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_context_none_coalesce.yv": "6258bd0c84e904c4d0cab11d62e1d9e2ba3842990873fb0b9e0ffa7f3eda03f6",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_return_none_coalesce.yv": "ac4f39a7427cc0cd1ff852fb292aebe4fe1a62bd0cd1eac8079bb39bfe2a4393",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_inferred_none_coalesce.yv": "411762b7805c97ea3e9952389b75f88357f29f77bf9022dbc24ce4c97a078b0a",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_is_some_arity.yv": "81bff6fc36ef363cfd254b2dd95b8022e6948e5472248a38049325ad60b6774d",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_condition.yv": "05428030f4d679f32e4fac1c5eb55cacb654d77a55d2b630e3413409033c9e9d",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_immutable.yv": "3a615972aa82aa16e2d5af8ac0c52e7bad99e28d644318085df01834f0b86499",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_readonly_parameter.yv": "b62be3904f300541a881efb2c27e7803895024a82cbc979de3a876dc30652e7f",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_readonly_field.yv": "a100850e558aeb8cb8a8ef16f860c5eafa733ec4f50df842fc896265a5b4f204",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_arity.yv": "960f2b3b2686a7cb6e3b2b1470c104eca63640c4fbb9d61cab933d2ee9be5377",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_borrowed_argument.yv": "a9fc0a9fb51aaeea0db631041851b5ce2ff95cfb1ebf62c13d05e052c55aaa14",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_reserved_argument.yv": "b88f275375a19c65d9253da2951b5f045d29ba79976dd4a8258a143a00ba8d6c",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_after_move.yv": "4426c05aa0eb4121326a4ad21bfc772a1255310e632154a4dff654da038417fa",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_coalesce_after_move.yv": "11656368b05587d4eaae4288632b30f2f1fe9e6ec5c5915e8edbd0c5e4794c99",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_some_shadow_variable.yv": "a57cdc2fd757a45fe266567b1999f896dbe83babc127fa77a1748f90c0f2f15c",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_missing_return.yv": "bfee992b86670b2c81b566ea41d302f8d0fb50e2d5254f72a38e1933adf46403",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_byte_implicit.yv": "b7e995b24db43d78e5b8aa1c3cae8ea60af718b21853eb72861c8f9659f0f0c0",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_byte_coalesce.yv": "307d3175b54bf6ae22b99f4840c02e18a53eef0292cf04ec66104db59f0452f0",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_byte_implicit.yv": "79b28f8e588605963fa90b1994f5a794c7469d7bafb1206fa67a73effc5d4b7d",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_byte_return_implicit.yv": "7af118aede1afc4b26e47be1603953f749ff3d6949b61f2cb8faa556bcd158e1",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_compare.yv": "a24dca8818e73c98f2663683e2a1bb44fb310736ebb4a7de5aa13e3b3db67004",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_test_scalar.yv": "295d8c0b3bdd9a153e46112f240f786822b8d161831e4ccc47b0e0129f5af6cb",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_vec_pop_temporary.yv": "8c7a91a719a1a27e8d7b4e59d0764f36c4eccfc19cc8ff91d33c2d3eef040ace",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_vec_pop_nonvector.yv": "5531e65fba81c2733a5e92440d99ec9f4e13b036565dc3a0f161f7bcc469d1cc",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_vec_pop_string.yv": "d38d2c297207535739d4a7e065419a88a86f030d24a50034994f25d62b94f863",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_vec_pop_owned_struct.yv": "6b8692618f81d6c348d0a69b54776ec1629333737b021b35731d9141770c6b09",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_string.yv": "f17c6689ad1861386ac60f61677b7a37b0a0acaf8cde348c716a1fa72b23dd78",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_vec.yv": "558aab180277522782a4c305976741f8808269d3eddb63668f191d0bd4e2b75a",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_owned_struct.yv": "20a18104bcb278d7a8627d7c0e862515f4ebc44a452f62b17542bc145492352f",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_str.yv": "c986b7334849cdeab4c8ea971aee6dd543324cf35e0162dab7c77bceed82bee3",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_unit.yv": "d0d9bacb87e570089eaaf0633d356e9ef93c599fd510c8c4d7a87ece47714fc0",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_nested.yv": "1d18cdff59cc27a744de14efad70124e815dc1cad1ccddc7cc335b65c258246e",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_nested_context.yv": "64df36f028299366b689d1ebbf625914991b976637f6b9833f6836c11f79a98d",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_field.yv": "a6b37d932febddf5fca1cc0b17277678d1fd524177a340cd784885581b249ab9",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_vec_element.yv": "b2bb14773c250e356cea90a0f3a47b4bae62b3edd9dc6e66b0134ae13e00fd72",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_result_success.yv": "4cbb912ad61ed23bd7a71bee4f3b7ab5bb15e8c6e078279308ad634c54f6f743",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_result_payload.yv": "cf4b2e7976774d52b1bb19df59741f30063df9e9759d2bfa431b8e1ecd7279c2",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_if_let.yv": "357c47a2c1c9a0ff07193f3129751de45ce5d5f627cc85b12d00d2813cee80ff",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_match.yv": "ee0b1d186a0c258b18a3043ef3dcf092470fe20ed1352a141deb9d3049c50648",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_coalesce_return.yv": "8265ad2a1082c79009d9867a082b953b19ff139ee71a618211c1e1e99e049bbd",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_coalesce_break.yv": "f2fdf09f3a25bfed20aa703c756228a13732d568cab6ebc232a82e972386a9d3",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_coalesce_continue.yv": "2666637b23db5c05db4e2153107e3256e2a27b5a095a16d680878c13c9f067d9",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_basic.yv": "f9566d147e9c04e4a97153cc74aa7fbbf79fd5d6498df8a2b50e7e11f65e2446",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/vec_pop_basic/program.c": "4379c8ff76560fe40d8742147db4513f04e7e37bd2834c28ffbf13dcba607883",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/vec_pop_basic/program": "801f9eb47b156834ee299ccb4490ccea61cd239d2ef0ad00fa40a782320b7195"
+  },
+  "environment": {
+    "YAVO_ALLOC_CHECK": "1",
+    "YAVO_NO_CACHE": "1"
+  },
+  "records": [
+    {
+      "id": "vec_pop_primitives",
+      "kind": "run",
+      "file": "run/vec_pop_primitives.yv",
+      "source": "fn main() {\n    var numbers = [1, 2]\n    println(numbers.pop() ?? -1)\n    println(numbers.pop() ?? -1)\n    println(numbers.pop() ?? -1)\n    var flags = [false]\n    println(flags.pop() ?? true)\n    println(flags.pop() ?? true)\n    var bytes: Vec[byte] = ['a', 'z']\n    println(int(bytes.pop() ?? '!'))\n    println(int(bytes.pop() ?? '!'))\n    println(int(bytes.pop() ?? '!'))\n    println(numbers.pop().isNone())\n}\n",
+      "source_sha256": "b256da1be1aadd7e41f266380ebcaab6345ddc715c4c4138971dded6e5ea7cae",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_primitives.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_primitives.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"b256da1be1aadd7e41f266380ebcaab6345ddc715c4c4138971dded6e5ea7cae\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "first_error": null,
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_primitives.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/vec_pop_primitives/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/vec_pop_primitives/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_primitives.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"b256da1be1aadd7e41f266380ebcaab6345ddc715c4c4138971dded6e5ea7cae\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.225
+      },
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/vec_pop_primitives/program"
+        ],
+        "exit_code": 0,
+        "stdout": "2\n1\n-1\nfalse\ntrue\n122\n97\n33\ntrue\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "expected": {
+        "exit_code": 0,
+        "stdout": "2\n1\n-1\nfalse\ntrue\n122\n97\n33\ntrue\n",
+        "stderr": ""
+      },
+      "generated_c_sha256": "a1ff9a378c535aa7084518d0682262b28dc0262be4e9e33b0557dd2f438d256a",
+      "binary_sha256": "bee52b22b3baf978d0e5beac84f88d71de6e479e49fb6e671137787ee200b319"
+    },
+    {
+      "id": "vec_pop_copy_nominal",
+      "kind": "run",
+      "file": "run/vec_pop_copy_nominal.yv",
+      "source": "enum Mark { Cold Hot }\nstruct Position { x: int y: int }\nstruct Token { position: Position mark: Mark }\nfn fallback() -> Token { return Token{position: Position{x: -1, y: -1}, mark: .Cold} }\nfn main() {\n    var tokens = [Token{position: Position{x: 2, y: 3}, mark: .Cold}, Token{position: Position{x: 5, y: 7}, mark: .Hot}]\n    let last = tokens.pop() ?? fallback()\n    println(last.position.x + last.position.y)\n    println(last.mark == .Hot)\n    let first = tokens.pop() ?? fallback()\n    println(first.position.x + first.position.y)\n    println(first.mark == .Cold)\n    println(tokens.pop().isNone())\n    var marks: Vec[Mark] = [.Cold, .Hot]\n    println((marks.pop() ?? .Cold) == .Hot)\n    println((marks.pop() ?? .Hot) == .Cold)\n    println((marks.pop() ?? .Hot) == .Hot)\n}\n",
+      "source_sha256": "a268bb8b24ff0ba2305950fc2de15fc63becd2d58ae7d8c6029fdf790c6e3930",
+      "passed": false,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_copy_nominal.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"E0020\",\"column\":18,\"end_column\":21,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_copy_nominal.yv\",\"fixes\":[],\"line\":1,\"message\":\"expected a newline or `,` after the case, found `Hot`\",\"notes\":[],\"primary\":{\"column\":18,\"end\":20,\"end_column\":21,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_copy_nominal.yv\",\"line\":1,\"start\":17},\"severity\":\"ERROR\"},{\"code\":\"E0020\",\"column\":26,\"end_column\":27,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_copy_nominal.yv\",\"fixes\":[],\"line\":2,\"message\":\"expected a newline or `,` after the field, found `y`\",\"notes\":[],\"primary\":{\"column\":26,\"end\":49,\"end_column\":27,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_copy_nominal.yv\",\"line\":2,\"start\":48},\"severity\":\"ERROR\"},{\"code\":\"E0020\",\"column\":35,\"end_column\":39,\"end_line\":3,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_copy_nominal.yv\",\"fixes\":[],\"line\":3,\"message\":\"expected a newline or `,` after the field, found `mark`\",\"notes\":[],\"primary\":{\"column\":35,\"end\":95,\"end_column\":39,\"end_line\":3,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_copy_nominal.yv\",\"line\":3,\"start\":91},\"severity\":\"ERROR\"}],\"error_count\":3,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_copy_nominal.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"a268bb8b24ff0ba2305950fc2de15fc63becd2d58ae7d8c6029fdf790c6e3930\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "first_error": {
+        "code": "E0020",
+        "line": 1,
+        "column": 18,
+        "message": "expected a newline or `,` after the case, found `Hot`"
+      }
+    },
+    {
+      "id": "vec_pop_receivers",
+      "kind": "run",
+      "file": "run/vec_pop_receivers.yv",
+      "source": "struct Stack { values: Vec[int] }\nstruct Nested { stack: Stack }\nfn popValues(values: inout Vec[int]) -> ?int { return values.pop() }\nfn popField(stack: inout Stack) -> ?int { return stack.values.pop() }\nfn main() {\n    var nested = Nested{stack: Stack{values: [10, 20, 30, 40]}}\n    println(nested.stack.values.pop() ?? -1)\n    println(popField(&nested.stack) ?? -1)\n    println(popValues(&nested.stack.values) ?? -1)\n    println(nested.stack.values.pop() ?? -1)\n    println(popField(&nested.stack) ?? -1)\n    println(nested.stack.values.len())\n}\n",
+      "source_sha256": "6510fb8248a2ebb35f15e66ffb9d14ff9026a27230dfaa9d44c7ef2dce506171",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_receivers.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_receivers.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"6510fb8248a2ebb35f15e66ffb9d14ff9026a27230dfaa9d44c7ef2dce506171\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "first_error": null,
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_receivers.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/vec_pop_receivers/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/vec_pop_receivers/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_receivers.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"6510fb8248a2ebb35f15e66ffb9d14ff9026a27230dfaa9d44c7ef2dce506171\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.184
+      },
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/vec_pop_receivers/program"
+        ],
+        "exit_code": 0,
+        "stdout": "40\n30\n20\n10\n-1\n0\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.001
+      },
+      "expected": {
+        "exit_code": 0,
+        "stdout": "40\n30\n20\n10\n-1\n0\n",
+        "stderr": ""
+      },
+      "generated_c_sha256": "1c52763240452189acf327467f5c82f54304acc14dd636fe4bf10bb520ec3a6f",
+      "binary_sha256": "80460fe589479c8cadae61b924d4f1857da1d78f66ca3b256f22b980b720538e"
+    },
+    {
+      "id": "vec_pop_rewind",
+      "kind": "run",
+      "file": "run/vec_pop_rewind.yv",
+      "source": "struct Slot { index: int active: bool }\nfn rewind(values: inout Vec[Slot], count: int) {\n    while values.len() > count { let _ = values.pop() }\n}\nfn main() {\n    var values: Vec[Slot] = []\n    var index = 0\n    while index < 40 {\n        values.push(Slot{index: index, active: true})\n        index += 1\n    }\n    rewind(&values, 5)\n    println(values.len())\n    println((values.pop() ?? Slot{index: -1, active: false}).index)\n    rewind(&values, 2)\n    values.push(Slot{index: 99, active: false})\n    println((values.pop() ?? Slot{index: -1, active: false}).index)\n    rewind(&values, 0)\n    println(values.pop().isNone())\n    index = 0\n    while index < 40 {\n        let _ = values.pop()\n        index += 1\n    }\n    println(values.len())\n}\n",
+      "source_sha256": "6fa8844fb15a88867c5ff3f0f231b0a0297ccdd0117d8bb4befbf57c5e73cef8",
+      "passed": false,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_rewind.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"E0020\",\"column\":26,\"end_column\":32,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_rewind.yv\",\"fixes\":[],\"line\":1,\"message\":\"expected a newline or `,` after the field, found `active`\",\"notes\":[],\"primary\":{\"column\":26,\"end\":31,\"end_column\":32,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_rewind.yv\",\"line\":1,\"start\":25},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_rewind.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"6fa8844fb15a88867c5ff3f0f231b0a0297ccdd0117d8bb4befbf57c5e73cef8\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "first_error": {
+        "code": "E0020",
+        "line": 1,
+        "column": 26,
+        "message": "expected a newline or `,` after the field, found `active`"
+      }
+    },
+    {
+      "id": "optional_copy_forms",
+      "kind": "run",
+      "file": "run/optional_copy_forms.yv",
+      "source": "fn source(present: bool) -> ?int {\n    if present { return 7 }\n    return none\n}\nfn accept(value: ?int) -> int { return value ?? 99 }\nfn main() {\n    let inferred = some(0)\n    let empty: ?int = none\n    println(inferred.isSome())\n    println(empty.isNone())\n    println(inferred ?? 9)\n    println(empty ?? -1)\n    var assigned: ?int = 1\n    assigned = some(2)\n    println(assigned ?? -1)\n    assigned = none\n    println(assigned.isNone())\n    assigned = 3\n    let copied = assigned\n    println(assigned ?? 0)\n    println(copied ?? 0)\n    println(source(true) ?? 8)\n    println(source(false) ?? 8)\n    println(accept(5))\n    println(accept(none))\n    println(accept(some(6)))\n    let contextual: int = none ?? 4\n    println(contextual)\n    let wrapped: ?int = some(1) ?? 2\n    println(wrapped ?? 0)\n}\n",
+      "source_sha256": "0d8046f50165200867d393c9c34a8636a7f695f2df152f93dcb6a9a222a2aefc",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_copy_forms.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_copy_forms.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"0d8046f50165200867d393c9c34a8636a7f695f2df152f93dcb6a9a222a2aefc\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "first_error": null,
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_copy_forms.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/optional_copy_forms/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/optional_copy_forms/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_copy_forms.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"0d8046f50165200867d393c9c34a8636a7f695f2df152f93dcb6a9a222a2aefc\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.205
+      },
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/optional_copy_forms/program"
+        ],
+        "exit_code": 0,
+        "stdout": "true\ntrue\n0\n-1\n2\ntrue\n3\n3\n7\n8\n5\n99\n6\n4\n1\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.001
+      },
+      "expected": {
+        "exit_code": 0,
+        "stdout": "true\ntrue\n0\n-1\n2\ntrue\n3\n3\n7\n8\n5\n99\n6\n4\n1\n",
+        "stderr": ""
+      },
+      "generated_c_sha256": "4a34354781b4dfeb681fedcf1e23cc6e58a769ec62190e86f86d62347985ea67",
+      "binary_sha256": "3baeac5718fc032ee11b929011b2116b0037e73d033047dd0447b445b472353a"
+    },
+    {
+      "id": "optional_coalesce_order",
+      "kind": "run",
+      "file": "run/optional_coalesce_order.yv",
+      "source": "fn mark(tag: str, value: int) -> int {\n    print(tag)\n    return value\n}\nfn main() {\n    let first: ?int = none\n    let second: ?int = 2\n    let empty: ?int = none\n    println(first ?? second ?? mark(\"X\", 3))\n    println(first ?? empty ?? mark(\"F\", 3))\n    println(second ?? mark(\"X\", 4))\n    println(first ?? 4 + 1 == 5)\n    println(first ?? 4 | 1)\n    let flag: ?bool = false\n    println(false || flag ?? true)\n    println(true && flag ?? true)\n}\n",
+      "source_sha256": "e416b505420f1bb9499e7be299e38c280c1653c67f1e82c0c72e3a979b079068",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_coalesce_order.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_coalesce_order.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"e416b505420f1bb9499e7be299e38c280c1653c67f1e82c0c72e3a979b079068\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "first_error": null,
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_coalesce_order.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/optional_coalesce_order/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/optional_coalesce_order/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_coalesce_order.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"e416b505420f1bb9499e7be299e38c280c1653c67f1e82c0c72e3a979b079068\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.167
+      },
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/optional_coalesce_order/program"
+        ],
+        "exit_code": 0,
+        "stdout": "2\nF3\n2\ntrue\n5\nfalse\nfalse\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.001
+      },
+      "expected": {
+        "exit_code": 0,
+        "stdout": "2\nF3\n2\ntrue\n5\nfalse\nfalse\n",
+        "stderr": ""
+      },
+      "generated_c_sha256": "bd8501371a0d520592028f9fe745708ff4fa54097b96394e0f34269e761fac4c",
+      "binary_sha256": "b0cb6e6433ff3a022ad359f990d9e0fb6a0f5075c63b87e4a310418fc201bb9d"
+    },
+    {
+      "id": "optional_some_shadow",
+      "kind": "run",
+      "file": "run/optional_some_shadow.yv",
+      "source": "fn some(value: int) -> int { return value + 10 }\nfn main() {\n    println(some(2))\n    let value: ?int = some(3)\n    println(value ?? 0)\n}\n",
+      "source_sha256": "626beb790b733bcb74693d8f4b3520964532e9e40235169ed497e7fb752afabf",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_some_shadow.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_some_shadow.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"626beb790b733bcb74693d8f4b3520964532e9e40235169ed497e7fb752afabf\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "first_error": null,
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_some_shadow.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/optional_some_shadow/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/optional_some_shadow/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_some_shadow.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"626beb790b733bcb74693d8f4b3520964532e9e40235169ed497e7fb752afabf\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.178
+      },
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/optional_some_shadow/program"
+        ],
+        "exit_code": 0,
+        "stdout": "12\n13\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "expected": {
+        "exit_code": 0,
+        "stdout": "12\n13\n",
+        "stderr": ""
+      },
+      "generated_c_sha256": "f2222b89a3518c90a3c2abba4d677cd5b4442b1308815f0399b28204958f789b",
+      "binary_sha256": "2ef919a26a6157e13b3c73c3e06e46952f8477815811a9a0160ef5edafb495b9"
+    },
+    {
+      "id": "optional_fallback_temporaries",
+      "kind": "run",
+      "file": "run/optional_fallback_temporaries.yv",
+      "source": "fn measure(value: String) -> int {\n    println(value)\n    return value.len()\n}\nfn main() {\n    let present: ?int = 7\n    let empty: ?int = none\n    println(present ?? measure(\"skip\".toString()))\n    println(empty ?? measure(\"used\".toString()))\n    println(empty ?? [\"one\".toString(), \"two\".toString()].len())\n}\n",
+      "source_sha256": "1ad733ed42b3f8b9d72aeb6c076b06dc89d8b6983adfe437802bef26e2ab469f",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_fallback_temporaries.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_fallback_temporaries.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"1ad733ed42b3f8b9d72aeb6c076b06dc89d8b6983adfe437802bef26e2ab469f\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "first_error": null,
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_fallback_temporaries.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/optional_fallback_temporaries/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/optional_fallback_temporaries/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_fallback_temporaries.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"1ad733ed42b3f8b9d72aeb6c076b06dc89d8b6983adfe437802bef26e2ab469f\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.18
+      },
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/optional_fallback_temporaries/program"
+        ],
+        "exit_code": 0,
+        "stdout": "7\nused\n4\n2\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.001
+      },
+      "expected": {
+        "exit_code": 0,
+        "stdout": "7\nused\n4\n2\n",
+        "stderr": ""
+      },
+      "generated_c_sha256": "c08852c68d5d6acf644ed25c90903ae3d6dda48ea9e21912fe2c612f51a7e4d1",
+      "binary_sha256": "9441fa062a52a249f3906d1ab381e21453c7a43e20b7cbab88aae932db73a1d2"
+    },
+    {
+      "id": "optional_conditional_move",
+      "kind": "run",
+      "file": "run/optional_conditional_move.yv",
+      "source": "fn work(present: bool) {\n    let owner = \"owned\".toString()\n    var value: ?int = none\n    if present { value = 4 }\n    println(value ?? [owner].len())\n}\nfn main() {\n    work(true)\n    work(false)\n}\n",
+      "source_sha256": "7d2d3cb2a8f27b83fe98429dbd828456c550c65750f53072b55aac8b1f77e01e",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_conditional_move.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_conditional_move.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"7d2d3cb2a8f27b83fe98429dbd828456c550c65750f53072b55aac8b1f77e01e\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "first_error": null,
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_conditional_move.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/optional_conditional_move/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/optional_conditional_move/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_conditional_move.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"7d2d3cb2a8f27b83fe98429dbd828456c550c65750f53072b55aac8b1f77e01e\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.187
+      },
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/optional_conditional_move/program"
+        ],
+        "exit_code": 0,
+        "stdout": "4\n1\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "expected": {
+        "exit_code": 0,
+        "stdout": "4\n1\n",
+        "stderr": ""
+      },
+      "generated_c_sha256": "e1ab0107060d93cd162fb4f7a98103ce69d25b219933f48b077ffc29cd4f93ea",
+      "binary_sha256": "699d65f5efce0de4fc323d9fe7aad8cb8e974308002bc29b607c60b1558c7c3b"
+    },
+    {
+      "id": "optional_try_fallback",
+      "kind": "run",
+      "file": "run/optional_try_fallback.yv",
+      "source": "fn checked(label: String, fail: bool) -> int ! String {\n    println(label)\n    if fail { return err(\"failed\".toString()) }\n    return 9\n}\nfn work(present: bool, fail: bool) -> int ! String {\n    let guard = [\"outer\".toString()]\n    var value: ?int = none\n    if present { value = 7 }\n    return value ?? (try checked(\"used\".toString(), fail))\n}\nfn show(present: bool, fail: bool) {\n    let value = work(present, fail) catch error {\n        println(error)\n        return\n    }\n    println(value)\n}\nfn main() {\n    show(true, true)\n    show(false, false)\n    show(false, true)\n}\n",
+      "source_sha256": "75c05bc3b3001f1ee1684c39c862509dc6ed833d28a9cb019482df89cd943c78",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_try_fallback.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[{\"code\":\"W0001\",\"column\":9,\"end_column\":14,\"end_line\":7,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_try_fallback.yv\",\"fixes\":[{\"applicability\":\"automatic\",\"edits\":[{\"end\":204,\"replacement\":\"_guard\",\"start\":199}],\"id\":\"rename-unused\",\"impact\":\"Keeps the same binding, writes and destruction time; only suppresses the unused-binding warning.\",\"patch_id\":\"rename-unused:bbbb0cee9f3cc1e640b215765aebb1cda46c60ef9641cf3119424839b37c138d\",\"preconditions\":[\"All edited identifiers resolve to this binding.\",\"The new name does not capture any existing name in the function.\"],\"recheck\":\"passed\",\"recheck_scope\":\"automatic-set\",\"title\":\"Rename guard to _guard\"}],\"line\":7,\"message\":\"unused variable `guard`\",\"notes\":[\"rename it to `_guard` if this is intentional\"],\"primary\":{\"column\":9,\"end\":204,\"end_column\":14,\"end_line\":7,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_try_fallback.yv\",\"line\":7,\"start\":199},\"severity\":\"WARN\"}],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_try_fallback.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"75c05bc3b3001f1ee1684c39c862509dc6ed833d28a9cb019482df89cd943c78\",\"warning_count\":1}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.003
+      },
+      "first_error": null,
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_try_fallback.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/optional_try_fallback/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/optional_try_fallback/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[{\"code\":\"W0001\",\"column\":9,\"end_column\":14,\"end_line\":7,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_try_fallback.yv\",\"fixes\":[{\"applicability\":\"automatic\",\"edits\":[{\"end\":204,\"replacement\":\"_guard\",\"start\":199}],\"id\":\"rename-unused\",\"impact\":\"Keeps the same binding, writes and destruction time; only suppresses the unused-binding warning.\",\"patch_id\":\"rename-unused:bbbb0cee9f3cc1e640b215765aebb1cda46c60ef9641cf3119424839b37c138d\",\"preconditions\":[\"All edited identifiers resolve to this binding.\",\"The new name does not capture any existing name in the function.\"],\"recheck\":\"passed\",\"recheck_scope\":\"automatic-set\",\"title\":\"Rename guard to _guard\"}],\"line\":7,\"message\":\"unused variable `guard`\",\"notes\":[\"rename it to `_guard` if this is intentional\"],\"primary\":{\"column\":9,\"end\":204,\"end_column\":14,\"end_line\":7,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_try_fallback.yv\",\"line\":7,\"start\":199},\"severity\":\"WARN\"}],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_try_fallback.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"75c05bc3b3001f1ee1684c39c862509dc6ed833d28a9cb019482df89cd943c78\",\"warning_count\":1}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.226
+      },
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/optional_try_fallback/program"
+        ],
+        "exit_code": 0,
+        "stdout": "7\nused\n9\nused\nfailed\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "expected": {
+        "exit_code": 0,
+        "stdout": "7\nused\n9\nused\nfailed\n",
+        "stderr": ""
+      },
+      "generated_c_sha256": "0fc1a497a26009c7f48e8a42919da9d551a811c936a7ee961cf10dfdb9ffdc64",
+      "binary_sha256": "862728b2115ce0dd6912c58d37be6a56266f4bf2d3c22f0c095f14bd950fbe85"
+    },
+    {
+      "id": "optional_catch_return_fallback",
+      "kind": "run",
+      "file": "run/optional_catch_return_fallback.yv",
+      "source": "fn checked(label: String, fail: bool) -> int ! String {\n    println(label)\n    if fail { return err(\"failed\".toString()) }\n    return 9\n}\nfn work(present: bool, fail: bool) -> int {\n    let guard = [\"outer\".toString()]\n    var value: ?int = none\n    if present { value = 7 }\n    let number = value ?? (checked(\"used\".toString(), fail) catch error {\n        println(error)\n        return -1\n    })\n    return number\n}\nfn main() {\n    println(work(true, true))\n    println(work(false, false))\n    println(work(false, true))\n}\n",
+      "source_sha256": "7dfb161fcef0ab055c05722ea04718e737cba81a0d6f81215b6d70bdc2aee795",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_catch_return_fallback.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[{\"code\":\"W0001\",\"column\":9,\"end_column\":14,\"end_line\":7,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_catch_return_fallback.yv\",\"fixes\":[{\"applicability\":\"automatic\",\"edits\":[{\"end\":195,\"replacement\":\"_guard\",\"start\":190}],\"id\":\"rename-unused\",\"impact\":\"Keeps the same binding, writes and destruction time; only suppresses the unused-binding warning.\",\"patch_id\":\"rename-unused:64f06a6204f48f5cb1e420e070e06ccaf5fffae5926ee9110c5b22876223e225\",\"preconditions\":[\"All edited identifiers resolve to this binding.\",\"The new name does not capture any existing name in the function.\"],\"recheck\":\"passed\",\"recheck_scope\":\"automatic-set\",\"title\":\"Rename guard to _guard\"}],\"line\":7,\"message\":\"unused variable `guard`\",\"notes\":[\"rename it to `_guard` if this is intentional\"],\"primary\":{\"column\":9,\"end\":195,\"end_column\":14,\"end_line\":7,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_catch_return_fallback.yv\",\"line\":7,\"start\":190},\"severity\":\"WARN\"}],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_catch_return_fallback.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"7dfb161fcef0ab055c05722ea04718e737cba81a0d6f81215b6d70bdc2aee795\",\"warning_count\":1}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.003
+      },
+      "first_error": null,
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_catch_return_fallback.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/optional_catch_return_fallback/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/optional_catch_return_fallback/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[{\"code\":\"W0001\",\"column\":9,\"end_column\":14,\"end_line\":7,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_catch_return_fallback.yv\",\"fixes\":[{\"applicability\":\"automatic\",\"edits\":[{\"end\":195,\"replacement\":\"_guard\",\"start\":190}],\"id\":\"rename-unused\",\"impact\":\"Keeps the same binding, writes and destruction time; only suppresses the unused-binding warning.\",\"patch_id\":\"rename-unused:64f06a6204f48f5cb1e420e070e06ccaf5fffae5926ee9110c5b22876223e225\",\"preconditions\":[\"All edited identifiers resolve to this binding.\",\"The new name does not capture any existing name in the function.\"],\"recheck\":\"passed\",\"recheck_scope\":\"automatic-set\",\"title\":\"Rename guard to _guard\"}],\"line\":7,\"message\":\"unused variable `guard`\",\"notes\":[\"rename it to `_guard` if this is intentional\"],\"primary\":{\"column\":9,\"end\":195,\"end_column\":14,\"end_line\":7,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_catch_return_fallback.yv\",\"line\":7,\"start\":190},\"severity\":\"WARN\"}],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_catch_return_fallback.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"7dfb161fcef0ab055c05722ea04718e737cba81a0d6f81215b6d70bdc2aee795\",\"warning_count\":1}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.222
+      },
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/optional_catch_return_fallback/program"
+        ],
+        "exit_code": 0,
+        "stdout": "7\nused\n9\nused\nfailed\n-1\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "expected": {
+        "exit_code": 0,
+        "stdout": "7\nused\n9\nused\nfailed\n-1\n",
+        "stderr": ""
+      },
+      "generated_c_sha256": "948b0906a0bd05a431c4bcebdc09002ac9c4abae9cef0106b207f7699546f7b9",
+      "binary_sha256": "042fb48dab7545f84b771831eb7c5abd5741a11f1c9dddb17a7567a9c7abe982"
+    },
+    {
+      "id": "optional_catch_loop_fallback",
+      "kind": "run",
+      "file": "run/optional_catch_loop_fallback.yv",
+      "source": "fn step(index: int) -> int ! String {\n    if index == 1 { return err(\"skip\".toString()) }\n    if index == 3 { return err(\"stop\".toString()) }\n    return index\n}\nfn main() {\n    var index = 0\n    while index < 5 {\n        index += 1\n        let guard = [\"inside\".toString()]\n        let empty: ?int = none\n        let number = empty ?? (step(index) catch error {\n            println(error)\n            if index == 1 { continue }\n            break\n        })\n        println(number)\n    }\n    println(index)\n}\n",
+      "source_sha256": "ffa79310e3b7a2130dc797130deb7b3a036ef30e1bca14682e38349d80e11a81",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_catch_loop_fallback.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[{\"code\":\"W0001\",\"column\":13,\"end_column\":18,\"end_line\":10,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_catch_loop_fallback.yv\",\"fixes\":[{\"applicability\":\"automatic\",\"edits\":[{\"end\":249,\"replacement\":\"_guard\",\"start\":244}],\"id\":\"rename-unused\",\"impact\":\"Keeps the same binding, writes and destruction time; only suppresses the unused-binding warning.\",\"patch_id\":\"rename-unused:8b38b18d97c3b39714a7510a03a40948de85169d0bfcb0fe1ae7c55490e71910\",\"preconditions\":[\"All edited identifiers resolve to this binding.\",\"The new name does not capture any existing name in the function.\"],\"recheck\":\"passed\",\"recheck_scope\":\"automatic-set\",\"title\":\"Rename guard to _guard\"}],\"line\":10,\"message\":\"unused variable `guard`\",\"notes\":[\"rename it to `_guard` if this is intentional\"],\"primary\":{\"column\":13,\"end\":249,\"end_column\":18,\"end_line\":10,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_catch_loop_fallback.yv\",\"line\":10,\"start\":244},\"severity\":\"WARN\"}],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_catch_loop_fallback.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"ffa79310e3b7a2130dc797130deb7b3a036ef30e1bca14682e38349d80e11a81\",\"warning_count\":1}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.003
+      },
+      "first_error": null,
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_catch_loop_fallback.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/optional_catch_loop_fallback/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/optional_catch_loop_fallback/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[{\"code\":\"W0001\",\"column\":13,\"end_column\":18,\"end_line\":10,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_catch_loop_fallback.yv\",\"fixes\":[{\"applicability\":\"automatic\",\"edits\":[{\"end\":249,\"replacement\":\"_guard\",\"start\":244}],\"id\":\"rename-unused\",\"impact\":\"Keeps the same binding, writes and destruction time; only suppresses the unused-binding warning.\",\"patch_id\":\"rename-unused:8b38b18d97c3b39714a7510a03a40948de85169d0bfcb0fe1ae7c55490e71910\",\"preconditions\":[\"All edited identifiers resolve to this binding.\",\"The new name does not capture any existing name in the function.\"],\"recheck\":\"passed\",\"recheck_scope\":\"automatic-set\",\"title\":\"Rename guard to _guard\"}],\"line\":10,\"message\":\"unused variable `guard`\",\"notes\":[\"rename it to `_guard` if this is intentional\"],\"primary\":{\"column\":13,\"end\":249,\"end_column\":18,\"end_line\":10,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_catch_loop_fallback.yv\",\"line\":10,\"start\":244},\"severity\":\"WARN\"}],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_catch_loop_fallback.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"ffa79310e3b7a2130dc797130deb7b3a036ef30e1bca14682e38349d80e11a81\",\"warning_count\":1}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.209
+      },
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/optional_catch_loop_fallback/program"
+        ],
+        "exit_code": 0,
+        "stdout": "skip\n2\nstop\n3\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "expected": {
+        "exit_code": 0,
+        "stdout": "skip\n2\nstop\n3\n",
+        "stderr": ""
+      },
+      "generated_c_sha256": "90e9ba0bcc37bdf730cb9d17be48954189dce1f3238d570070095b3b01291630",
+      "binary_sha256": "d3dd910c953f8624841cdc632cb9ec4197e0eb1a62e1a0a6875f4d158948d163"
+    },
+    {
+      "id": "optional_byte_context",
+      "kind": "run",
+      "file": "run/optional_byte_context.yv",
+      "source": "fn explicitResult() -> byte ! int { return ok(65) }\nfn literalResult() -> byte ! int { return 'B' }\nfn variableResult() -> byte ! int {\n    let value: byte = 67\n    return value\n}\nfn main() {\n    let first: ?byte = some(1)\n    let converted: ?byte = byte(2)\n    let literal: ?byte = 'C'\n    let local: byte = 4\n    let variable: ?byte = local\n    println(int(first ?? '!'))\n    println(int(converted ?? '!'))\n    println(int(literal ?? '!'))\n    println(int(variable ?? '!'))\n    let a = explicitResult() catch _ { return }\n    let b = literalResult() catch _ { return }\n    let c = variableResult() catch _ { return }\n    println(int(a))\n    println(int(b))\n    println(int(c))\n}\n",
+      "source_sha256": "487d744ecc81b6cff3c4a6697a1f18387d1ca020c198d02f4c2aa15949f577cb",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_byte_context.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_byte_context.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"487d744ecc81b6cff3c4a6697a1f18387d1ca020c198d02f4c2aa15949f577cb\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "first_error": null,
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_byte_context.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/optional_byte_context/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/optional_byte_context/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_byte_context.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"487d744ecc81b6cff3c4a6697a1f18387d1ca020c198d02f4c2aa15949f577cb\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.182
+      },
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/optional_byte_context/program"
+        ],
+        "exit_code": 0,
+        "stdout": "1\n2\n67\n4\n65\n66\n67\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "expected": {
+        "exit_code": 0,
+        "stdout": "1\n2\n67\n4\n65\n66\n67\n",
+        "stderr": ""
+      },
+      "generated_c_sha256": "1761b28efb005c147f1273ea442ece5f82f3acab2b971b2104fbd4447e00c35f",
+      "binary_sha256": "8093cd1046c9c432c2e7c90d52c5a70a70c546e27deef155cb5dfff44637e819"
+    },
+    {
+      "id": "optional_none_untyped",
+      "kind": "reject",
+      "file": "reject/optional_none_untyped.yv",
+      "source": "fn main() { let value = none }\n",
+      "source_sha256": "91938d1767c7214aeb2242db8cbef89b4c49986d35ad693a2ae664a5f13c6a84",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_none_untyped.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"E0001\",\"column\":25,\"end_column\":29,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_none_untyped.yv\",\"fixes\":[],\"line\":1,\"message\":\"cannot tell which optional type this `none` has\",\"notes\":[\"give the variable a type, e.g. `let x: ?int = none`\"],\"primary\":{\"column\":25,\"end\":28,\"end_column\":29,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_none_untyped.yv\",\"line\":1,\"start\":24},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_none_untyped.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"91938d1767c7214aeb2242db8cbef89b4c49986d35ad693a2ae664a5f13c6a84\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "first_error": {
+        "code": "E0001",
+        "line": 1,
+        "column": 25,
+        "message": "cannot tell which optional type this `none` has"
+      }
+    },
+    {
+      "id": "optional_some_empty",
+      "kind": "reject",
+      "file": "reject/optional_some_empty.yv",
+      "source": "fn main() { let value = some() }\n",
+      "source_sha256": "6f982924c79c91dc3877517cb525d973cfe3f0ff41e3b862c22874b95ed48700",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_some_empty.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"E0012\",\"column\":25,\"end_column\":31,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_some_empty.yv\",\"fixes\":[],\"line\":1,\"message\":\"`some` takes exactly one argument\",\"notes\":[],\"primary\":{\"column\":25,\"end\":30,\"end_column\":31,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_some_empty.yv\",\"line\":1,\"start\":24},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_some_empty.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"6f982924c79c91dc3877517cb525d973cfe3f0ff41e3b862c22874b95ed48700\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.001
+      },
+      "first_error": {
+        "code": "E0012",
+        "line": 1,
+        "column": 25,
+        "message": "`some` takes exactly one argument"
+      }
+    },
+    {
+      "id": "optional_some_extra",
+      "kind": "reject",
+      "file": "reject/optional_some_extra.yv",
+      "source": "fn main() { let value = some(1, 2) }\n",
+      "source_sha256": "1e4e3d794a60db5c925fd95080214571420b5376c7824b532fe48c0964ed25ce",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_some_extra.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"E0012\",\"column\":25,\"end_column\":35,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_some_extra.yv\",\"fixes\":[],\"line\":1,\"message\":\"`some` takes exactly one argument\",\"notes\":[],\"primary\":{\"column\":25,\"end\":34,\"end_column\":35,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_some_extra.yv\",\"line\":1,\"start\":24},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_some_extra.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"1e4e3d794a60db5c925fd95080214571420b5376c7824b532fe48c0964ed25ce\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "first_error": {
+        "code": "E0012",
+        "line": 1,
+        "column": 25,
+        "message": "`some` takes exactly one argument"
+      }
+    },
+    {
+      "id": "optional_some_unit",
+      "kind": "reject",
+      "file": "reject/optional_some_unit.yv",
+      "source": "fn noop() {}\nfn main() { let value = some(noop()) }\n",
+      "source_sha256": "7437562264b866f63aad2fa3d8e804310fb8d433e8a2d1179697d59ee04fcf2b",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_some_unit.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"E0001\",\"column\":30,\"end_column\":36,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_some_unit.yv\",\"fixes\":[],\"line\":2,\"message\":\"this call returns nothing, so it cannot be wrapped in `some`\",\"notes\":[],\"primary\":{\"column\":30,\"end\":48,\"end_column\":36,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_some_unit.yv\",\"line\":2,\"start\":42},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_some_unit.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"7437562264b866f63aad2fa3d8e804310fb8d433e8a2d1179697d59ee04fcf2b\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "first_error": {
+        "code": "E0001",
+        "line": 2,
+        "column": 30,
+        "message": "this call returns nothing, so it cannot be wrapped in `some`"
+      }
+    },
+    {
+      "id": "optional_some_none",
+      "kind": "reject",
+      "file": "reject/optional_some_none.yv",
+      "source": "fn main() { let value: ?int = some(none) }\n",
+      "source_sha256": "098d4f3091b7d700184d57946a73483a4e81dd545fcdf4a2045308e84541a929",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_some_none.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"W0001\",\"column\":17,\"end_column\":22,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_some_none.yv\",\"fixes\":[],\"line\":1,\"message\":\"unused variable `value`\",\"notes\":[\"rename it to `_value` if this is intentional\"],\"primary\":{\"column\":17,\"end\":21,\"end_column\":22,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_some_none.yv\",\"line\":1,\"start\":16},\"severity\":\"WARN\"},{\"code\":\"E0001\",\"column\":36,\"end_column\":40,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_some_none.yv\",\"fixes\":[],\"line\":1,\"message\":\"cannot tell which optional type this `none` has\",\"notes\":[\"give the variable a type, e.g. `let x: ?int = none`\"],\"primary\":{\"column\":36,\"end\":39,\"end_column\":40,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_some_none.yv\",\"line\":1,\"start\":35},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_some_none.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"098d4f3091b7d700184d57946a73483a4e81dd545fcdf4a2045308e84541a929\",\"warning_count\":1}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "first_error": {
+        "code": "E0001",
+        "line": 1,
+        "column": 36,
+        "message": "cannot tell which optional type this `none` has"
+      }
+    },
+    {
+      "id": "optional_wrong_payload",
+      "kind": "reject",
+      "file": "reject/optional_wrong_payload.yv",
+      "source": "fn main() { let value: ?int = some(true) }\n",
+      "source_sha256": "b45b654ce5ca18762eb9c19f032387a5aea05a00f6ff1dbfc69af82dde841466",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_wrong_payload.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"W0001\",\"column\":17,\"end_column\":22,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_wrong_payload.yv\",\"fixes\":[],\"line\":1,\"message\":\"unused variable `value`\",\"notes\":[\"rename it to `_value` if this is intentional\"],\"primary\":{\"column\":17,\"end\":21,\"end_column\":22,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_wrong_payload.yv\",\"line\":1,\"start\":16},\"severity\":\"WARN\"},{\"code\":\"E0001\",\"column\":31,\"end_column\":41,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_wrong_payload.yv\",\"fixes\":[],\"line\":1,\"message\":\"mismatched types: expected `?int`, found `?bool`\",\"notes\":[],\"primary\":{\"column\":31,\"end\":40,\"end_column\":41,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_wrong_payload.yv\",\"line\":1,\"start\":30},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_wrong_payload.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"b45b654ce5ca18762eb9c19f032387a5aea05a00f6ff1dbfc69af82dde841466\",\"warning_count\":1}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "first_error": {
+        "code": "E0001",
+        "line": 1,
+        "column": 31,
+        "message": "mismatched types: expected `?int`, found `?bool`"
+      }
+    },
+    {
+      "id": "optional_wrong_fallback",
+      "kind": "reject",
+      "file": "reject/optional_wrong_fallback.yv",
+      "source": "fn main() {\n    let value: ?int = none\n    let number = value ?? true\n}\n",
+      "source_sha256": "a16f3d5e9d7f4550898bbb9b926b0d7ac1584df5337c88204252d85c75b720e5",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_wrong_fallback.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"W0001\",\"column\":9,\"end_column\":15,\"end_line\":3,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_wrong_fallback.yv\",\"fixes\":[],\"line\":3,\"message\":\"unused variable `number`\",\"notes\":[\"rename it to `_number` if this is intentional\"],\"primary\":{\"column\":9,\"end\":53,\"end_column\":15,\"end_line\":3,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_wrong_fallback.yv\",\"line\":3,\"start\":47},\"severity\":\"WARN\"},{\"code\":\"E0001\",\"column\":27,\"end_column\":31,\"end_line\":3,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_wrong_fallback.yv\",\"fixes\":[],\"line\":3,\"message\":\"mismatched types: expected `int`, found `bool`\",\"notes\":[],\"primary\":{\"column\":27,\"end\":69,\"end_column\":31,\"end_line\":3,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_wrong_fallback.yv\",\"line\":3,\"start\":65},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_wrong_fallback.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"a16f3d5e9d7f4550898bbb9b926b0d7ac1584df5337c88204252d85c75b720e5\",\"warning_count\":1}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "first_error": {
+        "code": "E0001",
+        "line": 3,
+        "column": 27,
+        "message": "mismatched types: expected `int`, found `bool`"
+      }
+    },
+    {
+      "id": "optional_nonoptional_coalesce",
+      "kind": "reject",
+      "file": "reject/optional_nonoptional_coalesce.yv",
+      "source": "fn main() { let value = 1 ?? 2 }\n",
+      "source_sha256": "bdd8295927942456e4cb92b2be3f2ad52eaffaa1d43bfc6ba0848ae0a2f3b5d5",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_nonoptional_coalesce.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"E0001\",\"column\":25,\"end_column\":26,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_nonoptional_coalesce.yv\",\"fixes\":[],\"line\":1,\"message\":\"the left side of `??` must be an optional value (`?T`), found `int`\",\"notes\":[],\"primary\":{\"column\":25,\"end\":25,\"end_column\":26,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_nonoptional_coalesce.yv\",\"line\":1,\"start\":24},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_nonoptional_coalesce.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"bdd8295927942456e4cb92b2be3f2ad52eaffaa1d43bfc6ba0848ae0a2f3b5d5\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "first_error": {
+        "code": "E0001",
+        "line": 1,
+        "column": 25,
+        "message": "the left side of `??` must be an optional value (`?T`), found `int`"
+      }
+    },
+    {
+      "id": "optional_context_none_coalesce",
+      "kind": "reject",
+      "file": "reject/optional_context_none_coalesce.yv",
+      "source": "fn main() { let value: ?int = none ?? 1 }\n",
+      "source_sha256": "6258bd0c84e904c4d0cab11d62e1d9e2ba3842990873fb0b9e0ffa7f3eda03f6",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_context_none_coalesce.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"W0001\",\"column\":17,\"end_column\":22,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_context_none_coalesce.yv\",\"fixes\":[],\"line\":1,\"message\":\"unused variable `value`\",\"notes\":[\"rename it to `_value` if this is intentional\"],\"primary\":{\"column\":17,\"end\":21,\"end_column\":22,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_context_none_coalesce.yv\",\"line\":1,\"start\":16},\"severity\":\"WARN\"},{\"code\":\"E0001\",\"column\":39,\"end_column\":40,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_context_none_coalesce.yv\",\"fixes\":[],\"line\":1,\"message\":\"mismatched types: expected `?int`, found `int`\",\"notes\":[],\"primary\":{\"column\":39,\"end\":39,\"end_column\":40,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_context_none_coalesce.yv\",\"line\":1,\"start\":38},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_context_none_coalesce.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"6258bd0c84e904c4d0cab11d62e1d9e2ba3842990873fb0b9e0ffa7f3eda03f6\",\"warning_count\":1}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.003
+      },
+      "first_error": {
+        "code": "E0001",
+        "line": 1,
+        "column": 39,
+        "message": "mismatched types: expected `?int`, found `int`"
+      }
+    },
+    {
+      "id": "optional_return_none_coalesce",
+      "kind": "reject",
+      "file": "reject/optional_return_none_coalesce.yv",
+      "source": "fn source() -> ?int { return none ?? 1 }\nfn main() {}\n",
+      "source_sha256": "ac4f39a7427cc0cd1ff852fb292aebe4fe1a62bd0cd1eac8079bb39bfe2a4393",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_return_none_coalesce.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"E0001\",\"column\":38,\"end_column\":39,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_return_none_coalesce.yv\",\"fixes\":[],\"line\":1,\"message\":\"mismatched types: expected `?int`, found `int`\",\"notes\":[],\"primary\":{\"column\":38,\"end\":38,\"end_column\":39,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_return_none_coalesce.yv\",\"line\":1,\"start\":37},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_return_none_coalesce.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"ac4f39a7427cc0cd1ff852fb292aebe4fe1a62bd0cd1eac8079bb39bfe2a4393\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "first_error": {
+        "code": "E0001",
+        "line": 1,
+        "column": 38,
+        "message": "mismatched types: expected `?int`, found `int`"
+      }
+    },
+    {
+      "id": "optional_inferred_none_coalesce",
+      "kind": "reject",
+      "file": "reject/optional_inferred_none_coalesce.yv",
+      "source": "fn main() { let value = none ?? 1 }\n",
+      "source_sha256": "411762b7805c97ea3e9952389b75f88357f29f77bf9022dbc24ce4c97a078b0a",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_inferred_none_coalesce.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"E0001\",\"column\":25,\"end_column\":29,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_inferred_none_coalesce.yv\",\"fixes\":[],\"line\":1,\"message\":\"cannot tell which optional type this `none` has\",\"notes\":[\"give the variable a type, e.g. `let x: ?int = none`\"],\"primary\":{\"column\":25,\"end\":28,\"end_column\":29,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_inferred_none_coalesce.yv\",\"line\":1,\"start\":24},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_inferred_none_coalesce.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"411762b7805c97ea3e9952389b75f88357f29f77bf9022dbc24ce4c97a078b0a\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "first_error": {
+        "code": "E0001",
+        "line": 1,
+        "column": 25,
+        "message": "cannot tell which optional type this `none` has"
+      }
+    },
+    {
+      "id": "optional_is_some_arity",
+      "kind": "reject",
+      "file": "reject/optional_is_some_arity.yv",
+      "source": "fn main() {\n    let value = some(1)\n    println(value.isSome(2))\n}\n",
+      "source_sha256": "81bff6fc36ef363cfd254b2dd95b8022e6948e5472248a38049325ad60b6774d",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_is_some_arity.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"E0012\",\"column\":13,\"end_column\":28,\"end_line\":3,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_is_some_arity.yv\",\"fixes\":[],\"line\":3,\"message\":\"`isSome` takes no arguments\",\"notes\":[],\"primary\":{\"column\":13,\"end\":63,\"end_column\":28,\"end_line\":3,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_is_some_arity.yv\",\"line\":3,\"start\":48},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_is_some_arity.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"81bff6fc36ef363cfd254b2dd95b8022e6948e5472248a38049325ad60b6774d\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "first_error": {
+        "code": "E0012",
+        "line": 3,
+        "column": 13,
+        "message": "`isSome` takes no arguments"
+      }
+    },
+    {
+      "id": "optional_condition",
+      "kind": "reject",
+      "file": "reject/optional_condition.yv",
+      "source": "fn main() { if some(1) { println(\"bad\") } }\n",
+      "source_sha256": "05428030f4d679f32e4fac1c5eb55cacb654d77a55d2b630e3413409033c9e9d",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_condition.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"E0001\",\"column\":16,\"end_column\":23,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_condition.yv\",\"fixes\":[],\"line\":1,\"message\":\"mismatched types: expected `bool`, found `?int`\",\"notes\":[],\"primary\":{\"column\":16,\"end\":22,\"end_column\":23,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_condition.yv\",\"line\":1,\"start\":15},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_condition.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"05428030f4d679f32e4fac1c5eb55cacb654d77a55d2b630e3413409033c9e9d\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "first_error": {
+        "code": "E0001",
+        "line": 1,
+        "column": 16,
+        "message": "mismatched types: expected `bool`, found `?int`"
+      }
+    },
+    {
+      "id": "vec_pop_immutable",
+      "kind": "reject",
+      "file": "reject/vec_pop_immutable.yv",
+      "source": "fn main() {\n    let values = [1]\n    let _ = values.pop()\n}\n",
+      "source_sha256": "3a615972aa82aa16e2d5af8ac0c52e7bad99e28d644318085df01834f0b86499",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_immutable.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"E0014\",\"column\":13,\"end_column\":19,\"end_line\":3,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_immutable.yv\",\"fixes\":[],\"line\":3,\"message\":\"cannot modify `values` because it was declared with `let`\",\"notes\":[\"declare it with `var values` to make it mutable\"],\"primary\":{\"column\":13,\"end\":51,\"end_column\":19,\"end_line\":3,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_immutable.yv\",\"line\":3,\"start\":45},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_immutable.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"3a615972aa82aa16e2d5af8ac0c52e7bad99e28d644318085df01834f0b86499\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "first_error": {
+        "code": "E0014",
+        "line": 3,
+        "column": 13,
+        "message": "cannot modify `values` because it was declared with `let`"
+      }
+    },
+    {
+      "id": "vec_pop_readonly_parameter",
+      "kind": "reject",
+      "file": "reject/vec_pop_readonly_parameter.yv",
+      "source": "fn remove(values: Vec[int]) { let _ = values.pop() }\nfn main() {}\n",
+      "source_sha256": "b62be3904f300541a881efb2c27e7803895024a82cbc979de3a876dc30652e7f",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_readonly_parameter.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"E0014\",\"column\":39,\"end_column\":45,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_readonly_parameter.yv\",\"fixes\":[],\"line\":1,\"message\":\"cannot modify `values`: parameters and loop variables are read-only\",\"notes\":[],\"primary\":{\"column\":39,\"end\":44,\"end_column\":45,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_readonly_parameter.yv\",\"line\":1,\"start\":38},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_readonly_parameter.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"b62be3904f300541a881efb2c27e7803895024a82cbc979de3a876dc30652e7f\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "first_error": {
+        "code": "E0014",
+        "line": 1,
+        "column": 39,
+        "message": "cannot modify `values`: parameters and loop variables are read-only"
+      }
+    },
+    {
+      "id": "vec_pop_readonly_field",
+      "kind": "reject",
+      "file": "reject/vec_pop_readonly_field.yv",
+      "source": "struct Stack { values: Vec[int] }\nfn main() {\n    let stack = Stack{values: [1]}\n    let _ = stack.values.pop()\n}\n",
+      "source_sha256": "a100850e558aeb8cb8a8ef16f860c5eafa733ec4f50df842fc896265a5b4f204",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_readonly_field.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"E0014\",\"column\":13,\"end_column\":18,\"end_line\":4,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_readonly_field.yv\",\"fixes\":[],\"line\":4,\"message\":\"cannot modify `stack` because it was declared with `let`\",\"notes\":[\"declare it with `var stack` to make it mutable\"],\"primary\":{\"column\":13,\"end\":98,\"end_column\":18,\"end_line\":4,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_readonly_field.yv\",\"line\":4,\"start\":93},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_readonly_field.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"a100850e558aeb8cb8a8ef16f860c5eafa733ec4f50df842fc896265a5b4f204\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "first_error": {
+        "code": "E0014",
+        "line": 4,
+        "column": 13,
+        "message": "cannot modify `stack` because it was declared with `let`"
+      }
+    },
+    {
+      "id": "vec_pop_arity",
+      "kind": "reject",
+      "file": "reject/vec_pop_arity.yv",
+      "source": "fn main() {\n    var values = [1]\n    let _ = values.pop(2)\n}\n",
+      "source_sha256": "960f2b3b2686a7cb6e3b2b1470c104eca63640c4fbb9d61cab933d2ee9be5377",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_arity.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"E0012\",\"column\":13,\"end_column\":26,\"end_line\":3,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_arity.yv\",\"fixes\":[],\"line\":3,\"message\":\"`pop` takes no arguments\",\"notes\":[],\"primary\":{\"column\":13,\"end\":58,\"end_column\":26,\"end_line\":3,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_arity.yv\",\"line\":3,\"start\":45},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_arity.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"960f2b3b2686a7cb6e3b2b1470c104eca63640c4fbb9d61cab933d2ee9be5377\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "first_error": {
+        "code": "E0012",
+        "line": 3,
+        "column": 13,
+        "message": "`pop` takes no arguments"
+      }
+    },
+    {
+      "id": "vec_pop_borrowed_argument",
+      "kind": "reject",
+      "file": "reject/vec_pop_borrowed_argument.yv",
+      "source": "fn inspect(values: Vec[int], present: bool) {\n    println(values.len())\n    println(present)\n}\nfn main() {\n    var values = [1, 2]\n    inspect(values, values.pop().isSome())\n}\n",
+      "source_sha256": "a9fc0a9fb51aaeea0db631041851b5ce2ff95cfb1ebf62c13d05e052c55aaa14",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_borrowed_argument.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"E0102\",\"column\":21,\"end_column\":27,\"end_line\":7,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_borrowed_argument.yv\",\"fixes\":[],\"line\":7,\"message\":\"cannot modify `values`: an earlier call argument still borrows it\",\"notes\":[],\"primary\":{\"column\":21,\"end\":157,\"end_column\":27,\"end_line\":7,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_borrowed_argument.yv\",\"line\":7,\"start\":151},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_borrowed_argument.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"a9fc0a9fb51aaeea0db631041851b5ce2ff95cfb1ebf62c13d05e052c55aaa14\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "first_error": {
+        "code": "E0102",
+        "line": 7,
+        "column": 21,
+        "message": "cannot modify `values`: an earlier call argument still borrows it"
+      }
+    },
+    {
+      "id": "vec_pop_reserved_argument",
+      "kind": "reject",
+      "file": "reject/vec_pop_reserved_argument.yv",
+      "source": "fn main() {\n    var values: Vec[bool] = [true]\n    values.push(values.pop().isSome())\n}\n",
+      "source_sha256": "b88f275375a19c65d9253da2951b5f045d29ba79976dd4a8258a143a00ba8d6c",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_reserved_argument.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"E0403\",\"column\":17,\"end_column\":23,\"end_line\":3,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_reserved_argument.yv\",\"fixes\":[{\"applicability\":\"candidate\",\"edits\":[{\"end\":51,\"replacement\":\"let argument = values.pop().isSome()\\n    \",\"start\":51},{\"end\":84,\"replacement\":\"argument\",\"start\":63}],\"id\":\"hoist-argument\",\"impact\":\"Moves this argument's evaluation before the receiver and any preceding arguments; their side effects, panic order and resource lifetimes can change.\",\"patch_id\":\"hoist-argument:9baad21b56923c48eb811d9b969acb32984324934e076ed4d01eab785cae970f\",\"preconditions\":[\"Choose only when evaluating this argument first matches the intended behavior.\",\"The call remains in its original statement block; the entire patched file must recheck.\"],\"recheck\":\"passed\",\"recheck_scope\":\"single-candidate\",\"title\":\"Evaluate the argument before acquiring the mutable receiver\"}],\"line\":3,\"message\":\"cannot modify `values` in an argument of `values.push(...)`: the call is about to modify it\",\"notes\":[\"an argument may read `values`, but not modify or move it; do that in a separate statement first\"],\"primary\":{\"column\":17,\"end\":69,\"end_column\":23,\"end_line\":3,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_reserved_argument.yv\",\"line\":3,\"start\":63},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_reserved_argument.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"b88f275375a19c65d9253da2951b5f045d29ba79976dd4a8258a143a00ba8d6c\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "first_error": {
+        "code": "E0403",
+        "line": 3,
+        "column": 17,
+        "message": "cannot modify `values` in an argument of `values.push(...)`: the call is about to modify it"
+      }
+    },
+    {
+      "id": "vec_pop_after_move",
+      "kind": "reject",
+      "file": "reject/vec_pop_after_move.yv",
+      "source": "fn main() {\n    var values = [1]\n    let moved = values\n    let _ = values.pop()\n    println(moved.len())\n}\n",
+      "source_sha256": "4426c05aa0eb4121326a4ad21bfc772a1255310e632154a4dff654da038417fa",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_after_move.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"E0402\",\"column\":13,\"end_column\":19,\"end_line\":4,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_after_move.yv\",\"fixes\":[],\"line\":4,\"message\":\"use of moved value `values`\",\"notes\":[\"it was moved on line 3 (on at least one path to here)\",\"keep a copy with `values.clone()` there, or use it before moving it\"],\"primary\":{\"column\":13,\"end\":74,\"end_column\":19,\"end_line\":4,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_after_move.yv\",\"line\":4,\"start\":68},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_after_move.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"4426c05aa0eb4121326a4ad21bfc772a1255310e632154a4dff654da038417fa\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "first_error": {
+        "code": "E0402",
+        "line": 4,
+        "column": 13,
+        "message": "use of moved value `values`"
+      }
+    },
+    {
+      "id": "optional_coalesce_after_move",
+      "kind": "reject",
+      "file": "reject/optional_coalesce_after_move.yv",
+      "source": "fn work(value: ?int) {\n    let owner = \"owned\".toString()\n    let count = value ?? [owner].len()\n    println(owner)\n    println(count)\n}\nfn main() {}\n",
+      "source_sha256": "11656368b05587d4eaae4288632b30f2f1fe9e6ec5c5915e8edbd0c5e4794c99",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_coalesce_after_move.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"E0402\",\"column\":13,\"end_column\":18,\"end_line\":4,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_coalesce_after_move.yv\",\"fixes\":[],\"line\":4,\"message\":\"use of moved value `owner`\",\"notes\":[\"it was moved on line 3 (on at least one path to here)\",\"keep a copy with `owner.clone()` there, or use it before moving it\"],\"primary\":{\"column\":13,\"end\":114,\"end_column\":18,\"end_line\":4,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_coalesce_after_move.yv\",\"line\":4,\"start\":109},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_coalesce_after_move.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"11656368b05587d4eaae4288632b30f2f1fe9e6ec5c5915e8edbd0c5e4794c99\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "first_error": {
+        "code": "E0402",
+        "line": 4,
+        "column": 13,
+        "message": "use of moved value `owner`"
+      }
+    },
+    {
+      "id": "optional_some_shadow_variable",
+      "kind": "reject",
+      "file": "reject/optional_some_shadow_variable.yv",
+      "source": "fn main() {\n    let some = 3\n    let value = some(1)\n}\n",
+      "source_sha256": "a57cdc2fd757a45fe266567b1999f896dbe83babc127fa77a1748f90c0f2f15c",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_some_shadow_variable.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"W0001\",\"column\":9,\"end_column\":13,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_some_shadow_variable.yv\",\"fixes\":[],\"line\":2,\"message\":\"unused variable `some`\",\"notes\":[\"rename it to `_some` if this is intentional\"],\"primary\":{\"column\":9,\"end\":24,\"end_column\":13,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_some_shadow_variable.yv\",\"line\":2,\"start\":20},\"severity\":\"WARN\"},{\"code\":\"E0001\",\"column\":17,\"end_column\":21,\"end_line\":3,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_some_shadow_variable.yv\",\"fixes\":[],\"line\":3,\"message\":\"`some` is a variable, not a function\",\"notes\":[],\"primary\":{\"column\":17,\"end\":49,\"end_column\":21,\"end_line\":3,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_some_shadow_variable.yv\",\"line\":3,\"start\":45},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_some_shadow_variable.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"a57cdc2fd757a45fe266567b1999f896dbe83babc127fa77a1748f90c0f2f15c\",\"warning_count\":1}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "first_error": {
+        "code": "E0001",
+        "line": 3,
+        "column": 17,
+        "message": "`some` is a variable, not a function"
+      }
+    },
+    {
+      "id": "optional_missing_return",
+      "kind": "reject",
+      "file": "reject/optional_missing_return.yv",
+      "source": "fn source() -> ?int {}\nfn main() {}\n",
+      "source_sha256": "bfee992b86670b2c81b566ea41d302f8d0fb50e2d5254f72a38e1933adf46403",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_missing_return.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"E0013\",\"column\":22,\"end_column\":23,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_missing_return.yv\",\"fixes\":[],\"line\":1,\"message\":\"function `source` can reach its end without returning a value of type `?int`\",\"notes\":[\"add a `return` statement before the closing `}`\"],\"primary\":{\"column\":22,\"end\":22,\"end_column\":23,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_missing_return.yv\",\"line\":1,\"start\":21},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_missing_return.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"bfee992b86670b2c81b566ea41d302f8d0fb50e2d5254f72a38e1933adf46403\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "first_error": {
+        "code": "E0013",
+        "line": 1,
+        "column": 22,
+        "message": "function `source` can reach its end without returning a value of type `?int`"
+      }
+    },
+    {
+      "id": "optional_byte_implicit",
+      "kind": "reject",
+      "file": "reject/optional_byte_implicit.yv",
+      "source": "fn main() { let value: ?byte = 1 }\n",
+      "source_sha256": "b7e995b24db43d78e5b8aa1c3cae8ea60af718b21853eb72861c8f9659f0f0c0",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_byte_implicit.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"W0001\",\"column\":17,\"end_column\":22,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_byte_implicit.yv\",\"fixes\":[],\"line\":1,\"message\":\"unused variable `value`\",\"notes\":[\"rename it to `_value` if this is intentional\"],\"primary\":{\"column\":17,\"end\":21,\"end_column\":22,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_byte_implicit.yv\",\"line\":1,\"start\":16},\"severity\":\"WARN\"},{\"code\":\"E0001\",\"column\":32,\"end_column\":33,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_byte_implicit.yv\",\"fixes\":[],\"line\":1,\"message\":\"mismatched types: expected `?u8`, found `int`\",\"notes\":[],\"primary\":{\"column\":32,\"end\":32,\"end_column\":33,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_byte_implicit.yv\",\"line\":1,\"start\":31},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_byte_implicit.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"b7e995b24db43d78e5b8aa1c3cae8ea60af718b21853eb72861c8f9659f0f0c0\",\"warning_count\":1}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "first_error": {
+        "code": "E0001",
+        "line": 1,
+        "column": 32,
+        "message": "mismatched types: expected `?u8`, found `int`"
+      }
+    },
+    {
+      "id": "optional_byte_coalesce",
+      "kind": "reject",
+      "file": "reject/optional_byte_coalesce.yv",
+      "source": "fn main() { let value: ?byte = some(1) ?? 2 }\n",
+      "source_sha256": "307d3175b54bf6ae22b99f4840c02e18a53eef0292cf04ec66104db59f0452f0",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_byte_coalesce.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"W0001\",\"column\":17,\"end_column\":22,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_byte_coalesce.yv\",\"fixes\":[],\"line\":1,\"message\":\"unused variable `value`\",\"notes\":[\"rename it to `_value` if this is intentional\"],\"primary\":{\"column\":17,\"end\":21,\"end_column\":22,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_byte_coalesce.yv\",\"line\":1,\"start\":16},\"severity\":\"WARN\"},{\"code\":\"E0001\",\"column\":32,\"end_column\":44,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_byte_coalesce.yv\",\"fixes\":[],\"line\":1,\"message\":\"mismatched types: expected `?u8`, found `int`\",\"notes\":[],\"primary\":{\"column\":32,\"end\":43,\"end_column\":44,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_byte_coalesce.yv\",\"line\":1,\"start\":31},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_byte_coalesce.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"307d3175b54bf6ae22b99f4840c02e18a53eef0292cf04ec66104db59f0452f0\",\"warning_count\":1}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "first_error": {
+        "code": "E0001",
+        "line": 1,
+        "column": 32,
+        "message": "mismatched types: expected `?u8`, found `int`"
+      }
+    },
+    {
+      "id": "result_byte_implicit",
+      "kind": "reject",
+      "file": "reject/result_byte_implicit.yv",
+      "source": "fn main() { let value: byte ! int = 1 }\n",
+      "source_sha256": "79b28f8e588605963fa90b1994f5a794c7469d7bafb1206fa67a73effc5d4b7d",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_byte_implicit.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"W0001\",\"column\":17,\"end_column\":22,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_byte_implicit.yv\",\"fixes\":[],\"line\":1,\"message\":\"unused variable `value`\",\"notes\":[\"rename it to `_value` if this is intentional\"],\"primary\":{\"column\":17,\"end\":21,\"end_column\":22,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_byte_implicit.yv\",\"line\":1,\"start\":16},\"severity\":\"WARN\"},{\"code\":\"E0001\",\"column\":37,\"end_column\":38,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_byte_implicit.yv\",\"fixes\":[],\"line\":1,\"message\":\"mismatched types: expected `u8 ! int`, found `int`\",\"notes\":[],\"primary\":{\"column\":37,\"end\":37,\"end_column\":38,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_byte_implicit.yv\",\"line\":1,\"start\":36},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_byte_implicit.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"79b28f8e588605963fa90b1994f5a794c7469d7bafb1206fa67a73effc5d4b7d\",\"warning_count\":1}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.001
+      },
+      "first_error": {
+        "code": "E0001",
+        "line": 1,
+        "column": 37,
+        "message": "mismatched types: expected `u8 ! int`, found `int`"
+      }
+    },
+    {
+      "id": "result_byte_return_implicit",
+      "kind": "reject",
+      "file": "reject/result_byte_return_implicit.yv",
+      "source": "fn source() -> byte ! int { return 1 }\nfn main() {}\n",
+      "source_sha256": "7af118aede1afc4b26e47be1603953f749ff3d6949b61f2cb8faa556bcd158e1",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_byte_return_implicit.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"E0001\",\"column\":36,\"end_column\":37,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_byte_return_implicit.yv\",\"fixes\":[],\"line\":1,\"message\":\"mismatched types: expected `u8 ! int`, found `int`\",\"notes\":[],\"primary\":{\"column\":36,\"end\":36,\"end_column\":37,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_byte_return_implicit.yv\",\"line\":1,\"start\":35},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_byte_return_implicit.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"7af118aede1afc4b26e47be1603953f749ff3d6949b61f2cb8faa556bcd158e1\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "first_error": {
+        "code": "E0001",
+        "line": 1,
+        "column": 36,
+        "message": "mismatched types: expected `u8 ! int`, found `int`"
+      }
+    },
+    {
+      "id": "unsupported_optional_compare",
+      "kind": "shared_unsupported",
+      "file": "unsupported/unsupported_optional_compare.yv",
+      "source": "fn main() {\n    let first: ?int = 1\n    let second: ?int = 1\n    println(first == second)\n}\n",
+      "source_sha256": "a24dca8818e73c98f2663683e2a1bb44fb310736ebb4a7de5aa13e3b3db67004",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_compare.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"U0001\",\"column\":13,\"end_column\":28,\"end_line\":4,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_compare.yv\",\"fixes\":[],\"line\":4,\"message\":\"comparing optional values (`?int`) is not supported yet\",\"notes\":[\"use `if let`, `isSome()` or `??` instead\"],\"primary\":{\"column\":13,\"end\":88,\"end_column\":28,\"end_line\":4,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_compare.yv\",\"line\":4,\"start\":73},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_compare.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"a24dca8818e73c98f2663683e2a1bb44fb310736ebb4a7de5aa13e3b3db67004\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.001
+      },
+      "first_error": {
+        "code": "U0001",
+        "line": 4,
+        "column": 13,
+        "message": "comparing optional values (`?int`) is not supported yet"
+      }
+    },
+    {
+      "id": "unsupported_optional_test_scalar",
+      "kind": "shared_unsupported",
+      "file": "unsupported/unsupported_optional_test_scalar.yv",
+      "source": "fn main() {\n    let value = 1\n    println(value.isSome())\n}\n",
+      "source_sha256": "295d8c0b3bdd9a153e46112f240f786822b8d161831e4ccc47b0e0129f5af6cb",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_test_scalar.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"U0001\",\"column\":13,\"end_column\":25,\"end_line\":3,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_test_scalar.yv\",\"fixes\":[],\"line\":3,\"message\":\"method `isSome` on `int` is not supported in P0\",\"notes\":[],\"primary\":{\"column\":13,\"end\":54,\"end_column\":25,\"end_line\":3,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_test_scalar.yv\",\"line\":3,\"start\":42},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_test_scalar.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"295d8c0b3bdd9a153e46112f240f786822b8d161831e4ccc47b0e0129f5af6cb\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.001
+      },
+      "first_error": {
+        "code": "U0001",
+        "line": 3,
+        "column": 13,
+        "message": "method `isSome` on `int` is not supported in P0"
+      }
+    },
+    {
+      "id": "unsupported_vec_pop_temporary",
+      "kind": "shared_unsupported",
+      "file": "unsupported/unsupported_vec_pop_temporary.yv",
+      "source": "fn source() -> Vec[int] { return [1] }\nfn main() { let _ = source().pop() }\n",
+      "source_sha256": "8c7a91a719a1a27e8d7b4e59d0764f36c4eccfc19cc8ff91d33c2d3eef040ace",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_vec_pop_temporary.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"U0001\",\"column\":21,\"end_column\":29,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_vec_pop_temporary.yv\",\"fixes\":[],\"line\":2,\"message\":\"`pop` is only supported on a variable for now\",\"notes\":[],\"primary\":{\"column\":21,\"end\":67,\"end_column\":29,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_vec_pop_temporary.yv\",\"line\":2,\"start\":59},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_vec_pop_temporary.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"8c7a91a719a1a27e8d7b4e59d0764f36c4eccfc19cc8ff91d33c2d3eef040ace\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "first_error": {
+        "code": "U0001",
+        "line": 2,
+        "column": 21,
+        "message": "`pop` is only supported on a variable for now"
+      }
+    },
+    {
+      "id": "unsupported_vec_pop_nonvector",
+      "kind": "shared_unsupported",
+      "file": "unsupported/unsupported_vec_pop_nonvector.yv",
+      "source": "fn main() {\n    var value = 1\n    let _ = value.pop()\n}\n",
+      "source_sha256": "5531e65fba81c2733a5e92440d99ec9f4e13b036565dc3a0f161f7bcc469d1cc",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_vec_pop_nonvector.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"U0001\",\"column\":13,\"end_column\":22,\"end_line\":3,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_vec_pop_nonvector.yv\",\"fixes\":[],\"line\":3,\"message\":\"method `pop` on `int` is not supported yet\",\"notes\":[],\"primary\":{\"column\":13,\"end\":51,\"end_column\":22,\"end_line\":3,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_vec_pop_nonvector.yv\",\"line\":3,\"start\":42},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_vec_pop_nonvector.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"5531e65fba81c2733a5e92440d99ec9f4e13b036565dc3a0f161f7bcc469d1cc\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "first_error": {
+        "code": "U0001",
+        "line": 3,
+        "column": 13,
+        "message": "method `pop` on `int` is not supported yet"
+      }
+    },
+    {
+      "id": "unsupported_vec_pop_string",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_vec_pop_string.yv",
+      "source": "fn main() {\n    var values = [\"owned\".toString()]\n    let _ = values.pop()\n}\n",
+      "source_sha256": "d38d2c297207535739d4a7e065419a88a86f030d24a50034994f25d62b94f863",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_vec_pop_string.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_vec_pop_string.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"d38d2c297207535739d4a7e065419a88a86f030d24a50034994f25d62b94f863\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.001
+      },
+      "first_error": null
+    },
+    {
+      "id": "unsupported_vec_pop_owned_struct",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_vec_pop_owned_struct.yv",
+      "source": "struct Owner { text: String items: Vec[String] }\nfn main() {\n    var values = [Owner{text: \"owned\".toString(), items: [\"item\".toString()]}]\n    let _ = values.pop()\n}\n",
+      "source_sha256": "6b8692618f81d6c348d0a69b54776ec1629333737b021b35731d9141770c6b09",
+      "passed": false,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_vec_pop_owned_struct.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"E0020\",\"column\":29,\"end_column\":34,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_vec_pop_owned_struct.yv\",\"fixes\":[],\"line\":1,\"message\":\"expected a newline or `,` after the field, found `items`\",\"notes\":[],\"primary\":{\"column\":29,\"end\":33,\"end_column\":34,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_vec_pop_owned_struct.yv\",\"line\":1,\"start\":28},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_vec_pop_owned_struct.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"6b8692618f81d6c348d0a69b54776ec1629333737b021b35731d9141770c6b09\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.001
+      },
+      "first_error": {
+        "code": "E0020",
+        "line": 1,
+        "column": 29,
+        "message": "expected a newline or `,` after the field, found `items`"
+      }
+    },
+    {
+      "id": "unsupported_optional_string",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_optional_string.yv",
+      "source": "fn main() { let value: ?String = none\n println(value.isNone()) }\n",
+      "source_sha256": "f17c6689ad1861386ac60f61677b7a37b0a0acaf8cde348c716a1fa72b23dd78",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_string.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_string.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"f17c6689ad1861386ac60f61677b7a37b0a0acaf8cde348c716a1fa72b23dd78\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.001
+      },
+      "first_error": null
+    },
+    {
+      "id": "unsupported_optional_vec",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_optional_vec.yv",
+      "source": "fn main() { let value: ?Vec[int] = none\n println(value.isNone()) }\n",
+      "source_sha256": "558aab180277522782a4c305976741f8808269d3eddb63668f191d0bd4e2b75a",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_vec.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_vec.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"558aab180277522782a4c305976741f8808269d3eddb63668f191d0bd4e2b75a\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.001
+      },
+      "first_error": null
+    },
+    {
+      "id": "unsupported_optional_owned_struct",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_optional_owned_struct.yv",
+      "source": "struct Owner { text: String }\nfn main() { let value: ?Owner = none\n println(value.isNone()) }\n",
+      "source_sha256": "20a18104bcb278d7a8627d7c0e862515f4ebc44a452f62b17542bc145492352f",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_owned_struct.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_owned_struct.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"20a18104bcb278d7a8627d7c0e862515f4ebc44a452f62b17542bc145492352f\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.001
+      },
+      "first_error": null
+    },
+    {
+      "id": "unsupported_optional_str",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_optional_str.yv",
+      "source": "fn main() { let value: ?str = none\n println(value.isNone()) }\n",
+      "source_sha256": "c986b7334849cdeab4c8ea971aee6dd543324cf35e0162dab7c77bceed82bee3",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_str.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_str.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"c986b7334849cdeab4c8ea971aee6dd543324cf35e0162dab7c77bceed82bee3\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.001
+      },
+      "first_error": null
+    },
+    {
+      "id": "unsupported_optional_unit",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_optional_unit.yv",
+      "source": "fn main() { let value: ?() = none\n println(value.isNone()) }\n",
+      "source_sha256": "d0d9bacb87e570089eaaf0633d356e9ef93c599fd510c8c4d7a87ece47714fc0",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_unit.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_unit.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"d0d9bacb87e570089eaaf0633d356e9ef93c599fd510c8c4d7a87ece47714fc0\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "first_error": null
+    },
+    {
+      "id": "unsupported_optional_nested",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_optional_nested.yv",
+      "source": "fn main() { let value: ??int = some(some(1))\n println(value.isSome()) }\n",
+      "source_sha256": "1d18cdff59cc27a744de14efad70124e815dc1cad1ccddc7cc335b65c258246e",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_nested.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_nested.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"1d18cdff59cc27a744de14efad70124e815dc1cad1ccddc7cc335b65c258246e\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.001
+      },
+      "first_error": null
+    },
+    {
+      "id": "unsupported_optional_nested_context",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_optional_nested_context.yv",
+      "source": "fn main() { let value: ?int = none ?? some(2)\n println(value.isSome()) }\n",
+      "source_sha256": "64df36f028299366b689d1ebbf625914991b976637f6b9833f6836c11f79a98d",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_nested_context.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_nested_context.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"64df36f028299366b689d1ebbf625914991b976637f6b9833f6836c11f79a98d\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.001
+      },
+      "first_error": null
+    },
+    {
+      "id": "unsupported_optional_field",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_optional_field.yv",
+      "source": "struct Holder { value: ?int }\nfn main() { let holder = Holder{}\n println(holder.value.isNone()) }\n",
+      "source_sha256": "a6b37d932febddf5fca1cc0b17277678d1fd524177a340cd784885581b249ab9",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_field.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_field.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"a6b37d932febddf5fca1cc0b17277678d1fd524177a340cd784885581b249ab9\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.001
+      },
+      "first_error": null
+    },
+    {
+      "id": "unsupported_optional_vec_element",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_optional_vec_element.yv",
+      "source": "fn main() { let values: Vec[?int] = [some(1)]\n println(values.len()) }\n",
+      "source_sha256": "b2bb14773c250e356cea90a0f3a47b4bae62b3edd9dc6e66b0134ae13e00fd72",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_vec_element.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_vec_element.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"b2bb14773c250e356cea90a0f3a47b4bae62b3edd9dc6e66b0134ae13e00fd72\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.001
+      },
+      "first_error": null
+    },
+    {
+      "id": "unsupported_optional_result_success",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_optional_result_success.yv",
+      "source": "fn source() -> ?int ! int { return ok(some(1)) }\nfn main() { let _ = source() }\n",
+      "source_sha256": "4cbb912ad61ed23bd7a71bee4f3b7ab5bb15e8c6e078279308ad634c54f6f743",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_result_success.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_result_success.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"4cbb912ad61ed23bd7a71bee4f3b7ab5bb15e8c6e078279308ad634c54f6f743\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.001
+      },
+      "first_error": null
+    },
+    {
+      "id": "unsupported_optional_result_payload",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_optional_result_payload.yv",
+      "source": "fn source() -> int ! int { return 1 }\nfn main() { let value = some(source())\n println(value.isSome()) }\n",
+      "source_sha256": "cf4b2e7976774d52b1bb19df59741f30063df9e9759d2bfa431b8e1ecd7279c2",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_result_payload.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_result_payload.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"cf4b2e7976774d52b1bb19df59741f30063df9e9759d2bfa431b8e1ecd7279c2\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "first_error": null
+    },
+    {
+      "id": "unsupported_optional_if_let",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_optional_if_let.yv",
+      "source": "fn main() { let value = some(1)\n if let item = value { println(item) } }\n",
+      "source_sha256": "357c47a2c1c9a0ff07193f3129751de45ce5d5f627cc85b12d00d2813cee80ff",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_if_let.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_if_let.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"357c47a2c1c9a0ff07193f3129751de45ce5d5f627cc85b12d00d2813cee80ff\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.001
+      },
+      "first_error": null
+    },
+    {
+      "id": "unsupported_optional_match",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_optional_match.yv",
+      "source": "fn main() { let value = some(1)\n match value {\n some(item) => println(item)\n none => println(0)\n } }\n",
+      "source_sha256": "ee0b1d186a0c258b18a3043ef3dcf092470fe20ed1352a141deb9d3049c50648",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_match.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_match.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"ee0b1d186a0c258b18a3043ef3dcf092470fe20ed1352a141deb9d3049c50648\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.001
+      },
+      "first_error": null
+    },
+    {
+      "id": "unsupported_optional_coalesce_return",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_optional_coalesce_return.yv",
+      "source": "fn source(value: ?int) -> int {\n    let number = value ?? return 0\n    return number\n}\nfn main() { println(source(none)) }\n",
+      "source_sha256": "8265ad2a1082c79009d9867a082b953b19ff139ee71a618211c1e1e99e049bbd",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_coalesce_return.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_coalesce_return.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"8265ad2a1082c79009d9867a082b953b19ff139ee71a618211c1e1e99e049bbd\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "first_error": null
+    },
+    {
+      "id": "unsupported_optional_coalesce_break",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_optional_coalesce_break.yv",
+      "source": "fn main() {\n    let value: ?int = none\n    loop { let number = value ?? break\n        println(number) }\n}\n",
+      "source_sha256": "f2fdf09f3a25bfed20aa703c756228a13732d568cab6ebc232a82e972386a9d3",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_coalesce_break.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_coalesce_break.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"f2fdf09f3a25bfed20aa703c756228a13732d568cab6ebc232a82e972386a9d3\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.001
+      },
+      "first_error": null
+    },
+    {
+      "id": "unsupported_optional_coalesce_continue",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_optional_coalesce_continue.yv",
+      "source": "fn main() {\n    var index = 0\n    let value: ?int = none\n    while index < 2 {\n        index += 1\n        let number = value ?? continue\n        println(number)\n    }\n}\n",
+      "source_sha256": "2666637b23db5c05db4e2153107e3256e2a27b5a095a16d680878c13c9f067d9",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_coalesce_continue.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_coalesce_continue.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"2666637b23db5c05db4e2153107e3256e2a27b5a095a16d680878c13c9f067d9\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.001
+      },
+      "first_error": null
+    },
+    {
+      "id": "vec_pop_basic",
+      "kind": "run",
+      "file": "run/vec_pop_basic.yv",
+      "source": "fn main() { var values = [1]\n let item = values.pop() }\n",
+      "source_sha256": "f9566d147e9c04e4a97153cc74aa7fbbf79fd5d6498df8a2b50e7e11f65e2446",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_basic.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[{\"code\":\"W0001\",\"column\":6,\"end_column\":10,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_basic.yv\",\"fixes\":[{\"applicability\":\"automatic\",\"edits\":[{\"end\":38,\"replacement\":\"_item\",\"start\":34}],\"id\":\"rename-unused\",\"impact\":\"Keeps the same binding, writes and destruction time; only suppresses the unused-binding warning.\",\"patch_id\":\"rename-unused:63d01dc0d5a6053eba886d3df3e95617bad19a7753f88b8a3315a9df8de292cf\",\"preconditions\":[\"All edited identifiers resolve to this binding.\",\"The new name does not capture any existing name in the function.\"],\"recheck\":\"passed\",\"recheck_scope\":\"automatic-set\",\"title\":\"Rename item to _item\"}],\"line\":2,\"message\":\"unused variable `item`\",\"notes\":[\"rename it to `_item` if this is intentional\"],\"primary\":{\"column\":6,\"end\":38,\"end_column\":10,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_basic.yv\",\"line\":2,\"start\":34},\"severity\":\"WARN\"}],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_basic.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"f9566d147e9c04e4a97153cc74aa7fbbf79fd5d6498df8a2b50e7e11f65e2446\",\"warning_count\":1}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "first_error": null,
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_basic.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/vec_pop_basic/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/vec_pop_basic/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[{\"code\":\"W0001\",\"column\":6,\"end_column\":10,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_basic.yv\",\"fixes\":[{\"applicability\":\"automatic\",\"edits\":[{\"end\":38,\"replacement\":\"_item\",\"start\":34}],\"id\":\"rename-unused\",\"impact\":\"Keeps the same binding, writes and destruction time; only suppresses the unused-binding warning.\",\"patch_id\":\"rename-unused:63d01dc0d5a6053eba886d3df3e95617bad19a7753f88b8a3315a9df8de292cf\",\"preconditions\":[\"All edited identifiers resolve to this binding.\",\"The new name does not capture any existing name in the function.\"],\"recheck\":\"passed\",\"recheck_scope\":\"automatic-set\",\"title\":\"Rename item to _item\"}],\"line\":2,\"message\":\"unused variable `item`\",\"notes\":[\"rename it to `_item` if this is intentional\"],\"primary\":{\"column\":6,\"end\":38,\"end_column\":10,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_basic.yv\",\"line\":2,\"start\":34},\"severity\":\"WARN\"}],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_basic.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"f9566d147e9c04e4a97153cc74aa7fbbf79fd5d6498df8a2b50e7e11f65e2446\",\"warning_count\":1}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.212
+      },
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/matrix-debug-1/vec_pop_basic/program"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.001
+      },
+      "expected": {
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "generated_c_sha256": "4379c8ff76560fe40d8742147db4513f04e7e37bd2834c28ffbf13dcba607883",
+      "binary_sha256": "801f9eb47b156834ee299ccb4490ccea61cd239d2ef0ad00fa40a782320b7195"
+    }
+  ],
+  "status": "failed",
+  "inputs_changed": [],
+  "passed": 60,
+  "total": 63,
+  "kinds": {
+    "run": 14,
+    "reject": 27,
+    "shared_unsupported": 4,
+    "unsupported": 18
+  }
+}

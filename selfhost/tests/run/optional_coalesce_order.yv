@@ -1,0 +1,17 @@
+fn mark(tag: str, value: int) -> int {
+    print(tag)
+    return value
+}
+fn main() {
+    let first: ?int = none
+    let second: ?int = 2
+    let empty: ?int = none
+    println(first ?? second ?? mark("X", 3))
+    println(first ?? empty ?? mark("F", 3))
+    println(second ?? mark("X", 4))
+    println(first ?? 4 + 1 == 5)
+    println(first ?? 4 | 1)
+    let flag: ?bool = false
+    println(false || flag ?? true)
+    println(true && flag ?? true)
+}

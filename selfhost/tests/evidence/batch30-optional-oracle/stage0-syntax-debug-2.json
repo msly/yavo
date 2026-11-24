@@ -1,0 +1,168 @@
+{
+  "schema": "yavo-batch30-stage0-oracle/1",
+  "baseline": "e3222d87e6220f2447ec2b9e8d458b6f02e60a21",
+  "profile": "Debug",
+  "inputs": {
+    "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo": "bcbbbf91215b81ad628329320ca9b18b0c924f9735a006af2597d77d4640c2c0",
+    "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig": "58959f01285c05a74276f09327b551d42ed6006bf325a78dc661a024e314987b",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/candidates.json": "24fed725f8955bcb16cf018083067f47731af84bebe635aa84388b399c274334",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/verify_stage0.py": "bbded9feb0fdb7dacf1b127df03519092ad3032a4d1e57aea96daac6ecfa14a9",
+    "/data1/workspace/github/workspace/yavo/compiler/runtime/yavo_rt.h": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+    "/data1/workspace/github/workspace/yavo/compiler/toolchain.lock": "a9bbe83e644b0e1cee19c8dba8b5157eaed3e9ddc71b96d8aab2b2d2bb15f53c",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_copy_nominal.yv": "d6da3e41e9e6e4dd8216033ce81cf51e49c16205de8bbf0f4ee58efd493f051d",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/syntax-debug-2/vec_pop_copy_nominal/program.c": "a66f4828cd46a0316fe73a86b297d498fc663bfd10b67d2ef45b27d7517ccf1a",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/syntax-debug-2/vec_pop_copy_nominal/program": "be6523d66f8727be15786d8141ef39f775502f1c83245240dfb8991eb52d7e32",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_rewind.yv": "5cec942a9c2c7402e279e0b2824e93acb15dda8597996162ed03736e75ff8f11",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/syntax-debug-2/vec_pop_rewind/program.c": "e153355889d01a96e89c35e33edff2c2cb624c32afdcd63bfb37ece27caa7bdc",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/syntax-debug-2/vec_pop_rewind/program": "8a3d1f78d5a1259235fe6917acb2f64759b59e16075cfa5055cbf7a09e04adf5",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_vec_pop_owned_struct.yv": "833817ecb1be509dbad02e4df674e54e89b7cd4c3163e3eb13479c5a43a34532"
+  },
+  "environment": {
+    "YAVO_ALLOC_CHECK": "1",
+    "YAVO_NO_CACHE": "1"
+  },
+  "records": [
+    {
+      "id": "vec_pop_copy_nominal",
+      "kind": "run",
+      "file": "run/vec_pop_copy_nominal.yv",
+      "source": "enum Mark {\n    Cold\n    Hot\n}\nstruct Position {\n    x: int\n    y: int\n}\nstruct Token {\n    position: Position\n    mark: Mark\n}\nfn fallback() -> Token { return Token{position: Position{x: -1, y: -1}, mark: .Cold} }\nfn main() {\n    var tokens = [Token{position: Position{x: 2, y: 3}, mark: .Cold}, Token{position: Position{x: 5, y: 7}, mark: .Hot}]\n    let last = tokens.pop() ?? fallback()\n    println(last.position.x + last.position.y)\n    println(last.mark == .Hot)\n    let first = tokens.pop() ?? fallback()\n    println(first.position.x + first.position.y)\n    println(first.mark == .Cold)\n    println(tokens.pop().isNone())\n    var marks: Vec[Mark] = [.Cold, .Hot]\n    println((marks.pop() ?? .Cold) == .Hot)\n    println((marks.pop() ?? .Hot) == .Cold)\n    println((marks.pop() ?? .Hot) == .Hot)\n}\n",
+      "source_sha256": "d6da3e41e9e6e4dd8216033ce81cf51e49c16205de8bbf0f4ee58efd493f051d",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_copy_nominal.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_copy_nominal.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"d6da3e41e9e6e4dd8216033ce81cf51e49c16205de8bbf0f4ee58efd493f051d\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.003
+      },
+      "first_error": null,
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_copy_nominal.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/syntax-debug-2/vec_pop_copy_nominal/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/syntax-debug-2/vec_pop_copy_nominal/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_copy_nominal.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"d6da3e41e9e6e4dd8216033ce81cf51e49c16205de8bbf0f4ee58efd493f051d\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.2
+      },
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/syntax-debug-2/vec_pop_copy_nominal/program"
+        ],
+        "exit_code": 0,
+        "stdout": "12\ntrue\n5\ntrue\ntrue\ntrue\ntrue\ntrue\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.001
+      },
+      "expected": {
+        "exit_code": 0,
+        "stdout": "12\ntrue\n5\ntrue\ntrue\ntrue\ntrue\ntrue\n",
+        "stderr": ""
+      },
+      "generated_c_sha256": "a66f4828cd46a0316fe73a86b297d498fc663bfd10b67d2ef45b27d7517ccf1a",
+      "binary_sha256": "be6523d66f8727be15786d8141ef39f775502f1c83245240dfb8991eb52d7e32"
+    },
+    {
+      "id": "vec_pop_rewind",
+      "kind": "run",
+      "file": "run/vec_pop_rewind.yv",
+      "source": "struct Slot {\n    index: int\n    active: bool\n}\nfn rewind(values: inout Vec[Slot], count: int) {\n    while values.len() > count { let _ = values.pop() }\n}\nfn main() {\n    var values: Vec[Slot] = []\n    var index = 0\n    while index < 40 {\n        values.push(Slot{index: index, active: true})\n        index += 1\n    }\n    rewind(&values, 5)\n    println(values.len())\n    println((values.pop() ?? Slot{index: -1, active: false}).index)\n    rewind(&values, 2)\n    values.push(Slot{index: 99, active: false})\n    println((values.pop() ?? Slot{index: -1, active: false}).index)\n    rewind(&values, 0)\n    println(values.pop().isNone())\n    index = 0\n    while index < 40 {\n        let _ = values.pop()\n        index += 1\n    }\n    println(values.len())\n}\n",
+      "source_sha256": "5cec942a9c2c7402e279e0b2824e93acb15dda8597996162ed03736e75ff8f11",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_rewind.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_rewind.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"5cec942a9c2c7402e279e0b2824e93acb15dda8597996162ed03736e75ff8f11\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "first_error": null,
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_rewind.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/syntax-debug-2/vec_pop_rewind/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/syntax-debug-2/vec_pop_rewind/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_rewind.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"5cec942a9c2c7402e279e0b2824e93acb15dda8597996162ed03736e75ff8f11\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.232
+      },
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/syntax-debug-2/vec_pop_rewind/program"
+        ],
+        "exit_code": 0,
+        "stdout": "5\n4\n99\ntrue\n0\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.001
+      },
+      "expected": {
+        "exit_code": 0,
+        "stdout": "5\n4\n99\ntrue\n0\n",
+        "stderr": ""
+      },
+      "generated_c_sha256": "e153355889d01a96e89c35e33edff2c2cb624c32afdcd63bfb37ece27caa7bdc",
+      "binary_sha256": "8a3d1f78d5a1259235fe6917acb2f64759b59e16075cfa5055cbf7a09e04adf5"
+    },
+    {
+      "id": "unsupported_vec_pop_owned_struct",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_vec_pop_owned_struct.yv",
+      "source": "struct Owner {\n    text: String\n    items: Vec[String]\n}\nfn main() {\n    var values = [Owner{text: \"owned\".toString(), items: [\"item\".toString()]}]\n    let _ = values.pop()\n}\n",
+      "source_sha256": "833817ecb1be509dbad02e4df674e54e89b7cd4c3163e3eb13479c5a43a34532",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_vec_pop_owned_struct.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_vec_pop_owned_struct.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"833817ecb1be509dbad02e4df674e54e89b7cd4c3163e3eb13479c5a43a34532\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "first_error": null
+    }
+  ],
+  "status": "passed",
+  "inputs_changed": [],
+  "passed": 3,
+  "total": 3,
+  "kinds": {
+    "run": 2,
+    "unsupported": 1
+  }
+}

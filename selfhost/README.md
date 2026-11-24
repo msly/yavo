@@ -12,10 +12,12 @@ separate behavioral reference; no stage delegates an input back to Rust.
 The compiler sources were rewritten into a *bootstrap dialect*: a strict
 subset of the stage0 language that the compiler itself implements (see
 [decision 20–24](../docs/decisions.md)). It is not yet the default compiler:
-stage0 accepts far more of the language (optionals, `for`,
+stage0 accepts far more of the language (owned optionals, `for`,
 interpolation, modules, methods, generics, Map/Set, closures, threads...).
-Batch 29 adds user-function results and error propagation, including the
-compiler's own `lex → compile → main` path; it does not complete SH-3.
+Batch 30 adds Copy Optional, `Vec.pop` and value-form `??`, and uses pop to
+replace all five copying truncation helpers in the compiler. Batch 29's
+user-function results and `lex → compile → main` propagation remain covered;
+SH-3 is still incomplete.
 
 ## Build and validate
 
@@ -59,7 +61,31 @@ and writes `receipt.json` with `achieved: "self-hosted-fixed-point"` and
 `self_hosted: true` only when everything passes. Native CI runs this gate on
 Linux, Windows and macOS; a configured job is not itself a passing result.
 
-## Current validation: batch 29 (2026-11-24)
+## Current validation: batch 30 (2026-11-24)
+
+The frozen manifest has **439 cases and 155 executable inputs**: 127 run,
+28 panic, 218 reject, 52 subset-unsupported and 14 shared-unsupported cases.
+Batch 30 adds 67 cases and promotes the original `unsupported_vec_pop` input
+byte for byte to `vec_pop_basic`. Its 68 targeted cases cover five Copy payload
+families, mutable local/field/inout receivers, repeated pop/push, implicit
+wrapping, lazy defaults, context-sensitive rejection and early-exit cleanup.
+
+All 14 former truncation sites now pop the suffix in place. `cleanTemps` and
+`cleanLocals` still only emit cleanup; metadata is removed at the original
+discard points. Lock marks retain their outer prefixes, and loop exit states
+are copied before the frames are removed. This removes rebuilding the retained
+prefix; no performance improvement is claimed without measurement.
+
+The [local receipt](../compiler/validation/selfhost-optional-pop-2026-11-24.json)
+passes **439/439 cases, 12/12 auxiliary checks and zero skips**. Stage2/stage3
+C is identical (668,302 bytes), as are the Linux binaries (308,504 bytes).
+The real lexer passes both modes and both compiler generations. Full Rust
+Debug/Release each pass 145/0/1 with frozen conformance 124/3/2.
+[Independent oracles](tests/evidence/batch30-optional-oracle/oracle-index.json)
+preserve the original attempts, source identities and diagnostic differences.
+Native CI confirmation for this batch is pending submission.
+
+## Historical validation: batch 29 (2026-11-24)
 
 Local validation passes **372/372 cases**, including **140 executable C
 emissions**: 112 normal programs, 28 panic programs, 190 rejected programs,
@@ -174,14 +200,15 @@ JSON diagnostics, suggestions and recovery remain future work.
 | Area | Implemented |
 | --- | --- |
 | Files | One source file; function and aggregate declarations, including `pub`; required `fn main()`; optional leading `use std/{fs, os}` (other imports are `U0001`) |
-| Types | `int` (signed 64-bit), `byte` (unsigned 8-bit), `bool`, borrowed `str`, owned `String`, `Vec[T]` with Copy or owned String/struct elements, unit return; nominal structs, payload-free enums and supported `T ! E` results |
+| Types | `int` (signed 64-bit), `byte` (unsigned 8-bit), `bool`, borrowed `str`, owned `String`, `Vec[T]` with Copy or owned String/struct elements, unit return; nominal structs, payload-free enums, supported `T ! E` results and Copy `?T` |
 | String | Empty construction, str.toString, len, clone, push, output, String/str equality and ordering, UTF-8/NUL; checked single-byte indexing returns Copy byte |
-| Vec | Typed empty construction, empty/nonempty literals including Vec[byte], len, consuming push, reserve, recursive clone/drop; checked reads and index/field/compound assignments for Copy elements; expression-local read-only indexing and field projection for owned elements |
+| Vec | Typed empty construction, empty/nonempty literals including Vec[byte], len, consuming push, reserve, recursive clone/drop; zero-argument pop for Copy elements on mutable local/field/inout places; checked reads and index/field/compound assignments for Copy elements; expression-local read-only indexing and field projection for owned elements |
 | Aggregates | Forward/nested fields, construction, reads and mutable fields; Copy values or owned String/Vec/nested struct fields; constant defaults and empty aggregates; by-value cycles rejected |
 | Enums | Qualified and context-inferred cases, nominal type checks, equality/inequality, case-name output |
 | Literals | Decimal integers including negative `INT64_MIN`, contextual byte-range integers, single-quoted ASCII byte literals and seven escapes, booleans, unit, non-interpolated UTF-8 strings with supported escapes and NUL; vector literals with contextual or first-element type inference |
 | Functions | Typed parameters, scalar/String/Vec/struct/unit returns, forward calls and recursion; owned ordinary parameters borrow read-only; `inout` parameters with `&variable` or `&variable.field` arguments (later arguments may not use that root, E0102); str returns remain outside the subset |
 | Results | User-function `T ! E`, contextual `ok(value)`/`err(error)` and implicit success wrapping, `try`, terminating `catch name { ... }`/`catch _ { ... }`; owned String/Vec/struct payloads and cleanup on propagation |
+| Optionals | Explicit/inferred `?T` for int/byte/bool/Copy struct/enum; `some`, contextual `none`, implicit wrapping at fit boundaries, `isSome`/`isNone`, lazy right-associative value-form `??` |
 | Text slices | Expression-local `s[start..end]` on str/String with int bounds, P-INDEX and P-STR-BOUNDARY checks; usable in comparisons, read-only arguments, `push` and `toString()`; a view of an owned String cannot be bound or assigned (U0001) |
 | Standard calls | `take(&place)` for String/Vec places; `os.args()` (len, indexing to static str), `os.exit(code)`; `fs.readText`, `fs.writeNewText` and `String.fromUtf8` only with a `catch _ { ... }` handler that cannot fall through (E0601) |
 | Locals | `let`/`var`, inferred or explicit types, assignment and arithmetic compound assignment; active locals cannot be shadowed |
@@ -204,10 +231,38 @@ rejected consistently with stage0. Explicit constructor fields are evaluated
 in source order. Bare enum cases use annotation/parameter/return/field/
 assignment/RHS comparison context.
 
+### Copy Optional and pop
+
+Optional payloads are limited to int, byte, bool, non-owning structs and
+payload-free enums. `some(value)` infers its actual payload type; `none` needs
+an Optional context. Bindings, assignments, arguments and returns can wrap a
+matching Copy payload implicitly. Both tag methods take zero arguments.
+
+`Vec.pop()` evaluates a writable place once, checks its existing move/borrow/
+reservation permissions, then returns `none` for an empty vector or removes
+and copies the last element into `some`. Capacity is retained. The returned
+Optional has no borrow back to the vector. Temporary receivers and owned
+indexed places retain the previous U0001 boundary.
+
+`lhs ?? rhs` is right associative, binds more tightly than comparisons and
+less tightly than bitwise OR, and evaluates the RHS only when the LHS is none.
+Its branch temporaries are cleaned inside that branch and conditional moves
+are merged into the following ownership state. The RHS must have the exact
+payload type; it does not receive implicit wrapping. Context is also distinct
+from wrapping for literals: `?byte = some(1)` is valid, while `?byte = 1` is
+E0001; use `byte(1)`, a byte literal or an existing byte for implicit wrapping.
+The same raw-context rule applies to Result success values: `return ok(1)`
+can provide byte context, but `return 1` in a `byte ! E` function is E0001.
+
+Owned/String/Vec/borrowed-str/unit payloads, nested Optional, Optional fields
+or container elements, Optional/Result combinations, owned-element pop,
+`if let`, `match` and jumping `?? return/break/continue` remain U0001.
+Optional comparison and direct printing are also U0001, matching stage0.
+
 ### Results and error propagation
 
 `T ! E` is supported in function signatures and local annotations. Its success
-payload may use an existing supported non-Result type, including `String`,
+payload may use an existing supported non-Result, non-Optional type, including `String`,
 `Vec[Token]` and owned structs. The error payload may be an owned struct or
 another supported non-Result value; unit errors are rejected with E0001 and
 borrowed errors with E0301. Local results can carry static `str`; borrowed

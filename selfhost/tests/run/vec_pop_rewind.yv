@@ -1,0 +1,29 @@
+struct Slot {
+    index: int
+    active: bool
+}
+fn rewind(values: inout Vec[Slot], count: int) {
+    while values.len() > count { let _ = values.pop() }
+}
+fn main() {
+    var values: Vec[Slot] = []
+    var index = 0
+    while index < 40 {
+        values.push(Slot{index: index, active: true})
+        index += 1
+    }
+    rewind(&values, 5)
+    println(values.len())
+    println((values.pop() ?? Slot{index: -1, active: false}).index)
+    rewind(&values, 2)
+    values.push(Slot{index: 99, active: false})
+    println((values.pop() ?? Slot{index: -1, active: false}).index)
+    rewind(&values, 0)
+    println(values.pop().isNone())
+    index = 0
+    while index < 40 {
+        let _ = values.pop()
+        index += 1
+    }
+    println(values.len())
+}

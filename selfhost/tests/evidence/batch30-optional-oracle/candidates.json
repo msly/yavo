@@ -1,0 +1,605 @@
+{
+  "schema": "yavo-batch30-oracle-candidates/1",
+  "baseline": "e3222d87e6220f2447ec2b9e8d458b6f02e60a21",
+  "cases": [
+    {
+      "id": "vec_pop_primitives",
+      "kind": "run",
+      "stdout": "2\n1\n-1\nfalse\ntrue\n122\n97\n33\ntrue\n",
+      "file": "run/vec_pop_primitives.yv"
+    },
+    {
+      "id": "vec_pop_copy_nominal",
+      "kind": "run",
+      "stdout": "12\ntrue\n5\ntrue\ntrue\ntrue\ntrue\ntrue\n",
+      "file": "run/vec_pop_copy_nominal.yv"
+    },
+    {
+      "id": "vec_pop_receivers",
+      "kind": "run",
+      "stdout": "40\n30\n20\n10\n-1\n0\n",
+      "file": "run/vec_pop_receivers.yv"
+    },
+    {
+      "id": "vec_pop_rewind",
+      "kind": "run",
+      "stdout": "5\n4\n99\ntrue\n0\n",
+      "file": "run/vec_pop_rewind.yv"
+    },
+    {
+      "id": "optional_copy_forms",
+      "kind": "run",
+      "stdout": "true\ntrue\n0\n-1\n2\ntrue\n3\n3\n7\n8\n5\n99\n6\n4\n1\n",
+      "file": "run/optional_copy_forms.yv"
+    },
+    {
+      "id": "optional_coalesce_order",
+      "kind": "run",
+      "stdout": "2\nF3\n2\ntrue\n5\nfalse\nfalse\n",
+      "file": "run/optional_coalesce_order.yv"
+    },
+    {
+      "id": "optional_some_shadow",
+      "kind": "run",
+      "stdout": "12\n13\n",
+      "file": "run/optional_some_shadow.yv"
+    },
+    {
+      "id": "optional_fallback_temporaries",
+      "kind": "run",
+      "stdout": "7\nused\n4\n2\n",
+      "file": "run/optional_fallback_temporaries.yv"
+    },
+    {
+      "id": "optional_conditional_move",
+      "kind": "run",
+      "stdout": "4\n1\n",
+      "file": "run/optional_conditional_move.yv"
+    },
+    {
+      "id": "optional_try_fallback",
+      "kind": "run",
+      "stdout": "7\nused\n9\nused\nfailed\n",
+      "file": "run/optional_try_fallback.yv"
+    },
+    {
+      "id": "optional_catch_return_fallback",
+      "kind": "run",
+      "stdout": "7\nused\n9\nused\nfailed\n-1\n",
+      "file": "run/optional_catch_return_fallback.yv"
+    },
+    {
+      "id": "optional_catch_loop_fallback",
+      "kind": "run",
+      "stdout": "skip\n2\nstop\n3\n",
+      "file": "run/optional_catch_loop_fallback.yv"
+    },
+    {
+      "id": "optional_byte_context",
+      "kind": "run",
+      "stdout": "1\n2\n67\n4\n65\n66\n67\n",
+      "file": "run/optional_byte_context.yv"
+    },
+    {
+      "id": "optional_none_untyped",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/optional_none_untyped.yv",
+      "first_error": {
+        "code": "E0001",
+        "line": 1,
+        "column": 25
+      }
+    },
+    {
+      "id": "optional_some_empty",
+      "kind": "reject",
+      "diagnostic": "E0012",
+      "file": "reject/optional_some_empty.yv",
+      "first_error": {
+        "code": "E0012",
+        "line": 1,
+        "column": 25
+      }
+    },
+    {
+      "id": "optional_some_extra",
+      "kind": "reject",
+      "diagnostic": "E0012",
+      "file": "reject/optional_some_extra.yv",
+      "first_error": {
+        "code": "E0012",
+        "line": 1,
+        "column": 25
+      }
+    },
+    {
+      "id": "optional_some_unit",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/optional_some_unit.yv",
+      "first_error": {
+        "code": "E0001",
+        "line": 2,
+        "column": 30
+      }
+    },
+    {
+      "id": "optional_some_none",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/optional_some_none.yv",
+      "first_error": {
+        "code": "E0001",
+        "line": 1,
+        "column": 36
+      }
+    },
+    {
+      "id": "optional_wrong_payload",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/optional_wrong_payload.yv",
+      "first_error": {
+        "code": "E0001",
+        "line": 1,
+        "column": 31
+      }
+    },
+    {
+      "id": "optional_wrong_fallback",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/optional_wrong_fallback.yv",
+      "first_error": {
+        "code": "E0001",
+        "line": 3,
+        "column": 27
+      }
+    },
+    {
+      "id": "optional_nonoptional_coalesce",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/optional_nonoptional_coalesce.yv",
+      "first_error": {
+        "code": "E0001",
+        "line": 1,
+        "column": 25
+      }
+    },
+    {
+      "id": "optional_context_none_coalesce",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/optional_context_none_coalesce.yv",
+      "first_error": {
+        "code": "E0001",
+        "line": 1,
+        "column": 39
+      }
+    },
+    {
+      "id": "optional_return_none_coalesce",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/optional_return_none_coalesce.yv",
+      "first_error": {
+        "code": "E0001",
+        "line": 1,
+        "column": 38
+      }
+    },
+    {
+      "id": "optional_inferred_none_coalesce",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/optional_inferred_none_coalesce.yv",
+      "first_error": {
+        "code": "E0001",
+        "line": 1,
+        "column": 25
+      }
+    },
+    {
+      "id": "optional_is_some_arity",
+      "kind": "reject",
+      "diagnostic": "E0012",
+      "file": "reject/optional_is_some_arity.yv",
+      "first_error": {
+        "code": "E0012",
+        "line": 3,
+        "column": 13
+      }
+    },
+    {
+      "id": "optional_condition",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/optional_condition.yv",
+      "first_error": {
+        "code": "E0001",
+        "line": 1,
+        "column": 16
+      }
+    },
+    {
+      "id": "vec_pop_immutable",
+      "kind": "reject",
+      "diagnostic": "E0014",
+      "file": "reject/vec_pop_immutable.yv",
+      "first_error": {
+        "code": "E0014",
+        "line": 3,
+        "column": 13
+      }
+    },
+    {
+      "id": "vec_pop_readonly_parameter",
+      "kind": "reject",
+      "diagnostic": "E0014",
+      "file": "reject/vec_pop_readonly_parameter.yv",
+      "first_error": {
+        "code": "E0014",
+        "line": 1,
+        "column": 39
+      }
+    },
+    {
+      "id": "vec_pop_readonly_field",
+      "kind": "reject",
+      "diagnostic": "E0014",
+      "file": "reject/vec_pop_readonly_field.yv",
+      "first_error": {
+        "code": "E0014",
+        "line": 4,
+        "column": 13
+      }
+    },
+    {
+      "id": "vec_pop_arity",
+      "kind": "reject",
+      "diagnostic": "E0012",
+      "file": "reject/vec_pop_arity.yv",
+      "first_error": {
+        "code": "E0012",
+        "line": 3,
+        "column": 13
+      }
+    },
+    {
+      "id": "vec_pop_borrowed_argument",
+      "kind": "reject",
+      "diagnostic": "E0102",
+      "file": "reject/vec_pop_borrowed_argument.yv",
+      "first_error": {
+        "code": "E0102",
+        "line": 7,
+        "column": 21
+      }
+    },
+    {
+      "id": "vec_pop_reserved_argument",
+      "kind": "reject",
+      "diagnostic": "E0403",
+      "file": "reject/vec_pop_reserved_argument.yv",
+      "first_error": {
+        "code": "E0403",
+        "line": 3,
+        "column": 17
+      }
+    },
+    {
+      "id": "vec_pop_after_move",
+      "kind": "reject",
+      "diagnostic": "E0402",
+      "file": "reject/vec_pop_after_move.yv",
+      "first_error": {
+        "code": "E0402",
+        "line": 4,
+        "column": 13
+      }
+    },
+    {
+      "id": "optional_coalesce_after_move",
+      "kind": "reject",
+      "diagnostic": "E0402",
+      "file": "reject/optional_coalesce_after_move.yv",
+      "first_error": {
+        "code": "E0402",
+        "line": 4,
+        "column": 13
+      }
+    },
+    {
+      "id": "optional_some_shadow_variable",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/optional_some_shadow_variable.yv",
+      "first_error": {
+        "code": "E0001",
+        "line": 3,
+        "column": 17
+      }
+    },
+    {
+      "id": "optional_missing_return",
+      "kind": "reject",
+      "diagnostic": "E0013",
+      "file": "reject/optional_missing_return.yv",
+      "first_error": {
+        "code": "E0013",
+        "line": 1,
+        "column": 22
+      }
+    },
+    {
+      "id": "optional_byte_implicit",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/optional_byte_implicit.yv",
+      "first_error": {
+        "code": "E0001",
+        "line": 1,
+        "column": 32
+      }
+    },
+    {
+      "id": "optional_byte_coalesce",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/optional_byte_coalesce.yv",
+      "first_error": {
+        "code": "E0001",
+        "line": 1,
+        "column": 32
+      }
+    },
+    {
+      "id": "result_byte_implicit",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/result_byte_implicit.yv",
+      "first_error": {
+        "code": "E0001",
+        "line": 1,
+        "column": 37
+      }
+    },
+    {
+      "id": "result_byte_return_implicit",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/result_byte_return_implicit.yv",
+      "first_error": {
+        "code": "E0001",
+        "line": 1,
+        "column": 36
+      }
+    },
+    {
+      "id": "unsupported_optional_compare",
+      "kind": "shared_unsupported",
+      "diagnostic": "U0001",
+      "reason": "Stage0 and this subset both reject Optional comparisons with U0001.",
+      "file": "unsupported/unsupported_optional_compare.yv",
+      "first_error": {
+        "code": "U0001",
+        "line": 4,
+        "column": 13
+      }
+    },
+    {
+      "id": "unsupported_optional_test_scalar",
+      "kind": "shared_unsupported",
+      "diagnostic": "U0001",
+      "reason": "isSome is defined for Optional receivers; stage0 rejects this scalar receiver with U0001.",
+      "file": "unsupported/unsupported_optional_test_scalar.yv",
+      "first_error": {
+        "code": "U0001",
+        "line": 3,
+        "column": 13
+      }
+    },
+    {
+      "id": "unsupported_vec_pop_temporary",
+      "kind": "shared_unsupported",
+      "diagnostic": "U0001",
+      "reason": "Stage0 and the subset require a writable variable or field receiver for pop.",
+      "file": "unsupported/unsupported_vec_pop_temporary.yv",
+      "first_error": {
+        "code": "U0001",
+        "line": 2,
+        "column": 21
+      }
+    },
+    {
+      "id": "unsupported_vec_pop_nonvector",
+      "kind": "shared_unsupported",
+      "diagnostic": "U0001",
+      "reason": "pop on an integer receiver is outside both stage0 and the subset.",
+      "file": "unsupported/unsupported_vec_pop_nonvector.yv",
+      "first_error": {
+        "code": "U0001",
+        "line": 3,
+        "column": 13
+      }
+    },
+    {
+      "id": "unsupported_vec_pop_string",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "reason": "This batch supports Copy-element pop; String payload ownership in Optional is outside the subset.",
+      "file": "unsupported/unsupported_vec_pop_string.yv"
+    },
+    {
+      "id": "unsupported_vec_pop_owned_struct",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "reason": "A struct containing String and Vec[String] is owned, so its pop result is outside the Copy-only Optional subset.",
+      "file": "unsupported/unsupported_vec_pop_owned_struct.yv"
+    },
+    {
+      "id": "unsupported_optional_string",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "reason": "Owned String Optional payloads are outside this Copy-only batch.",
+      "file": "unsupported/unsupported_optional_string.yv"
+    },
+    {
+      "id": "unsupported_optional_vec",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "reason": "Owned vector Optional payloads are outside this Copy-only batch.",
+      "file": "unsupported/unsupported_optional_vec.yv"
+    },
+    {
+      "id": "unsupported_optional_owned_struct",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "reason": "Owned nominal Optional payloads are outside this Copy-only batch.",
+      "file": "unsupported/unsupported_optional_owned_struct.yv"
+    },
+    {
+      "id": "unsupported_optional_str",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "reason": "Borrow-carrying str Optional payloads require lifetime tracking outside this batch.",
+      "file": "unsupported/unsupported_optional_str.yv"
+    },
+    {
+      "id": "unsupported_optional_unit",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "reason": "Stage0 accepts an explicit unit Optional type, but this subset permits only the listed Copy payload types.",
+      "file": "unsupported/unsupported_optional_unit.yv"
+    },
+    {
+      "id": "unsupported_optional_nested",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "reason": "Nested Optional types remain outside the single-layer subset.",
+      "file": "unsupported/unsupported_optional_nested.yv"
+    },
+    {
+      "id": "unsupported_optional_nested_context",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "reason": "The outer expected ?int makes the none operand an inferred ??int; this valid stage0 expression requires nested Optional support.",
+      "file": "unsupported/unsupported_optional_nested_context.yv"
+    },
+    {
+      "id": "unsupported_optional_field",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "reason": "Optional struct-field storage and its default-none behavior remain outside this batch.",
+      "file": "unsupported/unsupported_optional_field.yv"
+    },
+    {
+      "id": "unsupported_optional_vec_element",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "reason": "Optional vector elements remain outside this batch.",
+      "file": "unsupported/unsupported_optional_vec_element.yv"
+    },
+    {
+      "id": "unsupported_optional_result_success",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "reason": "Optional payloads inside Result remain outside this batch.",
+      "file": "unsupported/unsupported_optional_result_success.yv"
+    },
+    {
+      "id": "unsupported_optional_result_payload",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "reason": "Result payloads inside inferred Optional remain outside this batch.",
+      "file": "unsupported/unsupported_optional_result_payload.yv"
+    },
+    {
+      "id": "unsupported_optional_if_let",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "reason": "Optional if-let binding is outside this batch; ordinary coalescing and predicates provide the supported observations.",
+      "file": "unsupported/unsupported_optional_if_let.yv"
+    },
+    {
+      "id": "unsupported_optional_match",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "reason": "Optional pattern matching remains outside this batch.",
+      "file": "unsupported/unsupported_optional_match.yv"
+    },
+    {
+      "id": "unsupported_optional_coalesce_return",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "reason": "A return expression directly on the right of ?? is outside this ordinary-value RHS batch.",
+      "file": "unsupported/unsupported_optional_coalesce_return.yv"
+    },
+    {
+      "id": "unsupported_optional_coalesce_break",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "reason": "A break expression directly on the right of ?? is outside this ordinary-value RHS batch.",
+      "file": "unsupported/unsupported_optional_coalesce_break.yv"
+    },
+    {
+      "id": "unsupported_optional_coalesce_continue",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "reason": "A continue expression directly on the right of ?? is outside this ordinary-value RHS batch.",
+      "file": "unsupported/unsupported_optional_coalesce_continue.yv"
+    },
+    {
+      "id": "vec_pop_basic",
+      "kind": "run",
+      "file": "run/vec_pop_basic.yv",
+      "stdout": "",
+      "promotion_from": "unsupported_vec_pop"
+    },
+    {
+      "id": "result_vec_raw_context",
+      "kind": "run",
+      "stdout": "1\n0\n",
+      "file": "run/result_vec_raw_context.yv"
+    },
+    {
+      "id": "result_vec_implicit_empty",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/result_vec_implicit_empty.yv",
+      "first_error": {
+        "code": "E0001",
+        "line": 1,
+        "column": 40
+      }
+    },
+    {
+      "id": "unsupported_optional_none_result_hint",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "reason": "The return context infers an Optional[Result] for none, which remains outside this Copy-only Optional batch.",
+      "file": "unsupported/unsupported_optional_none_result_hint.yv"
+    },
+    {
+      "id": "unsupported_optional_none_owned_hint",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "reason": "The String context infers an owned Optional for none, which remains outside this batch.",
+      "file": "unsupported/unsupported_optional_none_owned_hint.yv"
+    },
+    {
+      "id": "unsupported_optional_print",
+      "kind": "shared_unsupported",
+      "diagnostic": "U0001",
+      "reason": "Both Rust stage0 and the subset reject direct Optional printing with U0001.",
+      "file": "unsupported/unsupported_optional_print.yv",
+      "first_error": {
+        "code": "U0001",
+        "line": 3,
+        "column": 13
+      }
+    }
+  ]
+}

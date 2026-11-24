@@ -96,6 +96,9 @@ fn vectorType(s: inout State, ts: Vec[Token], name: int) -> TypeRef {
     if elem.kind == .Result {
         fail(ts, token, "U0001", "Result vector elements are outside the selfhost subset")
     }
+    if elem.kind == .Optional {
+        fail(ts, token, "U0001", "Optional vector elements are outside the selfhost subset")
+    }
     return TypeRef{kind: .Vec, name: name, elementKind: elem.kind, elementName: token}
 }
 
@@ -107,6 +110,14 @@ fn typeAtom(s: inout State, ts: Vec[Token]) -> TypeRef {
     } else if eat(&s, ts, "bool") { result = TypeRef{elementKind: .Unknown, kind: .Bool}
     } else if eat(&s, ts, "str") { result = TypeRef{elementKind: .Unknown, kind: .Str}
     } else if eat(&s, ts, "String") { result = TypeRef{elementKind: .Unknown, kind: .String}
+    } else if eat(&s, ts, "?") {
+        let question = s.pos - 1
+        let token = s.pos
+        let inner = typeAtom(&s, ts)
+        if inner.kind == .Optional || inner.kind == .Vec || inner.kind == .Result {
+            fail(ts, question, "U0001", "nested Optional and container payloads are outside the selfhost subset")
+        }
+        result = TypeRef{kind: .Optional, name: question, elementKind: inner.kind, elementName: token}
     } else if at(s, ts, "Vec") {
         let name = s.pos
         s.pos += 1
@@ -136,7 +147,7 @@ fn typeAtom(s: inout State, ts: Vec[Token]) -> TypeRef {
         s.pos += 1
         result = TypeRef{elementKind: .Unknown, kind: .Named, name: name}
     } else if at(s, ts, "inout") || at(s, ts, "sink") || at(s, ts, "Self") ||
-        at(s, ts, "[") || at(s, ts, "?") || at(s, ts, "??") || at(s, ts, "&") {
+        at(s, ts, "[") || at(s, ts, "??") || at(s, ts, "&") {
         syntax(s, ts, "U0001", "type is outside the selfhost subset")
     } else {
         syntax(s, ts, "E0020", "expected a type name")
@@ -196,6 +207,7 @@ fn precedence(op: str) -> int {
     if op == "||" { return 1 }
     if op == "&&" { return 2 }
     if op == "==" || op == "!=" || op == "<" || op == "<=" || op == ">" || op == ">=" { return 3 }
+    if op == "??" { return 4 }
     if op == "|" { return 5 }
     if op == "^" { return 6 }
     if op == "&" { return 7 }
@@ -249,6 +261,7 @@ fn primary(s: inout State, ts: Vec[Token]) -> int {
         s.pos += 1
         return pushExpr(&s, .Boolean, p, -1, -1)
     }
+    if eat(&s, ts, "none") { return pushExpr(&s, .None, p, -1, -1) }
     if eat(&s, ts, "(") {
         if eat(&s, ts, ")") {
             return pushExpr(&s, .Unit, p, -1, -1)
@@ -284,7 +297,7 @@ fn primary(s: inout State, ts: Vec[Token]) -> int {
         s.nesting -= 1
         return pushExpr(&s, .Ref, p, target, -1)
     }
-    if at(s, ts, "match") || at(s, ts, "none") || at(s, ts, "spawn") {
+    if at(s, ts, "match") || at(s, ts, "spawn") {
         syntax(s, ts, "U0001", "expression is outside the selfhost SH-1 subset")
     }
     syntax(s, ts, "E0020", "expected an expression")
@@ -447,8 +460,20 @@ fn parseBinary(s: inout State, ts: Vec[Token], minimum: int) -> int {
         if level == 0 || level < minimum { break }
         let op = s.pos
         s.pos += 1
-        let rhs = parseBinary(&s, ts, level + 1)
-        lhs = pushExpr(&s, .Binary, op, lhs, rhs)
+        if level == 4 {
+            if at(s, ts, "return") || at(s, ts, "break") || at(s, ts, "continue") {
+                syntax(s, ts, "U0001", "jumping coalesce fallbacks are outside the selfhost subset")
+            }
+            // Unlike the other binary operators, ?? is right associative.
+            // Bound its same-precedence recursion with the parser nesting gate.
+            enter(&s, ts)
+            let rhs = parseBinary(&s, ts, level)
+            s.nesting -= 1
+            lhs = pushExpr(&s, .Coalesce, op, lhs, rhs)
+        } else {
+            let rhs = parseBinary(&s, ts, level + 1)
+            lhs = pushExpr(&s, .Binary, op, lhs, rhs)
+        }
         if level == 3 && ts[s.pos].kind == .Symbol && precedence(ts[s.pos].text) == 3 {
             syntax(s, ts, "E0020", "comparison operators cannot be chained")
         }

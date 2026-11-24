@@ -1,0 +1,8 @@
+fn inferred() -> Vec[int] ! int { return [1] }
+fn explicit() -> Vec[int] ! int { return ok([]) }
+fn main() {
+    let first = inferred() catch _ { return }
+    let second = explicit() catch _ { return }
+    println(first.len())
+    println(second.len())
+}

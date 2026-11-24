@@ -1,0 +1,190 @@
+{
+  "schema": "yavo-batch30-stage0-oracle/1",
+  "baseline": "e3222d87e6220f2447ec2b9e8d458b6f02e60a21",
+  "profile": "Debug",
+  "inputs": {
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-stage0/yavo": "bcbbbf91215b81ad628329320ca9b18b0c924f9735a006af2597d77d4640c2c0",
+    "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig": "58959f01285c05a74276f09327b551d42ed6006bf325a78dc661a024e314987b",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/candidates.json": "614b95670ebafb274182b5e8aa42c4dbbd778019715c4a792b7f6b55cd10de06",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/verify_stage0.py": "a3dd6d233d53468dc3e2b68e2373eecc43ff6e29830cd837f842268044f9c157",
+    "/data1/workspace/github/workspace/yavo/compiler/runtime/yavo_rt.h": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+    "/data1/workspace/github/workspace/yavo/compiler/toolchain.lock": "a9bbe83e644b0e1cee19c8dba8b5157eaed3e9ddc71b96d8aab2b2d2bb15f53c",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_vec_raw_context.yv": "3611333d392f58da5843b74cedb94c1ee7cc6c2dba5f53035b413a9436ae9e11",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/final-context-debug-1/result_vec_raw_context/program.c": "8c3060a5d95378719b3ba45f1b173a448a3b157e01c87b718a873289393ed5e2",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/final-context-debug-1/result_vec_raw_context/program": "ecce8a5ecfa2d88a5a898dbca9e85c96d53c519f679a9268e4415c5899744314",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_vec_implicit_empty.yv": "b0990c15b6f5b4825aac53952434dbc378038a34926645517a4214d4e2fcf92a",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_none_result_hint.yv": "3f951d20f3d4d8a964f0fcf29e1d791fcf6c1ca95f44f6bbca2e78909d099dad",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_none_owned_hint.yv": "26effd10e1246246e7847251c64868728f4c8f5397948630f870e1b031ad3281",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_print.yv": "29faf749879b106e1ce9e833f63aaccfd059d2d0a6b3ba7515d3f6dc6d4c8398"
+  },
+  "environment": {
+    "YAVO_ALLOC_CHECK": "1",
+    "YAVO_NO_CACHE": "1"
+  },
+  "records": [
+    {
+      "id": "result_vec_raw_context",
+      "kind": "run",
+      "file": "run/result_vec_raw_context.yv",
+      "source": "fn inferred() -> Vec[int] ! int { return [1] }\nfn explicit() -> Vec[int] ! int { return ok([]) }\nfn main() {\n    let first = inferred() catch _ { return }\n    let second = explicit() catch _ { return }\n    println(first.len())\n    println(second.len())\n}\n",
+      "source_sha256": "3611333d392f58da5843b74cedb94c1ee7cc6c2dba5f53035b413a9436ae9e11",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-stage0/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_vec_raw_context.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_vec_raw_context.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"3611333d392f58da5843b74cedb94c1ee7cc6c2dba5f53035b413a9436ae9e11\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.003
+      },
+      "first_error": null,
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-stage0/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_vec_raw_context.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/final-context-debug-1/result_vec_raw_context/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/final-context-debug-1/result_vec_raw_context/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_vec_raw_context.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"3611333d392f58da5843b74cedb94c1ee7cc6c2dba5f53035b413a9436ae9e11\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.167
+      },
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/final-context-debug-1/result_vec_raw_context/program"
+        ],
+        "exit_code": 0,
+        "stdout": "1\n0\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.001
+      },
+      "expected": {
+        "exit_code": 0,
+        "stdout": "1\n0\n",
+        "stderr": ""
+      },
+      "generated_c_sha256": "8c3060a5d95378719b3ba45f1b173a448a3b157e01c87b718a873289393ed5e2",
+      "binary_sha256": "ecce8a5ecfa2d88a5a898dbca9e85c96d53c519f679a9268e4415c5899744314"
+    },
+    {
+      "id": "result_vec_implicit_empty",
+      "kind": "reject",
+      "file": "reject/result_vec_implicit_empty.yv",
+      "source": "fn source() -> Vec[int] ! int { return [] }\nfn main() {}\n",
+      "source_sha256": "b0990c15b6f5b4825aac53952434dbc378038a34926645517a4214d4e2fcf92a",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-stage0/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_vec_implicit_empty.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"E0001\",\"column\":40,\"end_column\":42,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_vec_implicit_empty.yv\",\"fixes\":[],\"line\":1,\"message\":\"cannot infer the element type of `[]`\",\"notes\":[\"annotate it, e.g. `let v: Vec[int] = []`\"],\"primary\":{\"column\":40,\"end\":41,\"end_column\":42,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_vec_implicit_empty.yv\",\"line\":1,\"start\":39},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_vec_implicit_empty.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"b0990c15b6f5b4825aac53952434dbc378038a34926645517a4214d4e2fcf92a\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "first_error": {
+        "code": "E0001",
+        "line": 1,
+        "column": 40,
+        "message": "cannot infer the element type of `[]`"
+      }
+    },
+    {
+      "id": "unsupported_optional_none_result_hint",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_optional_none_result_hint.yv",
+      "source": "fn source() -> int ! int { return none ?? ok(1) }\nfn main() { let _ = source() }\n",
+      "source_sha256": "3f951d20f3d4d8a964f0fcf29e1d791fcf6c1ca95f44f6bbca2e78909d099dad",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-stage0/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_none_result_hint.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_none_result_hint.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"3f951d20f3d4d8a964f0fcf29e1d791fcf6c1ca95f44f6bbca2e78909d099dad\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.001
+      },
+      "first_error": null
+    },
+    {
+      "id": "unsupported_optional_none_owned_hint",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_optional_none_owned_hint.yv",
+      "source": "fn main() { let value: String = none ?? \"x\".toString()\n println(value) }\n",
+      "source_sha256": "26effd10e1246246e7847251c64868728f4c8f5397948630f870e1b031ad3281",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-stage0/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_none_owned_hint.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_none_owned_hint.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"26effd10e1246246e7847251c64868728f4c8f5397948630f870e1b031ad3281\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.001
+      },
+      "first_error": null
+    },
+    {
+      "id": "unsupported_optional_print",
+      "kind": "shared_unsupported",
+      "file": "unsupported/unsupported_optional_print.yv",
+      "source": "fn main() {\n    let value = some(1)\n    println(value)\n}\n",
+      "source_sha256": "29faf749879b106e1ce9e833f63aaccfd059d2d0a6b3ba7515d3f6dc6d4c8398",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-stage0/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_print.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"U0001\",\"column\":13,\"end_column\":18,\"end_line\":3,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_print.yv\",\"fixes\":[],\"line\":3,\"message\":\"printing an optional value (`?int`) is not supported yet\",\"notes\":[\"print the value inside with `if let`, or give a default with `??`\"],\"primary\":{\"column\":13,\"end\":53,\"end_column\":18,\"end_line\":3,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_print.yv\",\"line\":3,\"start\":48},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_print.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"29faf749879b106e1ce9e833f63aaccfd059d2d0a6b3ba7515d3f6dc6d4c8398\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.001
+      },
+      "first_error": {
+        "code": "U0001",
+        "line": 3,
+        "column": 13,
+        "message": "printing an optional value (`?int`) is not supported yet"
+      }
+    }
+  ],
+  "status": "passed",
+  "inputs_changed": [],
+  "passed": 5,
+  "total": 5,
+  "kinds": {
+    "run": 1,
+    "reject": 1,
+    "unsupported": 2,
+    "shared_unsupported": 1
+  }
+}

@@ -1,0 +1,10 @@
+fn work(present: bool) {
+    let owner = "owned".toString()
+    var value: ?int = none
+    if present { value = 4 }
+    println(value ?? [owner].len())
+}
+fn main() {
+    work(true)
+    work(false)
+}

@@ -1,6 +1,6 @@
 # Yavo 自举路线与实用验收
 
-2026-11-23 · 固定点之上新增 Result/try 与词法错误传播；第二十九批原生验收待确认
+2026-11-24 · 第三十批新增 Copy Optional、Vec.pop 与普通值 ??；编译器已用原地退栈替换五类复制 helper
 
 近期主目标改为：**用 Yavo 实现 Yavo 编译器，完成可重放的自举闭环，再让它承担日常编译工作。** 自举用于暴露真实工程中的语言和工具链缺口；实用验收继续独立执行。
 
@@ -36,8 +36,8 @@
 
 | 里程碑 | 交付范围 | 退出条件 | 当前状态 |
 | --- | --- | --- | --- |
-| SH-1：可用的子集编译器 | 在 `selfhost/` 中实现真实词法器、解析器、最小语义检查和 C 生成；公布精确输入子集 | stage0 构建成功；外部正向程序运行结果正确；负向程序在前端拒绝；未实现语法明确报错；支持的行为与 stage0 差分一致 | 已完成：子集覆盖编译器自身源码；第二十九批扩展到 372 个本机用例，原生结果待确认 |
-| SH-2：最小自举闭环 | 输入子集覆盖编译器全部 Yavo 源码；可由外部驱动构建 | 在独立目录、清空产物的条件下完成 stage0 → stage1 → stage2 → stage3；stage2/3 对固定输入生成的 C 一致，独立程序结果一致；记录所有源码、运行时、工具链和构建参数的身份 | **已闭合（引导子集）**：stage2.c 与 stage3.c 逐字节一致，stage2/stage3 二进制一致，stage2 在全部用例上与 stage1 输出相同；三平台原生基线已确认（`4739ffc`，run 45150424099），第二十九批扩展另行验收 |
+| SH-1：可用的子集编译器 | 在 `selfhost/` 中实现真实词法器、解析器、最小语义检查和 C 生成；公布精确输入子集 | stage0 构建成功；外部正向程序运行结果正确；负向程序在前端拒绝；未实现语法明确报错；支持的行为与 stage0 差分一致 | 已完成：子集覆盖编译器自身源码；第三十批语料扩展到 439 例，当前验收见下节 |
+| SH-2：最小自举闭环 | 输入子集覆盖编译器全部 Yavo 源码；可由外部驱动构建 | 在独立目录、清空产物的条件下完成 stage0 → stage1 → stage2 → stage3；stage2/3 对固定输入生成的 C 一致，独立程序结果一致；记录所有源码、运行时、工具链和构建参数的身份 | **已闭合（引导子集）**：stage2.c 与 stage3.c 逐字节一致，stage2/stage3 二进制一致，stage2 在全部用例上与 stage1 输出相同；三平台原生固定点基线与第二十九批扩展均已确认，当前批次证据见下节 |
 | SH-3：主编译器接替 | 逐步覆盖当前 Rust 前端支持的语义、模块与诊断；承接正常构建入口 | 现有回归与冻结规格报告无未解释退步；独立错误输入与资源测试通过；Linux、Windows、macOS 原生执行相应验收；日常开发默认用自举编译器 | 尚未接替，Rust stage0 仍是主编译器 |
 | SH-4：声明范围内的实用交付 | 以非编译器应用验证语言、库、工具和分发 | 下节中的应用、诊断、可重放构建、资源和平台门槛通过，明确支持范围与仍缺能力 | 首个 test-summary 已通过三平台验收，三个独立应用完成 1 个；SH-4 整体未完成 |
 
@@ -47,7 +47,24 @@ SH-1 的结果只标为“子集编译器”。SH-2 可以标为“子集自举�
 
 ## 当前进度
 
-### 第二十九批：Result/try 与词法错误传播
+### 第三十批：Copy Optional 与编译器原地退栈
+
+`?T` 支持 int、byte、bool、Copy struct 和无载荷 enum；显式类型与局部推断、`some`、有上下文的 `none`、边界处隐式包装、`isSome`/`isNone`、普通值形式的惰性 `??` 已接入。`Vec.pop()` 只处理 Copy 元素，接收者必须是可写 local、字段或 inout place；空 Vec 返回 none，非空 Vec 取末元素并减长度，保留容量。
+
+编译器的 **14 个截断调用点** 已使用原地 pop，删除 `truncInts`、`truncBools`、`truncLocals`、`truncTemps`、`truncLoops`。锁栈只删除 mark 后的记录；局部/临时值先生成清理代码再删除分析记录；循环退出状态先复制再退栈。`cleanTemps`/`cleanLocals` 本身继续只生成清理代码，以保留其它控制流分支需要的分析状态。改动消除了截断时复制保留前缀的工作；性能收益尚未测量。
+
+| 范围 | 第三十批边界 |
+| --- | --- |
+| `??` | 右结合、惰性 RHS；RHS 必须精确匹配载荷类型；fallback 临时值在分支内清理，移动状态合并到后续路径 |
+| 上下文与包装 | 数字只接受直接整数上下文，Vec 字面量只接受直接 Vec 上下文；`some` 根据实参实际类型构造。`?byte = some(1)` 合法，`?byte = 1` 和 `byte ! E` 函数的 `return 1` 为 E0001 |
+| Hint 与实际类型 | `??` 可能临时产生嵌套或拥有型 Optional 提示；仅用于推导与精确错型诊断，不进入 C 布局或资源管理 |
+| U0001 | 拥有型/String/Vec/str/unit 载荷、嵌套 Optional、Optional 字段/容器、Optional/Result 组合、拥有元素 pop、`if let`、`match`、跳转式 `??`；Optional 比较和直接打印与 stage0 一样为 U0001 |
+
+正式语料为 **439 cases、155 个可执行输入**：127 run、28 panic、218 reject、52 unsupported、14 shared_unsupported。净新增 67 例，原 `unsupported_vec_pop` 按原字节晋升；本批 68 项均先由独立 Rust oracle 确定结果，15 个运行程序的 Debug/Release 共 30 次执行通过。
+
+本机完整门 **439/439 cases、12/12 checks、0 skip**，stage2.c = stage3.c（668,302 字节），Linux stage2/stage3 二进制逐字节一致（308,504 字节）；真实 lexer 的两代 C 与 Debug/Release 正常返回堆检查通过。Rust 完整 Debug/Release 各 145/0/1，冻结 124/3/2。来源、命令与哈希见[本机验收摘要](../compiler/validation/selfhost-optional-pop-2026-11-24.json)和[独立 oracle](../selfhost/tests/evidence/batch30-optional-oracle/oracle-index.json)。本批三平台原生 CI 尚待提交后确认。
+
+### 第二十九批：Result/try 与词法错误传播（历史记录）
 
 用户函数已支持 `T ! E`、上下文确定类型的 `ok(value)`/`err(error)`、成功值自动包装、`try`，以及有名或匿名的终止式 `catch` 块。成功载荷覆盖现有非 Result 类型，包括 `String`、`Vec[Token]` 和拥有型结构体；错误载荷可以是拥有型结构体。`try` 要求调用方返回相同错误类型，传播前转移错误载荷，再清理仍存活的局部值、临时值和容器已初始化前缀。`() ! E` 函数允许空 return、`return ()` 和正常落空为成功。
 
@@ -99,8 +116,9 @@ SH-1 的结果只标为“子集编译器”。SH-2 可以标为“子集自举�
 | 已完成 | 三平台确认固定点 | `4739ffc` 的 run 45150424099 六项成功，三平台原生固定点通过；见[独立 CI 索引](../compiler/validation/selfhost-fixed-point-native-2026-11-23.json)。原历史本机回执保留原样 |
 | 已完成 | 第一个非编译器 CLI（SH-4 线） | [test-summary](../examples/test-summary/README.md) 使用 stage0，四模块首次 check/Debug/Release 通过，0 编译修复；独立输出、资源、可复现及三平台门已通过 |
 | 已完成 | Result/try 与真实词法器验收 | `e355cb3` 的 run 45226925936 六项成功；三平台各372/12、零跳过，真实 lexer 与 Linux stage2 sanitizer 通过，归档已核验 |
-| 下一批 | Optional 与 `Vec.pop` | 先支持 Copy 元素 pop、可写字段/inout 接收者、推断 `?T` 与显式丢弃，替换五类 Copy 栈的 `trunc*` helper；拥有元素若开放须独立验收转移/析构，否则报 U0001。再通过固定点及资源门 |
-| 后续 | 继续扩大引导子集 | `for`、插值/`format`、模块（替换拼接）。每项先在外部用例中与 stage0 对齐，再迁移编译器源码并重新达到固定点 |
+| 当前批次 | Copy Optional 与 `Vec.pop` | 439 例语料，14 个真实截断点已迁移并删除五个 helper；验收结果见本批记录，拥有型 Optional/pop 保持 U0001 |
+| 下一批 | `for` 与真实遍历迁移 | 以编译器和 lexer 单元中的只读遍历为切口，先对齐迭代对象单次求值、元素权限、break/continue 和提前退出清理，再迁移可直接替换的 while；保留固定点及独立资源门 |
+| 后续 | 格式化与源模块 | 插值/`format`、模块（替换拼接）。每项先在外部用例中与 stage0 对齐，再迁移编译器源码并重新达到固定点 |
 | 接替阶段 | SH-3 接替 | 子集覆盖既有回归与冻结规格后，再讨论让 Yavo 编译器承担日常 `check`/`build` |
 
 固定点现在是回归门：任何修改 `selfhost/` 的提交都必须保持 stage2.c = stage3.c 与 stage1/stage2 全用例一致。

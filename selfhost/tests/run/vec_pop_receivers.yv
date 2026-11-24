@@ -1,0 +1,13 @@
+struct Stack { values: Vec[int] }
+struct Nested { stack: Stack }
+fn popValues(values: inout Vec[int]) -> ?int { return values.pop() }
+fn popField(stack: inout Stack) -> ?int { return stack.values.pop() }
+fn main() {
+    var nested = Nested{stack: Stack{values: [10, 20, 30, 40]}}
+    println(nested.stack.values.pop() ?? -1)
+    println(popField(&nested.stack) ?? -1)
+    println(popValues(&nested.stack.values) ?? -1)
+    println(nested.stack.values.pop() ?? -1)
+    println(popField(&nested.stack) ?? -1)
+    println(nested.stack.values.len())
+}

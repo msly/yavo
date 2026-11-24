@@ -1,0 +1,20 @@
+fn checked(label: String, fail: bool) -> int ! String {
+    println(label)
+    if fail { return err("failed".toString()) }
+    return 9
+}
+fn work(present: bool, fail: bool) -> int {
+    let guard = ["outer".toString()]
+    var value: ?int = none
+    if present { value = 7 }
+    let number = value ?? (checked("used".toString(), fail) catch error {
+        println(error)
+        return -1
+    })
+    return number
+}
+fn main() {
+    println(work(true, true))
+    println(work(false, false))
+    println(work(false, true))
+}

@@ -1,0 +1,3684 @@
+{
+  "schema": "yavo-selfhost-optional-pop-validation/1",
+  "date": "2026-11-24",
+  "recorded_at_utc": "2026-11-24T07:04:36.155907+00:00",
+  "status": "passed",
+  "base_commit": "e3222d87e6220f2447ec2b9e8d458b6f02e60a21",
+  "implementation_commit": null,
+  "source_identity": "Tested working source is identified by hashes; base_commit is the starting revision. Native CI binds the later implementation commit.",
+  "scope": "Local bootstrap fixed point, complete Rust Debug/Release, independent source/artifact rehash and sanitizer input validation",
+  "bootstrap": {
+    "receipt": {
+      "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/receipt.json",
+      "bytes": 4847382,
+      "sha256": "c58ff7115c36bb04d2a039d74d4003a27395621cad5a706b70bfa3d26ad13b8b"
+    },
+    "results": {
+      "status": "passed",
+      "achieved": "self-hosted-fixed-point",
+      "self_hosted": true,
+      "host": {
+        "machine": "x86_64",
+        "platform": "Linux-6.1.0-50-cloud-amd64-x86_64-with-glibc2.36"
+      },
+      "passed": 439,
+      "failed": 0,
+      "total": 439,
+      "case_counts": {
+        "panic": 28,
+        "reject": 218,
+        "run": 127,
+        "shared_unsupported": 14,
+        "unsupported": 52
+      },
+      "checks_passed": 12,
+      "checks_failed": 0,
+      "checks_skipped": 0
+    },
+    "inputs": {
+      "assembled_sources": {
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/programs/diagnostic_original_source/input.yv": "5e125ecc74f10aad11eda9d741043e8ee1beecb6fe30dcaf30006b5c2713f82f",
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/programs/model_original_source/input.yv": "525ea1fae0f926e4106ceaa43c5c9e1f40dad9a39b68cb1226833196737970a3",
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/programs/model_original_traversal/input.yv": "fc1b7a228763a0d9489b8474a61eb0d1b761d14275b77ecf04657829455f9faa"
+      },
+      "compiler_bundle": {
+        "bytes": 156663,
+        "parts": [
+          {
+            "file": "support.yv",
+            "sha256": "3871f3a26d00e2242d989ef73e5a8a8f209dab151f6758c7c31d717ba78f6b16"
+          },
+          {
+            "file": "lexer.yv",
+            "sha256": "d19510e0e58fb21b6466319c564bb25684a71fac7a2ef77789c44f0057ca0067"
+          },
+          {
+            "file": "model.yv",
+            "sha256": "8eeefd34c56d00db5b5cd9a5181486c9c5b3edb71ec74b93ffd2145f88894ae8"
+          },
+          {
+            "file": "parser.yv",
+            "sha256": "82a930eba144ec0d6544e86ca0f5fd145398157f1f040c71c3bfb5b35f822240"
+          },
+          {
+            "file": "types.yv",
+            "sha256": "2c3b7ab239b4ef77fd45f66c165bcb6f675b5121b2a63df5c7955eceaa39ee83"
+          },
+          {
+            "file": "codegen.yv",
+            "sha256": "e1c74a94e775947cdfd04237f6bfe7c114edf3d475b8a1ada820f5509a059615"
+          },
+          {
+            "file": "main.yv",
+            "sha256": "44fd3da90a86be5dedb3ac55ba52489750bac4391e9da5ac21b38dccbec48486"
+          }
+        ],
+        "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/yavo-selfhost.yv",
+        "sha256": "9c0eaf4fb68c282e8f8e91191aac6db7e836521414c89782f427442ecc5c7765"
+      },
+      "examples": {
+        "borrowed_token_scan.yv": "ff22520a393aa89139713b8f38bb8bdd8af21a3db6591acdb88487bec549f9a3",
+        "lexer_byte_helpers.yv": "19a8c4077618de1c3fb8e35f11761489e6710d2446c9b5ad768d36b96ddadd3e",
+        "owned_token_store.yv": "966233c72a4c04634cfa9433c0b7370d22e9ecb6cf60899ad63d6fea6150682f",
+        "token_metadata.yv": "3d1218d1dd1628702bd0e73495bb92d807867d51bd11380d65389fa04db9bee5",
+        "token_table.yv": "a55b42746e0febd160918c6c7f08cfacd8e9e7300e97b2ca5d519b580eeb5c75"
+      },
+      "fixtures": {
+        "panic/aggregate_overflow.yv": "698c58ecfbfe0e74d1840a88b5b4c402920f751e1720bba923aa3baa24e535fb",
+        "panic/assertion.yv": "5adf00f5bf95451b1d5bffdfceb39569885474b1d1492b2949116643c7636b2c",
+        "panic/borrowed_index_negative_bounds.yv": "5703a4ce9a1c7f242712a1de6eb2d8c3f327d923e760f67261a53fe94f2c386e",
+        "panic/borrowed_index_upper_bounds.yv": "e5161244ccfe28b1e59f08a079f67ccbad17c754a8d5c9af7e7b70d7e93cddce",
+        "panic/byte_convert_negative.yv": "e333d7d1e1ba88f73d1976d5a542c631a8a366e5f3b703e240a0e513965cbe66",
+        "panic/byte_convert_upper.yv": "5d641b8543606d3f8f08566e24466cb7d04ff083e218952b1c6c15f148cdfa76",
+        "panic/byte_division_zero.yv": "c6c7817376cbdb9736ffe30c1b8af02bb684caf2241ff506783179b9f729424d",
+        "panic/byte_literal_left_overflow_order.yv": "257c35e0a5c243e288b7f022d1eaf682210df527c04974d0242971f8e18db348",
+        "panic/byte_shift_width.yv": "1446e23e443912b4cbe9dd7cd49328eead660c497200cde34ce64c246f0eff36",
+        "panic/division_overflow.yv": "f88dfd09dea4a11d728f1f4e7ae64567c84402d45251b9a4f0331b2a718a992c",
+        "panic/division_zero.yv": "38962d368e40c28bfadc902a1006f10db4ba0ba18313ec61c8f572cd46aa115c",
+        "panic/overflow_add.yv": "990fe1a7c9fb711353db7132d893b6aa8b79647857d533fa08174f63da9c9ec6",
+        "panic/overflow_mul.yv": "7cb7eefb6ba91ad067290679fc29ae3c303be7a74e4cea73c3de01abd1a5dfe4",
+        "panic/overflow_neg.yv": "8bb3c2b5118f90d47e3721bbfad2a586f0b3d542e63a8aa75952bf850da04d2b",
+        "panic/overflow_sub.yv": "44c30ff108caeda95d0590d3e448b6f2034bbd3e05910b2ec6295cd9dbb74dbf",
+        "panic/owned_vec_partial_literal_panic.yv": "89ff872cf83eb7595dab54a10609ca01f78b7b10756e7fc653fd095b342d9e37",
+        "panic/remainder_zero.yv": "143ecc930a1a64735d8b19d066898466ea3f30993e782c9fc76edbf1eb065324",
+        "panic/shift_range.yv": "94e710d679a3511f7a307110dcbdb860028f646dbd46188c1591eef60f099554",
+        "panic/text_byte_index_empty.yv": "86a2370bba068be6d7d9e58de470fa621e0367eec3ba797b82c7b59766649f6f",
+        "panic/text_byte_index_negative.yv": "d2abe254460d6be2ce811a10d23152844d2c93b4ec812f94573cdb1d350505d7",
+        "panic/text_byte_index_upper.yv": "8efb2089bd9bacfa287daeed7220eec630d2833f6ce1b721898554ceec803bd9",
+        "panic/text_slice_boundary.yv": "2a2000f9a552bfe0e9185523ada9bf38ee496ce37cabe5a3183aa211802ee0df",
+        "panic/text_slice_bounds.yv": "5ebf4a63743292c1f771b81ca81d9f8a91ffe696b5cb3d79c8b08f4ff3ad576c",
+        "panic/vec_assignment_bounds_order.yv": "ef88a11a63e0fd2d693aae30efb0be37986ed45a07b23acc6fd76c6ae524562b",
+        "panic/vec_negative_index.yv": "a6e1b9baa0b70f353d3259c255b09eaa4e7a21a7db0c006bfea1ccf78d417b02",
+        "panic/vec_reserve_negative.yv": "c65a2ff7f2c0a9b0da79b58ec9687ddc2571aaa95538b99f349a79c6b9b54548",
+        "panic/vec_reserve_overflow.yv": "565b7117c6ae3e4297c697501b3d76fef842b3e6970682bcdd1d7d9286e1f0c2",
+        "panic/vec_upper_index.yv": "8964dbea816e53d4413b96aea390b5f2ee05c9d886a5f82990c1eb7a145ae5c8",
+        "reject/active_shadowing.yv": "a209769be27b6d45d0a3281c98ce191a56b75e7515b35ef2215fe75086032c85",
+        "reject/annotation_mismatch.yv": "37b0dca451c7199f9a4538618e31a8077e03a31c29ba3e21140b76c53ef2358a",
+        "reject/argument_count.yv": "f8e608f4dd0f435d8db8518183808db62b94704bd64e5bfc20a3c84f792aeed7",
+        "reject/argument_type.yv": "29ab7eb8729805035f07188fa6d364f8d6a3ce48e811abd0b02eb039f3843b98",
+        "reject/bare_literal.yv": "3dc6f81f4883fcf046a899f24e0400773ee74c4602246be6a13b0f2f92b9b504",
+        "reject/borrowed_index_call_owner_move.yv": "9ce4714bc8c9017159178272f32ead51fe50afa13997886f74521a9fa1dd6cbc",
+        "reject/borrowed_index_owned_annotation.yv": "d79b4c616f025f6504b4951265f9ee26c33c6fc9f72adc4b94640d8fb0679841",
+        "reject/borrowed_index_owned_field_move.yv": "e11664ab17328f02384e318e930d024fe71ad47046b84a8da59d42a597827095",
+        "reject/borrowed_index_owned_return.yv": "a392f5bb8424cfd2f773173d508668c846d145ee01a6f3aafd8fef838d96e795",
+        "reject/borrowed_index_push_owner.yv": "060ae730e105989c43926fdcb307fbc88c2fcab25675d468a753fc63d198417a",
+        "reject/borrowed_index_struct_clone.yv": "b6ee3538edc13c3751a1b13d12aa805832160d1dd1156a7a37c7df4b39eeb481",
+        "reject/borrowed_index_typed_literal_owner.yv": "9a6711cb2fcca79a946dba8b54785dc8fe34dc3cfb9faad1a22709e6cb8c115b",
+        "reject/break_outside.yv": "b1f50b3d90e0c4fb1312cf476b3a16031b259ae93b15ab3871b1ec217aa6e537",
+        "reject/byte_context_negative.yv": "ae6f46078ec467f83dad1280ccf5c4c1aa704775f35602fb6b3dde77ab94feb6",
+        "reject/byte_context_range.yv": "d31e60fdc4575cd173adf035dd796b65e053265d741bdf40f433ea54f3720bb4",
+        "reject/byte_context_variable.yv": "904b1ab2e9c4d71218e07d7d7475edefaf55ea16f19afca2c9cd905b5f95402e",
+        "reject/byte_convert_arity.yv": "8fdefd012f4f51bf37f849484d950e0fbb2f3443a37d1da0dc5122c38baf00d6",
+        "reject/byte_convert_type.yv": "1e3937a4f6584e64ff4f431a5d23396582131ad2af362e223de857614998aa73",
+        "reject/byte_default_range.yv": "5823b7a633979422f623b97407579692538a9e575d22f75647a8c2f029bff4f5",
+        "reject/byte_default_to_int.yv": "b71b9efe5f5829d2ce57a916e80e8fb3d1ffc34e43dd14109a07a5d4fa370349",
+        "reject/byte_literal_empty.yv": "02d97efe5164dd2abdb6595fbfbfb1ac146cd8c5cc317ccf94654066b1c3212d",
+        "reject/byte_literal_escape.yv": "e7ea83772bc6eb68826dfc9207d1e5844d7eced95a74cb35fac9970bcb385dd8",
+        "reject/byte_literal_many.yv": "c8b09602e4f305bda2f56dfa43b8e72766f65c9ce67e1d4f98443282c9700fed",
+        "reject/byte_literal_non_ascii.yv": "154a2e3398a83f35398d4813e5a3ea27a175541ee04183a612e4e65b08465974",
+        "reject/byte_literal_to_int.yv": "95e9c001b5f1c6099d38f5bd19509e2fd2368f798c4bf23e9224cfc7804c2763",
+        "reject/byte_literal_unterminated.yv": "c53eced2c0a5535ecdd3212bec64eca298f5ee5247679f3235bac929827cc0ab",
+        "reject/byte_unsigned_negation.yv": "a5d14ad01c9b343182096ce20744d24dc9a30e2c80b137961ecd0f975459caee",
+        "reject/byte_vector_push_type.yv": "da19473801fe787b567bffe17bfec97c86712c5b2f0e2b2144709bb68bbea7bf",
+        "reject/catch_falls_through.yv": "d6c883b8eb84c624f501cea4d3c33342dae516c6f43e6b7cb977a60a0e24c706",
+        "reject/comparison_chain.yv": "9f3fb005d4e8f5ed325eb0dda40196f502bb45234f3750206fd17d7165d54302",
+        "reject/constructor_duplicate_field.yv": "4c5b595853e18ee2317a50683e5cad462c76860fa6bd5d58b35021c5b43a982d",
+        "reject/constructor_missing_field.yv": "7affb676f2fd7aa3f2b14d5c42f0dbeb3756cc74a779b58ea94f03edc6e6135c",
+        "reject/constructor_unknown_field.yv": "1cbc0c6d1217965fc6181fe871bc41fd9d1ba54d00c5e64582c9178809aa320e",
+        "reject/constructor_wrong_nominal.yv": "dac1bd6dd3c526e6a7f77059c9d1cb581089c908216bc11814ee0b6f620c1278",
+        "reject/constructor_wrong_type.yv": "912b2077a93742e54dcfae682670b36fd533e753cff2d69b0ddaa2c21a75e985",
+        "reject/continue_outside.yv": "f361b0d2123760c8d2a9495b1a239ede657c0ad2e4f17a24a22ab5987f465693",
+        "reject/conversion_shadow.yv": "460801e296d6c4a29c02811392c500a645afba9b96226a090c2f863b64bf5604",
+        "reject/duplicate_field.yv": "e3e85d96a2587e7d507db9f539a9f284d299db3c2bed6249364faf8f5fb0188f",
+        "reject/duplicate_function.yv": "ac2ffce366b88f2d19af4a65ed2e232c01ebaeaab96093a15fa80cb22600a552",
+        "reject/duplicate_parameter.yv": "dd62ae4b86b18a5c417a21e219c2764b9584e092f2652c27114bd3f52259b3a2",
+        "reject/duplicate_type.yv": "e9401a8ab27804ece680b5a31417cd5f4e05004f49641024708d0723e92e4e49",
+        "reject/duplicate_variant.yv": "605294d0bc9bc7998202c4284964db889f00f9a0324c23048ebef7de11607c3e",
+        "reject/enum_default_not_constant.yv": "ed830fe32354af486a4f8eb950d73bf9f060e2ee9cfd9b1f216972f8fadd4cfa",
+        "reject/enum_left_no_context.yv": "6564ac6093cc6c5c68127ce80fcb032aa2d72381051fb2e646e1766d9fdcec38",
+        "reject/enum_name_as_value.yv": "1ba96bf6b3456e34c8d5cf61a26c5c981c783564898ef3d9392546e413c8583a",
+        "reject/enum_no_context.yv": "4b5a23d30c8fc4efc6addc3340a6cc025b46952bd91fcca8cc229a8736112d99",
+        "reject/enum_order.yv": "5981f3193329f95acc1a70f045010e428f81fb432f6501ac79bb1a642e51deb2",
+        "reject/enum_unknown_case.yv": "1991c6abe671c81924a0c4248d6a52c00cb85806d0139843c5f77dedfd47e9db",
+        "reject/enum_unknown_context_case.yv": "e2aab7a7a31d079572c697c1dc8612928fde9fcc72db71dccdd6d608fd012166",
+        "reject/enum_wrong_nominal.yv": "4cb75a44bcb6ae72ba2a1ff35322e369032bdd1eb161d28ae8b0e9e8f830476b",
+        "reject/field_borrowed_str.yv": "e1733cecdb3c7890ab5ae7a117f8691f49e1d75fb74db27490a38b2eb0f701cb",
+        "reject/field_compound_bool.yv": "b1a70f2564921e6c8a14cadd31d6a1ff66516ae4e44a797d6cf3aef6a007b463",
+        "reject/field_default_call.yv": "388513174cc762125b3b476b054f2cab551cc0c7a50860e4b89c799db4186bcc",
+        "reject/field_default_computed.yv": "181ec376f6f0bafb9248af4d63619e62f44874329ee857f76435f445266932b1",
+        "reject/field_default_literal_above_u128.yv": "478fc67b2a4e29e679c75dd506bf968fd4a6cb4f019003e67a820aaaeb4dea1f",
+        "reject/field_default_neg_parenthesized.yv": "36eab220505d6313fee2fa94438245fa3459aa7ca11a10abca1c8193a20f57bb",
+        "reject/field_default_range.yv": "7283c0ae249c684a16273949171a8c3960321a904571b4344093a5e2abf9c050",
+        "reject/field_default_wrong_type.yv": "0b24e42133dcf2a4b1b4be8fbe4f7dc6e115fb1c44239f62dcced215451ac165",
+        "reject/immutable_assignment.yv": "65914b97833ea6f3ada809198312893827d7c348af4819421ad7a1cce0ad7980",
+        "reject/inout_immutable_local.yv": "dab3ffeac8db2071a60a34ced864b706f0f96d02b8d95d2d90b45eee2fc610bc",
+        "reject/inout_later_argument_use.yv": "7233e539a250fb378653ea492cfdd3062c76e44d02172f2ba36f0891ace18ef1",
+        "reject/inout_missing_borrow.yv": "538dc0883d7158e5f6dc96fb58312ab22a49053d3e178d2020348ef90117c742",
+        "reject/inout_move_out.yv": "b90b0869e90675736afbe5e46bd1ab50df3cd5ddcc36ca62825eb7636245b91a",
+        "reject/integer_out_of_range.yv": "221213ca682bb6a22a7a07abb52016a00d880d27fde4064cf6b19221a4b98718",
+        "reject/invalid_arithmetic.yv": "3c010577e1103a84b6df09c98c627f26bc26a2d5ee1ca312381db427e9d1e06b",
+        "reject/invalid_escape.yv": "776e40a12ec082e67b790c2ae80bc8d7fd8aeab8275c98b92fb31f2111ce4c0e",
+        "reject/local_hides_assert.yv": "b93e9eb78c238f3b02e7de1fea1e26ac2a4649224337fd4ecb280102725a5785",
+        "reject/local_hides_fn.yv": "210a277d68cb92cd6be6cf599ba48f5f1962e5d68504e6eb0579a69bfd9a1815",
+        "reject/local_hides_print.yv": "f088d215e50e6c50390613fbc97d2107f147a6dfac7d8ff26cf0cf1e24e73fad",
+        "reject/loop_unreachable_break_after_continue.yv": "a3f5e6955c425fafdddcd52db5448563732b37f5e3af47048f6a026c59b044f4",
+        "reject/loop_unreachable_break_after_return.yv": "c4f40cc97568b9850cbde9434e948db5e5a7daf8f1a002caf86d896823c047d6",
+        "reject/main_parameters.yv": "215a31d2833f77a3dcef9518a85c7af67d581d042835017506e4450b25cf3bd7",
+        "reject/missing_main.yv": "a9056e4d5143dee5a485795c9873cfe0b792536a818f0a5abb4504f1e08ad4ad",
+        "reject/missing_newline.yv": "3293f7f46d1af7b8ddf9df2e054bdc136bd7855e833d1a0c2f1a0397f30936fb",
+        "reject/missing_return.yv": "014560960d7b2bcba1d15c4bdc390030bc9c5faea1c5e88a19e178dcd0279ef2",
+        "reject/negative_out_of_range.yv": "a349bae44216a54adba885261bef06d62acce63999c1356e56ac5cd13502fb22",
+        "reject/non_bool_condition.yv": "6c3b27ebd20d01a58e4e419d2eb9fb91fae947cb6d974def4c518eb7ec7dd97f",
+        "reject/optional_byte_coalesce.yv": "307d3175b54bf6ae22b99f4840c02e18a53eef0292cf04ec66104db59f0452f0",
+        "reject/optional_byte_implicit.yv": "b7e995b24db43d78e5b8aa1c3cae8ea60af718b21853eb72861c8f9659f0f0c0",
+        "reject/optional_coalesce_after_move.yv": "11656368b05587d4eaae4288632b30f2f1fe9e6ec5c5915e8edbd0c5e4794c99",
+        "reject/optional_condition.yv": "05428030f4d679f32e4fac1c5eb55cacb654d77a55d2b630e3413409033c9e9d",
+        "reject/optional_context_none_coalesce.yv": "6258bd0c84e904c4d0cab11d62e1d9e2ba3842990873fb0b9e0ffa7f3eda03f6",
+        "reject/optional_inferred_none_coalesce.yv": "411762b7805c97ea3e9952389b75f88357f29f77bf9022dbc24ce4c97a078b0a",
+        "reject/optional_is_some_arity.yv": "81bff6fc36ef363cfd254b2dd95b8022e6948e5472248a38049325ad60b6774d",
+        "reject/optional_missing_return.yv": "bfee992b86670b2c81b566ea41d302f8d0fb50e2d5254f72a38e1933adf46403",
+        "reject/optional_none_untyped.yv": "91938d1767c7214aeb2242db8cbef89b4c49986d35ad693a2ae664a5f13c6a84",
+        "reject/optional_nonoptional_coalesce.yv": "bdd8295927942456e4cb92b2be3f2ad52eaffaa1d43bfc6ba0848ae0a2f3b5d5",
+        "reject/optional_return_none_coalesce.yv": "ac4f39a7427cc0cd1ff852fb292aebe4fe1a62bd0cd1eac8079bb39bfe2a4393",
+        "reject/optional_some_empty.yv": "6f982924c79c91dc3877517cb525d973cfe3f0ff41e3b862c22874b95ed48700",
+        "reject/optional_some_extra.yv": "1e4e3d794a60db5c925fd95080214571420b5376c7824b532fe48c0964ed25ce",
+        "reject/optional_some_none.yv": "098d4f3091b7d700184d57946a73483a4e81dd545fcdf4a2045308e84541a929",
+        "reject/optional_some_shadow_variable.yv": "a57cdc2fd757a45fe266567b1999f896dbe83babc127fa77a1748f90c0f2f15c",
+        "reject/optional_some_unit.yv": "7437562264b866f63aad2fa3d8e804310fb8d433e8a2d1179697d59ee04fcf2b",
+        "reject/optional_wrong_fallback.yv": "a16f3d5e9d7f4550898bbb9b926b0d7ac1584df5337c88204252d85c75b720e5",
+        "reject/optional_wrong_payload.yv": "b45b654ce5ca18762eb9c19f032387a5aea05a00f6ff1dbfc69af82dde841466",
+        "reject/out_of_scope.yv": "7365df0bb758a721c001235613709d2ca4c200a44ae3196a5204ca7467c97422",
+        "reject/owned_argument_borrow_move.yv": "8e0291195da23bb09dba8b7399f14f49a92830773531945450bc31013fa4f99b",
+        "reject/owned_argument_move_use.yv": "b2ec6685ad357b984c62f46863aa92045cba5da0547f072cf6f0309edd34f68d",
+        "reject/owned_branch_move_use.yv": "1b325540fc86d8e2098abf5896afa973d08df3b97d69d29721d5fdc4b029950a",
+        "reject/owned_constructor_field.yv": "d7e8d642afe87d5e0c1b23e5f3ceccfad03280f6541f5fe06f1e11df68c14359",
+        "reject/owned_field_move.yv": "1c5a64c958fc5a48b3dc5209c07a306d2baf96f0f6b63856b8754f2a3bc1d434",
+        "reject/owned_literal_argument.yv": "ca224c302341ad7c24b469567688ce8675028e1dd81f8fce0b1fbf221fde33de",
+        "reject/owned_literal_binding.yv": "965a609cb3c931aaea940d49d0a62725887c6ec607b1d0899bbc8b3917931da5",
+        "reject/owned_literal_field.yv": "001e05edcabb4ea53428616b015cdf4ef483bb63845f26b09d1dbf1062e16154",
+        "reject/owned_literal_return.yv": "36d6538e9d2320a8f5013d6b7ad9791d6ba802e3f8ccba63cd03d646c1ec6004",
+        "reject/owned_loop_break_move.yv": "11ac3b96480085b8c003c0680252ece6a59833383d045be07d301e1c882c23a1",
+        "reject/owned_loop_move.yv": "e708954e15b65d6903d44849f009cc581f556dab76a7ecca8bc48d7b8ae99709",
+        "reject/owned_method_arity.yv": "bda2017ce1f16df9d0effc8a9594b5cc965570cd16a7b94f18847b0b0a1bcd3c",
+        "reject/owned_parameter_move.yv": "3bcf99de07a6de66a6ebb67ef7847450bd2003b403c7df9d75dd130558cb41e8",
+        "reject/owned_push_alias.yv": "9fae4004a5e278387ecea7c3c1ccbacf0b16930dd4cb4c5e83c745f8342a0e09",
+        "reject/owned_push_argument_type.yv": "9bdd6e17e2166aa7560ac34a96e81e3313beefe0fbba05432782bfff71a376e8",
+        "reject/owned_push_field_alias.yv": "34e0032278258618315cd3e857ef21e36b7a7bea38f94061165bc8daadb862be",
+        "reject/owned_readonly_field.yv": "bbaed71412ce0fab389ced34ad050fc068a61b9f1eacda50a66ac898537e958f",
+        "reject/owned_readonly_local.yv": "f1d7d8fc54f61ecedbafa66cdc74a34d9b739ea7a33f063c376677293d8a1611",
+        "reject/owned_readonly_parameter.yv": "4bad571848f22b5fae926cc6cfa0ecf774fa9f9631134e2d56e30fd8a037a2b7",
+        "reject/owned_str_binding.yv": "b58fe281137903de6a831e76cc60d65ec619e3003c39c3043ea1b090a3f7985b",
+        "reject/owned_struct_clone_method.yv": "0a93a35aac30db0363f0ba9960d3e995bdae932ab51ebd8a8ad90cf895fe1a01",
+        "reject/owned_struct_parameter_move.yv": "3405c4841e61d024c4434076c8c22edf1312034bdb450072be8971844c13e28d",
+        "reject/owned_struct_use_after_move.yv": "35032a83c178767d464c2353121446a92c8241e803a26ec13465f8f169004091",
+        "reject/owned_use_after_move.yv": "39390d8e8fabc33890cda2ccf77cc41f5f8ce263b7bda0424bc2fe088b86caaa",
+        "reject/owned_vec_literal_borrowed_parameter.yv": "582f73ead1220e3a36e4b9fef6f41b63ddcc02fc7341cb19dec61768e0674a97",
+        "reject/owned_vec_literal_duplicate_owner.yv": "6a4b21faa1d2694a1ea42348cd5eac53fadddc317c9e942dbe6314b27dc01616",
+        "reject/owned_vec_literal_moved_string.yv": "a392ff9028a103ff6ffcaafec2576e51501134b6b05767f55d6fed97b1d3cda7",
+        "reject/owned_vec_loop_repeated_element_move.yv": "74bf666b88ac46d9f55e6fbd53dee42d46fc3f3d2c3337a7ce3c0a5bd4bd737c",
+        "reject/owned_vec_push_field_move.yv": "22a84415f51b11f3719b927546b9f17387bb4762ad282914b4217650435a5413",
+        "reject/owned_vec_push_moved_token.yv": "2aa9d0f4bf1999a7fd2966cc126a3dd35790001b92fd747ee8f7949090a33167",
+        "reject/owned_vec_push_str_requires_conversion.yv": "cbbe072f2a7f6f4af6cf90a2a90cb8ba5c37b9b3eded9e1a8c16a86a2ee9d9f7",
+        "reject/param_hides_fn.yv": "4a8d93990cf290e942059fbdeed28038614d60b5c5659e93456a407d1ff992e4",
+        "reject/paren_output.yv": "d1d8b864f639bcf73ff8e285b5a980631ac0b6580eae98b402d6e1ae0c96b5d5",
+        "reject/quoted_braces.yv": "2af5e97c5af3974c46aa3d3ff59e754be296270748a08a6e51049ba99432d9f1",
+        "reject/quoted_function_keyword.yv": "ac399fcd741fb3829b6a8e9e1ac2ef610699e2cfcb9530252d10db3999463c9f",
+        "reject/quoted_operator.yv": "8b80215a127e10bcf068e9f6027505e077cb142bd7e5764e3b97c419fd375111",
+        "reject/quoted_type.yv": "fb9a72f591a3d84cb05956e04e4839f0af6b0256230edf27338493c0083bd5bc",
+        "reject/readonly_field_write.yv": "e97220168f77681522590a7e9a6a45907796704d65970db2f95036a376ae7563",
+        "reject/readonly_parameter_field.yv": "90fa2fdf08300fc46c4c1a82eab8c72a592380594a40d5f539b7033dfad46562",
+        "reject/recursive_struct_direct.yv": "24b15740a7bf5f96499c4b4dc0c3e23a1b2c489f601babc1a0034d68ae189072",
+        "reject/recursive_struct_indirect.yv": "1cd131e55bb389290fc56a1bfd9cfed3cb69064a58bf7dbb6cfec2007c7a0364",
+        "reject/reserved_identifier.yv": "44310578a4351b48347e71b351b6cd027228dda0ec56da8151f8b7a43f8abfbc",
+        "reject/result_borrowed_catch.yv": "e9d8113baceca5c6d422bbe748e013ed9f37004857c90d40f2cf4e12c2c9ba86",
+        "reject/result_borrowed_try.yv": "f5e73b489bdf82cce66e49183587c5d46a0df6e3f54058b19ded144a7cc66d43",
+        "reject/result_byte_implicit.yv": "79b28f8e588605963fa90b1994f5a794c7469d7bafb1206fa67a73effc5d4b7d",
+        "reject/result_byte_return_implicit.yv": "7af118aede1afc4b26e47be1603953f749ff3d6949b61f2cb8faa556bcd158e1",
+        "reject/result_catch_break_missing_return.yv": "120f1a4c8dce49b215735c95765e238fbeb5b5c6706f14e550b0f4bdd64a89c1",
+        "reject/result_catch_falls_through.yv": "6c15ff5e6556526e9ef79033156c66a76b1dec49f4ac42bdce6360b38ffd272d",
+        "reject/result_catch_partial_termination.yv": "bbd964bd7847891c381a858dd1ee8fad19f4d16928c21fdc2aa4358b48e22d57",
+        "reject/result_compare.yv": "f74965a37682353f3e0de35378b356c5d81b442d6b518b924981d52a4986bd51",
+        "reject/result_err_inferred.yv": "6af6474414e55f56ed8f5dcc6dd352563a368afdd1f1794c9bf0a0e210474ead",
+        "reject/result_error_type.yv": "a94b8bb31965a7614770fc0c462184d03bbd8ae4f3ce57e2f7cf34a19367d5e3",
+        "reject/result_missing_return.yv": "718bc4e9ef1125f71fa3351a14adb25060107664da5e6a14a273346c6c61a95c",
+        "reject/result_nested_chain.yv": "bdf431c11797e3b81ef09853a71e23ec25970c5127d716a60196c68bea43d0e7",
+        "reject/result_nested_parenthesized.yv": "1d7cb284c6939f49b4bb4d289b2723818e3ae523b07bb3ac224692d066903ee1",
+        "reject/result_success_type.yv": "0ef9c814bfbbea601873fbe5589a9c556319dc55264a771c181353713a69a405",
+        "reject/result_try_error_type.yv": "24012e058212adb220c45a6f0fd77ae0454f6a53ea3506f4c9ec6d27dbf2a0fb",
+        "reject/result_try_outside.yv": "3fb9d1f5ac499b8347a1ab09622e04231d02eff29b638fe051bb8578ec0de743",
+        "reject/result_unhandled_statement.yv": "6766ab7c9b8efcb266fbc543ef323c969f87dc57ef19f88e69c04acb8709d1f7",
+        "reject/result_unhandled_value.yv": "778bd89697b3527e13ea37cc720fc6c39201c1dca391190ea169197d374fbd35",
+        "reject/result_use_after_catch.yv": "78e4fe6c8206104084b9be55b6294bd3a3fb238fd3ecbe99304960b622c9249e",
+        "reject/result_use_after_try.yv": "1c8bc6ec0b25bb00b94b8e6a4970bdb27bc096b61e0d9f70bafa3b317a39594d",
+        "reject/result_vec_implicit_empty.yv": "b0990c15b6f5b4825aac53952434dbc378038a34926645517a4214d4e2fcf92a",
+        "reject/return_assert.yv": "03479889ca8533fa999e57ae521f6475b8c28372ee246b0e20a0125d87cd187f",
+        "reject/return_output.yv": "ba21c6e9c2e75fba7c037eaf390a5df79be543a00a09a7e16d5ecb21855a2846",
+        "reject/return_type.yv": "26e76515df5f788a5ae9a236185d05044d2fe2e33b9d613e51c87ed81f6888bf",
+        "reject/struct_equality.yv": "6cac5da75c6f011428503a9dfd6047803f05e51fd30ba47e3c8e673c4c7b201c",
+        "reject/struct_name_as_value.yv": "944dd396f582e9099c9233ca2824ec67efa8e9c278eb32fabf7af53ea6fbb895",
+        "reject/struct_print.yv": "f823fa0ab14b892699cf1142abeae2e7ff6d97eb9d473d0da84ae6bdd2bf04e0",
+        "reject/text_byte_index_type.yv": "11a1a9586364e75d5d9a3e6cd9656872879b9a2ffdc0bd7efa3db315b2d94d40",
+        "reject/text_byte_index_write.yv": "f153fe0fa05f2778fd29e990275a9077409a6c871ca357b8eb30c0ecd7b2701d",
+        "reject/type_redefines_builtin.yv": "48891109cb5261985e7eeb1a67e199aa4194eed1e549701194cd03feb6583f0a",
+        "reject/unit_explicit_value.yv": "af354b6bfd78518fa747f41b58f52712b0d646f4dd80001bc3a8ce6b219b166f",
+        "reject/unknown_annotation_type.yv": "cd0787bbf541528dabead5c1d9fdc3531b14a36bb99dbb536e3bcb4dbbd30836",
+        "reject/unknown_field_read.yv": "e3f78dbb516c7576ce5fbb06569fb97bfb132e0e77efd39bcd56cd3d383ed1e8",
+        "reject/unknown_field_type.yv": "dc0ac4930e649c172d3fa3db62e9e1078230637f988167adbcc393683ed0d4a8",
+        "reject/unknown_field_write.yv": "1d4998a2dfb3154c09dccd81dd9c1d3f2ebc62e54d9e0b23fbb629ac97f940bd",
+        "reject/unknown_function.yv": "7e54336af93371ebe8c49cda6ce7d5d10fa3db5294069671eedf44ca16432ad2",
+        "reject/unknown_name.yv": "2e50ae3cbe8803f9302fdc896cf95048ee1d8bd2eb944e79c8de3da83f2f8a12",
+        "reject/unknown_struct_constructor.yv": "c4aa06344428ee0384329ba6377c81c06a685377b5bdcf29dee82b2fba1406ed",
+        "reject/unterminated_string.yv": "c79ffadbd67c945ad28386f06c596c3f52da4ea32cc08706f2265a1f0bceac76",
+        "reject/vec_argument_borrow_move.yv": "9b10fe37852471ca1a4878e2378015281aa6f21cd8db7dc6808280437c6420bc",
+        "reject/vec_assignment_element_mismatch.yv": "8cc1c8cbaed189105499316fcd6e32193600f473649e5d3fb8e3b04f52e9a498",
+        "reject/vec_bare_constructor.yv": "8ceb6d9d8abd7836189b0a326ccbd561fe3c3bb52e4a85ab8086f6a1d6099f71",
+        "reject/vec_borrowed_parameter_move.yv": "602b76e8ae192425a3aabcf027e86847c3c010e3ed57ae75687e06ac1d5d0620",
+        "reject/vec_compound_noninteger.yv": "fecf3cda9eefba0d57ca0d467eee9e9e6679f0c64723f651176be51d09272ccc",
+        "reject/vec_empty_inference.yv": "47b340b96920bde5ce9e3fd971fd95541b893ce19b7a2c48631d6b0896c3cb54",
+        "reject/vec_equality_rejected.yv": "99e7e4f4b87688b104af6134800a2ae8059297eb1dc745887593ab23e073418a",
+        "reject/vec_extra_type_argument.yv": "17de6c5bb1f9f2c4c75a42665db8ba46ecfa8afa68d16e16fffd32f6d52fab3b",
+        "reject/vec_field_move.yv": "159d5bafa4b3b2bd4aa94f051b901b3ef88aa6f93d66588aca49d394d63772ff",
+        "reject/vec_immutable_index.yv": "da5c068641aab3992fece7ccb60e234dda80fa16fdd7c546547da04ecd302cbb",
+        "reject/vec_index_assignment_receiver_move.yv": "4265fcfed6b3748091599fe2d4c9c7b310d253cb63e002d072ea412754d4ddc6",
+        "reject/vec_index_assignment_rhs_move.yv": "1ef0e7772ff94ee814b47b25efee791dfeef843721bb8589513531c8e222b613",
+        "reject/vec_index_type.yv": "a00b116a1dc7b3af290c700c9837f60b6ce4f400a2b00379c4ee7b5807ec102a",
+        "reject/vec_len_arity.yv": "197e68abac312bfa707d022c6c7dad20bd8c73e69b0826b760fb8a881549ee6a",
+        "reject/vec_loop_repeated_move.yv": "dee21ebc9a402610912a4ae53a154820d45a5434a5dbd0aaf894e370a52bc05a",
+        "reject/vec_missing_type_argument.yv": "2d0103ad8d1cece7dfaed76fcf74c7be0e32af86a965a61e630906e886b61ba2",
+        "reject/vec_mixed_literal.yv": "92020ae4b8195473f77745fbe0c1e44472e3435a6a88482fb3535837ae59c271",
+        "reject/vec_nominal_element_mismatch.yv": "407234a2dc06db82bcc1a8632d8a3ec9e3f44030fa2d6a7e54dc942b611987b6",
+        "reject/vec_nonempty_field_default.yv": "f1369494b9a771ea63d334c7033d3b4256c88ff8551eb15b0afe377be07e40b8",
+        "reject/vec_pop_after_move.yv": "4426c05aa0eb4121326a4ad21bfc772a1255310e632154a4dff654da038417fa",
+        "reject/vec_pop_arity.yv": "960f2b3b2686a7cb6e3b2b1470c104eca63640c4fbb9d61cab933d2ee9be5377",
+        "reject/vec_pop_borrowed_argument.yv": "a9fc0a9fb51aaeea0db631041851b5ce2ff95cfb1ebf62c13d05e052c55aaa14",
+        "reject/vec_pop_immutable.yv": "3a615972aa82aa16e2d5af8ac0c52e7bad99e28d644318085df01834f0b86499",
+        "reject/vec_pop_readonly_field.yv": "a100850e558aeb8cb8a8ef16f860c5eafa733ec4f50df842fc896265a5b4f204",
+        "reject/vec_pop_readonly_parameter.yv": "b62be3904f300541a881efb2c27e7803895024a82cbc979de3a876dc30652e7f",
+        "reject/vec_pop_reserved_argument.yv": "b88f275375a19c65d9253da2951b5f045d29ba79976dd4a8258a143a00ba8d6c",
+        "reject/vec_print_rejected.yv": "095974cbee5bb221bd49855ef96f6d8c2bfbb677d7effbefdb7c6df4333775a3",
+        "reject/vec_push_arity.yv": "7210991a29c293447b20cb732f1e729d164ba09e10f68201d264159ee802038a",
+        "reject/vec_push_element_mismatch.yv": "a0001914e9559e1a285c7941df523beca658e44d040f9a3150c53f97a376b4dd",
+        "reject/vec_push_receiver_move.yv": "916f9c511402d098225689b776d2d573739a1540fee1c411f485512041f8265c",
+        "reject/vec_readonly_push.yv": "39a3dd04523b893c9052a84d51c2793a2486590b33b7dc57d1a2ecbb4016472c",
+        "reject/vec_readonly_reserve.yv": "e0e3af5376b9a6e91b62e8d5255d127f617159049e105a8193a66a74f6fa5769",
+        "reject/vec_reserve_type.yv": "a4c0ca5b8b4bee4e1b39e71194029d8465b88fdaacf51e3512835f1da855a4f7",
+        "reject/vec_temporary_index_write.yv": "55b3be6c801f4773a85c6d39701847e5d3a33f91120d89ec7e3ae89ef653eb5e",
+        "reject/vec_typed_field_default.yv": "46172b7b6541da125ccc7c6fcf313a8071ba46ef16ecd3b1a4604e4f8c0d0f86",
+        "reject/vec_unit_first_element.yv": "8f175c13c8314499100d75a34508be305251e8bb4a624df43bfc9e3935c81598",
+        "reject/vec_unknown_element_field.yv": "ba14d5809175923e03319451681f7031908a863aadef5d2c4b2a255fab67cc5e",
+        "reject/vec_use_after_move.yv": "60b067de70570cc8c25bec555785ddc4bdb657b5a9c9df1f438a1954b2db1f86",
+        "reject/wrong_aggregate_argument.yv": "9fefb7d30ca3c21d51b0d496e18fe3cad3fb080940aa85dd0bdd24e55489e0dd",
+        "reject/wrong_aggregate_return.yv": "1eeb998bb16feaa998e78e0375879b8930057c61bb6e6596ea077a29aee34258",
+        "reject/wrong_field_assignment.yv": "471398571a809cb079eaa72b2bec8f8fdab36f8fcf3508db88382c90472eb0fc",
+        "run/aggregate_copy.yv": "1fd2139e516506f7c8a3b6b5c88411ae967cd7252ed42a013f05f5e06d49345a",
+        "run/aggregate_defaults.yv": "ca63572e5b32d6a75857097a634da7425dac7f73a7c6e40d5f5b6fb54e2c5b95",
+        "run/aggregate_empty.yv": "8e255a4de04ba04e215e9089357cd1e1e724b5fb331c4a78b9f73778288b04ff",
+        "run/aggregate_field_order.yv": "a987ef28fdfe85ff316e0af000b76956cb1c4e1ae6cf7d4bf090d4460f690fdb",
+        "run/aggregate_functions.yv": "4540839f38af7d00c1321a5e77c6d96950d565fbdac4924dea09afb6f2cfcd51",
+        "run/aggregate_namespaces.yv": "9b2e1ebfe6b3e9de941708d055bb7a974c43d1182a035d789132267883b447fc",
+        "run/aggregate_nested_forward.yv": "51ee9ebca67eec2751fb10cde32b451ea7ff0f4d044a9ed44e3e20af04ec51a2",
+        "run/aggregate_parameter_copy.yv": "84a8505d398a2ab5d21644f3b086b4a3c3ad692c6a335cdd831de9b1be7760ab",
+        "run/aggregate_self_assignment.yv": "222544a8c8da8b99d3fc5ee170fcd977c80954140b94c15d5c9146355cdc2010",
+        "run/arithmetic.yv": "209dc7ce2e1dac4f63ca216c0bd7f736cbfaabb0acbb21654bf692ff5c8f908b",
+        "run/assert_override.yv": "dffa1e93d3e9e37b4209fd41787d7ed9548073ce59125f44c93e1e9964ed72e4",
+        "run/borrowed_index_loop_borrows.yv": "13ad1b094612c7c43ae70d3e297ce17e1ccac8dd97c8fe6f5201e22b2d55aa51",
+        "run/borrowed_index_nested_fields.yv": "0453317a5d08a1c97b2d767fb7e1fcd173789a79a2937da2a74a2ca9fcf64746",
+        "run/borrowed_index_string_clone_independent.yv": "4ebe64ca64c9c6964a80ddb6f46c90fbe0c8199b032187acb3eef170b0deae7c",
+        "run/borrowed_index_string_expressions.yv": "db4f35db5bfe584ca1a456d13a29d76e95f8d0d757914f1f21b4e80dcff8fae2",
+        "run/borrowed_index_string_storage.yv": "2886147e161a16e7434e634ceca378faf2c784a4dd428381b3b7d6d26a22b2dd",
+        "run/borrowed_index_temporary_lifetimes.yv": "d761516e48988c8634352f9fb6dfb4da1c6c55ed8c3ebd9a2296bad2134f3650",
+        "run/borrowed_index_token_copy_field.yv": "c7e148b1e616b1ff7b44bb21537071b127da9a0fa7a158c8c8f823f9cd25bdb5",
+        "run/borrowed_index_token_scan.yv": "ff22520a393aa89139713b8f38bb8bdd8af21a3db6591acdb88487bec549f9a3",
+        "run/borrowed_index_value_results_release_root.yv": "fe8f72ef3e982171139d7a83cf6e4a97b417e6a58e2228feb13a34a2537ec57b",
+        "run/byte_arithmetic.yv": "ce69d4058d3fdfde8d198f77451615dd3cb4d42ccdb4068eb15f464c430073b2",
+        "run/byte_conversions.yv": "2ec8a159f899f2ee1ade0fe99bcd680046f7d7f5e567d15c2ceb2e9edf485066",
+        "run/byte_literal_basic.yv": "8f51ee5a172360b8c50a558da04600a02b68084f1b23996a0a04989333b2995f",
+        "run/byte_literals_contexts.yv": "d37f56c9abec823be21f6829ad342e66347bc85d6764c7f84fa012379ab70d9e",
+        "run/byte_vector_lifecycle.yv": "e6bea30c81c31cf364c1594e4f7d096fab5c258e8deed76d5198da64d045e2cc",
+        "run/control.yv": "1aa76fb2fe08d600ef7b57501ae64cecda5739250a3577960708b236e2066c52",
+        "run/diagnostic_original_source.yv": "d0349a60e82d2702abe99e90cfb0fd24442fd9b56c23326ba7a487d204dddb07",
+        "run/enum_context.yv": "23b3d925c90b5ee21ddefd3aa41014d4f7d1baa3c3c5f270198805fb3fa8f7ac",
+        "run/enum_copy_print.yv": "e3b992226b5aa0b9945b9ea260a1ec58f7c322d29ed8f5a9684e934eed112d72",
+        "run/enum_nominal_context.yv": "2619492d2a33d62598e478a60a81f48ba87b7cbce14cbe9a1fca0990c82c74bd",
+        "run/evaluation_order.yv": "26a54292b2c751f6cc481a198d96668a3560e3cc9ba4c54600a775c10aed52ef",
+        "run/inout_params.yv": "b1b56bca71fffe5990cc9314e0a2052b5b157eeb9a17513eff309ca0436cd075",
+        "run/integer_limits.yv": "bd55efda78f55108189469d877fc74a60fd1bc6ce35aee774bcc8ade59f78b13",
+        "run/lexer_byte_helpers_original_fragments.yv": "19a8c4077618de1c3fb8e35f11761489e6710d2446c9b5ad768d36b96ddadd3e",
+        "run/loop_nested_break_boundary.yv": "92ce99597a632d2f4c76df665abb6890d236dc6c40738a98556660e98ecff357",
+        "run/model_original_source.yv": "6319b40533c2022c6760c147b422413253966c79f1e5450261269cf160bf6c7d",
+        "run/model_original_traversal.yv": "8b30d27854859c807286efad62f931523f5b3a7acfe25a02b4973bd78765bf71",
+        "run/newline_rules.yv": "c844a14d60c50aa9c292d3fbf1848be794dc89d3c9c500a2cdba94b259c41c26",
+        "run/optional_byte_context.yv": "487d744ecc81b6cff3c4a6697a1f18387d1ca020c198d02f4c2aa15949f577cb",
+        "run/optional_catch_loop_fallback.yv": "ffa79310e3b7a2130dc797130deb7b3a036ef30e1bca14682e38349d80e11a81",
+        "run/optional_catch_return_fallback.yv": "7dfb161fcef0ab055c05722ea04718e737cba81a0d6f81215b6d70bdc2aee795",
+        "run/optional_coalesce_order.yv": "e416b505420f1bb9499e7be299e38c280c1653c67f1e82c0c72e3a979b079068",
+        "run/optional_conditional_move.yv": "7d2d3cb2a8f27b83fe98429dbd828456c550c65750f53072b55aac8b1f77e01e",
+        "run/optional_copy_forms.yv": "0d8046f50165200867d393c9c34a8636a7f695f2df152f93dcb6a9a222a2aefc",
+        "run/optional_fallback_temporaries.yv": "1ad733ed42b3f8b9d72aeb6c076b06dc89d8b6983adfe437802bef26e2ab469f",
+        "run/optional_some_shadow.yv": "626beb790b733bcb74693d8f4b3520964532e9e40235169ed497e7fb752afabf",
+        "run/optional_try_fallback.yv": "75c05bc3b3001f1ee1684c39c862509dc6ed833d28a9cb019482df89cd943c78",
+        "run/owned_argument_order.yv": "67a34375ae3feb96e2c5651a0ff0aa3fc841ec59ccbc76552a4fc93fd747c50b",
+        "run/owned_branch_cleanup.yv": "b582c11fd111574ba2b4a4864c672a87e2c32e26eb95fb1f56589f4f4a005c09",
+        "run/owned_field_declaration.yv": "52078819944f290f410a6575869c1fa732c2da17dbddbbcfe5181eea2795645b",
+        "run/owned_field_defaults.yv": "795bc05400512595b9b5284e230e536e2cf88c0c1c6f192b6d8904b18d7d31fa",
+        "run/owned_loop_cleanup.yv": "cfce1bd79e3b8cd6b51ef40ca74dd88efacf4d8c64dfb2c4d86fb6445ee9d33e",
+        "run/owned_loop_reinitialization.yv": "cfd0ac3269113b6e3e1c3a35f81cfad1efd2c1977fc56a274b4cd90cf75c6ced",
+        "run/owned_nested_fields.yv": "743cc851702a476778074208409cfa3c79d2b8cfc88690ffb66b140d84cb68d2",
+        "run/owned_reassignment.yv": "eb2af2faa8f69987623f8d70f3643261b58582443239eca6c51c7a28cfcdae90",
+        "run/owned_return_cleanup.yv": "8650c34b5dcf370330bb7df750d47eb60e156d409e2a32447bd8bec5d2e1430e",
+        "run/owned_string_basic.yv": "b0f1d03399bc8cac80720e3b6e54c594d7cd422ae71bcd4d81ba128a1815ad7e",
+        "run/owned_string_empty.yv": "7a77377064aa3d38343df0fd8e41c495200d1448180a1aa762326c9568194ddb",
+        "run/owned_string_returns.yv": "5df57c6c5446e3343d32050f79b122067354f6fae5bcfc88ccfe9020acf4ea73",
+        "run/owned_string_utf8_nul.yv": "195a3a964562d02ec83ad7f8417ba8e3600df8c7ed536206147b7c75dbd05d79",
+        "run/owned_struct_move.yv": "159ba7de6ff950d7ceea66286d9384c40d8ef0bb38b0fe29e11603504e0e92e2",
+        "run/owned_temporary_borrows.yv": "4c3819b11e1d146ff309a27342969cf97415de9364093eb5cc6265ae9655dca0",
+        "run/owned_vec_borrowed_params_temporaries.yv": "7c97bac8440a4e8db4c1a65e16e2414f21daf3166efe86ae35ca179fd3e05e47",
+        "run/owned_vec_control_flow_cleanup.yv": "72c213819e69b9a29af2ae55406ef9a301406155ee702ad3fa4bb7787123dfcc",
+        "run/owned_vec_literal_temporaries.yv": "faeaf40ba706e894bcdb73b87a87b1460a599915890af29dc16fc9c9278a2970",
+        "run/owned_vec_mixed_payload_fields.yv": "1f53f47fc6e4f3cd4b4f17d20ed40e562acac3a40801ae9446ca4abdff009da5",
+        "run/owned_vec_mixed_recursive_layout.yv": "d813b907210bb6ae2bc5ab5aa6c17809b46b93bc2c2ec89c59a509bfd8c02008",
+        "run/owned_vec_recursive_node.yv": "1b9d87a587459442263f13c7c0a47261f630da492f9a4a73c8a86f82d2512d04",
+        "run/owned_vec_string_clone_lifetimes.yv": "32011d188288bc0a345ef959b6d5db23c7cef3d26c34b66e4a92657566b02ab3",
+        "run/owned_vec_string_moves.yv": "eb9fcada297aa9a88d1830d6bd6c43dae5b7a1d28c759989e8c041b660f1d6e9",
+        "run/owned_vec_struct_declaration.yv": "c851bf3b5a32ec91e19b76918a275445b987bc113897ec51a66db6de63d6f4f9",
+        "run/owned_vec_token_fields.yv": "966233c72a4c04634cfa9433c0b7370d22e9ecb6cf60899ad63d6fea6150682f",
+        "run/recursion.yv": "7cb3cd786cc1b8d1933cdd2c94e1bd5210b044c4f7050e515dc1af94ecdaa694",
+        "run/result_argument_try_order.yv": "b0c98b05a9610b095bfa57bccaac01e1c06eee2a3ebb7e1fceea49a9fe2c8398",
+        "run/result_catch_discard_owned.yv": "2e0608d9d27cf20d8d621e3925743edfb50f6696202c8008fe0567f593d7deaf",
+        "run/result_catch_loop.yv": "38995bb3123abcf5980a13c9745d32e0d9604a897d6066bb154760acc7a26549",
+        "run/result_catch_return.yv": "8785a473993f1cc9e5828a6e651c98eb2a7dfd93856827e2728629ed6d49aba5",
+        "run/result_forms.yv": "12c1f69ffee422fcbe1a0047708ccbf2224ed6cb059509d2eff29fbda80ca18d",
+        "run/result_multilevel_try.yv": "18936cc9672cd63dbcd849b148a49f9577a4781d39c5492451f1b275aad4e6a2",
+        "run/result_owned_string.yv": "859f7dfc282c9488580b08f47ffb21c0f025deba86a52104d569ac735dcc283b",
+        "run/result_owned_struct.yv": "527d973ef19484f5b5c50da49a7fb4ab3052f2f5446fe98303366cff1a2118b9",
+        "run/result_owned_vec.yv": "3cded6ba19416cf36bd1644f48a172f4fc54608ea2fb711dd23ecc0f4c8dca2d",
+        "run/result_short_circuit_try.yv": "251808b950dd7225ebff7fc1a8237cc50514be9f26ee1ff660d10c4d4ac1e4e0",
+        "run/result_struct_partial_try.yv": "6c722c192e7a7fd777e99f925e68d5aa3675f6fc1cce70a41cc7267668302551",
+        "run/result_try_loop_cleanup.yv": "e9c68908aeff70a876cafb52491184ae3dc5df6328fa4e6f7cc6059eb5603aed",
+        "run/result_vec_partial_try.yv": "bf2fdbb4ca3796a54c57ee09b7ef8e3c2d37605716b5ae68eae667cf41d225a5",
+        "run/result_vec_raw_context.yv": "3611333d392f58da5843b74cedb94c1ee7cc6c2dba5f53035b413a9436ae9e11",
+        "run/result_vec_struct_partial_try.yv": "08d6aa560329de21114177a76094b8394709fe10d7f7cf210c4e550cd6931202",
+        "run/scopes.yv": "13a460fc3c14f9a00ac5dcf5aa0d77b8db5cd92bd332833e6cefae2f24ce2266",
+        "run/short_circuit.yv": "52698311031d597db90b06498b5b6381519fc79ad5daf7a2ebc411a5aeb30848",
+        "run/std_catch_args.yv": "6d0b5ee75d3fc61e344906d037f6954f3d5898068dcb1a54ec3af42cf2e94641",
+        "run/strings.yv": "39366076dfd9a112f8f299054306c355fdce63ca9290f7dec18f5d7e1ce13912",
+        "run/struct_basic.yv": "a991a5b8ff8c28df533838a6b81461c35f63565c3a6e3f22f6b3273829164d23",
+        "run/syntax_like_strings.yv": "71f0fd18dd340ccc9d75eb4c49f08d3eedb50a9b5fe6d511fd50fe68b8e294f1",
+        "run/take_places.yv": "6561f2fd44cd2f18c69003ee0c53a0009e9f766dc8e14e90c9e400b715c8b156",
+        "run/text_byte_index_evaluation_order.yv": "7719b5d796ecef2d384ffd70f1c0e72e03717537071d75fdef0401784cd074a8",
+        "run/text_byte_index_lifetimes.yv": "431e66f2526d9e77f8a420e3c27c08728e0d30b77983991d8cd0c07320308a36",
+        "run/text_byte_index_values.yv": "0f11c6590ccff77f81ee23612df70eb75f9f9c5045267cc0c07510fe66e510e0",
+        "run/text_slice_owned_print.yv": "85e0016cfa1fdadd90f9165dc8bc8ac6c369fce16f70eb923b712f1abbe97acf",
+        "run/text_slices.yv": "fc695901cec84e77fb6e3c87fecbda4699d948f552a9a6680cee1ed032ef8ad9",
+        "run/token_metadata.yv": "3d1218d1dd1628702bd0e73495bb92d807867d51bd11380d65389fa04db9bee5",
+        "run/unit_literal.yv": "f821759d3ecbe42aedb078bd69b82fa3a94d3b29d9cf59cbc11a3c3694306970",
+        "run/unit_return.yv": "78c7ca2c662233aeae85b58f6d39c16dc8dc1b4e863d8631b0073d820acb44aa",
+        "run/vec_clone_independence.yv": "fe58a2ecc325515e27a1bac9711e5da966799e151ffef2d8f4aebacc3f7cd7bb",
+        "run/vec_control_flow_cleanup.yv": "664640e7164e4f86d00d311742971b3ad1fda4bb204ea6ece10e060d70e6a759",
+        "run/vec_copy_reads_release_borrows.yv": "981ce37bf46631691871876bcc999a8c1d4a4703e57f76a54810a7457ca64a56",
+        "run/vec_empty_annotations.yv": "8e7fb655bfe8c922edcd394982ad07e6b1986922f48ab044e1702ee2f7417a7f",
+        "run/vec_enum_contexts.yv": "3536f4cb915e11e1c873d85219691f8f97d430e0eff0b4af6832b308c0cce7b7",
+        "run/vec_field_defaults_and_moves.yv": "fea2b5267dc69e240ee85c9357317184f0b8b9db34ef51e02067ebacf0f2d96b",
+        "run/vec_index_evaluation_order.yv": "db488f82e0a3cf42fd36528b43b299422c3d3a4b33df0c83d98017f7b1da1ff6",
+        "run/vec_loop_move_reinitialize.yv": "bd7707caebc194269822d1963f2686722264d545a0eaa22414d547c589c18592",
+        "run/vec_moves_and_reinitialization.yv": "a8f08155cc8cc6169f20ed820fe0fcf7ba75f16a707ae28cc863cd12d611cbaf",
+        "run/vec_params_returns.yv": "c751b905a9fb53698408c7dd40985fab570a01b460100846764d582613624df7",
+        "run/vec_pop_basic.yv": "f9566d147e9c04e4a97153cc74aa7fbbf79fd5d6498df8a2b50e7e11f65e2446",
+        "run/vec_pop_copy_nominal.yv": "d6da3e41e9e6e4dd8216033ce81cf51e49c16205de8bbf0f4ee58efd493f051d",
+        "run/vec_pop_primitives.yv": "b256da1be1aadd7e41f266380ebcaab6345ddc715c4c4138971dded6e5ea7cae",
+        "run/vec_pop_receivers.yv": "6510fb8248a2ebb35f15e66ffb9d14ff9026a27230dfaa9d44c7ef2dce506171",
+        "run/vec_pop_rewind.yv": "5cec942a9c2c7402e279e0b2824e93acb15dda8597996162ed03736e75ff8f11",
+        "run/vec_receiver_copy_reads.yv": "3750050cdb63e4d30418fae73125b53285b711aa0ecc1d8159b180c575eae493",
+        "run/vec_reserve_preserves_values.yv": "f65306764415f74f33a3d2bb5829f7ec5f4f0c2bcfe24ffc5a6b233ad89ea6d6",
+        "run/vec_scalar_literals.yv": "3bb9920312c83a335b40245817d2376800982370e682bd4b65b70b3b19830de7",
+        "run/vec_struct_copy_and_fields.yv": "880de038856d6f1d76189c7636b5c5812f4085acf89c7b3680af28ea781fd1ea",
+        "run/vec_temporary_reads.yv": "7b56870c4b3d98ca8d95ca71d2afc963d54e0151e1e8cbb464a3cc2db1c64aa4",
+        "run/vec_token_table.yv": "a55b42746e0febd160918c6c7f08cfacd8e9e7300e97b2ca5d519b580eeb5c75",
+        "run/vec_typed_empty.yv": "264a57016f73112d1622646268e402189bdefc55012a9f601b2308ef7fd85867",
+        "run/vector_basic.yv": "9c952e792150eac509273fba91dd4198c103581575c396b3c20df3a622544fe3",
+        "run/while_condition.yv": "c6332037f6c35895bf4a55c704ffd8b6b16923e9586f1470b9adeedbf65ab60f",
+        "unsupported/unsupported_borrow.yv": "f5db590498bb914621c448b58622892f7fa4843f4b03d55ed407df355963986f",
+        "unsupported/unsupported_borrowed_index_comparison_owner.yv": "a508dd487579aade31e6b958bc79aa8bffec4c37d78608c0936daae4853c04e0",
+        "unsupported/unsupported_borrowed_index_element_push.yv": "07949054e505c1fffbf8b8b697d154c8c1d5052160be819a356386c176c9a6fd",
+        "unsupported/unsupported_borrowed_index_nested_owner.yv": "c2eb020d67920ed5d342bb473d9327d78e5e5460e09e76dfc060fe2a8a78bf41",
+        "unsupported/unsupported_borrowed_index_reference_vector.yv": "738a354db32584f82cbea1b295c89172d5d103637bcce8aa5963684edb8cfb18",
+        "unsupported/unsupported_borrowed_index_string_binding.yv": "f14c747b22c8d143ef264aeec27d7cdc31637b2211e7654c518c4fb6acba6995",
+        "unsupported/unsupported_borrowed_index_token_binding.yv": "6e0eea1c4c9322ceb84e84e39c32e07d16d40b00b0319b9320fd1be8f53f36b1",
+        "unsupported/unsupported_call_field_write.yv": "d31f304cbd091c63a5053cec04e6c333e67e792736cbe1ed360f2a3dfe1ea13b",
+        "unsupported/unsupported_catch_binding.yv": "ff1fe7565fc69a465bc849d3ccb6caf33c8a05afb1bafbc104e2dd346e9d8122",
+        "unsupported/unsupported_comparison_borrow_move.yv": "371ef25bbaa904011f4f0238c15826e6e9edaaeb168cca54287adfb589ec96ae",
+        "unsupported/unsupported_constructor_field_write.yv": "b24d01252eba1b64b945b88c837d43e3dcbcbd85528a439cf5d63a9a34ef7288",
+        "unsupported/unsupported_enum_payload.yv": "a6f416a878c6387b67acd8d66d9a9286c61dfaca2b743f6c0bf4f855689b080f",
+        "unsupported/unsupported_expression_assignment.yv": "afa0e1508195ad023d444ea088e9a758c89f56c04c5246abcc71f07447335637",
+        "unsupported/unsupported_float.yv": "bf51c7039210214404cc9a0d4244efec972f8ba25dce30bb77e4b2ff8989eda4",
+        "unsupported/unsupported_for.yv": "b4a1117d580f90847b30eff44cc678e2bbfeeb4c9baf79039fb7563d47f1dc5d",
+        "unsupported/unsupported_generic.yv": "9f53c08e56526a6bc058db3938c31b432259b4bd162df94e0802cb62d82c4f5e",
+        "unsupported/unsupported_generic_struct.yv": "f5b3e3f4f7413610ab9fce77fa9d38fe5a216db1c1b3c71915175a52208526d8",
+        "unsupported/unsupported_inout_index.yv": "d0b9360201d7a24b641e265dacd0570b00e8e5a0dc544cfeda7ded3f7cbf55c3",
+        "unsupported/unsupported_interpolation.yv": "2391757f4bbfef054e7fed3f45bbc645c937b72f67023ceadbc8b16f27028a60",
+        "unsupported/unsupported_loop_condition_move.yv": "f380dcfff2531adc96647c8ad4de009826fd62213a73ad31d709d6167326050f",
+        "unsupported/unsupported_module.yv": "627a49d39da180749aa8dfb67ffe757ff7fc38af269da04c3a06099a73f49685",
+        "unsupported/unsupported_optional_coalesce_break.yv": "f2fdf09f3a25bfed20aa703c756228a13732d568cab6ebc232a82e972386a9d3",
+        "unsupported/unsupported_optional_coalesce_continue.yv": "2666637b23db5c05db4e2153107e3256e2a27b5a095a16d680878c13c9f067d9",
+        "unsupported/unsupported_optional_coalesce_return.yv": "8265ad2a1082c79009d9867a082b953b19ff139ee71a618211c1e1e99e049bbd",
+        "unsupported/unsupported_optional_compare.yv": "a24dca8818e73c98f2663683e2a1bb44fb310736ebb4a7de5aa13e3b3db67004",
+        "unsupported/unsupported_optional_field.yv": "a6b37d932febddf5fca1cc0b17277678d1fd524177a340cd784885581b249ab9",
+        "unsupported/unsupported_optional_if_let.yv": "357c47a2c1c9a0ff07193f3129751de45ce5d5f627cc85b12d00d2813cee80ff",
+        "unsupported/unsupported_optional_match.yv": "ee0b1d186a0c258b18a3043ef3dcf092470fe20ed1352a141deb9d3049c50648",
+        "unsupported/unsupported_optional_nested.yv": "1d18cdff59cc27a744de14efad70124e815dc1cad1ccddc7cc335b65c258246e",
+        "unsupported/unsupported_optional_nested_context.yv": "64df36f028299366b689d1ebbf625914991b976637f6b9833f6836c11f79a98d",
+        "unsupported/unsupported_optional_none_owned_hint.yv": "26effd10e1246246e7847251c64868728f4c8f5397948630f870e1b031ad3281",
+        "unsupported/unsupported_optional_none_result_hint.yv": "3f951d20f3d4d8a964f0fcf29e1d791fcf6c1ca95f44f6bbca2e78909d099dad",
+        "unsupported/unsupported_optional_owned_struct.yv": "20a18104bcb278d7a8627d7c0e862515f4ebc44a452f62b17542bc145492352f",
+        "unsupported/unsupported_optional_print.yv": "29faf749879b106e1ce9e833f63aaccfd059d2d0a6b3ba7515d3f6dc6d4c8398",
+        "unsupported/unsupported_optional_result_payload.yv": "cf4b2e7976774d52b1bb19df59741f30063df9e9759d2bfa431b8e1ecd7279c2",
+        "unsupported/unsupported_optional_result_success.yv": "4cbb912ad61ed23bd7a71bee4f3b7ab5bb15e8c6e078279308ad634c54f6f743",
+        "unsupported/unsupported_optional_str.yv": "c986b7334849cdeab4c8ea971aee6dd543324cf35e0162dab7c77bceed82bee3",
+        "unsupported/unsupported_optional_string.yv": "f17c6689ad1861386ac60f61677b7a37b0a0acaf8cde348c716a1fa72b23dd78",
+        "unsupported/unsupported_optional_test_scalar.yv": "295d8c0b3bdd9a153e46112f240f786822b8d161831e4ccc47b0e0129f5af6cb",
+        "unsupported/unsupported_optional_unit.yv": "d0d9bacb87e570089eaaf0633d356e9ef93c599fd510c8c4d7a87ece47714fc0",
+        "unsupported/unsupported_optional_vec.yv": "558aab180277522782a4c305976741f8808269d3eddb63668f191d0bd4e2b75a",
+        "unsupported/unsupported_optional_vec_element.yv": "b2bb14773c250e356cea90a0f3a47b4bae62b3edd9dc6e66b0134ae13e00fd72",
+        "unsupported/unsupported_owned_vec_index_field_write.yv": "5d0c37d4d196d1d6b1670f1b9d11b84b58dc1f60e1370a6bd9b676a4fde8d8c1",
+        "unsupported/unsupported_owned_vec_index_replace.yv": "1b183c2b3ce9ee7ae9e268ba7eeb8d43f4e07a6058a4356b5d330fac46ae1167",
+        "unsupported/unsupported_result_arrow_catch.yv": "31f052c9465527743adb7ff1a1bfa6cc3804ccac44c93b80fa4d8fc91c9bcd93",
+        "unsupported/unsupported_result_borrowed_view.yv": "c72902463f974929b6fff4af6fee372932b28b783130f157636c6d786c6d5087",
+        "unsupported/unsupported_result_field.yv": "0386094d2f5959d73e229f104f2bf7749abd9af6f3ab3c943771ed1a4d452f87",
+        "unsupported/unsupported_result_temporary_view.yv": "2e50aa37044630d8c0fc7000cfca10b7bbbbd4783fc0824859ca98cfbad6ad81",
+        "unsupported/unsupported_result_vec_element.yv": "5c3c9463ca8093d52edad901a97e60c9d6938ef9537fe4d43932ad000eb2cdb8",
+        "unsupported/unsupported_scalar_member.yv": "2963aaee4571484ea3e90b11832af61a216304f596c5d177529cf41d614b2b96",
+        "unsupported/unsupported_str_clone.yv": "073ba9b47b53af16cd54ba37c9ee0f722b9108563cda06648829560d8c25b0bb",
+        "unsupported/unsupported_string_to_string.yv": "41a49995b5e39184b00e5c62e716db871a5bd62662f353ae29d1af101b30dfbb",
+        "unsupported/unsupported_string_view_binding.yv": "208c2b33643f226ffc14795866740565c51accc22b3adab5c399df0aff4eaafb",
+        "unsupported/unsupported_struct_method.yv": "801616a5b280f58f6c971b37ddf3361b626302da015e7b5a142544de25477245",
+        "unsupported/unsupported_temporary_string_push.yv": "006ec8329197a577682dc26de8202a226ad41986edf1de5bbfed8b8796fc61b1",
+        "unsupported/unsupported_text_byte_index_owner.yv": "3dc7839befd7b50bfb0aa2649f87aed017ffa47f2a232ba6b4e258de20e77645",
+        "unsupported/unsupported_unit_field.yv": "29ccd7540df8a756571592523c59631f1782024b63c0bee8a24cd51b72591298",
+        "unsupported/unsupported_vec_index_receiver_move.yv": "7cda52a388b4e18a6fb90ef4825e5376c4c694efb98fac78fbbe329c21e00473",
+        "unsupported/unsupported_vec_nested_element.yv": "44966259cb6bb82eb69d98565ff902a372dac1fc8169000686ccf01345f233db",
+        "unsupported/unsupported_vec_pop_nonvector.yv": "5531e65fba81c2733a5e92440d99ec9f4e13b036565dc3a0f161f7bcc469d1cc",
+        "unsupported/unsupported_vec_pop_owned_struct.yv": "833817ecb1be509dbad02e4df674e54e89b7cd4c3163e3eb13479c5a43a34532",
+        "unsupported/unsupported_vec_pop_string.yv": "d38d2c297207535739d4a7e065419a88a86f030d24a50034994f25d62b94f863",
+        "unsupported/unsupported_vec_pop_temporary.yv": "8c7a91a719a1a27e8d7b4e59d0764f36c4eccfc19cc8ff91d33c2d3eef040ace",
+        "unsupported/unsupported_vec_reserve_receiver_move.yv": "6c33b185934d12d29f605c5a5258a600058658cbb73c395d93b20c6675a28820",
+        "unsupported/unsupported_vec_slice.yv": "f8c9ac9c725a4a4afbb6ea964a94628bc16a744cc56a5c2441b8a0b59dc88a82",
+        "unsupported/unsupported_vec_str_element.yv": "a2de1f038ca1b56a40156b9e432fe9e29fcc5c13bd0482eb08e8888e0113a53b"
+      },
+      "harness_sha256": "2a6c56267bcccad3438a74857e14ae79c1106c07b5ee48155da2f4d6b02b2929",
+      "lexer_unit_bundle": {
+        "bytes": 26723,
+        "parts": [
+          {
+            "file": "support.yv",
+            "sha256": "3871f3a26d00e2242d989ef73e5a8a8f209dab151f6758c7c31d717ba78f6b16"
+          },
+          {
+            "file": "lexer.yv",
+            "sha256": "d19510e0e58fb21b6466319c564bb25684a71fac7a2ef77789c44f0057ca0067"
+          },
+          {
+            "file": "lexer_test.yv",
+            "sha256": "1031cdb50b49739c9eb9eae3ad635b50ae42befb664d081e903799a186534ee0"
+          }
+        ],
+        "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/lexer-test.yv",
+        "sha256": "05a61bff4c12c185775d2cc353ec273732aa08feff9bb16b5b44648e534eec2a"
+      },
+      "manifest_sha256": "2d3494f7bc9ce52024ab81e1abcf595541e99a2f47c233ae4f2ce239f8b1f9ce",
+      "runtime_sha256": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+      "source_prefixes": {
+        "tests/prefixes/diagnostic-2026-11-23.yv": "9172df140e7e78c1413f21eb03ab350b73657693a7643534c9b9c5899453a624",
+        "tests/prefixes/model-2026-11-23.yv": "c7631f035bf6a8960e16b70b59c89fae145467c6d43200c96b9dd6db6011d912"
+      },
+      "stage0": {
+        "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-stage0/yavo",
+        "sha256": "bcbbbf91215b81ad628329320ca9b18b0c924f9735a006af2597d77d4640c2c0"
+      },
+      "subset_compiler": {
+        "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/yavo-selfhost",
+        "sha256": "62731d25633d6987bab1f2c8b60e26be8aba0516f742eecd7dec334c38516d69"
+      },
+      "toolchain_lock_sha256": "a9bbe83e644b0e1cee19c8dba8b5157eaed3e9ddc71b96d8aab2b2d2bb15f53c",
+      "yavo_sources": {
+        "selfhost/codegen.yv": "e1c74a94e775947cdfd04237f6bfe7c114edf3d475b8a1ada820f5509a059615",
+        "selfhost/lexer.yv": "d19510e0e58fb21b6466319c564bb25684a71fac7a2ef77789c44f0057ca0067",
+        "selfhost/lexer_test.yv": "1031cdb50b49739c9eb9eae3ad635b50ae42befb664d081e903799a186534ee0",
+        "selfhost/main.yv": "44fd3da90a86be5dedb3ac55ba52489750bac4391e9da5ac21b38dccbec48486",
+        "selfhost/model.yv": "8eeefd34c56d00db5b5cd9a5181486c9c5b3edb71ec74b93ffd2145f88894ae8",
+        "selfhost/parser.yv": "82a930eba144ec0d6544e86ca0f5fd145398157f1f040c71c3bfb5b35f822240",
+        "selfhost/support.yv": "3871f3a26d00e2242d989ef73e5a8a8f209dab151f6758c7c31d717ba78f6b16",
+        "selfhost/types.yv": "2c3b7ab239b4ef77fd45f66c165bcb6f675b5121b2a63df5c7955eceaa39ee83"
+      },
+      "zig": {
+        "expected_version": "0.17.1",
+        "path": "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+        "sha256": "58959f01285c05a74276f09327b551d42ed6006bf325a78dc661a024e314987b"
+      }
+    },
+    "stages": {
+      "stage1_check": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/yavo-selfhost",
+          "check",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/yavo-selfhost.yv"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo",
+        "elapsed_seconds": 0.03249239828437567,
+        "environment": {
+          "PATH": "",
+          "YAVO_ALLOC_CHECK": "1",
+          "YAVO_NO_CACHE": "1"
+        },
+        "exit_code": 0,
+        "stderr": {
+          "base64": "",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdout": {
+          "base64": "",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "timed_out": false
+      },
+      "stage1_emit": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/yavo-selfhost",
+          "emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/yavo-selfhost.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/stages/stage2/yavo-selfhost.c"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo",
+        "elapsed_seconds": 0.03258433099836111,
+        "environment": {
+          "PATH": "",
+          "YAVO_ALLOC_CHECK": "1",
+          "YAVO_NO_CACHE": "1"
+        },
+        "exit_code": 0,
+        "stderr": {
+          "base64": "",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdout": {
+          "base64": "",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "timed_out": false
+      },
+      "stage2_build": {
+        "argv": [
+          "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+          "cc",
+          "-std=c17",
+          "-fno-strict-aliasing",
+          "-DYV_ALLOC_CHECK",
+          "-O2",
+          "-s",
+          "-I",
+          "/data1/workspace/github/workspace/yavo/compiler/runtime",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/stages/stage2/yavo-selfhost.c",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/stages/stage2/yavo-selfhost"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo",
+        "elapsed_seconds": 6.237741325981915,
+        "environment": {
+          "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+          "YAVO_ALLOC_CHECK": "1",
+          "YAVO_NO_CACHE": "1"
+        },
+        "exit_code": 0,
+        "stderr": {
+          "base64": "",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdout": {
+          "base64": "",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "timed_out": false
+      },
+      "stage2_c": {
+        "bytes": 668302,
+        "sha256": "85966dd501b0604920bafb7c0ef2105ce0a9f86fe2688124f4ab8e34fc90c03e"
+      },
+      "stage2_emit": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/stages/stage2/yavo-selfhost",
+          "emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/yavo-selfhost.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/stages/stage3/yavo-selfhost.c"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo",
+        "elapsed_seconds": 0.03227728232741356,
+        "environment": {
+          "PATH": "",
+          "YAVO_ALLOC_CHECK": "1",
+          "YAVO_NO_CACHE": "1"
+        },
+        "exit_code": 0,
+        "stderr": {
+          "base64": "",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdout": {
+          "base64": "",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "timed_out": false
+      },
+      "stage2_sha256": "d2f6dea257e453931b9c0e3413334821d0c8c8f6f69c7a3d9733795a4098800f",
+      "stage3_build": {
+        "argv": [
+          "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+          "cc",
+          "-std=c17",
+          "-fno-strict-aliasing",
+          "-DYV_ALLOC_CHECK",
+          "-O2",
+          "-s",
+          "-I",
+          "/data1/workspace/github/workspace/yavo/compiler/runtime",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/stages/stage3/yavo-selfhost.c",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/stages/stage3/yavo-selfhost"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo",
+        "elapsed_seconds": 6.891017507761717,
+        "environment": {
+          "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+          "YAVO_ALLOC_CHECK": "1",
+          "YAVO_NO_CACHE": "1"
+        },
+        "exit_code": 0,
+        "stderr": {
+          "base64": "",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdout": {
+          "base64": "",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "timed_out": false
+      },
+      "stage3_c": {
+        "bytes": 668302,
+        "sha256": "85966dd501b0604920bafb7c0ef2105ce0a9f86fe2688124f4ab8e34fc90c03e"
+      },
+      "stage3_sha256": "d2f6dea257e453931b9c0e3413334821d0c8c8f6f69c7a3d9733795a4098800f"
+    },
+    "checks": [
+      {
+        "command": {
+          "argv": [
+            "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+            "version"
+          ],
+          "cwd": "/data1/workspace/github/workspace/yavo",
+          "elapsed_seconds": 0.00819944404065609,
+          "environment": {
+            "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+            "YAVO_ALLOC_CHECK": "1",
+            "YAVO_NO_CACHE": "1"
+          },
+          "exit_code": 0,
+          "stderr": {
+            "base64": "",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stdout": {
+            "base64": "MC4xNy4xCg==",
+            "bytes": 7,
+            "sha256": "cd81ec19767ffb807bada6d48578a18d77a29adb394e09e9cdfcd5ea9eebb6a2"
+          },
+          "timed_out": false
+        },
+        "id": "locked_zig",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "command": {
+          "argv": [
+            "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-stage0/yavo",
+            "build",
+            "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/yavo-selfhost.yv",
+            "--release",
+            "-o",
+            "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/yavo-selfhost"
+          ],
+          "cwd": "/data1/workspace/github/workspace/yavo",
+          "elapsed_seconds": 5.534412353299558,
+          "environment": {
+            "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+            "YAVO_ALLOC_CHECK": "1",
+            "YAVO_NO_CACHE": "1"
+          },
+          "exit_code": 0,
+          "stderr": {
+            "base64": "",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stdout": {
+            "base64": "",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "timed_out": false
+        },
+        "id": "build_yavo_frontend",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "id": "self_compilation_fixed_point",
+        "passed": true,
+        "stage2_c_equals_stage3_c": true,
+        "status": "passed"
+      },
+      {
+        "id": "stage3_binary_reproduces_stage2",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "build": {
+          "argv": [
+            "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-stage0/yavo",
+            "build",
+            "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/lexer-test.yv",
+            "-o",
+            "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/lexer-test"
+          ],
+          "cwd": "/data1/workspace/github/workspace/yavo",
+          "elapsed_seconds": 0.3657327061519027,
+          "environment": {
+            "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+            "YAVO_ALLOC_CHECK": "1",
+            "YAVO_NO_CACHE": "1"
+          },
+          "exit_code": 0,
+          "stderr": {
+            "base64": "d2FybmluZ1tXMDAwM106IHVudXNlZCBpbXBvcnQgYHN0ZC9mc2AKICAtLT4gL2RhdGExL3dvcmtzcGFjZS9naXRodWIvd29ya3NwYWNlL3lhdm8vY29tcGlsZXIvdGFyZ2V0L2NpL3NlbGZob3N0LW9wdGlvbmFsLXBvcDMwLWZpbmFsL3J1bi10OGg0bG9zeS9sZXhlci10ZXN0Lnl2OjE6MTAKICB8CjEgfCB1c2Ugc3RkL3tmcywgb3N9CiAgfCAgICAgICAgICBeXgogID0gbm90ZTogcmVtb3ZlIGl0CiAgPSBhdXRvbWF0aWMgZml4IFtyZW1vdmUtdW51c2VkLWltcG9ydF06IFJlbW92ZSB1bnVzZWQgc3RhbmRhcmQtbGlicmFyeSBpbXBvcnRzCiAgPSBpbXBhY3Q6IFJlbW92ZXMgb25seSBpbXBvcnRzIHJlcG9ydGVkIHVudXNlZDsgcHJlc2VydmVzIHRoZSByZW1haW5pbmcgZ3JvdXBlZCBpbXBvcnRzIGFuZCB0cmFpbGluZyBjb21tZW50cy4KICA9IHJlcXVpcmVzOiBUaGUgaW1wb3J0IGhhcyBXMDAwMyBhbmQgbm8gcnVudGltZSBpbml0aWFsaXphdGlvbiBzZW1hbnRpY3MuCiAgPSByZXF1aXJlczogTm8gc3ludGFjdGljIHJlZmVyZW5jZSByZW1haW5zLCBpbmNsdWRpbmcgdW5pbnN0YW50aWF0ZWQgZ2VuZXJpYyBib2RpZXMgYW5kIHR5cGVzLgoKd2FybmluZzogL2RhdGExL3dvcmtzcGFjZS9naXRodWIvd29ya3NwYWNlL3lhdm8vY29tcGlsZXIvdGFyZ2V0L2NpL3NlbGZob3N0LW9wdGlvbmFsLXBvcDMwLWZpbmFsL3J1bi10OGg0bG9zeS9sZXhlci10ZXN0Lnl2OiAxIHdhcm5pbmcocykK",
+            "bytes": 732,
+            "sha256": "90028199ee14a18517ec0bd9500cdb6e695758dceccfcbabca3d78df5f103155"
+          },
+          "stdout": {
+            "base64": "",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "timed_out": false
+        },
+        "id": "lexer_units",
+        "passed": true,
+        "run": {
+          "argv": [
+            "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/lexer-test"
+          ],
+          "cwd": "/data1/workspace/github/workspace/yavo",
+          "elapsed_seconds": 0.008285965770483017,
+          "environment": {
+            "PATH": "",
+            "YAVO_ALLOC_CHECK": "1",
+            "YAVO_NO_CACHE": "1"
+          },
+          "exit_code": 0,
+          "stderr": {
+            "base64": "",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stdout": {
+            "base64": "bGV4ZXIgdGVzdHMgcGFzc2VkCg==",
+            "bytes": 19,
+            "sha256": "02d84d6f54e7455bdc57d5b2c119d3f61f0cd4c24c952b62d128af524e22d796"
+          },
+          "timed_out": false
+        },
+        "status": "passed"
+      },
+      {
+        "id": "lexer_units_selfhost",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "command": {
+          "argv": [
+            "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/yavo-selfhost",
+            "emit-c",
+            "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/guard-source.yv",
+            "-o",
+            "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/guard-source.yv"
+          ],
+          "cwd": "/data1/workspace/github/workspace/yavo",
+          "elapsed_seconds": 0.002039124257862568,
+          "environment": {
+            "PATH": "",
+            "YAVO_ALLOC_CHECK": "1",
+            "YAVO_NO_CACHE": "1"
+          },
+          "exit_code": 2,
+          "stderr": {
+            "base64": "cmVmdXNpbmcgdG8gb3ZlcndyaXRlIHRoZSBzb3VyY2UgZmlsZQo=",
+            "bytes": 38,
+            "sha256": "735814b7229d85803469b9546d9e90db5e77230374e2f6acdb4b27e5fadfff96"
+          },
+          "stdout": {
+            "base64": "",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "timed_out": false
+        },
+        "id": "input_output_guard",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "command": {
+          "argv": [
+            "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/yavo-selfhost",
+            "emit-c",
+            "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/guard-source.yv",
+            "-o",
+            "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/existing-output.c"
+          ],
+          "cwd": "/data1/workspace/github/workspace/yavo",
+          "elapsed_seconds": 0.004129060544073582,
+          "environment": {
+            "PATH": "",
+            "YAVO_ALLOC_CHECK": "1",
+            "YAVO_NO_CACHE": "1"
+          },
+          "exit_code": 3,
+          "stderr": {
+            "base64": "Y2Fubm90IHdyaXRlIG91dHB1dAo=",
+            "bytes": 20,
+            "sha256": "6a3236cfe11e4a637cd02abb994b3a8a2e8f094e1165ce0da23c9a7fa94ee356"
+          },
+          "stdout": {
+            "base64": "",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "timed_out": false
+        },
+        "id": "existing_output_guard",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "command": {
+          "argv": [
+            "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/yavo-selfhost",
+            "emit-c",
+            "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/guard-source.yv",
+            "-o",
+            "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/./guard-source.yv"
+          ],
+          "cwd": "/data1/workspace/github/workspace/yavo",
+          "elapsed_seconds": 0.00186156015843153,
+          "environment": {
+            "PATH": "",
+            "YAVO_ALLOC_CHECK": "1",
+            "YAVO_NO_CACHE": "1"
+          },
+          "exit_code": 3,
+          "stderr": {
+            "base64": "Y2Fubm90IHdyaXRlIG91dHB1dAo=",
+            "bytes": 20,
+            "sha256": "6a3236cfe11e4a637cd02abb994b3a8a2e8f094e1165ce0da23c9a7fa94ee356"
+          },
+          "stdout": {
+            "base64": "",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "timed_out": false
+        },
+        "id": "dot_alias_output_guard",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "command": {
+          "argv": [
+            "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/yavo-selfhost",
+            "emit-c",
+            "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/guard-source.yv",
+            "-o",
+            "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/hardlink-output.c"
+          ],
+          "cwd": "/data1/workspace/github/workspace/yavo",
+          "elapsed_seconds": 0.0021201353520154953,
+          "environment": {
+            "PATH": "",
+            "YAVO_ALLOC_CHECK": "1",
+            "YAVO_NO_CACHE": "1"
+          },
+          "exit_code": 3,
+          "stderr": {
+            "base64": "Y2Fubm90IHdyaXRlIG91dHB1dAo=",
+            "bytes": 20,
+            "sha256": "6a3236cfe11e4a637cd02abb994b3a8a2e8f094e1165ce0da23c9a7fa94ee356"
+          },
+          "stdout": {
+            "base64": "",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "timed_out": false
+        },
+        "id": "hardlink_output_guard",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "command": {
+          "argv": [
+            "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/yavo-selfhost",
+            "emit-c",
+            "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/guard-source.yv",
+            "-o",
+            "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/symlink-output.c"
+          ],
+          "cwd": "/data1/workspace/github/workspace/yavo",
+          "elapsed_seconds": 0.0018235184252262115,
+          "environment": {
+            "PATH": "",
+            "YAVO_ALLOC_CHECK": "1",
+            "YAVO_NO_CACHE": "1"
+          },
+          "exit_code": 3,
+          "stderr": {
+            "base64": "Y2Fubm90IHdyaXRlIG91dHB1dAo=",
+            "bytes": 20,
+            "sha256": "6a3236cfe11e4a637cd02abb994b3a8a2e8f094e1165ce0da23c9a7fa94ee356"
+          },
+          "stdout": {
+            "base64": "",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "timed_out": false
+        },
+        "id": "symlink_output_guard",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "changed": [],
+        "id": "inputs_unchanged_during_run",
+        "passed": true,
+        "status": "passed"
+      }
+    ],
+    "lexer_selfhost_unit": {
+      "deterministic_c": true,
+      "generated_c": {
+        "bytes": 133996,
+        "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/lexer-selfhost/program.c",
+        "sha256": "53f3799d238be232cd657cde9ef767ca5331aeeca76c822bf206677c301f87ec"
+      },
+      "modes": [
+        {
+          "binary": {
+            "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/lexer-selfhost/lexer-debug",
+            "sha256": "62de94c7847db20cfe8e9c7808ca8afd70801ba9bd2923410b7bfca6caf64229"
+          },
+          "build": {
+            "argv": [
+              "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+              "cc",
+              "-std=c17",
+              "-fno-strict-aliasing",
+              "-DYV_ALLOC_CHECK",
+              "-O0",
+              "-g",
+              "-I",
+              "/data1/workspace/github/workspace/yavo/compiler/runtime",
+              "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/lexer-selfhost/program.c",
+              "-o",
+              "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/lexer-selfhost/lexer-debug"
+            ],
+            "cwd": "/data1/workspace/github/workspace/yavo",
+            "elapsed_seconds": 0.4165760288015008,
+            "environment": {
+              "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+              "YAVO_ALLOC_CHECK": "1",
+              "YAVO_NO_CACHE": "1"
+            },
+            "exit_code": 0,
+            "stderr": {
+              "base64": "",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stdout": {
+              "base64": "",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "timed_out": false
+          },
+          "mode": "debug",
+          "passed": true,
+          "run": {
+            "argv": [
+              "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/lexer-selfhost/lexer-debug"
+            ],
+            "cwd": "/data1/workspace/github/workspace/yavo",
+            "elapsed_seconds": 0.008126957342028618,
+            "environment": {
+              "PATH": "",
+              "YAVO_ALLOC_CHECK": "1",
+              "YAVO_NO_CACHE": "1"
+            },
+            "exit_code": 0,
+            "stderr": {
+              "base64": "",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stdout": {
+              "base64": "bGV4ZXIgdGVzdHMgcGFzc2VkCg==",
+              "bytes": 19,
+              "sha256": "02d84d6f54e7455bdc57d5b2c119d3f61f0cd4c24c952b62d128af524e22d796"
+            },
+            "timed_out": false
+          }
+        },
+        {
+          "binary": {
+            "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/lexer-selfhost/lexer-release",
+            "sha256": "bd21bc8d7e0b2ca8974060a0cfaf7490f90dc0dec283f7bf48bc4641fe3d712d"
+          },
+          "build": {
+            "argv": [
+              "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+              "cc",
+              "-std=c17",
+              "-fno-strict-aliasing",
+              "-DYV_ALLOC_CHECK",
+              "-O2",
+              "-s",
+              "-I",
+              "/data1/workspace/github/workspace/yavo/compiler/runtime",
+              "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/lexer-selfhost/program.c",
+              "-o",
+              "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/lexer-selfhost/lexer-release"
+            ],
+            "cwd": "/data1/workspace/github/workspace/yavo",
+            "elapsed_seconds": 1.0185405295342207,
+            "environment": {
+              "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+              "YAVO_ALLOC_CHECK": "1",
+              "YAVO_NO_CACHE": "1"
+            },
+            "exit_code": 0,
+            "stderr": {
+              "base64": "",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stdout": {
+              "base64": "",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "timed_out": false
+          },
+          "mode": "release",
+          "passed": true,
+          "run": {
+            "argv": [
+              "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/lexer-selfhost/lexer-release"
+            ],
+            "cwd": "/data1/workspace/github/workspace/yavo",
+            "elapsed_seconds": 0.0037572141736745834,
+            "environment": {
+              "PATH": "",
+              "YAVO_ALLOC_CHECK": "1",
+              "YAVO_NO_CACHE": "1"
+            },
+            "exit_code": 0,
+            "stderr": {
+              "base64": "",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stdout": {
+              "base64": "bGV4ZXIgdGVzdHMgcGFzc2VkCg==",
+              "bytes": 19,
+              "sha256": "02d84d6f54e7455bdc57d5b2c119d3f61f0cd4c24c952b62d128af524e22d796"
+            },
+            "timed_out": false
+          }
+        }
+      ],
+      "source": {
+        "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/lexer-test.yv",
+        "sha256": "05a61bff4c12c185775d2cc353ec273732aa08feff9bb16b5b44648e534eec2a"
+      },
+      "stage1_emit": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/yavo-selfhost",
+          "emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/lexer-test.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/lexer-selfhost/program.c"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo",
+        "elapsed_seconds": 0.008247452788054943,
+        "environment": {
+          "PATH": "",
+          "YAVO_ALLOC_CHECK": "1",
+          "YAVO_NO_CACHE": "1"
+        },
+        "exit_code": 0,
+        "stderr": {
+          "base64": "",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdout": {
+          "base64": "",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "timed_out": false
+      },
+      "stage2_c": {
+        "bytes": 133996,
+        "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/lexer-selfhost/stage2.c",
+        "sha256": "53f3799d238be232cd657cde9ef767ca5331aeeca76c822bf206677c301f87ec"
+      },
+      "stage2_emit": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/stages/stage2/yavo-selfhost",
+          "emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/lexer-test.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/run-t8h4losy/lexer-selfhost/stage2.c"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo",
+        "elapsed_seconds": 0.008019544184207916,
+        "environment": {
+          "PATH": "",
+          "YAVO_ALLOC_CHECK": "1",
+          "YAVO_NO_CACHE": "1"
+        },
+        "exit_code": 0,
+        "stderr": {
+          "base64": "",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdout": {
+          "base64": "",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "timed_out": false
+      }
+    },
+    "independent_artifact_recheck": {
+      "status": "passed",
+      "receipt": {
+        "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-logs/local-artifact-recheck.json",
+        "bytes": 3264576,
+        "sha256": "70dd4b19b920740ec9089113b8d3d0280b588cd34a70993656ac1f56ccf1418f"
+      },
+      "executable_cases": 155,
+      "candidate_repeated_stage2_c_files": 465,
+      "debug_release_reference_candidate_binaries": 620,
+      "saved_command_records_checked": 3610,
+      "all_inputs_unchanged": true
+    }
+  },
+  "rust": {
+    "receipt": {
+      "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-rust/results.json",
+      "bytes": 2550,
+      "sha256": "2d784a315ebb144f856ac5b68d9599cb40894d4cc3f9f35f9fc3df5d1683c288"
+    },
+    "results": {
+      "schema": "yavo-ci/1",
+      "revision": "e3222d87e6220f2447ec2b9e8d458b6f02e60a21",
+      "host": {
+        "platform": "Linux-6.1.0-50-cloud-amd64-x86_64-with-glibc2.36",
+        "machine": "x86_64"
+      },
+      "rust_toolchain": "1.99.1",
+      "toolchain_lock_sha256": "a9bbe83e644b0e1cee19c8dba8b5157eaed3e9ddc71b96d8aab2b2d2bb15f53c",
+      "cargo_lock_sha256": "1855e4b98bba9e064b54ffdb43935981e5dc2f22d8c5561688cac88bcf73ad41",
+      "commands": [
+        {
+          "label": "tests-debug",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "--offline",
+            "--",
+            "--nocapture"
+          ],
+          "cwd": "/data1/workspace/github/workspace/yavo/compiler",
+          "exit_code": 0,
+          "timed_out": false,
+          "seconds": 150.07491675950587,
+          "log": "tests-debug.log",
+          "log_sha256": "340c233982bc189a5fa48adcddd9463ab5cada6a5ae92a70ca071a227b0f6288"
+        },
+        {
+          "label": "tests-release",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "--offline",
+            "--release",
+            "--",
+            "--nocapture"
+          ],
+          "cwd": "/data1/workspace/github/workspace/yavo/compiler",
+          "exit_code": 0,
+          "timed_out": false,
+          "seconds": 62.59305050224066,
+          "log": "tests-release.log",
+          "log_sha256": "2b98bed6ff84fa7485f6e28aa5bee05241ac02f367f713f98f2db4afa68a5383"
+        }
+      ],
+      "status": "passed",
+      "scope": "All Cargo tests and frozen conformance on Linux x86_64",
+      "suites": {
+        "debug": {
+          "exit_code": 0,
+          "totals": {
+            "passed": 145,
+            "failed": 0,
+            "ignored": 1,
+            "measured": 0,
+            "filtered_out": 0
+          },
+          "selection": [],
+          "conformance": {
+            "passed": true,
+            "counts": {
+              "pass": 124,
+              "superseded": 2,
+              "unsupported": 3
+            },
+            "errors": [],
+            "report": "conformance-debug.json",
+            "sha256": "eb67ee505e0a0f0fad8dacfad2df80851a80fdfd3db1aed1b7e02c2531edeefe"
+          },
+          "passed": true
+        },
+        "release": {
+          "exit_code": 0,
+          "totals": {
+            "passed": 145,
+            "failed": 0,
+            "ignored": 1,
+            "measured": 0,
+            "filtered_out": 0
+          },
+          "selection": [],
+          "conformance": {
+            "passed": true,
+            "counts": {
+              "pass": 124,
+              "superseded": 2,
+              "unsupported": 3
+            },
+            "errors": [],
+            "report": "conformance-release.json",
+            "sha256": "eb67ee505e0a0f0fad8dacfad2df80851a80fdfd3db1aed1b7e02c2531edeefe"
+          },
+          "passed": true
+        }
+      }
+    },
+    "source_receipt": {
+      "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-rust/source-inputs.json",
+      "bytes": 35230,
+      "sha256": "530a3625367c3c7b23689ebf490f27148d115f5ade259cd9fd7deb3b30fbef4c"
+    },
+    "source_verification": {
+      "status": "passed",
+      "gate_exit": 0,
+      "changed_inputs": [],
+      "source_receipt_sha256": "530a3625367c3c7b23689ebf490f27148d115f5ade259cd9fd7deb3b30fbef4c",
+      "native_receipt_sha256": "2d784a315ebb144f856ac5b68d9599cb40894d4cc3f9f35f9fc3df5d1683c288",
+      "stage0_release_sha256": "bcbbbf91215b81ad628329320ca9b18b0c924f9735a006af2597d77d4640c2c0"
+    },
+    "current_compiler_and_frozen_inputs_match_tested_hashes": true,
+    "tested_input_files": {
+      "compiler/.gitignore": "44c92e3a70ad3307b7056871c2bdb096d8bfa9373f5bf06a79bb6324a20ff2fb",
+      "compiler/Cargo.lock": "1855e4b98bba9e064b54ffdb43935981e5dc2f22d8c5561688cac88bcf73ad41",
+      "compiler/Cargo.toml": "c3d8cd3d23c13ced4499ea298eefabeef20bf522ad7ec573ef6692b8b75b87a9",
+      "compiler/README.md": "bdc7f6c6d89a9c52000755ff2d447608c452c07bc68bf7111fe2ac8f0f7facac",
+      "compiler/runtime/yavo_rt.h": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+      "compiler/src/allocations.rs": "b22b7aa173b320b6d09bc8ac5eea57f4a189163dc9dba02c0965b457409ff4bb",
+      "compiler/src/ast.rs": "e2205244e7dfd902c6860c044c1ff4ca8dae79db123d7d80c0799bc23ed1b343",
+      "compiler/src/cache.rs": "71491bfa1220cd34c72498ab2aea9c8d8dfe59503c54189fda5d13400d9a6280",
+      "compiler/src/check.rs": "19603d21a1fd9677573ad74a2ddfb9a108dc3e06aa58b332c8fe20f5f9795cad",
+      "compiler/src/closure_free.rs": "2bc028fe53ebd14d6af6fc68d704bc8d132c091a6d9527292cc125dd4abd92f5",
+      "compiler/src/codegen.rs": "b906f946307dd44d43e0c653f0512685c5c27ecd042c1483efd8cca8ad222f09",
+      "compiler/src/diag.rs": "738f097f5f537ce20acf9ae4ad4eb3338b7811275428d231e69d453b3e5e85e6",
+      "compiler/src/fix.rs": "1170ca66e4cbea997eb5ac3faa966fab0c07ebcf048998a796904afdef5dae78",
+      "compiler/src/fix_plan.rs": "e2a611ab76f61c401d4d9f9bd020eb48f60ab3135272fee77ab0a26485c688d0",
+      "compiler/src/lexer.rs": "705f24fcd337ecd1ce1118709f4e36c0e4e3e6bb03134367cd9ee27fd9557fc1",
+      "compiler/src/main.rs": "bae50868607684ff53527643e6a4c8c1d1a452bc12e4e8c8edfc1615e97e8f2b",
+      "compiler/src/parser.rs": "9d25ae708d1f9ab06b65923d63e380c405e9c1083e14e3ce0af901bb88396c90",
+      "compiler/src/process.rs": "b03f4c08f1fa763faeeb20379fbb21bfb06416f6baa6782aba673e727c729164",
+      "compiler/src/project.rs": "3f24b0c0eb161cd843a2be8e1a84ad5c0b6642974afca4198af9eba48170af62",
+      "compiler/src/toolchain.rs": "c76e499e77ae812a46b0841c332312a4fb28c91e80b998ad1421c2ba81d79a81",
+      "compiler/src/types.rs": "6affdbd9bd5dd15c7a8ff251cba4821e1a2a15ad18cfd7c61480527909696d15",
+      "compiler/src/verify.rs": "a2fc0b21a9ecd0727dfda6150b21a0a104bc844213279b857a9beebaf1b440bf",
+      "compiler/tests/alloc_check.rs": "3501f19341772816ed722229ba49c96ad290706d7f7a8935fb417edd5e98fb2f",
+      "compiler/tests/arena.rs": "25b9ea9e7750622d3df0592e6649fba7e83ecdacdc95c80e8795969676094956",
+      "compiler/tests/arena_runtime.c": "f9320597fd470a16cc753093028591035981ab44ba803193dd289c953c958d78",
+      "compiler/tests/build_cache.rs": "16b31147fad7847525c6711279aa1a6d45194c92524ee2cef3ec4efc93372985",
+      "compiler/tests/collections.rs": "9d5111f880f450b5032414582a87dcda3246cfa3524ddd00bf831741c6331469",
+      "compiler/tests/common/fault_alloc.h": "0fd37b235a5b487b1876a6045602d9f87d4ebcdc224f1e93fdb3a3e7e3a4195e",
+      "compiler/tests/common/mod.rs": "366633b4c6dcee1e7bfb3ec38f9545c6ed0d7adbc4ad1ebc81f88aa5382b2af6",
+      "compiler/tests/conformance.rs": "67bfefee5c3663d5c870394212a31f326ec79a7bda58b785a40dee84ec6ef433",
+      "compiler/tests/conformance_baseline.txt": "a8481f176f2e77d1828d8fb44d87cca3f1340218cef709e53e611136913e248b",
+      "compiler/tests/conformance_superseded.txt": "ca04a7a2bebc22d534d45e97f32ef7cd07b93524262c394774af7a571a30fab1",
+      "compiler/tests/fix.rs": "241ff004287b81f6a5480dad3512e510e09ad648b77e25819f1dbf5315fae335",
+      "compiler/tests/fs_create_new.rs": "10ec1d6e353d8a329f9d668121b7e62970d9e0353db08dc4f8f09f712ecf389d",
+      "compiler/tests/harness.rs": "48ffa2d5f44d416b9a06d04a36e8dc303213d597f82f5e56de59c148a8a66bbf",
+      "compiler/tests/index_assignment.rs": "3ba9384ab845b876a22782d410d3a9d4085ff7deacdc781c4b39dbddfd851d70",
+      "compiler/tests/modules.rs": "60f3effd8513bf220d6484fd0d61ce597771087517df3486823f96caf2954d07",
+      "compiler/tests/modules/arena/graph.yv": "075d1641f3eb330aec44d065107b5eb2aeea906c935a454f3d55e02e92f98ece",
+      "compiler/tests/modules/arena/main.yv": "11aed70e7dcb0948e589b5590034135cd7af618eda5589b5bc15eab814ea8277",
+      "compiler/tests/modules/basic/algorithms.yv": "0e80d973ab862b8c4ecf4c6f859b8c3bc409522d171bb8a74a79401c403fdf59",
+      "compiler/tests/modules/basic/contracts.yv": "9dcd7948c0f6e66c67fcd8a922e3cf79ec0ad546f9ee838c913c944baec8426c",
+      "compiler/tests/modules/basic/main.yv": "42f5fc95a45d004f329658699208ca692ae4aaeef8f798261e8f2cd70755d167",
+      "compiler/tests/modules/basic/models.yv": "760666d673d95904cd655f79412f117c6dce5007f6d0679d0316caea1425c178",
+      "compiler/tests/modules/basic/util.yv": "a5b6e795cb0bf2a5c5b3c6ffad2ee8e260cd7fcaf14dd00491b168cbe76ee4be",
+      "compiler/tests/mutref_returns.rs": "d2435939078b9cc79efcfc2f4b29b6a9fbf45d14d36d2609f52d822658cf7618",
+      "compiler/tests/p0.rs": "8b10a54fc6d371b295363164c7a02b852e66649451d7ae1e53fbf08012b1af3a",
+      "compiler/tests/p0/errors_box.yv": "7458fb9c3a9c63b92417edd0aa8c9c882bcdd0d7fdaab5c8ac0b64e617e225e2",
+      "compiler/tests/p0/errors_catch_break_return.yv": "c62a879c2d18a0eb394b21b62217d6bcf646a7db4801d5204950199857a9832c",
+      "compiler/tests/p0/errors_channels.yv": "e420e8760d41139f91e841c39834f43744ad102c1a6c02a9c5af7a52db0db53a",
+      "compiler/tests/p0/errors_check.yv": "fbe592f2da1de310b1da0636accf038f6a645b08ac07858a124dddc820cae65d",
+      "compiler/tests/p0/errors_clone_interface_resources.yv": "82ae2cdeaae2f46664ed9efc76fd0faeef858650ccbf51bf193a2bb0922dd88c",
+      "compiler/tests/p0/errors_clone_resources.yv": "3430e7cbfca39d72fd25155a1166725114991ed20906cef0c17a4cba9afbb1da",
+      "compiler/tests/p0/errors_closures.yv": "2bbf3967d41c83b4f9044f4b7378a879e50880ac5493f43a49f1fc4f7ed5f092",
+      "compiler/tests/p0/errors_deref.yv": "235628c5f67edba69ee4595b806e235e3af801052befd865fec5681bff5359e1",
+      "compiler/tests/p0/errors_discard_loop.yv": "577529e963ae01e0c89b5dc928485070bf44ef97cf09572a030f115594ecdbd2",
+      "compiler/tests/p0/errors_discard_parameter.yv": "f89e0a4131b85b82e497047824bad2c2ee1db7b1c7d62e8a2cba9d882292404e",
+      "compiler/tests/p0/errors_discard_read.yv": "66bc01fcea4550ce81d27beef7e22d2982da55dc1ac9d1c9d10ec20e41ea5a91",
+      "compiler/tests/p0/errors_drop.yv": "507399d31c32cd8ff5c850f84c637e162b7c26685360cfa23cf63cb6c5f4dfb1",
+      "compiler/tests/p0/errors_enums.yv": "07a4e27be9a7c9fdeaef8c15ceebf585d7ba7b3996cf4e6624c357d9dd7215e6",
+      "compiler/tests/p0/errors_floats.yv": "c537ccf42a0141762e8d13316d4d61e6f2cfb59bbce2dc2d2e03b6d89fe477db",
+      "compiler/tests/p0/errors_from_utf8.yv": "363510d440bd9209d24e226ee9258ac0ca15f84333929e14ff5e11866a68ef8e",
+      "compiler/tests/p0/errors_generics.yv": "675636a4e5202935b152e472944d12cb50d2a1d1c214ffd5eaf30933ea47f04a",
+      "compiler/tests/p0/errors_index_methods.yv": "0a4c5cb95c7810f819baf6a2a4574ba81c1e9972c8df5b0eb7884aa6b5dec734",
+      "compiler/tests/p0/errors_interfaces.yv": "fd1760685e8e12e4e34bc76a51a06a32ff77c9b00d1f6c8a097f22f577dd21e4",
+      "compiler/tests/p0/errors_interp.yv": "fb9ebd84b1c96c9a5fbc99bc0583bd7af5044625c5ca2a64a1acde65dc8cfcf0",
+      "compiler/tests/p0/errors_maps.yv": "fdce076c195143cd3f080499e43612de81457b75c841fdb3b6c2748851b004a7",
+      "compiler/tests/p0/errors_methods.yv": "bfb2e81fbb27cf2930549781ff6cd03a21b7c32a19f21a27713761e81bee54dc",
+      "compiler/tests/p0/errors_optionals.yv": "ce0ff254f28b0823a567285958e3417d47cb4c257f0e7c02d236ec46538bed2e",
+      "compiler/tests/p0/errors_ownership.yv": "027f5d01586623517e2a1c0db8fabb9a0f04d56c7d84001b0505b53057e45556",
+      "compiler/tests/p0/errors_parse.yv": "f47b94c0fe4756b1228a88352e94aea2f6f76e586e85ef75acef5931fbff22ef",
+      "compiler/tests/p0/errors_protocols.yv": "1cfa9e06cd9668971d71064d9766412d478ac5ba822221fce4b4b3898170dbc2",
+      "compiler/tests/p0/errors_refs.yv": "47faa9d9051bd47720916e220ba283e8c92e84edd68ae753ced9c82ed04c662f",
+      "compiler/tests/p0/errors_return.yv": "3f8f737c563a714d9dbee454e008b9b4c1bdd6308aea0409bf33ee6e6e2cf70d",
+      "compiler/tests/p0/errors_saved_collections.yv": "6659f2fe3e40e6d488fc84db93d04aa04af0d67e2d96d8817cb224cc270b19d1",
+      "compiler/tests/p0/errors_sets_format.yv": "d10c0c8785054f317356e29bf6466f47b0e0dc4f5bcfdeb24f482b9364044d68",
+      "compiler/tests/p0/errors_shadow.yv": "cf8339f12b1101fc709815faa8f8fe51d0f4c43aa9f1cc06cc7e33cff844e769",
+      "compiler/tests/p0/errors_slices.yv": "e9c91fd73e962d4bb9b8bcbbb401d47ee2c75c54eacb71b7d61ce53070b31c49",
+      "compiler/tests/p0/errors_spawn_views.yv": "4bb855e9a932c7917a08c52ee8c2906e8c3db7a0e561afcbef090632e2b53d7e",
+      "compiler/tests/p0/errors_stdlib.yv": "d3b07ee7fca8e57941f43a37c660f218da6f22d48a1970a876ef018105ee7ac3",
+      "compiler/tests/p0/errors_structs.yv": "6e8d726773b2007ad2a109d59cf01740133a814bb78e58a5d8c4c111734ab59a",
+      "compiler/tests/p0/errors_sync_local.yv": "c2ded73417508955aaa6ec26318253207e56e94057170e80c1035f9aafda3a43",
+      "compiler/tests/p0/errors_thread_caps_nested.yv": "9b44cf13eed41a7f8d79f64f574867e703858a33dc91cc7cf731042e23770860",
+      "compiler/tests/p0/errors_thread_mutable_borrow.yv": "0d3c4a02c35606a70df50afbde6fb3b335d9ca23e4cf77d6bd26c96d896d4e0f",
+      "compiler/tests/p0/errors_threads.yv": "5051d84a7eba7977bc791f5584c28fb4fab2af0021c6acd8471ff9b2e29ddf1a",
+      "compiler/tests/p0/errors_tuples.yv": "94d44fe0aee55da838393ef82b762fec4816d3f2d7cb6fd364bbe9f27e474272",
+      "compiler/tests/p0/errors_two_phase_defaults.yv": "4ba434c5ddaa6c0b5d76609a308cb65371e9c6ff35fd5cc5b68f7bf8972cbf95",
+      "compiler/tests/p0/errors_unsupported.yv": "b11db3b4d34cc9182c05d6b4c754a42a1c370a6d7a78b6fd0e2bf72de6d4908b",
+      "compiler/tests/p0/errors_views.yv": "30203b67df574096cc249f886bd7d91a96085f05706bc191172c06d62b6ff60a",
+      "compiler/tests/p0/panic_assert.yv": "3f6ba6a4f70cef276d7b0f650bc6ac6b8b8f24840f79490cadc783ac2c076a81",
+      "compiler/tests/p0/panic_channel_cap.yv": "8315efbc1316a5bfe376724e6fb112aaaca4f6ebd5b65ef4a28990d9cfb5cc82",
+      "compiler/tests/p0/panic_convert.yv": "08ed0326d7ffc9a3874e7456a81c704962c04f722eb10964977a15fe81a797a7",
+      "compiler/tests/p0/panic_div_overflow.yv": "a7049ee8fd6765bc37b5bbee2c92694f7b90a7d5166a09b5bb9e6d881e165cd5",
+      "compiler/tests/p0/panic_div_zero.yv": "8971629b573cf347c2dcb7ff4e625895f3ee51120a67121ff87476733fe00214",
+      "compiler/tests/p0/panic_float_convert.yv": "835d03bd0c5cd1e3b5b6eb4007102fe2aa2fe8f03b0da0d3f5e0c4ce29757c1c",
+      "compiler/tests/p0/panic_index_write.yv": "2a62a6c8b6437819acd8611f8fa96ed616ecc172329475216072b8ba1ca52916",
+      "compiler/tests/p0/panic_interpolation_no_prefix.yv": "c0312d28099e1a54a8cbda777571f6eda67583017802f7c33e009caff178fef3",
+      "compiler/tests/p0/panic_neg.yv": "d820e7e0cb668bfeefeff34656a5b7e063a7114987a5c0e85dd3f791d37dd0dc",
+      "compiler/tests/p0/panic_overflow.yv": "4e607a7f6dc800f49d6b9f9b8302937e4ee7b3ec3b0da5936b4e3c1e804d1539",
+      "compiler/tests/p0/panic_shift.yv": "70c25d1b650bf83cd47982dcfa21a7536ee05f3a949e7b9b23f048bef0029f91",
+      "compiler/tests/p0/panic_slice_bounds.yv": "6820a18419dea80876fad70f754c3723c794a38745b9eac98e48bad0aa04b09b",
+      "compiler/tests/p0/panic_stack.yv": "bd8f846de9fe537e9c6ed6968c0ba4b852accc9785b57f59b6466dad2219c0f9",
+      "compiler/tests/p0/panic_str_boundary.yv": "a1d980ebc6150c50cf8c1ce5e1d8df2d9a877120bc746dd2616a212837278362",
+      "compiler/tests/p0/panic_user.yv": "961d2121c8605f09fab0b5181107b6e4ed9bba9b58bc2790c6b3ba3998f37e99",
+      "compiler/tests/p0/run_arena.yv": "766af13c580c9b3eb64e627a7fd32ac5a2357b3289f97041215b6f4f084088c5",
+      "compiler/tests/p0/run_arena_drops.yv": "01fe755212744a0ede0c5f295dad97d7b6b41b12b44aa50ea168577c6c46cce0",
+      "compiler/tests/p0/run_arena_resources.yv": "167142e5ef3fb708bf7675039f37398d725a96a34ac230a2355bc23b80091591",
+      "compiler/tests/p0/run_arena_sync.yv": "a9e6194c8877ed280c15a6ff7eaf892f17e6282dcc4398446d110d8e01733756",
+      "compiler/tests/p0/run_arith.yv": "3b96b6b58dba6a26331b7dd4b7e309d05ca101664acbd013c7c930f02be008e8",
+      "compiler/tests/p0/run_box.yv": "b0a65737208a7f756f7e6a5665e51aa91bd0d514cffcb32d7e5c71b0a1449d83",
+      "compiler/tests/p0/run_channels.yv": "d4cdd466cc62a099c67ec2103e4e57add68b139b362c2ce1d0d842e4a9fae71a",
+      "compiler/tests/p0/run_closures.yv": "dd23746d3432fdd07333d78f8df39a22964c99f0f9e09614ddb44ee39e61e1c6",
+      "compiler/tests/p0/run_collection_drops.yv": "8a31a3c84efc673fa73a2bb9ff18f11f30a83249145d8785f512e56b3a05ca7b",
+      "compiler/tests/p0/run_collection_returns.yv": "a6cfd5e5d91405e3c29ee28c3416c4f32d0a6bf43d659ab5008c55ce01a1a384",
+      "compiler/tests/p0/run_collections.yv": "24ee4bf3915de8634fea47bdeb96fc780c912bf14ba1739bf1f65e4f7ed37f0e",
+      "compiler/tests/p0/run_control.yv": "97e40abb427d08f49568c1eb5626eea42246601540cfdffb3b8e739611af9ca2",
+      "compiler/tests/p0/run_convert.yv": "e8d14ef73199b8d8aa5b26dfde8ba0218eb479b8a58622775aca9bb9a46c2c5e",
+      "compiler/tests/p0/run_deref.yv": "d774c600ae27adf2fc5a12208c9d473f9d34b8b95878adb629b143c723fa297d",
+      "compiler/tests/p0/run_discard.yv": "e8eea82fc13f4b84f47bf1ec11d4f2c8cba2aeac739a59b12b820f8999ed38c2",
+      "compiler/tests/p0/run_drop.yv": "381c11bc832b74fce39c4f19c84a0b2d2a4f016d3776dca81eeec1f11ac1a18c",
+      "compiler/tests/p0/run_enums.yv": "1045c9b5ea77d5059ac648c494893713ad33eb1ddfe24396ae49687b9cfcda5a",
+      "compiler/tests/p0/run_fields.yv": "318aeaf57652efd8ee24e98bb651545f84fb1cea5ccd0bdc2f18616a7b1f25c6",
+      "compiler/tests/p0/run_floats.yv": "57b3be8d341a0cc981408e630797c9ff2023d8f8144a2515bc7881cd8a49946f",
+      "compiler/tests/p0/run_format_fixed.yv": "b09eaf205b096117bad41649d24bbcc0530e744b22dd44b51c8329bee7e5778e",
+      "compiler/tests/p0/run_from_utf8.yv": "5de110b6bacc41d337d591bcc541cacc80feffebafde34264066e55ccf3437e5",
+      "compiler/tests/p0/run_generics.yv": "56f5b15368fbcbf89aaf7e4c8ffc8703275322de4a4d99b6e2cba10ede826d72",
+      "compiler/tests/p0/run_imports.yv": "235533ffc18d01ffea3ec99bb6f294ff35673f85cf6d6fcbd38a0146a436b0c8",
+      "compiler/tests/p0/run_index_methods.yv": "2afb8211afdf689ca46ce63df0caf0c03f7544b99b54446dc818300178abf9ee",
+      "compiler/tests/p0/run_index_two_phase_defaults.yv": "0edb2ae7326385e67a77d6190967e5c402e04a8f5c14dd8e2f4bba87cca0181e",
+      "compiler/tests/p0/run_interfaces.yv": "12dbaf6e0a69be8f81e15133885458c020887475d3229866c66d46aa9d2a8f71",
+      "compiler/tests/p0/run_interpolation_order.yv": "8dffc566a50e145bc83003998622a5b46f04f56fe507ce62f406d8517a6bf9fb",
+      "compiler/tests/p0/run_maps.yv": "0aa3759624738027e64f3f1e8e6a80201a411b2ecd012889439fccf522612c98",
+      "compiler/tests/p0/run_methods.yv": "550476df01178decf17499b272f94863a940eb30b8248ce0c21ea1dc1a9a6f87",
+      "compiler/tests/p0/run_optionals.yv": "4213141fc1f56e91bfbd7353daf0f567f9b2ec6db7adbec3e915b4fd5845829d",
+      "compiler/tests/p0/run_order.yv": "a921d70ca7dd6916ee6d88d9a02400dc16c2d61b656aab73a6e4fa1fc019bda1",
+      "compiler/tests/p0/run_ownership.yv": "0eb23c2cd5dfb46dc0d7ab9b024520f46fc198a6de6ac89af5d5de568e9453d8",
+      "compiler/tests/p0/run_protocols.yv": "584847a17d17e21d042a9630bb654beb7972ff10a89e351eb76bcfc9af579bb5",
+      "compiler/tests/p0/run_refs.yv": "878fda70dc8d2eac5ac6c1045b83d3f403bb7623fcee10b71de007eda8d84b94",
+      "compiler/tests/p0/run_results.yv": "1c6ca56564c72d064debe47a29b1918381dcb1619ed6d16da6ddaf173127a1c6",
+      "compiler/tests/p0/run_safety_combinations.yv": "67d7bcc2804e3d60b795a0b914536f89e652c7bf5bedd5b622a51ecb87a96240",
+      "compiler/tests/p0/run_sets.yv": "27bbd7c96e36545d32876751cb1a92315835540c2c7ae9b693ea77b41a0cf26c",
+      "compiler/tests/p0/run_slices.yv": "f38f7dff2ddc49bd9d979e9bf7220288a02f09517b529691aa1d72f2211d0ef8",
+      "compiler/tests/p0/run_stdlib.yv": "9e98efeca24a42fd409b26605576321d6e7c1648bcd0057c63c00f001d62d482",
+      "compiler/tests/p0/run_strings.yv": "d7013b9683f6a2e6642fad3825d4d156c2479647e21f64a788f443ac2d0de587",
+      "compiler/tests/p0/run_structs.yv": "f5f168ef5550dabb6fdbbcea9b20e8141a80569edfdb54e12c113fda13f362bf",
+      "compiler/tests/p0/run_sync_local.yv": "1cd5c069b423f102e3f453680ee4cff3c578500cae5fd5524b49fa3d1b3c2512",
+      "compiler/tests/p0/run_threads.yv": "8d5325f69d16b9ac878bd3ad68fdb4a45c7c814f3869504c50a1b05f3b5d0b32",
+      "compiler/tests/p0/run_tuples.yv": "25be9f2424ed3db49bd4fd4a99357226059adb2386f64930b4d636b9601914ed",
+      "compiler/tests/p0/run_views.yv": "579515dbc4bbc7f9fbd324f4e4e67b2a4b4c1ea80a47a758b71adaf72d77755d",
+      "compiler/tests/p0_regressions.rs": "1d26a7ad185ba1a58ff7c067136680071822c5d829114be8d3ae4ad04201c4d9",
+      "compiler/tests/runtime_io_concurrency.c": "414f4d2a3b9f5c4c45cb8f58c0811bd86c0561a7d2c3a29bebda91ac89b32129",
+      "compiler/tests/runtime_io_concurrency.rs": "6bbb15b7155310758c28f6e7f37e0ecb558de7d2ffc12abb67966881b8056722",
+      "compiler/tests/selfhost_blockers.rs": "4d0ed2dbf658f56c0664e4d65754078371321029dc8cfb3125274fa605cb76c3",
+      "compiler/tests/stdlib_io.rs": "9e6757d964ccfff5e1e73de3b5205782829fafc314a66d78ce83a2754fad17de",
+      "compiler/tests/targets.rs": "5930580ec55985e84c1b0cb03f1a30371569dfb024470c4d5d41924c9cc11318",
+      "compiler/tests/verify.rs": "3a481df002d2cebe4524edff2823892e4dae16af91d6af809bc393f2ca0a9936",
+      "compiler/toolchain.lock": "a9bbe83e644b0e1cee19c8dba8b5157eaed3e9ddc71b96d8aab2b2d2bb15f53c",
+      "compiler/validation/agent-eval-runtime-2026-11-22.json": "7b75f359ab4eb7840e2a98cc337370077166d7801f194f32be48eea7ab4acdf8",
+      "compiler/validation/agent-start-2026-11-22.json": "78b473619a95fb781bc81a6c8b4d0ea1fb7a3181123709fdb95c0866cb15ebe3",
+      "compiler/validation/arena-modules-2026-11-21.json": "a01a6362e6a5d30b6df72a67db7924c43574eb74c484bdcc70c2f6be8e34543b",
+      "compiler/validation/arena-modules-repro-2026-11-21.json": "d14fae41b828b8f23234ce0b9520cc1b0e2c37068b7c8709cdf0937420dd3599",
+      "compiler/validation/asan-arena-modules-2026-11-21.json": "abbd90af1d97bf58704537e04690693e331af062928f95d8f73b1519c250418c",
+      "compiler/validation/asan-baseline-2026-11-21.json": "d6fe40f08b0c0b2b4e316ca6c65aa4b21e42dfd997fdbc0f1e77ecb8e0b73672",
+      "compiler/validation/batch28-ci-initial-2026-11-23.json": "d1a2050662cb90cb2a91bfcde0af047db7e9a12a8669bc6a5e65efb2590af303",
+      "compiler/validation/batch28-native-2026-11-23.json": "02705d47c65d8963466f05dbd160abf5cb30151625302e2a15468e564249284f",
+      "compiler/validation/batch29-native-2026-11-24.json": "27c1c299005577b1747ac2c8ceea1ec81b37938cbeb284845a0f1f1831a28f4e",
+      "compiler/validation/catch-break-return-2026-11-24.json": "4938169ab0a1917db8215838d48ab4071e3e41e6acc104d7cdd67e3622c7943b",
+      "compiler/validation/completion-2026-11-21.json": "e9217385278ef2cfd1e990175f77d6799816552e80c96b5a1c6e2f53ee1164c9",
+      "compiler/validation/fix-2026-11-21.json": "6d25e8d067541a71695fdcb464d83e5e7e163edef7ed2f9c825cd351369307f8",
+      "compiler/validation/github-ci-2026-11-22.json": "7975a4ed35b0013bdd189e88f1d27bad632f1f8c64db540fd0b62d1fc89a6f17",
+      "compiler/validation/github-ci-agent-eval-2026-11-22.json": "f3a661cfa5c211046afabf02ff27af14b1939e2328ddf971a26736dc18b46618",
+      "compiler/validation/github-ci-round5-2026-11-22.json": "cb064edf3d26b16b6bccf26c8e31eaf3795a40260a7cb92d584f16e90dbb990d",
+      "compiler/validation/safety-2026-11-20.json": "52edfc1d655807436c47c44c9d76b8336efba3fd1f3145fe4f77925c45363889",
+      "compiler/validation/selfhost-aggregates-2026-11-22.json": "7225ecce29d4eb2c39ec80d3eb619040f09e75457a8a64aa6102617475c74aa2",
+      "compiler/validation/selfhost-borrow-index-2026-11-23.json": "67294c950d27889e848ed011efa30737aca454f70a47c625cf7ca1574af99aff",
+      "compiler/validation/selfhost-byte-2026-11-23.json": "5e705306daf6518eddc60766d280ba6c01d29ddba572844dcbed7d6453fe9333",
+      "compiler/validation/selfhost-fixed-point-native-2026-11-23.json": "2ec307d66a753907ceb444aaed47967a11cff57a1978fbd326efd8a4bfba7349",
+      "compiler/validation/selfhost-fixpoint-2026-11-23.json": "851fa82985b725ac43f4f0cae9039c07397441c6221d9433acb0aefd85f906a0",
+      "compiler/validation/selfhost-owned-vec-2026-11-23.json": "4f713f6b30141c3114d761c64227aa7c920aa134eb340bae35630d2a874a01de",
+      "compiler/validation/selfhost-result-2026-11-24.json": "4779b630000b113b918b0aa5da5fecbe2d4daffb78cf0557931dd41d996947d1",
+      "compiler/validation/selfhost-sh1-2026-11-22.json": "b19d9107e6938c76096216b5b2ab3c498103b074cdd8e078eef9bf3bfcb24509",
+      "compiler/validation/selfhost-string-2026-11-22.json": "551975ee4baee069f27201856c708960eacc5c24911f338be09319f4d3291161",
+      "compiler/validation/selfhost-vec-2026-11-23.json": "9e6594041e0ee90cd185b6efd5d46c1e318cbafb13a1355aa0e7103dab90f90a",
+      "compiler/validation/stage2-sanitizer-2026-11-23.json": "03fa1cf336272fd5ef9e939c049dd766542fd5bd1ebd4aae8228c130b294bf41",
+      "compiler/validation/test-summary-2026-11-23.json": "68327ee575d4f08a9e81549c30b678f1d368f950a6c1515325d81f643b36d4d1",
+      "compiler/validation/verify-2026-11-21.json": "2ecbe0572ddc0c285b97e8c5fdd9cbb69a84a83e67e08a6a86d2b7f33ef9d41e",
+      "tools/ci/run.py": "d9650d107536e4a22ac46889be2f13ed68647882a0369f3101be80a8b6ec9eef",
+      "yavo-tests/COVERAGE.json": "e82c24dbf8bbfab4eec4fe0f5e9ff882402a08d37e6991e0a5fa93cdc17009a6",
+      "yavo-tests/ERRORS.md": "cf7e834a68298a402c1294ed525f1f4d34908d5963fed107aaf869e278d6480f",
+      "yavo-tests/MANIFEST.json": "82c4bf71c0f239d4f07bc13500c4f7d7e6e4416f7b9722a0974fabc33bfbb3a5",
+      "yavo-tests/README.md": "c6a81033039f11347d267f3e60962bf2cda7da78da144b618d4b2d973b0dc1f5",
+      "yavo-tests/check/T-A1.yv": "994815f20c35157a5e9e1b02d3c4c225c25862f931f8449a5c286f20b89ab97e",
+      "yavo-tests/check/T-A1p.yv": "c0e6ddb9a6749cda595497f2a1b30c06dbdb95603e34abec7f985890f0427160",
+      "yavo-tests/check/T-A2.yv": "a652d81e1242b8ce61c72296cc15df8ea23d7fa0178552e2de904961ca65ef06",
+      "yavo-tests/check/T-A2p.yv": "c186e2ea88337c06a8a5664ad0d357002945488f46dac8e1ae3d38e5726977cf",
+      "yavo-tests/check/T-A3.yv": "a2fcf39afec9d4c45355562d8a6bbc4f10c872f7aa79ffaed753798ac768ebed",
+      "yavo-tests/check/T-A3f.yv": "482f1f6e2389faecce28ca56db996f28c967b74ae3c951fc27f56e985210ad81",
+      "yavo-tests/check/T-A4.yv": "b897b2ac1b6b8881249c537a69658d642729a7bd37824058cf4c1b9fe0cde521",
+      "yavo-tests/check/T-A4p.yv": "cf3a572fd1653988cc5770a4752b1c2a8eae055731cac3779251e412556a3a08",
+      "yavo-tests/check/T-C1.yv": "c6133555405493e02f47fa1bfa7f81665067f4c708e1fc30585f95bf2ce3b811",
+      "yavo-tests/check/T-C1p.yv": "fab915607bf52be7f1c72765ba7bec5378e252700d0c6c30f74f57cc79afaae8",
+      "yavo-tests/check/T-C2.yv": "6cce8b66285267fa5c325fca96591cffab6000cb70dbefebcc1b4cb35846642d",
+      "yavo-tests/check/T-C2f.yv": "ec9eee00e765f7597765943ad5e6a3e56e5746dbaa4b492e43aa227c41b1db5d",
+      "yavo-tests/check/T-C3.yv": "30806f78a59cb0bf54d8de05b9dc2e4fc72fadc3161b4f3faba0216c57dda006",
+      "yavo-tests/check/T-C3f.yv": "daf8240fab7002f32565319386ffaf5a8b7bd145fcfe3dd5862250c55ff4c5e8",
+      "yavo-tests/check/T-C4.yv": "86d2bae7df947866cdc05bd2f3f45fa17a775c51bfe6044103a7662b8a63eb8c",
+      "yavo-tests/check/T-C4p.yv": "583b1b067809adc34d3d63c15be5791901e197cc76e8fab6d219f9436e6e9134",
+      "yavo-tests/check/T-C5.yv": "47e0cf3a9136273852c45af8496c0d0e97a78862868fd8a6a42635210d59ee27",
+      "yavo-tests/check/T-C6.yv": "4b1dcd452c43dedef22772e1bb6dd42dc446967e97a9ad36f998e595f52141cd",
+      "yavo-tests/check/T-C6p.yv": "45ab92afe83d70938c181b7f4b70fea00937c06371ed9c30f76a72c12faa50bb",
+      "yavo-tests/check/T-C7.yv": "8d3282986b1a573cbc583ce35de681c382839963dbdcc8596578095167ecb54b",
+      "yavo-tests/check/T-C7f.yv": "130609fd7b1c92cb9861f7db90c5f8759094eb3b58220688248b4ae90b0870bd",
+      "yavo-tests/check/T-C8.yv": "54f31aa155d84dad9e639187870632c10bd898f3c0a3a0fa51ead58cba4f5a52",
+      "yavo-tests/check/T-C8f.yv": "2384dd5071e083e9e1aa966a5a1c9f9b9d147a34524e34f7e856d86dd22912ae",
+      "yavo-tests/check/T-E1.yv": "c0c30cee52085af442af9df19a973179be04790005d82c2384262d3e754c8e97",
+      "yavo-tests/check/T-E1p.yv": "688e815bb57a9a16417a99064b38f3b0f01b7ee8ade6f1b3268c7473794760c9",
+      "yavo-tests/check/T-E2.yv": "f14644e0c4ffb55cece11e4c4d1d6286dd8ee887d837ce240b1ba64a25ad69b5",
+      "yavo-tests/check/T-E2p.yv": "3c29eb46313c3a6fabe037f877fd71ba29a729c395a17b276111c801bb250a06",
+      "yavo-tests/check/T-G01.yv": "dc6cc70bfcc5552a114fb7de2dc96594594dc09ae708388904bb05d0a027426b",
+      "yavo-tests/check/T-G02.yv": "d453afcfec2a119ffbdc1bb9d252af669618cd133f67d276738500e73cd1600d",
+      "yavo-tests/check/T-G03.yv": "e1cecdd9f1a0c81d3fb66a6ecb12a5a0111f3623b21d4c57789eb86919789949",
+      "yavo-tests/check/T-G04.yv": "041a79494c56d01c239c778a766b780e7cf9e930d887bb88f101a69291a96ea7",
+      "yavo-tests/check/T-G05.yv": "9a276c2b0acb75d44a3fc3e962bfbffac88a29e4916a01fe34e5fb6c718a233a",
+      "yavo-tests/check/T-G06.yv": "f1a14803532ffa55cd520cd352f3036a8e00ecc3674c4fa395e09893f042df06",
+      "yavo-tests/check/T-G07.yv": "a0ea80e6e5bda2cb05180ef32fac9b80026ac7069529bb25c0e945e6b9f4b9b6",
+      "yavo-tests/check/T-G08.yv": "b9ff5edcf81b8c50aee476adc3832de725c427014b4e7d476f3578fd6611d205",
+      "yavo-tests/check/T-G09.yv": "cbfb10ddbe6e57b9e82fddac4ca64e70a3323c33d1e8a6d307b90780a251f08d",
+      "yavo-tests/check/T-G10.yv": "817417074877c3eff1dbf699adb963053d7e5178a5ade760e1a5ad11475eed70",
+      "yavo-tests/check/T-G11.yv": "898fe7c7ba8bf786d4dae2462455b96895247f54a487628fe78fc31a735be150",
+      "yavo-tests/check/T-G12.yv": "0db20a953a785de242cf9f41d72e1fdbcaa1dc266eb28f3acbb91e51876069db",
+      "yavo-tests/check/T-G13.yv": "47fbde29f53ad691d1d4955e443e8b3d3e60ae6d3d192b0bb5dbf4d5b762efd8",
+      "yavo-tests/check/T-G14.yv": "7b7501a13d6e12123387bea38590302dd8364eb2bbf16cc3c24648584a2051e8",
+      "yavo-tests/check/T-G15.yv": "77768c595ddfbabdb94ef9fc5bdba438414ba7a5cdbecf1131abfe7717469965",
+      "yavo-tests/check/T-G16.yv": "8bcb32c55dc926f43bb3096596ddf152a68d149106b32679ac955a4bb4f923a9",
+      "yavo-tests/check/T-G17.yv": "ea7bfa60b0020cce9cc9dccdd5078446d2f0aa229ca3300035855d2452af6f99",
+      "yavo-tests/check/T-G18.yv": "923a7e7be8dbffe00e63a35eb5875ee22e77f337edfa4ea88318c8885c15fed1",
+      "yavo-tests/check/T-G19.yv": "e10c5eb2f079be0d991548e19e98bafffff4fa16369f36846d9e39a5cdf6e0a5",
+      "yavo-tests/check/T-G20.yv": "a23dce941cb15dafcd55d8098fb7915bdd3f61cd8588ba849ccbf50b8124aa26",
+      "yavo-tests/check/T-G21.yv": "e7238f580633cca0184346da0ae89e91043ad078d6c82583d18ba17e5dece33f",
+      "yavo-tests/check/T-G22.yv": "3cf004b5ecf2fc99af5b6a0ddfa7d82eef4ea162564de7d6f28bf8fca5d96232",
+      "yavo-tests/check/T-G23.yv": "ed873c45ba9d66644ee9ec65fdd45cdfce8303c90e7eef3362e6d82fe0ee50a2",
+      "yavo-tests/check/T-G24.yv": "49a0141de80e66be168166f5bc2ed2ac2fa6cbb358b9017ce7a371ff8a7234ad",
+      "yavo-tests/check/T-G25.yv": "169b847d8e9b672f81b11b1fb5ce547385fa3b590f54cfd4724b52e03567e1f8",
+      "yavo-tests/check/T-G26.yv": "93c046cc81c0ba8c3abb428ed3898a3e15f6832964ee8b69815a8cdd2a97ec7b",
+      "yavo-tests/check/T-G27.yv": "b509495a3a687db13377d8238f3af20b09cb44841c1cafe50f1079b18e2e0a85",
+      "yavo-tests/check/T-G28.yv": "010944c9b208ae830ee8e3ff0fb004b5e147d3c178ed35fb27537f6609d066ae",
+      "yavo-tests/check/T-G29.yv": "7773e66cce44c766566cc3e5521a6b64156cba1d2815b9980311ac2e3fe6fa55",
+      "yavo-tests/check/T-K1.yv": "7de1d1d1eddd3d35dc024db0e2a0f48a7e5fa26228bfc5aec497621859d48147",
+      "yavo-tests/check/T-K1p.yv": "f2fd3c742e04da8250711a7881aa1215dfac524a9e2e442ea7103539716dac96",
+      "yavo-tests/check/T-O1.yv": "c91429e0935c89dad37b518c2408e9f8a6c49717eb07fc1399a3ef7e49f9a92e",
+      "yavo-tests/check/T-O1p.yv": "d31bb5c95d5adcf5b91c857fc7792cf7c9553fc16646bfec635edb2650ffe6f2",
+      "yavo-tests/check/T-O2.yv": "58b50d6b7e09770ec511a0b5140155f35a7d38ce17cc890b43b5e63fd7702a1f",
+      "yavo-tests/check/T-O2p.yv": "374ac082c13542436d5dde3d675df6c6d9e415b6ee3fd18f1c2d47475cdbdabd",
+      "yavo-tests/check/T-O3.yv": "b447c788086ea01fc8b4783a474da0faf7cbc615a747993f9fbb127dbeaa048d",
+      "yavo-tests/check/T-O3p.yv": "66f19cbc6d5c48ea88f772b607cb26aca8b0913d6e7d0779836257a71b598bec",
+      "yavo-tests/check/T-O4.yv": "d54c53e3b60547acc63913b63ae622398fef0516aec188fe6dbfbd4838061f30",
+      "yavo-tests/check/T-O4p.yv": "7b9a4b9d97be43d57b34946ddb0fd32eced5663dbda3b52ffb9ce348933396db",
+      "yavo-tests/check/T-O5.yv": "53489b4f7e2d561f5cc182ccd0a06e519d97c3b786180d234f9b29b6f33eeb8b",
+      "yavo-tests/check/T-O5p.yv": "fac82f33ab4348c9c7b1653b268f6c67ddebc507f8ad5e6e9c667efb5f9eae2a",
+      "yavo-tests/check/T-O6.yv": "1ced58f938bf962c005794d5305fa21fd4423a9b6dd916af26c7877566d27749",
+      "yavo-tests/check/T-O7.yv": "6bc4dc398b714fc803ee16e217c523d082bc23d3e639b4d8949ca8ca52fb3a3c",
+      "yavo-tests/check/T-O8.yv": "311584f1f767332b03d317088beb7d31ef58e9398c03644cd1cba526501f6f93",
+      "yavo-tests/check/T-O8p.yv": "7938082889d554c771c3c9f9bd26d222e5ddef827d4a75abf953ed85d90eddb5",
+      "yavo-tests/check/T-V2.yv": "30fa314e1ea37c36cb94fea9b372873d935d7a509667e64f3cfc0870d13adbe0",
+      "yavo-tests/check/T-V2p.yv": "3a3503456aa394cf73e1b19f6118fefbad646adf08fc235ff62efafed67583ec",
+      "yavo-tests/check/T-V4.yv": "396f4bd191efc2d74eb19079322e6ef0099d0de2424170f3d667cfbdd0b317a1",
+      "yavo-tests/check/T-V4p.yv": "ec64817880856e3330b2182c386e778cd31ffbd1fde56215d68111f61260b3f0",
+      "yavo-tests/concurrency/T-GP1.yv": "ad79c4a36fa561bcf9aa2d102ffed246b5e8cf695f66ecf9a99cc819d27f7009",
+      "yavo-tests/concurrency/T-GP2.yv": "11a941b38b3a474995ab87c0d56834b151d10d320e184cfd67b63cbb9e1cedbe",
+      "yavo-tests/concurrency/T-GP3.yv": "1b3290f3318da52e28d47cb893c46b22d3352a744ec5d539d7ce9b46391ee440",
+      "yavo-tests/concurrency/T-GP4.yv": "8d560f140eb1dcfff769c4c3173d97ab736c6e6a5e8752f294b7cf0b3e9417f1",
+      "yavo-tests/concurrency/T-GP5.yv": "abe176758de56763334c90878f6ed73dde9c56cf11bef7027d50567e5ae36c80",
+      "yavo-tests/concurrency/T-GP6.yv": "ef595291ab443f0d5f04b4c227eabe61ef871c766173019886e07f482ad48b7b",
+      "yavo-tests/concurrency/T-GP7.yv": "67cbf9826629b9e9da6148baea67a5f8c12ca74c7bbc620d4295cbbb10f92b32",
+      "yavo-tests/concurrency/T-P1.yv": "7476d7d9c30098445f6476b20902322d42158c022e33618e8db4db139aad54e3",
+      "yavo-tests/concurrency/T-P1p.yv": "d151b7c3e04e320c8e03957553b426e41d86dcc9d28a60ec567b7237cac38210",
+      "yavo-tests/concurrency/T-P2.yv": "45b9528235017b963cee4cf04eb70d222ae6655dbd60c292f7673a3a5dfa95e3",
+      "yavo-tests/concurrency/T-P2p.yv": "4eee0787b1880a92327a73a3224905fb7032a302bc1bb2675b5c745580b0f285",
+      "yavo-tests/concurrency/T-P2s.yv": "0ff77472cf57aff23fe3343c0e5b3402e00221e6c0d771cf77ed22df5a8f4349",
+      "yavo-tests/concurrency/T-P3.yv": "f52bcdc8c68de13956a966a7438455a370718abc2c064dbf85572d433acc5156",
+      "yavo-tests/concurrency/T-P3f.yv": "3313976829a4c32bf59ecb1974c4f36f4685ead5864e7f52d7f4fb6a5647291a",
+      "yavo-tests/concurrency/T-P4.yv": "9c32b801701ede6b88ef945c1b44e5c2e63d3b0f0e93a0f81d3387259fd320aa",
+      "yavo-tests/concurrency/T-P4p.yv": "37355d8495f8f3d2c66513ef1af08343371abffdd0ba428d767acf0aaa9552a4",
+      "yavo-tests/concurrency/T-P5.yv": "b3ce802c39a69f19efe3ecb80c6621b1419e6676f8156fa0b4717c1d55b252a2",
+      "yavo-tests/concurrency/T-P5p.yv": "8a4b6d6297f8493b85d58dbca45226ed184445fe66bbc470af07e3eb47636cb6",
+      "yavo-tests/concurrency/T-P6.yv": "ea7c2601330be1f2364c023d2aad5c1f168e8d101df78e273ea04311175d670c",
+      "yavo-tests/concurrency/T-P6p.yv": "6ca220054b38e2353a6be12229ff685c4571fa843334a658a5846a5a2093ffd2",
+      "yavo-tests/concurrency/T-V5.yv": "57c0feecb6f44d8aead5378f153612fa15311c636c3680c3aa07e0860593c618",
+      "yavo-tests/fix/T-F1.fixed.yv": "9fdb1f60753f3d4decaa2d58366b2e83f34000d1468587f570d479b2b791f1df",
+      "yavo-tests/fix/T-F1.yv": "a9cb0ff5141053037daade2b09953198bab922e5aa97fc95882232ee633f9656",
+      "yavo-tests/fix/T-F2.yv": "d072970398dd60da43807b0fe059b6267c052f2f45ba4e856bc5ede66eb65164",
+      "yavo-tests/fix/T-GF1.yv": "b821aeb9a8fc31190ec77cc2aaef4e5b672c3755857200b16015bcb2f95473a1",
+      "yavo-tests/fix/T-GF2.fixed.yv": "0d0099c04afc807b42f6d7a5f5dbb2c83c1c8917550a352e10b534a453465d97",
+      "yavo-tests/fix/T-GF2.yv": "4e34fc9673a60e7902787d362af84cd6aa85208d3b83b046c0f8b168edd30a35",
+      "yavo-tests/fix/T-GF3.fixed.yv": "42f7635435915afc395e4f19ae570093b75839f4bae20d354cf2d49c29911e64",
+      "yavo-tests/fix/T-GF3.yv": "881fb8bfc0dcf12f5b6c2ca2c4af537ee3dcf61637cc3bcbe31572dc243baf54",
+      "yavo-tests/fix/T-V1.fixed.yv": "705b0dfab1ee257ad52f6abb10b460dc098959204a4079ab0adc86502a188b57",
+      "yavo-tests/fix/T-V1.yv": "2854519a6e6ec9333480fdf4c43484a22221fa9647e7e4d711c5de7439c42974",
+      "yavo-tests/fix/T-V3.yv": "04ae26125ef5696ec67e944cf9f3bb4cde74a44369a35659264af1b53245cb53",
+      "yavo-tests/report/T-GA1.json": "07e97795a06c50b8c4996795a8430c6ea2a05d64f8b34600500203603e9ce0d3",
+      "yavo-tests/report/T-GA2.json": "3fe7718b8e97d6f41bd7ea2a6cae1d6e167139e507290906141c2cd3eac95a33",
+      "yavo-tests/report/T-R1.json": "13fc48710fb02e92b85cba3206fe485f316b96509afd04ea141270941dc371b5",
+      "yavo-tests/report/T-R2.json": "95c998b84a36a0782f555c9f1e2be005290f6c45f35f49ae53a6da112562350f",
+      "yavo-tests/report/fixtures/alloc-known.yv": "3f5f3016385c6e6dcb53dc27133f3a91f64f1ee0483c73b034687c1b285caf98",
+      "yavo-tests/report/fixtures/alloc-unknown.yv": "1724e041e22f0340c4035c87de373d520d401b1c5be188d351632a40a65ac7b5",
+      "yavo-tests/run/T-D1.yv": "995ee1d0ef0346e344cc7cd06abf8ff9ca1d3225f69e1dba665748b60937e0df",
+      "yavo-tests/run/T-GR1.yv": "2dfe19999adec8c9ddace1b0ee6879ec52e8e195de6cb1d320f8d4fdb3cefe9f",
+      "yavo-tests/run/T-GR10.yv": "b72e823f5982cfc8bd0c6cb1a7a39179e20cab6a2dc30b827bdec84dc646e80d",
+      "yavo-tests/run/T-GR11.yv": "9339546c12199f2f6ac31edcdeb94b4cb1019675582374e3c5755651a507a55a",
+      "yavo-tests/run/T-GR12.yv": "88f77b7eb1b55ce7bd40e43abe56942f90c05f1b11881fe4dfc1191189376fc7",
+      "yavo-tests/run/T-GR2.yv": "87526ba8b0f0e55ca69f08c504e8ef10f8ff00900cd6a0aaf10326a7284d9ef8",
+      "yavo-tests/run/T-GR3.yv": "1a964f04fd429192bbbdeef9a03078d07778d8735521f2c934d46e79a055245b",
+      "yavo-tests/run/T-GR4.yv": "df513d36aeabbec9cb63ad143736cc3bed94eaaf8d7f61215b293b6189a5ce92",
+      "yavo-tests/run/T-GR5.yv": "b0e3dcc5b7b2b1f0acce7f013e29fd7e9923334af9608b23da0cf844dc71fce0",
+      "yavo-tests/run/T-GR6.yv": "8bc6b02b08aa0bd2c46aa829ae34c72313e6e77ede558c2b58ce88b4abab57d2",
+      "yavo-tests/run/T-GR7.yv": "17101eae45f927a368e8e86c3e1b53695ebd6c890282d1d1c33c960921ffd2f1",
+      "yavo-tests/run/T-GR8.yv": "efa3e5353259ed4865559d713b690e5023e37168d818da05e6494f2be827b0df",
+      "yavo-tests/run/T-GR9.yv": "f3d2526a7f073a6058e9913a5c1dae9e4070617c26740c95a76af93391e9029a",
+      "yavo-tests/run/T-N1a.yv": "452a0fab153a2a4b43c8268641b1fc8909bb7925098883b11fe7eb2be8cf0d35",
+      "yavo-tests/run/T-N1b.yv": "c81b634da93dcb7931b467607c3231017133f8b4c708b05ab9a508bd120e660c",
+      "yavo-tests/run/T-N1c.yv": "c931b9984da51303cc70583b807de5ef0ed0e04181a5e4f387beb46f98f4afe0",
+      "yavo-tests/run/T-N1d.yv": "53e8a6903499a8101f26836a40d349e4cb530c42ccb7448d0838df745ec8f9cc",
+      "yavo-tests/run/T-N2.yv": "0f7c8367930a2923db979cd2602c54ec9a829d460074a6a46fc20b4819ddc115",
+      "yavo-tests/run/T-S1.yv": "74d56c534e23800928cb9bc09d90f5f00b53d19b9f0f9d2ccf0457b883f6ad14",
+      "yavo-tests/run/T-S2.input.bin": "90bffc373a2f59fb08febc2e658c277ff0d3751a37abcb4ca6381a3439a08125",
+      "yavo-tests/run/T-S2.yv": "762748605b9fae6e76498663f13c675dd66a8206ef624b05e9ab014482dbff13",
+      "yavo-tests/run/T-S3.yv": "3ccb62b99658b8d416d165119c5553d83938ea8711812b0002ab0a7f7ee6e2b4"
+    }
+  },
+  "sanitizer_input_validation": {
+    "status": "passed",
+    "bootstrap_receipt": {
+      "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-optional-pop30-final/receipt.json",
+      "bytes": 4847382,
+      "sha256": "c58ff7115c36bb04d2a039d74d4003a27395621cad5a706b70bfa3d26ad13b8b"
+    },
+    "bootstrap": {
+      "status": "passed",
+      "achieved": "self-hosted-fixed-point",
+      "self_hosted": true,
+      "host": {
+        "machine": "x86_64",
+        "platform": "Linux-6.1.0-50-cloud-amd64-x86_64-with-glibc2.36"
+      },
+      "passed": 439,
+      "failed": 0,
+      "total": 439,
+      "case_counts": {
+        "panic": 28,
+        "reject": 218,
+        "run": 127,
+        "shared_unsupported": 14,
+        "unsupported": 52
+      },
+      "checks_passed": 12,
+      "checks_failed": 0,
+      "checks_skipped": 0
+    },
+    "loaded_programs": 156,
+    "lexer_unit_id": "lexer_selfhost_unit",
+    "bound_files": 788,
+    "adapter_sha256": "25caef45482027ed886404de04efb9b7c3096575a6f1b913a6002388bef8c37c",
+    "scope": "Input validation only; no GCC build or sanitizer execution was performed",
+    "receipt": {
+      "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-logs/sanitizer-inputs.json",
+      "bytes": 210960,
+      "sha256": "cefc560d526f08cd4f585f076420cf13deb87542f968d9e00622564800013dbb"
+    }
+  },
+  "independent_oracles": {
+    "receipt": {
+      "path": "/data1/workspace/github/workspace/yavo/selfhost/tests/evidence/batch30-optional-oracle/oracle-index.json",
+      "bytes": 52407,
+      "sha256": "096e47e05c90965ba2f8c62f8aba8595b34a5af55f11a828274e8aeae5e37ff2"
+    },
+    "index": {
+      "schema": "yavo-optional-oracle-index/1",
+      "baseline": "e3222d87e6220f2447ec2b9e8d458b6f02e60a21",
+      "scope": "Independent Rust stage0 checks and first-error observations for all 68 registered Batch 30 cases, with source-matched Debug and Release execution for all 15 run cases. The supplied attempt-2 stage1 check differential is historical review evidence; full fixed-point/bootstrap validation is recorded separately.",
+      "manifest_sha256": "2d3494f7bc9ce52024ab81e1abcf595541e99a2f47c233ae4f2ce239f8b1f9ce",
+      "candidates_sha256": "c35cce307fa36cd622001d8bbc80817adb3e876eb0de944959f4c966148360d6",
+      "manifest_counts": {
+        "run": 127,
+        "panic": 28,
+        "reject": 218,
+        "unsupported": 52,
+        "shared_unsupported": 14
+      },
+      "registered_cases": 68,
+      "cases": [
+        {
+          "id": "vec_pop_primitives",
+          "kind": "run",
+          "file": "run/vec_pop_primitives.yv",
+          "source_sha256": "b256da1be1aadd7e41f266380ebcaab6345ddc715c4c4138971dded6e5ea7cae",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "vec_pop_primitives",
+              "profile": "Debug",
+              "runtime": true
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "vec_pop_primitives",
+              "profile": "Release",
+              "runtime": true
+            }
+          ]
+        },
+        {
+          "id": "vec_pop_copy_nominal",
+          "kind": "run",
+          "file": "run/vec_pop_copy_nominal.yv",
+          "source_sha256": "d6da3e41e9e6e4dd8216033ce81cf51e49c16205de8bbf0f4ee58efd493f051d",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "vec_pop_copy_nominal",
+              "profile": "Release",
+              "runtime": true
+            },
+            {
+              "receipt": "stage0-syntax-debug-2.json",
+              "receipt_status": "passed",
+              "record_id": "vec_pop_copy_nominal",
+              "profile": "Debug",
+              "runtime": true
+            }
+          ]
+        },
+        {
+          "id": "vec_pop_receivers",
+          "kind": "run",
+          "file": "run/vec_pop_receivers.yv",
+          "source_sha256": "6510fb8248a2ebb35f15e66ffb9d14ff9026a27230dfaa9d44c7ef2dce506171",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "vec_pop_receivers",
+              "profile": "Debug",
+              "runtime": true
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "vec_pop_receivers",
+              "profile": "Release",
+              "runtime": true
+            }
+          ]
+        },
+        {
+          "id": "vec_pop_rewind",
+          "kind": "run",
+          "file": "run/vec_pop_rewind.yv",
+          "source_sha256": "5cec942a9c2c7402e279e0b2824e93acb15dda8597996162ed03736e75ff8f11",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "vec_pop_rewind",
+              "profile": "Release",
+              "runtime": true
+            },
+            {
+              "receipt": "stage0-syntax-debug-2.json",
+              "receipt_status": "passed",
+              "record_id": "vec_pop_rewind",
+              "profile": "Debug",
+              "runtime": true
+            }
+          ]
+        },
+        {
+          "id": "optional_copy_forms",
+          "kind": "run",
+          "file": "run/optional_copy_forms.yv",
+          "source_sha256": "0d8046f50165200867d393c9c34a8636a7f695f2df152f93dcb6a9a222a2aefc",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "optional_copy_forms",
+              "profile": "Debug",
+              "runtime": true
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "optional_copy_forms",
+              "profile": "Release",
+              "runtime": true
+            }
+          ]
+        },
+        {
+          "id": "optional_coalesce_order",
+          "kind": "run",
+          "file": "run/optional_coalesce_order.yv",
+          "source_sha256": "e416b505420f1bb9499e7be299e38c280c1653c67f1e82c0c72e3a979b079068",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "optional_coalesce_order",
+              "profile": "Debug",
+              "runtime": true
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "optional_coalesce_order",
+              "profile": "Release",
+              "runtime": true
+            }
+          ]
+        },
+        {
+          "id": "optional_some_shadow",
+          "kind": "run",
+          "file": "run/optional_some_shadow.yv",
+          "source_sha256": "626beb790b733bcb74693d8f4b3520964532e9e40235169ed497e7fb752afabf",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "optional_some_shadow",
+              "profile": "Debug",
+              "runtime": true
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "optional_some_shadow",
+              "profile": "Release",
+              "runtime": true
+            }
+          ]
+        },
+        {
+          "id": "optional_fallback_temporaries",
+          "kind": "run",
+          "file": "run/optional_fallback_temporaries.yv",
+          "source_sha256": "1ad733ed42b3f8b9d72aeb6c076b06dc89d8b6983adfe437802bef26e2ab469f",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "optional_fallback_temporaries",
+              "profile": "Debug",
+              "runtime": true
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "optional_fallback_temporaries",
+              "profile": "Release",
+              "runtime": true
+            }
+          ]
+        },
+        {
+          "id": "optional_conditional_move",
+          "kind": "run",
+          "file": "run/optional_conditional_move.yv",
+          "source_sha256": "7d2d3cb2a8f27b83fe98429dbd828456c550c65750f53072b55aac8b1f77e01e",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "optional_conditional_move",
+              "profile": "Debug",
+              "runtime": true
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "optional_conditional_move",
+              "profile": "Release",
+              "runtime": true
+            }
+          ]
+        },
+        {
+          "id": "optional_try_fallback",
+          "kind": "run",
+          "file": "run/optional_try_fallback.yv",
+          "source_sha256": "75c05bc3b3001f1ee1684c39c862509dc6ed833d28a9cb019482df89cd943c78",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "optional_try_fallback",
+              "profile": "Debug",
+              "runtime": true
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "optional_try_fallback",
+              "profile": "Release",
+              "runtime": true
+            }
+          ]
+        },
+        {
+          "id": "optional_catch_return_fallback",
+          "kind": "run",
+          "file": "run/optional_catch_return_fallback.yv",
+          "source_sha256": "7dfb161fcef0ab055c05722ea04718e737cba81a0d6f81215b6d70bdc2aee795",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "optional_catch_return_fallback",
+              "profile": "Debug",
+              "runtime": true
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "optional_catch_return_fallback",
+              "profile": "Release",
+              "runtime": true
+            }
+          ]
+        },
+        {
+          "id": "optional_catch_loop_fallback",
+          "kind": "run",
+          "file": "run/optional_catch_loop_fallback.yv",
+          "source_sha256": "ffa79310e3b7a2130dc797130deb7b3a036ef30e1bca14682e38349d80e11a81",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "optional_catch_loop_fallback",
+              "profile": "Debug",
+              "runtime": true
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "optional_catch_loop_fallback",
+              "profile": "Release",
+              "runtime": true
+            }
+          ]
+        },
+        {
+          "id": "optional_byte_context",
+          "kind": "run",
+          "file": "run/optional_byte_context.yv",
+          "source_sha256": "487d744ecc81b6cff3c4a6697a1f18387d1ca020c198d02f4c2aa15949f577cb",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "optional_byte_context",
+              "profile": "Debug",
+              "runtime": true
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "optional_byte_context",
+              "profile": "Release",
+              "runtime": true
+            }
+          ]
+        },
+        {
+          "id": "optional_none_untyped",
+          "kind": "reject",
+          "file": "reject/optional_none_untyped.yv",
+          "source_sha256": "91938d1767c7214aeb2242db8cbef89b4c49986d35ad693a2ae664a5f13c6a84",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "optional_none_untyped",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "optional_none_untyped",
+              "profile": "Release",
+              "runtime": false
+            }
+          ],
+          "stage0_first_error": {
+            "code": "E0001",
+            "line": 1,
+            "column": 25
+          }
+        },
+        {
+          "id": "optional_some_empty",
+          "kind": "reject",
+          "file": "reject/optional_some_empty.yv",
+          "source_sha256": "6f982924c79c91dc3877517cb525d973cfe3f0ff41e3b862c22874b95ed48700",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "optional_some_empty",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "optional_some_empty",
+              "profile": "Release",
+              "runtime": false
+            }
+          ],
+          "stage0_first_error": {
+            "code": "E0012",
+            "line": 1,
+            "column": 25
+          }
+        },
+        {
+          "id": "optional_some_extra",
+          "kind": "reject",
+          "file": "reject/optional_some_extra.yv",
+          "source_sha256": "1e4e3d794a60db5c925fd95080214571420b5376c7824b532fe48c0964ed25ce",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "optional_some_extra",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "optional_some_extra",
+              "profile": "Release",
+              "runtime": false
+            }
+          ],
+          "stage0_first_error": {
+            "code": "E0012",
+            "line": 1,
+            "column": 25
+          }
+        },
+        {
+          "id": "optional_some_unit",
+          "kind": "reject",
+          "file": "reject/optional_some_unit.yv",
+          "source_sha256": "7437562264b866f63aad2fa3d8e804310fb8d433e8a2d1179697d59ee04fcf2b",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "optional_some_unit",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "optional_some_unit",
+              "profile": "Release",
+              "runtime": false
+            }
+          ],
+          "stage0_first_error": {
+            "code": "E0001",
+            "line": 2,
+            "column": 30
+          }
+        },
+        {
+          "id": "optional_some_none",
+          "kind": "reject",
+          "file": "reject/optional_some_none.yv",
+          "source_sha256": "098d4f3091b7d700184d57946a73483a4e81dd545fcdf4a2045308e84541a929",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "optional_some_none",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "optional_some_none",
+              "profile": "Release",
+              "runtime": false
+            }
+          ],
+          "stage0_first_error": {
+            "code": "E0001",
+            "line": 1,
+            "column": 36
+          }
+        },
+        {
+          "id": "optional_wrong_payload",
+          "kind": "reject",
+          "file": "reject/optional_wrong_payload.yv",
+          "source_sha256": "b45b654ce5ca18762eb9c19f032387a5aea05a00f6ff1dbfc69af82dde841466",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "optional_wrong_payload",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "optional_wrong_payload",
+              "profile": "Release",
+              "runtime": false
+            }
+          ],
+          "stage0_first_error": {
+            "code": "E0001",
+            "line": 1,
+            "column": 31
+          }
+        },
+        {
+          "id": "optional_wrong_fallback",
+          "kind": "reject",
+          "file": "reject/optional_wrong_fallback.yv",
+          "source_sha256": "a16f3d5e9d7f4550898bbb9b926b0d7ac1584df5337c88204252d85c75b720e5",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "optional_wrong_fallback",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "optional_wrong_fallback",
+              "profile": "Release",
+              "runtime": false
+            }
+          ],
+          "stage0_first_error": {
+            "code": "E0001",
+            "line": 3,
+            "column": 27
+          }
+        },
+        {
+          "id": "optional_nonoptional_coalesce",
+          "kind": "reject",
+          "file": "reject/optional_nonoptional_coalesce.yv",
+          "source_sha256": "bdd8295927942456e4cb92b2be3f2ad52eaffaa1d43bfc6ba0848ae0a2f3b5d5",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "optional_nonoptional_coalesce",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "optional_nonoptional_coalesce",
+              "profile": "Release",
+              "runtime": false
+            }
+          ],
+          "stage0_first_error": {
+            "code": "E0001",
+            "line": 1,
+            "column": 25
+          }
+        },
+        {
+          "id": "optional_context_none_coalesce",
+          "kind": "reject",
+          "file": "reject/optional_context_none_coalesce.yv",
+          "source_sha256": "6258bd0c84e904c4d0cab11d62e1d9e2ba3842990873fb0b9e0ffa7f3eda03f6",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "optional_context_none_coalesce",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "optional_context_none_coalesce",
+              "profile": "Release",
+              "runtime": false
+            }
+          ],
+          "stage0_first_error": {
+            "code": "E0001",
+            "line": 1,
+            "column": 39
+          }
+        },
+        {
+          "id": "optional_return_none_coalesce",
+          "kind": "reject",
+          "file": "reject/optional_return_none_coalesce.yv",
+          "source_sha256": "ac4f39a7427cc0cd1ff852fb292aebe4fe1a62bd0cd1eac8079bb39bfe2a4393",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "optional_return_none_coalesce",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "optional_return_none_coalesce",
+              "profile": "Release",
+              "runtime": false
+            }
+          ],
+          "stage0_first_error": {
+            "code": "E0001",
+            "line": 1,
+            "column": 38
+          }
+        },
+        {
+          "id": "optional_inferred_none_coalesce",
+          "kind": "reject",
+          "file": "reject/optional_inferred_none_coalesce.yv",
+          "source_sha256": "411762b7805c97ea3e9952389b75f88357f29f77bf9022dbc24ce4c97a078b0a",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "optional_inferred_none_coalesce",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "optional_inferred_none_coalesce",
+              "profile": "Release",
+              "runtime": false
+            }
+          ],
+          "stage0_first_error": {
+            "code": "E0001",
+            "line": 1,
+            "column": 25
+          }
+        },
+        {
+          "id": "optional_is_some_arity",
+          "kind": "reject",
+          "file": "reject/optional_is_some_arity.yv",
+          "source_sha256": "81bff6fc36ef363cfd254b2dd95b8022e6948e5472248a38049325ad60b6774d",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "optional_is_some_arity",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "optional_is_some_arity",
+              "profile": "Release",
+              "runtime": false
+            }
+          ],
+          "stage0_first_error": {
+            "code": "E0012",
+            "line": 3,
+            "column": 13
+          }
+        },
+        {
+          "id": "optional_condition",
+          "kind": "reject",
+          "file": "reject/optional_condition.yv",
+          "source_sha256": "05428030f4d679f32e4fac1c5eb55cacb654d77a55d2b630e3413409033c9e9d",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "optional_condition",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "optional_condition",
+              "profile": "Release",
+              "runtime": false
+            }
+          ],
+          "stage0_first_error": {
+            "code": "E0001",
+            "line": 1,
+            "column": 16
+          }
+        },
+        {
+          "id": "vec_pop_immutable",
+          "kind": "reject",
+          "file": "reject/vec_pop_immutable.yv",
+          "source_sha256": "3a615972aa82aa16e2d5af8ac0c52e7bad99e28d644318085df01834f0b86499",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "vec_pop_immutable",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "vec_pop_immutable",
+              "profile": "Release",
+              "runtime": false
+            }
+          ],
+          "stage0_first_error": {
+            "code": "E0014",
+            "line": 3,
+            "column": 13
+          }
+        },
+        {
+          "id": "vec_pop_readonly_parameter",
+          "kind": "reject",
+          "file": "reject/vec_pop_readonly_parameter.yv",
+          "source_sha256": "b62be3904f300541a881efb2c27e7803895024a82cbc979de3a876dc30652e7f",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "vec_pop_readonly_parameter",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "vec_pop_readonly_parameter",
+              "profile": "Release",
+              "runtime": false
+            }
+          ],
+          "stage0_first_error": {
+            "code": "E0014",
+            "line": 1,
+            "column": 39
+          }
+        },
+        {
+          "id": "vec_pop_readonly_field",
+          "kind": "reject",
+          "file": "reject/vec_pop_readonly_field.yv",
+          "source_sha256": "a100850e558aeb8cb8a8ef16f860c5eafa733ec4f50df842fc896265a5b4f204",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "vec_pop_readonly_field",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "vec_pop_readonly_field",
+              "profile": "Release",
+              "runtime": false
+            }
+          ],
+          "stage0_first_error": {
+            "code": "E0014",
+            "line": 4,
+            "column": 13
+          }
+        },
+        {
+          "id": "vec_pop_arity",
+          "kind": "reject",
+          "file": "reject/vec_pop_arity.yv",
+          "source_sha256": "960f2b3b2686a7cb6e3b2b1470c104eca63640c4fbb9d61cab933d2ee9be5377",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "vec_pop_arity",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "vec_pop_arity",
+              "profile": "Release",
+              "runtime": false
+            }
+          ],
+          "stage0_first_error": {
+            "code": "E0012",
+            "line": 3,
+            "column": 13
+          }
+        },
+        {
+          "id": "vec_pop_borrowed_argument",
+          "kind": "reject",
+          "file": "reject/vec_pop_borrowed_argument.yv",
+          "source_sha256": "a9fc0a9fb51aaeea0db631041851b5ce2ff95cfb1ebf62c13d05e052c55aaa14",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "vec_pop_borrowed_argument",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "vec_pop_borrowed_argument",
+              "profile": "Release",
+              "runtime": false
+            }
+          ],
+          "stage0_first_error": {
+            "code": "E0102",
+            "line": 7,
+            "column": 21
+          }
+        },
+        {
+          "id": "vec_pop_reserved_argument",
+          "kind": "reject",
+          "file": "reject/vec_pop_reserved_argument.yv",
+          "source_sha256": "b88f275375a19c65d9253da2951b5f045d29ba79976dd4a8258a143a00ba8d6c",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "vec_pop_reserved_argument",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "vec_pop_reserved_argument",
+              "profile": "Release",
+              "runtime": false
+            }
+          ],
+          "stage0_first_error": {
+            "code": "E0403",
+            "line": 3,
+            "column": 17
+          }
+        },
+        {
+          "id": "vec_pop_after_move",
+          "kind": "reject",
+          "file": "reject/vec_pop_after_move.yv",
+          "source_sha256": "4426c05aa0eb4121326a4ad21bfc772a1255310e632154a4dff654da038417fa",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "vec_pop_after_move",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "vec_pop_after_move",
+              "profile": "Release",
+              "runtime": false
+            }
+          ],
+          "stage0_first_error": {
+            "code": "E0402",
+            "line": 4,
+            "column": 13
+          }
+        },
+        {
+          "id": "optional_coalesce_after_move",
+          "kind": "reject",
+          "file": "reject/optional_coalesce_after_move.yv",
+          "source_sha256": "11656368b05587d4eaae4288632b30f2f1fe9e6ec5c5915e8edbd0c5e4794c99",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "optional_coalesce_after_move",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "optional_coalesce_after_move",
+              "profile": "Release",
+              "runtime": false
+            }
+          ],
+          "stage0_first_error": {
+            "code": "E0402",
+            "line": 4,
+            "column": 13
+          }
+        },
+        {
+          "id": "optional_some_shadow_variable",
+          "kind": "reject",
+          "file": "reject/optional_some_shadow_variable.yv",
+          "source_sha256": "a57cdc2fd757a45fe266567b1999f896dbe83babc127fa77a1748f90c0f2f15c",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "optional_some_shadow_variable",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "optional_some_shadow_variable",
+              "profile": "Release",
+              "runtime": false
+            }
+          ],
+          "stage0_first_error": {
+            "code": "E0001",
+            "line": 3,
+            "column": 17
+          }
+        },
+        {
+          "id": "optional_missing_return",
+          "kind": "reject",
+          "file": "reject/optional_missing_return.yv",
+          "source_sha256": "bfee992b86670b2c81b566ea41d302f8d0fb50e2d5254f72a38e1933adf46403",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "optional_missing_return",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "optional_missing_return",
+              "profile": "Release",
+              "runtime": false
+            }
+          ],
+          "stage0_first_error": {
+            "code": "E0013",
+            "line": 1,
+            "column": 22
+          }
+        },
+        {
+          "id": "optional_byte_implicit",
+          "kind": "reject",
+          "file": "reject/optional_byte_implicit.yv",
+          "source_sha256": "b7e995b24db43d78e5b8aa1c3cae8ea60af718b21853eb72861c8f9659f0f0c0",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "optional_byte_implicit",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "optional_byte_implicit",
+              "profile": "Release",
+              "runtime": false
+            }
+          ],
+          "stage0_first_error": {
+            "code": "E0001",
+            "line": 1,
+            "column": 32
+          }
+        },
+        {
+          "id": "optional_byte_coalesce",
+          "kind": "reject",
+          "file": "reject/optional_byte_coalesce.yv",
+          "source_sha256": "307d3175b54bf6ae22b99f4840c02e18a53eef0292cf04ec66104db59f0452f0",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "optional_byte_coalesce",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "optional_byte_coalesce",
+              "profile": "Release",
+              "runtime": false
+            }
+          ],
+          "stage0_first_error": {
+            "code": "E0001",
+            "line": 1,
+            "column": 32
+          }
+        },
+        {
+          "id": "result_byte_implicit",
+          "kind": "reject",
+          "file": "reject/result_byte_implicit.yv",
+          "source_sha256": "79b28f8e588605963fa90b1994f5a794c7469d7bafb1206fa67a73effc5d4b7d",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "result_byte_implicit",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "result_byte_implicit",
+              "profile": "Release",
+              "runtime": false
+            }
+          ],
+          "stage0_first_error": {
+            "code": "E0001",
+            "line": 1,
+            "column": 37
+          }
+        },
+        {
+          "id": "result_byte_return_implicit",
+          "kind": "reject",
+          "file": "reject/result_byte_return_implicit.yv",
+          "source_sha256": "7af118aede1afc4b26e47be1603953f749ff3d6949b61f2cb8faa556bcd158e1",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "result_byte_return_implicit",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "result_byte_return_implicit",
+              "profile": "Release",
+              "runtime": false
+            }
+          ],
+          "stage0_first_error": {
+            "code": "E0001",
+            "line": 1,
+            "column": 36
+          }
+        },
+        {
+          "id": "unsupported_optional_compare",
+          "kind": "shared_unsupported",
+          "file": "unsupported/unsupported_optional_compare.yv",
+          "source_sha256": "a24dca8818e73c98f2663683e2a1bb44fb310736ebb4a7de5aa13e3b3db67004",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "unsupported_optional_compare",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "unsupported_optional_compare",
+              "profile": "Release",
+              "runtime": false
+            }
+          ],
+          "stage0_first_error": {
+            "code": "U0001",
+            "line": 4,
+            "column": 13
+          }
+        },
+        {
+          "id": "unsupported_optional_test_scalar",
+          "kind": "shared_unsupported",
+          "file": "unsupported/unsupported_optional_test_scalar.yv",
+          "source_sha256": "295d8c0b3bdd9a153e46112f240f786822b8d161831e4ccc47b0e0129f5af6cb",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "unsupported_optional_test_scalar",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "unsupported_optional_test_scalar",
+              "profile": "Release",
+              "runtime": false
+            }
+          ],
+          "stage0_first_error": {
+            "code": "U0001",
+            "line": 3,
+            "column": 13
+          }
+        },
+        {
+          "id": "unsupported_vec_pop_temporary",
+          "kind": "shared_unsupported",
+          "file": "unsupported/unsupported_vec_pop_temporary.yv",
+          "source_sha256": "8c7a91a719a1a27e8d7b4e59d0764f36c4eccfc19cc8ff91d33c2d3eef040ace",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "unsupported_vec_pop_temporary",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "unsupported_vec_pop_temporary",
+              "profile": "Release",
+              "runtime": false
+            }
+          ],
+          "stage0_first_error": {
+            "code": "U0001",
+            "line": 2,
+            "column": 21
+          }
+        },
+        {
+          "id": "unsupported_vec_pop_nonvector",
+          "kind": "shared_unsupported",
+          "file": "unsupported/unsupported_vec_pop_nonvector.yv",
+          "source_sha256": "5531e65fba81c2733a5e92440d99ec9f4e13b036565dc3a0f161f7bcc469d1cc",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "unsupported_vec_pop_nonvector",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "unsupported_vec_pop_nonvector",
+              "profile": "Release",
+              "runtime": false
+            }
+          ],
+          "stage0_first_error": {
+            "code": "U0001",
+            "line": 3,
+            "column": 13
+          }
+        },
+        {
+          "id": "unsupported_vec_pop_string",
+          "kind": "unsupported",
+          "file": "unsupported/unsupported_vec_pop_string.yv",
+          "source_sha256": "d38d2c297207535739d4a7e065419a88a86f030d24a50034994f25d62b94f863",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "unsupported_vec_pop_string",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "unsupported_vec_pop_string",
+              "profile": "Release",
+              "runtime": false
+            }
+          ]
+        },
+        {
+          "id": "unsupported_vec_pop_owned_struct",
+          "kind": "unsupported",
+          "file": "unsupported/unsupported_vec_pop_owned_struct.yv",
+          "source_sha256": "833817ecb1be509dbad02e4df674e54e89b7cd4c3163e3eb13479c5a43a34532",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "unsupported_vec_pop_owned_struct",
+              "profile": "Release",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-syntax-debug-2.json",
+              "receipt_status": "passed",
+              "record_id": "unsupported_vec_pop_owned_struct",
+              "profile": "Debug",
+              "runtime": false
+            }
+          ]
+        },
+        {
+          "id": "unsupported_optional_string",
+          "kind": "unsupported",
+          "file": "unsupported/unsupported_optional_string.yv",
+          "source_sha256": "f17c6689ad1861386ac60f61677b7a37b0a0acaf8cde348c716a1fa72b23dd78",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "unsupported_optional_string",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "unsupported_optional_string",
+              "profile": "Release",
+              "runtime": false
+            }
+          ]
+        },
+        {
+          "id": "unsupported_optional_vec",
+          "kind": "unsupported",
+          "file": "unsupported/unsupported_optional_vec.yv",
+          "source_sha256": "558aab180277522782a4c305976741f8808269d3eddb63668f191d0bd4e2b75a",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "unsupported_optional_vec",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "unsupported_optional_vec",
+              "profile": "Release",
+              "runtime": false
+            }
+          ]
+        },
+        {
+          "id": "unsupported_optional_owned_struct",
+          "kind": "unsupported",
+          "file": "unsupported/unsupported_optional_owned_struct.yv",
+          "source_sha256": "20a18104bcb278d7a8627d7c0e862515f4ebc44a452f62b17542bc145492352f",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "unsupported_optional_owned_struct",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "unsupported_optional_owned_struct",
+              "profile": "Release",
+              "runtime": false
+            }
+          ]
+        },
+        {
+          "id": "unsupported_optional_str",
+          "kind": "unsupported",
+          "file": "unsupported/unsupported_optional_str.yv",
+          "source_sha256": "c986b7334849cdeab4c8ea971aee6dd543324cf35e0162dab7c77bceed82bee3",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "unsupported_optional_str",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "unsupported_optional_str",
+              "profile": "Release",
+              "runtime": false
+            }
+          ]
+        },
+        {
+          "id": "unsupported_optional_unit",
+          "kind": "unsupported",
+          "file": "unsupported/unsupported_optional_unit.yv",
+          "source_sha256": "d0d9bacb87e570089eaaf0633d356e9ef93c599fd510c8c4d7a87ece47714fc0",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "unsupported_optional_unit",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "unsupported_optional_unit",
+              "profile": "Release",
+              "runtime": false
+            }
+          ]
+        },
+        {
+          "id": "unsupported_optional_nested",
+          "kind": "unsupported",
+          "file": "unsupported/unsupported_optional_nested.yv",
+          "source_sha256": "1d18cdff59cc27a744de14efad70124e815dc1cad1ccddc7cc335b65c258246e",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "unsupported_optional_nested",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "unsupported_optional_nested",
+              "profile": "Release",
+              "runtime": false
+            }
+          ]
+        },
+        {
+          "id": "unsupported_optional_nested_context",
+          "kind": "unsupported",
+          "file": "unsupported/unsupported_optional_nested_context.yv",
+          "source_sha256": "64df36f028299366b689d1ebbf625914991b976637f6b9833f6836c11f79a98d",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "unsupported_optional_nested_context",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "unsupported_optional_nested_context",
+              "profile": "Release",
+              "runtime": false
+            }
+          ]
+        },
+        {
+          "id": "unsupported_optional_field",
+          "kind": "unsupported",
+          "file": "unsupported/unsupported_optional_field.yv",
+          "source_sha256": "a6b37d932febddf5fca1cc0b17277678d1fd524177a340cd784885581b249ab9",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "unsupported_optional_field",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "unsupported_optional_field",
+              "profile": "Release",
+              "runtime": false
+            }
+          ]
+        },
+        {
+          "id": "unsupported_optional_vec_element",
+          "kind": "unsupported",
+          "file": "unsupported/unsupported_optional_vec_element.yv",
+          "source_sha256": "b2bb14773c250e356cea90a0f3a47b4bae62b3edd9dc6e66b0134ae13e00fd72",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "unsupported_optional_vec_element",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "unsupported_optional_vec_element",
+              "profile": "Release",
+              "runtime": false
+            }
+          ]
+        },
+        {
+          "id": "unsupported_optional_result_success",
+          "kind": "unsupported",
+          "file": "unsupported/unsupported_optional_result_success.yv",
+          "source_sha256": "4cbb912ad61ed23bd7a71bee4f3b7ab5bb15e8c6e078279308ad634c54f6f743",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "unsupported_optional_result_success",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "unsupported_optional_result_success",
+              "profile": "Release",
+              "runtime": false
+            }
+          ]
+        },
+        {
+          "id": "unsupported_optional_result_payload",
+          "kind": "unsupported",
+          "file": "unsupported/unsupported_optional_result_payload.yv",
+          "source_sha256": "cf4b2e7976774d52b1bb19df59741f30063df9e9759d2bfa431b8e1ecd7279c2",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "unsupported_optional_result_payload",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "unsupported_optional_result_payload",
+              "profile": "Release",
+              "runtime": false
+            }
+          ]
+        },
+        {
+          "id": "unsupported_optional_if_let",
+          "kind": "unsupported",
+          "file": "unsupported/unsupported_optional_if_let.yv",
+          "source_sha256": "357c47a2c1c9a0ff07193f3129751de45ce5d5f627cc85b12d00d2813cee80ff",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "unsupported_optional_if_let",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "unsupported_optional_if_let",
+              "profile": "Release",
+              "runtime": false
+            }
+          ]
+        },
+        {
+          "id": "unsupported_optional_match",
+          "kind": "unsupported",
+          "file": "unsupported/unsupported_optional_match.yv",
+          "source_sha256": "ee0b1d186a0c258b18a3043ef3dcf092470fe20ed1352a141deb9d3049c50648",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "unsupported_optional_match",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "unsupported_optional_match",
+              "profile": "Release",
+              "runtime": false
+            }
+          ]
+        },
+        {
+          "id": "unsupported_optional_coalesce_return",
+          "kind": "unsupported",
+          "file": "unsupported/unsupported_optional_coalesce_return.yv",
+          "source_sha256": "8265ad2a1082c79009d9867a082b953b19ff139ee71a618211c1e1e99e049bbd",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "unsupported_optional_coalesce_return",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "unsupported_optional_coalesce_return",
+              "profile": "Release",
+              "runtime": false
+            }
+          ]
+        },
+        {
+          "id": "unsupported_optional_coalesce_break",
+          "kind": "unsupported",
+          "file": "unsupported/unsupported_optional_coalesce_break.yv",
+          "source_sha256": "f2fdf09f3a25bfed20aa703c756228a13732d568cab6ebc232a82e972386a9d3",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "unsupported_optional_coalesce_break",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "unsupported_optional_coalesce_break",
+              "profile": "Release",
+              "runtime": false
+            }
+          ]
+        },
+        {
+          "id": "unsupported_optional_coalesce_continue",
+          "kind": "unsupported",
+          "file": "unsupported/unsupported_optional_coalesce_continue.yv",
+          "source_sha256": "2666637b23db5c05db4e2153107e3256e2a27b5a095a16d680878c13c9f067d9",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "unsupported_optional_coalesce_continue",
+              "profile": "Debug",
+              "runtime": false
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "unsupported_optional_coalesce_continue",
+              "profile": "Release",
+              "runtime": false
+            }
+          ]
+        },
+        {
+          "id": "vec_pop_basic",
+          "kind": "run",
+          "file": "run/vec_pop_basic.yv",
+          "source_sha256": "f9566d147e9c04e4a97153cc74aa7fbbf79fd5d6498df8a2b50e7e11f65e2446",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-matrix-debug-1.json",
+              "receipt_status": "failed",
+              "record_id": "vec_pop_basic",
+              "profile": "Debug",
+              "runtime": true
+            },
+            {
+              "receipt": "stage0-matrix-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "vec_pop_basic",
+              "profile": "Release",
+              "runtime": true
+            }
+          ],
+          "promotion_from": "unsupported_vec_pop"
+        },
+        {
+          "id": "result_vec_raw_context",
+          "kind": "run",
+          "file": "run/result_vec_raw_context.yv",
+          "source_sha256": "3611333d392f58da5843b74cedb94c1ee7cc6c2dba5f53035b413a9436ae9e11",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-final-context-debug-1.json",
+              "receipt_status": "passed",
+              "record_id": "result_vec_raw_context",
+              "profile": "Debug",
+              "runtime": true
+            },
+            {
+              "receipt": "stage0-final-context-release-1.json",
+              "receipt_status": "passed",
+              "record_id": "result_vec_raw_context",
+              "profile": "Release",
+              "runtime": true
+            }
+          ]
+        },
+        {
+          "id": "result_vec_implicit_empty",
+          "kind": "reject",
+          "file": "reject/result_vec_implicit_empty.yv",
+          "source_sha256": "b0990c15b6f5b4825aac53952434dbc378038a34926645517a4214d4e2fcf92a",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-final-context-debug-1.json",
+              "receipt_status": "passed",
+              "record_id": "result_vec_implicit_empty",
+              "profile": "Debug",
+              "runtime": false
+            }
+          ],
+          "stage0_first_error": {
+            "code": "E0001",
+            "line": 1,
+            "column": 40
+          }
+        },
+        {
+          "id": "unsupported_optional_none_result_hint",
+          "kind": "unsupported",
+          "file": "unsupported/unsupported_optional_none_result_hint.yv",
+          "source_sha256": "3f951d20f3d4d8a964f0fcf29e1d791fcf6c1ca95f44f6bbca2e78909d099dad",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-final-context-debug-1.json",
+              "receipt_status": "passed",
+              "record_id": "unsupported_optional_none_result_hint",
+              "profile": "Debug",
+              "runtime": false
+            }
+          ]
+        },
+        {
+          "id": "unsupported_optional_none_owned_hint",
+          "kind": "unsupported",
+          "file": "unsupported/unsupported_optional_none_owned_hint.yv",
+          "source_sha256": "26effd10e1246246e7847251c64868728f4c8f5397948630f870e1b031ad3281",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-final-context-debug-1.json",
+              "receipt_status": "passed",
+              "record_id": "unsupported_optional_none_owned_hint",
+              "profile": "Debug",
+              "runtime": false
+            }
+          ]
+        },
+        {
+          "id": "unsupported_optional_print",
+          "kind": "shared_unsupported",
+          "file": "unsupported/unsupported_optional_print.yv",
+          "source_sha256": "29faf749879b106e1ce9e833f63aaccfd059d2d0a6b3ba7515d3f6dc6d4c8398",
+          "stage0_proofs": [
+            {
+              "receipt": "stage0-final-context-debug-1.json",
+              "receipt_status": "passed",
+              "record_id": "unsupported_optional_print",
+              "profile": "Debug",
+              "runtime": false
+            }
+          ],
+          "stage0_first_error": {
+            "code": "U0001",
+            "line": 3,
+            "column": 13
+          }
+        }
+      ],
+      "evidence": {
+        "stage0-matrix-debug-1.json": "6ac753dc84ade2616e588c4f1ba6e12cbd4b388e279745c2304c5f8021079187",
+        "stage0-matrix-release-1.json": "2ed78453daac7ae3d974ae85bf9dd473c1dcc228ca6292fb5111c6247b073a22",
+        "stage0-syntax-debug-2.json": "53915b1763097a4631c5c6547f099436ed7016e4f05e6b9523b77dd369d32ec6",
+        "stage0-final-context-debug-1.json": "9dc76151f810caf33baa2877d735d9f529b47d63721f3e722b4215fd1c8abe3b",
+        "stage0-final-context-release-1.json": "748d612e2bb7fa3c94c2e2563beb804dde960020352d9a39ac58c49fb8c89c4d",
+        "candidates.json": "c35cce307fa36cd622001d8bbc80817adb3e876eb0de944959f4c966148360d6",
+        "exploratory-probes.json": "dbbba8c3cfd61280d17b112d5d1845d92390a266338e4dfbc30b3e2db36e5d91",
+        "driver-history.json": "b27d27bc74261b1d0078d46ba1796b04e16b09b36606d99d1bbf17e0fed83a6a",
+        "candidate-history.json": "ba651118254dc28372d37732f8aeb0ce268c17b591a71fe4e57c5ffa7d2a2215",
+        "stage1-attempt2-checks.json": "25ccb8220796ccc2d0eec44239ab54c1e81fc8e5f83fcee7b0f669bbfc729d76"
+      },
+      "stage1_check_snapshot": {
+        "receipt": "stage1-attempt2-checks.json",
+        "checked": 68,
+        "code_passed": 67,
+        "known_stale_cases": {
+          "unsupported_optional_print": "This supplied attempt-2 snapshot predates the already-applied direct-Optional-print U0001 fix."
+        },
+        "unexpected_code_failures": []
+      },
+      "stage0_runtime_final_source_profiles": 30,
+      "reference_oracle_complete": true
+    }
+  },
+  "pop_migration": {
+    "status": "passed",
+    "baseline_commit": "e3222d87e6220f2447ec2b9e8d458b6f02e60a21",
+    "baseline_codegen_sha256": "eda8ad3144c3c919ccc12121010dbedc876d9cebf6e02bfc74d60a0809b7e92d",
+    "current_codegen": {
+      "path": "/data1/workspace/github/workspace/yavo/selfhost/codegen.yv",
+      "bytes": 91160,
+      "sha256": "e1c74a94e775947cdfd04237f6bfe7c114edf3d475b8a1ada820f5509a059615"
+    },
+    "deleted_copy_helpers": [
+      "truncInts",
+      "truncBools",
+      "truncLocals",
+      "truncTemps",
+      "truncLoops"
+    ],
+    "replaced_call_sites": 14,
+    "baseline_sites": [
+      {
+        "function": "discardTemps",
+        "field": "temps",
+        "mark": "start",
+        "line": 299,
+        "source": "if g.temps.len() > start { g.temps = truncTemps(g.temps, start) }"
+      },
+      {
+        "function": "releaseLocks",
+        "field": "locks",
+        "mark": "start",
+        "line": 427,
+        "source": "if g.locks.len() > start { g.locks = truncInts(g.locks, start) }"
+      },
+      {
+        "function": "callValue",
+        "field": "inoutLocks",
+        "mark": "inoutMark",
+        "line": 695,
+        "source": "if g.inoutLocks.len() > inoutMark { g.inoutLocks = truncInts(g.inoutLocks, inoutMark) }"
+      },
+      {
+        "function": "methodValue",
+        "field": "accessLocks",
+        "mark": "mark",
+        "line": 759,
+        "source": "if g.accessLocks.len() > mark { g.accessLocks = truncInts(g.accessLocks, mark) }"
+      },
+      {
+        "function": "methodValue",
+        "field": "reservations",
+        "mark": "reservations",
+        "line": 775,
+        "source": "g.reservations = truncInts(g.reservations, reservations)"
+      },
+      {
+        "function": "methodValue",
+        "field": "reservations",
+        "mark": "reservations",
+        "line": 786,
+        "source": "g.reservations = truncInts(g.reservations, reservations)"
+      },
+      {
+        "function": "userCatchValue",
+        "field": "locals",
+        "mark": "count",
+        "line": 919,
+        "source": "if g.locals.len() > count { g.locals = truncLocals(g.locals, count) }"
+      },
+      {
+        "function": "binaryValue",
+        "field": "binaryLocks",
+        "mark": "locks",
+        "line": 1078,
+        "source": "if g.binaryLocks.len() > locks { g.binaryLocks = truncInts(g.binaryLocks, locks) }"
+      },
+      {
+        "function": "indexValue",
+        "field": "accessLocks",
+        "mark": "mark",
+        "line": 1324,
+        "source": "if g.accessLocks.len() > mark { g.accessLocks = truncInts(g.accessLocks, mark) }"
+      },
+      {
+        "function": "sliceValue",
+        "field": "accessLocks",
+        "mark": "mark",
+        "line": 1367,
+        "source": "if g.accessLocks.len() > mark { g.accessLocks = truncInts(g.accessLocks, mark) }"
+      },
+      {
+        "function": "placeOf",
+        "field": "reservations",
+        "mark": "reservations",
+        "line": 1533,
+        "source": "g.reservations = truncInts(g.reservations, reservations)"
+      },
+      {
+        "function": "popLoop",
+        "field": "exits",
+        "mark": "frame.exitBase",
+        "line": 1574,
+        "source": "g.exits = truncBools(g.exits, frame.exitBase)"
+      },
+      {
+        "function": "popLoop",
+        "field": "loopStates",
+        "mark": "index",
+        "line": 1575,
+        "source": "g.loopStates = truncLoops(g.loopStates, index)"
+      },
+      {
+        "function": "emitBlock",
+        "field": "locals",
+        "mark": "localCount",
+        "line": 1594,
+        "source": "if g.locals.len() > localCount { g.locals = truncLocals(g.locals, localCount) }"
+      }
+    ],
+    "current_sites": [
+      {
+        "function": "discardTemps",
+        "field": "temps",
+        "mark": "start",
+        "line": 262,
+        "source": "while g.temps.len() > start { let _ = g.temps.pop() }"
+      },
+      {
+        "function": "releaseLocks",
+        "field": "locks",
+        "mark": "start",
+        "line": 390,
+        "source": "while g.locks.len() > start { let _ = g.locks.pop() }"
+      },
+      {
+        "function": "callValue",
+        "field": "inoutLocks",
+        "mark": "inoutMark",
+        "line": 659,
+        "source": "while g.inoutLocks.len() > inoutMark { let _ = g.inoutLocks.pop() }"
+      },
+      {
+        "function": "methodValue",
+        "field": "accessLocks",
+        "mark": "mark",
+        "line": 741,
+        "source": "while g.accessLocks.len() > mark { let _ = g.accessLocks.pop() }"
+      },
+      {
+        "function": "methodValue",
+        "field": "reservations",
+        "mark": "reservations",
+        "line": 757,
+        "source": "while g.reservations.len() > reservations { let _ = g.reservations.pop() }"
+      },
+      {
+        "function": "methodValue",
+        "field": "reservations",
+        "mark": "reservations",
+        "line": 768,
+        "source": "while g.reservations.len() > reservations { let _ = g.reservations.pop() }"
+      },
+      {
+        "function": "userCatchValue",
+        "field": "locals",
+        "mark": "count",
+        "line": 988,
+        "source": "while g.locals.len() > count { let _ = g.locals.pop() }"
+      },
+      {
+        "function": "binaryValue",
+        "field": "binaryLocks",
+        "mark": "locks",
+        "line": 1147,
+        "source": "while g.binaryLocks.len() > locks { let _ = g.binaryLocks.pop() }"
+      },
+      {
+        "function": "indexValue",
+        "field": "accessLocks",
+        "mark": "mark",
+        "line": 1435,
+        "source": "while g.accessLocks.len() > mark { let _ = g.accessLocks.pop() }"
+      },
+      {
+        "function": "sliceValue",
+        "field": "accessLocks",
+        "mark": "mark",
+        "line": 1478,
+        "source": "while g.accessLocks.len() > mark { let _ = g.accessLocks.pop() }"
+      },
+      {
+        "function": "placeOf",
+        "field": "reservations",
+        "mark": "reservations",
+        "line": 1647,
+        "source": "while g.reservations.len() > reservations { let _ = g.reservations.pop() }"
+      },
+      {
+        "function": "popLoop",
+        "field": "exits",
+        "mark": "frame.exitBase",
+        "line": 1688,
+        "source": "while g.exits.len() > frame.exitBase { let _ = g.exits.pop() }"
+      },
+      {
+        "function": "popLoop",
+        "field": "loopStates",
+        "mark": "index",
+        "line": 1689,
+        "source": "while g.loopStates.len() > index { let _ = g.loopStates.pop() }"
+      },
+      {
+        "function": "emitBlock",
+        "field": "locals",
+        "mark": "localCount",
+        "line": 1708,
+        "source": "while g.locals.len() > localCount { let _ = g.locals.pop() }"
+      }
+    ],
+    "scope": "Structural source evidence; no performance benchmark or owned Optional claim"
+  },
+  "native_ci": {
+    "status": "pending",
+    "required_platforms": [
+      "Linux x86_64",
+      "Windows x86_64",
+      "macOS arm64"
+    ]
+  },
+  "independent_gcc": {
+    "status": "not_run",
+    "note": "Only the sanitizer input loader ran locally; actual GCC ASan/UBSan is a native CI gate"
+  },
+  "limits": [
+    "Copy Optional only; owned/str/nested/Result-combined/field-container Optional remain outside the subset.",
+    "Ordinary lazy value ?? is included; jump-form ??, if-let and Optional match are excluded.",
+    "No new agent-cost measurement, performance benchmark or additional application acceptance is claimed."
+  ],
+  "summarizer": {
+    "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-logs/summarize_local.py",
+    "bytes": 21728,
+    "sha256": "74464be480c52104b1e6cbd0e5d39a80a1d94f21f95ec5b5f74cf48941273314"
+  }
+}

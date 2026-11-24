@@ -1,0 +1,31 @@
+fn source(present: bool) -> ?int {
+    if present { return 7 }
+    return none
+}
+fn accept(value: ?int) -> int { return value ?? 99 }
+fn main() {
+    let inferred = some(0)
+    let empty: ?int = none
+    println(inferred.isSome())
+    println(empty.isNone())
+    println(inferred ?? 9)
+    println(empty ?? -1)
+    var assigned: ?int = 1
+    assigned = some(2)
+    println(assigned ?? -1)
+    assigned = none
+    println(assigned.isNone())
+    assigned = 3
+    let copied = assigned
+    println(assigned ?? 0)
+    println(copied ?? 0)
+    println(source(true) ?? 8)
+    println(source(false) ?? 8)
+    println(accept(5))
+    println(accept(none))
+    println(accept(some(6)))
+    let contextual: int = none ?? 4
+    println(contextual)
+    let wrapped: ?int = some(1) ?? 2
+    println(wrapped ?? 0)
+}

@@ -1,18 +1,18 @@
-# Yavo 交接文档（2026-11-24，第二十九批：Result 与真实词法错误传播）
+# Yavo 交接文档（2026-11-24，第三十批：Copy Optional 与原地退栈）
 
-给下一个会话：先读第 1、2、10、13 节及 docs/self-hosting.md、selfhost/README.md 再开工。第十二至第二十六批的原始记录在 `history/handoff-batches-2026-11-21-to-23.md`，第六至第十一批在 `history/handoff-batches-2026-11-19-to-21.md`。
+给下一个会话：先读第 1、2、10、14 节及 docs/self-hosting.md、selfhost/README.md 再开工。第十二至第二十六批的原始记录在 `history/handoff-batches-2026-11-21-to-23.md`，第六至第十一批在 `history/handoff-batches-2026-11-19-to-21.md`。
 
 ## 1. 一句话状态
 
-**SH-2 引导子集自举固定点已完成，下一阶段是 SH-3 编译器接替与 SH-4 真实 CLI 交付。** `4739ffc` 的 [CI run 45150424099](https://github.com/msly/yavo/actions/runs/45150424099) 三平台原生固定点通过，6/6 jobs 成功；[独立原生索引](compiler/validation/selfhost-fixed-point-native-2026-11-23.json) 保存 run、job/step 与工件元数据，原 `67794d9` 本机回执不改写。
+**SH-2 引导子集固定点已完成；第三十批实现 Copy Optional、Vec.pop 与普通值 `??`，并把编译器五类栈的 14 个截断点改为原地退栈。** 支持 int/byte/bool/Copy struct/enum 的 `?T`、some/none、边界处隐式包装、isSome/isNone；pop 沿用可写 local/field/inout place 与借用/预留锁。拥有型 Optional、嵌套与容器组合保持 U0001。
 
-**第二十九批实现用户函数 Result/try，并把真实 `lex → compile → main` 改为拥有型 Diagnostic 传播。** 支持 `T ! E`、成功包装、`ok`/`err`、`try` 和终止式有名/匿名 `catch`；拥有载荷、实参临时值、部分初始化 Vec/struct 在提前退出时清理。原 335 个用例保留，新增 37 个，当前 **372 cases、140 个可执行输入**。Rust 与 selfhost 同时修复 catch 表达式内 break 漏入返回完备性分析的旧缺陷，18 个 E0013 回归及 6 个合法边界保留独立证据。
+当前语料 **439 cases、155 个可执行输入**，净新增 67 例并原样晋升旧 pop fixture；本批 68 项先由 Rust 独立定标，15 个运行程序的 Debug/Release 共 30 次执行通过。完整 Rust Debug/Release 各 **145/0/1**，冻结 129 项仍为 **124 pass、3 unsupported、2 superseded**。本批没有改 Rust 编译器、运行时或冻结规格。
 
-本批 Rust Debug/Release 全量各 **145/0/1**，冻结 129 项维持 **124 pass、3 unsupported、2 superseded**。最终完整自举 **372/372 cases、12/12 checks、0 skip**，包含真实 lexer 单元的两代 C 一致与 Debug/Release 堆块检查；固定点 C 为 623,204 字节，两代 Linux 二进制均为 293,640 字节。420 份用例 C 与 560 个模式二进制已复验哈希，见[本机回执](compiler/validation/selfhost-result-2026-11-24.json)。
+本机完整自举 **439/439 cases、12/12 checks、0 skip**；stage2/stage3 的 C（668,302 字节）和 Linux 二进制（308,504 字节）分别逐字节一致。真实 lexer 两代 C 与 Debug/Release 正常返回堆检查通过。详见[第三十批本机回执](compiler/validation/selfhost-optional-pop-2026-11-24.json)及[独立 oracle](selfhost/tests/evidence/batch30-optional-oracle/oracle-index.json)。本批三平台原生 CI 尚待提交后确认。
 
-实现 `e355cb3` 的 [CI run 45226925936](https://github.com/msly/yavo/actions/runs/45226925936) **6/6 jobs 全部通过**。三平台各 372/372、12/12、0 skip，两代 C/二进制一致，真实 lexer 两模式及 CLI 各 213 次执行通过。Linux GCC ASan/UBSan 通过 141 程序，stage2 自编译、372 checks、140 emits、8 个坏输入；Windows/macOS 选定 Rust 套件各模式分别为 81/0/1、84/0/1。三份原生归档已下载并核验，共重哈希 35,461 个文件、核对 19,908 条嵌入流记录，见[最终原生索引](compiler/validation/batch29-native-2026-11-24.json)。
+上一批 `e355cb3` 的 [run 45226925936](https://github.com/msly/yavo/actions/runs/45226925936) 已六项成功并完成三平台归档审计，见[第二十九批原生索引](compiler/validation/batch29-native-2026-11-24.json)。本批源码的验证单独记录，不沿用旧 run 作为新源码证明。
 
-Rust stage0 仍是日常编译器；本批改动 Rust 检查器，运行时和冻结规格未变。SH-4 已有首个真实应用 `examples/test-summary/`，第二十八批 [run 45174913978](https://github.com/msly/yavo/actions/runs/45174913978) 六项通过、每原生平台 213/213 次应用执行并完成归档核验，见第 12 节；阶段进度仍为 **1/3 个应用**。第六轮文档实验仍 0 会话、0 交付，真实 usage 资格未取得。
+Rust stage0 仍是日常编译器，SH-3 尚未接替；SH-4 保持 **1/3 个独立应用**。首个 `examples/test-summary/` 已通过三平台各 213 次执行。下一批以 `for` 支持和真实遍历迁移为主，随后格式化、源模块；第六轮文档实验仍 0 会话，真实 usage 资格未取得。
 
 ## 2. 仓库与环境
 
@@ -185,6 +185,7 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 | 14–15 | Arena/Id；多文件源模块 | 已实现；包依赖与程序锁文件待做 |
 | 已落地 | 自举固定点 | `67794d9`：引导子集编译自身，stage2.c = stage3.c，335/335 例，stage2 与 stage1 全用例一致（第 11 节） |
 | 已落地 | Result 与真实词法传播 | 第二十九批：372 个自举用例，用户 Result/try 与拥有型 Diagnostic；真实 lexer 正常返回清理门（第 13 节） |
+| 当前批次 | Copy Optional 与原地退栈 | 第三十批：439 个语料用例，14 处 pop 替换五个截断 helper（第 14 节） |
 | 冷启动实验 | 五轮 | 第五轮两语言各 24/24 首编、公开、隐藏及结构通过；受控操作/时间比 1.0455/1.2051，token 缺失；4 会话、12 题（第 22 节） |
 | 已落地 | 三平台 CI | `073003d` 的 run 45002067581 六项全通过：Linux 全量、Windows/macOS 选定原生套件、独立 ASan+UBSan，以及两项实验检查（第 23 节） |
 | 已落地 | 第五项 CI | `0bad3d2` 的 run 44996118634 通过，核验 1,344 条判定、96 个源码阶段、16 项结构审查和冻结题包 |
@@ -195,9 +196,9 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 
 ## 10. 下一个会话的第一步
 
-1. 检查 Git 状态、最新提交与 CI；先读本批第 13 节，再读 [自举路线](docs/self-hosting.md)、[selfhost 说明](selfhost/README.md)及首个[应用契约](examples/test-summary/SPEC.md)。已有固定点、Result 词法传播与首个 CLI 的工作无需从头重做。
-2. **下一批是 Optional 与 `Vec.pop`，落地目标是删除五类复制式 trunc 辅助函数。** 五类内部栈的元素均为 Copy；最小迁移需要零参 pop、可写字段/inout 接收者、推断的 `?T` 返回值及显式丢弃，用 `while v.len() > n { let _ = v.pop() }` 原地截断。先对齐 stage0 的空/非空语义及借用/预留锁，再替换 `truncInts`、`truncBools`、`truncLocals`、`truncTemps`、`truncLoops`，保留 cleanTemps/cleanLocals 先清理再删除记录的顺序。拥有元素的 pop 若开放，必须另验 Optional 丢弃、载荷转移和提前退出的恰好一次析构；未开放则明确 U0001。完整 Optional 表层语法和泛型枚举不是删除 helper 的前置条件。验收真实编译器路径、固定点、stage1/stage2 差分及独立 sanitizer，不凭 helper 删除推断性能提升。
-3. 随后按 `for` → 插值/`format` → 源模块顺序扩大引导子集。parser/types/codegen 的多错误恢复、Result 字段/容器、临时 String view 装 Result 均不夹带进下一批；每项必须有实际需求和独立语义验收。
+1. 检查 Git 状态、最新提交与 CI；先读本批第 14 节，再读 [自举路线](docs/self-hosting.md)、[selfhost 说明](selfhost/README.md)及首个[应用契约](examples/test-summary/SPEC.md)。固定点、Result 词法传播、Copy Optional/pop 与首个 CLI 已有独立记录。
+2. **下一批是 `for` 与真实遍历迁移。** 最小范围先考虑 int/byte 半开区间及稳定 Vec 局部/参数的单绑定 Copy 元素只读遍历；迁移 lexer_test 的 32 次 token 构造、512 次前导零、16 轮 Diagnostic 清理及 parser.store 的 Vec[int] 复制。先独立对齐端点/容器单次求值、循环变量只读、容器循环期间禁止修改/移动、continue 步进、break/return/try 的清理。范围表达式里的 catch break 属于外层循环，须在建立新 loop frame 前求值。拥有元素、可变借用遍历、临时/字段容器和双绑定等能力按实际需求另定，未开放则 U0001。
+3. 然后按插值/`format` → 源模块顺序扩大引导子集。拥有型 Optional/pop、if let/match、跳转式 `??`、Result 字段/容器与多错误恢复不自动夹带进 for 批次；每项先有实际需求和独立语义验收。
 4. SH-4 应用线继续用 stage0，后续选择结构化文本校验和多文件依赖/索引工具；用真实阻塞决定最小 `yavo test`、文件/进程 API、依赖锁定与分发的顺序。第一款应用完整入口是 `python3 tools/ci/test_summary.py`，本机 Python 路径见第 2 节。
 5. 自举改动保持 stage2.c = stage3.c、stage2 与 stage1 全用例一致；Linux 的 `tools/ci/selfhost_sanitize.py` 同时要求生成程序门和编译器自身门通过。保持冻结规格、Debug/Release 和三平台原生回归；不要同时运行共用临时目录的两条 cargo test。
 6. 第六轮文档实验有可计量环境才恢复，随后执行 60 题 pilot 及正式成本研究；当前工程推进不受它阻塞。
@@ -236,6 +237,16 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - Rust 完整 Debug/Release 各 145/0/1、冻结 124/3/2 通过；本机自举 372/372、12/12、0 skip 记录在 `compiler/validation/selfhost-result-2026-11-24.json`。原摘要的 implementation_commit=null 及 native pending 保留原时点语义，后续 `e355cb3` 的 run 45226925936 六项成功与归档核验写入 `compiler/validation/batch29-native-2026-11-24.json`，685 个本机测试输入路径已与该提交逐项对照。
 - Windows 归档中 36 对 reject-new/reject-existing 记录内容（含耗时 0.0）相同。离线审计器原“记录内容唯一”假设误报，改为 3,140 条嵌入/保存记录多重集完全一致、逐份核验实际流；首失败与完整证明已保留于最终索引。三平台最终审计通过；未改编译器或重跑 CI 来处理这项审计器问题。
 - SH-3 仍进行中，SH-4 为 1/3；下一步 Optional/pop 的具体范围见第 10 节。
+
+## 14. 第三十批：Copy Optional 与编译器原地退栈（2026-11-24）
+
+- 基线 `e3222d8`。Copy Optional 使用 has/val C 布局；支持 int、byte、bool、非拥有型 struct 和无载荷 enum。pop 对可写 local/field/inout place 定位一次，沿用 readable/writable/预留锁，再按空或非空返回；结果不保留 Vec 借用。
+- 普通值 `??` 右结合，RHS 惰性求值且不隐式包装；分支内清理新增临时值，合并移动状态。私有 Hint 表示上下文中的额外 Optional 层，仅检查类型，禁止虚拟值进入 C。`let x:?int=none??1` 为 E0001；`let x:?int=some(1)??2` 合法；实际嵌套 Optional 为 U0001。
+- 分离 raw context 与 fit，修正原 subset 对 Result 字面量的误接受：`?byte=1`、`byte ! E` 的 `return 1`、`Vec[int] ! E` 的 `return []` 均按 Rust 报 E0001；some/ok 构造器和显式转换提供相应直接上下文。Rust 实现未改。
+- 删除五个 trunc helper，14 处改为 while + pop。`cleanTemps`、`cleanLocals`、`readable`、`writable`、`takeValue`、`refPlace`、`recordExit` 与基线逐函数字节相同；锁栈保留外层 mark，循环状态先复制再缩短。消除保留前缀的重复复制，尚无性能测量结论。
+- 正式语料 439：127 run、28 panic、218 reject、52 unsupported、14 shared。净新增 67 例，原 unsupported_vec_pop 原字节晋升为 vec_pop_basic；本批覆盖 68 项，15 个 run 的独立 Rust Debug/Release 共 30 次执行通过。首轮输入修正与诊断位置差异保留在独立 oracle 中，不按 selfhost 输出修改预期。
+- 拥有型/String/Vec/str/unit Optional、嵌套/字段/容器/Result 组合、owned pop、if let、match、跳转式 ?? 均继续明确 U0001；Optional 比较和直接打印与 stage0 一样为 U0001。
+- 完整本机与原生验收结果见第 1 节及本批验收索引。SH-3 未接替、SH-4 保持 1/3，下一步见第 10 节。
 
 ## 历史批次（已移出）
 

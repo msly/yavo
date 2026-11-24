@@ -1,0 +1,86 @@
+{
+  "schema": "yavo-batch30-stage0-oracle/1",
+  "baseline": "e3222d87e6220f2447ec2b9e8d458b6f02e60a21",
+  "profile": "Release",
+  "inputs": {
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-stage0/yavo": "bcbbbf91215b81ad628329320ca9b18b0c924f9735a006af2597d77d4640c2c0",
+    "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig": "58959f01285c05a74276f09327b551d42ed6006bf325a78dc661a024e314987b",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/candidates.json": "c35cce307fa36cd622001d8bbc80817adb3e876eb0de944959f4c966148360d6",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/verify_stage0.py": "a3dd6d233d53468dc3e2b68e2373eecc43ff6e29830cd837f842268044f9c157",
+    "/data1/workspace/github/workspace/yavo/compiler/runtime/yavo_rt.h": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+    "/data1/workspace/github/workspace/yavo/compiler/toolchain.lock": "a9bbe83e644b0e1cee19c8dba8b5157eaed3e9ddc71b96d8aab2b2d2bb15f53c",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_vec_raw_context.yv": "3611333d392f58da5843b74cedb94c1ee7cc6c2dba5f53035b413a9436ae9e11",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/final-context-release-1/result_vec_raw_context/program.c": "8c3060a5d95378719b3ba45f1b173a448a3b157e01c87b718a873289393ed5e2",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/final-context-release-1/result_vec_raw_context/program": "232482dcaa368d25b7c24ae6acf647961cf570648d600fbc32f5b438b4dcea79"
+  },
+  "environment": {
+    "YAVO_ALLOC_CHECK": "1",
+    "YAVO_NO_CACHE": "1"
+  },
+  "records": [
+    {
+      "id": "result_vec_raw_context",
+      "kind": "run",
+      "file": "run/result_vec_raw_context.yv",
+      "source": "fn inferred() -> Vec[int] ! int { return [1] }\nfn explicit() -> Vec[int] ! int { return ok([]) }\nfn main() {\n    let first = inferred() catch _ { return }\n    let second = explicit() catch _ { return }\n    println(first.len())\n    println(second.len())\n}\n",
+      "source_sha256": "3611333d392f58da5843b74cedb94c1ee7cc6c2dba5f53035b413a9436ae9e11",
+      "passed": true,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-stage0/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_vec_raw_context.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_vec_raw_context.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"3611333d392f58da5843b74cedb94c1ee7cc6c2dba5f53035b413a9436ae9e11\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.002
+      },
+      "first_error": null,
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-stage0/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_vec_raw_context.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/final-context-release-1/result_vec_raw_context/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/final-context-release-1/result_vec_raw_context/program.c",
+          "--json",
+          "--release"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_vec_raw_context.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"3611333d392f58da5843b74cedb94c1ee7cc6c2dba5f53035b413a9436ae9e11\",\"warning_count\":0}\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.229
+      },
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/final-context-release-1/result_vec_raw_context/program"
+        ],
+        "exit_code": 0,
+        "stdout": "1\n0\n",
+        "stderr": "",
+        "timed_out": false,
+        "seconds": 0.001
+      },
+      "expected": {
+        "exit_code": 0,
+        "stdout": "1\n0\n",
+        "stderr": ""
+      },
+      "generated_c_sha256": "8c3060a5d95378719b3ba45f1b173a448a3b157e01c87b718a873289393ed5e2",
+      "binary_sha256": "232482dcaa368d25b7c24ae6acf647961cf570648d600fbc32f5b438b4dcea79"
+    }
+  ],
+  "status": "passed",
+  "inputs_changed": [],
+  "passed": 1,
+  "total": 1,
+  "kinds": {
+    "run": 1
+  }
+}

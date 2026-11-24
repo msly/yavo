@@ -1,0 +1,27 @@
+enum Mark {
+    Cold
+    Hot
+}
+struct Position {
+    x: int
+    y: int
+}
+struct Token {
+    position: Position
+    mark: Mark
+}
+fn fallback() -> Token { return Token{position: Position{x: -1, y: -1}, mark: .Cold} }
+fn main() {
+    var tokens = [Token{position: Position{x: 2, y: 3}, mark: .Cold}, Token{position: Position{x: 5, y: 7}, mark: .Hot}]
+    let last = tokens.pop() ?? fallback()
+    println(last.position.x + last.position.y)
+    println(last.mark == .Hot)
+    let first = tokens.pop() ?? fallback()
+    println(first.position.x + first.position.y)
+    println(first.mark == .Cold)
+    println(tokens.pop().isNone())
+    var marks: Vec[Mark] = [.Cold, .Hot]
+    println((marks.pop() ?? .Cold) == .Hot)
+    println((marks.pop() ?? .Hot) == .Cold)
+    println((marks.pop() ?? .Hot) == .Hot)
+}

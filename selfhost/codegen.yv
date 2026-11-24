@@ -22,6 +22,19 @@ struct Value {
     transient: bool = false
 }
 
+// Expected types can acquire extra Optional layers while checking ??, even
+// when the actual expression independently infers a supported Copy value.
+// These layers are hints only: symbolic values never reach C materialization.
+struct Hint {
+    ty: Type
+    extra: int = 0
+}
+
+struct HintedValue {
+    value: Value
+    extra: int = 0
+}
+
 struct Place {
     ty: Type
     name: String
@@ -75,56 +88,6 @@ struct Generator {
     nesting: int = 0
     outputRoot: int = -1
     loopCondition: bool = false
-}
-
-fn truncInts(values: Vec[int], count: int) -> Vec[int] {
-    var out: Vec[int] = []
-    var i = 0
-    while i < count {
-        out.push(values[i])
-        i += 1
-    }
-    return out
-}
-
-fn truncBools(values: Vec[bool], count: int) -> Vec[bool] {
-    var out: Vec[bool] = []
-    var i = 0
-    while i < count {
-        out.push(values[i])
-        i += 1
-    }
-    return out
-}
-
-fn truncLocals(values: Vec[Local], count: int) -> Vec[Local] {
-    var out: Vec[Local] = []
-    var i = 0
-    while i < count {
-        out.push(values[i])
-        i += 1
-    }
-    return out
-}
-
-fn truncTemps(values: Vec[Temporary], count: int) -> Vec[Temporary] {
-    var out: Vec[Temporary] = []
-    var i = 0
-    while i < count {
-        out.push(values[i])
-        i += 1
-    }
-    return out
-}
-
-fn truncLoops(values: Vec[LoopState], count: int) -> Vec[LoopState] {
-    var out: Vec[LoopState] = []
-    var i = 0
-    while i < count {
-        out.push(values[i])
-        i += 1
-    }
-    return out
 }
 
 fn require(reg: Registry, ts: Vec[Token], token: int, actual: Type, expected: Type) {
@@ -296,7 +259,7 @@ fn cleanTemps(g: inout Generator, reg: Registry, start: int) {
 
 fn discardTemps(g: inout Generator, reg: Registry, start: int) {
     cleanTemps(&g, reg, start)
-    if g.temps.len() > start { g.temps = truncTemps(g.temps, start) }
+    while g.temps.len() > start { let _ = g.temps.pop() }
 }
 
 fn localName(local: Local) -> String {
@@ -424,7 +387,7 @@ fn view(v: Value) -> String {
 }
 
 fn releaseLocks(g: inout Generator, start: int) {
-    if g.locks.len() > start { g.locks = truncInts(g.locks, start) }
+    while g.locks.len() > start { let _ = g.locks.pop() }
 }
 
 fn localIndex(g: Generator, ts: Vec[Token], token: int) -> int {
@@ -507,6 +470,7 @@ fn lineColumn(ts: Vec[Token], token: int) -> String {
 }
 
 fn printValue(g: inout Generator, reg: Registry, ts: Vec[Token], token: int, arg: Value, output: int) {
+    if arg.ty.kind == .Optional { fail(ts, token, "U0001", "printing an Optional is outside this subset") }
     let target = join3("(&o_", decimal(output), ", ")
     if arg.ty.kind == .Int {
         put(&g, "yv_out_i64")
@@ -692,7 +656,7 @@ fn callValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: E
     let expression = join5("sh_fn_", decimal(index), "(", args, ")")
     let result = resolve(reg, ts, f.result)
     releaseLocks(&g, locks)
-    if g.inoutLocks.len() > inoutMark { g.inoutLocks = truncInts(g.inoutLocks, inoutMark) }
+    while g.inoutLocks.len() > inoutMark { let _ = g.inoutLocks.pop() }
     if result.kind == .Unit {
         emit(&g, join2(expression, ";"))
         return Value{ty: result, name: "".toString()}
@@ -739,6 +703,24 @@ fn methodValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
             fail(ts, e.token, "U0001", "enum payload construction is outside this subset")
         }
     }
+    if name == "pop" {
+        let target = placeOf(&g, p, ts, reg, e.left, 0)
+        readable(g, ts, target.root, e.token)
+        if !target.mutable { fail(ts, e.token, "E0014", "cannot modify a read-only value") }
+        if e.argCount != 0 { fail(ts, e.token, "E0012", "pop takes no arguments") }
+        if target.ty.kind != .Vec { fail(ts, e.token, "U0001", "pop requires a Vec in this subset") }
+        writable(g, ts, target.root, e.token)
+        let elem = element(target.ty)
+        let ty = optional(reg, ts, e.token, elem)
+        let result = typedValue(&g, reg, ty, join3("(", cType(ty), "){0}"))
+        emit(&g, join3("if ((", target.name, ").len > 0) {"))
+        emit(&g, join3("(", target.name, ").len--;"))
+        put(&g, join5(result.name, ".val = ((", cType(elem), " *)(", target.name))
+        emit(&g, join3(").ptr)[(", target.name, ").len];"))
+        emit(&g, join2(result.name, ".has = true;"))
+        emit(&g, "}")
+        return result
+    }
     if name == "push" || name == "reserve" {
         let target = placeOf(&g, p, ts, reg, e.left, 0)
         readable(g, ts, target.root, e.token)
@@ -756,7 +738,7 @@ fn methodValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
             g.accessLocks.push(target.root)
             let count = emitExpected(&g, p, ts, reg, argId, primitive(.Int))
             basic(reg, ts, e.token, count.ty, .Int)
-            if g.accessLocks.len() > mark { g.accessLocks = truncInts(g.accessLocks, mark) }
+            while g.accessLocks.len() > mark { let _ = g.accessLocks.pop() }
             let elem = element(target.ty)
             put(&g, join3("yv_vec_reserve(&(", target.name, "), (int64_t)sizeof("))
             put(&g, cType(elem))
@@ -772,7 +754,7 @@ fn methodValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
                 if arg.root == target.root {
                     fail(ts, e.token, "E0403", "push argument still borrows the receiver's root")
                 }
-                g.reservations = truncInts(g.reservations, reservations)
+                while g.reservations.len() > reservations { let _ = g.reservations.pop() }
                 put(&g, join5("yv_string_push(&(", target.name, "), ", view(arg), ", "))
                 put(&g, lineColumn(ts, e.token))
                 emit(&g, ");")
@@ -783,7 +765,7 @@ fn methodValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
                 // Keep the receiver reserved until consuming the argument has checked
                 // its source root; storing the value transfers ownership to the slot.
                 let taken = takeValue(&g, reg, ts, p.expressions[argId].token, arg)
-                g.reservations = truncInts(g.reservations, reservations)
+                while g.reservations.len() > reservations { let _ = g.reservations.pop() }
                 let et = cType(elem)
                 put(&g, join5("*(", et, " *)yv_vec_push_slot(&(", target.name, "), (int64_t)sizeof("))
                 put(&g, et)
@@ -818,11 +800,98 @@ fn methodValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
         }
         fail(ts, e.token, "U0001", "vector method is outside the selfhost subset")
     }
+    if base.ty.kind == .Optional && (name == "isSome" || name == "isNone") {
+        if e.argCount != 0 { fail(ts, e.token, "E0012", "this Optional method takes no arguments") }
+        var code = join3("(", base.name, ").has")
+        if name == "isNone" { code = join3("(!", code, ")") }
+        return scalar(&g, .Bool, code)
+    }
     if base.ty.kind == .Named && reg.entries[base.ty.decl].kind == .Struct {
         fail(ts, e.token, "E0010", "unknown struct method")
     }
     fail(ts, e.token, "U0001", "method is outside the selfhost subset")
     return Value{ty: primitive(.Unit), name: "".toString()}
+}
+
+fn wrapOptional(g: inout Generator, reg: Registry, ty: Type, value: Value) -> Value {
+    return typedValue(&g, reg, ty,
+        join5("(", cType(ty), "){ .has = true, .val = ", value.name, " }"))
+}
+
+fn liftHint(reg: Registry, expected: Hint) -> Hint {
+    let ty = expected.ty
+    if expected.extra == 0 && (ty.kind == .Int || ty.kind == .Byte || ty.kind == .Bool ||
+        (ty.kind == .Named && !owned(reg, ty))) {
+        return Hint{ty: Type{kind: .Optional, elementKind: ty.kind, elementDecl: ty.decl}}
+    }
+    return Hint{ty: ty, extra: expected.extra + 1}
+}
+
+fn peelHint(expected: Hint) -> Hint {
+    if expected.extra > 0 { return Hint{ty: expected.ty, extra: expected.extra - 1} }
+    if expected.ty.kind == .Optional { return Hint{ty: element(expected.ty)} }
+    return Hint{ty: primitive(.Unknown)}
+}
+
+fn hintName(reg: Registry, ts: Vec[Token], hint: Hint) -> String {
+    var name = String{}
+    var i = 0
+    while i < hint.extra {
+        name.push("?")
+        i += 1
+    }
+    name.push(describe(reg, ts, hint.ty))
+    return name
+}
+
+fn requireHint(reg: Registry, ts: Vec[Token], token: int, actual: HintedValue, expected: Hint) {
+    if actual.extra != expected.extra || !same(actual.value.ty, expected.ty) {
+        let found = Hint{ty: actual.value.ty, extra: actual.extra}
+        fail(ts, token, "E0001", join4("expected ", hintName(reg, ts, expected), ", found ", hintName(reg, ts, found)))
+    }
+}
+
+fn someConstructor(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression, expected: Hint) -> Value {
+    if e.argCount != 1 { fail(ts, e.token, "E0012", "some requires one argument") }
+    let shaped = emitHint(&g, p, ts, reg, p.lists[e.argStart], peelHint(expected))
+    if shaped.extra > 0 { fail(ts, e.token, "U0001", "nested or owned Optional payloads are outside this subset") }
+    let arg = copyValue(shaped.value)
+    if arg.ty.kind == .Unit { fail(ts, e.token, "E0001", "some requires a value") }
+    let ty = optional(reg, ts, e.token, arg.ty)
+    return wrapOptional(&g, reg, ty, arg)
+}
+
+fn coalesceValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression, expected: Hint) -> Value {
+    var context = Hint{ty: primitive(.Unknown)}
+    if expected.extra > 0 || (expected.ty.kind != .Unknown && expected.ty.kind != .Unit) {
+        context = liftHint(reg, expected)
+    }
+    let shaped = emitHint(&g, p, ts, reg, e.left, context)
+    if shaped.extra == 0 && shaped.value.ty.kind != .Optional {
+        fail(ts, e.token, "E0001", "the left side of ?? requires an Optional value")
+    }
+    let inner = peelHint(Hint{ty: shaped.value.ty, extra: shaped.extra})
+    if shaped.extra > 0 {
+        // Check the exact RHS type before rejecting a symbolic Optional. This
+        // preserves E0001 for `let x: ?int = none ?? 1` without admitting ??int.
+        let rhs = emitHint(&g, p, ts, reg, e.right, inner)
+        requireHint(reg, ts, e.token, rhs, inner)
+        fail(ts, e.token, "U0001", "nested or owned Optional values are outside this subset")
+    }
+    let lhs = copyValue(shaped.value)
+    let output = typedValue(&g, reg, inner.ty, join3("(", lhs.name, ").val"))
+    let before = movedState(g)
+    let temps = g.temps.len()
+    emit(&g, join3("if (!(", lhs.name, ").has) {"))
+    let rhs = emitHint(&g, p, ts, reg, e.right, inner)
+    requireHint(reg, ts, e.token, rhs, inner)
+    emit(&g, join4(output.name, " = ", rhs.value.name, ";"))
+    discardTemps(&g, reg, temps)
+    let after = movedState(g)
+    let joined = joinStates(before, after)
+    restoreState(&g, joined)
+    emit(&g, "}")
+    return output
 }
 
 // Moving a payload into a Result leaves the original owner empty. The inactive
@@ -916,7 +985,7 @@ fn userCatchValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry,
     let flow = emitBlock(&g, p, ts, reg, e.argStart, e.argCount)
     if flow.falls { fail(ts, e.extra, "E0601", "this catch block can reach its closing brace") }
     cleanLocals(&g, reg, count)
-    if g.locals.len() > count { g.locals = truncLocals(g.locals, count) }
+    while g.locals.len() > count { let _ = g.locals.pop() }
     restoreState(&g, before)
     emit(&g, "}")
     return resultPayload(&g, reg, taken)
@@ -1032,7 +1101,7 @@ fn operandHint(reg: Registry, ty: Type, fallback: Type) -> Type {
 fn binaryValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression, expected: Type) -> Value {
     let op = ts[e.token].text.clone()
     if op == "&&" || op == "||" {
-        let lhs = emitExpected(&g, p, ts, reg, e.left, primitive(.Bool))
+        let lhs = emitContext(&g, p, ts, reg, e.left, primitive(.Bool))
         basic(reg, ts, e.token, lhs.ty, .Bool)
         let output = scalar(&g, .Bool, lhs.name)
         let before = movedState(g)
@@ -1040,7 +1109,7 @@ fn binaryValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
         if op == "&&" { emit(&g, join3("if (", output.name, ") {")) } else {
             emit(&g, join3("if (!", output.name, ") {"))
         }
-        let rhs = emitExpected(&g, p, ts, reg, e.right, primitive(.Bool))
+        let rhs = emitContext(&g, p, ts, reg, e.right, primitive(.Bool))
         basic(reg, ts, e.token, rhs.ty, .Bool)
         emit(&g, join4(output.name, " = ", rhs.name, ";"))
         discardTemps(&g, reg, temps)
@@ -1062,20 +1131,20 @@ fn binaryValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
         // C. Type inference is bidirectional; run-time evaluation stays left
         // to right, including a literal-expression panic before RHS effects.
         let before = take(&g.out)
-        rhs = emitExpected(&g, p, ts, reg, e.right, context)
+        rhs = emitContext(&g, p, ts, reg, e.right, context)
         let rightCode = take(&g.out)
         g.out = before
         let hint = operandHint(reg, rhs.ty, context)
-        lhs = emitExpected(&g, p, ts, reg, e.left, hint)
+        lhs = emitContext(&g, p, ts, reg, e.left, hint)
         g.out.push(rightCode)
     } else {
-        lhs = emitExpected(&g, p, ts, reg, e.left, context)
+        lhs = emitContext(&g, p, ts, reg, e.left, context)
         let locks = g.binaryLocks.len()
         if lhs.root >= 0 { g.binaryLocks.push(lhs.root) }
         var hint = operandHint(reg, lhs.ty, context)
         if shift { hint = primitive(.Unknown) }
-        rhs = emitExpected(&g, p, ts, reg, e.right, hint)
-        if g.binaryLocks.len() > locks { g.binaryLocks = truncInts(g.binaryLocks, locks) }
+        rhs = emitContext(&g, p, ts, reg, e.right, hint)
+        while g.binaryLocks.len() > locks { let _ = g.binaryLocks.pop() }
     }
     if shift {
         requireInteger(ts, e.token, lhs.ty)
@@ -1088,6 +1157,9 @@ fn binaryValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
     }
     require(reg, ts, e.token, rhs.ty, lhs.ty)
     if comparison {
+        if lhs.ty.kind == .Optional {
+            fail(ts, e.token, "U0001", "Optional comparison is outside this subset")
+        }
         if lhs.ty.kind == .Unit || (lhs.ty.kind == .Bool && !equality) {
             fail(ts, e.token, "E0001", "operator is not defined for this type")
         }
@@ -1106,13 +1178,52 @@ fn emitExpr(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, id: i
     return emitExpected(&g, p, ts, reg, id, primitive(.Unknown))
 }
 
-fn emitExpected(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, id: int, expected: Type) -> Value {
+// Context guides literals and constructors. Wrapping is applied only at the
+// assignment/argument/return boundary, not inside some, parentheses or ?? RHS.
+fn emitHint(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, id: int, expected: Hint) -> HintedValue {
     if g.nesting >= 256 {
         fail(ts, p.expressions[id].token, "U0001", "selfhost lowering nesting limit (256) exceeded")
     }
     g.nesting += 1
-    let result = expressionValue(&g, p, ts, reg, id, expected)
+    let result = hintedExpression(&g, p, ts, reg, id, expected)
     g.nesting -= 1
+    return result
+}
+
+fn hintedExpression(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, id: int, expected: Hint) -> HintedValue {
+    let e = p.expressions[id]
+    if e.kind == .Paren { return emitHint(&g, p, ts, reg, e.left, expected) }
+    if e.kind == .None {
+        if expected.extra > 0 {
+            return HintedValue{value: Value{ty: expected.ty, name: String{}}, extra: expected.extra}
+        }
+        if expected.ty.kind != .Optional { fail(ts, e.token, "E0001", "none requires an Optional context") }
+        let value = typedValue(&g, reg, expected.ty, join3("(", cType(expected.ty), "){0}"))
+        return HintedValue{value: value}
+    }
+    if e.kind == .Call && ts[e.token].text == "some" &&
+        functionIndex(p, ts, e.token) < 0 && localIndex(g, ts, e.token) < 0 {
+        return HintedValue{value: someConstructor(&g, p, ts, reg, e, expected)}
+    }
+    if e.kind == .Coalesce {
+        return HintedValue{value: coalesceValue(&g, p, ts, reg, e, expected)}
+    }
+    var context = expected.ty
+    if expected.extra > 0 { context = primitive(.Unknown) }
+    return HintedValue{value: expressionValue(&g, p, ts, reg, id, context)}
+}
+
+fn emitContext(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, id: int, expected: Type) -> Value {
+    let result = emitHint(&g, p, ts, reg, id, Hint{ty: expected})
+    if result.extra > 0 { fail(ts, p.expressions[id].token, "U0001", "this Optional value is outside the selfhost subset") }
+    return copyValue(result.value)
+}
+
+fn emitExpected(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, id: int, expected: Type) -> Value {
+    let result = emitContext(&g, p, ts, reg, id, expected)
+    if expected.kind == .Optional && same(result.ty, element(expected)) {
+        return wrapOptional(&g, reg, expected, result)
+    }
     if expected.kind == .Result && !same(result.ty, expected) {
         let ok = resultOk(reg, expected)
         if ok.kind != .Unit && same(result.ty, ok) {
@@ -1321,7 +1432,7 @@ fn indexValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: 
     if base.root >= 0 { g.accessLocks.push(base.root) }
     let index = emitExpected(&g, p, ts, reg, e.right, primitive(.Int))
     requireInteger(ts, e.token, index.ty)
-    if g.accessLocks.len() > mark { g.accessLocks = truncInts(g.accessLocks, mark) }
+    while g.accessLocks.len() > mark { let _ = g.accessLocks.pop() }
     let at = join5(", ", index.name, ", ", lineColumn(ts, e.token), ")")
     if stringLike(base.ty) {
         // A text read is a checked UTF-8 byte read, immediately copied away
@@ -1364,7 +1475,7 @@ fn sliceValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: 
     basic(reg, ts, e.token, start.ty, .Int)
     let end = emitExpected(&g, p, ts, reg, e.extra, primitive(.Int))
     basic(reg, ts, e.token, end.ty, .Int)
-    if g.accessLocks.len() > mark { g.accessLocks = truncInts(g.accessLocks, mark) }
+    while g.accessLocks.len() > mark { let _ = g.accessLocks.pop() }
     var code = join5("yv_str_slice(", view(base), ", ", start.name, ", ")
     code.push(end.name)
     code.push(", ")
@@ -1380,14 +1491,11 @@ fn sliceValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: 
 
 fn expressionValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, id: int, expected: Type) -> Value {
     let e = p.expressions[id]
-    var hint = expected
-    if hint.kind == .Result { hint = resultOk(reg, hint) }
     if e.kind == .Unit { return Value{ty: primitive(.Unit), name: "".toString()} }
-    if e.kind == .Paren { return emitExpected(&g, p, ts, reg, e.left, expected) }
     if e.kind == .Number {
         let number = parseDecimal(ts[e.token].text)
         if number < 0 { fail(ts, e.token, "E0003", "integer literal is outside int range") }
-        if hint.kind == .Byte {
+        if expected.kind == .Byte {
             if number > 255 {
                 fail(ts, e.token, "E0003", "integer literal is outside byte range")
             }
@@ -1417,7 +1525,7 @@ fn expressionValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry
     if e.kind == .Unary {
         let child = p.expressions[unparenthesized(p, e.left)]
         let minus = ts[e.token].text == "-"
-        if minus && child.kind == .Number && hint.kind == .Byte {
+        if minus && child.kind == .Number && expected.kind == .Byte {
             let number = parseDecimal(ts[child.token].text)
             if number != 0 {
                 fail(ts, e.token, "E0003", "negative literal is outside byte range")
@@ -1427,9 +1535,9 @@ fn expressionValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry
         if minus && child.kind == .Number && minimumMagnitude(ts[child.token].text) {
             return scalar(&g, .Int, "INT64_MIN")
         }
-        var context = hint
+        var context = expected
         if !minus { context = primitive(.Bool) }
-        let arg = emitExpected(&g, p, ts, reg, e.left, context)
+        let arg = emitContext(&g, p, ts, reg, e.left, context)
         if !minus {
             basic(reg, ts, e.token, arg.ty, .Bool)
             return scalar(&g, .Bool, join3("(!", arg.name, ")"))
@@ -1437,10 +1545,16 @@ fn expressionValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry
         basic(reg, ts, e.token, arg.ty, .Int)
         return scalar(&g, .Int, join5("yv_neg_i64(", arg.name, ", ", lineColumn(ts, e.token), ")"))
     }
-    if e.kind == .Binary { return binaryValue(&g, p, ts, reg, e, hint) }
-    if e.kind == .Variant { return enumValue(&g, reg, ts, e.token, hint) }
+    if e.kind == .Binary { return binaryValue(&g, p, ts, reg, e, expected) }
+    if e.kind == .Variant {
+        var hint = expected
+        if hint.kind == .Result { hint = resultOk(reg, hint) } else if hint.kind == .Optional {
+            hint = element(hint)
+        }
+        return enumValue(&g, reg, ts, e.token, hint)
+    }
     if e.kind == .Construct { return constructValue(&g, p, ts, reg, e) }
-    if e.kind == .Vector { return vectorValue(&g, p, ts, reg, e, hint) }
+    if e.kind == .Vector { return vectorValue(&g, p, ts, reg, e, expected) }
     if e.kind == .Index { return indexValue(&g, p, ts, reg, e) }
     if e.kind == .Slice { return sliceValue(&g, p, ts, reg, e) }
     if e.kind == .Field { return fieldValue(&g, p, ts, reg, e) }
@@ -1530,7 +1644,7 @@ fn placeOf(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, id: in
         g.reservations.push(base.root)
         let index = emitExpected(&g, p, ts, reg, e.right, primitive(.Int))
         requireInteger(ts, e.token, index.ty)
-        g.reservations = truncInts(g.reservations, reservations)
+        while g.reservations.len() > reservations { let _ = g.reservations.pop() }
         let n = g.counter
         g.counter += 1
         let et = cType(shape.ty)
@@ -1571,8 +1685,8 @@ fn popLoop(g: inout Generator) -> LoopExit {
         continues.push(g.exits[frame.exitBase + frame.localCount + i])
         i += 1
     }
-    g.exits = truncBools(g.exits, frame.exitBase)
-    g.loopStates = truncLoops(g.loopStates, index)
+    while g.exits.len() > frame.exitBase { let _ = g.exits.pop() }
+    while g.loopStates.len() > index { let _ = g.loopStates.pop() }
     return LoopExit{breaks: breaks, continues: continues, hasBreak: frame.hasBreak}
 }
 
@@ -1591,7 +1705,7 @@ fn emitBlock(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, star
         i += 1
     }
     cleanLocals(&g, reg, localCount)
-    if g.locals.len() > localCount { g.locals = truncLocals(g.locals, localCount) }
+    while g.locals.len() > localCount { let _ = g.locals.pop() }
     emit(&g, "}")
     return flow
 }
@@ -1884,6 +1998,24 @@ fn vectorLifecycle(g: inout Generator, reg: Registry, elem: Type) {
     emit(&g, "}")
 }
 
+fn optionalLayout(g: inout Generator, elem: Type) {
+    let ty = Type{kind: .Optional, elementKind: elem.kind, elementDecl: elem.decl}
+    emit(&g, join5("typedef struct { bool has; ", cType(elem), " val; } ", cType(ty), ";"))
+}
+
+fn optionalLayouts(g: inout Generator, reg: Registry) {
+    optionalLayout(&g, primitive(.Int))
+    optionalLayout(&g, primitive(.Byte))
+    optionalLayout(&g, primitive(.Bool))
+    var i = 0
+    while i < reg.entries.len() {
+        if !reg.entries[i].owned {
+            optionalLayout(&g, Type{kind: .Named, decl: i, elementKind: .Unknown})
+        }
+        i += 1
+    }
+}
+
 fn resultLayouts(g: inout Generator, reg: Registry) {
     var i = 0
     while i < reg.results.len() {
@@ -1940,6 +2072,7 @@ fn declarations(g: inout Generator, reg: Registry) {
         k += 1
     }
 
+    optionalLayouts(&g, reg)
     resultLayouts(&g, reg)
 
     // Every named C layout is complete. Lifecycle prototypes break indirect

@@ -41,7 +41,7 @@ Recent changes implement index assignment, two-phase variable/field receivers, S
 
 | Check | Recorded local result | Scope |
 | --- | --- | --- |
-| Release suite | **145 passed, 0 failed, 1 ignored** | Batch 29: complete suite after the catch-expression break/return-analysis correction |
+| Release suite | **145 passed, 0 failed, 1 ignored** | Batch 30: complete suite; Rust sources, runtime and frozen cases unchanged |
 | Debug suite | **145 passed, 0 failed, 1 ignored** | Same source, all 19 groups, independent completed local log |
 | Frozen specification | **124 pass, 0 wrong, 3 unsupported, 0 not_run, 2 superseded** | 129 frozen cases; a different counting unit from Cargo test functions |
 | Cross-compilation | Six target formats/architectures build | Linux (static musl), Windows and macOS on x86-64/aarch64; native CI now covers Linux x86-64 plus the Windows x86-64/macOS arm64 selections below |
@@ -51,7 +51,32 @@ The ignored Cargo test is the old exploratory P0 conformance report; the current
 
 Source modules support top-level exports, per-file imports, cyclic imports and original-file diagnostics. Package dependencies and a program lockfile remain open. Multi-file `fix` returns `U0001` without writing; symlink module aliases are unsupported.
 
-### Selfhost Result and error propagation (2026-11-24)
+### Selfhost Copy Optional and pop (2026-11-24)
+
+The Yavo compiler now accepts Copy `?T`, `some`/`none`, implicit wrapping,
+`isSome`/`isNone`, mutable-place `Vec.pop()` and lazy value-form `??`.
+Payloads are int, byte, bool, non-owning structs and payload-free enums.
+All **14 internal truncation sites** now pop their suffix in place; the five
+copying `truncInts`/`truncBools`/`truncLocals`/`truncTemps`/`truncLoops` helpers
+are removed. Cleanup generation and analysis-state removal keep their original
+ordering. Owned Optional/pop and nested/container/Result combinations remain
+explicit U0001 boundaries.
+
+The matrix has **439 cases and 155 executable inputs**: 67 new inputs plus the
+original pop fixture promoted byte for byte. Independent Rust oracles fix the
+68 targeted expectations before selfhost comparison; all 15 run programs pass
+both Debug and Release. Context typing is separate from implicit wrapping,
+including byte literals and empty Vec Result rejection. Full Rust suites retain
+**145/0/1 per mode** and frozen conformance **124/3/2**.
+
+The [batch-30 local receipt](compiler/validation/selfhost-optional-pop-2026-11-24.json)
+passes **439/439 cases, 12/12 auxiliary checks and zero skips**. Stage2/stage3
+C (668,302 bytes) and Linux binaries (308,504 bytes) match exactly. The real
+lexer retains both-generation C equality and both-mode allocation checks.
+[Oracle evidence](selfhost/tests/evidence/batch30-optional-oracle/oracle-index.json)
+retains the original attempts and precise source identities.
+
+### Selfhost Result and error propagation (batch 29)
 
 The Yavo compiler now accepts user-function `T ! E`, success wrapping, `ok`/`err`,
 `try`, and terminating named/underscore `catch` blocks. Its actual lexer returns
@@ -74,6 +99,9 @@ passes **372/372 cases, 12/12 checks and zero skips**, including the real lexer
 unit in Debug/Release. Stage2/stage3 C (623,204 bytes) and binaries match exactly.
 
 ### GitHub CI
+
+Batch 30 native confirmation will be recorded against its implementation commit;
+the following runs remain historical evidence for their own source revisions.
 
 Batch 29 [run 45226925936](https://github.com/msly/yavo/actions/runs/45226925936)
 passed **six of six jobs** at `e355cb3`. Linux x86-64, Windows x86-64 and macOS
@@ -282,8 +310,8 @@ and [module/thread audit](experiments/coldstart-2026-11-22-r5/evidence/manual-re
 
 ## Next work and acceptance gates
 
-1. Add Optional/`Vec.pop` to selfhost, then replace the compiler's copying `truncInts`, `truncBools`, `truncLocals`, `truncTemps` and `truncLoops` helpers. Validate empty/nonempty vectors, owned-element moves, discarded values and cleanup before restoring the full fixed point; scope is in [HANDOFF.md](HANDOFF.md).
-2. Preserve the completed [SH-2 fixed point](docs/self-hosting.md), real lexer normal-return allocation checks and stage2 ASan/UBSan gate. Continue through `for`, formatting and source modules, using each addition in the compiler itself.
+1. Add `for` with a concrete compiler migration: int/byte half-open ranges and read-only Copy-element traversal of stable Vec locals/parameters are the initial scope. Migrate lexer stress loops and `parser.store`, validating single evaluation, iteration permissions, continue stepping and early-exit cleanup; details are in [HANDOFF.md](HANDOFF.md).
+2. Preserve the completed [SH-2 fixed point](docs/self-hosting.md), Copy Optional/pop, real lexer normal-return allocation checks and stage2 ASan/UBSan gate. Continue with formatting and source modules, using each addition in the compiler itself.
 3. Complete SH-3 before making it the default compiler. SH-4 has one accepted application; add independent structured-text validation and multi-file dependency/index projects, retaining frozen conformance, native checks, diagnostics and resource validation.
 4. Resume the qualified [per-request executor](tools/agent_eval/README.md), [prepared document experiment](experiments/docs-ab-2026-11-22-r6/README.md), 60-task pilot and formal cost study as later product evidence. Live API qualification is still **blocked**, with **0 round-six participant sessions**; it no longer blocks compiler development.
 5. Remaining v1 functionality includes user test blocks and `yavo test`, local/Git dependencies and a lockfile, FFI/unsafe/audit, general closures/higher-order parameters, public movable Join and `spawn inout`. Prioritize these only when required by the declared application scope or a concrete bootstrap blocker.

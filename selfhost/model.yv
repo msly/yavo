@@ -12,6 +12,7 @@ pub enum BasicType {
     Byte
     Args
     Result
+    Optional
 }
 
 pub struct TypeRef {
@@ -21,6 +22,9 @@ pub struct TypeRef {
     elementName: int = -1
     result: int = -1
 }
+
+// Vec and Copy Optional share the flat elementKind/elementName representation;
+// neither admits another container or Result as its element in this subset.
 
 // Result payloads are non-Result types. The syntax pool keeps TypeRef Copy.
 pub struct ResultRef {
@@ -71,6 +75,8 @@ pub enum ExprKind {
     Ref
     Catch
     Try
+    None
+    Coalesce
 }
 
 // args/names index Program.lists. A Slice keeps its end in extra; a Catch

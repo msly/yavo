@@ -1,0 +1,23 @@
+fn explicitResult() -> byte ! int { return ok(65) }
+fn literalResult() -> byte ! int { return 'B' }
+fn variableResult() -> byte ! int {
+    let value: byte = 67
+    return value
+}
+fn main() {
+    let first: ?byte = some(1)
+    let converted: ?byte = byte(2)
+    let literal: ?byte = 'C'
+    let local: byte = 4
+    let variable: ?byte = local
+    println(int(first ?? '!'))
+    println(int(converted ?? '!'))
+    println(int(literal ?? '!'))
+    println(int(variable ?? '!'))
+    let a = explicitResult() catch _ { return }
+    let b = literalResult() catch _ { return }
+    let c = variableResult() catch _ { return }
+    println(int(a))
+    println(int(b))
+    println(int(c))
+}

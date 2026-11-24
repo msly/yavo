@@ -1,0 +1,1658 @@
+{
+  "schema": "yavo-batch30-stage1-check-differential/1",
+  "binary": "compiler/target/ci/batch30-integration/attempt-2/stage1",
+  "inputs": {
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1": "d1cb6d84a771f4e8b056f1d0b7a15d897695cca63deeba0f4c0fd625cd788553",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-oracle/candidates.json": "c35cce307fa36cd622001d8bbc80817adb3e876eb0de944959f4c966148360d6",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/cases.json": "2d3494f7bc9ce52024ab81e1abcf595541e99a2f47c233ae4f2ce239f8b1f9ce",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_primitives.yv": "b256da1be1aadd7e41f266380ebcaab6345ddc715c4c4138971dded6e5ea7cae",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_copy_nominal.yv": "d6da3e41e9e6e4dd8216033ce81cf51e49c16205de8bbf0f4ee58efd493f051d",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_receivers.yv": "6510fb8248a2ebb35f15e66ffb9d14ff9026a27230dfaa9d44c7ef2dce506171",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_rewind.yv": "5cec942a9c2c7402e279e0b2824e93acb15dda8597996162ed03736e75ff8f11",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_copy_forms.yv": "0d8046f50165200867d393c9c34a8636a7f695f2df152f93dcb6a9a222a2aefc",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_coalesce_order.yv": "e416b505420f1bb9499e7be299e38c280c1653c67f1e82c0c72e3a979b079068",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_some_shadow.yv": "626beb790b733bcb74693d8f4b3520964532e9e40235169ed497e7fb752afabf",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_fallback_temporaries.yv": "1ad733ed42b3f8b9d72aeb6c076b06dc89d8b6983adfe437802bef26e2ab469f",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_conditional_move.yv": "7d2d3cb2a8f27b83fe98429dbd828456c550c65750f53072b55aac8b1f77e01e",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_try_fallback.yv": "75c05bc3b3001f1ee1684c39c862509dc6ed833d28a9cb019482df89cd943c78",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_catch_return_fallback.yv": "7dfb161fcef0ab055c05722ea04718e737cba81a0d6f81215b6d70bdc2aee795",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_catch_loop_fallback.yv": "ffa79310e3b7a2130dc797130deb7b3a036ef30e1bca14682e38349d80e11a81",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_byte_context.yv": "487d744ecc81b6cff3c4a6697a1f18387d1ca020c198d02f4c2aa15949f577cb",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_none_untyped.yv": "91938d1767c7214aeb2242db8cbef89b4c49986d35ad693a2ae664a5f13c6a84",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_some_empty.yv": "6f982924c79c91dc3877517cb525d973cfe3f0ff41e3b862c22874b95ed48700",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_some_extra.yv": "1e4e3d794a60db5c925fd95080214571420b5376c7824b532fe48c0964ed25ce",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_some_unit.yv": "7437562264b866f63aad2fa3d8e804310fb8d433e8a2d1179697d59ee04fcf2b",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_some_none.yv": "098d4f3091b7d700184d57946a73483a4e81dd545fcdf4a2045308e84541a929",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_wrong_payload.yv": "b45b654ce5ca18762eb9c19f032387a5aea05a00f6ff1dbfc69af82dde841466",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_wrong_fallback.yv": "a16f3d5e9d7f4550898bbb9b926b0d7ac1584df5337c88204252d85c75b720e5",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_nonoptional_coalesce.yv": "bdd8295927942456e4cb92b2be3f2ad52eaffaa1d43bfc6ba0848ae0a2f3b5d5",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_context_none_coalesce.yv": "6258bd0c84e904c4d0cab11d62e1d9e2ba3842990873fb0b9e0ffa7f3eda03f6",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_return_none_coalesce.yv": "ac4f39a7427cc0cd1ff852fb292aebe4fe1a62bd0cd1eac8079bb39bfe2a4393",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_inferred_none_coalesce.yv": "411762b7805c97ea3e9952389b75f88357f29f77bf9022dbc24ce4c97a078b0a",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_is_some_arity.yv": "81bff6fc36ef363cfd254b2dd95b8022e6948e5472248a38049325ad60b6774d",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_condition.yv": "05428030f4d679f32e4fac1c5eb55cacb654d77a55d2b630e3413409033c9e9d",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_immutable.yv": "3a615972aa82aa16e2d5af8ac0c52e7bad99e28d644318085df01834f0b86499",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_readonly_parameter.yv": "b62be3904f300541a881efb2c27e7803895024a82cbc979de3a876dc30652e7f",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_readonly_field.yv": "a100850e558aeb8cb8a8ef16f860c5eafa733ec4f50df842fc896265a5b4f204",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_arity.yv": "960f2b3b2686a7cb6e3b2b1470c104eca63640c4fbb9d61cab933d2ee9be5377",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_borrowed_argument.yv": "a9fc0a9fb51aaeea0db631041851b5ce2ff95cfb1ebf62c13d05e052c55aaa14",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_reserved_argument.yv": "b88f275375a19c65d9253da2951b5f045d29ba79976dd4a8258a143a00ba8d6c",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_after_move.yv": "4426c05aa0eb4121326a4ad21bfc772a1255310e632154a4dff654da038417fa",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_coalesce_after_move.yv": "11656368b05587d4eaae4288632b30f2f1fe9e6ec5c5915e8edbd0c5e4794c99",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_some_shadow_variable.yv": "a57cdc2fd757a45fe266567b1999f896dbe83babc127fa77a1748f90c0f2f15c",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_missing_return.yv": "bfee992b86670b2c81b566ea41d302f8d0fb50e2d5254f72a38e1933adf46403",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_byte_implicit.yv": "b7e995b24db43d78e5b8aa1c3cae8ea60af718b21853eb72861c8f9659f0f0c0",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_byte_coalesce.yv": "307d3175b54bf6ae22b99f4840c02e18a53eef0292cf04ec66104db59f0452f0",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_byte_implicit.yv": "79b28f8e588605963fa90b1994f5a794c7469d7bafb1206fa67a73effc5d4b7d",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_byte_return_implicit.yv": "7af118aede1afc4b26e47be1603953f749ff3d6949b61f2cb8faa556bcd158e1",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_compare.yv": "a24dca8818e73c98f2663683e2a1bb44fb310736ebb4a7de5aa13e3b3db67004",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_test_scalar.yv": "295d8c0b3bdd9a153e46112f240f786822b8d161831e4ccc47b0e0129f5af6cb",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_vec_pop_temporary.yv": "8c7a91a719a1a27e8d7b4e59d0764f36c4eccfc19cc8ff91d33c2d3eef040ace",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_vec_pop_nonvector.yv": "5531e65fba81c2733a5e92440d99ec9f4e13b036565dc3a0f161f7bcc469d1cc",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_vec_pop_string.yv": "d38d2c297207535739d4a7e065419a88a86f030d24a50034994f25d62b94f863",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_vec_pop_owned_struct.yv": "833817ecb1be509dbad02e4df674e54e89b7cd4c3163e3eb13479c5a43a34532",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_string.yv": "f17c6689ad1861386ac60f61677b7a37b0a0acaf8cde348c716a1fa72b23dd78",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_vec.yv": "558aab180277522782a4c305976741f8808269d3eddb63668f191d0bd4e2b75a",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_owned_struct.yv": "20a18104bcb278d7a8627d7c0e862515f4ebc44a452f62b17542bc145492352f",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_str.yv": "c986b7334849cdeab4c8ea971aee6dd543324cf35e0162dab7c77bceed82bee3",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_unit.yv": "d0d9bacb87e570089eaaf0633d356e9ef93c599fd510c8c4d7a87ece47714fc0",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_nested.yv": "1d18cdff59cc27a744de14efad70124e815dc1cad1ccddc7cc335b65c258246e",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_nested_context.yv": "64df36f028299366b689d1ebbf625914991b976637f6b9833f6836c11f79a98d",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_field.yv": "a6b37d932febddf5fca1cc0b17277678d1fd524177a340cd784885581b249ab9",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_vec_element.yv": "b2bb14773c250e356cea90a0f3a47b4bae62b3edd9dc6e66b0134ae13e00fd72",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_result_success.yv": "4cbb912ad61ed23bd7a71bee4f3b7ab5bb15e8c6e078279308ad634c54f6f743",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_result_payload.yv": "cf4b2e7976774d52b1bb19df59741f30063df9e9759d2bfa431b8e1ecd7279c2",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_if_let.yv": "357c47a2c1c9a0ff07193f3129751de45ce5d5f627cc85b12d00d2813cee80ff",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_match.yv": "ee0b1d186a0c258b18a3043ef3dcf092470fe20ed1352a141deb9d3049c50648",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_coalesce_return.yv": "8265ad2a1082c79009d9867a082b953b19ff139ee71a618211c1e1e99e049bbd",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_coalesce_break.yv": "f2fdf09f3a25bfed20aa703c756228a13732d568cab6ebc232a82e972386a9d3",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_coalesce_continue.yv": "2666637b23db5c05db4e2153107e3256e2a27b5a095a16d680878c13c9f067d9",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_basic.yv": "f9566d147e9c04e4a97153cc74aa7fbbf79fd5d6498df8a2b50e7e11f65e2446",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_vec_raw_context.yv": "3611333d392f58da5843b74cedb94c1ee7cc6c2dba5f53035b413a9436ae9e11",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_vec_implicit_empty.yv": "b0990c15b6f5b4825aac53952434dbc378038a34926645517a4214d4e2fcf92a",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_none_result_hint.yv": "3f951d20f3d4d8a964f0fcf29e1d791fcf6c1ca95f44f6bbca2e78909d099dad",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_none_owned_hint.yv": "26effd10e1246246e7847251c64868728f4c8f5397948630f870e1b031ad3281",
+    "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_print.yv": "29faf749879b106e1ce9e833f63aaccfd059d2d0a6b3ba7515d3f6dc6d4c8398"
+  },
+  "known_stale_cases": {
+    "unsupported_optional_print": "This supplied attempt-2 snapshot predates the already-applied direct-Optional-print U0001 fix."
+  },
+  "records": [
+    {
+      "id": "vec_pop_primitives",
+      "kind": "run",
+      "source_sha256": "b256da1be1aadd7e41f266380ebcaab6345ddc715c4c4138971dded6e5ea7cae",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_primitives.yv"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "first_error": null,
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "vec_pop_copy_nominal",
+      "kind": "run",
+      "source_sha256": "d6da3e41e9e6e4dd8216033ce81cf51e49c16205de8bbf0f4ee58efd493f051d",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_copy_nominal.yv"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "first_error": null,
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "vec_pop_receivers",
+      "kind": "run",
+      "source_sha256": "6510fb8248a2ebb35f15e66ffb9d14ff9026a27230dfaa9d44c7ef2dce506171",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_receivers.yv"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "first_error": null,
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "vec_pop_rewind",
+      "kind": "run",
+      "source_sha256": "5cec942a9c2c7402e279e0b2824e93acb15dda8597996162ed03736e75ff8f11",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_rewind.yv"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "first_error": null,
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "optional_copy_forms",
+      "kind": "run",
+      "source_sha256": "0d8046f50165200867d393c9c34a8636a7f695f2df152f93dcb6a9a222a2aefc",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_copy_forms.yv"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "first_error": null,
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "optional_coalesce_order",
+      "kind": "run",
+      "source_sha256": "e416b505420f1bb9499e7be299e38c280c1653c67f1e82c0c72e3a979b079068",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_coalesce_order.yv"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "first_error": null,
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "optional_some_shadow",
+      "kind": "run",
+      "source_sha256": "626beb790b733bcb74693d8f4b3520964532e9e40235169ed497e7fb752afabf",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_some_shadow.yv"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "first_error": null,
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "optional_fallback_temporaries",
+      "kind": "run",
+      "source_sha256": "1ad733ed42b3f8b9d72aeb6c076b06dc89d8b6983adfe437802bef26e2ab469f",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_fallback_temporaries.yv"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "first_error": null,
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "optional_conditional_move",
+      "kind": "run",
+      "source_sha256": "7d2d3cb2a8f27b83fe98429dbd828456c550c65750f53072b55aac8b1f77e01e",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_conditional_move.yv"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "first_error": null,
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "optional_try_fallback",
+      "kind": "run",
+      "source_sha256": "75c05bc3b3001f1ee1684c39c862509dc6ed833d28a9cb019482df89cd943c78",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_try_fallback.yv"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "first_error": null,
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "optional_catch_return_fallback",
+      "kind": "run",
+      "source_sha256": "7dfb161fcef0ab055c05722ea04718e737cba81a0d6f81215b6d70bdc2aee795",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_catch_return_fallback.yv"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "first_error": null,
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "optional_catch_loop_fallback",
+      "kind": "run",
+      "source_sha256": "ffa79310e3b7a2130dc797130deb7b3a036ef30e1bca14682e38349d80e11a81",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_catch_loop_fallback.yv"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "first_error": null,
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "optional_byte_context",
+      "kind": "run",
+      "source_sha256": "487d744ecc81b6cff3c4a6697a1f18387d1ca020c198d02f4c2aa15949f577cb",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/run/optional_byte_context.yv"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "first_error": null,
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "optional_none_untyped",
+      "kind": "reject",
+      "source_sha256": "91938d1767c7214aeb2242db8cbef89b4c49986d35ad693a2ae664a5f13c6a84",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_none_untyped.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_none_untyped.yv:1:25: E0001: none requires an Optional context\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 1,
+        "column": 25,
+        "code": "E0001"
+      },
+      "expected_stage0_first_error": {
+        "code": "E0001",
+        "line": 1,
+        "column": 25
+      },
+      "code_passed": true,
+      "position_agrees": true
+    },
+    {
+      "id": "optional_some_empty",
+      "kind": "reject",
+      "source_sha256": "6f982924c79c91dc3877517cb525d973cfe3f0ff41e3b862c22874b95ed48700",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_some_empty.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_some_empty.yv:1:25: E0012: some requires one argument\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 1,
+        "column": 25,
+        "code": "E0012"
+      },
+      "expected_stage0_first_error": {
+        "code": "E0012",
+        "line": 1,
+        "column": 25
+      },
+      "code_passed": true,
+      "position_agrees": true
+    },
+    {
+      "id": "optional_some_extra",
+      "kind": "reject",
+      "source_sha256": "1e4e3d794a60db5c925fd95080214571420b5376c7824b532fe48c0964ed25ce",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_some_extra.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_some_extra.yv:1:25: E0012: some requires one argument\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 1,
+        "column": 25,
+        "code": "E0012"
+      },
+      "expected_stage0_first_error": {
+        "code": "E0012",
+        "line": 1,
+        "column": 25
+      },
+      "code_passed": true,
+      "position_agrees": true
+    },
+    {
+      "id": "optional_some_unit",
+      "kind": "reject",
+      "source_sha256": "7437562264b866f63aad2fa3d8e804310fb8d433e8a2d1179697d59ee04fcf2b",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_some_unit.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_some_unit.yv:2:25: E0001: some requires a value\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 2,
+        "column": 25,
+        "code": "E0001"
+      },
+      "expected_stage0_first_error": {
+        "code": "E0001",
+        "line": 2,
+        "column": 30
+      },
+      "code_passed": true,
+      "position_agrees": false
+    },
+    {
+      "id": "optional_some_none",
+      "kind": "reject",
+      "source_sha256": "098d4f3091b7d700184d57946a73483a4e81dd545fcdf4a2045308e84541a929",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_some_none.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_some_none.yv:1:36: E0001: none requires an Optional context\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 1,
+        "column": 36,
+        "code": "E0001"
+      },
+      "expected_stage0_first_error": {
+        "code": "E0001",
+        "line": 1,
+        "column": 36
+      },
+      "code_passed": true,
+      "position_agrees": true
+    },
+    {
+      "id": "optional_wrong_payload",
+      "kind": "reject",
+      "source_sha256": "b45b654ce5ca18762eb9c19f032387a5aea05a00f6ff1dbfc69af82dde841466",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_wrong_payload.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_wrong_payload.yv:1:13: E0001: expected ?int, found ?bool\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 1,
+        "column": 13,
+        "code": "E0001"
+      },
+      "expected_stage0_first_error": {
+        "code": "E0001",
+        "line": 1,
+        "column": 31
+      },
+      "code_passed": true,
+      "position_agrees": false
+    },
+    {
+      "id": "optional_wrong_fallback",
+      "kind": "reject",
+      "source_sha256": "a16f3d5e9d7f4550898bbb9b926b0d7ac1584df5337c88204252d85c75b720e5",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_wrong_fallback.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_wrong_fallback.yv:3:24: E0001: expected int, found bool\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 3,
+        "column": 24,
+        "code": "E0001"
+      },
+      "expected_stage0_first_error": {
+        "code": "E0001",
+        "line": 3,
+        "column": 27
+      },
+      "code_passed": true,
+      "position_agrees": false
+    },
+    {
+      "id": "optional_nonoptional_coalesce",
+      "kind": "reject",
+      "source_sha256": "bdd8295927942456e4cb92b2be3f2ad52eaffaa1d43bfc6ba0848ae0a2f3b5d5",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_nonoptional_coalesce.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_nonoptional_coalesce.yv:1:27: E0001: the left side of ?? requires an Optional value\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 1,
+        "column": 27,
+        "code": "E0001"
+      },
+      "expected_stage0_first_error": {
+        "code": "E0001",
+        "line": 1,
+        "column": 25
+      },
+      "code_passed": true,
+      "position_agrees": false
+    },
+    {
+      "id": "optional_context_none_coalesce",
+      "kind": "reject",
+      "source_sha256": "6258bd0c84e904c4d0cab11d62e1d9e2ba3842990873fb0b9e0ffa7f3eda03f6",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_context_none_coalesce.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_context_none_coalesce.yv:1:36: E0001: expected ?int, found int\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 1,
+        "column": 36,
+        "code": "E0001"
+      },
+      "expected_stage0_first_error": {
+        "code": "E0001",
+        "line": 1,
+        "column": 39
+      },
+      "code_passed": true,
+      "position_agrees": false
+    },
+    {
+      "id": "optional_return_none_coalesce",
+      "kind": "reject",
+      "source_sha256": "ac4f39a7427cc0cd1ff852fb292aebe4fe1a62bd0cd1eac8079bb39bfe2a4393",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_return_none_coalesce.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_return_none_coalesce.yv:1:35: E0001: expected ?int, found int\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 1,
+        "column": 35,
+        "code": "E0001"
+      },
+      "expected_stage0_first_error": {
+        "code": "E0001",
+        "line": 1,
+        "column": 38
+      },
+      "code_passed": true,
+      "position_agrees": false
+    },
+    {
+      "id": "optional_inferred_none_coalesce",
+      "kind": "reject",
+      "source_sha256": "411762b7805c97ea3e9952389b75f88357f29f77bf9022dbc24ce4c97a078b0a",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_inferred_none_coalesce.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_inferred_none_coalesce.yv:1:25: E0001: none requires an Optional context\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 1,
+        "column": 25,
+        "code": "E0001"
+      },
+      "expected_stage0_first_error": {
+        "code": "E0001",
+        "line": 1,
+        "column": 25
+      },
+      "code_passed": true,
+      "position_agrees": true
+    },
+    {
+      "id": "optional_is_some_arity",
+      "kind": "reject",
+      "source_sha256": "81bff6fc36ef363cfd254b2dd95b8022e6948e5472248a38049325ad60b6774d",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_is_some_arity.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_is_some_arity.yv:3:19: E0012: this Optional method takes no arguments\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 3,
+        "column": 19,
+        "code": "E0012"
+      },
+      "expected_stage0_first_error": {
+        "code": "E0012",
+        "line": 3,
+        "column": 13
+      },
+      "code_passed": true,
+      "position_agrees": false
+    },
+    {
+      "id": "optional_condition",
+      "kind": "reject",
+      "source_sha256": "05428030f4d679f32e4fac1c5eb55cacb654d77a55d2b630e3413409033c9e9d",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_condition.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_condition.yv:1:13: E0001: expected bool, found ?int\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 1,
+        "column": 13,
+        "code": "E0001"
+      },
+      "expected_stage0_first_error": {
+        "code": "E0001",
+        "line": 1,
+        "column": 16
+      },
+      "code_passed": true,
+      "position_agrees": false
+    },
+    {
+      "id": "vec_pop_immutable",
+      "kind": "reject",
+      "source_sha256": "3a615972aa82aa16e2d5af8ac0c52e7bad99e28d644318085df01834f0b86499",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_immutable.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_immutable.yv:3:20: E0014: cannot modify a read-only value\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 3,
+        "column": 20,
+        "code": "E0014"
+      },
+      "expected_stage0_first_error": {
+        "code": "E0014",
+        "line": 3,
+        "column": 13
+      },
+      "code_passed": true,
+      "position_agrees": false
+    },
+    {
+      "id": "vec_pop_readonly_parameter",
+      "kind": "reject",
+      "source_sha256": "b62be3904f300541a881efb2c27e7803895024a82cbc979de3a876dc30652e7f",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_readonly_parameter.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_readonly_parameter.yv:1:46: E0014: cannot modify a read-only value\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 1,
+        "column": 46,
+        "code": "E0014"
+      },
+      "expected_stage0_first_error": {
+        "code": "E0014",
+        "line": 1,
+        "column": 39
+      },
+      "code_passed": true,
+      "position_agrees": false
+    },
+    {
+      "id": "vec_pop_readonly_field",
+      "kind": "reject",
+      "source_sha256": "a100850e558aeb8cb8a8ef16f860c5eafa733ec4f50df842fc896265a5b4f204",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_readonly_field.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_readonly_field.yv:4:26: E0014: cannot modify a read-only value\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 4,
+        "column": 26,
+        "code": "E0014"
+      },
+      "expected_stage0_first_error": {
+        "code": "E0014",
+        "line": 4,
+        "column": 13
+      },
+      "code_passed": true,
+      "position_agrees": false
+    },
+    {
+      "id": "vec_pop_arity",
+      "kind": "reject",
+      "source_sha256": "960f2b3b2686a7cb6e3b2b1470c104eca63640c4fbb9d61cab933d2ee9be5377",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_arity.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_arity.yv:3:20: E0012: pop takes no arguments\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 3,
+        "column": 20,
+        "code": "E0012"
+      },
+      "expected_stage0_first_error": {
+        "code": "E0012",
+        "line": 3,
+        "column": 13
+      },
+      "code_passed": true,
+      "position_agrees": false
+    },
+    {
+      "id": "vec_pop_borrowed_argument",
+      "kind": "reject",
+      "source_sha256": "a9fc0a9fb51aaeea0db631041851b5ce2ff95cfb1ebf62c13d05e052c55aaa14",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_borrowed_argument.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_borrowed_argument.yv:7:28: E0102: an earlier expression still borrows this value\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 7,
+        "column": 28,
+        "code": "E0102"
+      },
+      "expected_stage0_first_error": {
+        "code": "E0102",
+        "line": 7,
+        "column": 21
+      },
+      "code_passed": true,
+      "position_agrees": false
+    },
+    {
+      "id": "vec_pop_reserved_argument",
+      "kind": "reject",
+      "source_sha256": "b88f275375a19c65d9253da2951b5f045d29ba79976dd4a8258a143a00ba8d6c",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_reserved_argument.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_reserved_argument.yv:3:24: E0403: mutation conflicts with a reserved receiver\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 3,
+        "column": 24,
+        "code": "E0403"
+      },
+      "expected_stage0_first_error": {
+        "code": "E0403",
+        "line": 3,
+        "column": 17
+      },
+      "code_passed": true,
+      "position_agrees": false
+    },
+    {
+      "id": "vec_pop_after_move",
+      "kind": "reject",
+      "source_sha256": "4426c05aa0eb4121326a4ad21bfc772a1255310e632154a4dff654da038417fa",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_after_move.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/vec_pop_after_move.yv:4:20: E0402: use of a moved value\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 4,
+        "column": 20,
+        "code": "E0402"
+      },
+      "expected_stage0_first_error": {
+        "code": "E0402",
+        "line": 4,
+        "column": 13
+      },
+      "code_passed": true,
+      "position_agrees": false
+    },
+    {
+      "id": "optional_coalesce_after_move",
+      "kind": "reject",
+      "source_sha256": "11656368b05587d4eaae4288632b30f2f1fe9e6ec5c5915e8edbd0c5e4794c99",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_coalesce_after_move.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_coalesce_after_move.yv:4:13: E0402: use of a moved value\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 4,
+        "column": 13,
+        "code": "E0402"
+      },
+      "expected_stage0_first_error": {
+        "code": "E0402",
+        "line": 4,
+        "column": 13
+      },
+      "code_passed": true,
+      "position_agrees": true
+    },
+    {
+      "id": "optional_some_shadow_variable",
+      "kind": "reject",
+      "source_sha256": "a57cdc2fd757a45fe266567b1999f896dbe83babc127fa77a1748f90c0f2f15c",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_some_shadow_variable.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_some_shadow_variable.yv:3:17: E0001: a local value cannot be called as a function\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 3,
+        "column": 17,
+        "code": "E0001"
+      },
+      "expected_stage0_first_error": {
+        "code": "E0001",
+        "line": 3,
+        "column": 17
+      },
+      "code_passed": true,
+      "position_agrees": true
+    },
+    {
+      "id": "optional_missing_return",
+      "kind": "reject",
+      "source_sha256": "bfee992b86670b2c81b566ea41d302f8d0fb50e2d5254f72a38e1933adf46403",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_missing_return.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_missing_return.yv:1:4: E0013: not every path returns a value\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 1,
+        "column": 4,
+        "code": "E0013"
+      },
+      "expected_stage0_first_error": {
+        "code": "E0013",
+        "line": 1,
+        "column": 22
+      },
+      "code_passed": true,
+      "position_agrees": false
+    },
+    {
+      "id": "optional_byte_implicit",
+      "kind": "reject",
+      "source_sha256": "b7e995b24db43d78e5b8aa1c3cae8ea60af718b21853eb72861c8f9659f0f0c0",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_byte_implicit.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_byte_implicit.yv:1:13: E0001: expected ?byte, found int\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 1,
+        "column": 13,
+        "code": "E0001"
+      },
+      "expected_stage0_first_error": {
+        "code": "E0001",
+        "line": 1,
+        "column": 32
+      },
+      "code_passed": true,
+      "position_agrees": false
+    },
+    {
+      "id": "optional_byte_coalesce",
+      "kind": "reject",
+      "source_sha256": "307d3175b54bf6ae22b99f4840c02e18a53eef0292cf04ec66104db59f0452f0",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_byte_coalesce.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/optional_byte_coalesce.yv:1:13: E0001: expected ?byte, found int\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 1,
+        "column": 13,
+        "code": "E0001"
+      },
+      "expected_stage0_first_error": {
+        "code": "E0001",
+        "line": 1,
+        "column": 32
+      },
+      "code_passed": true,
+      "position_agrees": false
+    },
+    {
+      "id": "result_byte_implicit",
+      "kind": "reject",
+      "source_sha256": "79b28f8e588605963fa90b1994f5a794c7469d7bafb1206fa67a73effc5d4b7d",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_byte_implicit.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_byte_implicit.yv:1:13: E0001: expected byte ! int, found int\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 1,
+        "column": 13,
+        "code": "E0001"
+      },
+      "expected_stage0_first_error": {
+        "code": "E0001",
+        "line": 1,
+        "column": 37
+      },
+      "code_passed": true,
+      "position_agrees": false
+    },
+    {
+      "id": "result_byte_return_implicit",
+      "kind": "reject",
+      "source_sha256": "7af118aede1afc4b26e47be1603953f749ff3d6949b61f2cb8faa556bcd158e1",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_byte_return_implicit.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_byte_return_implicit.yv:1:29: E0001: expected byte ! int, found int\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 1,
+        "column": 29,
+        "code": "E0001"
+      },
+      "expected_stage0_first_error": {
+        "code": "E0001",
+        "line": 1,
+        "column": 36
+      },
+      "code_passed": true,
+      "position_agrees": false
+    },
+    {
+      "id": "unsupported_optional_compare",
+      "kind": "shared_unsupported",
+      "source_sha256": "a24dca8818e73c98f2663683e2a1bb44fb310736ebb4a7de5aa13e3b3db67004",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_compare.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_compare.yv:4:19: U0001: Optional comparison is outside this subset\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 4,
+        "column": 19,
+        "code": "U0001"
+      },
+      "expected_stage0_first_error": {
+        "code": "U0001",
+        "line": 4,
+        "column": 13
+      },
+      "code_passed": true,
+      "position_agrees": false
+    },
+    {
+      "id": "unsupported_optional_test_scalar",
+      "kind": "shared_unsupported",
+      "source_sha256": "295d8c0b3bdd9a153e46112f240f786822b8d161831e4ccc47b0e0129f5af6cb",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_test_scalar.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_test_scalar.yv:3:19: U0001: method is outside the selfhost subset\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 3,
+        "column": 19,
+        "code": "U0001"
+      },
+      "expected_stage0_first_error": {
+        "code": "U0001",
+        "line": 3,
+        "column": 13
+      },
+      "code_passed": true,
+      "position_agrees": false
+    },
+    {
+      "id": "unsupported_vec_pop_temporary",
+      "kind": "shared_unsupported",
+      "source_sha256": "8c7a91a719a1a27e8d7b4e59d0764f36c4eccfc19cc8ff91d33c2d3eef040ace",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_vec_pop_temporary.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_vec_pop_temporary.yv:2:21: U0001: assignment to this form is outside the supported place syntax\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 2,
+        "column": 21,
+        "code": "U0001"
+      },
+      "expected_stage0_first_error": {
+        "code": "U0001",
+        "line": 2,
+        "column": 21
+      },
+      "code_passed": true,
+      "position_agrees": true
+    },
+    {
+      "id": "unsupported_vec_pop_nonvector",
+      "kind": "shared_unsupported",
+      "source_sha256": "5531e65fba81c2733a5e92440d99ec9f4e13b036565dc3a0f161f7bcc469d1cc",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_vec_pop_nonvector.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_vec_pop_nonvector.yv:3:19: U0001: pop requires a Vec in this subset\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 3,
+        "column": 19,
+        "code": "U0001"
+      },
+      "expected_stage0_first_error": {
+        "code": "U0001",
+        "line": 3,
+        "column": 13
+      },
+      "code_passed": true,
+      "position_agrees": false
+    },
+    {
+      "id": "unsupported_vec_pop_string",
+      "kind": "unsupported",
+      "source_sha256": "d38d2c297207535739d4a7e065419a88a86f030d24a50034994f25d62b94f863",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_vec_pop_string.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_vec_pop_string.yv:3:20: U0001: this Optional payload type is outside the selfhost subset\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 3,
+        "column": 20,
+        "code": "U0001"
+      },
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "unsupported_vec_pop_owned_struct",
+      "kind": "unsupported",
+      "source_sha256": "833817ecb1be509dbad02e4df674e54e89b7cd4c3163e3eb13479c5a43a34532",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_vec_pop_owned_struct.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_vec_pop_owned_struct.yv:7:20: U0001: owned Optional payloads are outside the selfhost subset\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 7,
+        "column": 20,
+        "code": "U0001"
+      },
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "unsupported_optional_string",
+      "kind": "unsupported",
+      "source_sha256": "f17c6689ad1861386ac60f61677b7a37b0a0acaf8cde348c716a1fa72b23dd78",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_string.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_string.yv:1:24: U0001: this Optional payload type is outside the selfhost subset\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 1,
+        "column": 24,
+        "code": "U0001"
+      },
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "unsupported_optional_vec",
+      "kind": "unsupported",
+      "source_sha256": "558aab180277522782a4c305976741f8808269d3eddb63668f191d0bd4e2b75a",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_vec.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_vec.yv:1:24: U0001: nested Optional and container payloads are outside the selfhost subset\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 1,
+        "column": 24,
+        "code": "U0001"
+      },
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "unsupported_optional_owned_struct",
+      "kind": "unsupported",
+      "source_sha256": "20a18104bcb278d7a8627d7c0e862515f4ebc44a452f62b17542bc145492352f",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_owned_struct.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_owned_struct.yv:2:24: U0001: owned Optional payloads are outside the selfhost subset\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 2,
+        "column": 24,
+        "code": "U0001"
+      },
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "unsupported_optional_str",
+      "kind": "unsupported",
+      "source_sha256": "c986b7334849cdeab4c8ea971aee6dd543324cf35e0162dab7c77bceed82bee3",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_str.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_str.yv:1:24: U0001: this Optional payload type is outside the selfhost subset\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 1,
+        "column": 24,
+        "code": "U0001"
+      },
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "unsupported_optional_unit",
+      "kind": "unsupported",
+      "source_sha256": "d0d9bacb87e570089eaaf0633d356e9ef93c599fd510c8c4d7a87ece47714fc0",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_unit.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_unit.yv:1:24: U0001: this Optional payload type is outside the selfhost subset\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 1,
+        "column": 24,
+        "code": "U0001"
+      },
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "unsupported_optional_nested",
+      "kind": "unsupported",
+      "source_sha256": "1d18cdff59cc27a744de14efad70124e815dc1cad1ccddc7cc335b65c258246e",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_nested.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_nested.yv:1:24: U0001: type is outside the selfhost subset\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 1,
+        "column": 24,
+        "code": "U0001"
+      },
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "unsupported_optional_nested_context",
+      "kind": "unsupported",
+      "source_sha256": "64df36f028299366b689d1ebbf625914991b976637f6b9833f6836c11f79a98d",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_nested_context.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_nested_context.yv:1:36: U0001: nested or owned Optional values are outside this subset\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 1,
+        "column": 36,
+        "code": "U0001"
+      },
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "unsupported_optional_field",
+      "kind": "unsupported",
+      "source_sha256": "a6b37d932febddf5fca1cc0b17277678d1fd524177a340cd784885581b249ab9",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_field.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_field.yv:1:17: U0001: Optional fields are outside the selfhost subset\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 1,
+        "column": 17,
+        "code": "U0001"
+      },
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "unsupported_optional_vec_element",
+      "kind": "unsupported",
+      "source_sha256": "b2bb14773c250e356cea90a0f3a47b4bae62b3edd9dc6e66b0134ae13e00fd72",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_vec_element.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_vec_element.yv:1:29: U0001: Optional vector elements are outside the selfhost subset\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 1,
+        "column": 29,
+        "code": "U0001"
+      },
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "unsupported_optional_result_success",
+      "kind": "unsupported",
+      "source_sha256": "4cbb912ad61ed23bd7a71bee4f3b7ab5bb15e8c6e078279308ad634c54f6f743",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_result_success.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_result_success.yv:1:23: U0001: Optional/Result combinations are outside the selfhost subset\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 1,
+        "column": 23,
+        "code": "U0001"
+      },
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "unsupported_optional_result_payload",
+      "kind": "unsupported",
+      "source_sha256": "cf4b2e7976774d52b1bb19df59741f30063df9e9759d2bfa431b8e1ecd7279c2",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_result_payload.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_result_payload.yv:2:25: U0001: this Optional payload type is outside the selfhost subset\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 2,
+        "column": 25,
+        "code": "U0001"
+      },
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "unsupported_optional_if_let",
+      "kind": "unsupported",
+      "source_sha256": "357c47a2c1c9a0ff07193f3129751de45ce5d5f627cc85b12d00d2813cee80ff",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_if_let.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_if_let.yv:2:5: U0001: if let is outside the selfhost SH-1 subset\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 2,
+        "column": 5,
+        "code": "U0001"
+      },
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "unsupported_optional_match",
+      "kind": "unsupported",
+      "source_sha256": "ee0b1d186a0c258b18a3043ef3dcf092470fe20ed1352a141deb9d3049c50648",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_match.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_match.yv:2:2: U0001: expression is outside the selfhost SH-1 subset\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 2,
+        "column": 2,
+        "code": "U0001"
+      },
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "unsupported_optional_coalesce_return",
+      "kind": "unsupported",
+      "source_sha256": "8265ad2a1082c79009d9867a082b953b19ff139ee71a618211c1e1e99e049bbd",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_coalesce_return.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_coalesce_return.yv:2:27: U0001: jumping coalesce fallbacks are outside the selfhost subset\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 2,
+        "column": 27,
+        "code": "U0001"
+      },
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "unsupported_optional_coalesce_break",
+      "kind": "unsupported",
+      "source_sha256": "f2fdf09f3a25bfed20aa703c756228a13732d568cab6ebc232a82e972386a9d3",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_coalesce_break.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_coalesce_break.yv:3:34: U0001: jumping coalesce fallbacks are outside the selfhost subset\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 3,
+        "column": 34,
+        "code": "U0001"
+      },
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "unsupported_optional_coalesce_continue",
+      "kind": "unsupported",
+      "source_sha256": "2666637b23db5c05db4e2153107e3256e2a27b5a095a16d680878c13c9f067d9",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_coalesce_continue.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_coalesce_continue.yv:6:31: U0001: jumping coalesce fallbacks are outside the selfhost subset\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 6,
+        "column": 31,
+        "code": "U0001"
+      },
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "vec_pop_basic",
+      "kind": "run",
+      "source_sha256": "f9566d147e9c04e4a97153cc74aa7fbbf79fd5d6498df8a2b50e7e11f65e2446",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/run/vec_pop_basic.yv"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "first_error": null,
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "result_vec_raw_context",
+      "kind": "run",
+      "source_sha256": "3611333d392f58da5843b74cedb94c1ee7cc6c2dba5f53035b413a9436ae9e11",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/run/result_vec_raw_context.yv"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "first_error": null,
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "result_vec_implicit_empty",
+      "kind": "reject",
+      "source_sha256": "b0990c15b6f5b4825aac53952434dbc378038a34926645517a4214d4e2fcf92a",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_vec_implicit_empty.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/reject/result_vec_implicit_empty.yv:1:40: E0001: cannot infer the element type of an empty vector\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 1,
+        "column": 40,
+        "code": "E0001"
+      },
+      "expected_stage0_first_error": {
+        "code": "E0001",
+        "line": 1,
+        "column": 40
+      },
+      "code_passed": true,
+      "position_agrees": true
+    },
+    {
+      "id": "unsupported_optional_none_result_hint",
+      "kind": "unsupported",
+      "source_sha256": "3f951d20f3d4d8a964f0fcf29e1d791fcf6c1ca95f44f6bbca2e78909d099dad",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_none_result_hint.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_none_result_hint.yv:1:40: U0001: nested or owned Optional values are outside this subset\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 1,
+        "column": 40,
+        "code": "U0001"
+      },
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "unsupported_optional_none_owned_hint",
+      "kind": "unsupported",
+      "source_sha256": "26effd10e1246246e7847251c64868728f4c8f5397948630f870e1b031ad3281",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_none_owned_hint.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_none_owned_hint.yv:1:38: U0001: nested or owned Optional values are outside this subset\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 1,
+        "column": 38,
+        "code": "U0001"
+      },
+      "expected_stage0_first_error": null,
+      "code_passed": true,
+      "position_agrees": null
+    },
+    {
+      "id": "unsupported_optional_print",
+      "kind": "shared_unsupported",
+      "source_sha256": "29faf749879b106e1ce9e833f63aaccfd059d2d0a6b3ba7515d3f6dc6d4c8398",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch30-integration/attempt-2/stage1",
+        "check",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_print.yv"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_print.yv:3:5: E0001: this type cannot be printed\n",
+      "timed_out": false,
+      "first_error": {
+        "line": 3,
+        "column": 5,
+        "code": "E0001"
+      },
+      "expected_stage0_first_error": {
+        "code": "U0001",
+        "line": 3,
+        "column": 13
+      },
+      "code_passed": false,
+      "position_agrees": false
+    }
+  ],
+  "inputs_changed": [],
+  "counts": {
+    "checked": 68,
+    "code_passed": 67,
+    "positions_compared": 33,
+    "positions_agree": 9,
+    "unexpected_code_failures": []
+  }
+}

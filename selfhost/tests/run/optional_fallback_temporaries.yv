@@ -1,0 +1,11 @@
+fn measure(value: String) -> int {
+    println(value)
+    return value.len()
+}
+fn main() {
+    let present: ?int = 7
+    let empty: ?int = none
+    println(present ?? measure("skip".toString()))
+    println(empty ?? measure("used".toString()))
+    println(empty ?? ["one".toString(), "two".toString()].len())
+}

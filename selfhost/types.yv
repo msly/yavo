@@ -58,7 +58,7 @@ pub fn resultError(reg: Registry, ty: Type) -> Type {
 pub fn same(a: Type, b: Type) -> bool {
     if a.kind != b.kind { return false }
     if a.kind == .Named || a.kind == .Result { return a.decl == b.decl }
-    if a.kind == .Vec {
+    if a.kind == .Vec || a.kind == .Optional {
         return a.elementKind == b.elementKind &&
             (a.elementKind != .Named || a.elementDecl == b.elementDecl)
     }
@@ -67,6 +67,8 @@ pub fn same(a: Type, b: Type) -> bool {
 
 pub fn owned(reg: Registry, ty: Type) -> bool {
     if ty.kind == .String || ty.kind == .Vec { return true }
+    // optional() admits only Copy payloads after named ownership is known.
+    if ty.kind == .Optional { return false }
     if ty.kind == .Result {
         return owned(reg, resultOk(reg, ty)) || owned(reg, resultError(reg, ty))
     }
@@ -86,6 +88,12 @@ pub fn cType(t: Type) -> String {
     if t.kind == .Vec || t.kind == .Args { return "yv_vec".toString() }
     if t.kind == .Named { return join2("sh_type_", decimal(t.decl)) }
     if t.kind == .Result { return join2("sh_result_", decimal(t.decl)) }
+    if t.kind == .Optional {
+        if t.elementKind == .Int { return "sh_optional_int".toString() }
+        if t.elementKind == .Byte { return "sh_optional_byte".toString() }
+        if t.elementKind == .Bool { return "sh_optional_bool".toString() }
+        if t.elementKind == .Named { return join2("sh_optional_", decimal(t.elementDecl)) }
+    }
     return "void".toString()
 }
 
@@ -96,6 +104,7 @@ pub fn describe(reg: Registry, ts: Vec[Token], t: Type) -> String {
     if t.kind == .Str { return "str".toString() }
     if t.kind == .String { return "String".toString() }
     if t.kind == .Vec { return join3("Vec[", describe(reg, ts, element(t)), "]") }
+    if t.kind == .Optional { return join2("?", describe(reg, ts, element(t))) }
     if t.kind == .Args { return "[]str".toString() }
     if t.kind == .Unit { return "()".toString() }
     if t.kind == .Named { return ts[reg.entries[t.decl].name].text.clone() }
@@ -162,9 +171,27 @@ pub fn vector(ts: Vec[Token], token: int, elem: Type) -> Type {
     return Type{kind: .Vec, elementKind: elem.kind, elementDecl: elem.decl}
 }
 
+pub fn optional(reg: Registry, ts: Vec[Token], token: int, elem: Type) -> Type {
+    if elem.kind == .Unknown {
+        fail(ts, token, "E0001", "cannot infer the Optional payload type")
+    }
+    if elem.kind != .Int && elem.kind != .Byte && elem.kind != .Bool && elem.kind != .Named {
+        fail(ts, token, "U0001", "this Optional payload type is outside the selfhost subset")
+    }
+    if owned(reg, elem) {
+        fail(ts, token, "U0001", "owned Optional payloads are outside the selfhost subset")
+    }
+    return Type{kind: .Optional, elementKind: elem.kind, elementDecl: elem.decl}
+}
+
 pub fn resolve(reg: Registry, ts: Vec[Token], syn: TypeRef) -> Type {
     if syn.kind == .Result {
         return Type{kind: .Result, decl: reg.resultRefs[syn.result], elementKind: .Unknown}
+    }
+    if syn.kind == .Optional {
+        let elem = resolve(reg, ts, TypeRef{kind: syn.elementKind,
+            name: syn.elementName, elementKind: .Unknown})
+        return optional(reg, ts, syn.name, elem)
     }
     if syn.kind == .Vec {
         let elem = resolve(reg, ts, TypeRef{kind: syn.elementKind,
@@ -190,6 +217,11 @@ fn collectResults(p: Program, ts: Vec[Token], reg: inout Registry) {
     var i = 0
     while i < p.resultTypes.len() {
         let syntax = p.resultTypes[i]
+        // Result annotations are collected before named ownership is propagated.
+        // Reject the combination before resolving any Optional payload here.
+        if syntax.ok.kind == .Optional || syntax.error.kind == .Optional {
+            fail(ts, syntax.errorToken, "U0001", "Optional/Result combinations are outside the selfhost subset")
+        }
         let ok = resolve(reg, ts, syntax.ok)
         let error = resolve(reg, ts, syntax.error)
         if ok.kind == .Result || error.kind == .Result || error.kind == .Unit {
@@ -280,6 +312,9 @@ pub fn collect(p: Program, ts: Vec[Token]) -> Registry {
         var j = 0
         while j < d.fieldCount {
             let f = p.fields[d.fieldStart + j]
+            if f.ty.kind == .Optional {
+                fail(ts, f.name, "U0001", "Optional fields are outside the selfhost subset")
+            }
             var k = fieldStart
             while k < reg.fields.len() {
                 if ts[reg.fields[k].name].text == ts[f.name].text {
