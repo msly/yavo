@@ -1,6 +1,6 @@
 {
   "schema": "yavo-selfhost-cases/1",
-  "description": "Independent fixed-oracle probes for the Yavo-written scalar, byte, aggregate, String, owned-vector, user-function Result and Copy Optional/pop, interpolation, source-module, borrowed-return, Vec[str], jumping ?? and []T parameter subset; not the frozen full-language conformance suite.",
+  "description": "Independent fixed-oracle probes for the Yavo-written scalar, byte, aggregate, String, owned-vector, user-function Result and Copy Optional/pop, interpolation, source-module, borrowed-return, Vec[str], jumping ??, []T parameter and text query subset; not the frozen full-language conformance suite.",
   "cases": [
     {
       "id": "arithmetic",
@@ -4531,6 +4531,78 @@
       "kind": "shared_unsupported",
       "diagnostic": "U0001",
       "file": "unsupported/slice_clone.yv"
+    },
+    {
+      "id": "text_queries",
+      "kind": "run",
+      "stdout": "true\ntrue\ntrue\n6\n-1\n4\n0\ngamma\n42\n-9223372036854775808\n7\n5\n3\n4\n1\n1\ntrue 6\n12\n-1\na\n3\n2\nfalse\ntrue\n2\n0\n2\na-b!\n",
+      "file": "run/text_queries.yv"
+    },
+    {
+      "id": "text_query_arity",
+      "kind": "reject",
+      "diagnostic": "E0012",
+      "file": "reject/text_query_arity.yv"
+    },
+    {
+      "id": "parse_int_argument",
+      "kind": "reject",
+      "diagnostic": "E0012",
+      "file": "reject/parse_int_argument.yv"
+    },
+    {
+      "id": "text_query_argument_type",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/text_query_argument_type.yv"
+    },
+    {
+      "id": "text_find_optional",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/text_find_optional.yv"
+    },
+    {
+      "id": "text_split_unlisted",
+      "kind": "reject",
+      "diagnostic": "E0303",
+      "file": "reject/text_split_unlisted.yv"
+    },
+    {
+      "id": "text_split_element_unlisted",
+      "kind": "reject",
+      "diagnostic": "E0303",
+      "file": "reject/text_split_element_unlisted.yv"
+    },
+    {
+      "id": "text_query_receiver_modified",
+      "kind": "reject",
+      "diagnostic": "E0102",
+      "file": "reject/text_query_receiver_modified.yv"
+    },
+    {
+      "id": "text_split_owned_bind",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/text_split_owned_bind.yv"
+    },
+    {
+      "id": "text_query_str_receiver_reassigned",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/text_query_str_receiver_reassigned.yv"
+    },
+    {
+      "id": "text_query_non_text",
+      "kind": "shared_unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/text_query_non_text.yv"
+    },
+    {
+      "id": "text_unknown_method",
+      "kind": "shared_unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/text_unknown_method.yv"
     }
   ],
   "promotions": [

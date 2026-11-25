@@ -1,0 +1,10 @@
+// The receiver is read after the argument, so the argument may not grow it.
+fn grow(s: inout String) -> str of static {
+    s.push("a longer tail that forces the buffer to move")
+    return "ab"
+}
+
+fn main() {
+    var owned = "abc".toString()
+    println(owned.startsWith(grow(&owned)))
+}

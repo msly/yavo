@@ -1,0 +1,54 @@
+// Text queries: startsWith/endsWith/contains/find/split/parseInt on str and String.
+fn number(word: str) -> int {
+    let value = word.parseInt() ?? return -1
+    return value
+}
+
+fn first(text: str) -> str of text {
+    let parts = text.split(",")
+    return parts[0]
+}
+
+fn lines(text: str) -> Vec[str] of text {
+    return text.split("\n")
+}
+
+fn grow(s: inout String) -> int {
+    s.push("!")
+    return 0
+}
+
+fn main() {
+    let s = "alpha,beta,,gamma"
+    println(s.startsWith("al"))
+    println(s.endsWith("ma"))
+    println(s.contains(",,"))
+    println(s.find("beta") ?? -1)
+    println(s.find("zzz") ?? -1)
+    let parts = s.split(",")
+    println(parts.len())
+    println(parts[2].len())
+    println(parts[3])
+    println("42".parseInt() ?? 0)
+    println("-9223372036854775808".parseInt() ?? 0)
+    println("9223372036854775808".parseInt() ?? 7)
+    println("+5".parseInt() ?? 0)
+    println("".parseInt() ?? 3)
+    println(" 1".parseInt() ?? 4)
+    println("x".split("").len())
+    println("".split(",").len())
+    println("${s.startsWith("a")} ${s.find("b") ?? 9}")
+    println(number("12"))
+    println(number("x"))
+    println(first("a,b"))
+    println(lines("a\nb\nc").len())
+    let sep = "-".toString()
+    println("a-b".split(sep).len())
+    println("a-b".startsWith(sep))
+    var owned = "a-b".toString()
+    println(owned.startsWith("a"))
+    println(owned.split("-").len())
+    println(owned.parseInt() ?? 0)
+    println(owned.split("-").len() + grow(&owned))
+    println(owned)
+}

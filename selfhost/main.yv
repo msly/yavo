@@ -39,7 +39,7 @@ fn compile(source: str, path: str) -> String ! Diagnostic {
         i += 1
     }
     var stemEnd = path.len()
-    if path.len() - cut > 3 && path[path.len() - 3..path.len()] == ".yv" { stemEnd = path.len() - 3 }
+    if path.len() - cut > 3 && path.endsWith(".yv") { stemEnd = path.len() - 3 }
     var keys: Vec[String] = [path[cut + 1..stemEnd].toString()]
     var paths: Vec[String] = [path.toString()]
     var sites: Vec[int] = [-1]

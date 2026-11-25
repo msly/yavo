@@ -1,0 +1,10 @@
+fn swap(s: inout str) -> str of static {
+    s = "zz"
+    return "a"
+}
+
+fn main() {
+    var s = "abc"
+    println(s.startsWith(swap(&s)))
+    println(s)
+}

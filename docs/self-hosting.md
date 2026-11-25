@@ -1,6 +1,6 @@
 # Yavo 自举路线与实用验收
 
-2026-11-25 · 第三十七批加入只读 `[]T` 参数；第三十六批加入跳转式 `??`
+2026-11-25 · 第三十八批加入 str 查询方法并修复 Rust 文本方法接收者锁；第三十七批加入只读 `[]T` 参数
 
 近期主目标改为：**用 Yavo 实现 Yavo 编译器，完成可重放的自举闭环，再让它承担日常编译工作。** 自举用于暴露真实工程中的语言和工具链缺口；实用验收继续独立执行。
 
@@ -47,7 +47,11 @@ SH-1 的结果只标为“子集编译器”。SH-2 可以标为“子集自举�
 
 ## 当前进度
 
-### 第三十七批：只读 []T 参数
+### 第三十八批：str 查询方法
+
+str 与 String 接收者支持 `startsWith`/`endsWith`/`contains`（bool）、`find`/`parseInt`（`?int`，可配合 `??` 与 `?? return`）和 `split`（`Vec[str]`）。`split` 的结果指向接收者：str 接收者时继承其来源（可做 `-> Vec[str] of text` 返回值，元素同样），String 或临时接收者时只能在当前语句内使用，绑定为局部仍是 U0001。实参个数错 E0012，实参类型错 E0001，`let i: int = s.find(x)` 报 E0001。实参求值期间锁住接收者：拥有型接收者被 inout 修改报 E0102；同时修复了 Rust stage0 在这里漏检导致的释放后使用。新增 12 例（1 run、7 reject、2 unsupported、2 shared_unsupported）。
+
+### 第三十七批：只读 []T 参数（历史记录）
 
 `[]T`（T 为 int/byte/bool/str 或 Copy 命名类型）可以做参数、由参数复制来的局部和带 `of` 的返回值；C 中与 Vec 同为 `yv_vec` 描述符，不拥有存储、携带借用（参数带自己的来源位，元素读出的 str 继承切片来源）。调用时 `Vec[T]` 实参自动转为视图（不按切片元素类型推断字面量，同 stage0），`os.args()` 视为 `[]str`。`len`、下标读（越界 P-INDEX）、`for` 可用；写元素、`push`、给参数赋值报 E0014，`var` 切片局部写元素报 E0101，比较 E0501，打印/插值 E0001，字段 E0301，返回缺 `of` 报 E0302。把 `Vec` 实参的视图作为结果绑定、`let ys: []T = v`、返回 `Vec` 当切片、子切片 `xs[a..b]`、`toVec`、元素为拥有类型的切片仍是 U0001。编译器自身的 `contains`、来源与状态辅助函数、parser 的 `store` 改为 `[]T` 参数。新增 26 例（1 run、1 panic、16 reject、7 unsupported、1 shared_unsupported）。
 
@@ -171,7 +175,8 @@ SH-1 的结果只标为“子集编译器”。SH-2 可以标为“子集自举�
 | 已完成 | `Vec[str]` | 第三十五批：623 例；容器来源合并；修复 Rust 对拥有型实参返回视图的检查 |
 | 已完成 | 跳转式 `??` | 第三十六批：637 例；`?? return/break/continue`；修复 catch 块后来源未恢复的子集差异 |
 | 已完成 | 只读 `[]T` 参数 | 第三十七批：663 例；`Vec[T]` 自动视图、len/下标/for |
-| 下一步 | 用 selfhost 编译真实程序 | 以 examples/test-summary 为目标，按实际阻塞补子集：`Map`、str 方法等，衡量 SH-3 距离 |
+| 已完成 | str 查询方法 | 第三十八批：675 例；startsWith/endsWith/contains/find/split/parseInt；修复 Rust 接收者锁 |
+| 下一步 | 用 selfhost 编译真实程序 | 以 examples/test-summary 为目标，按实际阻塞补子集：`Map`、遍历 `Vec[String]` 等，衡量 SH-3 距离 |
 | 接替阶段 | SH-3 接替 | 子集覆盖既有回归与冻结规格后，再讨论让 Yavo 编译器承担日常 `check`/`build` |
 
 固定点现在是回归门：任何修改 `selfhost/` 的提交都必须保持 stage2.c = stage3.c 与 stage1/stage2 全用例一致。

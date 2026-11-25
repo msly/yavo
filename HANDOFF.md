@@ -1,16 +1,16 @@
-# Yavo 交接文档（2026-11-25，第三十七批：[]T 参数）
+# Yavo 交接文档（2026-11-25，第三十八批：str 查询方法）
 
-给下一个会话：先读第 1、2、10、16、17 节及 docs/self-hosting.md、selfhost/README.md 再开工。第二十七至第三十批在 `history/handoff-batches-2026-11-23-to-24.md`，第十二至第二十六批在 `history/handoff-batches-2026-11-21-to-23.md`，第六至第十一批在 `history/handoff-batches-2026-11-19-to-21.md`。
+给下一个会话：先读第 1、2、10、17、18 节及 docs/self-hosting.md、selfhost/README.md 再开工。第二十七至第三十批在 `history/handoff-batches-2026-11-23-to-24.md`，第十二至第二十六批在 `history/handoff-batches-2026-11-21-to-23.md`，第六至第十一批在 `history/handoff-batches-2026-11-19-to-21.md`。
 
 ## 1. 一句话状态
 
-**SH-2 引导子集固定点保持；第三十七批让 selfhost 支持只读 `[]T` 参数与 `Vec[T]` → `[]T` 自动视图（见第 17 节）；第三十六批支持 `?? return`/`?? break`/`?? continue`（第 16 节）；第三十五批让 selfhost 支持 `Vec[str]`，并修复 Rust stage0 对拥有型实参（`Vec[String]` 等）返回视图的释放后使用缺陷（见第 15 节）；第三十四批加入借用返回 `-> str of …` 并修复 loans 在分支与循环中丢失的缺陷（第 14 节）。** 第三十三批起 selfhost 支持多文件源模块： `use a`、`use a/b`、`use a/{b, c}` 以入口文件目录为根加载，允许循环导入与自导入；顶层 `pub` 决定导出；导入逐文件生效、不传递；函数一律写 `module.f(...)`，公开类型可用短名或 `module.T`（含 `module.T{...}`、`module.E.V`），短名二义报 E0010；诊断和运行时 panic 都指向原文件行列。第三十二批的插值与 format（含 Rust 输出片段借用修复）见第 12 节。
+**SH-2 引导子集固定点保持；第三十八批让 selfhost 支持 str 查询方法 `startsWith`/`endsWith`/`contains`/`find`/`split`/`parseInt`，并修复 Rust stage0 文本方法接收者在实参求值期间未被锁住的释放后使用缺陷（见第 18 节）；第三十七批支持只读 `[]T` 参数与 `Vec[T]` → `[]T` 自动视图（第 17 节）；第三十六批支持 `?? return`/`?? break`/`?? continue`（第 16 节）；第三十五批让 selfhost 支持 `Vec[str]`，并修复 Rust stage0 对拥有型实参（`Vec[String]` 等）返回视图的释放后使用缺陷（见第 15 节）；第三十四批加入借用返回 `-> str of …` 并修复 loans 在分支与循环中丢失的缺陷（第 14 节）。** 第三十三批起 selfhost 支持多文件源模块： `use a`、`use a/b`、`use a/{b, c}` 以入口文件目录为根加载，允许循环导入与自导入；顶层 `pub` 决定导出；导入逐文件生效、不传递；函数一律写 `module.f(...)`，公开类型可用短名或 `module.T`（含 `module.T{...}`、`module.E.V`），短名二义报 E0010；诊断和运行时 panic 都指向原文件行列。第三十二批的插值与 format（含 Rust 输出片段借用修复）见第 12 节。
 
-当前语料 **663 cases**。第三十七批本机完整自举 **663/663、12/12、0 skip**，固定点数字见第 17 节；Rust Debug/Release 各 145/0/1（p0 用例文件计在同一测试内）、冻结 124/3/2。
+当前语料 **675 cases**。第三十八批本机完整自举 **675/675、12/12、0 skip**，固定点数字见第 18 节；Rust Debug/Release 各 145/0/1（p0 用例文件计在同一测试内）、冻结 124/3/2。
 
 编译器自身也已改为以 `selfhost/main.yv` 为入口的 `use` 多文件（决定 28），bootstrap 不再拼接源码；改后本机 568/568、12/12，stage2/stage3 C（785,468 字节）与二进制（366,936 字节）一致。
 
-**SH-3 尚未接替，Rust stage0 仍承担日常编译；SH-4 完成 1/3 个独立应用。** 验收流程按 decisions.md 第九节。下一步见第 10 节：test-summary 的借用返回、`Vec[str]`、`?? return` 与 `[]str` 已解除，首错现在是 101 行的 `Map[String, int]`，随后是 str 方法等。
+**SH-3 尚未接替，Rust stage0 仍承担日常编译；SH-4 完成 1/3 个独立应用。** 验收流程按 decisions.md 第九节。下一步见第 10 节：test-summary 的借用返回、`Vec[str]`、`?? return`、`[]str` 与 str 查询方法已解除，首错仍是 101 行的 `Map[String, int]`，绕开后是 `main.yv:31` 遍历 `Vec[String]`。
 
 ## 2. 仓库与环境
 
@@ -197,7 +197,7 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 ## 10. 下一个会话的第一步
 
 1. 检查 Git 状态、最新提交与 CI；先读第 12 节、[自举路线](docs/self-hosting.md)、[selfhost 说明](selfhost/README.md)。
-2. **下一步：继续让 selfhost 编译 examples/test-summary（SH-3 的实际判据）。** 第三十四至三十七批解除了借用返回、`Vec[str]`、`?? return` 与 `[]str`。现在首错是解析期的 `parser.yv:101:19: U0001: type suffix is outside the selfhost subset`（`var cases: Map[String, int] = [:]`）。绕开 Map 后类型期的下一个阻塞是 `main.yv:18:40` 的 `arg.startsWith("-")`，之后可见 `split`/`endsWith`/`parseInt`/`toString`、Map 方法（`has`/`set`）、遍历 `Vec[String]`、`catch problem { }` 等。建议下一批做 str 方法组（`startsWith`/`endsWith`/`split`/`parseInt`：`split` 返回 `Vec[str] of` 接收者，`parseInt` 返回 `?int`，配合 `?? return` 覆盖 test-summary 72 行），Map 单独一批（类型、字面量、`has`/`set`/`get`、键为 String 的所有权）。每项先用 stage0 定标拒绝码，并迁移编译器自身里对应的变通写法。
+2. **下一步：继续让 selfhost 编译 examples/test-summary（SH-3 的实际判据）。** 第三十四至三十八批解除了借用返回、`Vec[str]`、`?? return`、`[]str` 与 str 查询方法。首错仍是解析期的 `parser.yv:101:19: U0001: type suffix is outside the selfhost subset`（`var cases: Map[String, int] = [:]`）。把 Map 换成 `Vec[String]` 绕开后，下一个阻塞是 `main.yv:31:5` 的 `for path in paths`（遍历 `Vec[String]`，循环变量是元素的视图），之后可见 `catch problem { }`、`toString`、`FileRow{path: path.clone(), ...}` 等。建议下一批二选一：Map 一批（类型、`[:]` 字面量、`has`/`set`/`get`、String 键的所有权与 drop），或先做遍历拥有元素的 `Vec`（循环变量为借用视图、循环体内锁住 Vec）。每项先用 stage0 定标拒绝码，并迁移编译器自身里对应的变通写法。
 3. 模块尚缺：包依赖与锁文件（stage0 也没有）、`use` 出现在其他项之后（stage0 接受，子集 U0001）、跨模块的枚举载荷/方法/泛型（子集本身没有）。
 
 4. 拥有型 Optional/pop、if let/match、跳转式 ??、Result 字段/容器、方法、泛型按实际阻塞另列；SH-3 的判据是能否编译 examples/test-summary 这样的真实程序，而不是特性数量。
@@ -289,3 +289,13 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - 编译器自身迁移：`contains`、`restoreState`、`restoreSources`、`joinSources`、`sourcesGrew`、`iterationSources` 与 parser 的 `store` 改为 `[]T` 参数（`joinStates` 用 `clone`，保持 Vec）；用户程序生成的 C 不变。
 - 用例：新增 26 个（run 1、panic 1、reject 16、unsupported 7、shared_unsupported 1）；约 160 个旧探针无回退。
 - 验收：本机 663/663、12/12、0 skip，stage2/stage3 C 849,712 字节、Linux 二进制 394,552 字节一致；本批未改 Rust（Rust 全量沿用第三十五批：各 145/0/1，冻结 124/3/2）。CI：`0889cb8` 的 [run 45576210191](https://github.com/msly/yavo/actions/runs/45576210191) **6/6 成功**（Linux x86-64 含 stage2 ASan/UBSan、Windows x86-64、macOS arm64）。
+
+## 18. 第三十八批：str 查询方法（2026-11-25）
+
+- 基线 `40547b5`。目标是 test-summary `main.yv:18` 的 `arg.startsWith("-")` 及 parser.yv 的 `split`/`endsWith`/`parseInt`。
+- selfhost：`textQuery` 处理 str/String 接收者的 `startsWith`/`endsWith`/`contains`（Bool）、`find`/`parseInt`（`?int`，`sh_optional_int`）、`split`（`Vec[str]`），C 与 stage0 同用 `yv_str_starts/ends/find/split/parse_int`。实参个数错 E0012，实参非文本 E0001（String 实参取视图）。`split` 结果来源随接收者：str 接收者继承来源位（可返回 `-> Vec[str] of text`，元素也可按来源返回；未列来源 E0303）；String 或临时接收者的结果是语句内视图，绑定为局部 U0001（stage0 对临时 String 报 E0305、绑定后修改报 E0102，子集一律 U0001）。
+- 求值顺序：实参先于接收者文本被读取，所以实参求值期间锁住拥有型接收者（经 inout 修改报 E0102，同 stage0 修复后行为）；str 局部接收者的槽也被守护，实参经 inout 改写它时 U0001（stage0 接受）。
+- **Rust stage0 缺陷修复**：`method2` 在求值单实参的文本方法（`startsWith`/`endsWith`/`contains`/`find`/`split` 等）实参前没有持有接收者，`owned.startsWith(grow(&owned))` 通过检查，生成的 C 在实参扩容 String 后读旧缓冲区（释放后使用）。现在实参求值期间以 `hold_call_argument` 持有接收者，报 E0102。P0 回归 `errors_text_method_receiver.yv`（startsWith/endsWith/contains/find/split 五处 E0102）。
+- 编译器自身迁移：`main.yv` 的 `.yv` 后缀判断改为 `path.endsWith(".yv")`。
+- 用例：新增 12 个（run 1、reject 7、unsupported 2、shared_unsupported 2）；无旧 unsupported 用例被提升；约 200 个旧探针无回退。
+- 验收：本机 675/675、12/12、0 skip，stage2/stage3 C 864,824 字节、Linux 二进制 406,680 字节一致；Rust Debug/Release 各 145/0/1，冻结 124/3/2。CI：待回填。

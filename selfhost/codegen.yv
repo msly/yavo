@@ -1138,6 +1138,10 @@ fn methodValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
     }
     let base = emitExpr(&g, p, ts, reg, e.left)
     if stringLike(base.ty) {
+        if name == "startsWith" || name == "endsWith" || name == "contains" || name == "find" ||
+            name == "split" || name == "parseInt" {
+            return textQuery(&g, p, ts, reg, e, base)
+        }
         if name == "len" || (name == "toString" && base.ty.kind == .Str) ||
             (name == "clone" && base.ty.kind == .String) {
             if e.argCount != 0 { lexer.fail(ts, e.token, "E0012", "this string method takes no arguments") }
@@ -1173,6 +1177,75 @@ fn methodValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
     }
     lexer.fail(ts, e.token, "U0001", "method is outside the selfhost subset")
     return Value{ty: types.primitive(.Unit), name: "".toString()}
+}
+
+// Text queries (stdlib contract section 2), lowered to the runtime helpers stage0
+// uses. The receiver is read after the argument, so while the argument is
+// evaluated an owned receiver is locked (stage0 hold_call_argument, E0102); a str
+// local's own slot is guarded too, which stage0 decides by its loans (U0001 here).
+fn textQuery(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression, base: Value) -> Value {
+    let name = ts[e.token].text.clone()
+    let wantsArgument = name != "parseInt"
+    var arity = 0
+    if wantsArgument { arity = 1 }
+    if e.argCount != arity {
+        if wantsArgument {
+            lexer.fail(ts, e.token, "E0012", format("${name} takes exactly one argument"))
+        }
+        lexer.fail(ts, e.token, "E0012", "parseInt takes no arguments")
+    }
+    var argument = String{}
+    if wantsArgument {
+        let locks = g.locks.len()
+        let guards = g.accessLocks.len()
+        if base.root >= 0 { g.locks.push(base.root) }
+        let receiver = p.expressions[e.left]
+        if receiver.kind == .Name && base.ty.kind == .Str {
+            let slot = localIndex(g, ts, receiver.token)
+            if slot >= 0 { g.accessLocks.push(slot) }
+        }
+        let argId = p.lists[e.argStart]
+        let arg = emitExpected(&g, p, ts, reg, argId, types.primitive(.Str))
+        if !stringLike(arg.ty) { require(reg, ts, p.expressions[argId].token, arg.ty, types.primitive(.Str)) }
+        argument = view(arg)
+        releaseLocks(&g, locks)
+        while g.accessLocks.len() > guards { let _ = g.accessLocks.pop() }
+    }
+    let text = view(base)
+    if name == "startsWith" {
+        return scalar(&g, .Bool, format("yv_str_starts(${text}, ${argument})"))
+    }
+    if name == "endsWith" {
+        return scalar(&g, .Bool, format("yv_str_ends(${text}, ${argument})"))
+    }
+    if name == "contains" {
+        return scalar(&g, .Bool, format("(yv_str_find(${text}, ${argument}) >= 0)"))
+    }
+    if name == "split" {
+        // The pieces point where the receiver points; pieces of an owned String
+        // are a statement-local view of it.
+        let pieces = Type{kind: .Vec, elementKind: .Str, elementDecl: -1}
+        var result = typedValue(&g, reg, pieces, format("yv_str_split(${text}, ${argument}, ${lineColumn(ts, e.token)})"))
+        if base.ty.kind == .String || base.transient {
+            result.transient = true
+            result.root = base.root
+        } else {
+            result.sources = base.sources
+        }
+        return result
+    }
+    let ty = types.optional(reg, ts, e.token, types.primitive(.Int))
+    let result = typedValue(&g, reg, ty, format("(${types.cType(ty)}){0}"))
+    let n = g.counter
+    g.counter += 1
+    if name == "find" {
+        emit(&g, format("int64_t n_${n} = yv_str_find(${text}, ${argument});"))
+        emit(&g, format("if (n_${n} >= 0) { ${result.name}.has = true; ${result.name}.val = n_${n}; }"))
+    } else {
+        emit(&g, format("int64_t n_${n} = 0;"))
+        emit(&g, format("if (yv_str_parse_int(${text}, &n_${n})) { ${result.name}.has = true; ${result.name}.val = n_${n}; }"))
+    }
+    return result
 }
 
 fn wrapOptional(g: inout Generator, reg: Registry, ty: Type, value: Value) -> Value {
