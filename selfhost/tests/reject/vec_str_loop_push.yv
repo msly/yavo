@@ -1,0 +1,12 @@
+fn f(a: str, b: str) -> Vec[str] of a {
+    var v: Vec[str] = []
+    var t = a
+    var i = 0
+    while i < 2 {
+        v.push(t)
+        t = b
+        i += 1
+    }
+    return v
+}
+fn main() { println(f("a", "b").len()) }

@@ -1,0 +1,7 @@
+fn f(a: str, b: str) -> Vec[str] of a {
+    var v: Vec[str] = [b]
+    let w = take(&v)
+    v.push(a)
+    return v
+}
+fn main() { println(f("a", "b").len()) }

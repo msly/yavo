@@ -83,6 +83,11 @@ pub fn owned(reg: Registry, ty: Type) -> bool {
     return ty.kind == .Named && reg.entries[ty.decl].owned
 }
 
+// Values that point into data they do not own: str and Vec[str] in this subset.
+pub fn carriesBorrow(ty: Type) -> bool {
+    return ty.kind == .Str || (ty.kind == .Vec && ty.elementKind == .Str)
+}
+
 pub fn fieldOf(reg: Registry, decl: int, index: int) -> Field {
     return reg.fields[reg.entries[decl].fieldStart + index]
 }
@@ -227,7 +232,8 @@ pub fn vector(ts: Vec[Token], token: int, elem: Type) -> Type {
     if elem.kind == .Unknown {
         lexer.fail(ts, token, "E0001", "cannot infer the vector element type")
     }
-    if elem.kind != .Int && elem.kind != .Byte && elem.kind != .Bool && elem.kind != .String && elem.kind != .Named {
+    if elem.kind != .Int && elem.kind != .Byte && elem.kind != .Bool && elem.kind != .String &&
+        elem.kind != .Str && elem.kind != .Named {
         lexer.fail(ts, token, "U0001", "this vector element type is outside the selfhost subset")
     }
     return Type{kind: .Vec, elementKind: elem.kind, elementDecl: elem.decl}
@@ -297,8 +303,8 @@ fn collectResults(p: Program, ts: Vec[Token], reg: inout Registry) {
         if ok.kind == .Result || error.kind == .Result || error.kind == .Unit {
             lexer.fail(ts, syntax.errorToken, "E0001", "a result needs a non-Result success type and a non-unit error type")
         }
-        if error.kind == .Str {
-            lexer.fail(ts, syntax.errorToken, "E0301", "an error value cannot hold a borrowed str; use String")
+        if carriesBorrow(error) {
+            lexer.fail(ts, syntax.errorToken, "E0301", "an error value cannot hold a borrowed view; use String")
         }
         var found = -1
         var j = 0
@@ -403,8 +409,8 @@ pub fn collect(p: Program, ts: Vec[Token]) -> Registry {
                 k += 1
             }
             let ty = resolve(reg, ts, f.ty)
-            if ty.kind == .Str {
-                lexer.fail(ts, f.name, "E0301", "a struct field cannot store a borrowed str; use an owned value")
+            if carriesBorrow(ty) {
+                lexer.fail(ts, f.name, "E0301", "a struct field cannot store a borrowed view; use an owned value")
             }
             if ty.kind == .Unit {
                 lexer.fail(ts, f.name, "U0001", "unit fields are outside the selfhost subset")

@@ -1,0 +1,10 @@
+fn f(s: inout str) {
+    let t = s
+    println(t)
+    s = "x"
+}
+fn main() {
+    var v = "a"
+    f(&v)
+    println(v)
+}

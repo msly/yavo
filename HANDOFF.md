@@ -1,16 +1,16 @@
-# Yavo 交接文档（2026-11-25，第三十四批：借用返回）
+# Yavo 交接文档（2026-11-25，第三十五批：Vec[str]）
 
-给下一个会话：先读第 1、2、10、13、14 节及 docs/self-hosting.md、selfhost/README.md 再开工。第二十七至第三十批在 `history/handoff-batches-2026-11-23-to-24.md`，第十二至第二十六批在 `history/handoff-batches-2026-11-21-to-23.md`，第六至第十一批在 `history/handoff-batches-2026-11-19-to-21.md`。
+给下一个会话：先读第 1、2、10、14、15 节及 docs/self-hosting.md、selfhost/README.md 再开工。第二十七至第三十批在 `history/handoff-batches-2026-11-23-to-24.md`，第十二至第二十六批在 `history/handoff-batches-2026-11-21-to-23.md`，第六至第十一批在 `history/handoff-batches-2026-11-19-to-21.md`。
 
 ## 1. 一句话状态
 
-**SH-2 引导子集固定点保持；第三十四批让 selfhost 支持借用返回 `-> str of …`，并修复 Rust stage0 借用来源在分支与循环中丢失的释放后使用缺陷（见第 14 节）。** 第三十三批起 selfhost 支持多文件源模块： `use a`、`use a/b`、`use a/{b, c}` 以入口文件目录为根加载，允许循环导入与自导入；顶层 `pub` 决定导出；导入逐文件生效、不传递；函数一律写 `module.f(...)`，公开类型可用短名或 `module.T`（含 `module.T{...}`、`module.E.V`），短名二义报 E0010；诊断和运行时 panic 都指向原文件行列。第三十二批的插值与 format（含 Rust 输出片段借用修复）见第 12 节。
+**SH-2 引导子集固定点保持；第三十五批让 selfhost 支持 `Vec[str]`，并修复 Rust stage0 对拥有型实参（`Vec[String]` 等）返回视图的释放后使用缺陷（见第 15 节）；第三十四批加入借用返回 `-> str of …` 并修复 loans 在分支与循环中丢失的缺陷（第 14 节）。** 第三十三批起 selfhost 支持多文件源模块： `use a`、`use a/b`、`use a/{b, c}` 以入口文件目录为根加载，允许循环导入与自导入；顶层 `pub` 决定导出；导入逐文件生效、不传递；函数一律写 `module.f(...)`，公开类型可用短名或 `module.T`（含 `module.T{...}`、`module.E.V`），短名二义报 E0010；诊断和运行时 panic 都指向原文件行列。第三十二批的插值与 format（含 Rust 输出片段借用修复）见第 12 节。
 
-当前语料 **598 cases**。第三十四批本机完整自举 **598/598、12/12、0 skip**，固定点数字见第 14 节；Rust Debug/Release 各 145/0/1（p0 新增两个用例文件，计在同一测试内）、冻结 124/3/2。
+当前语料 **623 cases**。第三十五批本机完整自举 **623/623、12/12、0 skip**，固定点数字见第 15 节；Rust Debug/Release 各 145/0/1（p0 用例文件计在同一测试内）、冻结 124/3/2。
 
 编译器自身也已改为以 `selfhost/main.yv` 为入口的 `use` 多文件（决定 28），bootstrap 不再拼接源码；改后本机 568/568、12/12，stage2/stage3 C（785,468 字节）与二进制（366,936 字节）一致。
 
-**SH-3 尚未接替，Rust stage0 仍承担日常编译；SH-4 完成 1/3 个独立应用。** 验收流程按 decisions.md 第九节。下一步见第 10 节：test-summary 的借用返回阻塞已解除，下一个阻塞是 `?? return`，随后依次是 `[]str`、`Map`、`Vec[str]`。
+**SH-3 尚未接替，Rust stage0 仍承担日常编译；SH-4 完成 1/3 个独立应用。** 验收流程按 decisions.md 第九节。下一步见第 10 节：test-summary 的借用返回与 `Vec[str]` 已解除，剩下解析期的 `?? return`、`[]str`、`Map`，以及 str 方法等。
 
 ## 2. 仓库与环境
 
@@ -197,7 +197,7 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 ## 10. 下一个会话的第一步
 
 1. 检查 Git 状态、最新提交与 CI；先读第 12 节、[自举路线](docs/self-hosting.md)、[selfhost 说明](selfhost/README.md)。
-2. **下一步：继续让 selfhost 编译 examples/test-summary（SH-3 的实际判据）。** 第三十四批解除了借用返回阻塞；现在 `yavo-selfhost check examples/test-summary/main.yv` 首错是 `parser.yv:72:36: U0001: jumping coalesce fallbacks`（`word.parseInt() ?? return err(...)`）。在副本里逐个绕开后依次是：`[]str` 切片参数（76 行，解析期）、`Map[String, int]`（101 行，解析期）、`Vec[str]`（44 行 `fields` 的签名，类型期）；之后可见 str 方法（`split`/`endsWith`/`startsWith`/`parseInt`）、Map 方法、遍历 `Vec[String]`、`catch problem { }` 等。建议先做 `Vec[str]`：它直接沿用本批的来源位掩码（元素来源 = 容器来源，`push` 合并），也是 `fields`/`split` 的前提。每项先用 stage0 定标拒绝码，并迁移编译器自身里对应的变通写法。
+2. **下一步：继续让 selfhost 编译 examples/test-summary（SH-3 的实际判据）。** 第三十四、三十五批解除了借用返回与 `Vec[str]`（`fields` 原样进入 `vec_str_basic` 用例）。现在首错仍是解析期的 `parser.yv:72:36: U0001: jumping coalesce fallbacks`（`word.parseInt() ?? return err(...)`）；随后解析期还有 `[]str` 切片参数（76 行）与 `Map[String, int]`（101 行）。在绕开这三处的副本里，类型期的下一个阻塞是 `main.yv:18:40` 的 `arg.startsWith("-")`（str 方法），之后可见 `split`/`endsWith`/`parseInt`、Map 方法、遍历 `Vec[String]`、`catch problem { }` 等。建议下一批做 `?? return`/`?? err` 跳转式回退（解析与控制流，复用已有 Copy Optional），或 str 方法组（`startsWith`/`endsWith`/`split`/`parseInt`，其中 `split` 返回 `Vec[str] of` 接收者，直接沿用本批）。每项先用 stage0 定标拒绝码，并迁移编译器自身里对应的变通写法。
 3. 模块尚缺：包依赖与锁文件（stage0 也没有）、`use` 出现在其他项之后（stage0 接受，子集 U0001）、跨模块的枚举载荷/方法/泛型（子集本身没有）。
 
 4. 拥有型 Optional/pop、if let/match、跳转式 ??、Result 字段/容器、方法、泛型按实际阻塞另列；SH-3 的判据是能否编译 examples/test-summary 这样的真实程序，而不是特性数量。
@@ -255,3 +255,15 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - 用例 30 个：run 3（`borrowed_return_basic`、`borrowed_return_flow`、`modules_borrowed`），reject 22（E0302/E0010/E0020/E0303 各类/E0102/E0306 四类），unsupported 5（String 参数来源、inout 来源、持久视图、ok 为 str 的 Result、两个拥有视图）。全部先用修复后的 stage0 实测；其中 7 个拒绝在旧 stage0 上会被接受。
 - 编译器自身迁移：`integerOperation` 的运行时函数名改由 `checkedStem`/`wrappingStem`（`-> str of static`）给出，不再为每个运算符分配 String；生成的 C 逐字节不变。
 - 验收：本机 598/598、12/12、0 skip，stage2/stage3 C 818,715 字节、Linux 二进制 381,784 字节一致；Rust Debug/Release 各 145/0/1，冻结 124/3/2。CI：`01c7856`（Rust 修复）与 `b6694a7`（本批）一起推送，[run 45558307665](https://github.com/msly/yavo/actions/runs/45558307665) **6/6 成功**：三平台 Rust Debug/Release（含修复后的 loans 检查与新 p0 用例）、selfhost 598 例与固定点、test-summary，Linux stage2 ASan/UBSan。
+
+## 15. 第三十五批：Vec[str]（2026-11-25）
+
+- 基线 `f3fac89`。目标是 test-summary 的 `fn fields(line: str) -> Vec[str] of line`；该函数原样放进 `run/vec_str_basic.yv`。
+- 类型：`types.vector` 放行 str 元素；新增 `carriesBorrow`（str 或 `Vec[str]`），字段与错误类型里出现即 E0301（与 stage0 相同），参数、签名 E0302 检查、返回检查与调用合并都改用它。
+- 来源：`Vec[str]` 局部的位掩码是元素来源的并集。`push`、`v[i] = s` 合并；整体赋值替换；移动（修正了 `takeValue` 移动拥有值时丢失来源）、`take`（被清空的位置保留来源，同 stage0）、`clone` 保留；字面量取元素并集；元素读与 `for` 绑定继承容器来源（`for` 现在允许 str 元素）。元素来自拥有 String 的视图时 U0001。
+- 调用：列在 `of` 中的实参若是元素为 Copy 的 Vec，贡献其来源；其他拥有值（String、`Vec[String]`、拥有结构体）或 transient 视为语句内视图；结果为 `Vec[str]` 时这种视图 U0001。
+- O4 与 inout：`storeSources` 统一处理三种写入。`inout` 参数只能接收静态文本（E0306）；`out.push(out[0])` 报 E0403（同 stage0）；只要还有别的局部指向该 inout 参数就报 U0001。stage0 按活跃性判断（不再使用则接受、仍使用则 E0102），U0001 对两者都安全。这关掉了第三十四批遗留的差异：子集曾接受 `let t = s; s = "x"; println(t)`（`s: inout str`），stage0 报 E0102。
+- **Rust stage0 缺陷（决定 27）**：调用点 `recv_loans` 对 String/结构体以外的实参只取元素借用。`fn first(v: Vec[String]) -> str of v { return v[0][0..1] }`、`fn head(v: Vec[int]) -> []int of v` 的结果实际指向实参存储，`owned = [...]` 后仍可使用，实测打印乱码。修复：拥有堆内存的实参按存储借用记录（局部/字段/下标取 storage_loans，临时值记 Temp）；只有元素为 Copy 的 Vec 且返回类型的借用全是 `str`（新增 `only_text_borrows`）时保持只取元素借用，所以 `let s = first(words); words = []` 仍合法。新增 p0 `errors_owned_view_args.yv`（3 处，旧版只报出结构体那 1 处）与 `run_text_vector_views.yv`（合法用法，Debug/Release 堆检查干净）。
+- 用例：新增 25 个（run 1、reject 18、unsupported 6），全部先用修复后的 stage0 实测；旧的 `unsupported_vec_str_element`（`["first", "second"]`）原字节晋升为 `run/vec_str_literal.yv`，记入 promotions。约 100 个探针上子集与 stage0 无“stage0 拒绝而子集接受”的情况。
+- 编译器自身没有为绕开 `Vec[str]` 写的变通代码（`main.yv` 的模块路径是拼出来的拥有字符串，lexer_test 的 `Vec[String]` 是有意测试清理），本批无迁移。
+- 验收：本机 623/623、12/12、0 skip，stage2/stage3 C 826,223 字节、Linux 二进制 386,344 字节一致；Rust Debug/Release 各 145/0/1，冻结 124/3/2。CI：待回填。

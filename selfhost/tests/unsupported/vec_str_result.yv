@@ -1,0 +1,11 @@
+enum E {
+    Bad
+}
+fn words(text: str) -> Vec[str] ! E of text {
+    if text.len() == 0 { return err(.Bad) }
+    return [text]
+}
+fn main() {
+    let w = words("a") catch _ { return }
+    println(w.len())
+}

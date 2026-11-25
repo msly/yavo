@@ -450,7 +450,8 @@ fn takeValue(g: inout Generator, reg: Registry, ts: Vec[Token], token: int, v: V
         if g.loopCondition {
             lexer.fail(ts, token, "U0001", "moving an existing owned value in a loop condition is outside this subset")
         }
-        let taken = typedValue(&g, reg, v.ty, v.name)
+        var taken = typedValue(&g, reg, v.ty, v.name)
+        taken.sources = v.sources
         zeroValue(&g, reg, v)
         g.locals[v.local].moved = true
         return taken
@@ -719,7 +720,9 @@ fn takeCall(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Ex
     if target.ty.kind != .String && target.ty.kind != .Vec {
         lexer.fail(ts, e.token, "U0001", "take is limited to String and Vec places in this subset")
     }
-    let taken = typedValue(&g, reg, target.ty, target.name)
+    var taken = typedValue(&g, reg, target.ty, target.name)
+    // Like stage0, the emptied place keeps its sources.
+    taken.sources = g.locals[target.root].sources
     put(&g, target.name)
     put(&g, " = (")
     put(&g, types.cType(target.ty))
@@ -816,7 +819,7 @@ fn userCall(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Ex
     let locks = g.locks.len()
     let inoutMark = g.inoutLocks.len()
     let result = types.resolve(reg, ts, f.result)
-    let borrowedResult = result.kind == .Str && f.sourced
+    let borrowedResult = types.carriesBorrow(result) && f.sourced
     var sources = 0
     var viewed = false
     var viewRoot = -1
@@ -855,13 +858,19 @@ fn userCall(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Ex
             }
             // The result points where its listed arguments point. A view of an
             // owned String keeps that owner as the root of a transient result.
-            if named && (arg.transient || arg.ty.kind == .String) {
+            // A vector of Copy elements lends only its elements' sources to a str
+            // result; any other owner lends its own storage (stage0 recv_loans).
+            let copyVector = arg.ty.kind == .Vec && !types.owned(reg, types.element(arg.ty))
+            if named && (arg.transient || (types.owned(reg, arg.ty) && !copyVector)) {
+                if result.kind == .Vec {
+                    lexer.fail(ts, argToken, "U0001", "vectors of views into owned values are outside this subset")
+                }
                 if viewed && viewRoot != arg.root {
                     lexer.fail(ts, argToken, "U0001", "borrowed returns viewing several owned strings are outside this subset")
                 }
                 viewed = true
                 viewRoot = arg.root
-            } else if named && arg.ty.kind == .Str {
+            } else if named {
                 sources = sources | arg.sources
             }
             if arg.root >= 0 { g.locks.push(arg.root) }
@@ -899,8 +908,8 @@ fn sourceListed(p: Program, ts: Vec[Token], f: Function, param: int) -> bool {
 fn allowedSources(p: Program, ts: Vec[Token], reg: Registry, index: int) -> int {
     let f = p.functions[index]
     let result = types.resolve(reg, ts, f.result)
-    var borrowed = result.kind == .Str
-    if result.kind == .Result { borrowed = types.resultOk(reg, result).kind == .Str }
+    var borrowed = types.carriesBorrow(result)
+    if result.kind == .Result { borrowed = types.carriesBorrow(types.resultOk(reg, result)) }
     if !f.sourced {
         if borrowed {
             var arrow = f.name
@@ -955,6 +964,37 @@ fn returnedSources(g: Generator, p: Program, ts: Vec[Token], id: int, returned: 
     }
     if (returned.sources | g.allowed) != g.allowed {
         lexer.fail(ts, token, "E0303", "the returned value points into a parameter that of does not list")
+    }
+}
+
+// Store a str value with these sources into a str or Vec[str] local: a whole
+// assignment replaces the local's sources, push and element stores join them.
+// O4: an inout parameter may only receive static text. Stage0 also keeps a loan
+// on an inout parameter while a local still points into it (E0102 if that local
+// is used later); without liveness, any such local blocks the write (U0001).
+fn storeSources(g: inout Generator, ts: Vec[Token], token: int, root: int, sources: int,
+    replace: bool, pushing: bool) {
+    let local = g.locals[root]
+    if local.byRef && types.carriesBorrow(local.ty) {
+        let own = sourceBit(root)
+        if pushing && (sources & own) != 0 {
+            lexer.fail(ts, token, "E0403", "this argument still points into the receiver")
+        }
+        if sources != 0 {
+            lexer.fail(ts, token, "E0306", "cannot store a borrow into the caller's inout parameter")
+        }
+        var i = 0
+        while i < g.locals.len() {
+            if i != root && (g.locals[i].sources & own) != 0 {
+                lexer.fail(ts, token, "U0001", "modifying an inout parameter while a local points into it is outside this subset")
+            }
+            i += 1
+        }
+    }
+    if replace {
+        g.locals[root].sources = sources
+    } else {
+        g.locals[root].sources = local.sources | sources
     }
 }
 
@@ -1064,6 +1104,12 @@ fn methodValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
                 let elem = types.element(target.ty)
                 let arg = emitExpected(&g, p, ts, reg, argId, elem)
                 require(reg, ts, p.expressions[argId].token, arg.ty, elem)
+                if elem.kind == .Str {
+                    if arg.transient {
+                        lexer.fail(ts, p.expressions[argId].token, "U0001", "persistent views of owned strings are outside this subset")
+                    }
+                    storeSources(&g, ts, p.expressions[argId].token, target.root, arg.sources, false, true)
+                }
                 // Keep the receiver reserved until consuming the argument has checked
                 // its source root; storing the value transfers ownership to the slot.
                 let taken = takeValue(&g, reg, ts, p.expressions[argId].token, arg)
@@ -1098,7 +1144,10 @@ fn methodValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
             if name == "len" { return scalar(&g, .Int, support.join3("(", base.name, ").len")) }
             let cloned = cloneExpression(reg, base.ty, base.name,
                 support.decimal(ts[e.token].line + ts[e.token].lineBase), support.decimal(ts[e.token].column))
-            return typedValue(&g, reg, base.ty, cloned)
+            // A cloned Vec[str] owns new storage; its elements keep their sources.
+            var copied = typedValue(&g, reg, base.ty, cloned)
+            copied.sources = base.sources
+            return copied
         }
         lexer.fail(ts, e.token, "U0001", "vector method is outside the selfhost subset")
     }
@@ -1694,6 +1743,7 @@ fn vectorValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
     var registered = types.primitive(.Vec)
     if ty.kind != .Unknown { registered = ty }
     g.temps.push(Temporary{ty: registered, id: n})
+    var sources = 0
     let before = take(&g.out)
     var i = 0
     while i < e.argCount {
@@ -1714,6 +1764,10 @@ fn vectorValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
             g.temps[temporary].ty = ty
         }
         require(reg, ts, argToken, item.ty, elem)
+        if item.transient {
+            lexer.fail(ts, argToken, "U0001", "persistent views of owned strings are outside this subset")
+        }
+        sources = sources | item.sources
         let taken = takeValue(&g, reg, ts, argToken, item)
         let et = types.cType(elem)
         put(&g, support.join5("*(", et, " *)yv_vec_push_slot(&", name, ", (int64_t)sizeof("))
@@ -1735,7 +1789,7 @@ fn vectorValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
     put(&g, lineColumn(ts, e.token))
     emit(&g, ");")
     g.out.push(body)
-    return Value{ty: ty, name: name, temporary: true}
+    return Value{ty: ty, name: name, temporary: true, sources: sources}
 }
 
 fn indexValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression) -> Value {
@@ -1780,8 +1834,11 @@ fn indexValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: 
         return Value{ty: elem, name: support.join3("(*borrow_", support.decimal(n), ")"), root: base.root, indexedBorrow: true}
     }
     // Copy reads immediately detach from the source container.
-    return typedValue(&g, reg, elem,
+    // A str element keeps the sources of the text it points into.
+    var element = typedValue(&g, reg, elem,
         support.join5("*(", et, " *)yv_vec_at(&(", base.name, support.join4("), (int64_t)sizeof(", et, ")", at)))
+    element.sources = base.sources
+    return element
 }
 
 // An expression-local text slice. A view of an owned String keeps its root
@@ -1847,7 +1904,9 @@ fn expressionValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry
         readable(g, ts, index, e.token)
         let local = g.locals[index]
         let name = localName(local)
-        if types.owned(reg, local.ty) { return Value{ty: local.ty, name: name, local: index, root: index} }
+        if types.owned(reg, local.ty) {
+            return Value{ty: local.ty, name: name, local: index, root: index, sources: local.sources}
+        }
         var value = typedValue(&g, reg, local.ty, name)
         value.sources = local.sources
         return value
@@ -2209,11 +2268,13 @@ fn forLoopStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registr
         }
         let elem = types.element(value.ty)
         if types.owned(reg, elem) ||
-            (elem.kind != .Int && elem.kind != .Byte && elem.kind != .Bool && elem.kind != .Named) {
+            (elem.kind != .Int && elem.kind != .Byte && elem.kind != .Bool && elem.kind != .Str &&
+            elem.kind != .Named) {
             lexer.fail(ts, s.token, "U0001", "iteration over this vector element type is outside the Copy subset")
         }
         g.iterationLocks.push(value.root)
         declare(&g, ts, s.name, elem, false, false, false)
+        g.locals[g.locals.len() - 1].sources = value.sources
         let index = support.join2("iter_", support.decimal(g.counter))
         g.counter += 1
         put(&g, support.join5("for (int64_t ", index, " = 0; ", index, " < ("))
@@ -2277,13 +2338,11 @@ fn emitStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, 
             lexer.fail(ts, s.token, "U0001", "persistent views of owned strings are outside this subset")
         }
         if ts[s.token].text == "=" {
-            if target.whole && !target.indexed && target.ty.kind == .Str {
-                // O4: an inout str parameter may only receive static text.
-                if g.locals[target.root].byRef && rhs.sources != 0 {
-                    lexer.fail(ts, p.expressions[s.expr].token, "E0306",
-                        "cannot store a borrow into the caller's inout parameter")
-                }
-                g.locals[target.root].sources = rhs.sources
+            let valueToken = p.expressions[s.expr].token
+            if target.whole && !target.indexed && types.carriesBorrow(target.ty) {
+                storeSources(&g, ts, valueToken, target.root, rhs.sources, true, false)
+            } else if target.indexed && target.ty.kind == .Str {
+                storeSources(&g, ts, valueToken, target.root, rhs.sources, false, false)
             }
             let taken = takeValue(&g, reg, ts, s.token, rhs)
             if target.indexed { target = placeOf(&g, p, ts, reg, s.target, 0) }
@@ -2337,7 +2396,7 @@ fn emitStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, 
             let resultType = g.result
             let returned = emitExpected(&g, p, ts, reg, s.expr, resultType)
             require(reg, ts, s.token, returned.ty, resultType)
-            if returned.ty.kind == .Str { returnedSources(g, p, ts, s.expr, returned) }
+            if types.carriesBorrow(returned.ty) { returnedSources(g, p, ts, s.expr, returned) }
             if returned.ty.kind == .Unit {
                 cleanTemps(&g, reg, 0)
                 cleanLocals(&g, reg, 0)
@@ -2637,9 +2696,9 @@ pub fn generate(p: Program, ts: Vec[Token], filename: str) -> String {
             let param = p.params[f.paramStart + k]
             let ty = types.resolve(reg, ts, param.ty)
             declare(&g, ts, param.name, ty, param.byRef, param.byRef || types.owned(reg, ty), param.byRef)
-            if ty.kind == .Str {
+            if types.carriesBorrow(ty) {
                 if k >= 62 {
-                    lexer.fail(ts, param.name, "U0001", "str parameters after the 62nd are outside this subset")
+                    lexer.fail(ts, param.name, "U0001", "borrowing parameters after the 62nd are outside this subset")
                 }
                 g.locals[k].sources = sourceBit(k)
             }

@@ -1,0 +1,70 @@
+// Vec[str] holds views; the vector's sources are the join of its elements'.
+// Reading an element yields a str with those sources, which outlives changes
+// to the vector itself.
+fn asciiSpace(b: byte) -> bool {
+    return b == ' ' || b == '\t'
+}
+
+// examples/test-summary's field splitter, unchanged.
+fn fields(line: str) -> Vec[str] of line {
+    var words: Vec[str] = []
+    var i = 0
+    while i < line.len() {
+        while i < line.len() && asciiSpace(line[i]) { i += 1 }
+        let begin = i
+        while i < line.len() && !asciiSpace(line[i]) { i += 1 }
+        if begin < i { words.push(line[begin..i]) }
+    }
+    return words
+}
+
+fn first(ws: Vec[str]) -> str of ws {
+    return ws[0]
+}
+
+fn longest(ws: Vec[str]) -> str of (ws, static) {
+    var best = ""
+    for w in ws {
+        if w.len() > best.len() { best = w }
+    }
+    return best
+}
+
+fn tagged(text: str) -> Vec[str] of text {
+    var out = [text, "static"]
+    let copy = out.clone()
+    out = copy
+    out[1] = "tag"
+    let emptied = take(&out)
+    out.push(emptied[0])
+    out.push(out[0])
+    return out
+}
+
+fn reset(out: inout Vec[str]) {
+    out.push("pushed")
+    out[0] = "replaced"
+}
+
+fn main() {
+    let words = fields("  alpha beta\tgamma  ")
+    println(words.len())
+    println(first(words))
+    println(longest(words))
+    for w in words {
+        println(w)
+    }
+    var ws = fields("one two")
+    let one = first(ws)
+    ws = []
+    println(one)
+    println(first(fields("direct call")))
+    let tags = tagged("text")
+    println(tags.len())
+    println(tags[1])
+    var mine: Vec[str] = ["a"]
+    reset(&mine)
+    println(mine[0])
+    println(mine[1])
+    println(longest([]))
+}

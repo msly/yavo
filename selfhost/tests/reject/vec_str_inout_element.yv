@@ -1,0 +1,8 @@
+fn setFirst(out: inout Vec[str], text: str) {
+    out[0] = text
+}
+fn main() {
+    var v: Vec[str] = ["x"]
+    setFirst(&v, "a")
+    println(v[0])
+}

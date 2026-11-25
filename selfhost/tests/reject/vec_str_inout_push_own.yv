@@ -1,0 +1,8 @@
+fn add(out: inout Vec[str]) {
+    if out.len() > 0 { out.push(out[0]) }
+}
+fn main() {
+    var v: Vec[str] = ["a"]
+    add(&v)
+    println(v.len())
+}

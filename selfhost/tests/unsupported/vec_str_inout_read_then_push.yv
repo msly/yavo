@@ -1,0 +1,10 @@
+fn count(out: inout Vec[str]) -> int {
+    let first = out[0]
+    println(first)
+    out.push("z")
+    return out.len()
+}
+fn main() {
+    var v: Vec[str] = ["a"]
+    println(count(&v))
+}

@@ -1,6 +1,6 @@
 {
   "schema": "yavo-selfhost-cases/1",
-  "description": "Independent fixed-oracle probes for the Yavo-written scalar, byte, aggregate, String, owned-vector, user-function Result and Copy Optional/pop, interpolation, source-module and borrowed-return subset; not the frozen full-language conformance suite.",
+  "description": "Independent fixed-oracle probes for the Yavo-written scalar, byte, aggregate, String, owned-vector, user-function Result and Copy Optional/pop, interpolation, source-module, borrowed-return and Vec[str] subset; not the frozen full-language conformance suite.",
   "cases": [
     {
       "id": "arithmetic",
@@ -1538,11 +1538,10 @@
       "file": "run/borrowed_index_string_storage.yv"
     },
     {
-      "id": "unsupported_vec_str_element",
-      "kind": "unsupported",
-      "batch": "vec-copy",
-      "file": "unsupported/unsupported_vec_str_element.yv",
-      "diagnostic": "U0001"
+      "id": "vec_str_literal",
+      "kind": "run",
+      "stdout": "first\n",
+      "file": "run/vec_str_literal.yv"
     },
     {
       "id": "unsupported_vec_nested_element",
@@ -4147,6 +4146,156 @@
       "kind": "unsupported",
       "diagnostic": "U0001",
       "file": "unsupported/borrowed_return_two_views.yv"
+    },
+    {
+      "id": "vec_str_basic",
+      "kind": "run",
+      "stdout": "3\nalpha\nalpha\nalpha\nbeta\ngamma\none\ndirect\n2\ntext\nreplaced\npushed\n\n",
+      "file": "run/vec_str_basic.yv"
+    },
+    {
+      "id": "vec_str_missing_of",
+      "kind": "reject",
+      "diagnostic": "E0302",
+      "file": "reject/vec_str_missing_of.yv"
+    },
+    {
+      "id": "vec_str_unlisted_push",
+      "kind": "reject",
+      "diagnostic": "E0303",
+      "file": "reject/vec_str_unlisted_push.yv"
+    },
+    {
+      "id": "vec_str_literal_sources",
+      "kind": "reject",
+      "diagnostic": "E0303",
+      "file": "reject/vec_str_literal_sources.yv"
+    },
+    {
+      "id": "vec_str_loop_push",
+      "kind": "reject",
+      "diagnostic": "E0303",
+      "file": "reject/vec_str_loop_push.yv"
+    },
+    {
+      "id": "vec_str_element_store",
+      "kind": "reject",
+      "diagnostic": "E0303",
+      "file": "reject/vec_str_element_store.yv"
+    },
+    {
+      "id": "vec_str_moved",
+      "kind": "reject",
+      "diagnostic": "E0303",
+      "file": "reject/vec_str_moved.yv"
+    },
+    {
+      "id": "vec_str_take",
+      "kind": "reject",
+      "diagnostic": "E0303",
+      "file": "reject/vec_str_take.yv"
+    },
+    {
+      "id": "vec_str_param_element",
+      "kind": "reject",
+      "diagnostic": "E0303",
+      "file": "reject/vec_str_param_element.yv"
+    },
+    {
+      "id": "vec_str_element_unlisted",
+      "kind": "reject",
+      "diagnostic": "E0303",
+      "file": "reject/vec_str_element_unlisted.yv"
+    },
+    {
+      "id": "vec_str_field",
+      "kind": "reject",
+      "diagnostic": "E0301",
+      "file": "reject/vec_str_field.yv"
+    },
+    {
+      "id": "vec_str_error_payload",
+      "kind": "reject",
+      "diagnostic": "E0301",
+      "file": "reject/vec_str_error_payload.yv"
+    },
+    {
+      "id": "vec_str_inout_push",
+      "kind": "reject",
+      "diagnostic": "E0306",
+      "file": "reject/vec_str_inout_push.yv"
+    },
+    {
+      "id": "vec_str_inout_assign",
+      "kind": "reject",
+      "diagnostic": "E0306",
+      "file": "reject/vec_str_inout_assign.yv"
+    },
+    {
+      "id": "vec_str_inout_element",
+      "kind": "reject",
+      "diagnostic": "E0306",
+      "file": "reject/vec_str_inout_element.yv"
+    },
+    {
+      "id": "vec_str_inout_push_iterated",
+      "kind": "reject",
+      "diagnostic": "E0306",
+      "file": "reject/vec_str_inout_push_iterated.yv"
+    },
+    {
+      "id": "vec_str_inout_push_own",
+      "kind": "reject",
+      "diagnostic": "E0403",
+      "file": "reject/vec_str_inout_push_own.yv"
+    },
+    {
+      "id": "vec_str_iterate_push",
+      "kind": "reject",
+      "diagnostic": "E0102",
+      "file": "reject/vec_str_iterate_push.yv"
+    },
+    {
+      "id": "vec_str_param_push",
+      "kind": "reject",
+      "diagnostic": "E0014",
+      "file": "reject/vec_str_param_push.yv"
+    },
+    {
+      "id": "vec_str_pop",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/vec_str_pop.yv"
+    },
+    {
+      "id": "vec_str_owned_element",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/vec_str_owned_element.yv"
+    },
+    {
+      "id": "vec_str_owned_argument",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/vec_str_owned_argument.yv"
+    },
+    {
+      "id": "vec_str_result",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/vec_str_result.yv"
+    },
+    {
+      "id": "vec_str_inout_read_then_push",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/vec_str_inout_read_then_push.yv"
+    },
+    {
+      "id": "inout_str_read_then_store",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/inout_str_read_then_store.yv"
     }
   ],
   "promotions": [
@@ -4259,6 +4408,17 @@
       "kind": "run",
       "source_sha256": "2391757f4bbfef054e7fed3f45bbc645c937b72f67023ceadbc8b16f27028a60",
       "reason": "Direct interpolation output is now accepted; the original source bytes are unchanged."
+    },
+    {
+      "previous_id": "unsupported_vec_str_element",
+      "previous_file": "unsupported/unsupported_vec_str_element.yv",
+      "previous_kind": "unsupported",
+      "baseline_commit": "f3fac8954f4e7357de9818a772680c531a8ea0c2",
+      "id": "vec_str_literal",
+      "file": "run/vec_str_literal.yv",
+      "kind": "run",
+      "source_sha256": "a2de1f038ca1b56a40156b9e432fe9e29fcc5c13bd0482eb08e8888e0113a53b",
+      "reason": "Vectors of str are now in the accepted input subset; the original source bytes are unchanged."
     }
   ]
 }

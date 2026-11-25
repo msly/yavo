@@ -1,0 +1,8 @@
+fn reset(out: inout Vec[str], text: str) {
+    out = [text]
+}
+fn main() {
+    var v: Vec[str] = []
+    reset(&v, "a")
+    println(v.len())
+}
