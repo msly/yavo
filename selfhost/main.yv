@@ -1,3 +1,10 @@
+use std/{fs, os}
+use support
+use lexer
+use model
+use parser
+use codegen
+
 // Command-line entry. The input is fully lexed, parsed, checked and lowered
 // before the output file is created; any diagnostic stops the process first.
 
@@ -24,7 +31,7 @@ fn moduleKey(ts: Vec[Token], item: ModuleImport) -> String {
 // k is the k-th distinct module path; a cycle or self-import reuses its index.
 fn compile(source: str, path: str) -> String ! Diagnostic {
     var tokens: Vec[Token] = []
-    let _ = try lexInto(source, path, &tokens)
+    let _ = try lexer.lexInto(source, path, &tokens)
     var cut = -1
     var i = 0
     while i < path.len() {
@@ -36,24 +43,24 @@ fn compile(source: str, path: str) -> String ! Diagnostic {
     var keys: Vec[String] = [path[cut + 1..stemEnd].toString()]
     var paths: Vec[String] = [path.toString()]
     var sites: Vec[int] = [-1]
-    var parser = startParse()
+    var state = parser.startParse()
     var file = 0
     while file < keys.len() {
         if file > 0 {
             let text = fs.readText(paths[file]) catch _ {
-                fail(tokens, sites[file], "E0010", join3("cannot load module '", keys[file], "'"))
+                lexer.fail(tokens, sites[file], "E0010", support.join3("cannot load module '", keys[file], "'"))
                 os.exit(1)
             }
-            let _ = lexInto(text, paths[file], &tokens) catch problem {
-                report(paths[file], problem.line, problem.column, problem.code, problem.message)
+            let _ = lexer.lexInto(text, paths[file], &tokens) catch problem {
+                support.report(paths[file], problem.line, problem.column, problem.code, problem.message)
                 os.exit(1)
             }
         }
-        parseFile(&parser, tokens)
-        let start = parser.files[file].importStart
+        parser.parseFile(&state, tokens)
+        let start = state.files[file].importStart
         var j = 0
-        while j < parser.files[file].importCount {
-            let key = moduleKey(tokens, parser.imports[start + j])
+        while j < state.files[file].importCount {
+            let key = moduleKey(tokens, state.imports[start + j])
             var found = -1
             var k = 0
             while k < keys.len() {
@@ -66,16 +73,16 @@ fn compile(source: str, path: str) -> String ! Diagnostic {
                 modulePath.push(key)
                 modulePath.push(".yv")
                 paths.push(modulePath)
-                sites.push(parser.imports[start + j].alias)
+                sites.push(state.imports[start + j].alias)
                 keys.push(key)
             }
-            parser.imports[start + j].file = found
+            state.imports[start + j].file = found
             j += 1
         }
         file += 1
     }
-    let program = finishParse(&parser)
-    return ok(generate(program, tokens, path))
+    let program = parser.finishParse(&state)
+    return ok(codegen.generate(program, tokens, path))
 }
 
 fn main() {
@@ -95,7 +102,7 @@ fn main() {
         os.exit(3)
     }
     let generated = compile(source, args[2]) catch diagnostic {
-        report(args[2], diagnostic.line, diagnostic.column, diagnostic.code, diagnostic.message)
+        support.report(args[2], diagnostic.line, diagnostic.column, diagnostic.code, diagnostic.message)
         os.exit(1)
     }
     if emitMode {

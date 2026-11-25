@@ -114,3 +114,11 @@ P0 继续完成真实工具链锁和三平台最小链路；P1 使用本版语�
 | 25 每批验收的必需项 | ① `selfhost/tests/cases.json` 登记的用例，每个拒绝码/输出先用 stage0 实测；② 本机 `bootstrap.py` 全量通过（固定点、stage1/stage2 全用例一致、真实 lexer）；③ Rust Debug/Release 全量与冻结规格棘轮无退步；④ 推送后三平台 CI 成功，在 HANDOFF 记录 run 链接。四项都满足即可进入下一批 | HANDOFF 第 10 节 |
 | 26 不再默认产出的材料 | 每批的独立 oracle 包、逐命令输出流存档、CI 归档下载后的离线重哈希审计、单独的“记录原生验收”文档提交。已有材料原样保留。只有出现可疑结果（平台差异、疑似 stage0 缺陷、固定点不稳定）时，才针对该问题留存最小复现与证据 | compiler/validation、selfhost/tests/evidence |
 | 27 Rust 侧缺陷 | 仍按原则在 `compiler/` 独立修复并加 P0 回归，不降低自举目标或改冻结用例 | docs/self-hosting.md |
+
+## 十、2026-11-25 编译器源码改为模块
+
+依据：第三十三批 selfhost 支持了源模块，决定 23 的“驱动逐字节拼接”已无必要。
+
+| 项 | 决定 | 定位 |
+| --- | --- | --- |
+| 28 编译器源码改为模块（取代决定 23） | 第三十三批 selfhost 实现源模块后，编译器自身改为以 `main.yv` 为入口的 `use` 多文件：跨文件调用写 `模块.函数(...)`，跨文件使用的项加 `pub`。bootstrap.py 只把这些文件原样复制到运行目录，并只交入口文件给各阶段编译器；lexer 单元以 `lexer_test.yv` 为入口。改写由脚本机械完成，除限定名、`pub`、`use` 行和 main.yv 中局部变量 `parser` 改名为 `state`（避免遮蔽模块名）外不改代码 | selfhost/bootstrap.py |

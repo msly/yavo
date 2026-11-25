@@ -158,13 +158,15 @@ def load_inputs(receipt_path):
         raise ValueError("bootstrap did not execute the selfhost lexer unit")
     unit = receipt["lexer_selfhost_unit"]
     bundle = inputs["lexer_unit_bundle"]
-    source = contained(work / "lexer-test.yv", work)
+    directory = contained(work / "selfhost-src", work)
+    source = contained(directory / BOOTSTRAP.LEXER_UNIT_ENTRY, work)
     expected_parts = [{"file": part, "sha256": BOOTSTRAP.digest(SELFHOST / part)}
                       for part in BOOTSTRAP.LEXER_UNIT_PARTS]
-    if (bundle["path"] != str(source) or bundle["parts"] != expected_parts
+    if (bundle["path"] != str(source) or Path(bundle["directory"]).resolve() != directory
+            or bundle["parts"] != expected_parts
             or bundle["bytes"] != source.stat().st_size
-            or source.read_bytes() != b"".join((SELFHOST / part).read_bytes()
-                                               for part in BOOTSTRAP.LEXER_UNIT_PARTS)
+            or any((directory / part).read_bytes() != (SELFHOST / part).read_bytes()
+                   for part in BOOTSTRAP.LEXER_UNIT_PARTS)
             or unit["source"] != {"path": str(source), "sha256": bundle["sha256"]}
             or unit.get("deterministic_c") is not True):
         raise ValueError("selfhost lexer unit does not bind the production source bundle")

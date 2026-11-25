@@ -34,12 +34,13 @@ cargo build --manifest-path compiler/Cargo.toml --locked --release
 python3 selfhost/bootstrap.py
 ```
 
-The compiler is one program assembled from `COMPILER_PARTS` in
-`bootstrap.py`: `support.yv`, `lexer.yv`, `model.yv`, `parser.yv`,
-`types.yv`, `codegen.yv`, `main.yv`, concatenated byte for byte (there are no
-modules in the bootstrap dialect). The lexer unit test is assembled from
-`support.yv`, `lexer.yv` and `lexer_test.yv`; its current validation status is
-listed below.
+The compiler is a module program whose entry is `main.yv`; it loads
+`support.yv`, `lexer.yv`, `model.yv`, `parser.yv`, `types.yv` and `codegen.yv`
+through `use` and calls across files as `module.f(...)`. `bootstrap.py` copies
+these files (`COMPILER_PARTS`) unchanged into the run directory and gives every
+compiler only the entry file. The lexer unit test's entry is `lexer_test.yv`,
+which uses `support` and `lexer`; its current validation status is listed below.
+To build the compiler by hand: `yavo build selfhost/main.yv -o yavo-selfhost`.
 
 `bootstrap.py` accepts `--stage0`, `--zig` and `--output`. Defaults use the
 Release compiler, the toolchain installation described by `compiler/toolchain.lock`,
@@ -544,8 +545,8 @@ executable fixtures from earlier increments.
 ## Next steps
 
 Self-hosting remains a regression gate. Batch 33's source modules have passed
-local acceptance. The next step is a separate commit that turns the compiler
-itself into `use`-linked files instead of the `COMPILER_PARTS` concatenation. Each increment must replace real compiler-source workarounds,
+local acceptance, and the compiler itself is now `use`-linked files rather than
+a concatenation. Each increment must replace real compiler-source workarounds,
 retain independent behavior and cleanup oracles, and renew the fixed point
 on Linux, Windows and macOS. [SH-3](../docs/self-hosting.md) remains incomplete;
 SH-4 has one of three independent applications validated.

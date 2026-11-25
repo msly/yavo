@@ -1,7 +1,11 @@
+use std/os
+use support
+use lexer
+
 // Built by stage0 and the selfhost compiler from the same three source files.
 
 fn good(source: str) -> Vec[Token] {
-    let tokens = lex(source, "test.yv") catch diagnostic {
+    let tokens = lexer.lex(source, "test.yv") catch diagnostic {
         eprintln(diagnostic.code)
         eprintln(diagnostic.message)
         eprintln("expected lexing to succeed")
@@ -12,7 +16,7 @@ fn good(source: str) -> Vec[Token] {
 }
 
 fn bad(source: str, code: str, offset: int, line: int, column: int) {
-    let _tokens = lex(source, "test.yv") catch diagnostic {
+    let _tokens = lexer.lex(source, "test.yv") catch diagnostic {
         assert(diagnostic.code == code)
         assert(diagnostic.offset == offset)
         assert(diagnostic.line == line)
@@ -29,7 +33,7 @@ fn throughTemporary(source: str, path: str) -> Vec[Token] ! Diagnostic {
     var temporary: Vec[String] = []
     temporary.push(source.toString())
     temporary.push(path.toString())
-    let tokens = try lex(source, path)
+    let tokens = try lexer.lex(source, path)
     assert(temporary.len() == 2)
     return ok(tokens)
 }

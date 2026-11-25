@@ -1,3 +1,7 @@
+use support
+use lexer
+use model
+
 // Recursive-descent parser for the bootstrap subset. The first syntax error is fatal.
 
 struct State {
@@ -34,15 +38,15 @@ fn eat(s: inout State, ts: Vec[Token], text: str) -> bool {
 
 fn syntax(s: State, ts: Vec[Token], code: str, message: str) {
     if ts[s.pos].kind == .DeferredError {
-        fail(ts, s.pos, ts[s.pos].text, ts[s.pos].message)
+        lexer.fail(ts, s.pos, ts[s.pos].text, ts[s.pos].message)
     }
-    fail(ts, s.pos, code, message)
+    lexer.fail(ts, s.pos, code, message)
 }
 
 fn expect(s: inout State, ts: Vec[Token], text: str) -> int {
     let p = s.pos
     if !eat(&s, ts, text) {
-        syntax(s, ts, "E0020", join3("expected '", text, "'"))
+        syntax(s, ts, "E0020", support.join3("expected '", text, "'"))
     }
     return p
 }
@@ -93,16 +97,16 @@ fn vectorType(s: inout State, ts: Vec[Token], name: int) -> TypeRef {
     }
     expect(&s, ts, "]")
     if count != 1 {
-        fail(ts, name, "E0001", "Vec takes exactly one type argument")
+        lexer.fail(ts, name, "E0001", "Vec takes exactly one type argument")
     }
     if elem.kind == .Vec {
-        fail(ts, token, "U0001", "nested Vec elements are outside the selfhost subset")
+        lexer.fail(ts, token, "U0001", "nested Vec elements are outside the selfhost subset")
     }
     if elem.kind == .Result {
-        fail(ts, token, "U0001", "Result vector elements are outside the selfhost subset")
+        lexer.fail(ts, token, "U0001", "Result vector elements are outside the selfhost subset")
     }
     if elem.kind == .Optional {
-        fail(ts, token, "U0001", "Optional vector elements are outside the selfhost subset")
+        lexer.fail(ts, token, "U0001", "Optional vector elements are outside the selfhost subset")
     }
     return TypeRef{kind: .Vec, name: name, elementKind: elem.kind, elementName: token}
 }
@@ -120,7 +124,7 @@ fn typeAtom(s: inout State, ts: Vec[Token]) -> TypeRef {
         let token = s.pos
         let inner = typeAtom(&s, ts)
         if inner.kind == .Optional || inner.kind == .Vec || inner.kind == .Result {
-            fail(ts, question, "U0001", "nested Optional and container payloads are outside the selfhost subset")
+            lexer.fail(ts, question, "U0001", "nested Optional and container payloads are outside the selfhost subset")
         }
         result = TypeRef{kind: .Optional, name: question, elementKind: inner.kind, elementName: token}
     } else if at(s, ts, "Vec") {
@@ -141,9 +145,9 @@ fn typeAtom(s: inout State, ts: Vec[Token]) -> TypeRef {
             }
             expect(&s, ts, ")")
             if count < 2 {
-                fail(ts, open, "E0020", "a tuple type needs at least two elements")
+                lexer.fail(ts, open, "E0020", "a tuple type needs at least two elements")
             }
-            fail(ts, open, "U0001", "tuple types are outside the selfhost subset")
+            lexer.fail(ts, open, "U0001", "tuple types are outside the selfhost subset")
         }
         expect(&s, ts, ")")
         result = TypeRef{elementKind: .Unknown, kind: .Unit}
@@ -259,7 +263,7 @@ fn interpolationOnlyFault(ts: Vec[Token], opening: int, fault: int) -> bool {
     if fault != opening + 1 || ts[fault].start == ts[opening].start ||
         ts[fault].message != "unexpected character" { return false }
     var pos = ts[fault].start - ts[opening].start
-    pos += scalarWidth(ts[opening].text[pos])
+    pos += lexer.scalarWidth(ts[opening].text[pos])
     while pos < ts[opening].text.len() {
         let c = ts[opening].text[pos]
         if c != ' ' && c != '\t' && c != '\r' {
@@ -291,10 +295,10 @@ fn interpolatedString(s: inout State, ts: Vec[Token]) -> int {
         let opening = s.pos
         s.pos += 1
         if ts[s.pos].kind == .InterpolationEnd || ts[s.pos].kind == .FormatSpec {
-            fail(ts, opening, "E0020", "empty interpolation")
+            lexer.fail(ts, opening, "E0020", "empty interpolation")
         }
         if ts[s.pos].kind == .DeferredError && interpolationOnlyFault(ts, opening, s.pos) {
-            fail(ts, opening, "E0020", "empty interpolation")
+            lexer.fail(ts, opening, "E0020", "empty interpolation")
         }
         let value = parseExpression(&s, ts)
         var spec = -1
@@ -466,7 +470,7 @@ fn postfix(s: inout State, ts: Vec[Token]) -> int {
                 }
                 let constructed = construction(&s, ts, target)
                 if s.expressions[constructed].argCount > 0 {
-                    fail(ts, target, "E0001", "Vec construction takes no fields; use push")
+                    lexer.fail(ts, target, "E0001", "Vec construction takes no fields; use push")
                 }
                 s.expressions[constructed].kind = .Vector
                 s.expressions[constructed].elementKind = ty.elementKind
@@ -653,12 +657,12 @@ fn forStatement(s: inout State, ts: Vec[Token]) -> int {
     var end = -1
     if eat(&s, ts, "..") {
         if second >= 0 {
-            fail(ts, second, "E0020", "a range loop has one variable")
+            lexer.fail(ts, second, "E0020", "a range loop has one variable")
         }
         kind = .ForRange
         end = parseExpression(&s, ts)
     } else if second >= 0 {
-        fail(ts, second, "U0001", "indexed iteration is outside the selfhost subset")
+        lexer.fail(ts, second, "U0001", "indexed iteration is outside the selfhost subset")
     }
     let body = parseBlock(&s, ts)
     let id = pushStmt(&s, kind, token, value)
@@ -821,7 +825,7 @@ fn aggregate(s: inout State, ts: Vec[Token]) -> TypeDecl {
 fn importItem(s: inout State, ts: Vec[Token]) {
     let token = expect(&s, ts, "use")
     if s.items > 0 {
-        fail(ts, token, "U0001", "imports after other items are outside the selfhost subset")
+        lexer.fail(ts, token, "U0001", "imports after other items are outside the selfhost subset")
     }
     if !at(s, ts, "std") {
         moduleImport(&s, ts)
@@ -844,7 +848,7 @@ fn importItem(s: inout State, ts: Vec[Token]) {
         if ts[names[i]].text == "fs" { s.importsFs = true
         } else if ts[names[i]].text == "os" { s.importsOs = true
         } else {
-            fail(ts, names[i], "U0001", "this standard module is outside the selfhost subset")
+            lexer.fail(ts, names[i], "U0001", "this standard module is outside the selfhost subset")
         }
         i += 1
     }
@@ -877,7 +881,7 @@ fn moduleImport(s: inout State, ts: Vec[Token]) {
         var j = first
         while j < s.imports.len() {
             if ts[s.imports[j].alias].text == ts[alias].text {
-                fail(ts, alias, "E0011", join3("module name '", ts[alias].text, "' is imported more than once"))
+                lexer.fail(ts, alias, "E0011", support.join3("module name '", ts[alias].text, "' is imported more than once"))
             }
             j += 1
         }
@@ -944,7 +948,7 @@ pub fn parseFile(s: inout State, ts: Vec[Token]) {
             k += 1
         }
         if clash {
-            fail(ts, alias, "E0011", join3("module name '", ts[alias].text, "' conflicts with a local declaration"))
+            lexer.fail(ts, alias, "E0011", support.join3("module name '", ts[alias].text, "' conflicts with a local declaration"))
         }
         j += 1
     }

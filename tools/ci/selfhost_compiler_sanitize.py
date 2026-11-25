@@ -3,7 +3,7 @@
 Called by selfhost_sanitize.py after the independent runner's clean/UAF/overflow
 probes pass. Every case is checked against both its manifest expectation and the
 unmodified bootstrap stage2 result; emitted C must match its recorded bytes.
-The compiler, its C input, bootstrap bundle, runtime, GCC and sanitizer libraries
+The compiler, its C input, bootstrap module files, runtime, GCC and sanitizer libraries
 remain identity-bound. This is Linux ASan/UBSan, not TSan or LeakSanitizer.
 """
 from __future__ import annotations
@@ -74,10 +74,14 @@ def load_stage_inputs(bootstrap, receipt, bound):
     parts = inputs["compiler_bundle"]["parts"]
     expected_parts = [{"file": part, "sha256": bootstrap.digest(bootstrap.SELFHOST / part)}
                       for part in bootstrap.COMPILER_PARTS]
-    if (parts != expected_parts or source.stat().st_size != inputs["compiler_bundle"]["bytes"]
-            or source.read_bytes() != b"".join((bootstrap.SELFHOST / p).read_bytes()
-                                               for p in bootstrap.COMPILER_PARTS)):
-        raise ValueError("compiler bundle is not the exact declared Yavo source concatenation")
+    directory = Path(inputs["compiler_bundle"]["directory"]).resolve()
+    # The compiler is a module program: every file it loads must be an exact
+    # copy of the declared source, and the bundle path must be its entry file.
+    if (parts != expected_parts or source != (directory / bootstrap.COMPILER_ENTRY).resolve()
+            or source.stat().st_size != inputs["compiler_bundle"]["bytes"]
+            or any(bind(directory / part, bootstrap.digest(bootstrap.SELFHOST / part)).read_bytes()
+                   != (bootstrap.SELFHOST / part).read_bytes() for part in bootstrap.COMPILER_PARTS)):
+        raise ValueError("compiler bundle is not the exact declared set of Yavo module files")
     stage1 = Path(inputs["subset_compiler"]["path"])
     paths = {}
     for name in ("stage2", "stage3"):

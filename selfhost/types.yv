@@ -1,3 +1,7 @@
+use support
+use lexer
+use model
+
 // Resolved aggregates for the bootstrap compiler. Type identity is a
 // registry index; source names remain lexer token indices throughout checking.
 
@@ -90,13 +94,13 @@ pub fn cType(t: Type) -> String {
     if t.kind == .Str { return "yv_str".toString() }
     if t.kind == .String { return "yv_string".toString() }
     if t.kind == .Vec || t.kind == .Args { return "yv_vec".toString() }
-    if t.kind == .Named { return join2("sh_type_", decimal(t.decl)) }
-    if t.kind == .Result { return join2("sh_result_", decimal(t.decl)) }
+    if t.kind == .Named { return support.join2("sh_type_", support.decimal(t.decl)) }
+    if t.kind == .Result { return support.join2("sh_result_", support.decimal(t.decl)) }
     if t.kind == .Optional {
         if t.elementKind == .Int { return "sh_optional_int".toString() }
         if t.elementKind == .Byte { return "sh_optional_byte".toString() }
         if t.elementKind == .Bool { return "sh_optional_bool".toString() }
-        if t.elementKind == .Named { return join2("sh_optional_", decimal(t.elementDecl)) }
+        if t.elementKind == .Named { return support.join2("sh_optional_", support.decimal(t.elementDecl)) }
     }
     return "void".toString()
 }
@@ -107,13 +111,13 @@ pub fn describe(reg: Registry, ts: Vec[Token], t: Type) -> String {
     if t.kind == .Bool { return "bool".toString() }
     if t.kind == .Str { return "str".toString() }
     if t.kind == .String { return "String".toString() }
-    if t.kind == .Vec { return join3("Vec[", describe(reg, ts, element(t)), "]") }
-    if t.kind == .Optional { return join2("?", describe(reg, ts, element(t))) }
+    if t.kind == .Vec { return support.join3("Vec[", describe(reg, ts, element(t)), "]") }
+    if t.kind == .Optional { return support.join2("?", describe(reg, ts, element(t))) }
     if t.kind == .Args { return "[]str".toString() }
     if t.kind == .Unit { return "()".toString() }
     if t.kind == .Named { return ts[reg.entries[t.decl].name].text.clone() }
     if t.kind == .Result {
-        return join3(describe(reg, ts, resultOk(reg, t)), " ! ", describe(reg, ts, resultError(reg, t)))
+        return support.join3(describe(reg, ts, resultOk(reg, t)), " ! ", describe(reg, ts, resultError(reg, t)))
     }
     return "<unknown>".toString()
 }
@@ -160,7 +164,7 @@ pub fn lookup(reg: Registry, ts: Vec[Token], nameToken: int) -> int {
         let decl = declaredIn(reg, ts, module, nameToken)
         if decl >= 0 && reg.entries[decl].public && decl != found {
             if found >= 0 {
-                fail(ts, nameToken, "E0010", join3("type '", ts[nameToken].text, "' is ambiguous; qualify it with its module name"))
+                lexer.fail(ts, nameToken, "E0010", support.join3("type '", ts[nameToken].text, "' is ambiguous; qualify it with its module name"))
             }
             found = decl
         }
@@ -176,7 +180,7 @@ pub fn qualifiedType(reg: Registry, ts: Vec[Token], alias: int, nameToken: int) 
     if module < 0 { return -1 }
     let decl = declaredIn(reg, ts, module, nameToken)
     if decl < 0 || !reg.entries[decl].public {
-        fail(ts, nameToken, "E0010", join5("module '", ts[alias].text, "' has no exported type '", ts[nameToken].text, "'"))
+        lexer.fail(ts, nameToken, "E0010", support.join5("module '", ts[alias].text, "' has no exported type '", ts[nameToken].text, "'"))
     }
     return decl
 }
@@ -221,23 +225,23 @@ fn unsupportedType(name: str) -> bool {
 
 pub fn vector(ts: Vec[Token], token: int, elem: Type) -> Type {
     if elem.kind == .Unknown {
-        fail(ts, token, "E0001", "cannot infer the vector element type")
+        lexer.fail(ts, token, "E0001", "cannot infer the vector element type")
     }
     if elem.kind != .Int && elem.kind != .Byte && elem.kind != .Bool && elem.kind != .String && elem.kind != .Named {
-        fail(ts, token, "U0001", "this vector element type is outside the selfhost subset")
+        lexer.fail(ts, token, "U0001", "this vector element type is outside the selfhost subset")
     }
     return Type{kind: .Vec, elementKind: elem.kind, elementDecl: elem.decl}
 }
 
 pub fn optional(reg: Registry, ts: Vec[Token], token: int, elem: Type) -> Type {
     if elem.kind == .Unknown {
-        fail(ts, token, "E0001", "cannot infer the Optional payload type")
+        lexer.fail(ts, token, "E0001", "cannot infer the Optional payload type")
     }
     if elem.kind != .Int && elem.kind != .Byte && elem.kind != .Bool && elem.kind != .Named {
-        fail(ts, token, "U0001", "this Optional payload type is outside the selfhost subset")
+        lexer.fail(ts, token, "U0001", "this Optional payload type is outside the selfhost subset")
     }
     if owned(reg, elem) {
-        fail(ts, token, "U0001", "owned Optional payloads are outside the selfhost subset")
+        lexer.fail(ts, token, "U0001", "owned Optional payloads are outside the selfhost subset")
     }
     return Type{kind: .Optional, elementKind: elem.kind, elementDecl: elem.decl}
 }
@@ -259,22 +263,22 @@ pub fn resolve(reg: Registry, ts: Vec[Token], syn: TypeRef) -> Type {
     if syn.kind != .Named { return primitive(syn.kind) }
     if ts[syn.name].text == "String" { return primitive(.String) }
     if ts[syn.name].text == "Vec" {
-        fail(ts, syn.name, "E0001", "Vec takes exactly one type argument")
+        lexer.fail(ts, syn.name, "E0001", "Vec takes exactly one type argument")
     }
     if unsupportedType(ts[syn.name].text) {
-        fail(ts, syn.name, "U0001", join3("type '", ts[syn.name].text, "' is outside the selfhost subset"))
+        lexer.fail(ts, syn.name, "U0001", support.join3("type '", ts[syn.name].text, "' is outside the selfhost subset"))
     }
     if ts[syn.name + 1].kind == .Symbol && ts[syn.name + 1].text == "." {
         // Type positions spell a module-qualified type as module.Name.
         let qualified = qualifiedType(reg, ts, syn.name, syn.name + 2)
         if qualified < 0 {
-            fail(ts, syn.name, "E0010", join3("module '", ts[syn.name].text, "' is not in scope"))
+            lexer.fail(ts, syn.name, "E0010", support.join3("module '", ts[syn.name].text, "' is not in scope"))
         }
         return Type{elementKind: .Unknown, kind: .Named, decl: qualified}
     }
     let decl = lookup(reg, ts, syn.name)
     if decl < 0 {
-        fail(ts, syn.name, "E0010", join3("unknown type '", ts[syn.name].text, "'"))
+        lexer.fail(ts, syn.name, "E0010", support.join3("unknown type '", ts[syn.name].text, "'"))
     }
     return Type{elementKind: .Unknown, kind: .Named, decl: decl}
 }
@@ -286,15 +290,15 @@ fn collectResults(p: Program, ts: Vec[Token], reg: inout Registry) {
         // Result annotations are collected before named ownership is propagated.
         // Reject the combination before resolving any Optional payload here.
         if syntax.ok.kind == .Optional || syntax.error.kind == .Optional {
-            fail(ts, syntax.errorToken, "U0001", "Optional/Result combinations are outside the selfhost subset")
+            lexer.fail(ts, syntax.errorToken, "U0001", "Optional/Result combinations are outside the selfhost subset")
         }
         let ok = resolve(reg, ts, syntax.ok)
         let error = resolve(reg, ts, syntax.error)
         if ok.kind == .Result || error.kind == .Result || error.kind == .Unit {
-            fail(ts, syntax.errorToken, "E0001", "a result needs a non-Result success type and a non-unit error type")
+            lexer.fail(ts, syntax.errorToken, "E0001", "a result needs a non-Result success type and a non-unit error type")
         }
         if error.kind == .Str {
-            fail(ts, syntax.errorToken, "E0301", "an error value cannot hold a borrowed str; use String")
+            lexer.fail(ts, syntax.errorToken, "E0301", "an error value cannot hold a borrowed str; use String")
         }
         var found = -1
         var j = 0
@@ -342,14 +346,14 @@ fn checkDefault(p: Program, reg: Registry, ts: Vec[Token], item: Field) {
             actual = primitive(.Int)
         }
     } else {
-        fail(ts, p.expressions[item.initial].token, "E0001",
+        lexer.fail(ts, p.expressions[item.initial].token, "E0001",
             "a field default must be a constant literal")
     }
     if !same(item.ty, actual) {
-        var message = join3("default for field '", ts[item.name].text, "' does not have type '")
+        var message = support.join3("default for field '", ts[item.name].text, "' does not have type '")
         message.push(describe(reg, ts, item.ty))
         message.push("'")
-        fail(ts, p.expressions[item.initial].token, "E0001", message)
+        lexer.fail(ts, p.expressions[item.initial].token, "E0001", message)
     }
 }
 
@@ -370,10 +374,10 @@ pub fn collect(p: Program, ts: Vec[Token]) -> Registry {
     while i < p.types.len() {
         let d = p.types[i]
         if reservedType(ts[d.name].text) {
-            fail(ts, d.name, "E0011", join3("'", ts[d.name].text, "' is a built-in name and cannot be redefined"))
+            lexer.fail(ts, d.name, "E0011", support.join3("'", ts[d.name].text, "' is a built-in name and cannot be redefined"))
         }
         if declaredIn(reg, ts, d.file, d.name) >= 0 {
-            fail(ts, d.name, "E0011", join3("type '", ts[d.name].text, "' is already declared"))
+            lexer.fail(ts, d.name, "E0011", support.join3("type '", ts[d.name].text, "' is already declared"))
         }
         reg.entries.push(Info{kind: d.kind, name: d.name, file: d.file, public: d.public})
         i += 1
@@ -389,24 +393,24 @@ pub fn collect(p: Program, ts: Vec[Token]) -> Registry {
         while j < d.fieldCount {
             let f = p.fields[d.fieldStart + j]
             if f.ty.kind == .Optional {
-                fail(ts, f.name, "U0001", "Optional fields are outside the selfhost subset")
+                lexer.fail(ts, f.name, "U0001", "Optional fields are outside the selfhost subset")
             }
             var k = fieldStart
             while k < reg.fields.len() {
                 if ts[reg.fields[k].name].text == ts[f.name].text {
-                    fail(ts, f.name, "E0011", join3("field '", ts[f.name].text, "' is already declared"))
+                    lexer.fail(ts, f.name, "E0011", support.join3("field '", ts[f.name].text, "' is already declared"))
                 }
                 k += 1
             }
             let ty = resolve(reg, ts, f.ty)
             if ty.kind == .Str {
-                fail(ts, f.name, "E0301", "a struct field cannot store a borrowed str; use an owned value")
+                lexer.fail(ts, f.name, "E0301", "a struct field cannot store a borrowed str; use an owned value")
             }
             if ty.kind == .Unit {
-                fail(ts, f.name, "U0001", "unit fields are outside the selfhost subset")
+                lexer.fail(ts, f.name, "U0001", "unit fields are outside the selfhost subset")
             }
             if ty.kind == .Result {
-                fail(ts, f.name, "U0001", "Result fields are outside the selfhost subset")
+                lexer.fail(ts, f.name, "U0001", "Result fields are outside the selfhost subset")
             }
             let item = Field{name: f.name, ty: ty, initial: f.initial}
             checkDefault(p, reg, ts, item)
@@ -422,7 +426,7 @@ pub fn collect(p: Program, ts: Vec[Token]) -> Registry {
             var k = variantStart
             while k < reg.variants.len() {
                 if ts[reg.variants[k]].text == ts[name].text {
-                    fail(ts, name, "E0011", join3("enum case '", ts[name].text, "' is already declared"))
+                    lexer.fail(ts, name, "E0011", support.join3("enum case '", ts[name].text, "' is already declared"))
                 }
                 k += 1
             }
@@ -466,7 +470,7 @@ pub fn collect(p: Program, ts: Vec[Token]) -> Registry {
             i = 0
             while done[i] { i += 1 }
             let name = reg.entries[i].name
-            fail(ts, name, "E0017", join3("type '", ts[name].text, "' has a recursive by-value dependency"))
+            lexer.fail(ts, name, "E0017", support.join3("type '", ts[name].text, "' has a recursive by-value dependency"))
         }
     }
     // Layout order is sufficient for by-value ownership propagation.

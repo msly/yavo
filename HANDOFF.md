@@ -8,7 +8,9 @@
 
 当前语料 **568 cases**。本机完整自举 **568/568、12/12、0 skip**；stage2/stage3 C（783,814 字节）与 Linux 二进制（365,864 字节）分别一致。第三十二批 Rust Debug/Release 各 145/0/1、冻结 124/3/2；第三十三批未改 Rust。
 
-**SH-3 尚未接替，Rust stage0 仍承担日常编译；SH-4 完成 1/3 个独立应用。** 验收流程按 decisions.md 第九节。下一步：把编译器自身从源码拼接改为 `use` 多文件（第 10 节）。
+编译器自身也已改为以 `selfhost/main.yv` 为入口的 `use` 多文件（决定 28），bootstrap 不再拼接源码；改后本机 568/568、12/12，stage2/stage3 C（785,468 字节）与二进制（366,936 字节）一致。
+
+**SH-3 尚未接替，Rust stage0 仍承担日常编译；SH-4 完成 1/3 个独立应用。** 验收流程按 decisions.md 第九节。下一步见第 10 节：用 selfhost 编译 examples/test-summary，首个阻塞是借用返回。
 
 ## 2. 仓库与环境
 
@@ -195,7 +197,7 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 ## 10. 下一个会话的第一步
 
 1. 检查 Git 状态、最新提交与 CI；先读第 12 节、[自举路线](docs/self-hosting.md)、[selfhost 说明](selfhost/README.md)。
-2. **下一步：编译器自身改为 `use` 多文件。** 跨文件调用加模块限定、跨文件使用的项补 `pub`、各文件补 `use`；注意局部变量会遮蔽同名模块别名（例如 main.yv 里不能再有名为 `parser` 的局部）。bootstrap.py 及 tools/ci 下拼接 `COMPILER_PARTS` 的脚本改为复制源文件目录、只交入口文件；lexer 单元测试同样改为以 lexer_test.yv 为入口。这是机械改写，单独提交，并重新达到三平台固定点。
+2. **下一步：让 selfhost 编译 examples/test-summary（SH-3 的实际判据）。** 当前 `yavo-selfhost check examples/test-summary/main.yv` 的首个错误是 `parser.yv:44:34: U0001: borrowed returns are outside the selfhost subset`（`fn fields(line: str) -> Vec[str] of line`、`-> str of raw`）。按“实现一个阻塞 → 再跑 → 看下一个阻塞”推进，每项先用 stage0 定标拒绝码，并迁移编译器自身里对应的变通写法。预计依次遇到：借用返回（`of`）、`Vec[str]`、str 方法（endsWith 等）、方法/拥有型 Optional/Map 等。
 3. 模块尚缺：包依赖与锁文件（stage0 也没有）、`use` 出现在其他项之后（stage0 接受，子集 U0001）、跨模块的枚举载荷/方法/泛型（子集本身没有）。
 
 4. 拥有型 Optional/pop、if let/match、跳转式 ??、Result 字段/容器、方法、泛型按实际阻塞另列；SH-3 的判据是能否编译 examples/test-summary 这样的真实程序，而不是特性数量。
@@ -226,7 +228,7 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - 真实迁移四处：support.report 的完整诊断行、codegen.temporaryName、localName、lineColumn；诊断与生成 C 中对应字符串保持逐字节不变（固定点与全用例 stage1/stage2 一致即为证明）。其余 join/decimal 调用未改。
 - 接手时的偏差与修正：上一会话的实现在 lexer 里写了 `tokens[head].end = …` 和 `tokens[marker].extra = …`，即给拥有型 Vec 元素的字段赋值——stage0 接受但超出引导子集，stage1 编译自身时报 U0001，固定点断开，全部 559 项失败。修正为不回写已入栈的记号：StringStart/StringEnd 只覆盖各自的引号；删掉只写不读的 `Token.extra`，DeferredError 紧跟在片段内记号之后。lexer_test 两处断言相应改为 `end == 3` 与 `fault == marker + 1`。此后 559/559 通过。
 - Rust 修复见第 1 节；本批独立定标材料在 `selfhost/tests/evidence/batch32-format-oracle/`（58 例：16 run、36 reject、4 unsupported、2 shared；原 `unsupported_interpolation` 原字节晋升为 `run/interpolation_basic.yv`）。这是按旧流程生成的最后一份 oracle 包。
-- 验收（新流程）：本机自举 547/547、12/12、0 skip，stage2/stage3 C 727,751 字节、Linux 二进制 339,512 字节一致；Rust Debug/Release 各 145/0/1、冻结 124/3/2。CI：`cc21ae5` 的 [run 45533511159](https://github.com/msly/yavo/actions/runs/45533511159)，见第 13 节末尾。
+- 验收（新流程）：本机自举 547/547、12/12、0 skip，stage2/stage3 C 727,751 字节、Linux 二进制 339,512 字节一致；Rust Debug/Release 各 145/0/1、冻结 124/3/2。CI：`cc21ae5` 的 [run 45533511159](https://github.com/msly/yavo/actions/runs/45533511159) 五项成功、Windows 作业被后续推送取消；包含本批全部改动的 `1708d4b` [run 45535558990](https://github.com/msly/yavo/actions/runs/45535558990) 6/6 成功（含 Windows 上的 Rust Debug/Release 与 selfhost）。
 
 ## 13. 第三十三批：源模块（2026-11-25）
 
@@ -235,5 +237,7 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - 加载（main.yv `compile`）：以入口文件所在目录为根（同时识别 `/` 与 `\`），按模块路径（`a/b`）去重、广度优先；入口自身的路径键是其文件名去掉 `.yv`，所以自导入与循环导入都复用已有文件号。读不到文件报 E0010（位置在导入别名），模块里的词法错误以模块路径报告。
 - 名字解析：无限定调用只看本文件的函数；`m.f()` 需要 m 是本文件的导入且 f 为 pub；类型短名先找本文件，再找导入模块中唯一的公开类型（二义 E0010）；`m.T` 当值是 E0001；局部变量遮蔽模块名。只有入口文件的 `main` 是程序入口，模块中的 `main` 是普通函数。函数、类型的 C 名称本来就按下标编号，跨文件同名不冲突。
 - 用例 21 个（`selfhost/tests/modules/`）：run 4（basic 含子目录与传递使用、cycle 含互递归/菱形/自导入、scopes 含同名类型/函数/局部遮蔽/模块 main、owned 含 String/Vec/inout/Result/per-file `use std/{os}`），panic 1（模块中除零，位置为 math.yv），reject 15，unsupported 1（`use` 在其他项之后）。所有错误码先用 stage0 实测；`modules_duplicate_in_module` 中 stage0 先报入口里的 E0010、随后报 E0011，selfhost 首错即停报 E0011。
-- 验收：本机 568/568、12/12、0 skip，stage2/stage3 C 783,814 字节、Linux 二进制 365,864 字节一致。未改 Rust。CI：待回填。
+- 验收：本机 568/568、12/12、0 skip，stage2/stage3 C 783,814 字节、Linux 二进制 365,864 字节一致。未改 Rust。
+- 编译器自身改为模块（单独提交，决定 28）：`/tmp` 下的脚本把跨文件调用改成 `模块.函数(...)`（codegen 541 处、types 47、parser 24、main 15、lexer_test 3、lexer 2），跨文件使用的项补 `pub`，各文件补 `use`；main.yv 的局部 `parser` 改名 `state` 以免遮蔽模块名。bootstrap.py 把 `COMPILER_PARTS` 与 lexer_test.yv 原样复制到 `run-*/selfhost-src/`，只交入口文件；回执的 `compiler_bundle`/`lexer_unit_bundle` 保留键名，新增 `directory`，`path` 指入口。`tools/ci/selfhost_compiler_sanitize.py` 与 `selfhost_sanitize.py` 的拼接字节核对改为逐文件核对（本机无 GCC，靠 CI 验证）。模块用例的非入口文件纳入 `fixture_modules` 输入哈希。改后本机 568/568、12/12，stage2/stage3 C 785,468 字节、二进制 366,936 字节一致。
+- CI：模块功能 `1708d4b` 的 [run 45535558990](https://github.com/msly/yavo/actions/runs/45535558990) **6/6 成功**：Linux x86-64（Rust 全量、selfhost 568 例、test-summary、stage2 ASan/UBSan）、Windows x86-64、macOS arm64 原生均通过，模块路径在 Windows 分隔符下正常。编译器改为模块的提交：CI 待回填。注意工作流 `cancel-in-progress: true`，同分支新推送会取消进行中的运行，推送前先等上一次运行结束。
 

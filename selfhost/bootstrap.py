@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Build and independently validate the Yavo-written compiler and its fixed point.
 
-stage0 (Rust) builds stage1 from the assembled Yavo sources. stage1 compiles the
-same sources to stage2 C, stage2 compiles them again to stage3 C, and the two
-generated C files must be byte-identical. Python only concatenates the listed
-source files and orchestrates commands; all parsing, checking and C generation
-happen in the Yavo binaries. Rust is used separately as a behavioral reference.
+stage0 (Rust) builds stage1 from the Yavo compiler's module files. stage1 compiles
+the same files to stage2 C, stage2 compiles them again to stage3 C, and the two
+generated C files must be byte-identical. Python only copies the listed source
+files into the run directory and orchestrates commands; module loading, parsing,
+checking and C generation happen in the Yavo binaries. Rust is used separately
+as a behavioral reference.
 """
 from __future__ import annotations
 
@@ -31,9 +32,13 @@ EXE = ".exe" if os.name == "nt" else ""
 PANIC = re.compile(rb"yavo panic \[(P-[A-Z-]+)\]")
 DIAGNOSTIC = re.compile(rb"\b([EU][0-9]{4})\b")
 LOCATION = re.compile(rb":[1-9][0-9]*:[1-9][0-9]*:")
-# The compiler is one program: these files are concatenated in this order, byte for byte.
+# The compiler is a module program whose entry is main.yv; these are the files it
+# loads through `use`. The lexer unit's entry is lexer_test.yv. Both are copied
+# byte for byte into one run directory and built from their entry files.
 COMPILER_PARTS = ["support.yv", "lexer.yv", "model.yv", "parser.yv", "types.yv", "codegen.yv", "main.yv"]
 LEXER_UNIT_PARTS = ["support.yv", "lexer.yv", "lexer_test.yv"]
+COMPILER_ENTRY = "main.yv"
+LEXER_UNIT_ENTRY = "lexer_test.yv"
 CC_FLAGS = {"debug": ["-std=c17", "-fno-strict-aliasing", "-DYV_ALLOC_CHECK", "-O0", "-g"],
             "release": ["-std=c17", "-fno-strict-aliasing", "-DYV_ALLOC_CHECK", "-O2", "-s"]}
 
@@ -130,11 +135,21 @@ def locked_zig(explicit):
     return home / "toolchains" / ("zig-" + arch + "-" + host + "-" + version) / ("zig" + EXE), version
 
 
-def assemble(parts, target):
-    data = b"".join((SELFHOST / part).read_bytes() for part in parts)
-    target.write_bytes(data)
-    return {"path": str(target), "parts": [{"file": part, "sha256": digest(SELFHOST / part)} for part in parts],
-            "bytes": len(data), "sha256": hashlib.sha256(data).hexdigest()}
+def assemble(parts, directory, entry):
+    """Copy module files unchanged into directory; the record's path is the entry file."""
+    directory.mkdir(exist_ok=True)
+    for part in parts:
+        data = (SELFHOST / part).read_bytes()
+        target = directory / part
+        if target.exists():
+            if target.read_bytes() != data:
+                raise RuntimeError("copied module file differs from its source: " + part)
+        else:
+            target.write_bytes(data)
+    target = directory / entry
+    return {"path": str(target), "directory": str(directory),
+            "parts": [{"file": part, "sha256": digest(SELFHOST / part)} for part in parts],
+            "bytes": target.stat().st_size, "sha256": digest(target)}
 
 
 def prefix_path(case):
@@ -233,6 +248,9 @@ def main():
             "yavo_sources": {str(path.relative_to(ROOT)): digest(path)
                              for path in sorted(SELFHOST.glob("*.yv"))},
             "fixtures": {case["file"]: digest(SELFHOST / "tests" / case["file"]) for case in cases},
+            # Module fixtures load sibling files that are not entries of their own.
+            "fixture_modules": {str(path.relative_to(SELFHOST / "tests")): digest(path)
+                                for path in sorted((SELFHOST / "tests" / "modules").rglob("*.yv"))},
             "examples": {case["example"]: digest(SELFHOST / "examples" / case["example"])
                          for case in cases if "example" in case},
             "source_prefixes": {case["source_prefix"]: digest(prefix_path(case))
@@ -246,10 +264,11 @@ def main():
         if not report["checks"][-1]["passed"]:
             raise RuntimeError("Zig version does not match compiler/toolchain.lock")
 
-        bundle = work / "yavo-selfhost.yv"
-        report["inputs"]["compiler_bundle"] = assemble(COMPILER_PARTS, bundle)
-        unit_source = work / "lexer-test.yv"
-        report["inputs"]["lexer_unit_bundle"] = assemble(LEXER_UNIT_PARTS, unit_source)
+        sources = work / "selfhost-src"
+        report["inputs"]["compiler_bundle"] = assemble(COMPILER_PARTS, sources, COMPILER_ENTRY)
+        report["inputs"]["lexer_unit_bundle"] = assemble(LEXER_UNIT_PARTS, sources, LEXER_UNIT_ENTRY)
+        bundle = sources / COMPILER_ENTRY
+        unit_source = sources / LEXER_UNIT_ENTRY
         binary = work / ("yavo-selfhost" + EXE)
         build = command("build-selfhost", [stage0, "build", bundle,
                                          "--release", "-o", binary], timeout=240)
@@ -524,8 +543,10 @@ def main():
             str(COMPILER / "toolchain.lock"): report["inputs"]["toolchain_lock_sha256"],
             str(Path(__file__).resolve()): report["inputs"]["harness_sha256"],
             str(SELFHOST / "tests/cases.json"): report["inputs"]["manifest_sha256"],
-            str(bundle): report["inputs"]["compiler_bundle"]["sha256"],
-            str(unit_source): report["inputs"]["lexer_unit_bundle"]["sha256"],
+            **{str(Path(record["directory"]) / part["file"]): part["sha256"]
+               for record in (report["inputs"]["compiler_bundle"], report["inputs"]["lexer_unit_bundle"])
+               for part in record["parts"]},
+            **{str(SELFHOST / "tests" / name): value for name, value in report["inputs"]["fixture_modules"].items()},
             **{str(ROOT / name): value for name, value in report["inputs"]["yavo_sources"].items()},
             **{str(SELFHOST / "tests" / name): value for name, value in report["inputs"]["fixtures"].items()},
             **{str(SELFHOST / "examples" / name): value for name, value in report["inputs"]["examples"].items()},

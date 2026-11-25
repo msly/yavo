@@ -1,3 +1,6 @@
+use std/os
+use support
+
 // The bootstrap subset deliberately rejects syntax it cannot yet compile.
 // Keep statement termination and string decoding aligned with the Rust lexer.
 
@@ -61,7 +64,7 @@ pub fn fail(ts: Vec[Token], token: int, code: str, message: str) {
     // The token's own file ends at the next Eof token, which holds its path.
     var eof = token
     while ts[eof].kind != .Eof { eof += 1 }
-    report(ts[eof].text, ts[token].line, ts[token].column, code, message)
+    support.report(ts[eof].text, ts[token].line, ts[token].column, code, message)
 }
 
 fn stop(cursor: inout Cursor, code: str, message: str, offset: int, line: int, column: int) {
@@ -102,7 +105,7 @@ fn integerLiteralFits(text: str) -> bool {
     return text[first..text.len()] <= maximum
 }
 
-fn scalarWidth(c: byte) -> int {
+pub fn scalarWidth(c: byte) -> int {
     if c < 128 { return 1 }
     if c < 224 { return 2 }
     if c < 240 { return 3 }
@@ -378,7 +381,7 @@ fn byteToken(cursor: inout Cursor, source: str) -> String {
         stop(&cursor, "E0020", "invalid byte literal; expected one ASCII character or a byte escape", start, line, column)
         return String{}
     }
-    return decimal(value)
+    return support.decimal(value)
 }
 
 fn twoSymbol(a: byte, b: byte) -> bool {
