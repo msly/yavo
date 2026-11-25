@@ -64,9 +64,14 @@ pub fn resultError(reg: Registry, ty: Type) -> Type {
 }
 
 pub fn same(a: Type, b: Type) -> bool {
+    // os.args() is a static []str.
+    if (a.kind == .Args && b.kind == .Slice && b.elementKind == .Str) ||
+        (b.kind == .Args && a.kind == .Slice && a.elementKind == .Str) {
+        return true
+    }
     if a.kind != b.kind { return false }
     if a.kind == .Named || a.kind == .Result { return a.decl == b.decl }
-    if a.kind == .Vec || a.kind == .Optional {
+    if a.kind == .Vec || a.kind == .Optional || a.kind == .Slice {
         return a.elementKind == b.elementKind &&
             (a.elementKind != .Named || a.elementDecl == b.elementDecl)
     }
@@ -83,9 +88,9 @@ pub fn owned(reg: Registry, ty: Type) -> bool {
     return ty.kind == .Named && reg.entries[ty.decl].owned
 }
 
-// Values that point into data they do not own: str and Vec[str] in this subset.
+// Values that point into data they do not own: str, Vec[str] and []T in this subset.
 pub fn carriesBorrow(ty: Type) -> bool {
-    return ty.kind == .Str || (ty.kind == .Vec && ty.elementKind == .Str)
+    return ty.kind == .Str || ty.kind == .Slice || (ty.kind == .Vec && ty.elementKind == .Str)
 }
 
 pub fn fieldOf(reg: Registry, decl: int, index: int) -> Field {
@@ -98,7 +103,7 @@ pub fn cType(t: Type) -> String {
     if t.kind == .Bool { return "bool".toString() }
     if t.kind == .Str { return "yv_str".toString() }
     if t.kind == .String { return "yv_string".toString() }
-    if t.kind == .Vec || t.kind == .Args { return "yv_vec".toString() }
+    if t.kind == .Vec || t.kind == .Args || t.kind == .Slice { return "yv_vec".toString() }
     if t.kind == .Named { return support.join2("sh_type_", support.decimal(t.decl)) }
     if t.kind == .Result { return support.join2("sh_result_", support.decimal(t.decl)) }
     if t.kind == .Optional {
@@ -119,6 +124,7 @@ pub fn describe(reg: Registry, ts: Vec[Token], t: Type) -> String {
     if t.kind == .Vec { return support.join3("Vec[", describe(reg, ts, element(t)), "]") }
     if t.kind == .Optional { return support.join2("?", describe(reg, ts, element(t))) }
     if t.kind == .Args { return "[]str".toString() }
+    if t.kind == .Slice { return support.join2("[]", describe(reg, ts, element(t))) }
     if t.kind == .Unit { return "()".toString() }
     if t.kind == .Named { return ts[reg.entries[t.decl].name].text.clone() }
     if t.kind == .Result {
@@ -264,6 +270,15 @@ pub fn resolve(reg: Registry, ts: Vec[Token], syn: TypeRef) -> Type {
         let elem = resolve(reg, ts, TypeRef{kind: syn.elementKind,
             name: syn.elementName, elementKind: .Unknown})
         return vector(ts, syn.elementName, elem)
+    }
+    if syn.kind == .Slice {
+        let elem = resolve(reg, ts, TypeRef{kind: syn.elementKind,
+            name: syn.elementName, elementKind: .Unknown})
+        if (elem.kind != .Int && elem.kind != .Byte && elem.kind != .Bool && elem.kind != .Str &&
+            elem.kind != .Named) || owned(reg, elem) {
+            lexer.fail(ts, syn.elementName, "U0001", "slices of this element type are outside the selfhost subset")
+        }
+        return Type{kind: .Slice, elementKind: elem.kind, elementDecl: elem.decl}
     }
     if syn.kind != .Named { return primitive(syn.kind) }
     if ts[syn.name].text == "String" { return primitive(.String) }

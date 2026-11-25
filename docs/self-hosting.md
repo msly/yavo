@@ -1,6 +1,6 @@
 # Yavo 自举路线与实用验收
 
-2026-11-25 · 第三十六批加入跳转式 `??`；第三十五批加入 `Vec[str]` 并修复 Rust 对拥有型实参返回视图的检查
+2026-11-25 · 第三十七批加入只读 `[]T` 参数；第三十六批加入跳转式 `??`
 
 近期主目标改为：**用 Yavo 实现 Yavo 编译器，完成可重放的自举闭环，再让它承担日常编译工作。** 自举用于暴露真实工程中的语言和工具链缺口；实用验收继续独立执行。
 
@@ -47,7 +47,11 @@ SH-1 的结果只标为“子集编译器”。SH-2 可以标为“子集自举�
 
 ## 当前进度
 
-### 第三十六批：跳转式 ??
+### 第三十七批：只读 []T 参数
+
+`[]T`（T 为 int/byte/bool/str 或 Copy 命名类型）可以做参数、由参数复制来的局部和带 `of` 的返回值；C 中与 Vec 同为 `yv_vec` 描述符，不拥有存储、携带借用（参数带自己的来源位，元素读出的 str 继承切片来源）。调用时 `Vec[T]` 实参自动转为视图（不按切片元素类型推断字面量，同 stage0），`os.args()` 视为 `[]str`。`len`、下标读（越界 P-INDEX）、`for` 可用；写元素、`push`、给参数赋值报 E0014，`var` 切片局部写元素报 E0101，比较 E0501，打印/插值 E0001，字段 E0301，返回缺 `of` 报 E0302。把 `Vec` 实参的视图作为结果绑定、`let ys: []T = v`、返回 `Vec` 当切片、子切片 `xs[a..b]`、`toVec`、元素为拥有类型的切片仍是 U0001。编译器自身的 `contains`、来源与状态辅助函数、parser 的 `store` 改为 `[]T` 参数。新增 26 例（1 run、1 panic、16 reject、7 unsupported、1 shared_unsupported）。
+
+### 第三十六批：跳转式 ??（历史记录）
 
 `x ?? return [值]`、`?? break`、`?? continue` 用于 Copy Optional。与 stage0 相同，只能作为 `let` 的整个初始值或 `=` 赋值的右侧，可以经过 `a ?? b ?? return` 的右结合链；加括号、放进参数或运算式、复合赋值都报 U0001。跳转分支复用 `return`/`break`/`continue` 语句的生成与清理，分支之后的代码看到分支之前的 moved 与来源状态；`return` 值的类型与 E0001/E0015 规则同语句形式。顺带修复第三十四批遗留的子集差异：`catch _ { … }` 块执行后只恢复了 moved 状态，没有恢复来源状态，块里 `t = a; return a` 会让后续 `return t` 被误接受（stage0 报 E0303）。编译器自身的 `types.importedFile` 改返回 `?int`，`qualifiedType` 用 `?? return -1` 代替哨兵判断。新增 14 例（1 run、9 reject、4 shared_unsupported），旧的三个 `unsupported_optional_coalesce_*` 原字节晋升为 run 用例。
 
@@ -166,7 +170,8 @@ SH-1 的结果只标为“子集编译器”。SH-2 可以标为“子集自举�
 | 已完成 | 借用返回 | 第三十四批：598 例；参数来源位掩码与路径合并；修复 Rust loans 在分支/循环中丢失的释放后使用 |
 | 已完成 | `Vec[str]` | 第三十五批：623 例；容器来源合并；修复 Rust 对拥有型实参返回视图的检查 |
 | 已完成 | 跳转式 `??` | 第三十六批：637 例；`?? return/break/continue`；修复 catch 块后来源未恢复的子集差异 |
-| 下一步 | 用 selfhost 编译真实程序 | 以 examples/test-summary 为目标，按实际阻塞补子集：`[]str`、`Map`、str 方法等，衡量 SH-3 距离 |
+| 已完成 | 只读 `[]T` 参数 | 第三十七批：663 例；`Vec[T]` 自动视图、len/下标/for |
+| 下一步 | 用 selfhost 编译真实程序 | 以 examples/test-summary 为目标，按实际阻塞补子集：`Map`、str 方法等，衡量 SH-3 距离 |
 | 接替阶段 | SH-3 接替 | 子集覆盖既有回归与冻结规格后，再讨论让 Yavo 编译器承担日常 `check`/`build` |
 
 固定点现在是回归门：任何修改 `selfhost/` 的提交都必须保持 stage2.c = stage3.c 与 stage1/stage2 全用例一致。

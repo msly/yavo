@@ -1,0 +1,74 @@
+// Read-only []T parameters: a Vec[T] argument is passed as a view of its
+// storage, a []T argument is passed on, and len, element reads and for work
+// on the view. A str read from a []str keeps the slice's sources.
+enum Color {
+    Red
+    Blue
+}
+
+fn sum(xs: []int) -> int {
+    var total = 0
+    for x in xs { total += x }
+    return total
+}
+
+fn total(bs: []byte) -> int {
+    var n = 0
+    for b in bs { n += int(b) }
+    return n
+}
+
+fn reds(cs: []Color) -> int {
+    var n = 0
+    for c in cs {
+        if c == .Red { n += 1 }
+    }
+    return n
+}
+
+fn forward(xs: []int) -> int {
+    let copy = xs
+    return sum(copy) + copy.len()
+}
+
+fn longer(xs: []int, ys: []int) -> []int of (xs, ys) {
+    var best = xs
+    if ys.len() > best.len() { best = ys }
+    return best
+}
+
+fn first(words: []str) -> str of words {
+    return words[0]
+}
+
+// The shape of examples/test-summary's declaredCounts.
+fn summaryLine(words: []str) -> bool {
+    if words.len() != 3 { return false }
+    return words[0] == "verification:" && words[2] == "passed"
+}
+
+fn widest(a: []int, b: []int) -> int {
+    let w = longer(a, b)
+    return w.len()
+}
+
+fn make() -> Vec[int] {
+    return [7, 8, 9]
+}
+
+fn main() {
+    let v = [1, 2, 3]
+    println(sum(v))
+    let bytes: Vec[byte] = [1, 2, 250]
+    println(total(bytes))
+    println(reds([Color.Red, Color.Blue, Color.Red]))
+    println(forward(v))
+    println(sum(make()))
+    println(widest(v, [4]))
+    let words: Vec[str] = ["verification:", "3", "passed"]
+    println(first(words))
+    println(summaryLine(words))
+    var other: Vec[str] = []
+    other.push("x")
+    println(summaryLine(other))
+}

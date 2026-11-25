@@ -314,7 +314,7 @@ fn movedState(g: Generator) -> Vec[bool] {
     return state
 }
 
-fn restoreState(g: inout Generator, state: Vec[bool]) {
+fn restoreState(g: inout Generator, state: []bool) {
     var i = 0
     while i < state.len() {
         g.locals[i].moved = state[i]
@@ -345,7 +345,7 @@ fn sourceState(g: Generator) -> Vec[int] {
     return state
 }
 
-fn restoreSources(g: inout Generator, state: Vec[int]) {
+fn restoreSources(g: inout Generator, state: []int) {
     var i = 0
     while i < state.len() && i < g.locals.len() {
         g.locals[i].sources = state[i]
@@ -353,7 +353,7 @@ fn restoreSources(g: inout Generator, state: Vec[int]) {
     }
 }
 
-fn joinSources(a: Vec[int], b: Vec[int]) -> Vec[int] {
+fn joinSources(a: []int, b: []int) -> Vec[int] {
     var out: Vec[int] = []
     var i = 0
     while i < a.len() || i < b.len() {
@@ -366,7 +366,7 @@ fn joinSources(a: Vec[int], b: Vec[int]) -> Vec[int] {
     return out
 }
 
-fn sourcesGrew(before: Vec[int], after: Vec[int]) -> bool {
+fn sourcesGrew(before: []int, after: []int) -> bool {
     var i = 0
     while i < before.len() && i < after.len() {
         if (before[i] | after[i]) != before[i] { return true }
@@ -377,7 +377,7 @@ fn sourcesGrew(before: Vec[int], after: Vec[int]) -> bool {
 
 // The state entering another iteration: the previous entry state joined
 // with the end of the body and every continue path, for the outer locals.
-fn iterationSources(before: Vec[int], ended: Vec[int], continues: Vec[int]) -> Vec[int] {
+fn iterationSources(before: []int, ended: []int, continues: []int) -> Vec[int] {
     let reached = joinSources(ended, continues)
     var out = joinSources(before, reached)
     while out.len() > before.len() { let _ = out.pop() }
@@ -386,7 +386,7 @@ fn iterationSources(before: Vec[int], ended: Vec[int], continues: Vec[int]) -> V
 
 fn sourceBit(index: int) -> int { return 1 << index }
 
-fn contains(values: Vec[int], wanted: int) -> bool {
+fn contains(values: []int, wanted: int) -> bool {
     var i = 0
     while i < values.len() {
         if values[i] == wanted { return true }
@@ -851,8 +851,13 @@ fn userCall(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Ex
                 lexer.fail(ts, argToken, "U0001", "borrow arguments for read-only parameters are outside this subset")
             }
             let arg = emitExpected(&g, p, ts, reg, argId, expected)
+            // Built-in view parameters accept String -> str and Vec[T] -> []T.
+            let sliceView = expected.kind == .Slice && arg.ty.kind == .Vec &&
+                types.same(types.element(arg.ty), types.element(expected))
             if expected.kind == .Str && arg.ty.kind == .String {
                 args.push(view(arg))
+            } else if sliceView {
+                args.push(arg.name)
             } else {
                 require(reg, ts, argToken, arg.ty, expected)
                 args.push(arg.name)
@@ -861,7 +866,9 @@ fn userCall(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Ex
             // owned String keeps that owner as the root of a transient result.
             // A vector of Copy elements lends only its elements' sources to a str
             // result; any other owner lends its own storage (stage0 recv_loans).
-            let copyVector = arg.ty.kind == .Vec && !types.owned(reg, types.element(arg.ty))
+            // A view of a vector's storage ([]T parameter or []T result) borrows the vector.
+            let copyVector = arg.ty.kind == .Vec && !types.owned(reg, types.element(arg.ty)) &&
+                !sliceView && result.kind != .Slice
             if named && (arg.transient || (types.owned(reg, arg.ty) && !copyVector)) {
                 if result.kind == .Vec {
                     lexer.fail(ts, argToken, "U0001", "vectors of views into owned values are outside this subset")
@@ -1067,6 +1074,9 @@ fn methodValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
     if name == "push" || name == "reserve" {
         let target = placeOf(&g, p, ts, reg, e.left, 0)
         readable(g, ts, target.root, e.token)
+        if target.ty.kind == .Slice && !target.mutable {
+            lexer.fail(ts, e.token, "E0014", "cannot modify a read-only value")
+        }
         if target.ty.kind != .Vec && (name != "push" || target.ty.kind != .String) {
             lexer.fail(ts, e.token, "U0001", "this modifying method is outside the selfhost subset")
         }
@@ -1139,7 +1149,7 @@ fn methodValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
         }
         lexer.fail(ts, e.token, "U0001", "string method is outside the selfhost subset")
     }
-    if base.ty.kind == .Vec || base.ty.kind == .Args {
+    if base.ty.kind == .Vec || base.ty.kind == .Args || base.ty.kind == .Slice {
         if name == "len" || (name == "clone" && base.ty.kind == .Vec) {
             if e.argCount != 0 { lexer.fail(ts, e.token, "E0012", "this vector method takes no arguments") }
             if name == "len" { return scalar(&g, .Int, support.join3("(", base.name, ").len")) }
@@ -1552,7 +1562,7 @@ fn binaryValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
         if lhs.ty.kind == .Unit || (lhs.ty.kind == .Bool && !equality) {
             lexer.fail(ts, e.token, "E0001", "operator is not defined for this type")
         }
-        if lhs.ty.kind == .Vec || lhs.ty.kind == .Args || lhs.ty.kind == .Result ||
+        if lhs.ty.kind == .Vec || lhs.ty.kind == .Args || lhs.ty.kind == .Slice || lhs.ty.kind == .Result ||
             (lhs.ty.kind == .Named && (reg.entries[lhs.ty.decl].kind == .Struct || !equality)) {
             lexer.fail(ts, e.token, "E0501", "this aggregate does not implement the required comparison")
         }
@@ -1840,7 +1850,7 @@ fn indexValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: 
         }
     }
     let base = emitExpr(&g, p, ts, reg, e.left)
-    if base.ty.kind != .Vec && base.ty.kind != .Args && !stringLike(base.ty) {
+    if base.ty.kind != .Vec && base.ty.kind != .Args && base.ty.kind != .Slice && !stringLike(base.ty) {
         lexer.fail(ts, e.token, "E0001", "this value cannot be indexed")
     }
     let mark = g.accessLocks.len()
@@ -1883,7 +1893,7 @@ fn indexValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: 
 // borrowed and may not be stored in a binding.
 fn sliceValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression) -> Value {
     let base = emitExpr(&g, p, ts, reg, e.left)
-    if base.ty.kind == .Vec {
+    if base.ty.kind == .Vec || base.ty.kind == .Slice || base.ty.kind == .Args {
         lexer.fail(ts, e.token, "U0001", "vector slices are outside the selfhost subset")
     }
     if !stringLike(base.ty) { lexer.fail(ts, e.token, "E0001", "this value cannot be sliced") }
@@ -2044,6 +2054,10 @@ fn placeType(g: Generator, p: Program, ts: Vec[Token], reg: Registry, id: int, d
         }
         let base = placeType(g, p, ts, reg, e.left, depth + 1)
         if stringLike(base.ty) { lexer.fail(ts, e.token, "E0101", "text elements are read-only") }
+        if base.ty.kind == .Slice {
+            if !base.mutable { lexer.fail(ts, e.token, "E0014", "cannot modify a read-only value") }
+            lexer.fail(ts, e.token, "E0101", "a slice is read-only; its elements cannot be modified")
+        }
         if base.ty.kind != .Vec { lexer.fail(ts, e.token, "E0001", "indexed assignment requires a vector") }
         if types.owned(reg, types.element(base.ty)) {
             lexer.fail(ts, e.token, "U0001", "indexed places for owned vector elements are outside this subset")
@@ -2301,7 +2315,7 @@ fn forLoopStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registr
     } else {
         let iterable = p.expressions[unparenthesized(p, s.expr)]
         let value = emitExpr(&g, p, ts, reg, s.expr)
-        if value.ty.kind != .Vec {
+        if value.ty.kind != .Vec && value.ty.kind != .Slice {
             lexer.fail(ts, s.token, "E0001", "iteration requires a vector or an integer range")
         }
         if iterable.kind != .Name {
@@ -2354,6 +2368,9 @@ fn emitStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, 
         }
         if initial.transient && ts[s.name].text != "_" {
             lexer.fail(ts, s.token, "U0001", "persistent views of owned strings are outside this subset")
+        }
+        if ty.kind == .Slice && initial.ty.kind == .Vec {
+            lexer.fail(ts, s.token, "U0001", "persistent slice views of vectors are outside this subset")
         }
         if ty.kind == .Unknown { ty = initial.ty }
         require(reg, ts, s.token, initial.ty, ty)
@@ -2480,6 +2497,9 @@ fn returnStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry
         }
         let resultType = g.result
         let returned = emitExpected(&g, p, ts, reg, expr, resultType)
+        if resultType.kind == .Slice && returned.ty.kind == .Vec {
+            lexer.fail(ts, token, "U0001", "returning a vector as a slice view is outside this subset")
+        }
         require(reg, ts, token, returned.ty, resultType)
         if types.carriesBorrow(returned.ty) { returnedSources(g, p, ts, expr, returned) }
         if returned.ty.kind == .Unit {
@@ -2749,6 +2769,9 @@ pub fn generate(p: Program, ts: Vec[Token], filename: str) -> String {
             let param = p.params[f.paramStart + k]
             let ty = types.resolve(reg, ts, param.ty)
             declare(&g, ts, param.name, ty, param.byRef, param.byRef || types.owned(reg, ty), param.byRef)
+            if param.byRef && ty.kind == .Slice {
+                lexer.fail(ts, param.name, "U0001", "inout slice parameters are outside this subset")
+            }
             if types.carriesBorrow(ty) {
                 if k >= 62 {
                     lexer.fail(ts, param.name, "U0001", "borrowing parameters after the 62nd are outside this subset")

@@ -1,16 +1,16 @@
-# Yavo 交接文档（2026-11-25，第三十六批：跳转式 ??）
+# Yavo 交接文档（2026-11-25，第三十七批：[]T 参数）
 
-给下一个会话：先读第 1、2、10、15、16 节及 docs/self-hosting.md、selfhost/README.md 再开工。第二十七至第三十批在 `history/handoff-batches-2026-11-23-to-24.md`，第十二至第二十六批在 `history/handoff-batches-2026-11-21-to-23.md`，第六至第十一批在 `history/handoff-batches-2026-11-19-to-21.md`。
+给下一个会话：先读第 1、2、10、16、17 节及 docs/self-hosting.md、selfhost/README.md 再开工。第二十七至第三十批在 `history/handoff-batches-2026-11-23-to-24.md`，第十二至第二十六批在 `history/handoff-batches-2026-11-21-to-23.md`，第六至第十一批在 `history/handoff-batches-2026-11-19-to-21.md`。
 
 ## 1. 一句话状态
 
-**SH-2 引导子集固定点保持；第三十六批让 selfhost 支持 `?? return`/`?? break`/`?? continue`（见第 16 节）；第三十五批让 selfhost 支持 `Vec[str]`，并修复 Rust stage0 对拥有型实参（`Vec[String]` 等）返回视图的释放后使用缺陷（见第 15 节）；第三十四批加入借用返回 `-> str of …` 并修复 loans 在分支与循环中丢失的缺陷（第 14 节）。** 第三十三批起 selfhost 支持多文件源模块： `use a`、`use a/b`、`use a/{b, c}` 以入口文件目录为根加载，允许循环导入与自导入；顶层 `pub` 决定导出；导入逐文件生效、不传递；函数一律写 `module.f(...)`，公开类型可用短名或 `module.T`（含 `module.T{...}`、`module.E.V`），短名二义报 E0010；诊断和运行时 panic 都指向原文件行列。第三十二批的插值与 format（含 Rust 输出片段借用修复）见第 12 节。
+**SH-2 引导子集固定点保持；第三十七批让 selfhost 支持只读 `[]T` 参数与 `Vec[T]` → `[]T` 自动视图（见第 17 节）；第三十六批支持 `?? return`/`?? break`/`?? continue`（第 16 节）；第三十五批让 selfhost 支持 `Vec[str]`，并修复 Rust stage0 对拥有型实参（`Vec[String]` 等）返回视图的释放后使用缺陷（见第 15 节）；第三十四批加入借用返回 `-> str of …` 并修复 loans 在分支与循环中丢失的缺陷（第 14 节）。** 第三十三批起 selfhost 支持多文件源模块： `use a`、`use a/b`、`use a/{b, c}` 以入口文件目录为根加载，允许循环导入与自导入；顶层 `pub` 决定导出；导入逐文件生效、不传递；函数一律写 `module.f(...)`，公开类型可用短名或 `module.T`（含 `module.T{...}`、`module.E.V`），短名二义报 E0010；诊断和运行时 panic 都指向原文件行列。第三十二批的插值与 format（含 Rust 输出片段借用修复）见第 12 节。
 
-当前语料 **637 cases**。第三十六批本机完整自举 **637/637、12/12、0 skip**，固定点数字见第 16 节；Rust Debug/Release 各 145/0/1（p0 用例文件计在同一测试内）、冻结 124/3/2。
+当前语料 **663 cases**。第三十七批本机完整自举 **663/663、12/12、0 skip**，固定点数字见第 17 节；Rust Debug/Release 各 145/0/1（p0 用例文件计在同一测试内）、冻结 124/3/2。
 
 编译器自身也已改为以 `selfhost/main.yv` 为入口的 `use` 多文件（决定 28），bootstrap 不再拼接源码；改后本机 568/568、12/12，stage2/stage3 C（785,468 字节）与二进制（366,936 字节）一致。
 
-**SH-3 尚未接替，Rust stage0 仍承担日常编译；SH-4 完成 1/3 个独立应用。** 验收流程按 decisions.md 第九节。下一步见第 10 节：test-summary 的借用返回、`Vec[str]` 与 `?? return` 已解除，首错现在是 76 行的 `[]str`，随后是 `Map` 与 str 方法等。
+**SH-3 尚未接替，Rust stage0 仍承担日常编译；SH-4 完成 1/3 个独立应用。** 验收流程按 decisions.md 第九节。下一步见第 10 节：test-summary 的借用返回、`Vec[str]`、`?? return` 与 `[]str` 已解除，首错现在是 101 行的 `Map[String, int]`，随后是 str 方法等。
 
 ## 2. 仓库与环境
 
@@ -197,7 +197,7 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 ## 10. 下一个会话的第一步
 
 1. 检查 Git 状态、最新提交与 CI；先读第 12 节、[自举路线](docs/self-hosting.md)、[selfhost 说明](selfhost/README.md)。
-2. **下一步：继续让 selfhost 编译 examples/test-summary（SH-3 的实际判据）。** 第三十四至三十六批解除了借用返回、`Vec[str]` 与 `?? return`。现在首错是解析期的 `parser.yv:76:26: U0001: type is outside the selfhost subset`（`fn declaredCounts(words: []str, ...)`，只读切片参数，实参是 `Vec[str]`，需要 `Vec[T]` → `[]T` 的自动视图转换）；随后解析期还有 `Map[String, int]`（101 行）。绕开后类型期的下一个阻塞是 `main.yv:18:40` 的 `arg.startsWith("-")`，之后可见 `split`/`endsWith`/`parseInt`、Map 方法、遍历 `Vec[String]`、`catch problem { }` 等。建议下一批做只读 `[]T` 参数（含 `Vec[T]` 实参的自动视图、`len`/下标/`for`），或 str 方法组（`split` 返回 `Vec[str] of` 接收者，`parseInt` 返回 `?int`，配合本批的 `?? return` 正好覆盖 test-summary 72 行）。每项先用 stage0 定标拒绝码，并迁移编译器自身里对应的变通写法。
+2. **下一步：继续让 selfhost 编译 examples/test-summary（SH-3 的实际判据）。** 第三十四至三十七批解除了借用返回、`Vec[str]`、`?? return` 与 `[]str`。现在首错是解析期的 `parser.yv:101:19: U0001: type suffix is outside the selfhost subset`（`var cases: Map[String, int] = [:]`）。绕开 Map 后类型期的下一个阻塞是 `main.yv:18:40` 的 `arg.startsWith("-")`，之后可见 `split`/`endsWith`/`parseInt`/`toString`、Map 方法（`has`/`set`）、遍历 `Vec[String]`、`catch problem { }` 等。建议下一批做 str 方法组（`startsWith`/`endsWith`/`split`/`parseInt`：`split` 返回 `Vec[str] of` 接收者，`parseInt` 返回 `?int`，配合 `?? return` 覆盖 test-summary 72 行），Map 单独一批（类型、字面量、`has`/`set`/`get`、键为 String 的所有权）。每项先用 stage0 定标拒绝码，并迁移编译器自身里对应的变通写法。
 3. 模块尚缺：包依赖与锁文件（stage0 也没有）、`use` 出现在其他项之后（stage0 接受，子集 U0001）、跨模块的枚举载荷/方法/泛型（子集本身没有）。
 
 4. 拥有型 Optional/pop、if let/match、跳转式 ??、Result 字段/容器、方法、泛型按实际阻塞另列；SH-3 的判据是能否编译 examples/test-summary 这样的真实程序，而不是特性数量。
@@ -278,3 +278,14 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - 编译器自身迁移：`types.importedFile` 改返回 `?int`；`qualifiedType` 用 `importedFile(...) ?? return -1` 代替 `if module < 0 { return -1 }`，`moduleOf` 用 `?? -1` 保持原接口。stage1 编译自身因此必须正确处理跳转式 `??`。
 - 用例：新增 14 个（run 1、reject 9、shared_unsupported 4），旧的 `unsupported_optional_coalesce_return/break/continue` 原字节晋升为 `run/optional_coalesce_*.yv`。
 - 验收：本机 637/637、12/12、0 skip，stage2/stage3 C 836,154 字节、Linux 二进制 390,648 字节一致；本批未改 Rust，Rust 全量沿用第三十五批结果（各 145/0/1，冻结 124/3/2）。CI：`0db8fb7` 的 [run 45571423128](https://github.com/msly/yavo/actions/runs/45571423128) **6/6 成功**（Linux x86-64 含 stage2 ASan/UBSan、Windows x86-64、macOS arm64；同时覆盖第三十五批）。
+
+## 17. 第三十七批：只读 []T 参数（2026-11-25）
+
+- 基线 `37d358f`。目标是 test-summary 76 行 `fn declaredCounts(words: []str, line: int)`（实参为 `Vec[str]`）。
+- 类型：`BasicType.Slice`；解析 `[]T`（元素为单个原子类型，容器/Optional/Result 元素 U0001）；解析期只接受 int/byte/bool/str/Copy 命名类型元素，拥有元素 U0001。`cType` 为 `yv_vec`，不拥有，`carriesBorrow` 为真（字段/错误类型 E0301，返回需 `of`）；`same` 把 `os.args()` 的 `Args` 视为 `[]str`。
+- 操作：下标读走 Copy 路径并继承来源；`len`；`for` 遍历；写元素/`push`/给参数赋值 E0014，`var` 切片局部写元素 E0101（同 stage0）；比较 E0501、打印与插值 E0001 沿用通用路径。
+- 调用：形参为 `[]T` 时 `Vec[T]` 实参直接传描述符（调用期间锁根）；字面量不按切片元素类型推断（stage0 报 E0001；本批曾误加推断导致子集接受 `total([1, 2, 250])`，已撤销并做成拒绝用例）。列在 `of` 中的 `Vec` 实参被转为切片、或结果本身是切片时，结果视为指向该 Vec 的存储（与 stage0 第三十五批修复后的 SliceOf 行为一致），绑定为局部时 U0001。
+- 不支持（U0001）：`let ys: []T = v`、返回 `Vec` 当切片、子切片、`toVec`、拥有元素切片、`inout []T` 参数；`clone` 两边都是 U0001。
+- 编译器自身迁移：`contains`、`restoreState`、`restoreSources`、`joinSources`、`sourcesGrew`、`iterationSources` 与 parser 的 `store` 改为 `[]T` 参数（`joinStates` 用 `clone`，保持 Vec）；用户程序生成的 C 不变。
+- 用例：新增 26 个（run 1、panic 1、reject 16、unsupported 7、shared_unsupported 1）；约 160 个旧探针无回退。
+- 验收：本机 663/663、12/12、0 skip，stage2/stage3 C 849,712 字节、Linux 二进制 394,552 字节一致；本批未改 Rust（Rust 全量沿用第三十五批：各 145/0/1，冻结 124/3/2）。CI：待回填。

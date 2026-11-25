@@ -14,6 +14,8 @@ subset of the stage0 language that the compiler itself implements (see
 [decision 20–24](../docs/decisions.md)). It is not yet the default compiler:
 stage0 accepts far more of the language (owned optionals, reference iteration,
 float formatting, methods, generics, Map/Set, closures, threads...).
+Batch 37 adds read-only `[]T` parameters; a `Vec[T]` argument is passed as a
+view of its storage.
 Batch 36 adds jumping `??` fallbacks (`?? return`, `?? break`, `?? continue`)
 as a whole let initializer or assigned value, as in stage0.
 Batch 35 adds `Vec[str]`: a vector's sources join its elements' (push and
@@ -551,9 +553,9 @@ executable fixtures from earlier increments.
 
 ## Next steps
 
-Self-hosting remains a regression gate. Batch 36's jumping `??` has passed local
-acceptance (637/637 cases, 12/12 checks); the compiler itself is `use`-linked
-files. The next real-program blockers in examples/test-summary are `[]str`,
+Self-hosting remains a regression gate. Batch 37's `[]T` parameters have passed
+local acceptance (663/663 cases, 12/12 checks); the compiler itself is
+`use`-linked files. The next real-program blockers in examples/test-summary are
 `Map` and str methods. Each increment must replace real compiler-source workarounds,
 retain independent behavior and cleanup oracles, and renew the fixed point
 on Linux, Windows and macOS. [SH-3](../docs/self-hosting.md) remains incomplete;

@@ -78,7 +78,7 @@ fn identifier(s: inout State, ts: Vec[Token]) -> int {
 }
 
 // Child lists are copied contiguously into the shared pool once complete.
-fn store(s: inout State, items: Vec[int]) -> int {
+fn store(s: inout State, items: []int) -> int {
     let start = s.lists.len()
     for item in items {
         s.lists.push(item)
@@ -127,6 +127,16 @@ fn typeAtom(s: inout State, ts: Vec[Token]) -> TypeRef {
             lexer.fail(ts, question, "U0001", "nested Optional and container payloads are outside the selfhost subset")
         }
         result = TypeRef{kind: .Optional, name: question, elementKind: inner.kind, elementName: token}
+    } else if at(s, ts, "[") && ts[s.pos + 1].text == "]" {
+        // A read-only view `[]T`; like Vec, the element is a single atom.
+        let open = s.pos
+        s.pos += 2
+        let token = s.pos
+        let inner = typeAtom(&s, ts)
+        if inner.kind == .Optional || inner.kind == .Vec || inner.kind == .Result || inner.kind == .Slice {
+            lexer.fail(ts, token, "U0001", "slices of containers, Optionals or Results are outside the selfhost subset")
+        }
+        result = TypeRef{kind: .Slice, name: open, elementKind: inner.kind, elementName: token}
     } else if at(s, ts, "Vec") {
         let name = s.pos
         s.pos += 1
