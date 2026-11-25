@@ -298,4 +298,4 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - **Rust stage0 缺陷修复**：`method2` 在求值单实参的文本方法（`startsWith`/`endsWith`/`contains`/`find`/`split` 等）实参前没有持有接收者，`owned.startsWith(grow(&owned))` 通过检查，生成的 C 在实参扩容 String 后读旧缓冲区（释放后使用）。现在实参求值期间以 `hold_call_argument` 持有接收者，报 E0102。P0 回归 `errors_text_method_receiver.yv`（startsWith/endsWith/contains/find/split 五处 E0102）。
 - 编译器自身迁移：`main.yv` 的 `.yv` 后缀判断改为 `path.endsWith(".yv")`。
 - 用例：新增 12 个（run 1、reject 7、unsupported 2、shared_unsupported 2）；无旧 unsupported 用例被提升；约 200 个旧探针无回退。
-- 验收：本机 675/675、12/12、0 skip，stage2/stage3 C 864,824 字节、Linux 二进制 406,680 字节一致；Rust Debug/Release 各 145/0/1，冻结 124/3/2。CI：待回填。
+- 验收：本机 675/675、12/12、0 skip，stage2/stage3 C 864,824 字节、Linux 二进制 406,680 字节一致；Rust Debug/Release 各 145/0/1，冻结 124/3/2。CI：`72cafa1` 的 [run 45586217122](https://github.com/msly/yavo/actions/runs/45586217122) **5/6**：Linux x86-64（含 stage2 ASan/UBSan）、macOS arm64 与三个独立作业成功；Windows x86-64 在 setup 步骤下载 95 MB 工具链时速度约 60 KB/s，约 20 分钟后被终止（环境问题，未进入测试）。服务器上的令牌没有 actions 写权限（rerun 返回 403），需在 GitHub 页面手动重跑，或由下一个改代码的提交覆盖；下一会话先确认 Windows 结果。
