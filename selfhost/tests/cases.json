@@ -1,6 +1,6 @@
 {
   "schema": "yavo-selfhost-cases/1",
-  "description": "Independent fixed-oracle probes for the Yavo-written scalar, byte, aggregate, String, owned-vector, user-function Result and Copy Optional/pop, interpolation, source-module, borrowed-return and Vec[str] subset; not the frozen full-language conformance suite.",
+  "description": "Independent fixed-oracle probes for the Yavo-written scalar, byte, aggregate, String, owned-vector, user-function Result and Copy Optional/pop, interpolation, source-module, borrowed-return, Vec[str] and jumping ?? subset; not the frozen full-language conformance suite.",
   "cases": [
     {
       "id": "arithmetic",
@@ -2992,28 +2992,22 @@
       "batch": "copy-optional-pop"
     },
     {
-      "id": "unsupported_optional_coalesce_return",
-      "kind": "unsupported",
-      "diagnostic": "U0001",
-      "reason": "A return expression directly on the right of ?? is outside this ordinary-value RHS batch.",
-      "file": "unsupported/unsupported_optional_coalesce_return.yv",
-      "batch": "copy-optional-pop"
+      "id": "optional_coalesce_return",
+      "kind": "run",
+      "stdout": "0\n",
+      "file": "run/optional_coalesce_return.yv"
     },
     {
-      "id": "unsupported_optional_coalesce_break",
-      "kind": "unsupported",
-      "diagnostic": "U0001",
-      "reason": "A break expression directly on the right of ?? is outside this ordinary-value RHS batch.",
-      "file": "unsupported/unsupported_optional_coalesce_break.yv",
-      "batch": "copy-optional-pop"
+      "id": "optional_coalesce_break",
+      "kind": "run",
+      "stdout": "",
+      "file": "run/optional_coalesce_break.yv"
     },
     {
-      "id": "unsupported_optional_coalesce_continue",
-      "kind": "unsupported",
-      "diagnostic": "U0001",
-      "reason": "A continue expression directly on the right of ?? is outside this ordinary-value RHS batch.",
-      "file": "unsupported/unsupported_optional_coalesce_continue.yv",
-      "batch": "copy-optional-pop"
+      "id": "optional_coalesce_continue",
+      "kind": "run",
+      "stdout": "",
+      "file": "run/optional_coalesce_continue.yv"
     },
     {
       "id": "result_vec_raw_context",
@@ -4296,6 +4290,90 @@
       "kind": "unsupported",
       "diagnostic": "U0001",
       "file": "unsupported/inout_str_read_then_store.yv"
+    },
+    {
+      "id": "jump_coalesce",
+      "kind": "run",
+      "stdout": "20\n-1\nvalue 3\n4\nempty\n1\n2\n-1\n5\nowned\n8\n6\n-1\n6\nitem 5\n1\n2\ndone\n",
+      "file": "run/jump_coalesce.yv"
+    },
+    {
+      "id": "jump_coalesce_break_outside_loop",
+      "kind": "reject",
+      "diagnostic": "E0015",
+      "file": "reject/jump_coalesce_break_outside_loop.yv"
+    },
+    {
+      "id": "jump_coalesce_return_type",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/jump_coalesce_return_type.yv"
+    },
+    {
+      "id": "jump_coalesce_return_missing",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/jump_coalesce_return_missing.yv"
+    },
+    {
+      "id": "jump_coalesce_unit_value",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/jump_coalesce_unit_value.yv"
+    },
+    {
+      "id": "jump_coalesce_not_optional",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/jump_coalesce_not_optional.yv"
+    },
+    {
+      "id": "jump_coalesce_annotation",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/jump_coalesce_annotation.yv"
+    },
+    {
+      "id": "jump_coalesce_sources",
+      "kind": "reject",
+      "diagnostic": "E0303",
+      "file": "reject/jump_coalesce_sources.yv"
+    },
+    {
+      "id": "jump_coalesce_statement",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/jump_coalesce_statement.yv"
+    },
+    {
+      "id": "catch_block_sources",
+      "kind": "reject",
+      "diagnostic": "E0303",
+      "file": "reject/catch_block_sources.yv"
+    },
+    {
+      "id": "jump_coalesce_argument",
+      "kind": "shared_unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/jump_coalesce_argument.yv"
+    },
+    {
+      "id": "jump_coalesce_parenthesized",
+      "kind": "shared_unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/jump_coalesce_parenthesized.yv"
+    },
+    {
+      "id": "jump_coalesce_operand",
+      "kind": "shared_unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/jump_coalesce_operand.yv"
+    },
+    {
+      "id": "jump_coalesce_compound_assignment",
+      "kind": "shared_unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/jump_coalesce_compound_assignment.yv"
     }
   ],
   "promotions": [
@@ -4419,6 +4497,39 @@
       "kind": "run",
       "source_sha256": "a2de1f038ca1b56a40156b9e432fe9e29fcc5c13bd0482eb08e8888e0113a53b",
       "reason": "Vectors of str are now in the accepted input subset; the original source bytes are unchanged."
+    },
+    {
+      "previous_id": "unsupported_optional_coalesce_return",
+      "previous_file": "unsupported/unsupported_optional_coalesce_return.yv",
+      "previous_kind": "unsupported",
+      "baseline_commit": "2c01ceba8f1f0ef7e81874b20445e83a5cb73467",
+      "id": "optional_coalesce_return",
+      "file": "run/optional_coalesce_return.yv",
+      "kind": "run",
+      "source_sha256": "8265ad2a1082c79009d9867a082b953b19ff139ee71a618211c1e1e99e049bbd",
+      "reason": "Jumping ?? fallbacks are now in the accepted input subset; the original source bytes are unchanged."
+    },
+    {
+      "previous_id": "unsupported_optional_coalesce_break",
+      "previous_file": "unsupported/unsupported_optional_coalesce_break.yv",
+      "previous_kind": "unsupported",
+      "baseline_commit": "2c01ceba8f1f0ef7e81874b20445e83a5cb73467",
+      "id": "optional_coalesce_break",
+      "file": "run/optional_coalesce_break.yv",
+      "kind": "run",
+      "source_sha256": "f2fdf09f3a25bfed20aa703c756228a13732d568cab6ebc232a82e972386a9d3",
+      "reason": "Jumping ?? fallbacks are now in the accepted input subset; the original source bytes are unchanged."
+    },
+    {
+      "previous_id": "unsupported_optional_coalesce_continue",
+      "previous_file": "unsupported/unsupported_optional_coalesce_continue.yv",
+      "previous_kind": "unsupported",
+      "baseline_commit": "2c01ceba8f1f0ef7e81874b20445e83a5cb73467",
+      "id": "optional_coalesce_continue",
+      "file": "run/optional_coalesce_continue.yv",
+      "kind": "run",
+      "source_sha256": "2666637b23db5c05db4e2153107e3256e2a27b5a095a16d680878c13c9f067d9",
+      "reason": "Jumping ?? fallbacks are now in the accepted input subset; the original source bytes are unchanged."
     }
   ]
 }

@@ -1,0 +1,8 @@
+fn pick(a: str, b: str, v: Vec[int]) -> str of a {
+    var t = b
+    var w = v.clone()
+    let n = w.pop() ?? return a
+    if n > 100 { t = a }
+    return t
+}
+fn main() { println(pick("a", "b", [1])) }

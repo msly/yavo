@@ -80,11 +80,14 @@ pub enum ExprKind {
     None
     Coalesce
     Interpolated
+    Jump
 }
 
 // args/names index Program.lists. A Slice keeps its end in extra; a Catch
 // keeps its handler statements in args and its binding token in extra.
 // Interpolated is the exception: its args directly index Program.stringParts.
+// A Jump is the `return [value]`, `break` or `continue` fallback of `??`: its
+// token is the keyword and left is the returned value or -1.
 pub struct Expression {
     kind: ExprKind
     token: int

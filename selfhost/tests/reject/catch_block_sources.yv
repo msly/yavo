@@ -1,0 +1,17 @@
+enum Problem {
+    Bad
+}
+fn risky(n: int) -> int ! Problem {
+    if n > 0 { return err(.Bad) }
+    return n
+}
+fn pick(a: str, b: str, n: int) -> str of a {
+    var t = b
+    let m = risky(n) catch _ {
+        t = a
+        return a
+    }
+    if m > 100 { return a }
+    return t
+}
+fn main() { println(pick("a", "b", 0)) }

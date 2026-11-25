@@ -1,6 +1,6 @@
 # Yavo 自举路线与实用验收
 
-2026-11-25 · 第三十五批加入 `Vec[str]` 并修复 Rust 对拥有型实参返回视图的检查；第三十四批加入借用返回（`of`）
+2026-11-25 · 第三十六批加入跳转式 `??`；第三十五批加入 `Vec[str]` 并修复 Rust 对拥有型实参返回视图的检查
 
 近期主目标改为：**用 Yavo 实现 Yavo 编译器，完成可重放的自举闭环，再让它承担日常编译工作。** 自举用于暴露真实工程中的语言和工具链缺口；实用验收继续独立执行。
 
@@ -47,7 +47,11 @@ SH-1 的结果只标为“子集编译器”。SH-2 可以标为“子集自举�
 
 ## 当前进度
 
-### 第三十五批：Vec[str]
+### 第三十六批：跳转式 ??
+
+`x ?? return [值]`、`?? break`、`?? continue` 用于 Copy Optional。与 stage0 相同，只能作为 `let` 的整个初始值或 `=` 赋值的右侧，可以经过 `a ?? b ?? return` 的右结合链；加括号、放进参数或运算式、复合赋值都报 U0001。跳转分支复用 `return`/`break`/`continue` 语句的生成与清理，分支之后的代码看到分支之前的 moved 与来源状态；`return` 值的类型与 E0001/E0015 规则同语句形式。顺带修复第三十四批遗留的子集差异：`catch _ { … }` 块执行后只恢复了 moved 状态，没有恢复来源状态，块里 `t = a; return a` 会让后续 `return t` 被误接受（stage0 报 E0303）。编译器自身的 `types.importedFile` 改返回 `?int`，`qualifiedType` 用 `?? return -1` 代替哨兵判断。新增 14 例（1 run、9 reject、4 shared_unsupported），旧的三个 `unsupported_optional_coalesce_*` 原字节晋升为 run 用例。
+
+### 第三十五批：Vec[str]（历史记录）
 
 `Vec[str]` 可以做局部、参数和带 `of` 的返回值。容器的来源是元素来源的并集：`push` 与下标赋值合并，整体赋值替换，移动、`take`、`clone` 保留；读出的元素与 `for` 绑定继承容器来源，之后改动容器不影响它们。字段或错误类型里放 `Vec[str]` 报 E0301；往 `inout Vec[str]` 存非静态文本报 E0306，存它自己的元素报 E0403。`pop`（`?str`）、拥有 String 的视图、`Vec[str] ! E` 仍是 U0001。写 `inout` 参数时若仍有局部变量指向它，子集报 U0001（stage0 按活跃性可能接受或报 E0102），这也关掉了上一批 `inout str` 读后写被子集接受而 stage0 拒绝的差异。
 
@@ -161,7 +165,8 @@ SH-1 的结果只标为“子集编译器”。SH-2 可以标为“子集自举�
 | 已完成 | 编译器自身改为多文件 | 跨文件调用加模块限定、补 `pub`/`use`，bootstrap 只交入口文件；固定点保持 |
 | 已完成 | 借用返回 | 第三十四批：598 例；参数来源位掩码与路径合并；修复 Rust loans 在分支/循环中丢失的释放后使用 |
 | 已完成 | `Vec[str]` | 第三十五批：623 例；容器来源合并；修复 Rust 对拥有型实参返回视图的检查 |
-| 下一步 | 用 selfhost 编译真实程序 | 以 examples/test-summary 为目标，按实际阻塞补子集：`?? return`、`[]str`、`Map`、str 方法等，衡量 SH-3 距离 |
+| 已完成 | 跳转式 `??` | 第三十六批：637 例；`?? return/break/continue`；修复 catch 块后来源未恢复的子集差异 |
+| 下一步 | 用 selfhost 编译真实程序 | 以 examples/test-summary 为目标，按实际阻塞补子集：`[]str`、`Map`、str 方法等，衡量 SH-3 距离 |
 | 接替阶段 | SH-3 接替 | 子集覆盖既有回归与冻结规格后，再讨论让 Yavo 编译器承担日常 `check`/`build` |
 
 固定点现在是回归门：任何修改 `selfhost/` 的提交都必须保持 stage2.c = stage3.c 与 stage1/stage2 全用例一致。

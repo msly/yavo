@@ -111,6 +111,7 @@ struct Generator {
     loops: int = 0
     nesting: int = 0
     outputRoot: int = -1
+    jumpExpr: int = -1
     loopCondition: bool = false
     file: int = 0
 }
@@ -510,7 +511,7 @@ fn functionIn(p: Program, ts: Vec[Token], file: int, token: int) -> int {
 // A module alias names an import of the current file unless a local shadows it.
 fn moduleOf(g: Generator, reg: Registry, ts: Vec[Token], receiver: Expression) -> int {
     if receiver.kind != .Name || localIndex(g, ts, receiver.token) >= 0 { return -1 }
-    return types.importedFile(reg, ts, receiver.token)
+    return types.importedFile(reg, ts, receiver.token) ?? -1
 }
 
 fn outputBuiltin(name: str) -> bool {
@@ -1212,7 +1213,16 @@ fn someConstructor(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry
     return wrapOptional(&g, reg, ty, arg)
 }
 
-fn coalesceValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression, expected: Hint) -> Value {
+fn coalesceValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, id: int, e: Expression, expected: Hint) -> Value {
+    // Like stage0, a jumping fallback may only end a whole let initializer or
+    // assigned value, possibly through the right side of a ?? chain.
+    let allowed = g.jumpExpr == id
+    g.jumpExpr = -1
+    let jumping = p.expressions[e.right].kind == .Jump
+    if jumping && !allowed {
+        lexer.fail(ts, p.expressions[e.right].token, "U0001",
+            "?? return, ?? break and ?? continue are only supported as a whole let initializer or assigned value")
+    }
     var context = Hint{ty: types.primitive(.Unknown)}
     if expected.extra > 0 || (expected.ty.kind != .Unknown && expected.ty.kind != .Unit) {
         context = liftHint(reg, expected)
@@ -1222,6 +1232,9 @@ fn coalesceValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, 
         lexer.fail(ts, e.token, "E0001", "the left side of ?? requires an Optional value")
     }
     let inner = peelHint(Hint{ty: shaped.value.ty, extra: shaped.extra})
+    if jumping && shaped.extra > 0 {
+        lexer.fail(ts, e.token, "U0001", "nested or owned Optional values are outside this subset")
+    }
     if shaped.extra > 0 {
         // Check the exact RHS type before rejecting a symbolic Optional. This
         // preserves E0001 for `let x: ?int = none ?? 1` without admitting ??int.
@@ -1231,10 +1244,29 @@ fn coalesceValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, 
     }
     let lhs = copyValue(shaped.value)
     let output = typedValue(&g, reg, inner.ty, support.join3("(", lhs.name, ").val"))
+    if jumping {
+        // The fallback leaves the statement; the following code sees the state
+        // from before it (stage0 restores moves and loans after a jump).
+        let jump = p.expressions[e.right]
+        let movedBefore = movedState(g)
+        let sourcesBefore = sourceState(g)
+        emit(&g, support.join3("if (!(", lhs.name, ").has) {"))
+        if ts[jump.token].text == "return" {
+            let _left = returnStatement(&g, p, ts, reg, jump.token, jump.left)
+        } else {
+            let _left = loopExit(&g, ts, reg, jump.token, ts[jump.token].text == "break")
+        }
+        emit(&g, "}")
+        restoreState(&g, movedBefore)
+        restoreSources(&g, sourcesBefore)
+        return output
+    }
     let before = movedState(g)
     let temps = g.temps.len()
     emit(&g, support.join3("if (!(", lhs.name, ").has) {"))
+    if allowed && p.expressions[e.right].kind == .Coalesce { g.jumpExpr = e.right }
     let rhs = emitHint(&g, p, ts, reg, e.right, inner)
+    g.jumpExpr = -1
     requireHint(reg, ts, e.token, rhs, inner)
     emit(&g, support.join4(output.name, " = ", rhs.value.name, ";"))
     discardTemps(&g, reg, temps)
@@ -1333,11 +1365,13 @@ fn userCatchValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry,
         emit(&g, support.join2(taken.name, ").err;"))
     }
     zeroValue(&g, reg, taken)
+    let sourcesBefore = sourceState(g)
     let flow = emitBlock(&g, p, ts, reg, e.argStart, e.argCount)
     if flow.falls { lexer.fail(ts, e.extra, "E0601", "this catch block can reach its closing brace") }
     cleanLocals(&g, reg, count)
     while g.locals.len() > count { let _ = g.locals.pop() }
     restoreState(&g, before)
+    restoreSources(&g, sourcesBefore)
     emit(&g, "}")
     return resultPayload(&g, reg, taken)
 }
@@ -1382,8 +1416,10 @@ fn catchValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: 
         emit(&g, support.join3("if (", status, " >= 0) {"))
         emit(&g, support.join3("yv_vec_free(&", buffer, ");"))
         let before = movedState(g)
+        let sourcesBefore = sourceState(g)
         let flow = emitBlock(&g, p, ts, reg, e.argStart, e.argCount)
         restoreState(&g, before)
+        restoreSources(&g, sourcesBefore)
         if flow.falls { lexer.fail(ts, e.token, "E0601", "this catch block can reach its closing brace") }
         emit(&g, "}")
         emit(&g, support.join5(result, " = (yv_string){ (char *)", buffer, ".ptr, ", support.join5(buffer, ".len, ", buffer, ".cap };", "")))
@@ -1416,8 +1452,10 @@ fn catchValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: 
             emit(&g, support.join2(result, " = (yv_string){0};"))
         }
         let before = movedState(g)
+        let sourcesBefore = sourceState(g)
         let flow = emitBlock(&g, p, ts, reg, e.argStart, e.argCount)
         restoreState(&g, before)
+        restoreSources(&g, sourcesBefore)
         if flow.falls { lexer.fail(ts, e.token, "E0601", "this catch block can reach its closing brace") }
         emit(&g, "}")
     }
@@ -1557,7 +1595,7 @@ fn hintedExpression(g: inout Generator, p: Program, ts: Vec[Token], reg: Registr
         return HintedValue{value: someConstructor(&g, p, ts, reg, e, expected)}
     }
     if e.kind == .Coalesce {
-        return HintedValue{value: coalesceValue(&g, p, ts, reg, e, expected)}
+        return HintedValue{value: coalesceValue(&g, p, ts, reg, id, e, expected)}
     }
     var context = expected.ty
     if expected.extra > 0 { context = types.primitive(.Unknown) }
@@ -1873,6 +1911,9 @@ fn sliceValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: 
 
 fn expressionValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, id: int, expected: Type) -> Value {
     let e = p.expressions[id]
+    if e.kind == .Jump {
+        lexer.fail(ts, e.token, "U0001", "?? return, ?? break and ?? continue are only supported as a whole let initializer or assigned value")
+    }
     if e.kind == .Interpolated {
         lexer.fail(ts, e.token, "E0001", "interpolation must be a direct output or format argument")
     }
@@ -2304,7 +2345,9 @@ fn emitStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, 
     let s = p.statements[id]
     if s.kind == .Bind {
         var ty = types.resolve(reg, ts, s.annotation)
+        g.jumpExpr = s.expr
         let initial = emitExpected(&g, p, ts, reg, s.expr, ty)
+        g.jumpExpr = -1
         if ty.kind == .Unknown && initial.indexedBorrow && !initial.field {
             if ts[s.name].text == "_" { return Flow{} }
             lexer.fail(ts, s.token, "U0001", "persistent indexed-element borrows are outside this subset")
@@ -2332,7 +2375,9 @@ fn emitStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, 
             if !target.whole { readable(g, ts, target.root, s.token) }
             writable(g, ts, target.root, s.token)
         }
+        if ts[s.token].text == "=" { g.jumpExpr = s.expr }
         let rhs = emitExpected(&g, p, ts, reg, s.expr, target.ty)
+        g.jumpExpr = -1
         require(reg, ts, s.token, rhs.ty, target.ty)
         if rhs.transient {
             lexer.fail(ts, s.token, "U0001", "persistent views of owned strings are outside this subset")
@@ -2374,48 +2419,7 @@ fn emitStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, 
         if exitsProcess(g, p, ts, s.expr) { return Flow{falls: false} }
         return Flow{}
     }
-    if s.kind == .Return {
-        if g.result.kind == .Result && types.resultOk(reg, g.result).kind == .Unit {
-            if s.expr < 0 || p.expressions[unparenthesized(p, s.expr)].kind == .Unit {
-                cleanTemps(&g, reg, 0)
-                cleanLocals(&g, reg, 0)
-                let returnedC = types.cType(g.result)
-                emit(&g, support.join3("return (", returnedC, "){ .ok = true };"))
-                return Flow{falls: false}
-            }
-        }
-        if s.expr < 0 {
-            require(reg, ts, s.token, types.primitive(.Unit), g.result)
-            cleanTemps(&g, reg, 0)
-            cleanLocals(&g, reg, 0)
-            emit(&g, "return;")
-        } else {
-            if g.result.kind == .Unit && p.expressions[s.expr].kind != .Unit {
-                lexer.fail(ts, s.token, "E0001", "a unit-returning function cannot return a value")
-            }
-            let resultType = g.result
-            let returned = emitExpected(&g, p, ts, reg, s.expr, resultType)
-            require(reg, ts, s.token, returned.ty, resultType)
-            if types.carriesBorrow(returned.ty) { returnedSources(g, p, ts, s.expr, returned) }
-            if returned.ty.kind == .Unit {
-                cleanTemps(&g, reg, 0)
-                cleanLocals(&g, reg, 0)
-                emit(&g, "return;")
-            } else {
-                let taken = takeValue(&g, reg, ts, s.token, returned)
-                let n = g.counter
-                g.counter += 1
-                put(&g, types.cType(taken.ty))
-                put(&g, support.join3(" return_", support.decimal(n), " = "))
-                emit(&g, support.join2(taken.name, ";"))
-                zeroValue(&g, reg, taken)
-                cleanTemps(&g, reg, 0)
-                cleanLocals(&g, reg, 0)
-                emit(&g, support.join3("return return_", support.decimal(n), ";"))
-            }
-        }
-        return Flow{falls: false}
-    }
+    if s.kind == .Return { return returnStatement(&g, p, ts, reg, s.token, s.expr) }
     if s.kind == .If {
         let tempCount = g.temps.len()
         let condition = emitExpected(&g, p, ts, reg, s.expr, types.primitive(.Bool))
@@ -2451,14 +2455,63 @@ fn emitStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, 
     }
     if s.kind == .While || s.kind == .Loop { return loopStatement(&g, p, ts, reg, s) }
     if s.kind == .ForRange || s.kind == .ForEach { return forLoopStatement(&g, p, ts, reg, s) }
-    if g.loops == 0 { lexer.fail(ts, s.token, "E0015", "break/continue requires an enclosing loop") }
+    return loopExit(&g, ts, reg, s.token, s.kind == .Break)
+}
+
+// `return [expr]`, as a statement or as the fallback of `?? return`.
+fn returnStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, token: int, expr: int) -> Flow {
+    if g.result.kind == .Result && types.resultOk(reg, g.result).kind == .Unit {
+        if expr < 0 || p.expressions[unparenthesized(p, expr)].kind == .Unit {
+            cleanTemps(&g, reg, 0)
+            cleanLocals(&g, reg, 0)
+            let returnedC = types.cType(g.result)
+            emit(&g, support.join3("return (", returnedC, "){ .ok = true };"))
+            return Flow{falls: false}
+        }
+    }
+    if expr < 0 {
+        require(reg, ts, token, types.primitive(.Unit), g.result)
+        cleanTemps(&g, reg, 0)
+        cleanLocals(&g, reg, 0)
+        emit(&g, "return;")
+    } else {
+        if g.result.kind == .Unit && p.expressions[expr].kind != .Unit {
+            lexer.fail(ts, token, "E0001", "a unit-returning function cannot return a value")
+        }
+        let resultType = g.result
+        let returned = emitExpected(&g, p, ts, reg, expr, resultType)
+        require(reg, ts, token, returned.ty, resultType)
+        if types.carriesBorrow(returned.ty) { returnedSources(g, p, ts, expr, returned) }
+        if returned.ty.kind == .Unit {
+            cleanTemps(&g, reg, 0)
+            cleanLocals(&g, reg, 0)
+            emit(&g, "return;")
+        } else {
+            let taken = takeValue(&g, reg, ts, token, returned)
+            let n = g.counter
+            g.counter += 1
+            put(&g, types.cType(taken.ty))
+            put(&g, support.join3(" return_", support.decimal(n), " = "))
+            emit(&g, support.join2(taken.name, ";"))
+            zeroValue(&g, reg, taken)
+            cleanTemps(&g, reg, 0)
+            cleanLocals(&g, reg, 0)
+            emit(&g, support.join3("return return_", support.decimal(n), ";"))
+        }
+    }
+    return Flow{falls: false}
+}
+
+// `break` or `continue`, as a statement or as the fallback of `?? break`.
+fn loopExit(g: inout Generator, ts: Vec[Token], reg: Registry, token: int, breaking: bool) -> Flow {
+    if g.loops == 0 { lexer.fail(ts, token, "E0015", "break/continue requires an enclosing loop") }
     let index = g.loopStates.len() - 1
     let localCount = g.loopStates[index].localCount
     let tempCount = g.loopStates[index].tempCount
-    recordExit(&g, s.kind == .Break)
+    recordExit(&g, breaking)
     cleanTemps(&g, reg, tempCount)
     cleanLocals(&g, reg, localCount)
-    if s.kind == .Break {
+    if breaking {
         emit(&g, "break;")
         return Flow{falls: false, breaks: true}
     }

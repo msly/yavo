@@ -135,15 +135,15 @@ pub fn fileOf(reg: Registry, token: int) -> int {
 }
 
 // The module file imported under `alias` by the alias token's own file, or -1.
-pub fn importedFile(reg: Registry, ts: Vec[Token], alias: int) -> int {
+pub fn importedFile(reg: Registry, ts: Vec[Token], alias: int) -> ?int {
     let from = reg.files[fileOf(reg, alias)]
     var i = 0
     while i < from.importCount {
         let item = reg.imports[from.importStart + i]
-        if ts[item.alias].text == ts[alias].text { return item.file }
+        if ts[item.alias].text == ts[alias].text { return some(item.file) }
         i += 1
     }
-    return -1
+    return none
 }
 
 fn declaredIn(reg: Registry, ts: Vec[Token], file: int, nameToken: int) -> int {
@@ -181,8 +181,7 @@ pub fn lookup(reg: Registry, ts: Vec[Token], nameToken: int) -> int {
 // `module.Name` where module is an import of the alias token's file. Returns
 // -1 when the alias is not a module; a missing or private name is E0010.
 pub fn qualifiedType(reg: Registry, ts: Vec[Token], alias: int, nameToken: int) -> int {
-    let module = importedFile(reg, ts, alias)
-    if module < 0 { return -1 }
+    let module = importedFile(reg, ts, alias) ?? return -1
     let decl = declaredIn(reg, ts, module, nameToken)
     if decl < 0 || !reg.entries[decl].public {
         lexer.fail(ts, nameToken, "E0010", support.join5("module '", ts[alias].text, "' has no exported type '", ts[nameToken].text, "'"))

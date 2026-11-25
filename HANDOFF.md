@@ -1,16 +1,16 @@
-# Yavo 交接文档（2026-11-25，第三十五批：Vec[str]）
+# Yavo 交接文档（2026-11-25，第三十六批：跳转式 ??）
 
-给下一个会话：先读第 1、2、10、14、15 节及 docs/self-hosting.md、selfhost/README.md 再开工。第二十七至第三十批在 `history/handoff-batches-2026-11-23-to-24.md`，第十二至第二十六批在 `history/handoff-batches-2026-11-21-to-23.md`，第六至第十一批在 `history/handoff-batches-2026-11-19-to-21.md`。
+给下一个会话：先读第 1、2、10、15、16 节及 docs/self-hosting.md、selfhost/README.md 再开工。第二十七至第三十批在 `history/handoff-batches-2026-11-23-to-24.md`，第十二至第二十六批在 `history/handoff-batches-2026-11-21-to-23.md`，第六至第十一批在 `history/handoff-batches-2026-11-19-to-21.md`。
 
 ## 1. 一句话状态
 
-**SH-2 引导子集固定点保持；第三十五批让 selfhost 支持 `Vec[str]`，并修复 Rust stage0 对拥有型实参（`Vec[String]` 等）返回视图的释放后使用缺陷（见第 15 节）；第三十四批加入借用返回 `-> str of …` 并修复 loans 在分支与循环中丢失的缺陷（第 14 节）。** 第三十三批起 selfhost 支持多文件源模块： `use a`、`use a/b`、`use a/{b, c}` 以入口文件目录为根加载，允许循环导入与自导入；顶层 `pub` 决定导出；导入逐文件生效、不传递；函数一律写 `module.f(...)`，公开类型可用短名或 `module.T`（含 `module.T{...}`、`module.E.V`），短名二义报 E0010；诊断和运行时 panic 都指向原文件行列。第三十二批的插值与 format（含 Rust 输出片段借用修复）见第 12 节。
+**SH-2 引导子集固定点保持；第三十六批让 selfhost 支持 `?? return`/`?? break`/`?? continue`（见第 16 节）；第三十五批让 selfhost 支持 `Vec[str]`，并修复 Rust stage0 对拥有型实参（`Vec[String]` 等）返回视图的释放后使用缺陷（见第 15 节）；第三十四批加入借用返回 `-> str of …` 并修复 loans 在分支与循环中丢失的缺陷（第 14 节）。** 第三十三批起 selfhost 支持多文件源模块： `use a`、`use a/b`、`use a/{b, c}` 以入口文件目录为根加载，允许循环导入与自导入；顶层 `pub` 决定导出；导入逐文件生效、不传递；函数一律写 `module.f(...)`，公开类型可用短名或 `module.T`（含 `module.T{...}`、`module.E.V`），短名二义报 E0010；诊断和运行时 panic 都指向原文件行列。第三十二批的插值与 format（含 Rust 输出片段借用修复）见第 12 节。
 
-当前语料 **623 cases**。第三十五批本机完整自举 **623/623、12/12、0 skip**，固定点数字见第 15 节；Rust Debug/Release 各 145/0/1（p0 用例文件计在同一测试内）、冻结 124/3/2。
+当前语料 **637 cases**。第三十六批本机完整自举 **637/637、12/12、0 skip**，固定点数字见第 16 节；Rust Debug/Release 各 145/0/1（p0 用例文件计在同一测试内）、冻结 124/3/2。
 
 编译器自身也已改为以 `selfhost/main.yv` 为入口的 `use` 多文件（决定 28），bootstrap 不再拼接源码；改后本机 568/568、12/12，stage2/stage3 C（785,468 字节）与二进制（366,936 字节）一致。
 
-**SH-3 尚未接替，Rust stage0 仍承担日常编译；SH-4 完成 1/3 个独立应用。** 验收流程按 decisions.md 第九节。下一步见第 10 节：test-summary 的借用返回与 `Vec[str]` 已解除，剩下解析期的 `?? return`、`[]str`、`Map`，以及 str 方法等。
+**SH-3 尚未接替，Rust stage0 仍承担日常编译；SH-4 完成 1/3 个独立应用。** 验收流程按 decisions.md 第九节。下一步见第 10 节：test-summary 的借用返回、`Vec[str]` 与 `?? return` 已解除，首错现在是 76 行的 `[]str`，随后是 `Map` 与 str 方法等。
 
 ## 2. 仓库与环境
 
@@ -197,7 +197,7 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 ## 10. 下一个会话的第一步
 
 1. 检查 Git 状态、最新提交与 CI；先读第 12 节、[自举路线](docs/self-hosting.md)、[selfhost 说明](selfhost/README.md)。
-2. **下一步：继续让 selfhost 编译 examples/test-summary（SH-3 的实际判据）。** 第三十四、三十五批解除了借用返回与 `Vec[str]`（`fields` 原样进入 `vec_str_basic` 用例）。现在首错仍是解析期的 `parser.yv:72:36: U0001: jumping coalesce fallbacks`（`word.parseInt() ?? return err(...)`）；随后解析期还有 `[]str` 切片参数（76 行）与 `Map[String, int]`（101 行）。在绕开这三处的副本里，类型期的下一个阻塞是 `main.yv:18:40` 的 `arg.startsWith("-")`（str 方法），之后可见 `split`/`endsWith`/`parseInt`、Map 方法、遍历 `Vec[String]`、`catch problem { }` 等。建议下一批做 `?? return`/`?? err` 跳转式回退（解析与控制流，复用已有 Copy Optional），或 str 方法组（`startsWith`/`endsWith`/`split`/`parseInt`，其中 `split` 返回 `Vec[str] of` 接收者，直接沿用本批）。每项先用 stage0 定标拒绝码，并迁移编译器自身里对应的变通写法。
+2. **下一步：继续让 selfhost 编译 examples/test-summary（SH-3 的实际判据）。** 第三十四至三十六批解除了借用返回、`Vec[str]` 与 `?? return`。现在首错是解析期的 `parser.yv:76:26: U0001: type is outside the selfhost subset`（`fn declaredCounts(words: []str, ...)`，只读切片参数，实参是 `Vec[str]`，需要 `Vec[T]` → `[]T` 的自动视图转换）；随后解析期还有 `Map[String, int]`（101 行）。绕开后类型期的下一个阻塞是 `main.yv:18:40` 的 `arg.startsWith("-")`，之后可见 `split`/`endsWith`/`parseInt`、Map 方法、遍历 `Vec[String]`、`catch problem { }` 等。建议下一批做只读 `[]T` 参数（含 `Vec[T]` 实参的自动视图、`len`/下标/`for`），或 str 方法组（`split` 返回 `Vec[str] of` 接收者，`parseInt` 返回 `?int`，配合本批的 `?? return` 正好覆盖 test-summary 72 行）。每项先用 stage0 定标拒绝码，并迁移编译器自身里对应的变通写法。
 3. 模块尚缺：包依赖与锁文件（stage0 也没有）、`use` 出现在其他项之后（stage0 接受，子集 U0001）、跨模块的枚举载荷/方法/泛型（子集本身没有）。
 
 4. 拥有型 Optional/pop、if let/match、跳转式 ??、Result 字段/容器、方法、泛型按实际阻塞另列；SH-3 的判据是能否编译 examples/test-summary 这样的真实程序，而不是特性数量。
@@ -267,3 +267,14 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - 用例：新增 25 个（run 1、reject 18、unsupported 6），全部先用修复后的 stage0 实测；旧的 `unsupported_vec_str_element`（`["first", "second"]`）原字节晋升为 `run/vec_str_literal.yv`，记入 promotions。约 100 个探针上子集与 stage0 无“stage0 拒绝而子集接受”的情况。
 - 编译器自身没有为绕开 `Vec[str]` 写的变通代码（`main.yv` 的模块路径是拼出来的拥有字符串，lexer_test 的 `Vec[String]` 是有意测试清理），本批无迁移。
 - 验收：本机 623/623、12/12、0 skip，stage2/stage3 C 826,223 字节、Linux 二进制 386,344 字节一致；Rust Debug/Release 各 145/0/1，冻结 124/3/2。CI：`fbbffb0`（Rust 修复）与 `7825d08`（本批）一起推送，[run 45567225110](https://github.com/msly/yavo/actions/runs/45567225110) 中独立 ASan/UBSan、实验证据、agent 准备三项成功，三个原生作业都在第 4 步 setup（`tools/ci/run.py setup`）以退出码 1 失败，用时约 5 分钟。作业日志需要仓库管理员权限，本会话读不到。同一提交在本机干净克隆里按 CI 方式执行 `run.py setup`（rustup、cargo fetch/build、Zig 0.17.1 从 ziglang.org 下载安装、Debug/Release 预热构建）全部通过，判断为环境问题（最可能是三平台同时下载 Zig 失败），**待在 GitHub 上重跑失败作业确认**，确认前本批不算完成 CI 门。
+
+## 16. 第三十六批：跳转式 ??（2026-11-25）
+
+- 基线 `2c01ceb`。目标是 test-summary 72 行 `let value = word.parseInt() ?? return err(...)` 的解析期阻塞（`parseInt` 本身属于 str 方法组，留给后续）。
+- 解析：`??` 右侧遇到 `return`/`break`/`continue` 时生成新表达式 `Jump`（记号为关键字，`left` 为返回值或 -1）；`return` 后紧跟换行、`}`、`)`、`,` 或文件结尾时无值，同 stage0 的 `jump()`。
+- 位置规则（同 stage0）：只能是 `let` 的整个初始值或 `=` 赋值的右侧，生成器用 `jumpExpr` 标记允许的表达式 id，`a ?? b ?? return` 沿右侧链传递；加括号、实参、运算式、复合赋值报 U0001（stage0 也是 U0001，记为 shared_unsupported）。
+- 生成：把 `return` 语句与 `break`/`continue` 语句的生成抽成 `returnStatement`、`loopExit`，语句与跳转分支共用（抽取后已有用例生成的 C 逐字节不变）。跳转分支放在 `if (!x.has) { … }` 中，结束后恢复分支前的 moved 与来源状态。
+- 顺带修复第三十四批遗留的子集差异：三处 `catch _ { … }` 块（用户 Result 与两个标准库调用）执行后只恢复 moved 状态，没有恢复来源状态。块里 `t = a; return a` 之后 `return t`（`of a`，`t` 仍指向 `b`）会被子集接受，stage0 报 E0303；上一版 stage1 实测接受，现已拒绝（`catch_block_sources`）。
+- 编译器自身迁移：`types.importedFile` 改返回 `?int`；`qualifiedType` 用 `importedFile(...) ?? return -1` 代替 `if module < 0 { return -1 }`，`moduleOf` 用 `?? -1` 保持原接口。stage1 编译自身因此必须正确处理跳转式 `??`。
+- 用例：新增 14 个（run 1、reject 9、shared_unsupported 4），旧的 `unsupported_optional_coalesce_return/break/continue` 原字节晋升为 `run/optional_coalesce_*.yv`。
+- 验收：本机 637/637、12/12、0 skip，stage2/stage3 C 836,154 字节、Linux 二进制 390,648 字节一致；本批未改 Rust，Rust 全量沿用第三十五批结果（各 145/0/1，冻结 124/3/2）。CI：待回填（这次推送同时覆盖第三十五批）。

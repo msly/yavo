@@ -549,7 +549,17 @@ fn parseBinary(s: inout State, ts: Vec[Token], minimum: int) -> int {
         s.pos += 1
         if level == 4 {
             if at(s, ts, "return") || at(s, ts, "break") || at(s, ts, "continue") {
-                syntax(s, ts, "U0001", "jumping coalesce fallbacks are outside the selfhost subset")
+                // Where the jump may stand is decided when the statement is checked.
+                let keyword = s.pos
+                s.pos += 1
+                var value = -1
+                if ts[keyword].text == "return" && ts[s.pos].kind != .Newline && ts[s.pos].kind != .Eof &&
+                    !at(s, ts, "}") && !at(s, ts, ")") && !at(s, ts, ",") {
+                    value = parseExpression(&s, ts)
+                }
+                let jump = pushExpr(&s, .Jump, keyword, value, -1)
+                lhs = pushExpr(&s, .Coalesce, op, lhs, jump)
+                continue
             }
             // Unlike the other binary operators, ?? is right associative.
             // Bound its same-precedence recursion with the parser nesting gate.

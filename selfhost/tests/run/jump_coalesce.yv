@@ -1,0 +1,109 @@
+// `?? return`, `?? break` and `?? continue` leave through the fallback only
+// when the Optional is empty; owned locals and statement temporaries are
+// released on that path, and the following code sees the state from before.
+enum Problem {
+    Empty
+}
+
+enum Color {
+    Red
+    Blue
+}
+
+fn last(v: Vec[int]) -> int {
+    var w = v.clone()
+    let x = w.pop() ?? return -1
+    return x * 10
+}
+
+fn show(v: Vec[int]) {
+    let label = "value".toString()
+    var w = v.clone()
+    let x = w.pop() ?? return
+    println("${label} ${x}")
+}
+
+fn checked(v: Vec[int]) -> int ! Problem {
+    var w = v.clone()
+    let x = w.pop() ?? return err(.Empty)
+    return x
+}
+
+fn report(v: Vec[int]) {
+    let n = checked(v) catch _ {
+        println("empty")
+        return
+    }
+    println(n)
+}
+
+fn find(n: int) -> ?Color {
+    if n == 0 { return some(.Red) }
+    if n == 1 { return some(.Blue) }
+    return none
+}
+
+fn code(n: int) -> int {
+    let c = find(n) ?? return -1
+    if c == .Red { return 1 }
+    return 2
+}
+
+fn size(text: String) -> int {
+    return text.len()
+}
+
+fn fallback(v: Vec[int]) -> int {
+    let owned = "owned".toString()
+    var w = v.clone()
+    let x = w.pop() ?? return size(owned)
+    println(owned)
+    return x
+}
+
+fn either(a: Vec[int], b: Vec[int]) -> int {
+    var x = 0
+    var first = a.clone()
+    var second = b.clone()
+    x = first.pop() ?? second.pop() ?? return -1
+    return x
+}
+
+fn main() {
+    println(last([1, 2]))
+    println(last([]))
+    show([3])
+    show([])
+    report([4])
+    report([])
+    println(code(0))
+    println(code(1))
+    println(code(2))
+    println(fallback([]))
+    println(fallback([8]))
+    println(either([], [6]))
+    println(either([], []))
+    var stack = [1, 2, 3]
+    var total = 0
+    loop {
+        let x = stack.pop() ?? break
+        total += x
+    }
+    println(total)
+    var items = [5]
+    for i in 0..3 {
+        let label = "item".toString()
+        let y = items.pop() ?? continue
+        println("${label} ${y + i}")
+    }
+    var outer = 0
+    while outer < 2 {
+        outer += 1
+        var inner = [outer]
+        loop {
+            let z = inner.pop() ?? break
+            println(z)
+        }
+    }
+    println("done")
+}
