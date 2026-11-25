@@ -1,0 +1,15 @@
+fn set(s: inout str, b: str, n: int) {
+    var t = "static"
+    var i = 0
+    while i < n {
+        s = t
+        t = b
+        i += 1
+    }
+}
+
+fn main() {
+    var t = "a"
+    set(&t, "b", 2)
+    println(t)
+}

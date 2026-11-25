@@ -1,0 +1,15 @@
+fn pick(a: str, b: str) -> str of a {
+    var t = a
+    var u = a
+    var i = 0
+    while i < 3 {
+        t = u
+        u = b
+        i += 1
+    }
+    return t
+}
+
+fn main() {
+    println(pick("x", "y"))
+}

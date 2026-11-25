@@ -1,0 +1,62 @@
+// Returned str values carry the parameters named after `of`; callers see
+// only those sources, so static and parameter text can be kept in locals.
+fn first(s: str) -> str of s {
+    if s.len() == 0 { return s }
+    return s[0..1]
+}
+
+fn language() -> str of static {
+    return "Yavo"
+}
+
+fn choose(a: str, b: str, pickA: bool) -> str of (a, b) {
+    if pickA { return a }
+    return b
+}
+
+fn orDefault(s: str) -> str of (s, static) {
+    if s.len() == 0 { return "default" }
+    return s
+}
+
+fn keepLeft(left: str, right: str) -> str of left {
+    if right.len() > 100 { return left[0..0] }
+    return choose(left, left, right.len() > 1)
+}
+
+fn tail(s: str) -> str of (s, s) {
+    return first(s[1..s.len()])
+}
+
+fn width(s: str) -> int of s {
+    return s.len()
+}
+
+fn copied(s: str) -> String of s {
+    return s.toString()
+}
+
+fn nested(text: str) -> str of text {
+    let head = first(text)
+    let again = first(head)
+    return again
+}
+
+fn main() {
+    let name = language()
+    println(name)
+    let initial = first(name)
+    println(initial)
+    println(choose("left", "right", false))
+    println(orDefault(""))
+    println(orDefault("given"))
+    println(keepLeft("kept", "other"))
+    println(tail("xyz"))
+    println(width("four"))
+    println(copied("owned copy"))
+    println(nested("nested"))
+    let owned = "temporary text".toString()
+    println(first(owned))
+    println(first("statement temporary".toString()))
+    println("${first(owned)}-${first(name)}")
+}

@@ -1,0 +1,9 @@
+fn set(s: inout str) {
+    s = s[1..2]
+}
+
+fn main() {
+    var t = "abc"
+    set(&t)
+    println(t)
+}

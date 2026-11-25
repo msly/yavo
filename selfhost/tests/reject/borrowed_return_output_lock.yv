@@ -1,0 +1,13 @@
+fn first(s: str) -> str of s {
+    return s[0..1]
+}
+
+fn change(s: inout String) -> int {
+    s = "replacement".toString()
+    return 7
+}
+
+fn main() {
+    var owned = "original".toString()
+    println("${first(owned)} ${change(&owned)}")
+}

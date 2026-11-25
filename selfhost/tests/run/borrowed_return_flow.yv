@@ -1,0 +1,72 @@
+// Source sets follow control flow as stage0's loans do: an assignment
+// replaces them on its path, joins merge only paths that reach the join,
+// and loops are rechecked until the state entering an iteration is stable.
+fn reassigned(a: str, b: str) -> str of a {
+    var t = b
+    t = a
+    return t
+}
+
+fn bothBranches(a: str, b: str, c: bool) -> str of a {
+    var t = b
+    if c { t = a } else { t = a }
+    return t
+}
+
+fn divergingBranch(a: str, b: str, c: bool) -> str of a {
+    var t = a
+    if c {
+        t = b
+        return a
+    }
+    return t
+}
+
+fn staticAfterLoop(a: str, b: str) -> str of (a, static) {
+    var t = a
+    var i = 0
+    while i < 2 {
+        t = b
+        t = "static"
+        i += 1
+    }
+    return t
+}
+
+fn latest(a: str, b: str, n: int) -> str of (a, b) {
+    var t = a
+    var u = a
+    var i = 0
+    while i < n {
+        t = u
+        u = b
+        i += 1
+    }
+    return t
+}
+
+fn breakOut(a: str, b: str) -> str of (a, b) {
+    var t = a
+    loop {
+        t = b
+        break
+    }
+    return t
+}
+
+fn resetStatic(s: inout str) {
+    s = "reset"
+}
+
+fn main() {
+    let owned = "temporary".toString()
+    println(reassigned("a", owned))
+    println(bothBranches("a", owned, true))
+    println(divergingBranch("a", owned, false))
+    println(staticAfterLoop("a", owned))
+    println(latest("a", "b", 3))
+    println(breakOut("a", "b"))
+    var text = "before"
+    resetStatic(&text)
+    println(text)
+}

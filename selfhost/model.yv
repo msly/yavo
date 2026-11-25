@@ -143,7 +143,9 @@ pub struct Parameter {
     byRef: bool = false
 }
 
-// params index Program.params; body indexes Program.lists.
+// params index Program.params; body indexes Program.lists. A returned-borrow
+// clause `of a` / `of (a, b)` keeps its name tokens in Program.lists at
+// sourceStart; sourced records whether the clause was written at all.
 pub struct Function {
     name: int
     result: TypeRef
@@ -153,6 +155,9 @@ pub struct Function {
     bodyCount: int = 0
     file: int = 0
     public: bool = false
+    sourced: bool = false
+    sourceStart: int = 0
+    sourceCount: int = 0
 }
 
 // One source file of a module program. Its tokens run from firstToken to its

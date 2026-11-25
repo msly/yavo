@@ -1,0 +1,21 @@
+// The loop in later() grows its source state, so its body is replayed;
+// the replay must still resolve this module's private helper.
+fn step(i: int) -> int {
+    return i + 1
+}
+
+pub fn first(s: str) -> str of s {
+    if s.len() == 0 { return s }
+    return s[0..1]
+}
+
+pub fn later(a: str, b: str, n: int) -> str of (a, b) {
+    var t = a
+    var i = 0
+    while i < n {
+        if step(i) == n { return t }
+        t = b
+        i += 1
+    }
+    return t
+}

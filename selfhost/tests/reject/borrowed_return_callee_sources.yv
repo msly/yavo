@@ -1,0 +1,12 @@
+fn first(s: str) -> str of s {
+    return s[0..1]
+}
+
+fn second(s: str, t: str) -> str of s {
+    if s.len() == 9 { return s }
+    return first(t)
+}
+
+fn main() {
+    println(second("hey", "x"))
+}

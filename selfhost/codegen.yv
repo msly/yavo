@@ -6,6 +6,9 @@ use types
 // Typed C lowering. Every value is materialized in source order.
 // Owned values have one owner; borrowed reads and statement temporaries are explicit.
 
+// sources: for a str local, the parameters its text may point into (bit k
+// is parameter k; static data has no bit). Persistent str values never point
+// into owned locals in this subset, so parameters are the only lifetimes.
 struct Local {
     token: int
     ty: Type
@@ -13,9 +16,11 @@ struct Local {
     borrowed: bool = false
     moved: bool = false
     byRef: bool = false
+    sources: int = 0
 }
 
 // transient: a str view into an owned String; it may not outlive its statement.
+// sources: as for Local, for a non-transient str value.
 struct Value {
     ty: Type
     name: String
@@ -25,6 +30,7 @@ struct Value {
     indexedBorrow: bool = false
     temporary: bool = false
     transient: bool = false
+    sources: int = 0
 }
 
 // Expected types can acquire extra Optional layers while checking ??, even
@@ -69,6 +75,16 @@ struct LoopExit {
     breaks: Vec[bool]
     continues: Vec[bool]
     hasBreak: bool
+    breakSources: Vec[int]
+    continueSources: Vec[int]
+}
+
+// A replayed loop body: its break states and the source state that reaches
+// the next iteration (the end of the body joined with its continue paths).
+struct Replay {
+    breaks: Vec[bool]
+    breakSources: Vec[int]
+    nextSources: Vec[int]
 }
 
 struct Flow {
@@ -89,7 +105,9 @@ struct Generator {
     inoutLocks: Vec[int] = []
     loopStates: Vec[LoopState] = []
     exits: Vec[bool] = []
+    sourceExits: Vec[int] = []
     result: Type
+    allowed: int = 0
     loops: int = 0
     nesting: int = 0
     outputRoot: int = -1
@@ -313,6 +331,60 @@ fn joinStates(a: Vec[bool], b: Vec[bool]) -> Vec[bool] {
     return out
 }
 
+// Source states mirror moved states: restored before each alternative path
+// and joined where paths meet, so a source taken on any path reaching a use
+// is kept (stage0 loans, semantics O2/O4).
+fn sourceState(g: Generator) -> Vec[int] {
+    var state: Vec[int] = []
+    var i = 0
+    while i < g.locals.len() {
+        state.push(g.locals[i].sources)
+        i += 1
+    }
+    return state
+}
+
+fn restoreSources(g: inout Generator, state: Vec[int]) {
+    var i = 0
+    while i < state.len() && i < g.locals.len() {
+        g.locals[i].sources = state[i]
+        i += 1
+    }
+}
+
+fn joinSources(a: Vec[int], b: Vec[int]) -> Vec[int] {
+    var out: Vec[int] = []
+    var i = 0
+    while i < a.len() || i < b.len() {
+        var bits = 0
+        if i < a.len() { bits = a[i] }
+        if i < b.len() { bits = bits | b[i] }
+        out.push(bits)
+        i += 1
+    }
+    return out
+}
+
+fn sourcesGrew(before: Vec[int], after: Vec[int]) -> bool {
+    var i = 0
+    while i < before.len() && i < after.len() {
+        if (before[i] | after[i]) != before[i] { return true }
+        i += 1
+    }
+    return false
+}
+
+// The state entering another iteration: the previous entry state joined
+// with the end of the body and every continue path, for the outer locals.
+fn iterationSources(before: Vec[int], ended: Vec[int], continues: Vec[int]) -> Vec[int] {
+    let reached = joinSources(ended, continues)
+    var out = joinSources(before, reached)
+    while out.len() > before.len() { let _ = out.pop() }
+    return out
+}
+
+fn sourceBit(index: int) -> int { return 1 << index }
+
 fn contains(values: Vec[int], wanted: int) -> bool {
     var i = 0
     while i < values.len() {
@@ -355,7 +427,7 @@ fn writable(g: Generator, ts: Vec[Token], root: int, token: int) {
 fn copyValue(v: Value) -> Value {
     return Value{ty: v.ty, name: v.name.clone(), local: v.local,
         root: v.root, field: v.field, indexedBorrow: v.indexedBorrow, temporary: v.temporary,
-        transient: v.transient}
+        transient: v.transient, sources: v.sources}
 }
 
 fn takeValue(g: inout Generator, reg: Registry, ts: Vec[Token], token: int, v: Value) -> Value {
@@ -453,22 +525,32 @@ fn reservedFunction(name: str) -> bool {
         name == "Vec" || name == "Box" || name == "Set"
 }
 
+// Runtime helper stems; empty when the operator has no helper of that kind.
+fn checkedStem(op: str) -> str of static {
+    if op == "+" || op == "+=" { return "add" }
+    if op == "-" || op == "-=" { return "sub" }
+    if op == "*" || op == "*=" { return "mul" }
+    if op == "/" || op == "/=" { return "div" }
+    if op == "%" || op == "%=" { return "rem" }
+    if op == "<<" { return "shl" }
+    if op == ">>" { return "shr" }
+    return ""
+}
+
+fn wrappingStem(op: str) -> str of static {
+    if op == "+%" { return "addw" }
+    if op == "-%" { return "subw" }
+    if op == "*%" { return "mulw" }
+    return ""
+}
+
 fn integerOperation(ts: Vec[Token], token: int, kind: BasicType, op: str, left: str, right: str) -> String {
-    var suffix = "i64".toString()
-    if kind == .Byte { suffix = "u8".toString() }
-    var stem = "".toString()
-    if op == "+" || op == "+=" { stem = "add".toString() }
-    if op == "-" || op == "-=" { stem = "sub".toString() }
-    if op == "*" || op == "*=" { stem = "mul".toString() }
-    if op == "/" || op == "/=" { stem = "div".toString() }
-    if op == "%" || op == "%=" { stem = "rem".toString() }
-    if op == "<<" { stem = "shl".toString() }
-    if op == ">>" { stem = "shr".toString() }
+    var suffix = "i64"
+    if kind == .Byte { suffix = "u8" }
+    var stem = checkedStem(op)
     var wrapping = false
     if stem.len() == 0 {
-        if op == "+%" { stem = "addw".toString() }
-        if op == "-%" { stem = "subw".toString() }
-        if op == "*%" { stem = "mulw".toString() }
+        stem = wrappingStem(op)
         wrapping = true
     }
     if stem.len() == 0 { return support.join5("(", left, support.join3(" ", op, " "), right, ")") }
@@ -733,6 +815,11 @@ fn userCall(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Ex
     }
     let locks = g.locks.len()
     let inoutMark = g.inoutLocks.len()
+    let result = types.resolve(reg, ts, f.result)
+    let borrowedResult = result.kind == .Str && f.sourced
+    var sources = 0
+    var viewed = false
+    var viewRoot = -1
     var args = String{}
     var i = 0
     while i < e.argCount {
@@ -740,10 +827,14 @@ fn userCall(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Ex
         let argToken = p.expressions[argId].token
         let param = p.params[f.paramStart + i]
         let expected = types.resolve(reg, ts, param.ty)
+        let named = borrowedResult && sourceListed(p, ts, f, param.name)
         if i > 0 { args.push(", ") }
         if param.byRef {
             if p.expressions[argId].kind != .Ref {
                 lexer.fail(ts, argToken, "E0001", "an inout argument must be written as &place")
+            }
+            if named {
+                lexer.fail(ts, argToken, "U0001", "borrowed returns from inout arguments are outside this subset")
             }
             let target = refPlace(&g, p, ts, reg, argId)
             require(reg, ts, argToken, target.ty, expected)
@@ -762,19 +853,109 @@ fn userCall(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Ex
                 require(reg, ts, argToken, arg.ty, expected)
                 args.push(arg.name)
             }
+            // The result points where its listed arguments point. A view of an
+            // owned String keeps that owner as the root of a transient result.
+            if named && (arg.transient || arg.ty.kind == .String) {
+                if viewed && viewRoot != arg.root {
+                    lexer.fail(ts, argToken, "U0001", "borrowed returns viewing several owned strings are outside this subset")
+                }
+                viewed = true
+                viewRoot = arg.root
+            } else if named && arg.ty.kind == .Str {
+                sources = sources | arg.sources
+            }
             if arg.root >= 0 { g.locks.push(arg.root) }
         }
         i += 1
     }
     let expression = support.join5("sh_fn_", support.decimal(index), "(", args, ")")
-    let result = types.resolve(reg, ts, f.result)
     releaseLocks(&g, locks)
     while g.inoutLocks.len() > inoutMark { let _ = g.inoutLocks.pop() }
     if result.kind == .Unit {
         emit(&g, support.join2(expression, ";"))
         return Value{ty: result, name: "".toString()}
     }
-    return typedValue(&g, reg, result, expression)
+    var value = typedValue(&g, reg, result, expression)
+    value.sources = sources
+    if viewed {
+        value.transient = true
+        value.root = viewRoot
+    }
+    return value
+}
+
+// Whether a parameter is named by its function's `of` clause.
+fn sourceListed(p: Program, ts: Vec[Token], f: Function, param: int) -> bool {
+    var i = 0
+    while i < f.sourceCount {
+        if ts[p.lists[f.sourceStart + i]].text == ts[param].text { return true }
+        i += 1
+    }
+    return false
+}
+
+// O1/O2 signature rules, checked before the body as stage0 does. Returns the
+// parameters a returned str may point into.
+fn allowedSources(p: Program, ts: Vec[Token], reg: Registry, index: int) -> int {
+    let f = p.functions[index]
+    let result = types.resolve(reg, ts, f.result)
+    var borrowed = result.kind == .Str
+    if result.kind == .Result { borrowed = types.resultOk(reg, result).kind == .Str }
+    if !f.sourced {
+        if borrowed {
+            var arrow = f.name
+            while ts[arrow].text != "->" { arrow += 1 }
+            lexer.fail(ts, arrow + 1, "E0302", "a returned str points into other data; the signature must say where with of")
+        }
+        return 0
+    }
+    var mask = 0
+    var i = 0
+    while i < f.sourceCount {
+        let token = p.lists[f.sourceStart + i]
+        if ts[token].text != "static" {
+            var found = -1
+            var k = 0
+            while k < f.paramCount {
+                if ts[p.params[f.paramStart + k].name].text == ts[token].text { found = k }
+                k += 1
+            }
+            if found < 0 {
+                lexer.fail(ts, token, "E0010", format("of ${ts[token].text}: there is no parameter with this name"))
+            }
+            if found >= 62 {
+                lexer.fail(ts, token, "U0001", "returned borrows of a parameter after the 62nd are outside this subset")
+            }
+            mask = mask | sourceBit(found)
+        }
+        i += 1
+    }
+    if result.kind == .Result && borrowed {
+        lexer.fail(ts, f.name, "U0001", "results carrying a borrowed str are outside this subset")
+    }
+    return mask
+}
+
+// O2: a returned str may point only into parameters listed after `of`, or
+// into static data. Parameters are the first locals of a function.
+fn returnedSources(g: Generator, p: Program, ts: Vec[Token], id: int, returned: Value) {
+    let token = p.expressions[id].token
+    if returned.transient {
+        let root = returned.root
+        if root >= 62 && (g.locals[root].borrowed || g.locals[root].byRef) {
+            lexer.fail(ts, token, "U0001", "returning a view of a String parameter is outside this subset")
+        }
+        if root >= 0 && (g.locals[root].borrowed || g.locals[root].byRef) {
+            if (g.allowed & sourceBit(root)) == 0 {
+                lexer.fail(ts, token, "E0303", "the returned value points into a parameter that of does not list")
+            }
+            lexer.fail(ts, token, "U0001", "returning a view of a String parameter is outside this subset")
+        }
+        lexer.fail(ts, token, "E0303", "the returned value points into a local or temporary that is dropped here")
+    }
+    if (returned.sources | g.allowed) != g.allowed {
+        lexer.fail(ts, token, "E0303", "the returned value points into a parameter that of does not list")
+    }
 }
 
 fn standardModule(g: Generator, p: Program, ts: Vec[Token], receiver: Expression) -> int {
@@ -1627,6 +1808,8 @@ fn sliceValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: 
     if base.ty.kind == .String || base.transient {
         result.transient = true
         result.root = base.root
+    } else {
+        result.sources = base.sources
     }
     return result
 }
@@ -1665,7 +1848,9 @@ fn expressionValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry
         let local = g.locals[index]
         let name = localName(local)
         if types.owned(reg, local.ty) { return Value{ty: local.ty, name: name, local: index, root: index} }
-        return typedValue(&g, reg, local.ty, name)
+        var value = typedValue(&g, reg, local.ty, name)
+        value.sources = local.sources
+        return value
     }
     if e.kind == .Unary {
         let child = p.expressions[unparenthesized(p, e.left)]
@@ -1809,6 +1994,7 @@ fn pushLoop(g: inout Generator, localCount: int, tempCount: int) {
     var i = 0
     while i < localCount * 2 {
         g.exits.push(false)
+        g.sourceExits.push(0)
         i += 1
     }
     g.loopStates.push(LoopState{localCount: localCount, tempCount: tempCount, exitBase: base})
@@ -1820,19 +2006,25 @@ fn popLoop(g: inout Generator) -> LoopExit {
     let frame = g.loopStates[index]
     var breaks: Vec[bool] = []
     var continues: Vec[bool] = []
+    var breakSources: Vec[int] = []
+    var continueSources: Vec[int] = []
     var i = 0
     while frame.hasBreak && i < frame.localCount {
         breaks.push(g.exits[frame.exitBase + i])
+        breakSources.push(g.sourceExits[frame.exitBase + i])
         i += 1
     }
     i = 0
     while frame.hasContinue && i < frame.localCount {
         continues.push(g.exits[frame.exitBase + frame.localCount + i])
+        continueSources.push(g.sourceExits[frame.exitBase + frame.localCount + i])
         i += 1
     }
     while g.exits.len() > frame.exitBase { let _ = g.exits.pop() }
+    while g.sourceExits.len() > frame.exitBase { let _ = g.sourceExits.pop() }
     while g.loopStates.len() > index { let _ = g.loopStates.pop() }
-    return LoopExit{breaks: breaks, continues: continues, hasBreak: frame.hasBreak}
+    return LoopExit{breaks: breaks, continues: continues, hasBreak: frame.hasBreak,
+        breakSources: breakSources, continueSources: continueSources}
 }
 
 fn emitBlock(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, start: int, count: int) -> Flow {
@@ -1869,6 +2061,9 @@ fn recordExit(g: inout Generator, breaking: bool) {
         var moved = g.locals[i].moved
         if had { moved = moved || g.exits[offset + i] }
         g.exits[offset + i] = moved
+        var sources = g.locals[i].sources
+        if had { sources = sources | g.sourceExits[offset + i] }
+        g.sourceExits[offset + i] = sources
         i += 1
     }
     if breaking { g.loopStates[index].hasBreak = true } else {
@@ -1876,9 +2071,10 @@ fn recordExit(g: inout Generator, breaking: bool) {
     }
 }
 
-// Recheck only the body, as stage0 does, with the moved state of a repeated
-// iteration. Generated C and transient analysis state belong to this probe.
-fn replayBody(parent: Generator, p: Program, ts: Vec[Token], reg: Registry, s: Statement, next: Vec[bool]) -> Vec[bool] {
+// Recheck only the body, as stage0 does, with the moved and source state of a
+// repeated iteration. Generated C and transient analysis state belong to this probe.
+fn replayBody(parent: Generator, p: Program, ts: Vec[Token], reg: Registry, s: Statement,
+    next: Vec[bool], nextSources: Vec[int]) -> Replay {
     var probe = Generator{
         counter: parent.counter,
         locals: parent.locals.clone(),
@@ -1891,20 +2087,27 @@ fn replayBody(parent: Generator, p: Program, ts: Vec[Token], reg: Registry, s: S
         inoutLocks: parent.inoutLocks.clone(),
         loopStates: parent.loopStates.clone(),
         exits: parent.exits.clone(),
+        sourceExits: parent.sourceExits.clone(),
         result: parent.result,
-        loops: parent.loops + 1
+        allowed: parent.allowed,
+        loops: parent.loops + 1,
+        file: parent.file
     }
     restoreState(&probe, next)
+    restoreSources(&probe, nextSources)
     let count = probe.locals.len()
     let tempCount = probe.temps.len()
     pushLoop(&probe, count, tempCount)
     let _flow = emitBlock(&probe, p, ts, reg, s.bodyStart, s.bodyCount)
     let frame = popLoop(&probe)
-    return frame.breaks.clone()
+    let following = iterationSources(nextSources, sourceState(probe), frame.continueSources)
+    return Replay{breaks: frame.breaks.clone(), breakSources: frame.breakSources.clone(),
+        nextSources: following}
 }
 
 fn emitLoopBody(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, s: Statement) -> Flow {
     let before = movedState(g)
+    let sourcesBefore = sourceState(g)
     let count = g.locals.len()
     let tempCount = g.temps.len()
     pushLoop(&g, count, tempCount)
@@ -1915,16 +2118,27 @@ fn emitLoopBody(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, s
     let ended = movedState(g)
     let end = joinStates(ended, frame.continues)
     let next = joinStates(before, end)
+    var nextSources = iterationSources(sourcesBefore, sourceState(g), frame.continueSources)
     var exits = frame.breaks.clone()
+    var exitSources = frame.breakSources.clone()
     var grew = false
     var i = 0
     while i < before.len() {
         if next[i] && !before[i] { grew = true }
         i += 1
     }
-    if grew {
-        let repeated = replayBody(g, p, ts, reg, s, next)
-        if exits.len() == 0 { exits = repeated } else { exits = joinStates(exits, repeated) }
+    // Sources written late in the body reach earlier statements of the next
+    // iteration: replay until the entry state stops growing.
+    if grew || sourcesGrew(sourcesBefore, nextSources) {
+        loop {
+            let repeated = replayBody(g, p, ts, reg, s, next, nextSources)
+            if exits.len() == 0 { exits = repeated.breaks.clone() } else {
+                exits = joinStates(exits, repeated.breaks)
+            }
+            exitSources = joinSources(exitSources, repeated.breakSources)
+            if !sourcesGrew(nextSources, repeated.nextSources) { break }
+            nextSources = joinSources(nextSources, repeated.nextSources)
+        }
     }
     if s.kind == .Loop && frame.hasBreak {
         restoreState(&g, exits)
@@ -1932,6 +2146,7 @@ fn emitLoopBody(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, s
         let after = joinStates(next, exits)
         restoreState(&g, after)
     }
+    restoreSources(&g, joinSources(nextSources, exitSources))
     emit(&g, "}")
     // recordExit also sees break inside expression handlers. A syntactically
     // nested catch must not make an escapable loop look non-terminating.
@@ -2041,6 +2256,7 @@ fn emitStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, 
         let taken = takeValue(&g, reg, ts, s.token, initial)
         if ts[s.name].text != "_" {
             declare(&g, ts, s.name, ty, s.mutable, false, false)
+            g.locals[g.locals.len() - 1].sources = taken.sources
             put(&g, types.cType(ty))
             put(&g, support.join3(" v_", support.decimal(s.name), " = "))
             emit(&g, support.join2(taken.name, ";"))
@@ -2061,6 +2277,14 @@ fn emitStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, 
             lexer.fail(ts, s.token, "U0001", "persistent views of owned strings are outside this subset")
         }
         if ts[s.token].text == "=" {
+            if target.whole && !target.indexed && target.ty.kind == .Str {
+                // O4: an inout str parameter may only receive static text.
+                if g.locals[target.root].byRef && rhs.sources != 0 {
+                    lexer.fail(ts, p.expressions[s.expr].token, "E0306",
+                        "cannot store a borrow into the caller's inout parameter")
+                }
+                g.locals[target.root].sources = rhs.sources
+            }
             let taken = takeValue(&g, reg, ts, s.token, rhs)
             if target.indexed { target = placeOf(&g, p, ts, reg, s.target, 0) }
             if !target.whole { readable(g, ts, target.root, s.token) }
@@ -2113,6 +2337,7 @@ fn emitStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, 
             let resultType = g.result
             let returned = emitExpected(&g, p, ts, reg, s.expr, resultType)
             require(reg, ts, s.token, returned.ty, resultType)
+            if returned.ty.kind == .Str { returnedSources(g, p, ts, s.expr, returned) }
             if returned.ty.kind == .Unit {
                 cleanTemps(&g, reg, 0)
                 cleanLocals(&g, reg, 0)
@@ -2138,21 +2363,30 @@ fn emitStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, 
         basic(reg, ts, s.token, condition.ty, .Bool)
         discardTemps(&g, reg, tempCount)
         let before = movedState(g)
+        let sourcesBefore = sourceState(g)
         emit(&g, support.join3("if (", condition.name, ")"))
         let yes = emitBlock(&g, p, ts, reg, s.bodyStart, s.bodyCount)
         let yesState = movedState(g)
+        let yesSources = sourceState(g)
         restoreState(&g, before)
+        restoreSources(&g, sourcesBefore)
         var no = Flow{}
         if s.elseCount > 0 {
             emit(&g, "else")
             no = emitBlock(&g, p, ts, reg, s.elseStart, s.elseCount)
         }
         let noState = movedState(g)
-        if yes.falls && !no.falls { restoreState(&g, yesState)
-        } else if !yes.falls && no.falls { restoreState(&g, noState)
+        let noSources = sourceState(g)
+        if yes.falls && !no.falls {
+            restoreState(&g, yesState)
+            restoreSources(&g, yesSources)
+        } else if !yes.falls && no.falls {
+            restoreState(&g, noState)
+            restoreSources(&g, noSources)
         } else {
             let merged = joinStates(yesState, noState)
             restoreState(&g, merged)
+            restoreSources(&g, joinSources(yesSources, noSources))
         }
         return Flow{falls: yes.falls || no.falls, breaks: yes.breaks || no.breaks}
     }
@@ -2397,11 +2631,18 @@ pub fn generate(p: Program, ts: Vec[Token], filename: str) -> String {
         let f = p.functions[i]
         g.file = f.file
         g.result = types.resolve(reg, ts, f.result)
+        g.allowed = allowedSources(p, ts, reg, i)
         var k = 0
         while k < f.paramCount {
             let param = p.params[f.paramStart + k]
             let ty = types.resolve(reg, ts, param.ty)
             declare(&g, ts, param.name, ty, param.byRef, param.byRef || types.owned(reg, ty), param.byRef)
+            if ty.kind == .Str {
+                if k >= 62 {
+                    lexer.fail(ts, param.name, "U0001", "str parameters after the 62nd are outside this subset")
+                }
+                g.locals[k].sources = sourceBit(k)
+            }
             k += 1
         }
         emit(&g, signature(p, ts, reg, i))

@@ -1,0 +1,13 @@
+fn first(x: str) -> str of x {
+    return x[0..1]
+}
+
+fn set(s: inout str, b: str) {
+    s = first(b)
+}
+
+fn main() {
+    var t = "a"
+    set(&t, "b")
+    println(t)
+}

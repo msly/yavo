@@ -14,6 +14,9 @@ subset of the stage0 language that the compiler itself implements (see
 [decision 20–24](../docs/decisions.md)). It is not yet the default compiler:
 stage0 accepts far more of the language (owned optionals, reference iteration,
 float formatting, methods, generics, Map/Set, closures, threads...).
+Batch 34 adds borrowed returns: `-> str of a`, `of (a, b)` and `of static`; each str
+local records which parameters it may point into, joined along control flow
+like stage0's loans, and `inout str` parameters accept only static text.
 Batch 33 adds multi-file source modules: `use a`, `use a/b` and `use a/{b, c}`
 load files relative to the entry directory (cycles allowed), `pub` items are
 exported, functions are called as `module.f(...)`, public types may be named
@@ -544,9 +547,10 @@ executable fixtures from earlier increments.
 
 ## Next steps
 
-Self-hosting remains a regression gate. Batch 33's source modules have passed
-local acceptance, and the compiler itself is now `use`-linked files rather than
-a concatenation. Each increment must replace real compiler-source workarounds,
+Self-hosting remains a regression gate. Batch 34's borrowed returns have passed
+local acceptance (598/598 cases, 12/12 checks); the compiler itself is
+`use`-linked files. The next real-program blockers in examples/test-summary are
+`?? return`, `[]str`, `Map` and `Vec[str]`. Each increment must replace real compiler-source workarounds,
 retain independent behavior and cleanup oracles, and renew the fixed point
 on Linux, Windows and macOS. [SH-3](../docs/self-hosting.md) remains incomplete;
 SH-4 has one of three independent applications validated.

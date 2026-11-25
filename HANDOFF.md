@@ -1,16 +1,16 @@
-# Yavo 交接文档（2026-11-25，第三十三批：源模块）
+# Yavo 交接文档（2026-11-25，第三十四批：借用返回）
 
-给下一个会话：先读第 1、2、10、12、13 节及 docs/self-hosting.md、selfhost/README.md 再开工。第二十七至第三十批在 `history/handoff-batches-2026-11-23-to-24.md`，第十二至第二十六批在 `history/handoff-batches-2026-11-21-to-23.md`，第六至第十一批在 `history/handoff-batches-2026-11-19-to-21.md`。
+给下一个会话：先读第 1、2、10、13、14 节及 docs/self-hosting.md、selfhost/README.md 再开工。第二十七至第三十批在 `history/handoff-batches-2026-11-23-to-24.md`，第十二至第二十六批在 `history/handoff-batches-2026-11-21-to-23.md`，第六至第十一批在 `history/handoff-batches-2026-11-19-to-21.md`。
 
 ## 1. 一句话状态
 
-**SH-2 引导子集固定点保持；第三十三批让 selfhost 支持多文件源模块。** `use a`、`use a/b`、`use a/{b, c}` 以入口文件目录为根加载，允许循环导入与自导入；顶层 `pub` 决定导出；导入逐文件生效、不传递；函数一律写 `module.f(...)`，公开类型可用短名或 `module.T`（含 `module.T{...}`、`module.E.V`），短名二义报 E0010；诊断和运行时 panic 都指向原文件行列。第三十二批的插值与 format（含 Rust 输出片段借用修复）见第 12 节。
+**SH-2 引导子集固定点保持；第三十四批让 selfhost 支持借用返回 `-> str of …`，并修复 Rust stage0 借用来源在分支与循环中丢失的释放后使用缺陷（见第 14 节）。** 第三十三批起 selfhost 支持多文件源模块： `use a`、`use a/b`、`use a/{b, c}` 以入口文件目录为根加载，允许循环导入与自导入；顶层 `pub` 决定导出；导入逐文件生效、不传递；函数一律写 `module.f(...)`，公开类型可用短名或 `module.T`（含 `module.T{...}`、`module.E.V`），短名二义报 E0010；诊断和运行时 panic 都指向原文件行列。第三十二批的插值与 format（含 Rust 输出片段借用修复）见第 12 节。
 
-当前语料 **568 cases**。本机完整自举 **568/568、12/12、0 skip**；stage2/stage3 C（783,814 字节）与 Linux 二进制（365,864 字节）分别一致。第三十二批 Rust Debug/Release 各 145/0/1、冻结 124/3/2；第三十三批未改 Rust。
+当前语料 **598 cases**。第三十四批本机完整自举 **598/598、12/12、0 skip**，固定点数字见第 14 节；Rust Debug/Release 各 145/0/1（p0 新增两个用例文件，计在同一测试内）、冻结 124/3/2。
 
 编译器自身也已改为以 `selfhost/main.yv` 为入口的 `use` 多文件（决定 28），bootstrap 不再拼接源码；改后本机 568/568、12/12，stage2/stage3 C（785,468 字节）与二进制（366,936 字节）一致。
 
-**SH-3 尚未接替，Rust stage0 仍承担日常编译；SH-4 完成 1/3 个独立应用。** 验收流程按 decisions.md 第九节。下一步见第 10 节：用 selfhost 编译 examples/test-summary，首个阻塞是借用返回。
+**SH-3 尚未接替，Rust stage0 仍承担日常编译；SH-4 完成 1/3 个独立应用。** 验收流程按 decisions.md 第九节。下一步见第 10 节：test-summary 的借用返回阻塞已解除，下一个阻塞是 `?? return`，随后依次是 `[]str`、`Map`、`Vec[str]`。
 
 ## 2. 仓库与环境
 
@@ -197,7 +197,7 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 ## 10. 下一个会话的第一步
 
 1. 检查 Git 状态、最新提交与 CI；先读第 12 节、[自举路线](docs/self-hosting.md)、[selfhost 说明](selfhost/README.md)。
-2. **下一步：让 selfhost 编译 examples/test-summary（SH-3 的实际判据）。** 当前 `yavo-selfhost check examples/test-summary/main.yv` 的首个错误是 `parser.yv:44:34: U0001: borrowed returns are outside the selfhost subset`（`fn fields(line: str) -> Vec[str] of line`、`-> str of raw`）。按“实现一个阻塞 → 再跑 → 看下一个阻塞”推进，每项先用 stage0 定标拒绝码，并迁移编译器自身里对应的变通写法。预计依次遇到：借用返回（`of`）、`Vec[str]`、str 方法（endsWith 等）、方法/拥有型 Optional/Map 等。
+2. **下一步：继续让 selfhost 编译 examples/test-summary（SH-3 的实际判据）。** 第三十四批解除了借用返回阻塞；现在 `yavo-selfhost check examples/test-summary/main.yv` 首错是 `parser.yv:72:36: U0001: jumping coalesce fallbacks`（`word.parseInt() ?? return err(...)`）。在副本里逐个绕开后依次是：`[]str` 切片参数（76 行，解析期）、`Map[String, int]`（101 行，解析期）、`Vec[str]`（44 行 `fields` 的签名，类型期）；之后可见 str 方法（`split`/`endsWith`/`startsWith`/`parseInt`）、Map 方法、遍历 `Vec[String]`、`catch problem { }` 等。建议先做 `Vec[str]`：它直接沿用本批的来源位掩码（元素来源 = 容器来源，`push` 合并），也是 `fields`/`split` 的前提。每项先用 stage0 定标拒绝码，并迁移编译器自身里对应的变通写法。
 3. 模块尚缺：包依赖与锁文件（stage0 也没有）、`use` 出现在其他项之后（stage0 接受，子集 U0001）、跨模块的枚举载荷/方法/泛型（子集本身没有）。
 
 4. 拥有型 Optional/pop、if let/match、跳转式 ??、Result 字段/容器、方法、泛型按实际阻塞另列；SH-3 的判据是能否编译 examples/test-summary 这样的真实程序，而不是特性数量。
@@ -239,5 +239,19 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - 用例 21 个（`selfhost/tests/modules/`）：run 4（basic 含子目录与传递使用、cycle 含互递归/菱形/自导入、scopes 含同名类型/函数/局部遮蔽/模块 main、owned 含 String/Vec/inout/Result/per-file `use std/{os}`），panic 1（模块中除零，位置为 math.yv），reject 15，unsupported 1（`use` 在其他项之后）。所有错误码先用 stage0 实测；`modules_duplicate_in_module` 中 stage0 先报入口里的 E0010、随后报 E0011，selfhost 首错即停报 E0011。
 - 验收：本机 568/568、12/12、0 skip，stage2/stage3 C 783,814 字节、Linux 二进制 365,864 字节一致。未改 Rust。
 - 编译器自身改为模块（单独提交，决定 28）：`/tmp` 下的脚本把跨文件调用改成 `模块.函数(...)`（codegen 541 处、types 47、parser 24、main 15、lexer_test 3、lexer 2），跨文件使用的项补 `pub`，各文件补 `use`；main.yv 的局部 `parser` 改名 `state` 以免遮蔽模块名。bootstrap.py 把 `COMPILER_PARTS` 与 lexer_test.yv 原样复制到 `run-*/selfhost-src/`，只交入口文件；回执的 `compiler_bundle`/`lexer_unit_bundle` 保留键名，新增 `directory`，`path` 指入口。`tools/ci/selfhost_compiler_sanitize.py` 与 `selfhost_sanitize.py` 的拼接字节核对改为逐文件核对（本机无 GCC，靠 CI 验证）。模块用例的非入口文件纳入 `fixture_modules` 输入哈希。改后本机 568/568、12/12，stage2/stage3 C 785,468 字节、二进制 366,936 字节一致。
-- CI：模块功能 `1708d4b` 的 [run 45535558990](https://github.com/msly/yavo/actions/runs/45535558990) **6/6 成功**：Linux x86-64（Rust 全量、selfhost 568 例、test-summary、stage2 ASan/UBSan）、Windows x86-64、macOS arm64 原生均通过，模块路径在 Windows 分隔符下正常。编译器改为模块的提交：CI 待回填。注意工作流 `cancel-in-progress: true`，同分支新推送会取消进行中的运行，推送前先等上一次运行结束。
+- CI：模块功能 `1708d4b` 的 [run 45535558990](https://github.com/msly/yavo/actions/runs/45535558990) **6/6 成功**：Linux x86-64（Rust 全量、selfhost 568 例、test-summary、stage2 ASan/UBSan）、Windows x86-64、macOS arm64 原生均通过，模块路径在 Windows 分隔符下正常。编译器改为模块的提交 `636f84a`：[run 45539950828](https://github.com/msly/yavo/actions/runs/45539950828) 成功。注意工作流 `cancel-in-progress: true`，同分支新推送会取消进行中的运行，推送前先等上一次运行结束。
 
+
+## 14. 第三十四批：借用返回（2026-11-25）
+
+- 基线 `636f84a`。目标是解除 examples/test-summary 的首个阻塞（`-> Vec[str] of line`、`-> str of raw`）。本批覆盖 `-> str of …`；`Vec[str]` 留给下一批。
+- 解析：`of name` / `of (a, b, …)` 跟在返回类型后，与 stage0 一样接受任何词（含 `static`、`self`、关键字），检查时才解析为参数；非词报 E0020。Function 新增 `sourced/sourceStart/sourceCount`（名字记号存在 Program.lists）。
+- 签名规则（函数体之前检查，同 stage0 的 check_ret_of）：返回 str（或 ok 为 str 的 Result）未写 `of` 报 E0302；名字不是参数报 E0010；ok 为 str 的 Result 写了 `of` 报 U0001；`of` 用在不带借用的返回类型上照常接受。
+- 来源模型：子集里持久的 str 只指向参数或静态数据（拥有 String 的视图是 transient，不能绑定），所以 Local/Value 各加一个 `sources` 位掩码，第 k 位是第 k 个参数，静态数据没有位。字面量 0；str 参数 `1 << k`；切片继承；赋值替换。if 按可落下的路径合并（与 moved 状态同一判断），break/continue 的来源记在与 `exits` 平行的 `sourceExits`，循环用 replayBody 重放到入口状态不再增长，退出状态 = 入口不动点 ∪ break。参数超过 62 个且需要位时报 U0001。
+- 返回检查（O2）：非 transient 值的来源须 ⊆ `of` 列出的参数；transient 值指向拥有局部或临时值报 E0303，指向 String/inout 参数时未列出报 E0303、列出报 U0001（stage0 接受）。调用方按被调函数的 `of` 合并对应实参的来源；对应实参是拥有 String 或 transient 时结果是同一根的 transient（不能绑定，输出期间锁根，所以 `"${first(owned)} ${change(&owned)}"` 报 E0102）；两个不同根报 U0001；`of` 指向 inout 实参报 U0001。
+- O4：给 `inout str` 参数赋值时右值来源必须为 0（只能是静态文本），否则 E0306，与 stage0 相同（连 `s = s[1..2]` 也拒绝）。这顺带堵上了接手前 selfhost 接受 `fn set(s: inout str, b: str) { s = b }` 而 stage0 拒绝的差异。
+- 顺带修复：replayBody 的探针没有复制 `g.file`，在非入口模块里重放会按入口文件解析无限定调用。此前 moved 重放几乎总会以 E0402 结束所以没暴露，本批的来源重放通常会成功，`modules_borrowed` 用例覆盖了这一点。
+- **Rust stage0 缺陷（决定 27）**：loans 按最后一次写入记录，if/match/catch 之后不合并，循环也不把后面写入的来源带回下一轮。`if c { t = b } else { t = a }`、循环里先 `return t` 后 `t = b`、`t = u; u = b` 链式传递、只在 continue 路径上写入等都被接受；实测 `pick("lit", temp.toString())` 返回已释放内存（打印出后来分配的字节）。修复（check.rs）：新增 `Loans` 快照/恢复/合并，if、两种 match、catch、`?? return` 与 moved 同处处理；loop_body 重放到 loans 不再增长（上限 256 轮），重放中保留 E0402/E0303/E0305/E0306/E0102/E0703。新增 `compiler/tests/p0/errors_loan_paths.yv`（9 处，旧 stage0 只报出其中 break 那 1 处）与 `run_loan_paths.yv`（合法流程仍通过，Debug/Release 堆检查干净）。
+- 用例 30 个：run 3（`borrowed_return_basic`、`borrowed_return_flow`、`modules_borrowed`），reject 22（E0302/E0010/E0020/E0303 各类/E0102/E0306 四类），unsupported 5（String 参数来源、inout 来源、持久视图、ok 为 str 的 Result、两个拥有视图）。全部先用修复后的 stage0 实测；其中 7 个拒绝在旧 stage0 上会被接受。
+- 编译器自身迁移：`integerOperation` 的运行时函数名改由 `checkedStem`/`wrappingStem`（`-> str of static`）给出，不再为每个运算符分配 String；生成的 C 逐字节不变。
+- 验收：本机 598/598、12/12、0 skip，stage2/stage3 C 818,715 字节、Linux 二进制 381,784 字节一致；Rust Debug/Release 各 145/0/1，冻结 124/3/2。CI：待回填。

@@ -1,0 +1,12 @@
+fn first(s: str) -> str of s {
+    return s[0..1]
+}
+
+fn bad(a: str) -> str of a {
+    if a.len() == 9 { return a }
+    return first("temporary".toString())
+}
+
+fn main() {
+    println(bad("x"))
+}

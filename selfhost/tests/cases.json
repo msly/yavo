@@ -1,6 +1,6 @@
 {
   "schema": "yavo-selfhost-cases/1",
-  "description": "Independent fixed-oracle probes for the Yavo-written scalar, byte, aggregate, String, owned-vector, user-function Result and Copy Optional/pop, interpolation and source-module subset; not the frozen full-language conformance suite.",
+  "description": "Independent fixed-oracle probes for the Yavo-written scalar, byte, aggregate, String, owned-vector, user-function Result and Copy Optional/pop, interpolation, source-module and borrowed-return subset; not the frozen full-language conformance suite.",
   "cases": [
     {
       "id": "arithmetic",
@@ -3967,6 +3967,186 @@
       "kind": "unsupported",
       "diagnostic": "U0001",
       "file": "modules/rejects/import_after_item.yv"
+    },
+    {
+      "id": "borrowed_return_basic",
+      "kind": "run",
+      "stdout": "Yavo\nY\nright\ndefault\ngiven\nkept\ny\n4\nowned copy\nn\nt\ns\nt-Y\n",
+      "file": "run/borrowed_return_basic.yv"
+    },
+    {
+      "id": "borrowed_return_flow",
+      "kind": "run",
+      "stdout": "a\na\na\nstatic\nb\nb\nreset\n",
+      "file": "run/borrowed_return_flow.yv"
+    },
+    {
+      "id": "modules_borrowed",
+      "kind": "run",
+      "stdout": "m\nlate\no\n",
+      "file": "modules/borrowed/main.yv"
+    },
+    {
+      "id": "borrowed_return_missing_of",
+      "kind": "reject",
+      "diagnostic": "E0302",
+      "file": "reject/borrowed_return_missing_of.yv"
+    },
+    {
+      "id": "borrowed_return_unknown_source",
+      "kind": "reject",
+      "diagnostic": "E0010",
+      "file": "reject/borrowed_return_unknown_source.yv"
+    },
+    {
+      "id": "borrowed_return_syntax",
+      "kind": "reject",
+      "diagnostic": "E0020",
+      "file": "reject/borrowed_return_syntax.yv"
+    },
+    {
+      "id": "borrowed_return_unlisted_param",
+      "kind": "reject",
+      "diagnostic": "E0303",
+      "file": "reject/borrowed_return_unlisted_param.yv"
+    },
+    {
+      "id": "borrowed_return_static_only",
+      "kind": "reject",
+      "diagnostic": "E0303",
+      "file": "reject/borrowed_return_static_only.yv"
+    },
+    {
+      "id": "borrowed_return_int_source",
+      "kind": "reject",
+      "diagnostic": "E0303",
+      "file": "reject/borrowed_return_int_source.yv"
+    },
+    {
+      "id": "borrowed_return_owned_local",
+      "kind": "reject",
+      "diagnostic": "E0303",
+      "file": "reject/borrowed_return_owned_local.yv"
+    },
+    {
+      "id": "borrowed_return_temporary",
+      "kind": "reject",
+      "diagnostic": "E0303",
+      "file": "reject/borrowed_return_temporary.yv"
+    },
+    {
+      "id": "borrowed_return_string_param",
+      "kind": "reject",
+      "diagnostic": "E0303",
+      "file": "reject/borrowed_return_string_param.yv"
+    },
+    {
+      "id": "borrowed_return_callee_sources",
+      "kind": "reject",
+      "diagnostic": "E0303",
+      "file": "reject/borrowed_return_callee_sources.yv"
+    },
+    {
+      "id": "borrowed_return_else_branch",
+      "kind": "reject",
+      "diagnostic": "E0303",
+      "file": "reject/borrowed_return_else_branch.yv"
+    },
+    {
+      "id": "borrowed_return_while_iteration",
+      "kind": "reject",
+      "diagnostic": "E0303",
+      "file": "reject/borrowed_return_while_iteration.yv"
+    },
+    {
+      "id": "borrowed_return_loop_iteration",
+      "kind": "reject",
+      "diagnostic": "E0303",
+      "file": "reject/borrowed_return_loop_iteration.yv"
+    },
+    {
+      "id": "borrowed_return_for_iteration",
+      "kind": "reject",
+      "diagnostic": "E0303",
+      "file": "reject/borrowed_return_for_iteration.yv"
+    },
+    {
+      "id": "borrowed_return_chained_iterations",
+      "kind": "reject",
+      "diagnostic": "E0303",
+      "file": "reject/borrowed_return_chained_iterations.yv"
+    },
+    {
+      "id": "borrowed_return_continue_path",
+      "kind": "reject",
+      "diagnostic": "E0303",
+      "file": "reject/borrowed_return_continue_path.yv"
+    },
+    {
+      "id": "borrowed_return_break_path",
+      "kind": "reject",
+      "diagnostic": "E0303",
+      "file": "reject/borrowed_return_break_path.yv"
+    },
+    {
+      "id": "borrowed_return_output_lock",
+      "kind": "reject",
+      "diagnostic": "E0102",
+      "file": "reject/borrowed_return_output_lock.yv"
+    },
+    {
+      "id": "inout_str_store_param",
+      "kind": "reject",
+      "diagnostic": "E0306",
+      "file": "reject/inout_str_store_param.yv"
+    },
+    {
+      "id": "inout_str_store_self",
+      "kind": "reject",
+      "diagnostic": "E0306",
+      "file": "reject/inout_str_store_self.yv"
+    },
+    {
+      "id": "inout_str_store_call",
+      "kind": "reject",
+      "diagnostic": "E0306",
+      "file": "reject/inout_str_store_call.yv"
+    },
+    {
+      "id": "inout_str_store_on_replay",
+      "kind": "reject",
+      "diagnostic": "E0306",
+      "file": "reject/inout_str_store_on_replay.yv"
+    },
+    {
+      "id": "borrowed_return_string_source",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/borrowed_return_string_source.yv"
+    },
+    {
+      "id": "borrowed_return_inout_source",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/borrowed_return_inout_source.yv"
+    },
+    {
+      "id": "borrowed_return_persistent_view",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/borrowed_return_persistent_view.yv"
+    },
+    {
+      "id": "borrowed_return_result",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/borrowed_return_result.yv"
+    },
+    {
+      "id": "borrowed_return_two_views",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/borrowed_return_two_views.yv"
     }
   ],
   "promotions": [

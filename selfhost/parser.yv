@@ -752,12 +752,22 @@ fn parseFunction(s: inout State, ts: Vec[Token]) -> Function {
     expect(&s, ts, ")")
     var result = TypeRef{elementKind: .Unknown, kind: .Unit}
     if eat(&s, ts, "->") { result = typeName(&s, ts) }
-    var borrowedResult = result.kind == .Str
-    if result.kind == .Result {
-        borrowedResult = s.resultTypes[result.result].ok.kind == .Str
-    }
-    if borrowedResult || at(s, ts, "of") {
-        syntax(s, ts, "U0001", "borrowed returns are outside the selfhost subset")
+    // Like stage0, any word may name a source here; names are resolved
+    // against the parameters when the function is checked.
+    var sourced = false
+    var sources: Vec[int] = []
+    if result.kind != .Unit && eat(&s, ts, "of") {
+        sourced = true
+        let paren = eat(&s, ts, "(")
+        loop {
+            if ts[s.pos].kind != .Word {
+                syntax(s, ts, "E0020", "expected a parameter name or static after of")
+            }
+            sources.push(s.pos)
+            s.pos += 1
+            if !paren || !eat(&s, ts, ",") { break }
+        }
+        if paren { expect(&s, ts, ")") }
     }
     let body = parseBlock(&s, ts)
     let paramStart = s.params.len()
@@ -766,9 +776,11 @@ fn parseFunction(s: inout State, ts: Vec[Token]) -> Function {
         s.params.push(params[i])
         i += 1
     }
+    let sourceStart = store(&s, sources)
     let bodyStart = store(&s, body)
     return Function{name: name, result: result, paramStart: paramStart, paramCount: params.len(),
-        bodyStart: bodyStart, bodyCount: body.len()}
+        bodyStart: bodyStart, bodyCount: body.len(), sourced: sourced, sourceStart: sourceStart,
+        sourceCount: sources.len()}
 }
 
 fn aggregate(s: inout State, ts: Vec[Token]) -> TypeDecl {
