@@ -1,0 +1,34 @@
+{
+  "schema": "yavo-format-diagnostic-priority/1",
+  "compiler_sha256": "2f5e7da56f11898371b0243e1d14cd9f57cd666266e3939f86811991dbac4814",
+  "records": [
+    {
+      "id": "fragment_operator_lex_error",
+      "source": "fn main() { println(\"${1 + @}\") }\n",
+      "source_sha256": "7a437b507cbd3d8e42a1b15b3b76f125317e6846ab918dbd10286f9fc1103035",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+        "check",
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/priority-checks-1/fragment_operator_lex_error.yv",
+        "--json"
+      ],
+      "exit_code": 1,
+      "stdout": "{\"diagnostics\":[{\"code\":\"E0020\",\"column\":28,\"end_column\":29,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/priority-checks-1/fragment_operator_lex_error.yv\",\"fixes\":[],\"line\":1,\"message\":\"unexpected character `@`\",\"notes\":[],\"primary\":{\"column\":28,\"end\":28,\"end_column\":29,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/priority-checks-1/fragment_operator_lex_error.yv\",\"line\":1,\"start\":27},\"severity\":\"ERROR\"},{\"code\":\"E0020\",\"column\":29,\"end_column\":29,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/priority-checks-1/fragment_operator_lex_error.yv\",\"fixes\":[],\"line\":1,\"message\":\"expected an expression, found the end of the file\",\"notes\":[],\"primary\":{\"column\":29,\"end\":28,\"end_column\":29,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/priority-checks-1/fragment_operator_lex_error.yv\",\"line\":1,\"start\":28},\"severity\":\"ERROR\"}],\"error_count\":2,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/priority-checks-1/fragment_operator_lex_error.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"7a437b507cbd3d8e42a1b15b3b76f125317e6846ab918dbd10286f9fc1103035\",\"warning_count\":0}\n",
+      "stderr": ""
+    },
+    {
+      "id": "fragment_then_outer_lex_error",
+      "source": "fn main() {\n    println(\"${@}\")\n}\n@\n",
+      "source_sha256": "4aab9d89d0ae8307dab975bd45a16b0f83864bd8d5a67cbbaa6963375e609740",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+        "check",
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/priority-checks-1/fragment_then_outer_lex_error.yv",
+        "--json"
+      ],
+      "exit_code": 1,
+      "stdout": "{\"diagnostics\":[{\"code\":\"E0020\",\"column\":16,\"end_column\":17,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/priority-checks-1/fragment_then_outer_lex_error.yv\",\"fixes\":[],\"line\":2,\"message\":\"unexpected character `@`\",\"notes\":[],\"primary\":{\"column\":16,\"end\":28,\"end_column\":17,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/priority-checks-1/fragment_then_outer_lex_error.yv\",\"line\":2,\"start\":27},\"severity\":\"ERROR\"},{\"code\":\"E0020\",\"column\":16,\"end_column\":17,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/priority-checks-1/fragment_then_outer_lex_error.yv\",\"fixes\":[],\"line\":2,\"message\":\"empty `${}` in string literal\",\"notes\":[],\"primary\":{\"column\":16,\"end\":28,\"end_column\":17,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/priority-checks-1/fragment_then_outer_lex_error.yv\",\"line\":2,\"start\":27},\"severity\":\"ERROR\"},{\"code\":\"E0020\",\"column\":1,\"end_column\":2,\"end_line\":4,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/priority-checks-1/fragment_then_outer_lex_error.yv\",\"fixes\":[],\"line\":4,\"message\":\"unexpected character `@`\",\"notes\":[],\"primary\":{\"column\":1,\"end\":35,\"end_column\":2,\"end_line\":4,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/priority-checks-1/fragment_then_outer_lex_error.yv\",\"line\":4,\"start\":34},\"severity\":\"ERROR\"}],\"error_count\":3,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/priority-checks-1/fragment_then_outer_lex_error.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"4aab9d89d0ae8307dab975bd45a16b0f83864bd8d5a67cbbaa6963375e609740\",\"warning_count\":0}\n",
+      "stderr": ""
+    }
+  ]
+}

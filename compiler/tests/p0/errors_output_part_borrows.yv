@@ -1,0 +1,103 @@
+// expect-error: E0102 47:38
+// expect-error: E0102 52:50
+// expect-error: E0102 58:44
+// expect-error: E0102 63:39
+// expect-error: E0102 68:43
+// expect-error: E0102 74:35
+// expect-error: E0102 79:56
+// expect-error: E0102 84:33
+// expect-error: E0102 89:36
+// expect-error: E0102 94:44
+// expect-error: E0102 99:39
+
+struct Holder {
+    text: String
+}
+
+enum Message {
+    Text(value: String)
+}
+
+fn changeString(value: inout String) -> int {
+    value = "replacement".toString()
+    return 7
+}
+
+fn changeVec(values: inout Vec[String]) -> int {
+    values = ["replacement".toString()]
+    return 7
+}
+
+fn changeHolder(value: inout Holder) -> int {
+    value.text = "replacement".toString()
+    return 7
+}
+
+fn changeMessage(value: inout Message) -> int {
+    value = .Text(value: "replacement".toString())
+    return 7
+}
+
+fn consume(value: sink String) -> int {
+    return value.len()
+}
+
+fn printOwner() {
+    var owner = "original".toString()
+    println("${owner} ${changeString(&owner)}")
+}
+
+fn formatOwner() {
+    var owner = "original".toString()
+    let result = format("${owner} ${changeString(&owner)}")
+    println(result)
+}
+
+fn printSlice() {
+    var owner = "original".toString()
+    println("${owner[0..1]} ${changeString(&owner)}")
+}
+
+fn printIndexed() {
+    var owners = ["original".toString()]
+    println("${owners[0]} ${changeVec(&owners)}")
+}
+
+fn printField() {
+    var owner = Holder{text: "original".toString()}
+    println("${owner.text} ${changeHolder(&owner)}")
+}
+
+fn printReference() {
+    var owners = ["original".toString()]
+    let first = owners[0]
+    println("${first} ${changeVec(&owners)}")
+}
+
+fn nestedFormatKeepsOuterLoan() {
+    var owner = "original".toString()
+    println("${owner} ${format("${1}")} ${changeString(&owner)}")
+}
+
+fn moveOwner() {
+    var owner = "original".toString()
+    println("${owner} ${consume(owner)}")
+}
+
+fn panicOwner() {
+    var owner = "original".toString()
+    panic("${owner} ${changeString(&owner)}")
+}
+
+fn assertOwner() {
+    var owner = "original".toString()
+    assert(false, "${owner} ${changeString(&owner)}")
+}
+
+fn printOwnedEnum() {
+    var owner = Message.Text(value: "original".toString())
+    println("${owner} ${changeMessage(&owner)}")
+}
+
+fn main() {
+}

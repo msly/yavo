@@ -9,9 +9,18 @@ pub enum TokenKind {
     Newline
     Eof
     Byte
+    StringStart
+    StringEnd
+    InterpolationStart
+    InterpolationEnd
+    FormatSpec
+    DeferredError
 }
 
-// The Eof token's text holds the input path for diagnostics.
+// The Eof token's text holds the input path for diagnostics. InterpolationStart
+// text retains its raw expression range; a deferred inner fault follows the
+// inner tokens. StringStart/StringEnd span only their own quote, so no token
+// is rewritten after it is pushed (owned element places are outside the subset).
 pub struct Token {
     kind: TokenKind
     text: String
@@ -19,6 +28,7 @@ pub struct Token {
     end: int
     line: int
     column: int
+    message: String = ""
 }
 
 // A lexical failure is recorded once; callers stop at the first one.
@@ -32,6 +42,16 @@ struct Cursor {
     failOffset: int = 0
     failLine: int = 0
     failColumn: int = 0
+}
+
+struct InterpolationRange {
+    expressionEnd: int = -1
+    specStart: int = -1
+    specLine: int = 0
+    specColumn: int = 0
+    close: int = -1
+    closeLine: int = 0
+    closeColumn: int = 0
 }
 
 // Fatal diagnostic at a token; the path is the Eof token's text.
@@ -154,21 +174,91 @@ fn unicodeEscape(cursor: inout Cursor, source: str, start: int, line: int, colum
     return scalarText(value)
 }
 
-fn stringToken(cursor: inout Cursor, source: str) -> String {
+// Match Rust's string boundary scan. Quoted strings and their escapes hide
+// braces/colons; only braces affect interpolation depth, not parentheses.
+fn stringInterpolationRange(cursor: inout Cursor, source: str, start: int, line: int, column: int) -> InterpolationRange {
+    var depth = 0
+    var quoted = false
+    var range = InterpolationRange{}
+    while cursor.pos < source.len() {
+        let c = source[cursor.pos]
+        if c == '\n' { break }
+        if c == '"' {
+            quoted = !quoted
+            bump(&cursor, source)
+            continue
+        }
+        if quoted {
+            if c == '\\' { bump(&cursor, source) }
+            if cursor.pos < source.len() { bump(&cursor, source) }
+            continue
+        }
+        if c == '{' { depth += 1
+        } else if c == '}' {
+            if depth == 0 {
+                range.close = cursor.pos
+                range.closeLine = cursor.line
+                range.closeColumn = cursor.column
+                if range.expressionEnd < 0 { range.expressionEnd = cursor.pos }
+                bump(&cursor, source)
+                return range
+            }
+            depth -= 1
+        } else if c == ':' && depth == 0 && range.specStart < 0 {
+            range.expressionEnd = cursor.pos
+            range.specStart = cursor.pos + 1
+            range.specLine = cursor.line
+            range.specColumn = cursor.column + 1
+        }
+        bump(&cursor, source)
+    }
+    stop(&cursor, "E0020", "unterminated interpolation; expected '}'", start, line, column)
+    return range
+}
+
+fn stringErrorToken(cursor: Cursor) -> Token {
+    return Token{kind: .DeferredError, text: cursor.code.clone(),
+        message: cursor.message.clone(), start: cursor.failOffset, end: cursor.pos,
+        line: cursor.failLine, column: cursor.failColumn}
+}
+
+fn stringTokens(cursor: inout Cursor, source: str, tokens: inout Vec[Token], depth: int) {
     let start = cursor.pos
     let line = cursor.line
     let column = cursor.column
+    if depth >= 128 {
+        stop(&cursor, "U0001", "selfhost interpolation nesting limit (128) exceeded", start, line, column)
+        return
+    }
     bump(&cursor, source)
+    var partStart = cursor.pos
+    var partLine = cursor.line
+    var partColumn = cursor.column
+    var head = -1
     var text = String{}
     while cursor.pos < source.len() {
         let c = source[cursor.pos]
         if c == '\n' {
             stop(&cursor, "E0020", "unterminated string literal", start, line, column)
-            return text
+            return
         }
         if c == '"' {
+            let close = cursor.pos
+            let closeLine = cursor.line
+            let closeColumn = cursor.column
             bump(&cursor, source)
-            return text
+            if head < 0 {
+                tokens.push(Token{kind: .Text, text: take(&text), start: start,
+                    end: cursor.pos, line: line, column: column})
+            } else {
+                if text.len() > 0 {
+                    tokens.push(Token{kind: .Text, text: take(&text), start: partStart,
+                        end: close, line: partLine, column: partColumn})
+                }
+                tokens.push(Token{kind: .StringEnd, text: String{}, start: close,
+                    end: cursor.pos, line: closeLine, column: closeColumn})
+            }
+            return
         }
         if c == '\\' {
             let escapeStart = cursor.pos
@@ -177,7 +267,7 @@ fn stringToken(cursor: inout Cursor, source: str) -> String {
             bump(&cursor, source)
             if cursor.pos >= source.len() {
                 stop(&cursor, "E0020", "unterminated string literal", start, line, column)
-                return text
+                return
             }
             let e = source[cursor.pos]
             bump(&cursor, source)
@@ -191,18 +281,52 @@ fn stringToken(cursor: inout Cursor, source: str) -> String {
             } else if e == '$' { text.push("$")
             } else if e == 'u' {
                 let value = unicodeEscape(&cursor, source, escapeStart, escapeLine, escapeColumn)
-                if cursor.failed { return text }
+                if cursor.failed { return }
                 text.push(value)
             } else {
                 stop(&cursor, "E0020", "unknown string escape sequence", escapeStart, escapeLine, escapeColumn)
-                return text
+                return
             }
         } else if c == '$' && cursor.pos + 1 < source.len() && source[cursor.pos + 1] == '{' {
             let at = cursor.pos
             let atLine = cursor.line
             let atColumn = cursor.column
-            stop(&cursor, "U0001", "string interpolation is not in the bootstrap subset", at, atLine, atColumn)
-            return text
+            if head < 0 {
+                head = tokens.len()
+                tokens.push(Token{kind: .StringStart, text: String{}, start: start,
+                    end: start + 1, line: line, column: column})
+            }
+            if text.len() > 0 {
+                tokens.push(Token{kind: .Text, text: take(&text), start: partStart,
+                    end: at, line: partLine, column: partColumn})
+            }
+            bump(&cursor, source)
+            bump(&cursor, source)
+            let expressionStart = cursor.pos
+            let expressionLine = cursor.line
+            let expressionColumn = cursor.column
+            let range = stringInterpolationRange(&cursor, source, at, atLine, atColumn)
+            if cursor.failed { return }
+            tokens.push(Token{kind: .InterpolationStart, text: source[expressionStart..range.expressionEnd].toString(),
+                start: expressionStart, end: range.expressionEnd,
+                line: expressionLine, column: expressionColumn})
+            var inner = Cursor{pos: expressionStart, line: expressionLine, column: expressionColumn}
+            // The prefix preserves original offsets while bounding the re-lex.
+            lexTokenRange(&inner, source[0..range.expressionEnd], &tokens, false, depth + 1)
+            if inner.failed {
+                tokens.push(stringErrorToken(inner))
+            }
+            if range.specStart >= 0 {
+                tokens.push(Token{kind: .FormatSpec, text: source[range.specStart..range.close].toString(),
+                    start: range.specStart, end: range.close,
+                    line: range.specLine, column: range.specColumn})
+            }
+            tokens.push(Token{kind: .InterpolationEnd, text: String{},
+                start: range.close, end: range.close + 1,
+                line: range.closeLine, column: range.closeColumn})
+            partStart = cursor.pos
+            partLine = cursor.line
+            partColumn = cursor.column
         } else {
             let first = cursor.pos
             bump(&cursor, source)
@@ -210,7 +334,6 @@ fn stringToken(cursor: inout Cursor, source: str) -> String {
         }
     }
     stop(&cursor, "E0020", "unterminated string literal", start, line, column)
-    return text
 }
 
 // Byte token text is a canonical decimal value, independent of source escapes.
@@ -292,9 +415,7 @@ fn lexFailure(cursor: Cursor) -> Diagnostic {
         line: cursor.failLine, column: cursor.failColumn}
 }
 
-pub fn lex(source: str, path: str) -> Vec[Token] ! Diagnostic {
-    var cursor = Cursor{}
-    var tokens: Vec[Token] = []
+fn lexTokenRange(cursor: inout Cursor, source: str, tokens: inout Vec[Token], finalNewline: bool, depth: int) {
     var delimiters: Vec[byte] = []
     var endsStatement = false
     while cursor.pos < source.len() {
@@ -326,7 +447,7 @@ pub fn lex(source: str, path: str) -> Vec[Token] ! Diagnostic {
         }
         if c == '/' && start + 1 < source.len() && source[start + 1] == '*' {
             stop(&cursor, "E0020", "block comments are not part of Yavo; use // on each line", start, line, column)
-            return err(lexFailure(cursor))
+            return
         }
         var kind: TokenKind = .Symbol
         var text = String{}
@@ -341,7 +462,7 @@ pub fn lex(source: str, path: str) -> Vec[Token] ! Diagnostic {
             if c == '0' && start + 1 < source.len() &&
                 (source[start + 1] == 'x' || source[start + 1] == 'b' || source[start + 1] == 'o') {
                 stop(&cursor, "U0001", "non-decimal integers are not in the bootstrap subset", start, line, column)
-                return err(lexFailure(cursor))
+                return
             }
             bump(&cursor, source)
             while cursor.pos < source.len() && digit(source[cursor.pos]) {
@@ -351,35 +472,36 @@ pub fn lex(source: str, path: str) -> Vec[Token] ! Diagnostic {
                 let next = source[cursor.pos]
                 if next == '_' {
                     stop(&cursor, "U0001", "integer separators are not in the bootstrap subset", start, line, column)
-                    return err(lexFailure(cursor))
+                    return
                 }
                 if (next == 'e' || next == 'E') && exponentAhead(source, cursor.pos) {
                     stop(&cursor, "U0001", "floating-point numbers are not in the bootstrap subset", start, line, column)
-                    return err(lexFailure(cursor))
+                    return
                 }
                 if next == '.' && cursor.pos + 1 < source.len() && digit(source[cursor.pos + 1]) {
                     stop(&cursor, "U0001", "floating-point numbers are not in the bootstrap subset", start, line, column)
-                    return err(lexFailure(cursor))
+                    return
                 }
                 if wordStart(next) {
                     stop(&cursor, "E0020", "invalid integer literal", start, line, column)
-                    return err(lexFailure(cursor))
+                    return
                 }
             }
             kind = .Number
             text = source[start..cursor.pos].toString()
             if !integerLiteralFits(text) {
                 stop(&cursor, "E0003", "integer literal is too large for any integer type", start, line, column)
-                return err(lexFailure(cursor))
+                return
             }
         } else if c == '"' {
-            kind = .Text
-            text = stringToken(&cursor, source)
-            if cursor.failed { return err(lexFailure(cursor)) }
+            stringTokens(&cursor, source, &tokens, depth)
+            if cursor.failed { return }
+            endsStatement = true
+            continue
         } else if c == '\'' {
             kind = .Byte
             text = byteToken(&cursor, source)
-            if cursor.failed { return err(lexFailure(cursor)) }
+            if cursor.failed { return }
         } else if oneSymbol(c) {
             bump(&cursor, source)
             if cursor.pos < source.len() && twoSymbol(c, source[cursor.pos]) {
@@ -388,7 +510,7 @@ pub fn lex(source: str, path: str) -> Vec[Token] ! Diagnostic {
             text = source[start..cursor.pos].toString()
         } else {
             stop(&cursor, "E0020", "unexpected character", start, line, column)
-            return err(lexFailure(cursor))
+            return
         }
         endsStatement = kind == .Word || kind == .Number || kind == .Text || kind == .Byte ||
             text == ")" || text == "]" || text == "}"
@@ -402,8 +524,33 @@ pub fn lex(source: str, path: str) -> Vec[Token] ! Diagnostic {
         }
         tokens.push(Token{kind: kind, text: text, start: start, end: cursor.pos, line: line, column: column})
     }
-    if endsStatement {
+    if finalNewline && endsStatement {
         tokens.push(Token{kind: .Newline, text: String{}, start: cursor.pos, end: cursor.pos, line: cursor.line, column: cursor.column})
+    }
+}
+
+pub fn lex(source: str, path: str) -> Vec[Token] ! Diagnostic {
+    var cursor = Cursor{}
+    var tokens: Vec[Token] = []
+    lexTokenRange(&cursor, source, &tokens, true, 0)
+    if cursor.failed {
+        // Keep an earlier interpolation lexical fault when a later outer
+        // lexical fault aborts the file. General multi-error recovery is not
+        // part of this first-error frontend.
+        var first = -1
+        var i = 0
+        while i < tokens.len() {
+            if tokens[i].kind == .DeferredError && tokens[i].start < cursor.failOffset {
+                if first < 0 || tokens[i].start < tokens[first].start { first = i }
+            }
+            i += 1
+        }
+        if first >= 0 {
+            return err(Diagnostic{code: tokens[first].text.clone(),
+                message: tokens[first].message.clone(), offset: tokens[first].start,
+                line: tokens[first].line, column: tokens[first].column})
+        }
+        return err(lexFailure(cursor))
     }
     tokens.push(Token{kind: .Eof, text: path.toString(), start: cursor.pos, end: cursor.pos, line: cursor.line, column: cursor.column})
     return ok(tokens)

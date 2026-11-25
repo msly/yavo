@@ -5724,6 +5724,8 @@ impl Checker<'_> {
 
     /// The pieces of a message: an interpolated string's text and values, or one value.
     fn print_parts(&mut self, arg: &Expr, cx: &mut FnCx) -> Vec<PrintPart> {
+        let shared_mark = cx.call_shared.len();
+        let mutable_mark = cx.call_mut.len();
         let mut parts = Vec::new();
         match &arg.kind {
             ExprKind::Str(segs) => {
@@ -5733,6 +5735,11 @@ impl Checker<'_> {
                         StrSeg::Expr { expr, spec } => {
                             let h = self.expr(expr, None, cx);
                             let h = self.deref(h);
+                            // Codegen evaluates every part before writing any of them. A
+                            // String/str (or an owning enum's payload) therefore keeps its
+                            // backing storage borrowed while later parts run. Copy scalars
+                            // and fresh owned results need no loan of their source locals.
+                            self.hold_call_argument(&h, false, false, cx);
                             if let Some(spec) = spec {
                                 // `.N`: fixed decimals for a float (the only specifier v1 defines).
                                 let digits = spec.strip_prefix('.').filter(|d| !d.is_empty() && d.len() <= 2 && d.bytes().all(|b| b.is_ascii_digit()));
@@ -5768,6 +5775,8 @@ impl Checker<'_> {
                 parts.push(PrintPart::Value(h));
             }
         }
+        cx.call_shared.truncate(shared_mark);
+        cx.call_mut.truncate(mutable_mark);
         parts
     }
 

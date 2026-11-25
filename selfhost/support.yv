@@ -84,15 +84,6 @@ pub fn join5(a: str, b: str, c: str, d: str, e: str) -> String {
 
 // Prints `path:line:column: code: message` and stops; no output file is open yet.
 pub fn report(path: str, line: int, column: int, code: str, message: str) {
-    var text = path.toString()
-    text.push(":")
-    text.push(decimal(line))
-    text.push(":")
-    text.push(decimal(column))
-    text.push(": ")
-    text.push(code)
-    text.push(": ")
-    text.push(message)
-    eprintln(text)
+    eprintln("${path}:${line}:${column}: ${code}: ${message}")
     os.exit(1)
 }

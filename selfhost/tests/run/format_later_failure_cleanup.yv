@@ -1,0 +1,39 @@
+struct Row {
+    left: String
+    right: String
+}
+fn fail(label: str) -> String ! String { return err(label.toString()) }
+fn failInt() -> int ! String { return err("call".toString()) }
+fn accept(first: String, second: int) -> int { return first.len() + second }
+fn vector() -> Vec[String] ! String {
+    return [format("first:${1}"), try fail("vec")]
+}
+fn object() -> Row ! String {
+    return Row{left: format("left:${2}"), right: try fail("struct")}
+}
+fn argument() -> int ! String {
+    return accept(format("arg:${3}"), try failInt())
+}
+fn checkVector() {
+    let _ = vector() catch error {
+        println(error)
+        return
+    }
+}
+fn checkObject() {
+    let _ = object() catch error {
+        println(error)
+        return
+    }
+}
+fn checkArgument() {
+    let _ = argument() catch error {
+        println(error)
+        return
+    }
+}
+fn main() {
+    checkVector()
+    checkObject()
+    checkArgument()
+}

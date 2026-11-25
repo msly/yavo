@@ -1,0 +1,11 @@
+fn mark(value: int) -> int {
+    println(value)
+    return value
+}
+fn main() {
+    println("outer:${mark(1)}:${mark(2)}")
+    let text = format("fmt:${mark(3)}:${mark(4)}")
+    println(text)
+    print("tail:${mark(5)}")
+    println(":end")
+}

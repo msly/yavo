@@ -1,0 +1,136 @@
+{
+  "schema": "yavo-batch32-stage0-oracle/1",
+  "baseline": "08f19faf834f1b89ddad39fb4e77f97753cc8641",
+  "profile": "Debug",
+  "environment_overrides": {
+    "YAVO_ALLOC_CHECK": "1",
+    "YAVO_NO_CACHE": "1",
+    "YAVO_CC": null
+  },
+  "inputs": {
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo": "2f5e7da56f11898371b0243e1d14cd9f57cd666266e3939f86811991dbac4814",
+    "/data1/workspace/github/workspace/yavo/compiler/runtime/yavo_rt.h": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+    "/data1/workspace/github/workspace/yavo/compiler/toolchain.lock": "a9bbe83e644b0e1cee19c8dba8b5157eaed3e9ddc71b96d8aab2b2d2bb15f53c",
+    "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig": "58959f01285c05a74276f09327b551d42ed6006bf325a78dc661a024e314987b",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/run_oracle.py": "1ead24ae1f03216ec9208d3d6544c9f5932668623081d0c9eb82e604dcd46207",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/safe-run-candidates-v2.json": "a29c83481051bf5f83435ae0aa09a8bb57460dbaac0e0ad8f2365b9d47d84a78",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-2/format_later_failure_cleanup/source.yv": "18f6613436ed23efc88b257ecaeb443ef8850c996e82c30d2f22829544d49cdd",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-2/format_later_failure_cleanup/program.c": "5a486343cfaeabc10a84525e4bac5e425e4f38c1beb56338d24a709a124e0162",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-2/format_later_failure_cleanup/program": "12c301e6ef5ab8b52444322f0f62f5aa0b3908473993d64e0e0490ad8b353e50",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-2/format_catch_loop_cleanup/source.yv": "a2db546342fd033052a8285cd65038771c92ded623b46b18dfe74fbced01ca9a",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-2/format_catch_loop_cleanup/program.c": "d03debe578a7bfcf1f7c5c19a0e596b036fc593207d59be2d5468ec3ba0a7ecb",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-2/format_catch_loop_cleanup/program": "99e1753b607003fa8bbfba8258af3c40b671d487b3124314529a38b570549ed7"
+  },
+  "records": [
+    {
+      "id": "format_later_failure_cleanup",
+      "kind": "run",
+      "source": "struct Row {\n    left: String\n    right: String\n}\nfn fail(label: str) -> String ! String { return err(label.toString()) }\nfn failInt() -> int ! String { return err(\"call\".toString()) }\nfn accept(first: String, second: int) -> int { return first.len() + second }\nfn vector() -> Vec[String] ! String {\n    return [format(\"first:${1}\"), try fail(\"vec\")]\n}\nfn object() -> Row ! String {\n    return Row{left: format(\"left:${2}\"), right: try fail(\"struct\")}\n}\nfn argument() -> int ! String {\n    return accept(format(\"arg:${3}\"), try failInt())\n}\nfn checkVector() {\n    let _ = vector() catch error {\n        println(error)\n        return\n    }\n}\nfn checkObject() {\n    let _ = object() catch error {\n        println(error)\n        return\n    }\n}\nfn checkArgument() {\n    let _ = argument() catch error {\n        println(error)\n        return\n    }\n}\nfn main() {\n    checkVector()\n    checkObject()\n    checkArgument()\n}\n",
+      "source_sha256": "18f6613436ed23efc88b257ecaeb443ef8850c996e82c30d2f22829544d49cdd",
+      "expected_exit": 0,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-2/format_later_failure_cleanup/source.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-2/format_later_failure_cleanup/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"18f6613436ed23efc88b257ecaeb443ef8850c996e82c30d2f22829544d49cdd\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.002,
+        "timed_out": false
+      },
+      "first_error": null,
+      "passed": true,
+      "expected_stdout": "vec\nstruct\ncall\n",
+      "expected_stderr": "",
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-2/format_later_failure_cleanup/source.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-2/format_later_failure_cleanup/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-2/format_later_failure_cleanup/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-2/format_later_failure_cleanup/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"18f6613436ed23efc88b257ecaeb443ef8850c996e82c30d2f22829544d49cdd\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.186,
+        "timed_out": false
+      },
+      "generated_c_sha256": "5a486343cfaeabc10a84525e4bac5e425e4f38c1beb56338d24a709a124e0162",
+      "binary_sha256": "12c301e6ef5ab8b52444322f0f62f5aa0b3908473993d64e0e0490ad8b353e50",
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-2/format_later_failure_cleanup/program"
+        ],
+        "exit_code": 0,
+        "stdout": "vec\nstruct\ncall\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      }
+    },
+    {
+      "id": "format_catch_loop_cleanup",
+      "kind": "run",
+      "source": "fn choose(value: int) -> int ! String {\n    if value == 1 { return value }\n    return err(\"discarded\".toString())\n}\nfn main() {\n    var seen = 0\n    for value in 0..3 {\n        seen += 1\n        println(\"row:${format(\"hold\")}:${choose(value) catch error { continue }}\")\n    }\n    println(seen)\n    seen = 0\n    for value in 1..4 {\n        seen += 1\n        println(\"break:${format(\"hold\")}:${choose(value) catch error { break }}\")\n    }\n    println(seen)\n}\n",
+      "source_sha256": "a2db546342fd033052a8285cd65038771c92ded623b46b18dfe74fbced01ca9a",
+      "expected_exit": 0,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-2/format_catch_loop_cleanup/source.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[{\"code\":\"W0001\",\"column\":62,\"end_column\":67,\"end_line\":9,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-2/format_catch_loop_cleanup/source.yv\",\"fixes\":[{\"applicability\":\"automatic\",\"edits\":[{\"end\":253,\"replacement\":\"_error\",\"start\":248}],\"id\":\"rename-unused\",\"impact\":\"Keeps the same binding, writes and destruction time; only suppresses the unused-binding warning.\",\"patch_id\":\"rename-unused:9e5f848614469e899195e5c60a6096a3e8b00e5d0d5e3207596422a0eadc90d1\",\"preconditions\":[\"All edited identifiers resolve to this binding.\",\"The new name does not capture any existing name in the function.\"],\"recheck\":\"passed\",\"recheck_scope\":\"automatic-set\",\"title\":\"Rename error to _error\"}],\"line\":9,\"message\":\"unused variable `error`\",\"notes\":[\"rename it to `_error` if this is intentional\"],\"primary\":{\"column\":62,\"end\":253,\"end_column\":67,\"end_line\":9,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-2/format_catch_loop_cleanup/source.yv\",\"line\":9,\"start\":248},\"severity\":\"WARN\"},{\"code\":\"W0001\",\"column\":64,\"end_column\":69,\"end_line\":15,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-2/format_catch_loop_cleanup/source.yv\",\"fixes\":[{\"applicability\":\"automatic\",\"edits\":[{\"end\":417,\"replacement\":\"_error2\",\"start\":412}],\"id\":\"rename-unused\",\"impact\":\"Keeps the same binding, writes and destruction time; only suppresses the unused-binding warning.\",\"patch_id\":\"rename-unused:9c58feb1044f761868a753927dfee199786aab719b9c1dc2b7629b3cf18308c5\",\"preconditions\":[\"All edited identifiers resolve to this binding.\",\"The new name does not capture any existing name in the function.\"],\"recheck\":\"passed\",\"recheck_scope\":\"automatic-set\",\"title\":\"Rename error to _error2\"}],\"line\":15,\"message\":\"unused variable `error`\",\"notes\":[\"rename it to `_error` if this is intentional\"],\"primary\":{\"column\":64,\"end\":417,\"end_column\":69,\"end_line\":15,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-2/format_catch_loop_cleanup/source.yv\",\"line\":15,\"start\":412},\"severity\":\"WARN\"}],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-2/format_catch_loop_cleanup/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"a2db546342fd033052a8285cd65038771c92ded623b46b18dfe74fbced01ca9a\",\"warning_count\":2}\n",
+        "stderr": "",
+        "seconds": 0.002,
+        "timed_out": false
+      },
+      "first_error": null,
+      "passed": true,
+      "expected_stdout": "row:hold:1\n3\nbreak:hold:1\n2\n",
+      "expected_stderr": "",
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-2/format_catch_loop_cleanup/source.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-2/format_catch_loop_cleanup/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-2/format_catch_loop_cleanup/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[{\"code\":\"W0001\",\"column\":62,\"end_column\":67,\"end_line\":9,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-2/format_catch_loop_cleanup/source.yv\",\"fixes\":[{\"applicability\":\"automatic\",\"edits\":[{\"end\":253,\"replacement\":\"_error\",\"start\":248}],\"id\":\"rename-unused\",\"impact\":\"Keeps the same binding, writes and destruction time; only suppresses the unused-binding warning.\",\"patch_id\":\"rename-unused:9e5f848614469e899195e5c60a6096a3e8b00e5d0d5e3207596422a0eadc90d1\",\"preconditions\":[\"All edited identifiers resolve to this binding.\",\"The new name does not capture any existing name in the function.\"],\"recheck\":\"passed\",\"recheck_scope\":\"automatic-set\",\"title\":\"Rename error to _error\"}],\"line\":9,\"message\":\"unused variable `error`\",\"notes\":[\"rename it to `_error` if this is intentional\"],\"primary\":{\"column\":62,\"end\":253,\"end_column\":67,\"end_line\":9,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-2/format_catch_loop_cleanup/source.yv\",\"line\":9,\"start\":248},\"severity\":\"WARN\"},{\"code\":\"W0001\",\"column\":64,\"end_column\":69,\"end_line\":15,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-2/format_catch_loop_cleanup/source.yv\",\"fixes\":[{\"applicability\":\"automatic\",\"edits\":[{\"end\":417,\"replacement\":\"_error2\",\"start\":412}],\"id\":\"rename-unused\",\"impact\":\"Keeps the same binding, writes and destruction time; only suppresses the unused-binding warning.\",\"patch_id\":\"rename-unused:9c58feb1044f761868a753927dfee199786aab719b9c1dc2b7629b3cf18308c5\",\"preconditions\":[\"All edited identifiers resolve to this binding.\",\"The new name does not capture any existing name in the function.\"],\"recheck\":\"passed\",\"recheck_scope\":\"automatic-set\",\"title\":\"Rename error to _error2\"}],\"line\":15,\"message\":\"unused variable `error`\",\"notes\":[\"rename it to `_error` if this is intentional\"],\"primary\":{\"column\":64,\"end\":417,\"end_column\":69,\"end_line\":15,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-2/format_catch_loop_cleanup/source.yv\",\"line\":15,\"start\":412},\"severity\":\"WARN\"}],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-2/format_catch_loop_cleanup/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"a2db546342fd033052a8285cd65038771c92ded623b46b18dfe74fbced01ca9a\",\"warning_count\":2}\n",
+        "stderr": "",
+        "seconds": 0.183,
+        "timed_out": false
+      },
+      "generated_c_sha256": "d03debe578a7bfcf1f7c5c19a0e596b036fc593207d59be2d5468ec3ba0a7ecb",
+      "binary_sha256": "99e1753b607003fa8bbfba8258af3c40b671d487b3124314529a38b570549ed7",
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-2/format_catch_loop_cleanup/program"
+        ],
+        "exit_code": 0,
+        "stdout": "row:hold:1\n3\nbreak:hold:1\n2\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      }
+    }
+  ],
+  "inputs_changed": [],
+  "passed": 2,
+  "total": 2,
+  "status": "passed"
+}

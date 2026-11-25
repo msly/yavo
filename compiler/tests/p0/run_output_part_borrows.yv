@@ -1,0 +1,102 @@
+// expect-stdout:
+// | 1 2
+// | 3 4
+// | false true
+// | 5 6
+// | 7 8
+// | Off 9
+// | first
+// | replacement
+// | nested 7
+// | cloned 7
+// | held
+// | replacement
+// | 0
+// | replacement 7
+struct NumberBox {
+    value: int
+}
+
+enum Light {
+    Off
+    On
+}
+
+fn bump(value: inout int) -> int {
+    value += 1
+    return value
+}
+
+fn bumpByte(value: inout byte) -> byte {
+    value += 1
+    return value
+}
+
+fn flip(value: inout bool) -> bool {
+    value = !value
+    return value
+}
+
+fn changeVec(values: inout Vec[int]) -> int {
+    values = [6]
+    return 6
+}
+
+fn changeBox(value: inout NumberBox) -> int {
+    value.value = 8
+    return 8
+}
+
+fn changeLight(value: inout Light) -> int {
+    value = .On
+    return 9
+}
+
+fn changeString(value: inout String) -> int {
+    value = "replacement".toString()
+    return 7
+}
+
+fn show(value: String, number: int) {
+    println("${value} ${number}")
+}
+
+fn main() {
+    // Copy values are snapshots, including projections into a mutable owner.
+    var number = 1
+    println("${number} ${bump(&number)}")
+    var small = byte(3)
+    println("${small} ${bumpByte(&small)}")
+    var flag = false
+    println("${flag} ${flip(&flag)}")
+    var values = [5]
+    println("${values[0]} ${changeVec(&values)}")
+    var box = NumberBox{value: 7}
+    println("${box.value} ${changeBox(&box)}")
+    var light: Light = .Off
+    println("${light} ${changeLight(&light)}")
+
+    // A completed output message releases only the loans it introduced.
+    var owner = "first".toString()
+    println("${owner}")
+    let _ = changeString(&owner)
+    println(owner)
+
+    // Nested formatting and cloning produce independent owners.
+    var nested = "nested".toString()
+    println("${format("${nested}")} ${changeString(&nested)}")
+    var cloned = "cloned".toString()
+    println("${cloned.clone()} ${changeString(&cloned)}")
+    var held = "held".toString()
+    let text = format("${held}")
+    let _ = changeString(&held)
+    println(text)
+    println(held)
+
+    // The assertion message is checked, but its expressions stay lazy.
+    var calls = 0
+    assert(true, "${held} ${bump(&calls)}")
+    println(calls)
+    let _ = changeString(&held)
+    show(format("${held}"), changeString(&held))
+}

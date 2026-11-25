@@ -1,0 +1,6 @@
+fn fail() -> int ! String { return err("discarded".toString()) }
+fn work() -> int {
+    println("BAD:${format("hold")}:${fail() catch error { return 9 }}:TAIL")
+    return 0
+}
+fn main() { println(work()) }

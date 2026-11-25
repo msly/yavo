@@ -1,0 +1,14 @@
+fn bump(value: inout int) -> int { value += 1
+    return value }
+fn replaceText(value: inout String) -> int {
+    value = "z".toString()
+    return 7
+}
+fn main() {
+    var count = 2
+    println("${count} ${bump(&count)} ${count}")
+    var owner = "abc".toString()
+    println("${owner.len()} ${replaceText(&owner)}")
+    owner = "abc".toString()
+    println("${owner[0]} ${replaceText(&owner)}")
+}

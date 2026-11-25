@@ -1,0 +1,81 @@
+{
+  "schema": "yavo-batch32-stage0-oracle/1",
+  "baseline": "08f19faf834f1b89ddad39fb4e77f97753cc8641",
+  "profile": "Release",
+  "environment_overrides": {
+    "YAVO_ALLOC_CHECK": "1",
+    "YAVO_NO_CACHE": "1",
+    "YAVO_CC": null
+  },
+  "inputs": {
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0-fixed/yavo": "05fde861598f401f00e748e09b366a4c3654d1e4b181adfbd3edc0820fbf82ab",
+    "/data1/workspace/github/workspace/yavo/compiler/runtime/yavo_rt.h": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+    "/data1/workspace/github/workspace/yavo/compiler/toolchain.lock": "a9bbe83e644b0e1cee19c8dba8b5157eaed3e9ddc71b96d8aab2b2d2bb15f53c",
+    "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig": "58959f01285c05a74276f09327b551d42ed6006bf325a78dc661a024e314987b",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/run_oracle.py": "1ead24ae1f03216ec9208d3d6544c9f5932668623081d0c9eb82e604dcd46207",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/candidates-v3.json": "fbe72c9c22e0d70caff300bea6790408f3493d52133bb6a47bfc06a8183c589d",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/fixed-order-release-1/format_evaluation_order/source.yv": "21b1ca92bfa1a526133e842ba9e7a5762ed63839c4be2e049ad515629188f4ff",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/fixed-order-release-1/format_evaluation_order/program.c": "78dc782f4468c0d6d2697f4f65ba39ae02cd0ac809a1ff382ff878593f8721c2",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/fixed-order-release-1/format_evaluation_order/program": "5538af4394164c0005e3984b329bad9d124fc2d4bfe8a431bf81e103c582f4bd"
+  },
+  "records": [
+    {
+      "id": "format_evaluation_order",
+      "kind": "run",
+      "source": "fn mark(value: int) -> int {\n    println(value)\n    return value\n}\nfn main() {\n    println(\"outer:${mark(1)}:${mark(2)}\")\n    let text = format(\"fmt:${mark(3)}:${mark(4)}\")\n    println(text)\n    print(\"tail:${mark(5)}\")\n    println(\":end\")\n}\n",
+      "source_sha256": "21b1ca92bfa1a526133e842ba9e7a5762ed63839c4be2e049ad515629188f4ff",
+      "expected_exit": 0,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0-fixed/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/fixed-order-release-1/format_evaluation_order/source.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/fixed-order-release-1/format_evaluation_order/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"21b1ca92bfa1a526133e842ba9e7a5762ed63839c4be2e049ad515629188f4ff\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.002,
+        "timed_out": false
+      },
+      "first_error": null,
+      "passed": true,
+      "expected_stdout": "1\n2\nouter:1:2\n3\n4\nfmt:3:4\n5\ntail:5:end\n",
+      "expected_stderr": "",
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0-fixed/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/fixed-order-release-1/format_evaluation_order/source.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/fixed-order-release-1/format_evaluation_order/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/fixed-order-release-1/format_evaluation_order/program.c",
+          "--json",
+          "--release"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/fixed-order-release-1/format_evaluation_order/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"21b1ca92bfa1a526133e842ba9e7a5762ed63839c4be2e049ad515629188f4ff\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.236,
+        "timed_out": false
+      },
+      "generated_c_sha256": "78dc782f4468c0d6d2697f4f65ba39ae02cd0ac809a1ff382ff878593f8721c2",
+      "binary_sha256": "5538af4394164c0005e3984b329bad9d124fc2d4bfe8a431bf81e103c582f4bd",
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/fixed-order-release-1/format_evaluation_order/program"
+        ],
+        "exit_code": 0,
+        "stdout": "1\n2\nouter:1:2\n3\n4\nfmt:3:4\n5\ntail:5:end\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      }
+    }
+  ],
+  "inputs_changed": [],
+  "passed": 1,
+  "total": 1,
+  "status": "passed"
+}

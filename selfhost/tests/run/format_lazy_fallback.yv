@@ -1,0 +1,10 @@
+fn build() -> String {
+    println("allocate")
+    return format("val:${22}")
+}
+fn main() {
+    let present: ?int = 5
+    let absent: ?int = none
+    println(present ?? build().len())
+    println(absent ?? build().len())
+}

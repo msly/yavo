@@ -1,0 +1,4 @@
+fn fail() -> int ! String { return err("failure".toString()) }
+fn main() {
+    println("${fail() catch error { println(error) }}")
+}

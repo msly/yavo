@@ -1,0 +1,422 @@
+[
+  {
+    "id": "format_scalar_types",
+    "kind": "run",
+    "stdout": "17\n65\ntrue\ntext\nowned\nHot\n\n",
+    "source": "enum Mark {\n    Cold\n    Hot\n}\nfn main() {\n    println(format(17))\n    println(format(byte(65)))\n    println(format(true))\n    println(format(\"text\"))\n    println(format(\"owned\".toString()))\n    println(format(Mark.Hot))\n    println(format(\"\"))\n}\n",
+    "file": "run/format_scalar_types.yv"
+  },
+  {
+    "id": "interpolation_literal_bytes",
+    "kind": "run",
+    "stdout": "汉🙂 ${literal} 65\u0000end\nquote:\" slash:\\ tab:\t:2\n",
+    "source": "fn main() {\n    println(\"汉🙂 \\${literal} ${'A'}\\0end\")\n    println(\"quote:\\\" slash:\\\\ tab:\\t:${2}\")\n}\n",
+    "file": "run/interpolation_literal_bytes.yv"
+  },
+  {
+    "id": "format_eprintln",
+    "kind": "run",
+    "stdout": "stdout:1\n",
+    "stderr": "err:汉🙂:66:true\n",
+    "source": "fn main() {\n    println(\"stdout:${1}\")\n    eprintln(\"err:汉🙂:${byte(66)}:${true}\")\n}\n",
+    "file": "run/format_eprintln.yv"
+  },
+  {
+    "id": "format_evaluation_order",
+    "kind": "run",
+    "stdout": "1\n2\nouter:1:2\n3\n4\nfmt:3:4\n5\ntail:5:end\n",
+    "source": "fn mark(value: int) -> int {\n    println(value)\n    return value\n}\nfn main() {\n    println(\"outer:${mark(1)}:${mark(2)}\")\n    let text = format(\"fmt:${mark(3)}:${mark(4)}\")\n    println(text)\n    print(\"tail:${mark(5)}\")\n    println(\":end\")\n}\n",
+    "file": "run/format_evaluation_order.yv"
+  },
+  {
+    "id": "format_owned_views",
+    "kind": "run",
+    "stdout": "owner:ow:own:value:汉\no:t\n",
+    "source": "struct Row {\n    text: String\n}\nfn main() {\n    let owner = \"owner\".toString()\n    let values = [\"value\".toString()]\n    println(\"${owner}:${owner[0..2]}:${Row{text: \"own\".toString()}.text}:${values[0]}:${\"汉🙂\".toString()[0..3]}\")\n    let staticView = \"static\"[0..3][1..2]\n    println(\"${owner[0..2][0..1]}:${staticView}\")\n}\n",
+    "file": "run/format_owned_views.yv"
+  },
+  {
+    "id": "format_owned_containers",
+    "kind": "run",
+    "stdout": "row:7\nv:8\nv:9\ndone:10\n",
+    "source": "struct Row {\n    text: String\n}\nfn produce(value: int) -> String { return format(\"done:${value}\") }\nfn main() {\n    var row = Row{text: format(\"row:${7}\")}\n    var values = [format(\"v:${8}\")]\n    values.push(format(\"v:${9}\"))\n    println(row.text)\n    println(values[0])\n    println(values[1])\n    row.text = produce(10)\n    println(row.text)\n}\n",
+    "file": "run/format_owned_containers.yv"
+  },
+  {
+    "id": "format_later_failure_cleanup",
+    "kind": "run",
+    "stdout": "vec\nstruct\ncall\n",
+    "source": "struct Row {\n    left: String\n    right: String\n}\nfn fail(label: str) -> String ! String { return err(label.toString()) }\nfn failInt() -> int ! String { return err(\"call\".toString()) }\nfn accept(first: String, second: int) -> int { return first.len() + second }\nfn vector() -> Vec[String] ! String {\n    return [format(\"first:${1}\"), try fail(\"vec\")]\n}\nfn object() -> Row ! String {\n    return Row{left: format(\"left:${2}\"), right: try fail(\"struct\")}\n}\nfn argument() -> int ! String {\n    return accept(format(\"arg:${3}\"), try failInt())\n}\nfn checkVector() {\n    let _ = vector() catch error {\n        println(error)\n        return\n    }\n}\nfn checkObject() {\n    let _ = object() catch error {\n        println(error)\n        return\n    }\n}\nfn checkArgument() {\n    let _ = argument() catch error {\n        println(error)\n        return\n    }\n}\nfn main() {\n    checkVector()\n    checkObject()\n    checkArgument()\n}\n",
+    "file": "run/format_later_failure_cleanup.yv"
+  },
+  {
+    "id": "format_try_output_atomicity",
+    "kind": "run",
+    "stdout": "print\nstderr\nformat\n",
+    "source": "fn fail(label: str) -> int ! String { return err(label.toString()) }\nfn printFailure() -> () ! String {\n    println(\"BAD:${\"hold\".toString()}:${try fail(\"print\")}:TAIL\")\n}\nfn stderrFailure() -> () ! String {\n    eprintln(\"BAD:${format(\"hold\")}:${try fail(\"stderr\")}:TAIL\")\n}\nfn formatFailure() -> String ! String {\n    return format(\"BAD:${format(\"hold\")}:${try fail(\"format\")}:TAIL\")\n}\nfn checkPrint() {\n    let _ = printFailure() catch error {\n        println(error)\n        return\n    }\n}\nfn checkStderr() {\n    let _ = stderrFailure() catch error {\n        println(error)\n        return\n    }\n}\nfn checkFormat() {\n    let _ = formatFailure() catch error {\n        println(error)\n        return\n    }\n}\nfn main() {\n    checkPrint()\n    checkStderr()\n    checkFormat()\n}\n",
+    "file": "run/format_try_output_atomicity.yv"
+  },
+  {
+    "id": "format_catch_return_cleanup",
+    "kind": "run",
+    "stdout": "9\n",
+    "source": "fn fail() -> int ! String { return err(\"discarded\".toString()) }\nfn work() -> int {\n    println(\"BAD:${format(\"hold\")}:${fail() catch error { return 9 }}:TAIL\")\n    return 0\n}\nfn main() { println(work()) }\n",
+    "file": "run/format_catch_return_cleanup.yv"
+  },
+  {
+    "id": "format_catch_loop_cleanup",
+    "kind": "run",
+    "stdout": "row:hold:1\n3\nbreak:hold:1\n2\n",
+    "source": "fn choose(value: int) -> int ! String {\n    if value == 1 { return value }\n    return err(\"discarded\".toString())\n}\nfn main() {\n    var seen = 0\n    for value in 0..3 {\n        seen += 1\n        println(\"row:${format(\"hold\")}:${choose(value) catch error { continue }}\")\n    }\n    println(seen)\n    seen = 0\n    for value in 1..4 {\n        seen += 1\n        println(\"break:${format(\"hold\")}:${choose(value) catch error { break }}\")\n    }\n    println(seen)\n}\n",
+    "file": "run/format_catch_loop_cleanup.yv"
+  },
+  {
+    "id": "format_lazy_fallback",
+    "kind": "run",
+    "stdout": "5\nallocate\n6\n",
+    "source": "fn build() -> String {\n    println(\"allocate\")\n    return format(\"val:${22}\")\n}\nfn main() {\n    let present: ?int = 5\n    let absent: ?int = none\n    println(present ?? build().len())\n    println(absent ?? build().len())\n}\n",
+    "file": "run/format_lazy_fallback.yv"
+  },
+  {
+    "id": "format_nested_parentheses",
+    "kind": "run",
+    "stdout": "7:4:v5:5\n6\n",
+    "source": "struct Point {\n    value: int\n}\nfn length(value: str) -> int { return value.len() }\nfn main() {\n    println(\"${Point{value: 7}.value}:${[3, 4][1]}:${format(\"v${2 + 3}\")}:${length(\"x}y:z\")}\")\n    println((format(\"${6}\")))\n}\n",
+    "file": "run/format_nested_parentheses.yv"
+  },
+  {
+    "id": "interpolation_copy_mutation",
+    "kind": "run",
+    "source": "fn bump(value: inout int) -> int { value += 1\n    return value }\nfn replaceText(value: inout String) -> int {\n    value = \"z\".toString()\n    return 7\n}\nfn main() {\n    var count = 2\n    println(\"${count} ${bump(&count)} ${count}\")\n    var owner = \"abc\".toString()\n    println(\"${owner.len()} ${replaceText(&owner)}\")\n    owner = \"abc\".toString()\n    println(\"${owner[0]} ${replaceText(&owner)}\")\n}\n",
+    "stdout": "2 3 3\n3 7\n97 7\n",
+    "file": "run/interpolation_copy_mutation.yv"
+  },
+  {
+    "id": "format_nested_copy_releases",
+    "kind": "run",
+    "source": "fn change(value: inout String) -> int {\n    value = \"replacement\".toString()\n    return 7\n}\nfn main() {\n    var owner = \"original\".toString()\n    println(\"${format(\"${owner}\")} ${change(&owner)}\")\n}\n",
+    "stdout": "original 7\n",
+    "file": "run/format_nested_copy_releases.yv"
+  },
+  {
+    "id": "format_user_shadow",
+    "kind": "run",
+    "source": "fn format(value: int) -> int { return value + 1 }\nfn main() { println(format(3)) }\n",
+    "stdout": "4\n",
+    "file": "run/format_user_shadow.yv"
+  },
+  {
+    "id": "interpolation_basic",
+    "kind": "run",
+    "source": "fn main() { println(\"${1}\") }\n",
+    "stdout": "1\n",
+    "promotes": "unsupported_interpolation",
+    "file": "run/interpolation_basic.yv"
+  },
+  {
+    "id": "owner_string_print_mutate",
+    "kind": "reject",
+    "diagnostic": "E0102",
+    "source": "fn change(value: inout String) -> int {\n    value = \"replacement\".toString()\n    return 7\n}\nfn main() {\n    var owner = \"original\".toString()\n    println(\"${owner} ${change(&owner)}\")\n}\n",
+    "reference_fix": "The original frozen reference accepts this unsafe deferred-output borrow. Final expectations come from the corrected independent Rust checker.",
+    "file": "reject/owner_string_print_mutate.yv"
+  },
+  {
+    "id": "owner_string_format_mutate",
+    "kind": "reject",
+    "diagnostic": "E0102",
+    "source": "fn change(value: inout String) -> int {\n    value = \"replacement\".toString()\n    return 7\n}\nfn main() {\n    var owner = \"original\".toString()\n    let result = format(\"${owner} ${change(&owner)}\")\n    println(result)\n}\n",
+    "reference_fix": "The original frozen reference accepts this unsafe deferred-output borrow. Final expectations come from the corrected independent Rust checker.",
+    "file": "reject/owner_string_format_mutate.yv"
+  },
+  {
+    "id": "owner_slice_print_mutate",
+    "kind": "reject",
+    "diagnostic": "E0102",
+    "source": "fn change(value: inout String) -> int {\n    value = \"replacement\".toString()\n    return 7\n}\nfn main() {\n    var owner = \"original\".toString()\n    println(\"${owner[0..1]} ${change(&owner)}\")\n}\n",
+    "reference_fix": "The original frozen reference accepts this unsafe deferred-output borrow. Final expectations come from the corrected independent Rust checker.",
+    "file": "reject/owner_slice_print_mutate.yv"
+  },
+  {
+    "id": "owner_vec_print_mutate",
+    "kind": "reject",
+    "diagnostic": "E0102",
+    "source": "fn change(values: inout Vec[String]) -> int {\n    values = [\"replacement\".toString()]\n    return 7\n}\nfn main() {\n    var owners = [\"original\".toString()]\n    println(\"${owners[0]} ${change(&owners)}\")\n}\n",
+    "reference_fix": "The original frozen reference accepts this unsafe deferred-output borrow. Final expectations come from the corrected independent Rust checker.",
+    "file": "reject/owner_vec_print_mutate.yv"
+  },
+  {
+    "id": "plain_interpolation_binding",
+    "kind": "reject",
+    "diagnostic": "E0001",
+    "source": "fn main() { let value = \"${1}\" }\n",
+    "file": "reject/plain_interpolation_binding.yv"
+  },
+  {
+    "id": "plain_interpolation_return",
+    "kind": "reject",
+    "diagnostic": "E0001",
+    "source": "fn value() -> String { return \"${1}\" }\nfn main() {}\n",
+    "file": "reject/plain_interpolation_return.yv"
+  },
+  {
+    "id": "plain_interpolation_argument",
+    "kind": "reject",
+    "diagnostic": "E0001",
+    "source": "fn show(value: str) { println(value) }\nfn main() { show(\"${1}\") }\n",
+    "file": "reject/plain_interpolation_argument.yv"
+  },
+  {
+    "id": "parenthesized_print",
+    "kind": "reject",
+    "diagnostic": "E0001",
+    "source": "fn main() { println((\"${1}\")) }\n",
+    "file": "reject/parenthesized_print.yv"
+  },
+  {
+    "id": "parenthesized_format",
+    "kind": "reject",
+    "diagnostic": "E0001",
+    "source": "fn main() { println(format((\"${1}\"))) }\n",
+    "file": "reject/parenthesized_format.yv"
+  },
+  {
+    "id": "format_zero_arity",
+    "kind": "reject",
+    "diagnostic": "E0012",
+    "source": "fn main() { let value = format() }\n",
+    "file": "reject/format_zero_arity.yv"
+  },
+  {
+    "id": "format_two_arity",
+    "kind": "reject",
+    "diagnostic": "E0012",
+    "source": "fn main() { let value = format(1, 2) }\n",
+    "file": "reject/format_two_arity.yv"
+  },
+  {
+    "id": "format_unit",
+    "kind": "reject",
+    "diagnostic": "E0001",
+    "source": "fn nothing() {}\nfn main() { let value = format(nothing()) }\n",
+    "file": "reject/format_unit.yv"
+  },
+  {
+    "id": "specifier_int_fixed",
+    "kind": "reject",
+    "diagnostic": "E0001",
+    "source": "fn main() { println(\"${1:.2}\") }\n",
+    "file": "reject/specifier_int_fixed.yv"
+  },
+  {
+    "id": "specifier_unknown",
+    "kind": "shared_unsupported",
+    "diagnostic": "U0001",
+    "source": "fn main() { println(\"${1:x}\") }\n",
+    "reason": "Both Rust stage0 and the selfhost subset reject this formatting boundary with U0001.",
+    "file": "unsupported/specifier_unknown.yv"
+  },
+  {
+    "id": "specifier_too_large",
+    "kind": "reject",
+    "diagnostic": "E0001",
+    "source": "fn main() { println(\"${1:.18}\") }\n",
+    "file": "reject/specifier_too_large.yv"
+  },
+  {
+    "id": "interpolation_empty",
+    "kind": "reject",
+    "diagnostic": "E0020",
+    "source": "fn main() { println(\"${}\") }\n",
+    "file": "reject/interpolation_empty.yv"
+  },
+  {
+    "id": "interpolation_unclosed",
+    "kind": "reject",
+    "diagnostic": "E0020",
+    "source": "fn main() { println(\"${1\") }\n",
+    "file": "reject/interpolation_unclosed.yv"
+  },
+  {
+    "id": "format_shadow_interpolation",
+    "kind": "reject",
+    "diagnostic": "E0001",
+    "source": "fn format(value: str) -> int { return value.len() }\nfn main() { println(format(\"${3}\")) }\n",
+    "file": "reject/format_shadow_interpolation.yv"
+  },
+  {
+    "id": "nested_fragment_lex_priority",
+    "kind": "reject",
+    "diagnostic": "E0020",
+    "source": "fn main() { println(\"${1 2 @}\") }\n",
+    "file": "reject/nested_fragment_lex_priority.yv"
+  },
+  {
+    "id": "earlier_parse_later_fragment",
+    "kind": "reject",
+    "diagnostic": "E0020",
+    "source": "fn main() {\n    let value = )\n    println(\"${@}\")\n}\n",
+    "file": "reject/earlier_parse_later_fragment.yv"
+  },
+  {
+    "id": "byte_closing_brace",
+    "kind": "reject",
+    "diagnostic": "E0020",
+    "source": "fn main() { println(\"${'}'}\") }\n",
+    "file": "reject/byte_closing_brace.yv"
+  },
+  {
+    "id": "byte_colon",
+    "kind": "reject",
+    "diagnostic": "E0020",
+    "source": "fn main() { println(\"${':'}\") }\n",
+    "file": "reject/byte_colon.yv"
+  },
+  {
+    "id": "format_field_default",
+    "kind": "reject",
+    "diagnostic": "E0001",
+    "source": "struct Item {\n    text: String = format(\"x\")\n}\nfn main() { let value = Item{} }\n",
+    "file": "reject/format_field_default.yv"
+  },
+  {
+    "id": "format_nested_owner_outer_lock",
+    "kind": "reject",
+    "diagnostic": "E0102",
+    "source": "fn change(value: inout String) -> int {\n    value = \"replacement\".toString()\n    return 7\n}\nfn main() {\n    var owner = \"original\".toString()\n    println(\"${owner} ${format(\"${owner}\")} ${change(&owner)}\")\n}\n",
+    "reference_fix": "The original frozen reference accepts this unsafe deferred-output borrow. Final expectations come from the corrected independent Rust checker.",
+    "file": "reject/format_nested_owner_outer_lock.yv"
+  },
+  {
+    "id": "print_zero",
+    "kind": "reject",
+    "diagnostic": "E0012",
+    "source": "fn main() { print() }\n",
+    "file": "reject/print_zero.yv"
+  },
+  {
+    "id": "unsupported_println_zero",
+    "kind": "unsupported",
+    "diagnostic": "U0001",
+    "reason": "Zero-argument newline output is valid in stage0 but is not added to the selfhost subset in this formatting batch.",
+    "source": "fn main() { println() }\n",
+    "file": "unsupported/unsupported_println_zero.yv"
+  },
+  {
+    "id": "unsupported_eprintln_zero",
+    "kind": "unsupported",
+    "diagnostic": "U0001",
+    "reason": "Zero-argument newline output is valid in stage0 but is not added to the selfhost subset in this formatting batch.",
+    "source": "fn main() { eprintln() }\n",
+    "file": "unsupported/unsupported_eprintln_zero.yv"
+  },
+  {
+    "id": "format_optional",
+    "kind": "shared_unsupported",
+    "diagnostic": "U0001",
+    "source": "fn main() { println(format(some(1))) }\n",
+    "reason": "Both Rust stage0 and the selfhost subset reject this formatting boundary with U0001.",
+    "file": "unsupported/format_optional.yv"
+  },
+  {
+    "id": "format_vector",
+    "kind": "reject",
+    "diagnostic": "E0001",
+    "source": "fn main() { println(format([1, 2])) }\n",
+    "file": "reject/format_vector.yv"
+  },
+  {
+    "id": "format_struct",
+    "kind": "reject",
+    "diagnostic": "E0001",
+    "source": "struct Point {\n    value: int\n}\nfn main() { println(format(Point{value: 1})) }\n",
+    "file": "reject/format_struct.yv"
+  },
+  {
+    "id": "format_result",
+    "kind": "reject",
+    "diagnostic": "E0001",
+    "source": "fn value() -> int ! int { return 1 }\nfn main() { println(format(value())) }\n",
+    "file": "reject/format_result.yv"
+  },
+  {
+    "id": "embedded_unknown_unicode_position",
+    "kind": "reject",
+    "diagnostic": "E0010",
+    "source": "fn main() {\n    println(\"汉🙂${missing}\")\n}\n",
+    "file": "reject/embedded_unknown_unicode_position.yv"
+  },
+  {
+    "id": "embedded_operator_position",
+    "kind": "reject",
+    "diagnostic": "E0001",
+    "source": "fn main() {\n    println(\"ok${1 + true}\")\n}\n",
+    "file": "reject/embedded_operator_position.yv"
+  },
+  {
+    "id": "fragment_operator_lex_error",
+    "kind": "reject",
+    "diagnostic": "E0020",
+    "source": "fn main() { println(\"${1 + @}\") }\n",
+    "file": "reject/fragment_operator_lex_error.yv"
+  },
+  {
+    "id": "fragment_then_outer_lex_error",
+    "kind": "reject",
+    "diagnostic": "E0020",
+    "source": "fn main() {\n    println(\"${@}\")\n}\n@\n",
+    "file": "reject/fragment_then_outer_lex_error.yv"
+  },
+  {
+    "id": "format_owner_field_mutation",
+    "kind": "reject",
+    "diagnostic": "E0102",
+    "source": "struct Row {\n    text: String\n}\nfn change(value: inout String) -> int {\n    value = \"replacement\".toString()\n    return 7\n}\nfn main() {\n    var row = Row{text: \"original\".toString()}\n    println(\"${row.text} ${change(&row.text)}\")\n}\n",
+    "file": "reject/format_owner_field_mutation.yv"
+  },
+  {
+    "id": "format_owner_take",
+    "kind": "reject",
+    "diagnostic": "E0102",
+    "source": "fn main() {\n    var owner = \"original\".toString()\n    println(\"${owner} ${take(&owner)}\")\n}\n",
+    "file": "reject/format_owner_take.yv"
+  },
+  {
+    "id": "format_catch_fallthrough",
+    "kind": "reject",
+    "diagnostic": "E0601",
+    "source": "fn fail() -> int ! String { return err(\"failure\".toString()) }\nfn main() {\n    println(\"${fail() catch error { println(error) }}\")\n}\n",
+    "file": "reject/format_catch_fallthrough.yv"
+  },
+  {
+    "id": "format_wrong_result_type",
+    "kind": "reject",
+    "diagnostic": "E0001",
+    "source": "fn main() {\n    let value: int = format(7)\n    println(value)\n}\n",
+    "file": "reject/format_wrong_result_type.yv"
+  },
+  {
+    "id": "unsupported_format_float",
+    "kind": "unsupported",
+    "diagnostic": "U0001",
+    "reason": "Floating-point values and their formatting remain outside the selfhost subset.",
+    "source": "fn main() { println(format(1.5)) }\n",
+    "file": "unsupported/unsupported_format_float.yv"
+  },
+  {
+    "id": "owner_slice_chain_mutate",
+    "kind": "reject",
+    "diagnostic": "E0102",
+    "source": "fn change(value: inout String) -> int {\n    value = \"replacement\".toString()\n    return 7\n}\nfn main() {\n    var owner = \"original\".toString()\n    println(\"${owner[0..2][0..1]} ${change(&owner)}\")\n}\n",
+    "reference_fix": "An additional slice must preserve the original owner loan through the deferred-output window.",
+    "file": "reject/owner_slice_chain_mutate.yv"
+  },
+  {
+    "id": "unsupported_format_owned_double_slice_binding",
+    "kind": "unsupported",
+    "diagnostic": "U0001",
+    "reason": "A chained view into owned String storage remains a borrowed binding outside the selfhost subset.",
+    "source": "fn main() {\n    let owner = \"original\".toString()\n    let view = owner[0..2][0..1]\n    println(view)\n}\n",
+    "file": "unsupported/unsupported_format_owned_double_slice_binding.yv"
+  }
+]

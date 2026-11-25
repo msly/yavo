@@ -1,0 +1,14 @@
+struct Row {
+    text: String
+}
+fn produce(value: int) -> String { return format("done:${value}") }
+fn main() {
+    var row = Row{text: format("row:${7}")}
+    var values = [format("v:${8}")]
+    values.push(format("v:${9}"))
+    println(row.text)
+    println(values[0])
+    println(values[1])
+    row.text = produce(10)
+    println(row.text)
+}

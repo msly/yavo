@@ -12,6 +12,7 @@ struct State {
     params: Vec[Parameter] = []
     fields: Vec[FieldDecl] = []
     resultTypes: Vec[ResultRef] = []
+    stringParts: Vec[StringPart] = []
     importsFs: bool = false
     importsOs: bool = false
 }
@@ -29,6 +30,9 @@ fn eat(s: inout State, ts: Vec[Token], text: str) -> bool {
 }
 
 fn syntax(s: State, ts: Vec[Token], code: str, message: str) {
+    if ts[s.pos].kind == .DeferredError {
+        fail(ts, s.pos, ts[s.pos].text, ts[s.pos].message)
+    }
     fail(ts, s.pos, code, message)
 }
 
@@ -241,8 +245,73 @@ fn vectorLiteral(s: inout State, ts: Vec[Token]) -> int {
     return pushList(&s, .Vector, token, -1, args)
 }
 
+// Rust also diagnoses an empty interpolation when its only source character
+// was rejected by the lexer. That diagnostic starts before leading whitespace.
+fn interpolationOnlyFault(ts: Vec[Token], opening: int, fault: int) -> bool {
+    if fault != opening + 1 || ts[fault].start == ts[opening].start ||
+        ts[fault].message != "unexpected character" { return false }
+    var pos = ts[fault].start - ts[opening].start
+    pos += scalarWidth(ts[opening].text[pos])
+    while pos < ts[opening].text.len() {
+        let c = ts[opening].text[pos]
+        if c != ' ' && c != '\t' && c != '\r' {
+            return c == '/' && pos + 1 < ts[opening].text.len() && ts[opening].text[pos + 1] == '/'
+        }
+        pos += 1
+    }
+    return true
+}
+
+fn interpolatedString(s: inout State, ts: Vec[Token]) -> int {
+    enter(&s, ts)
+    let token = s.pos
+    s.pos += 1
+    var parts: Vec[StringPart] = []
+    loop {
+        if ts[s.pos].kind == .StringEnd {
+            s.pos += 1
+            break
+        }
+        if ts[s.pos].kind == .Text {
+            parts.push(StringPart{token: s.pos})
+            s.pos += 1
+            continue
+        }
+        if ts[s.pos].kind != .InterpolationStart {
+            syntax(s, ts, "E0020", "expected an interpolation part")
+        }
+        let opening = s.pos
+        s.pos += 1
+        if ts[s.pos].kind == .InterpolationEnd || ts[s.pos].kind == .FormatSpec {
+            fail(ts, opening, "E0020", "empty interpolation")
+        }
+        if ts[s.pos].kind == .DeferredError && interpolationOnlyFault(ts, opening, s.pos) {
+            fail(ts, opening, "E0020", "empty interpolation")
+        }
+        let value = parseExpression(&s, ts)
+        var spec = -1
+        if ts[s.pos].kind == .FormatSpec {
+            spec = s.pos
+            s.pos += 1
+        }
+        if ts[s.pos].kind != .InterpolationEnd {
+            syntax(s, ts, "E0020", "only one expression is allowed in an interpolation")
+        }
+        s.pos += 1
+        parts.push(StringPart{token: opening, expr: value, spec: spec})
+    }
+    s.nesting -= 1
+    let start = s.stringParts.len()
+    for part in parts { s.stringParts.push(part) }
+    let id = pushExpr(&s, .Interpolated, token, -1, -1)
+    s.expressions[id].argStart = start
+    s.expressions[id].argCount = parts.len()
+    return id
+}
+
 fn primary(s: inout State, ts: Vec[Token]) -> int {
     let p = s.pos
+    if ts[p].kind == .StringStart { return interpolatedString(&s, ts) }
     if ts[p].kind == .Number {
         s.pos += 1
         return pushExpr(&s, .Number, p, -1, -1)
@@ -791,6 +860,6 @@ pub fn parse(ts: Vec[Token]) -> Program {
     return Program{expressions: take(&s.expressions), statements: take(&s.statements),
         functions: take(&s.functions), types: take(&s.types), lists: take(&s.lists),
         params: take(&s.params), fields: take(&s.fields),
-        resultTypes: take(&s.resultTypes),
+        resultTypes: take(&s.resultTypes), stringParts: take(&s.stringParts),
         importsFs: s.importsFs, importsOs: s.importsOs}
 }

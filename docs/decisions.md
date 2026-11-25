@@ -104,3 +104,13 @@ P0 继续完成真实工具链锁和三平台最小链路；P1 使用本版语�
 | 24 接受范围以 stage0 为准 | 引导子集是 stage0 语言的严格子集：新增能力的拒绝码与 stage0 一致（如 inout 后续实参 E0102、`catch` 块可落空 E0601）；stage0 接受而子集不支持的写法报 U0001 | selfhost/tests |
 
 原样组件与函数片段的历史用例保留：model.yv、diagnostic.yv 在改写前的字节冻结在 `selfhost/tests/prefixes/`，原有 prefix 工作负载继续以这些冻结文件为前缀运行。
+
+## 九、2026-11-25 收敛每批验收流程
+
+依据：第二十八至第三十二批中，每个实现提交之后都跟一个约 9 千行的证据提交（逐命令 base64 输出流、独立 oracle 包、CI 归档下载后重哈希数万文件的离线审计），证据量远超编译器代码本身的增量（selfhost 全部约 4,800 行）。用户在第八节选择的是“先快速证明”；用户授权本会话纠正偏差。
+
+| 项 | 决定 | 定位 |
+| --- | --- | --- |
+| 25 每批验收的必需项 | ① `selfhost/tests/cases.json` 登记的用例，每个拒绝码/输出先用 stage0 实测；② 本机 `bootstrap.py` 全量通过（固定点、stage1/stage2 全用例一致、真实 lexer）；③ Rust Debug/Release 全量与冻结规格棘轮无退步；④ 推送后三平台 CI 成功，在 HANDOFF 记录 run 链接。四项都满足即可进入下一批 | HANDOFF 第 10 节 |
+| 26 不再默认产出的材料 | 每批的独立 oracle 包、逐命令输出流存档、CI 归档下载后的离线重哈希审计、单独的“记录原生验收”文档提交。已有材料原样保留。只有出现可疑结果（平台差异、疑似 stage0 缺陷、固定点不稳定）时，才针对该问题留存最小复现与证据 | compiler/validation、selfhost/tests/evidence |
+| 27 Rust 侧缺陷 | 仍按原则在 `compiler/` 独立修复并加 P0 回归，不降低自举目标或改冻结用例 | docs/self-hosting.md |

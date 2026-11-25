@@ -1,0 +1,864 @@
+{
+  "schema": "yavo-batch32-stage0-oracle/1",
+  "baseline": "08f19faf834f1b89ddad39fb4e77f97753cc8641",
+  "profile": "Debug",
+  "environment_overrides": {
+    "YAVO_ALLOC_CHECK": "1",
+    "YAVO_NO_CACHE": "1",
+    "YAVO_CC": null
+  },
+  "inputs": {
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo": "2f5e7da56f11898371b0243e1d14cd9f57cd666266e3939f86811991dbac4814",
+    "/data1/workspace/github/workspace/yavo/compiler/runtime/yavo_rt.h": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+    "/data1/workspace/github/workspace/yavo/compiler/toolchain.lock": "a9bbe83e644b0e1cee19c8dba8b5157eaed3e9ddc71b96d8aab2b2d2bb15f53c",
+    "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig": "58959f01285c05a74276f09327b551d42ed6006bf325a78dc661a024e314987b",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/run_oracle.py": "1ead24ae1f03216ec9208d3d6544c9f5932668623081d0c9eb82e604dcd46207",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/safe-run-candidates-v1.json": "a0e4b6d783eae3c2ce23e02bea2798be8c86033a9160e3eb0fe953a59a0eba67",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_scalar_types/source.yv": "cc031d589a219160ffec4184b304bca86e67d8a6bee341dd48697d493659ae14",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_scalar_types/program.c": "ad1c54228f9f50a01165a2aaf5411f907250751dd578ae37e2f00b5fc858c045",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_scalar_types/program": "88d9e1f4b96baaf1f1ecd2f6bba744a0786b9c839912e71e7b2e42ec62d458fa",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/interpolation_literal_bytes/source.yv": "fe2955bf5c4a70e2621b1f17d870014ae9b20b8c1515b1a27f7e1c8a2a1ae576",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/interpolation_literal_bytes/program.c": "3ffd11fa3672e7c0ccbb5951e479adc331bc116d5c707a79d78e04e6968aeb3f",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/interpolation_literal_bytes/program": "aee55b777bb7128e99b1c3b20b80697aa405c7cd765ed87694704f767aa8c358",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_eprintln/source.yv": "f44b90e9d33c7a0ddf44d16c9ee33bc9bbd5d9bd405e9b395ba01281705a2223",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_eprintln/program.c": "28bce622a9d9da338471b06f2756920ce78e9fb256b2572c7a4bc4ca7205bcab",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_eprintln/program": "bb90a9d0596e9ace698584fc7969cc3bc299b52aecaa0ea92a54ebe2bf1de136",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_evaluation_order/source.yv": "b951a25d05f12030ae724f5ac3332d41d52af9c4bd9216708ef820785a30e0fe",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_evaluation_order/program.c": "fc6e3e5db5b6b615d398376141aa42276801da7f42cf041cff1fc8ec9fe0df9e",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_evaluation_order/program": "eb0d809262f74ee34665f819c6e5084e0619a54bfbf17b81a0e020ec689b7ef9",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_owned_views/source.yv": "1e425d973bfa709820ad4456ee6bdde9c0d6ff6f5faad298a1c14f6cacf2267d",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_owned_views/program.c": "f59c04d6db734dd69b83e18aa87bd6d78504fb4a8746dca7383ad6b37bb5c2ad",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_owned_views/program": "a4bf43b4479f3852a19859c54544eeb63a9996ad02ff931e4195cc853d740af8",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_owned_containers/source.yv": "3ba35292ff3171b3db45184592640812a1680acc3c0537f2c44e9c58d76b5278",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_owned_containers/program.c": "465848341230a1c629df08596a1cf7186510f656b34dcf0ab3b6a82763e36d19",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_owned_containers/program": "2f11b963c5359a7f7691877939c052ee0b4d76cf93e988f40b5939e8c022baff",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_later_failure_cleanup/source.yv": "dde0243d79aa53e9ac7ea75ef539cdb716f39c295a1dd89e5f9ac122c47051b8",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_try_output_atomicity/source.yv": "867676e35aebdd350c778a5358f4c032a5cf0cf3e13542a5609503ddab63a88a",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_try_output_atomicity/program.c": "4fca580ef0a33a7b4a3944dea85df7b9fed90613a96937b8135cd9be88fddf53",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_try_output_atomicity/program": "7a0825815462d5ed0ec4f1070a9cff89084d034b5daef8ba9c9479bb1cf834dd",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_catch_return_cleanup/source.yv": "cc06d00918e00b7fb1f7bedec97aebc8cea3ff281ac85830452e156b697f0c19",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_catch_return_cleanup/program.c": "c336a5a568022b7a3b855af80330b76114926effeabb86e20cc2bbb1c4490b6c",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_catch_return_cleanup/program": "0cb758a8fc8accd1a8c56a100b6ddea6487e727e4fc63bf78af436b0a831c3bc",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_catch_loop_cleanup/source.yv": "0654c01f96951581951fe80224101b3ea825397e09a2d9cabba567af03bef003",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_lazy_fallback/source.yv": "325d4eb0089b17b7c215b4deb2e17c173b3dfc89661b404589d7aa509fcca334",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_lazy_fallback/program.c": "b751f93e8b5a43359c7b89ffb69a1ecd4511ec61ad971fd0d69181654da2ba59",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_lazy_fallback/program": "7312fc0c4ecaa6d59891e04a8d18878a61ad77393876c9852e6f8d9ebfc8f8f0",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_nested_parentheses/source.yv": "9c9d61aff2a37879dc1257377378a943c5f122f50ddfc012274a51888a642366",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_nested_parentheses/program.c": "8c33d1e85cf7a0dada6e807d6e20e1f6fac68ad53bb59aa189562084479a6652",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_nested_parentheses/program": "6163ad94e85bab6408ab67e06ace5955bcf625cc1e12dd203c40950116a06a57",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/interpolation_copy_mutation/source.yv": "329d5b70e1ef35b203cf2cbd9ffa0d88bdb0a9cc53b3e13dbb3853d2c948c12a",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/interpolation_copy_mutation/program.c": "9fd2fdcfbb8b313e71557f92a10cd5eda482c4f6dd026032ed39790f70f65fbb",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/interpolation_copy_mutation/program": "907b63f0444ab80ac1136090873c91e69acb1fd68043980f64f190634173e0e3",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_nested_copy_releases/source.yv": "ee9e26c593a7e640ee017127531e71b5f04bc8d278d1c017e227a5e7e111ac31",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_nested_copy_releases/program.c": "943bcfe9816aac934cf8f6749b480d3fb5b1d0eb506734c1d1b8a573891afaf1",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_nested_copy_releases/program": "642e97cccdbba662afdadb6fd8fa730f92cc5ccc6890e13fe1b2eb70c1e0a1ae",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_user_shadow/source.yv": "0aff1d8fe74ea1e9f2ec5ffa40334f4fb5beb5d02cd4d0ac66567575157a16e1",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_user_shadow/program.c": "be0ba4ae5700f4c90270af2f509c3d0e236897167f5f57630d53b820f1380cfc",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_user_shadow/program": "b735ea6f083f005934e9b2356acf9867c9c2e9f895422bafbad38b1d8f00ed06",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/interpolation_basic/source.yv": "2391757f4bbfef054e7fed3f45bbc645c937b72f67023ceadbc8b16f27028a60",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/interpolation_basic/program.c": "8b853d9715ff143efc6555e40c55068e1d9efa04cba2722830f32adee3733241",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/interpolation_basic/program": "7afe8bb273268bee33d4bb886bcd05e619c04c2d93f0f2fdd2764cae0dac11fb"
+  },
+  "records": [
+    {
+      "id": "format_scalar_types",
+      "kind": "run",
+      "source": "enum Mark {\n    Cold\n    Hot\n}\nfn main() {\n    println(format(17))\n    println(format(byte(65)))\n    println(format(true))\n    println(format(\"text\"))\n    println(format(\"owned\".toString()))\n    println(format(Mark.Hot))\n    println(format(\"\"))\n}\n",
+      "source_sha256": "cc031d589a219160ffec4184b304bca86e67d8a6bee341dd48697d493659ae14",
+      "expected_exit": 0,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_scalar_types/source.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_scalar_types/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"cc031d589a219160ffec4184b304bca86e67d8a6bee341dd48697d493659ae14\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.002,
+        "timed_out": false
+      },
+      "first_error": null,
+      "passed": true,
+      "expected_stdout": "17\n65\ntrue\ntext\nowned\nHot\n\n",
+      "expected_stderr": "",
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_scalar_types/source.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_scalar_types/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_scalar_types/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_scalar_types/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"cc031d589a219160ffec4184b304bca86e67d8a6bee341dd48697d493659ae14\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.251,
+        "timed_out": false
+      },
+      "generated_c_sha256": "ad1c54228f9f50a01165a2aaf5411f907250751dd578ae37e2f00b5fc858c045",
+      "binary_sha256": "88d9e1f4b96baaf1f1ecd2f6bba744a0786b9c839912e71e7b2e42ec62d458fa",
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_scalar_types/program"
+        ],
+        "exit_code": 0,
+        "stdout": "17\n65\ntrue\ntext\nowned\nHot\n\n",
+        "stderr": "",
+        "seconds": 0.002,
+        "timed_out": false
+      }
+    },
+    {
+      "id": "interpolation_literal_bytes",
+      "kind": "run",
+      "source": "fn main() {\n    println(\"汉🙂 \\${literal} ${'A'}\\0end\")\n    println(\"quote:\\\" slash:\\\\ tab:\\t:${2}\")\n}\n",
+      "source_sha256": "fe2955bf5c4a70e2621b1f17d870014ae9b20b8c1515b1a27f7e1c8a2a1ae576",
+      "expected_exit": 0,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/interpolation_literal_bytes/source.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/interpolation_literal_bytes/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"fe2955bf5c4a70e2621b1f17d870014ae9b20b8c1515b1a27f7e1c8a2a1ae576\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.002,
+        "timed_out": false
+      },
+      "first_error": null,
+      "passed": true,
+      "expected_stdout": "汉🙂 ${literal} 65\u0000end\nquote:\" slash:\\ tab:\t:2\n",
+      "expected_stderr": "",
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/interpolation_literal_bytes/source.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/interpolation_literal_bytes/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/interpolation_literal_bytes/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/interpolation_literal_bytes/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"fe2955bf5c4a70e2621b1f17d870014ae9b20b8c1515b1a27f7e1c8a2a1ae576\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.188,
+        "timed_out": false
+      },
+      "generated_c_sha256": "3ffd11fa3672e7c0ccbb5951e479adc331bc116d5c707a79d78e04e6968aeb3f",
+      "binary_sha256": "aee55b777bb7128e99b1c3b20b80697aa405c7cd765ed87694704f767aa8c358",
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/interpolation_literal_bytes/program"
+        ],
+        "exit_code": 0,
+        "stdout": "汉🙂 ${literal} 65\u0000end\nquote:\" slash:\\ tab:\t:2\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      }
+    },
+    {
+      "id": "format_eprintln",
+      "kind": "run",
+      "source": "fn main() {\n    println(\"stdout:${1}\")\n    eprintln(\"err:汉🙂:${byte(66)}:${true}\")\n}\n",
+      "source_sha256": "f44b90e9d33c7a0ddf44d16c9ee33bc9bbd5d9bd405e9b395ba01281705a2223",
+      "expected_exit": 0,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_eprintln/source.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_eprintln/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"f44b90e9d33c7a0ddf44d16c9ee33bc9bbd5d9bd405e9b395ba01281705a2223\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.002,
+        "timed_out": false
+      },
+      "first_error": null,
+      "passed": true,
+      "expected_stdout": "stdout:1\n",
+      "expected_stderr": "err:汉🙂:66:true\n",
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_eprintln/source.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_eprintln/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_eprintln/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_eprintln/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"f44b90e9d33c7a0ddf44d16c9ee33bc9bbd5d9bd405e9b395ba01281705a2223\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.174,
+        "timed_out": false
+      },
+      "generated_c_sha256": "28bce622a9d9da338471b06f2756920ce78e9fb256b2572c7a4bc4ca7205bcab",
+      "binary_sha256": "bb90a9d0596e9ace698584fc7969cc3bc299b52aecaa0ea92a54ebe2bf1de136",
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_eprintln/program"
+        ],
+        "exit_code": 0,
+        "stdout": "stdout:1\n",
+        "stderr": "err:汉🙂:66:true\n",
+        "seconds": 0.001,
+        "timed_out": false
+      }
+    },
+    {
+      "id": "format_evaluation_order",
+      "kind": "run",
+      "source": "fn mark(value: int) -> int {\n    println(value)\n    return value\n}\nfn main() {\n    println(\"outer:${mark(1)}:${mark(2)}\")\n    let text = format(\"fmt:${mark(3)}:${mark(4)}\")\n    println(text)\n}\n",
+      "source_sha256": "b951a25d05f12030ae724f5ac3332d41d52af9c4bd9216708ef820785a30e0fe",
+      "expected_exit": 0,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_evaluation_order/source.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_evaluation_order/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"b951a25d05f12030ae724f5ac3332d41d52af9c4bd9216708ef820785a30e0fe\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.002,
+        "timed_out": false
+      },
+      "first_error": null,
+      "passed": true,
+      "expected_stdout": "1\n2\nouter:1:2\n3\n4\nfmt:3:4\n",
+      "expected_stderr": "",
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_evaluation_order/source.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_evaluation_order/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_evaluation_order/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_evaluation_order/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"b951a25d05f12030ae724f5ac3332d41d52af9c4bd9216708ef820785a30e0fe\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.186,
+        "timed_out": false
+      },
+      "generated_c_sha256": "fc6e3e5db5b6b615d398376141aa42276801da7f42cf041cff1fc8ec9fe0df9e",
+      "binary_sha256": "eb0d809262f74ee34665f819c6e5084e0619a54bfbf17b81a0e020ec689b7ef9",
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_evaluation_order/program"
+        ],
+        "exit_code": 0,
+        "stdout": "1\n2\nouter:1:2\n3\n4\nfmt:3:4\n",
+        "stderr": "",
+        "seconds": 0.002,
+        "timed_out": false
+      }
+    },
+    {
+      "id": "format_owned_views",
+      "kind": "run",
+      "source": "struct Row {\n    text: String\n}\nfn main() {\n    let owner = \"owner\".toString()\n    let values = [\"value\".toString()]\n    println(\"${owner}:${owner[0..2]}:${Row{text: \"own\".toString()}.text}:${values[0]}:${\"汉🙂\".toString()[0..3]}\")\n}\n",
+      "source_sha256": "1e425d973bfa709820ad4456ee6bdde9c0d6ff6f5faad298a1c14f6cacf2267d",
+      "expected_exit": 0,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_owned_views/source.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_owned_views/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"1e425d973bfa709820ad4456ee6bdde9c0d6ff6f5faad298a1c14f6cacf2267d\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.002,
+        "timed_out": false
+      },
+      "first_error": null,
+      "passed": true,
+      "expected_stdout": "owner:ow:own:value:汉\n",
+      "expected_stderr": "",
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_owned_views/source.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_owned_views/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_owned_views/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_owned_views/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"1e425d973bfa709820ad4456ee6bdde9c0d6ff6f5faad298a1c14f6cacf2267d\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.196,
+        "timed_out": false
+      },
+      "generated_c_sha256": "f59c04d6db734dd69b83e18aa87bd6d78504fb4a8746dca7383ad6b37bb5c2ad",
+      "binary_sha256": "a4bf43b4479f3852a19859c54544eeb63a9996ad02ff931e4195cc853d740af8",
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_owned_views/program"
+        ],
+        "exit_code": 0,
+        "stdout": "owner:ow:own:value:汉\n",
+        "stderr": "",
+        "seconds": 0.002,
+        "timed_out": false
+      }
+    },
+    {
+      "id": "format_owned_containers",
+      "kind": "run",
+      "source": "struct Row {\n    text: String\n}\nfn produce(value: int) -> String { return format(\"done:${value}\") }\nfn main() {\n    var row = Row{text: format(\"row:${7}\")}\n    var values = [format(\"v:${8}\")]\n    values.push(format(\"v:${9}\"))\n    println(row.text)\n    println(values[0])\n    println(values[1])\n    row.text = produce(10)\n    println(row.text)\n}\n",
+      "source_sha256": "3ba35292ff3171b3db45184592640812a1680acc3c0537f2c44e9c58d76b5278",
+      "expected_exit": 0,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_owned_containers/source.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_owned_containers/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"3ba35292ff3171b3db45184592640812a1680acc3c0537f2c44e9c58d76b5278\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.002,
+        "timed_out": false
+      },
+      "first_error": null,
+      "passed": true,
+      "expected_stdout": "row:7\nv:8\nv:9\ndone:10\n",
+      "expected_stderr": "",
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_owned_containers/source.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_owned_containers/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_owned_containers/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_owned_containers/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"3ba35292ff3171b3db45184592640812a1680acc3c0537f2c44e9c58d76b5278\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.227,
+        "timed_out": false
+      },
+      "generated_c_sha256": "465848341230a1c629df08596a1cf7186510f656b34dcf0ab3b6a82763e36d19",
+      "binary_sha256": "2f11b963c5359a7f7691877939c052ee0b4d76cf93e988f40b5939e8c022baff",
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_owned_containers/program"
+        ],
+        "exit_code": 0,
+        "stdout": "row:7\nv:8\nv:9\ndone:10\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      }
+    },
+    {
+      "id": "format_later_failure_cleanup",
+      "kind": "run",
+      "source": "struct Row {\n    left: String\n    right: String\n}\nfn fail(label: str) -> String ! String { return err(label.toString()) }\nfn failInt() -> int ! String { return err(\"call\".toString()) }\nfn use(first: String, second: int) -> int { return first.len() + second }\nfn vector() -> Vec[String] ! String {\n    return [format(\"first:${1}\"), try fail(\"vec\")]\n}\nfn object() -> Row ! String {\n    return Row{left: format(\"left:${2}\"), right: try fail(\"struct\")}\n}\nfn argument() -> int ! String {\n    return use(format(\"arg:${3}\"), try failInt())\n}\nfn checkVector() {\n    let _ = vector() catch error {\n        println(error)\n        return\n    }\n}\nfn checkObject() {\n    let _ = object() catch error {\n        println(error)\n        return\n    }\n}\nfn checkArgument() {\n    let _ = argument() catch error {\n        println(error)\n        return\n    }\n}\nfn main() {\n    checkVector()\n    checkObject()\n    checkArgument()\n}\n",
+      "source_sha256": "dde0243d79aa53e9ac7ea75ef539cdb716f39c295a1dd89e5f9ac122c47051b8",
+      "expected_exit": 0,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_later_failure_cleanup/source.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"E0020\",\"column\":4,\"end_column\":7,\"end_line\":7,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_later_failure_cleanup/source.yv\",\"fixes\":[],\"line\":7,\"message\":\"`use` is a reserved word and cannot be used as a function name\",\"notes\":[],\"primary\":{\"column\":4,\"end\":191,\"end_column\":7,\"end_line\":7,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_later_failure_cleanup/source.yv\",\"line\":7,\"start\":188},\"severity\":\"ERROR\"},{\"code\":\"E0020\",\"column\":12,\"end_column\":15,\"end_line\":15,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_later_failure_cleanup/source.yv\",\"fixes\":[],\"line\":15,\"message\":\"expected an expression, found `use`\",\"notes\":[],\"primary\":{\"column\":12,\"end\":497,\"end_column\":15,\"end_line\":15,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_later_failure_cleanup/source.yv\",\"line\":15,\"start\":494},\"severity\":\"ERROR\"}],\"error_count\":2,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_later_failure_cleanup/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"dde0243d79aa53e9ac7ea75ef539cdb716f39c295a1dd89e5f9ac122c47051b8\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      },
+      "first_error": {
+        "code": "E0020",
+        "message": "`use` is a reserved word and cannot be used as a function name",
+        "line": 7,
+        "column": 4
+      },
+      "passed": false
+    },
+    {
+      "id": "format_try_output_atomicity",
+      "kind": "run",
+      "source": "fn fail(label: str) -> int ! String { return err(label.toString()) }\nfn printFailure() -> () ! String {\n    println(\"BAD:${\"hold\".toString()}:${try fail(\"print\")}:TAIL\")\n}\nfn stderrFailure() -> () ! String {\n    eprintln(\"BAD:${format(\"hold\")}:${try fail(\"stderr\")}:TAIL\")\n}\nfn formatFailure() -> String ! String {\n    return format(\"BAD:${format(\"hold\")}:${try fail(\"format\")}:TAIL\")\n}\nfn checkPrint() {\n    let _ = printFailure() catch error {\n        println(error)\n        return\n    }\n}\nfn checkStderr() {\n    let _ = stderrFailure() catch error {\n        println(error)\n        return\n    }\n}\nfn checkFormat() {\n    let _ = formatFailure() catch error {\n        println(error)\n        return\n    }\n}\nfn main() {\n    checkPrint()\n    checkStderr()\n    checkFormat()\n}\n",
+      "source_sha256": "867676e35aebdd350c778a5358f4c032a5cf0cf3e13542a5609503ddab63a88a",
+      "expected_exit": 0,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_try_output_atomicity/source.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_try_output_atomicity/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"867676e35aebdd350c778a5358f4c032a5cf0cf3e13542a5609503ddab63a88a\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.002,
+        "timed_out": false
+      },
+      "first_error": null,
+      "passed": true,
+      "expected_stdout": "print\nstderr\nformat\n",
+      "expected_stderr": "",
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_try_output_atomicity/source.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_try_output_atomicity/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_try_output_atomicity/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_try_output_atomicity/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"867676e35aebdd350c778a5358f4c032a5cf0cf3e13542a5609503ddab63a88a\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.186,
+        "timed_out": false
+      },
+      "generated_c_sha256": "4fca580ef0a33a7b4a3944dea85df7b9fed90613a96937b8135cd9be88fddf53",
+      "binary_sha256": "7a0825815462d5ed0ec4f1070a9cff89084d034b5daef8ba9c9479bb1cf834dd",
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_try_output_atomicity/program"
+        ],
+        "exit_code": 0,
+        "stdout": "print\nstderr\nformat\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      }
+    },
+    {
+      "id": "format_catch_return_cleanup",
+      "kind": "run",
+      "source": "fn fail() -> int ! String { return err(\"discarded\".toString()) }\nfn work() -> int {\n    println(\"BAD:${format(\"hold\")}:${fail() catch error { return 9 }}:TAIL\")\n    return 0\n}\nfn main() { println(work()) }\n",
+      "source_sha256": "cc06d00918e00b7fb1f7bedec97aebc8cea3ff281ac85830452e156b697f0c19",
+      "expected_exit": 0,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_catch_return_cleanup/source.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[{\"code\":\"W0001\",\"column\":51,\"end_column\":56,\"end_line\":3,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_catch_return_cleanup/source.yv\",\"fixes\":[{\"applicability\":\"automatic\",\"edits\":[{\"end\":139,\"replacement\":\"_error\",\"start\":134}],\"id\":\"rename-unused\",\"impact\":\"Keeps the same binding, writes and destruction time; only suppresses the unused-binding warning.\",\"patch_id\":\"rename-unused:1c729ee66e29e3f0af2ddf9d543bf785b355422af780be72bdff25caef1e1a65\",\"preconditions\":[\"All edited identifiers resolve to this binding.\",\"The new name does not capture any existing name in the function.\"],\"recheck\":\"passed\",\"recheck_scope\":\"automatic-set\",\"title\":\"Rename error to _error\"}],\"line\":3,\"message\":\"unused variable `error`\",\"notes\":[\"rename it to `_error` if this is intentional\"],\"primary\":{\"column\":51,\"end\":139,\"end_column\":56,\"end_line\":3,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_catch_return_cleanup/source.yv\",\"line\":3,\"start\":134},\"severity\":\"WARN\"}],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_catch_return_cleanup/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"cc06d00918e00b7fb1f7bedec97aebc8cea3ff281ac85830452e156b697f0c19\",\"warning_count\":1}\n",
+        "stderr": "",
+        "seconds": 0.003,
+        "timed_out": false
+      },
+      "first_error": null,
+      "passed": true,
+      "expected_stdout": "9\n",
+      "expected_stderr": "",
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_catch_return_cleanup/source.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_catch_return_cleanup/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_catch_return_cleanup/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[{\"code\":\"W0001\",\"column\":51,\"end_column\":56,\"end_line\":3,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_catch_return_cleanup/source.yv\",\"fixes\":[{\"applicability\":\"automatic\",\"edits\":[{\"end\":139,\"replacement\":\"_error\",\"start\":134}],\"id\":\"rename-unused\",\"impact\":\"Keeps the same binding, writes and destruction time; only suppresses the unused-binding warning.\",\"patch_id\":\"rename-unused:1c729ee66e29e3f0af2ddf9d543bf785b355422af780be72bdff25caef1e1a65\",\"preconditions\":[\"All edited identifiers resolve to this binding.\",\"The new name does not capture any existing name in the function.\"],\"recheck\":\"passed\",\"recheck_scope\":\"automatic-set\",\"title\":\"Rename error to _error\"}],\"line\":3,\"message\":\"unused variable `error`\",\"notes\":[\"rename it to `_error` if this is intentional\"],\"primary\":{\"column\":51,\"end\":139,\"end_column\":56,\"end_line\":3,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_catch_return_cleanup/source.yv\",\"line\":3,\"start\":134},\"severity\":\"WARN\"}],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_catch_return_cleanup/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"cc06d00918e00b7fb1f7bedec97aebc8cea3ff281ac85830452e156b697f0c19\",\"warning_count\":1}\n",
+        "stderr": "",
+        "seconds": 0.175,
+        "timed_out": false
+      },
+      "generated_c_sha256": "c336a5a568022b7a3b855af80330b76114926effeabb86e20cc2bbb1c4490b6c",
+      "binary_sha256": "0cb758a8fc8accd1a8c56a100b6ddea6487e727e4fc63bf78af436b0a831c3bc",
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_catch_return_cleanup/program"
+        ],
+        "exit_code": 0,
+        "stdout": "9\n",
+        "stderr": "",
+        "seconds": 0.002,
+        "timed_out": false
+      }
+    },
+    {
+      "id": "format_catch_loop_cleanup",
+      "kind": "run",
+      "source": "fn choose(value: int) -> int ! String {\n    if value == 1 { return value }\n    return err(\"discarded\".toString())\n}\nfn main() {\n    var seen = 0\n    for value in 0..4 {\n        seen += 1\n        println(\"row:${format(\"hold\")}:${choose(value) catch error { if value == 0 { continue } else { break } }}\")\n    }\n    println(seen)\n}\n",
+      "source_sha256": "0654c01f96951581951fe80224101b3ea825397e09a2d9cabba567af03bef003",
+      "expected_exit": 0,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_catch_loop_cleanup/source.yv",
+          "--json"
+        ],
+        "exit_code": 1,
+        "stdout": "{\"diagnostics\":[{\"code\":\"E0601\",\"column\":62,\"end_column\":67,\"end_line\":9,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_catch_loop_cleanup/source.yv\",\"fixes\":[],\"line\":9,\"message\":\"this `catch` block can reach its closing `}`\",\"notes\":[\"leave the block with `return`, `break`, `continue` or `panic(...)`, or give a replacement value with `catch e => value`\"],\"primary\":{\"column\":62,\"end\":253,\"end_column\":67,\"end_line\":9,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_catch_loop_cleanup/source.yv\",\"line\":9,\"start\":248},\"severity\":\"ERROR\"},{\"code\":\"W0001\",\"column\":62,\"end_column\":67,\"end_line\":9,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_catch_loop_cleanup/source.yv\",\"fixes\":[],\"line\":9,\"message\":\"unused variable `error`\",\"notes\":[\"rename it to `_error` if this is intentional\"],\"primary\":{\"column\":62,\"end\":253,\"end_column\":67,\"end_line\":9,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_catch_loop_cleanup/source.yv\",\"line\":9,\"start\":248},\"severity\":\"WARN\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_catch_loop_cleanup/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"0654c01f96951581951fe80224101b3ea825397e09a2d9cabba567af03bef003\",\"warning_count\":1}\n",
+        "stderr": "",
+        "seconds": 0.003,
+        "timed_out": false
+      },
+      "first_error": {
+        "code": "E0601",
+        "message": "this `catch` block can reach its closing `}`",
+        "line": 9,
+        "column": 62
+      },
+      "passed": false
+    },
+    {
+      "id": "format_lazy_fallback",
+      "kind": "run",
+      "source": "fn build() -> String {\n    println(\"allocate\")\n    return format(\"val:${22}\")\n}\nfn main() {\n    let present: ?int = 5\n    let absent: ?int = none\n    println(present ?? build().len())\n    println(absent ?? build().len())\n}\n",
+      "source_sha256": "325d4eb0089b17b7c215b4deb2e17c173b3dfc89661b404589d7aa509fcca334",
+      "expected_exit": 0,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_lazy_fallback/source.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_lazy_fallback/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"325d4eb0089b17b7c215b4deb2e17c173b3dfc89661b404589d7aa509fcca334\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.002,
+        "timed_out": false
+      },
+      "first_error": null,
+      "passed": true,
+      "expected_stdout": "5\nallocate\n6\n",
+      "expected_stderr": "",
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_lazy_fallback/source.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_lazy_fallback/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_lazy_fallback/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_lazy_fallback/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"325d4eb0089b17b7c215b4deb2e17c173b3dfc89661b404589d7aa509fcca334\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.177,
+        "timed_out": false
+      },
+      "generated_c_sha256": "b751f93e8b5a43359c7b89ffb69a1ecd4511ec61ad971fd0d69181654da2ba59",
+      "binary_sha256": "7312fc0c4ecaa6d59891e04a8d18878a61ad77393876c9852e6f8d9ebfc8f8f0",
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_lazy_fallback/program"
+        ],
+        "exit_code": 0,
+        "stdout": "5\nallocate\n6\n",
+        "stderr": "",
+        "seconds": 0.002,
+        "timed_out": false
+      }
+    },
+    {
+      "id": "format_nested_parentheses",
+      "kind": "run",
+      "source": "struct Point {\n    value: int\n}\nfn length(value: str) -> int { return value.len() }\nfn main() {\n    println(\"${Point{value: 7}.value}:${[3, 4][1]}:${format(\"v${2 + 3}\")}:${length(\"x}y:z\")}\")\n    println((format(\"${6}\")))\n}\n",
+      "source_sha256": "9c9d61aff2a37879dc1257377378a943c5f122f50ddfc012274a51888a642366",
+      "expected_exit": 0,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_nested_parentheses/source.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_nested_parentheses/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"9c9d61aff2a37879dc1257377378a943c5f122f50ddfc012274a51888a642366\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.002,
+        "timed_out": false
+      },
+      "first_error": null,
+      "passed": true,
+      "expected_stdout": "7:4:v5:5\n6\n",
+      "expected_stderr": "",
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_nested_parentheses/source.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_nested_parentheses/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_nested_parentheses/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_nested_parentheses/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"9c9d61aff2a37879dc1257377378a943c5f122f50ddfc012274a51888a642366\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.167,
+        "timed_out": false
+      },
+      "generated_c_sha256": "8c33d1e85cf7a0dada6e807d6e20e1f6fac68ad53bb59aa189562084479a6652",
+      "binary_sha256": "6163ad94e85bab6408ab67e06ace5955bcf625cc1e12dd203c40950116a06a57",
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_nested_parentheses/program"
+        ],
+        "exit_code": 0,
+        "stdout": "7:4:v5:5\n6\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      }
+    },
+    {
+      "id": "interpolation_copy_mutation",
+      "kind": "run",
+      "source": "fn bump(value: inout int) -> int { value += 1\n    return value }\nfn main() { var count = 2\n    println(\"${count} ${bump(&count)} ${count}\") }\n",
+      "source_sha256": "329d5b70e1ef35b203cf2cbd9ffa0d88bdb0a9cc53b3e13dbb3853d2c948c12a",
+      "expected_exit": 0,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/interpolation_copy_mutation/source.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/interpolation_copy_mutation/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"329d5b70e1ef35b203cf2cbd9ffa0d88bdb0a9cc53b3e13dbb3853d2c948c12a\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.002,
+        "timed_out": false
+      },
+      "first_error": null,
+      "passed": true,
+      "expected_stdout": "2 3 3\n",
+      "expected_stderr": "",
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/interpolation_copy_mutation/source.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/interpolation_copy_mutation/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/interpolation_copy_mutation/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/interpolation_copy_mutation/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"329d5b70e1ef35b203cf2cbd9ffa0d88bdb0a9cc53b3e13dbb3853d2c948c12a\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.156,
+        "timed_out": false
+      },
+      "generated_c_sha256": "9fd2fdcfbb8b313e71557f92a10cd5eda482c4f6dd026032ed39790f70f65fbb",
+      "binary_sha256": "907b63f0444ab80ac1136090873c91e69acb1fd68043980f64f190634173e0e3",
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/interpolation_copy_mutation/program"
+        ],
+        "exit_code": 0,
+        "stdout": "2 3 3\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      }
+    },
+    {
+      "id": "format_nested_copy_releases",
+      "kind": "run",
+      "source": "fn change(value: inout String) -> int {\n    value = \"replacement\".toString()\n    return 7\n}\nfn main() {\n    var owner = \"original\".toString()\n    println(\"${format(\"${owner}\")} ${change(&owner)}\")\n}\n",
+      "source_sha256": "ee9e26c593a7e640ee017127531e71b5f04bc8d278d1c017e227a5e7e111ac31",
+      "expected_exit": 0,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_nested_copy_releases/source.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_nested_copy_releases/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"ee9e26c593a7e640ee017127531e71b5f04bc8d278d1c017e227a5e7e111ac31\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      },
+      "first_error": null,
+      "passed": true,
+      "expected_stdout": "original 7\n",
+      "expected_stderr": "",
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_nested_copy_releases/source.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_nested_copy_releases/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_nested_copy_releases/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_nested_copy_releases/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"ee9e26c593a7e640ee017127531e71b5f04bc8d278d1c017e227a5e7e111ac31\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.161,
+        "timed_out": false
+      },
+      "generated_c_sha256": "943bcfe9816aac934cf8f6749b480d3fb5b1d0eb506734c1d1b8a573891afaf1",
+      "binary_sha256": "642e97cccdbba662afdadb6fd8fa730f92cc5ccc6890e13fe1b2eb70c1e0a1ae",
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_nested_copy_releases/program"
+        ],
+        "exit_code": 0,
+        "stdout": "original 7\n",
+        "stderr": "",
+        "seconds": 0.002,
+        "timed_out": false
+      }
+    },
+    {
+      "id": "format_user_shadow",
+      "kind": "run",
+      "source": "fn format(value: int) -> int { return value + 1 }\nfn main() { println(format(3)) }\n",
+      "source_sha256": "0aff1d8fe74ea1e9f2ec5ffa40334f4fb5beb5d02cd4d0ac66567575157a16e1",
+      "expected_exit": 0,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_user_shadow/source.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_user_shadow/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"0aff1d8fe74ea1e9f2ec5ffa40334f4fb5beb5d02cd4d0ac66567575157a16e1\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.002,
+        "timed_out": false
+      },
+      "first_error": null,
+      "passed": true,
+      "expected_stdout": "4\n",
+      "expected_stderr": "",
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_user_shadow/source.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_user_shadow/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_user_shadow/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_user_shadow/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"0aff1d8fe74ea1e9f2ec5ffa40334f4fb5beb5d02cd4d0ac66567575157a16e1\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.163,
+        "timed_out": false
+      },
+      "generated_c_sha256": "be0ba4ae5700f4c90270af2f509c3d0e236897167f5f57630d53b820f1380cfc",
+      "binary_sha256": "b735ea6f083f005934e9b2356acf9867c9c2e9f895422bafbad38b1d8f00ed06",
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/format_user_shadow/program"
+        ],
+        "exit_code": 0,
+        "stdout": "4\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      }
+    },
+    {
+      "id": "interpolation_basic",
+      "kind": "run",
+      "source": "fn main() { println(\"${1}\") }\n",
+      "source_sha256": "2391757f4bbfef054e7fed3f45bbc645c937b72f67023ceadbc8b16f27028a60",
+      "expected_exit": 0,
+      "check": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/interpolation_basic/source.yv",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/interpolation_basic/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"2391757f4bbfef054e7fed3f45bbc645c937b72f67023ceadbc8b16f27028a60\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.002,
+        "timed_out": false
+      },
+      "first_error": null,
+      "passed": true,
+      "expected_stdout": "1\n",
+      "expected_stderr": "",
+      "build": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+          "build",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/interpolation_basic/source.yv",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/interpolation_basic/program",
+          "--emit-c",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/interpolation_basic/program.c",
+          "--json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/interpolation_basic/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"2391757f4bbfef054e7fed3f45bbc645c937b72f67023ceadbc8b16f27028a60\",\"warning_count\":0}\n",
+        "stderr": "",
+        "seconds": 0.159,
+        "timed_out": false
+      },
+      "generated_c_sha256": "8b853d9715ff143efc6555e40c55068e1d9efa04cba2722830f32adee3733241",
+      "binary_sha256": "7afe8bb273268bee33d4bb886bcd05e619c04c2d93f0f2fdd2764cae0dac11fb",
+      "run": {
+        "command": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/initial-safe-debug-1/interpolation_basic/program"
+        ],
+        "exit_code": 0,
+        "stdout": "1\n",
+        "stderr": "",
+        "seconds": 0.001,
+        "timed_out": false
+      }
+    }
+  ],
+  "inputs_changed": [],
+  "passed": 14,
+  "total": 16,
+  "status": "failed"
+}

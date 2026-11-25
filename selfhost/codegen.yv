@@ -142,7 +142,7 @@ fn emit(g: inout Generator, text: str) {
 }
 
 fn temporaryName(id: int) -> String {
-    return join2("t_", decimal(id))
+    return format("t_${id}")
 }
 
 fn typedValue(g: inout Generator, reg: Registry, ty: Type, expression: str) -> Value {
@@ -264,8 +264,8 @@ fn discardTemps(g: inout Generator, reg: Registry, start: int) {
 }
 
 fn localName(local: Local) -> String {
-    if local.byRef { return join3("(*v_", decimal(local.token), ")") }
-    return join2("v_", decimal(local.token))
+    if local.byRef { return format("(*v_${local.token})") }
+    return format("v_${local.token}")
 }
 
 fn cleanLocals(g: inout Generator, reg: Registry, start: int) {
@@ -470,7 +470,7 @@ fn integerOperation(ts: Vec[Token], token: int, kind: BasicType, op: str, left: 
 }
 
 fn lineColumn(ts: Vec[Token], token: int) -> String {
-    return join3(decimal(ts[token].line), ", ", decimal(ts[token].column))
+    return format("${ts[token].line}, ${ts[token].column}")
 }
 
 fn printValue(g: inout Generator, reg: Registry, ts: Vec[Token], token: int, arg: Value, output: int) {
@@ -517,6 +517,75 @@ fn printValue(g: inout Generator, reg: Registry, ts: Vec[Token], token: int, arg
     } else {
         fail(ts, token, "E0001", "this type cannot be printed")
     }
+}
+
+fn interpolationSpec(ts: Vec[Token], token: int, spec: int) {
+    if spec < 0 { return }
+    let text = ts[spec].text.clone()
+    if text.len() >= 2 && text.len() <= 3 && text[0] == '.' {
+        var digits = true
+        var places = 0
+        var i = 1
+        while i < text.len() {
+            if text[i] < '0' || text[i] > '9' { digits = false } else {
+                places = places * 10 + int(text[i]) - int('0')
+            }
+            i += 1
+        }
+        if digits {
+            if places > 17 { fail(ts, token, "E0001", "at most 17 decimal places can be printed") }
+            fail(ts, token, "E0001", "fixed-decimal formatting requires a float")
+        }
+    }
+    fail(ts, token, "U0001", "this format specifier is not supported")
+}
+
+// Keep only the write in the returned string. Operand evaluation remains in
+// g.out, so every value is evaluated before any outer message bytes are written.
+fn outputValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, id: int, spec: int, output: int) -> String {
+    let token = p.expressions[id].token
+    let arg = emitExpr(&g, p, ts, reg, id)
+    interpolationSpec(ts, token, spec)
+    if stringLike(arg.ty) && arg.root >= 0 { g.locks.push(arg.root) }
+    var value = copyValue(arg)
+    if arg.ty.kind == .String {
+        // Snapshot a borrowed descriptor, not a second String owner. The
+        // original owner stays alive in locals or statement temporaries.
+        value = scalar(&g, .Str, view(arg))
+    }
+    let before = take(&g.out)
+    printValue(&g, reg, ts, token, value, output)
+    let writes = take(&g.out)
+    g.out = before
+    return writes
+}
+
+fn messageWrites(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, id: int, output: int) -> String {
+    let locks = g.locks.len()
+    let e = p.expressions[id]
+    var writes = String{}
+    // Parentheses are not transparent here: only a direct interpolated string
+    // is a message. Elsewhere emitExpr rejects it with the ordinary E0001.
+    if e.kind == .Interpolated {
+        var i = 0
+        while i < e.argCount {
+            let part = p.stringParts[e.argStart + i]
+            if part.expr < 0 {
+                let text = ts[part.token].text.clone()
+                if text.len() > 0 {
+                    writes.push(join5("yv_out_bytes(&o_", decimal(output), ", ", cString(text), ", "))
+                    writes.push(join3(decimal(text.len()), ");", "\n"))
+                }
+            } else {
+                writes.push(outputValue(&g, p, ts, reg, part.expr, part.spec, output))
+            }
+            i += 1
+        }
+    } else {
+        writes = outputValue(&g, p, ts, reg, id, -1, output)
+    }
+    releaseLocks(&g, locks)
+    return writes
 }
 
 // A borrow argument names a mutable place; its root stays unavailable until the call ends.
@@ -578,17 +647,31 @@ fn callValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: E
         return scalar(&g, target, join5(helper, arg.name, ", ", lineColumn(ts, e.token), ")"))
     }
     if index < 0 && name == "take" { return takeCall(&g, p, ts, reg, e) }
+    if index < 0 && name == "format" {
+        if e.argCount != 1 { fail(ts, e.token, "E0012", "format requires one argument") }
+        let outputIndex = g.counter
+        g.counter += 1
+        let writes = messageWrites(&g, p, ts, reg, p.lists[e.argStart], outputIndex)
+        // Register the result only after all operands succeed: a try in a later
+        // operand must not clean a result whose declaration has not been emitted.
+        let result = typedValue(&g, reg, primitive(.String), "(yv_string){0}")
+        put(&g, join5("yv_out o_", decimal(outputIndex), " = {0, &", result.name, ", "))
+        emit(&g, join2(lineColumn(ts, e.token), "};"))
+        g.out.push(writes)
+        return result
+    }
     if index < 0 && outputBuiltin(name) {
         if name != "assert" && g.outputRoot != id {
             fail(ts, e.token, "E0001", "output calls must be direct statements")
         }
         if e.argCount != 1 {
+            if e.argCount == 0 && (name == "println" || name == "eprintln") {
+                fail(ts, e.token, "U0001", "zero-argument output is outside the selfhost subset")
+            }
             fail(ts, e.token, "E0012", "selfhost output/assert calls require one argument")
         }
-        var expected = primitive(.Unknown)
-        if name == "assert" { expected = primitive(.Bool) }
-        let arg = emitExpected(&g, p, ts, reg, p.lists[e.argStart], expected)
         if name == "assert" {
+            let arg = emitExpected(&g, p, ts, reg, p.lists[e.argStart], primitive(.Bool))
             basic(reg, ts, e.token, arg.ty, .Bool)
             put(&g, join3("if (!", arg.name, ") yv_panic(\"P-ASSERT\", \"assertion failed\", "))
             put(&g, lineColumn(ts, e.token))
@@ -598,13 +681,14 @@ fn callValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: E
             if name == "eprintln" { fd = 2 }
             let outputIndex = g.counter
             g.counter += 1
+            let writes = messageWrites(&g, p, ts, reg, p.lists[e.argStart], outputIndex)
             put(&g, join3("yv_out o_", decimal(outputIndex), " = {"))
             put(&g, decimal(fd))
             put(&g, ", NULL, ")
             put(&g, lineColumn(ts, e.token))
             emit(&g, "};")
             emit(&g, join3("yv_output_at(", lineColumn(ts, e.token), ");"))
-            printValue(&g, reg, ts, e.token, arg, outputIndex)
+            g.out.push(writes)
             if name != "print" {
                 emit(&g, join3("yv_out_bytes(&o_", decimal(outputIndex), ", \"\\n\", 1);"))
             }
@@ -612,7 +696,7 @@ fn callValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: E
         return Value{ty: primitive(.Unit), name: "".toString()}
     }
     if index < 0 {
-        if name == "format" || name == "bool" || name == "panic" ||
+        if name == "bool" || name == "panic" ||
             name == "some" || name == "replace" || name == "swap" {
             fail(ts, e.token, "U0001", "builtin is outside the selfhost subset")
         }
@@ -1486,7 +1570,7 @@ fn sliceValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: 
     code.push(lineColumn(ts, e.token))
     code.push(")")
     var result = scalar(&g, .Str, code)
-    if base.ty.kind == .String {
+    if base.ty.kind == .String || base.transient {
         result.transient = true
         result.root = base.root
     }
@@ -1495,6 +1579,9 @@ fn sliceValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: 
 
 fn expressionValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, id: int, expected: Type) -> Value {
     let e = p.expressions[id]
+    if e.kind == .Interpolated {
+        fail(ts, e.token, "E0001", "interpolation must be a direct output or format argument")
+    }
     if e.kind == .Unit { return Value{ty: primitive(.Unit), name: "".toString()} }
     if e.kind == .Number {
         let number = parseDecimal(ts[e.token].text)

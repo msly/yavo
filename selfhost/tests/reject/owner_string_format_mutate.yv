@@ -1,0 +1,9 @@
+fn change(value: inout String) -> int {
+    value = "replacement".toString()
+    return 7
+}
+fn main() {
+    var owner = "original".toString()
+    let result = format("${owner} ${change(&owner)}")
+    println(result)
+}

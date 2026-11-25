@@ -1,0 +1,553 @@
+{
+  "schema": "yavo-output-borrow-reference-after-fix/1",
+  "baseline": "08f19faf834f1b89ddad39fb4e77f97753cc8641",
+  "implementation_commit": null,
+  "status": "passed",
+  "created_at": "2026-11-24T13:11:43.044706+00:00",
+  "scope": "Targeted P0 checking and safe positive Debug/Release execution; rejected programs are never built or executed.",
+  "environment": {
+    "YAVO_ALLOC_CHECK": "1",
+    "YAVO_NO_CACHE": "1",
+    "YAVO_NO_PCH": "1"
+  },
+  "records": [
+    {
+      "id": "errors_output_part_borrows",
+      "source": {
+        "path": "/data1/workspace/github/workspace/yavo/compiler/tests/p0/errors_output_part_borrows.yv",
+        "bytes": 2232,
+        "sha256": "4c8a7c8594e30a7b1a0b1307eaadbe505412309da6313de42044d794787d42a3"
+      },
+      "frozen_source": {
+        "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/errors_output_part_borrows/source.yv",
+        "bytes": 2232,
+        "sha256": "4c8a7c8594e30a7b1a0b1307eaadbe505412309da6313de42044d794787d42a3"
+      },
+      "check": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0-fixed/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/errors_output_part_borrows/source.yv",
+          "--json-diagnostics"
+        ],
+        "started_at": "2026-11-24T13:11:43.050007+00:00",
+        "exit_code": 1,
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/errors_output_part_borrows/check.stdout",
+          "bytes": 6308,
+          "sha256": "38fe8a6679373f1197d90ce3e64540fab816838a7435c21bfcf4dd8a835b4a69"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/errors_output_part_borrows/check.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "diagnostics": {
+          "diagnostics": [
+            {
+              "code": "E0102",
+              "column": 38,
+              "end_column": 44,
+              "end_line": 47,
+              "file": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/errors_output_part_borrows/source.yv",
+              "fixes": [],
+              "line": 47,
+              "message": "`owner` is already borrowed by an earlier argument of this call",
+              "notes": [],
+              "primary": {
+                "column": 38,
+                "end": 986,
+                "end_column": 44,
+                "end_line": 47,
+                "file": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/errors_output_part_borrows/source.yv",
+                "line": 47,
+                "start": 980
+              },
+              "severity": "ERROR"
+            },
+            {
+              "code": "E0102",
+              "column": 50,
+              "end_column": 56,
+              "end_line": 52,
+              "file": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/errors_output_part_borrows/source.yv",
+              "fixes": [],
+              "line": 52,
+              "message": "`owner` is already borrowed by an earlier argument of this call",
+              "notes": [],
+              "primary": {
+                "column": 50,
+                "end": 1106,
+                "end_column": 56,
+                "end_line": 52,
+                "file": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/errors_output_part_borrows/source.yv",
+                "line": 52,
+                "start": 1100
+              },
+              "severity": "ERROR"
+            },
+            {
+              "code": "E0102",
+              "column": 44,
+              "end_column": 50,
+              "end_line": 58,
+              "file": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/errors_output_part_borrows/source.yv",
+              "fixes": [],
+              "line": 58,
+              "message": "`owner` is already borrowed by an earlier argument of this call",
+              "notes": [],
+              "primary": {
+                "column": 44,
+                "end": 1239,
+                "end_column": 50,
+                "end_line": 58,
+                "file": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/errors_output_part_borrows/source.yv",
+                "line": 58,
+                "start": 1233
+              },
+              "severity": "ERROR"
+            },
+            {
+              "code": "E0102",
+              "column": 39,
+              "end_column": 46,
+              "end_line": 63,
+              "file": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/errors_output_part_borrows/source.yv",
+              "fixes": [],
+              "line": 63,
+              "message": "`owners` is already borrowed by an earlier argument of this call",
+              "notes": [],
+              "primary": {
+                "column": 39,
+                "end": 1353,
+                "end_column": 46,
+                "end_line": 63,
+                "file": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/errors_output_part_borrows/source.yv",
+                "line": 63,
+                "start": 1346
+              },
+              "severity": "ERROR"
+            },
+            {
+              "code": "E0102",
+              "column": 43,
+              "end_column": 49,
+              "end_line": 68,
+              "file": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/errors_output_part_borrows/source.yv",
+              "fixes": [],
+              "line": 68,
+              "message": "`owner` is already borrowed by an earlier argument of this call",
+              "notes": [],
+              "primary": {
+                "column": 43,
+                "end": 1479,
+                "end_column": 49,
+                "end_line": 68,
+                "file": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/errors_output_part_borrows/source.yv",
+                "line": 68,
+                "start": 1473
+              },
+              "severity": "ERROR"
+            },
+            {
+              "code": "E0102",
+              "column": 35,
+              "end_column": 42,
+              "end_line": 74,
+              "file": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/errors_output_part_borrows/source.yv",
+              "fixes": [],
+              "line": 74,
+              "message": "`owners` is already borrowed by an earlier argument of this call",
+              "notes": [],
+              "primary": {
+                "column": 35,
+                "end": 1617,
+                "end_column": 42,
+                "end_line": 74,
+                "file": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/errors_output_part_borrows/source.yv",
+                "line": 74,
+                "start": 1610
+              },
+              "severity": "ERROR"
+            },
+            {
+              "code": "E0102",
+              "column": 56,
+              "end_column": 62,
+              "end_line": 79,
+              "file": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/errors_output_part_borrows/source.yv",
+              "fixes": [],
+              "line": 79,
+              "message": "`owner` is already borrowed by an earlier argument of this call",
+              "notes": [],
+              "primary": {
+                "column": 56,
+                "end": 1758,
+                "end_column": 62,
+                "end_line": 79,
+                "file": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/errors_output_part_borrows/source.yv",
+                "line": 79,
+                "start": 1752
+              },
+              "severity": "ERROR"
+            },
+            {
+              "code": "E0102",
+              "column": 33,
+              "end_column": 38,
+              "end_line": 84,
+              "file": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/errors_output_part_borrows/source.yv",
+              "fixes": [],
+              "line": 84,
+              "message": "cannot move `owner`: an earlier call argument still borrows it",
+              "notes": [],
+              "primary": {
+                "column": 33,
+                "end": 1858,
+                "end_column": 38,
+                "end_line": 84,
+                "file": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/errors_output_part_borrows/source.yv",
+                "line": 84,
+                "start": 1853
+              },
+              "severity": "ERROR"
+            },
+            {
+              "code": "E0102",
+              "column": 36,
+              "end_column": 42,
+              "end_line": 89,
+              "file": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/errors_output_part_borrows/source.yv",
+              "fixes": [],
+              "line": 89,
+              "message": "`owner` is already borrowed by an earlier argument of this call",
+              "notes": [],
+              "primary": {
+                "column": 36,
+                "end": 1963,
+                "end_column": 42,
+                "end_line": 89,
+                "file": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/errors_output_part_borrows/source.yv",
+                "line": 89,
+                "start": 1957
+              },
+              "severity": "ERROR"
+            },
+            {
+              "code": "E0102",
+              "column": 44,
+              "end_column": 50,
+              "end_line": 94,
+              "file": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/errors_output_part_borrows/source.yv",
+              "fixes": [],
+              "line": 94,
+              "message": "`owner` is already borrowed by an earlier argument of this call",
+              "notes": [],
+              "primary": {
+                "column": 44,
+                "end": 2077,
+                "end_column": 50,
+                "end_line": 94,
+                "file": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/errors_output_part_borrows/source.yv",
+                "line": 94,
+                "start": 2071
+              },
+              "severity": "ERROR"
+            },
+            {
+              "code": "E0102",
+              "column": 39,
+              "end_column": 45,
+              "end_line": 99,
+              "file": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/errors_output_part_borrows/source.yv",
+              "fixes": [],
+              "line": 99,
+              "message": "`owner` is already borrowed by an earlier argument of this call",
+              "notes": [],
+              "primary": {
+                "column": 39,
+                "end": 2210,
+                "end_column": 45,
+                "end_line": 99,
+                "file": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/errors_output_part_borrows/source.yv",
+                "line": 99,
+                "start": 2204
+              },
+              "severity": "ERROR"
+            }
+          ],
+          "error_count": 11,
+          "file": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/errors_output_part_borrows/source.yv",
+          "schema": "yavo-diagnostics/p0",
+          "source_sha256": "4c8a7c8594e30a7b1a0b1307eaadbe505412309da6313de42044d794787d42a3",
+          "warning_count": 0
+        },
+        "expected": [
+          [
+            "E0102",
+            47,
+            38
+          ],
+          [
+            "E0102",
+            52,
+            50
+          ],
+          [
+            "E0102",
+            58,
+            44
+          ],
+          [
+            "E0102",
+            63,
+            39
+          ],
+          [
+            "E0102",
+            68,
+            43
+          ],
+          [
+            "E0102",
+            74,
+            35
+          ],
+          [
+            "E0102",
+            79,
+            56
+          ],
+          [
+            "E0102",
+            84,
+            33
+          ],
+          [
+            "E0102",
+            89,
+            36
+          ],
+          [
+            "E0102",
+            94,
+            44
+          ],
+          [
+            "E0102",
+            99,
+            39
+          ]
+        ],
+        "passed": true
+      },
+      "executions": [],
+      "passed": true,
+      "compiled_or_executed": false
+    },
+    {
+      "id": "run_output_part_borrows",
+      "source": {
+        "path": "/data1/workspace/github/workspace/yavo/compiler/tests/p0/run_output_part_borrows.yv",
+        "bytes": 2213,
+        "sha256": "248c544877e83d2df6d39368911748b40341f0c901a5a23a8520299c165d4a71"
+      },
+      "frozen_source": {
+        "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/run_output_part_borrows/source.yv",
+        "bytes": 2213,
+        "sha256": "248c544877e83d2df6d39368911748b40341f0c901a5a23a8520299c165d4a71"
+      },
+      "check": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0-fixed/yavo",
+          "check",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/run_output_part_borrows/source.yv",
+          "--json-diagnostics"
+        ],
+        "started_at": "2026-11-24T13:11:43.053725+00:00",
+        "exit_code": 0,
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/run_output_part_borrows/check.stdout",
+          "bytes": 300,
+          "sha256": "8990bed5899ec5cd27b61e708423b73653ae97394ebac78043b517bddd578709"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/run_output_part_borrows/check.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "diagnostics": {
+          "diagnostics": [],
+          "error_count": 0,
+          "file": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/run_output_part_borrows/source.yv",
+          "schema": "yavo-diagnostics/p0",
+          "source_sha256": "248c544877e83d2df6d39368911748b40341f0c901a5a23a8520299c165d4a71",
+          "warning_count": 0
+        },
+        "expected": [],
+        "passed": true
+      },
+      "executions": [
+        {
+          "mode": "debug",
+          "build": {
+            "argv": [
+              "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0-fixed/yavo",
+              "build",
+              "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/run_output_part_borrows/source.yv",
+              "-o",
+              "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/run_output_part_borrows/debug/program"
+            ],
+            "started_at": "2026-11-24T13:11:43.057770+00:00",
+            "exit_code": 0,
+            "stdout": {
+              "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/run_output_part_borrows/debug/build.stdout",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stderr": {
+              "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/run_output_part_borrows/debug/build.stderr",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            }
+          },
+          "passed": true,
+          "binary": {
+            "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/run_output_part_borrows/debug/program",
+            "bytes": 4095712,
+            "sha256": "36cb005fbc8e2fee2d25b443969d9f4baaf75e37c6fe41b9fc4f5ea5d7595c4e"
+          },
+          "run": {
+            "argv": [
+              "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/run_output_part_borrows/debug/program"
+            ],
+            "started_at": "2026-11-24T13:11:43.264181+00:00",
+            "exit_code": 0,
+            "stdout": {
+              "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/run_output_part_borrows/debug/run.stdout",
+              "bytes": 102,
+              "sha256": "9cb56a35ddd75b17bf3862db5fe06a5284eee734f563028760f0132aff79912b"
+            },
+            "stderr": {
+              "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/run_output_part_borrows/debug/run.stderr",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            }
+          }
+        },
+        {
+          "mode": "release",
+          "build": {
+            "argv": [
+              "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0-fixed/yavo",
+              "build",
+              "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/run_output_part_borrows/source.yv",
+              "-o",
+              "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/run_output_part_borrows/release/program",
+              "--release"
+            ],
+            "started_at": "2026-11-24T13:11:43.266222+00:00",
+            "exit_code": 0,
+            "stdout": {
+              "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/run_output_part_borrows/release/build.stdout",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stderr": {
+              "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/run_output_part_borrows/release/build.stderr",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            }
+          },
+          "passed": true,
+          "binary": {
+            "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/run_output_part_borrows/release/program",
+            "bytes": 15832,
+            "sha256": "ff1f2e2c7834c9f262f8f0a62a10f434348e81fa68304f6a85fb654dc7397cea"
+          },
+          "run": {
+            "argv": [
+              "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/run_output_part_borrows/release/program"
+            ],
+            "started_at": "2026-11-24T13:11:43.604886+00:00",
+            "exit_code": 0,
+            "stdout": {
+              "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/run_output_part_borrows/release/run.stdout",
+              "bytes": 102,
+              "sha256": "9cb56a35ddd75b17bf3862db5fe06a5284eee734f563028760f0132aff79912b"
+            },
+            "stderr": {
+              "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/run_output_part_borrows/release/run.stderr",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            }
+          }
+        }
+      ],
+      "passed": true,
+      "expected_stdout": {
+        "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/run_output_part_borrows/expected.stdout",
+        "bytes": 102,
+        "sha256": "9cb56a35ddd75b17bf3862db5fe06a5284eee734f563028760f0132aff79912b"
+      }
+    }
+  ],
+  "compiler": {
+    "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0-fixed/yavo",
+    "bytes": 2826168,
+    "sha256": "05fde861598f401f00e748e09b366a4c3654d1e4b181adfbd3edc0820fbf82ab"
+  },
+  "before_receipt": {
+    "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-before-fix/receipt.json",
+    "bytes": 5890,
+    "sha256": "ae159471f457bddb01a517d101ddc0063ce5a1e97fe70c722df8d13d9165d7a4"
+  },
+  "checker": {
+    "path": "/data1/workspace/github/workspace/yavo/compiler/src/check.rs",
+    "bytes": 433022,
+    "sha256": "5d039e50e7bb4e9f2529f2ec549c368adfed64267ec3f4685950d9884810ab16"
+  },
+  "runtime": {
+    "path": "/data1/workspace/github/workspace/yavo/compiler/runtime/yavo_rt.h",
+    "bytes": 72317,
+    "sha256": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc"
+  },
+  "toolchain_lock": {
+    "path": "/data1/workspace/github/workspace/yavo/compiler/toolchain.lock",
+    "bytes": 1096,
+    "sha256": "a9bbe83e644b0e1cee19c8dba8b5157eaed3e9ddc71b96d8aab2b2d2bb15f53c"
+  },
+  "validator": {
+    "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/validate.py",
+    "bytes": 6018,
+    "sha256": "cc3c828f9e8512f104e00968825a0aa13652a1cdd0a7f02b02adcab0f31ab25a"
+  },
+  "inputs_changed": [],
+  "bound_inputs_and_artifacts": {
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0-fixed/yavo": "05fde861598f401f00e748e09b366a4c3654d1e4b181adfbd3edc0820fbf82ab",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-before-fix/receipt.json": "ae159471f457bddb01a517d101ddc0063ce5a1e97fe70c722df8d13d9165d7a4",
+    "/data1/workspace/github/workspace/yavo/compiler/src/check.rs": "5d039e50e7bb4e9f2529f2ec549c368adfed64267ec3f4685950d9884810ab16",
+    "/data1/workspace/github/workspace/yavo/compiler/runtime/yavo_rt.h": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+    "/data1/workspace/github/workspace/yavo/compiler/toolchain.lock": "a9bbe83e644b0e1cee19c8dba8b5157eaed3e9ddc71b96d8aab2b2d2bb15f53c",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/validate.py": "cc3c828f9e8512f104e00968825a0aa13652a1cdd0a7f02b02adcab0f31ab25a",
+    "/data1/workspace/github/workspace/yavo/compiler/tests/p0/errors_output_part_borrows.yv": "4c8a7c8594e30a7b1a0b1307eaadbe505412309da6313de42044d794787d42a3",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/errors_output_part_borrows/source.yv": "4c8a7c8594e30a7b1a0b1307eaadbe505412309da6313de42044d794787d42a3",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/errors_output_part_borrows/check.stdout": "38fe8a6679373f1197d90ce3e64540fab816838a7435c21bfcf4dd8a835b4a69",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/errors_output_part_borrows/check.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/data1/workspace/github/workspace/yavo/compiler/tests/p0/run_output_part_borrows.yv": "248c544877e83d2df6d39368911748b40341f0c901a5a23a8520299c165d4a71",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/run_output_part_borrows/source.yv": "248c544877e83d2df6d39368911748b40341f0c901a5a23a8520299c165d4a71",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/run_output_part_borrows/check.stdout": "8990bed5899ec5cd27b61e708423b73653ae97394ebac78043b517bddd578709",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/run_output_part_borrows/check.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/run_output_part_borrows/expected.stdout": "9cb56a35ddd75b17bf3862db5fe06a5284eee734f563028760f0132aff79912b",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/run_output_part_borrows/debug/build.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/run_output_part_borrows/debug/build.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/run_output_part_borrows/debug/program": "36cb005fbc8e2fee2d25b443969d9f4baaf75e37c6fe41b9fc4f5ea5d7595c4e",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/run_output_part_borrows/debug/run.stdout": "9cb56a35ddd75b17bf3862db5fe06a5284eee734f563028760f0132aff79912b",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/run_output_part_borrows/debug/run.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/run_output_part_borrows/release/build.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/run_output_part_borrows/release/build.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/run_output_part_borrows/release/program": "ff1f2e2c7834c9f262f8f0a62a10f434348e81fa68304f6a85fb654dc7397cea",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/run_output_part_borrows/release/run.stdout": "9cb56a35ddd75b17bf3862db5fe06a5284eee734f563028760f0132aff79912b",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-output-borrow-after-fix/run_output_part_borrows/release/run.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "old_reference_sha256": "2f5e7da56f11898371b0243e1d14cd9f57cd666266e3939f86811991dbac4814",
+  "fixed_reference_sha256": "05fde861598f401f00e748e09b366a4c3654d1e4b181adfbd3edc0820fbf82ab",
+  "observed_old_acceptances": [
+    "owner_string_print_mutate",
+    "owner_string_format_mutate",
+    "owner_slice_print_mutate",
+    "owner_vec_print_mutate",
+    "format_nested_owner_outer_lock"
+  ],
+  "unsafe_programs_built_or_executed": false,
+  "mechanism": "Print/format operands are all evaluated before output. Their earlier String or borrowed-view snapshots can retain the original allocation while a later inout operation replaces or takes its owner. Rust print_parts now keeps the existing call_shared/call_mut borrow window for the entire parts list and restores only the current window on exit.",
+  "fixed_registered_e0102": [
+    "owner_string_print_mutate",
+    "owner_string_format_mutate",
+    "owner_slice_print_mutate",
+    "owner_vec_print_mutate",
+    "format_nested_owner_outer_lock",
+    "format_owner_field_mutation",
+    "format_owner_take",
+    "owner_slice_chain_mutate"
+  ],
+  "legal_controls": [
+    "interpolation_copy_mutation",
+    "format_nested_copy_releases",
+    "format_owned_views"
+  ],
+  "targeted_rust_regression": "The separate P0 negative fixture originally emitted one E0102 and missed ten expected errors. The corrected checker emits all eleven expected E0102 positions. Its safe positive fixture passes Debug/Release with normal-return allocation checking."
+}

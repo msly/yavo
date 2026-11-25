@@ -51,6 +51,100 @@ fn detachedFailure() -> Diagnostic {
     os.exit(1)
 }
 
+fn lexerTokenCount(tokens: Vec[Token], kind: TokenKind) -> int {
+    var count = 0
+    var i = 0
+    while i < tokens.len() {
+        if tokens[i].kind == kind { count += 1 }
+        i += 1
+    }
+    return count
+}
+
+fn lexerTokenIndex(tokens: Vec[Token], kind: TokenKind, occurrence: int) -> int {
+    var count = 0
+    var i = 0
+    while i < tokens.len() {
+        if tokens[i].kind == kind {
+            if count == occurrence { return i }
+            count += 1
+        }
+        i += 1
+    }
+    return -1
+}
+
+fn lexerInterpolationChecks() {
+    let positioned = good("  \"汉🙂\${item}尾\\0\" next")
+    assert(positioned.len() == 10)
+    assert(positioned[0].kind == .StringStart && positioned[0].start == 2 && positioned[0].end == 3)
+    assert(positioned[0].line == 1 && positioned[0].column == 3)
+    assert(positioned[1].kind == .Text && positioned[1].text == "汉🙂")
+    assert(positioned[1].start == 3 && positioned[1].end == 10 && positioned[1].column == 4)
+    assert(positioned[2].kind == .InterpolationStart && positioned[2].start == 12 && positioned[2].end == 16)
+    assert(positioned[3].kind == .Word && positioned[3].text == "item")
+    assert(positioned[3].start == 12 && positioned[3].column == 8)
+    assert(positioned[4].kind == .InterpolationEnd && positioned[4].start == 16 && positioned[4].column == 12)
+    assert(positioned[5].kind == .Text && positioned[5].text == "尾\0")
+    assert(positioned[5].start == 17 && positioned[5].end == 22 && positioned[5].column == 13)
+    assert(positioned[6].kind == .StringEnd && positioned[6].start == 22 && positioned[6].column == 16)
+    assert(positioned[7].text == "next" && positioned[7].start == 24 && positioned[7].column == 18)
+
+    let adjacent = good("\"\${x}\${y}\"")
+    assert(adjacent.len() == 10 && lexerTokenCount(adjacent, .Text) == 0)
+    assert(lexerTokenCount(adjacent, .InterpolationStart) == 2)
+    let emptyPart = good("\"\${}\"")
+    assert(emptyPart[1].kind == .InterpolationStart && emptyPart[2].kind == .InterpolationEnd)
+
+    let specs = good("\"\${count:.2}|\${flag:x}|\${value:}\"")
+    assert(lexerTokenCount(specs, .FormatSpec) == 3)
+    let fixed = lexerTokenIndex(specs, .FormatSpec, 0)
+    let unknown = lexerTokenIndex(specs, .FormatSpec, 1)
+    let emptySpec = lexerTokenIndex(specs, .FormatSpec, 2)
+    assert(fixed >= 0 && specs[fixed].text == ".2")
+    assert(specs[fixed].start == 9 && specs[fixed].column == 10)
+    assert(unknown >= 0 && specs[unknown].text == "x")
+    assert(emptySpec >= 0 && specs[emptySpec].text == "")
+
+    let nested = good("\"\${format(\"inner\${value}\")}!\"")
+    assert(lexerTokenCount(nested, .StringStart) == 2)
+    assert(lexerTokenCount(nested, .StringEnd) == 2)
+    assert(lexerTokenCount(nested, .InterpolationStart) == 2)
+    assert(lexerTokenCount(nested, .InterpolationEnd) == 2)
+    assert(lexerTokenCount(nested, .DeferredError) == 0)
+    let quotedBraces = good("\"\${format(\"{:}\\\"}\")}\"")
+    assert(lexerTokenCount(quotedBraces, .InterpolationStart) == 1)
+    assert(lexerTokenCount(quotedBraces, .FormatSpec) == 0)
+    let constructed = good("\"\${Box{value: 7}.value}\"")
+    assert(lexerTokenCount(constructed, .FormatSpec) == 0)
+    assert(lexerTokenCount(constructed, .InterpolationEnd) == 1)
+    let bytePart = good("\"\${'A'}\"")
+    let byteIndex = lexerTokenIndex(bytePart, .Byte, 0)
+    assert(byteIndex >= 0 && bytePart[byteIndex].text == "65")
+
+    // Inner lexical faults stay at their own source positions until parsing.
+    let deferred = good("\"汉\${@}\"")
+    let fault = lexerTokenIndex(deferred, .DeferredError, 0)
+    let marker = lexerTokenIndex(deferred, .InterpolationStart, 0)
+    assert(fault >= 0 && deferred[fault].text == "E0020")
+    assert(deferred[fault].start == 6 && deferred[fault].line == 1 && deferred[fault].column == 5)
+    assert(deferred[fault].message == "unexpected character")
+    assert(marker >= 0 && fault == marker + 1)
+    // A later outer error must not replace that earlier inner lexical fault.
+    bad("\"汉\${@}\" @", "E0020", 6, 1, 5)
+    bad("\"\${value", "E0020", 1, 1, 2)
+    bad("\"prefix\${value}tail", "E0020", 0, 1, 1)
+    bad("\"\${value}tail\\q\"", "E0020", 13, 1, 14)
+}
+
+fn detachedInterpolationFailure() -> Diagnostic {
+    let source = "\"汉\${format(\"owned\\q\")}tail\" @".toString()
+    let path = "interpolation 诊断.yv".toString()
+    let _tokens = throughTemporary(source, path) catch diagnostic { return diagnostic }
+    eprintln("expected deferred interpolation diagnostic")
+    os.exit(1)
+}
+
 fn main() {
     let empty = good("")
     assert(empty.len() == 1)
@@ -187,7 +281,10 @@ fn main() {
     var interpolation = "\"".toString()
     interpolation.push("$")
     interpolation.push("{x}\"")
-    bad(interpolation, "U0001", 1, 1, 2)
+    let interpolationTokens = good(interpolation)
+    assert(interpolationTokens.len() == 7 && interpolationTokens[0].kind == .StringStart)
+    assert(interpolationTokens[1].kind == .InterpolationStart && interpolationTokens[2].text == "x")
+    lexerInterpolationChecks()
 
     let forwarded = throughTemporary("\"owned success 汉🙂\"", "success 路径.yv") catch _ {
         eprintln("expected propagated success")
@@ -201,6 +298,13 @@ fn main() {
         assert(diagnostic.message == "unknown string escape sequence")
         assert(diagnostic.offset == 761)
         assert(diagnostic.line == 34 && diagnostic.column == 19)
+    }
+
+    for _interpolationRound in 0..16 {
+        let problem = detachedInterpolationFailure()
+        assert(problem.code == "E0020")
+        assert(problem.message == "unknown string escape sequence")
+        assert(problem.offset == 19 && problem.line == 1 && problem.column == 18)
     }
 
     println("lexer tests passed")

@@ -308,12 +308,6 @@
       "file": "run/byte_literal_basic.yv"
     },
     {
-      "id": "unsupported_interpolation",
-      "kind": "unsupported",
-      "diagnostic": "U0001",
-      "file": "unsupported/unsupported_interpolation.yv"
-    },
-    {
       "id": "unsupported_generic",
       "kind": "unsupported",
       "diagnostic": "U0001",
@@ -3433,6 +3427,419 @@
       "stdout": "0\n1\n2\n",
       "file": "run/for_basic.yv",
       "batch": "range-copy-for"
+    },
+    {
+      "id": "format_scalar_types",
+      "kind": "run",
+      "stdout": "17\n65\ntrue\ntext\nowned\nHot\n\n",
+      "file": "run/format_scalar_types.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "interpolation_literal_bytes",
+      "kind": "run",
+      "stdout": "汉🙂 ${literal} 65\u0000end\nquote:\" slash:\\ tab:\t:2\n",
+      "file": "run/interpolation_literal_bytes.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "format_eprintln",
+      "kind": "run",
+      "stdout": "stdout:1\n",
+      "stderr": "err:汉🙂:66:true\n",
+      "file": "run/format_eprintln.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "format_evaluation_order",
+      "kind": "run",
+      "stdout": "1\n2\nouter:1:2\n3\n4\nfmt:3:4\n5\ntail:5:end\n",
+      "file": "run/format_evaluation_order.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "format_owned_views",
+      "kind": "run",
+      "stdout": "owner:ow:own:value:汉\no:t\n",
+      "file": "run/format_owned_views.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "format_owned_containers",
+      "kind": "run",
+      "stdout": "row:7\nv:8\nv:9\ndone:10\n",
+      "file": "run/format_owned_containers.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "format_later_failure_cleanup",
+      "kind": "run",
+      "stdout": "vec\nstruct\ncall\n",
+      "file": "run/format_later_failure_cleanup.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "format_try_output_atomicity",
+      "kind": "run",
+      "stdout": "print\nstderr\nformat\n",
+      "file": "run/format_try_output_atomicity.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "format_catch_return_cleanup",
+      "kind": "run",
+      "stdout": "9\n",
+      "file": "run/format_catch_return_cleanup.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "format_catch_loop_cleanup",
+      "kind": "run",
+      "stdout": "row:hold:1\n3\nbreak:hold:1\n2\n",
+      "file": "run/format_catch_loop_cleanup.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "format_lazy_fallback",
+      "kind": "run",
+      "stdout": "5\nallocate\n6\n",
+      "file": "run/format_lazy_fallback.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "format_nested_parentheses",
+      "kind": "run",
+      "stdout": "7:4:v5:5\n6\n",
+      "file": "run/format_nested_parentheses.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "interpolation_copy_mutation",
+      "kind": "run",
+      "stdout": "2 3 3\n3 7\n97 7\n",
+      "file": "run/interpolation_copy_mutation.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "format_nested_copy_releases",
+      "kind": "run",
+      "stdout": "original 7\n",
+      "file": "run/format_nested_copy_releases.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "format_user_shadow",
+      "kind": "run",
+      "stdout": "4\n",
+      "file": "run/format_user_shadow.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "interpolation_basic",
+      "kind": "run",
+      "stdout": "1\n",
+      "file": "run/interpolation_basic.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "owner_string_print_mutate",
+      "kind": "reject",
+      "diagnostic": "E0102",
+      "file": "reject/owner_string_print_mutate.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "owner_string_format_mutate",
+      "kind": "reject",
+      "diagnostic": "E0102",
+      "file": "reject/owner_string_format_mutate.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "owner_slice_print_mutate",
+      "kind": "reject",
+      "diagnostic": "E0102",
+      "file": "reject/owner_slice_print_mutate.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "owner_vec_print_mutate",
+      "kind": "reject",
+      "diagnostic": "E0102",
+      "file": "reject/owner_vec_print_mutate.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "plain_interpolation_binding",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/plain_interpolation_binding.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "plain_interpolation_return",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/plain_interpolation_return.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "plain_interpolation_argument",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/plain_interpolation_argument.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "parenthesized_print",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/parenthesized_print.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "parenthesized_format",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/parenthesized_format.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "format_zero_arity",
+      "kind": "reject",
+      "diagnostic": "E0012",
+      "file": "reject/format_zero_arity.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "format_two_arity",
+      "kind": "reject",
+      "diagnostic": "E0012",
+      "file": "reject/format_two_arity.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "format_unit",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/format_unit.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "specifier_int_fixed",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/specifier_int_fixed.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "specifier_unknown",
+      "kind": "shared_unsupported",
+      "diagnostic": "U0001",
+      "reason": "Both Rust stage0 and the selfhost subset reject this formatting boundary with U0001.",
+      "file": "unsupported/specifier_unknown.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "specifier_too_large",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/specifier_too_large.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "interpolation_empty",
+      "kind": "reject",
+      "diagnostic": "E0020",
+      "file": "reject/interpolation_empty.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "interpolation_unclosed",
+      "kind": "reject",
+      "diagnostic": "E0020",
+      "file": "reject/interpolation_unclosed.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "format_shadow_interpolation",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/format_shadow_interpolation.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "nested_fragment_lex_priority",
+      "kind": "reject",
+      "diagnostic": "E0020",
+      "file": "reject/nested_fragment_lex_priority.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "earlier_parse_later_fragment",
+      "kind": "reject",
+      "diagnostic": "E0020",
+      "file": "reject/earlier_parse_later_fragment.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "byte_closing_brace",
+      "kind": "reject",
+      "diagnostic": "E0020",
+      "file": "reject/byte_closing_brace.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "byte_colon",
+      "kind": "reject",
+      "diagnostic": "E0020",
+      "file": "reject/byte_colon.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "format_field_default",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/format_field_default.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "format_nested_owner_outer_lock",
+      "kind": "reject",
+      "diagnostic": "E0102",
+      "file": "reject/format_nested_owner_outer_lock.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "print_zero",
+      "kind": "reject",
+      "diagnostic": "E0012",
+      "file": "reject/print_zero.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "unsupported_println_zero",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "reason": "Zero-argument newline output is valid in stage0 but is not added to the selfhost subset in this formatting batch.",
+      "file": "unsupported/unsupported_println_zero.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "unsupported_eprintln_zero",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "reason": "Zero-argument newline output is valid in stage0 but is not added to the selfhost subset in this formatting batch.",
+      "file": "unsupported/unsupported_eprintln_zero.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "format_optional",
+      "kind": "shared_unsupported",
+      "diagnostic": "U0001",
+      "reason": "Both Rust stage0 and the selfhost subset reject this formatting boundary with U0001.",
+      "file": "unsupported/format_optional.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "format_vector",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/format_vector.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "format_struct",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/format_struct.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "format_result",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/format_result.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "embedded_unknown_unicode_position",
+      "kind": "reject",
+      "diagnostic": "E0010",
+      "file": "reject/embedded_unknown_unicode_position.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "embedded_operator_position",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/embedded_operator_position.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "fragment_operator_lex_error",
+      "kind": "reject",
+      "diagnostic": "E0020",
+      "file": "reject/fragment_operator_lex_error.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "fragment_then_outer_lex_error",
+      "kind": "reject",
+      "diagnostic": "E0020",
+      "file": "reject/fragment_then_outer_lex_error.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "format_owner_field_mutation",
+      "kind": "reject",
+      "diagnostic": "E0102",
+      "file": "reject/format_owner_field_mutation.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "format_owner_take",
+      "kind": "reject",
+      "diagnostic": "E0102",
+      "file": "reject/format_owner_take.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "format_catch_fallthrough",
+      "kind": "reject",
+      "diagnostic": "E0601",
+      "file": "reject/format_catch_fallthrough.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "format_wrong_result_type",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/format_wrong_result_type.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "unsupported_format_float",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "reason": "Floating-point values and their formatting remain outside the selfhost subset.",
+      "file": "unsupported/unsupported_format_float.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "owner_slice_chain_mutate",
+      "kind": "reject",
+      "diagnostic": "E0102",
+      "file": "reject/owner_slice_chain_mutate.yv",
+      "batch": "format-interpolation"
+    },
+    {
+      "id": "unsupported_format_owned_double_slice_binding",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "reason": "A chained view into owned String storage remains a borrowed binding outside the selfhost subset.",
+      "file": "unsupported/unsupported_format_owned_double_slice_binding.yv",
+      "batch": "format-interpolation"
     }
   ],
   "promotions": [
@@ -3534,6 +3941,17 @@
       "kind": "run",
       "source_sha256": "b4a1117d580f90847b30eff44cc678e2bbfeeb4c9baf79039fb7563d47f1dc5d",
       "reason": "Half-open integer ranges are now accepted; the original source bytes are unchanged."
+    },
+    {
+      "previous_id": "unsupported_interpolation",
+      "previous_file": "unsupported/unsupported_interpolation.yv",
+      "previous_kind": "unsupported",
+      "baseline_commit": "08f19faf834f1b89ddad39fb4e77f97753cc8641",
+      "id": "interpolation_basic",
+      "file": "run/interpolation_basic.yv",
+      "kind": "run",
+      "source_sha256": "2391757f4bbfef054e7fed3f45bbc645c937b72f67023ceadbc8b16f27028a60",
+      "reason": "Direct interpolation output is now accepted; the original source bytes are unchanged."
     }
   ]
 }

@@ -1,0 +1,8 @@
+fn change(values: inout Vec[String]) -> int {
+    values = ["replacement".toString()]
+    return 7
+}
+fn main() {
+    var owners = ["original".toString()]
+    println("${owners[0]} ${change(&owners)}")
+}

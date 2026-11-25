@@ -77,10 +77,12 @@ pub enum ExprKind {
     Try
     None
     Coalesce
+    Interpolated
 }
 
 // args/names index Program.lists. A Slice keeps its end in extra; a Catch
 // keeps its handler statements in args and its binding token in extra.
+// Interpolated is the exception: its args directly index Program.stringParts.
 pub struct Expression {
     kind: ExprKind
     token: int
@@ -93,6 +95,14 @@ pub struct Expression {
     argCount: int = 0
     nameStart: int = 0
     nameCount: int = 0
+}
+
+// A text part uses token's decoded text and expr=-1. A value part keeps its
+// expression index and optional raw format-specifier token (without the colon).
+pub struct StringPart {
+    token: int
+    expr: int = -1
+    spec: int = -1
 }
 
 pub enum StmtKind {
@@ -150,6 +160,7 @@ pub struct Program {
     params: Vec[Parameter] = []
     fields: Vec[FieldDecl] = []
     resultTypes: Vec[ResultRef] = []
+    stringParts: Vec[StringPart] = []
     importsFs: bool = false
     importsOs: bool = false
 }

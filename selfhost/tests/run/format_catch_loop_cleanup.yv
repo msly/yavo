@@ -1,0 +1,18 @@
+fn choose(value: int) -> int ! String {
+    if value == 1 { return value }
+    return err("discarded".toString())
+}
+fn main() {
+    var seen = 0
+    for value in 0..3 {
+        seen += 1
+        println("row:${format("hold")}:${choose(value) catch error { continue }}")
+    }
+    println(seen)
+    seen = 0
+    for value in 1..4 {
+        seen += 1
+        println("break:${format("hold")}:${choose(value) catch error { break }}")
+    }
+    println(seen)
+}

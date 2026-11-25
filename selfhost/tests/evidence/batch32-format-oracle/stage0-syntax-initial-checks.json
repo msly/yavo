@@ -1,0 +1,401 @@
+{
+  "schema": "yavo-format-syntax-checks/1",
+  "baseline": "08f19faf834f1b89ddad39fb4e77f97753cc8641",
+  "scope": "Independent Rust check-only context, parser priority and scalar format probes; unsafe outer-lock probe is not executed",
+  "inputs": {
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo": "2f5e7da56f11898371b0243e1d14cd9f57cd666266e3939f86811991dbac4814",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/nested_fragment_lex_priority/source.yv": "2e0a2413e3097d8313df5215765351306077fe8663835f28cae5ab48751633ee",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/earlier_parse_later_fragment/source.yv": "3b25c0fb7c27077598a18e4036b1b8e735da106fea373aa94d389bc0e76040c7",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/byte_closing_brace/source.yv": "866e684b599db0119804307cfb0b7448f5fe087fdbebe0f54a7aff234663c5d7",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/byte_colon/source.yv": "2206469a4622fd58f88ecd210133647e9e0026f44cc6700032a777f849ed1af3",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/byte_opening_brace/source.yv": "02331a943c59aea317415e6b8f8158805c4e4fa6ce3bc55ef53b03b455fb5303",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/format_field_default/source.yv": "ab59a6ee01db4a77c0c3ceb1b8207241dfb41ba99ce7eefc35c267be3a78d8cb",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/format_nested_owner_outer_lock/source.yv": "562074f4eabeb1e27477cf6d357851a73cc0c3c6bc5ebc5ac02eecd73bdbd4d8",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/format_nested_copy_releases/source.yv": "ee9e26c593a7e640ee017127531e71b5f04bc8d278d1c017e227a5e7e111ac31",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/interpolation_copy_mutation/source.yv": "329d5b70e1ef35b203cf2cbd9ffa0d88bdb0a9cc53b3e13dbb3853d2c948c12a",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/print_zero/source.yv": "0be9db9973bfd6e031aa9e8713f5430171189fb111c6faa6cd32efd6266d99c8",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/println_zero/source.yv": "3393e8238d75348322681dcc4d1e8fbce55a1980fc44bc7129c28c12a8be9794",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/eprintln_zero/source.yv": "a963bdc37361bf2eca5816749eb8e0ee94b7e1d9085be6994256e26026b005a4",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/format_optional/source.yv": "c7f8f87fbf890438c25e07bb1a0fa0b862571ffbf6e3fb8b3e50d582b9438a4c",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/format_vector/source.yv": "cbd03a55e6a40b9b591b5e963a98eeeca0efa03ffa7928a2ee2193fe9304ce68",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/format_struct/source.yv": "c5fca6a5966a31ffbc0c951004c746bfaadf4866b657b5a59d64e69a9d1184de",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/format_result/source.yv": "10644503bef703f39a1041313d615a4769698a6eb1f33d8f7ca7dd52ed547843",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/embedded_unknown_unicode_position/source.yv": "b056408c450c3cbb4c6bc9c96f69bad8b39d2336d7bf9949f50931569a4f06f0",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/embedded_operator_position/source.yv": "7b34d4c6b3450e8e26e29dbc0e1fdf0562b6077b39d0a53ddaf52774aa8f2a4a",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/interpolation_unclosed_eof/source.yv": "0d97dce5b6e924f750f784e43ee1010fc6234a5c1b226e93d9d8884234d7ef26",
+    "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/format_nested_syntax/source.yv": "a31c244be92cf3999836195cb43df509bf3815450c059cbdddcd040bd4f53ddb"
+  },
+  "records": [
+    {
+      "id": "nested_fragment_lex_priority",
+      "source": "fn main() { println(\"${1 2 @}\") }\n",
+      "source_sha256": "2e0a2413e3097d8313df5215765351306077fe8663835f28cae5ab48751633ee",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+        "check",
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/nested_fragment_lex_priority/source.yv",
+        "--json"
+      ],
+      "exit_code": 1,
+      "stdout": "{\"diagnostics\":[{\"code\":\"E0020\",\"column\":26,\"end_column\":27,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/nested_fragment_lex_priority/source.yv\",\"fixes\":[],\"line\":1,\"message\":\"only a single expression is allowed inside `${...}`\",\"notes\":[],\"primary\":{\"column\":26,\"end\":26,\"end_column\":27,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/nested_fragment_lex_priority/source.yv\",\"line\":1,\"start\":25},\"severity\":\"ERROR\"},{\"code\":\"E0020\",\"column\":28,\"end_column\":29,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/nested_fragment_lex_priority/source.yv\",\"fixes\":[],\"line\":1,\"message\":\"unexpected character `@`\",\"notes\":[],\"primary\":{\"column\":28,\"end\":28,\"end_column\":29,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/nested_fragment_lex_priority/source.yv\",\"line\":1,\"start\":27},\"severity\":\"ERROR\"}],\"error_count\":2,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/nested_fragment_lex_priority/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"2e0a2413e3097d8313df5215765351306077fe8663835f28cae5ab48751633ee\",\"warning_count\":0}\n",
+      "stderr": "",
+      "first_error": {
+        "code": "E0020",
+        "line": 1,
+        "column": 26,
+        "message": "only a single expression is allowed inside `${...}`"
+      }
+    },
+    {
+      "id": "earlier_parse_later_fragment",
+      "source": "fn main() {\n    let value = )\n    println(\"${@}\")\n}\n",
+      "source_sha256": "3b25c0fb7c27077598a18e4036b1b8e735da106fea373aa94d389bc0e76040c7",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+        "check",
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/earlier_parse_later_fragment/source.yv",
+        "--json"
+      ],
+      "exit_code": 1,
+      "stdout": "{\"diagnostics\":[{\"code\":\"E0020\",\"column\":17,\"end_column\":18,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/earlier_parse_later_fragment/source.yv\",\"fixes\":[],\"line\":2,\"message\":\"expected an expression, found `)`\",\"notes\":[],\"primary\":{\"column\":17,\"end\":29,\"end_column\":18,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/earlier_parse_later_fragment/source.yv\",\"line\":2,\"start\":28},\"severity\":\"ERROR\"},{\"code\":\"E0020\",\"column\":16,\"end_column\":17,\"end_line\":3,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/earlier_parse_later_fragment/source.yv\",\"fixes\":[],\"line\":3,\"message\":\"unexpected character `@`\",\"notes\":[],\"primary\":{\"column\":16,\"end\":46,\"end_column\":17,\"end_line\":3,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/earlier_parse_later_fragment/source.yv\",\"line\":3,\"start\":45},\"severity\":\"ERROR\"},{\"code\":\"E0020\",\"column\":16,\"end_column\":17,\"end_line\":3,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/earlier_parse_later_fragment/source.yv\",\"fixes\":[],\"line\":3,\"message\":\"empty `${}` in string literal\",\"notes\":[],\"primary\":{\"column\":16,\"end\":46,\"end_column\":17,\"end_line\":3,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/earlier_parse_later_fragment/source.yv\",\"line\":3,\"start\":45},\"severity\":\"ERROR\"}],\"error_count\":3,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/earlier_parse_later_fragment/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"3b25c0fb7c27077598a18e4036b1b8e735da106fea373aa94d389bc0e76040c7\",\"warning_count\":0}\n",
+      "stderr": "",
+      "first_error": {
+        "code": "E0020",
+        "line": 2,
+        "column": 17,
+        "message": "expected an expression, found `)`"
+      }
+    },
+    {
+      "id": "byte_closing_brace",
+      "source": "fn main() { println(\"${'}'}\") }\n",
+      "source_sha256": "866e684b599db0119804307cfb0b7448f5fe087fdbebe0f54a7aff234663c5d7",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+        "check",
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/byte_closing_brace/source.yv",
+        "--json"
+      ],
+      "exit_code": 1,
+      "stdout": "{\"diagnostics\":[{\"code\":\"E0020\",\"column\":24,\"end_column\":25,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/byte_closing_brace/source.yv\",\"fixes\":[],\"line\":1,\"message\":\"invalid byte literal: write one ASCII character or an escape between single quotes, e.g. 'a' or '\\\\n'\",\"notes\":[],\"primary\":{\"column\":24,\"end\":24,\"end_column\":25,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/byte_closing_brace/source.yv\",\"line\":1,\"start\":23},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/byte_closing_brace/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"866e684b599db0119804307cfb0b7448f5fe087fdbebe0f54a7aff234663c5d7\",\"warning_count\":0}\n",
+      "stderr": "",
+      "first_error": {
+        "code": "E0020",
+        "line": 1,
+        "column": 24,
+        "message": "invalid byte literal: write one ASCII character or an escape between single quotes, e.g. 'a' or '\\n'"
+      }
+    },
+    {
+      "id": "byte_colon",
+      "source": "fn main() { println(\"${':'}\") }\n",
+      "source_sha256": "2206469a4622fd58f88ecd210133647e9e0026f44cc6700032a777f849ed1af3",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+        "check",
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/byte_colon/source.yv",
+        "--json"
+      ],
+      "exit_code": 1,
+      "stdout": "{\"diagnostics\":[{\"code\":\"E0020\",\"column\":24,\"end_column\":25,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/byte_colon/source.yv\",\"fixes\":[],\"line\":1,\"message\":\"invalid byte literal: write one ASCII character or an escape between single quotes, e.g. 'a' or '\\\\n'\",\"notes\":[],\"primary\":{\"column\":24,\"end\":24,\"end_column\":25,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/byte_colon/source.yv\",\"line\":1,\"start\":23},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/byte_colon/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"2206469a4622fd58f88ecd210133647e9e0026f44cc6700032a777f849ed1af3\",\"warning_count\":0}\n",
+      "stderr": "",
+      "first_error": {
+        "code": "E0020",
+        "line": 1,
+        "column": 24,
+        "message": "invalid byte literal: write one ASCII character or an escape between single quotes, e.g. 'a' or '\\n'"
+      }
+    },
+    {
+      "id": "byte_opening_brace",
+      "source": "fn main() { println(\"${'{'}\") }\n",
+      "source_sha256": "02331a943c59aea317415e6b8f8158805c4e4fa6ce3bc55ef53b03b455fb5303",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+        "check",
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/byte_opening_brace/source.yv",
+        "--json"
+      ],
+      "exit_code": 1,
+      "stdout": "{\"diagnostics\":[{\"code\":\"E0020\",\"column\":11,\"end_column\":12,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/byte_opening_brace/source.yv\",\"fixes\":[],\"line\":1,\"message\":\"this `{` is never closed\",\"notes\":[],\"primary\":{\"column\":11,\"end\":11,\"end_column\":12,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/byte_opening_brace/source.yv\",\"line\":1,\"start\":10},\"severity\":\"ERROR\"},{\"code\":\"E0020\",\"column\":21,\"end_column\":32,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/byte_opening_brace/source.yv\",\"fixes\":[],\"line\":1,\"message\":\"unterminated string literal\",\"notes\":[],\"primary\":{\"column\":21,\"end\":31,\"end_column\":32,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/byte_opening_brace/source.yv\",\"line\":1,\"start\":20},\"severity\":\"ERROR\"},{\"code\":\"E0020\",\"column\":22,\"end_column\":32,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/byte_opening_brace/source.yv\",\"fixes\":[],\"line\":1,\"message\":\"unterminated `${` in string; close it with `}`\",\"notes\":[\"to write a literal `${` in a string, escape it as `\\\\${`\"],\"primary\":{\"column\":22,\"end\":31,\"end_column\":32,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/byte_opening_brace/source.yv\",\"line\":1,\"start\":21},\"severity\":\"ERROR\"},{\"code\":\"E0020\",\"column\":1,\"end_column\":1,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/byte_opening_brace/source.yv\",\"fixes\":[],\"line\":2,\"message\":\"expected `,` or `)`, found a newline\",\"notes\":[],\"primary\":{\"column\":1,\"end\":32,\"end_column\":1,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/byte_opening_brace/source.yv\",\"line\":2,\"start\":32},\"severity\":\"ERROR\"}],\"error_count\":4,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/byte_opening_brace/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"02331a943c59aea317415e6b8f8158805c4e4fa6ce3bc55ef53b03b455fb5303\",\"warning_count\":0}\n",
+      "stderr": "",
+      "first_error": {
+        "code": "E0020",
+        "line": 1,
+        "column": 11,
+        "message": "this `{` is never closed"
+      }
+    },
+    {
+      "id": "format_field_default",
+      "source": "struct Item {\n    text: String = format(\"x\")\n}\nfn main() { let value = Item{} }\n",
+      "source_sha256": "ab59a6ee01db4a77c0c3ceb1b8207241dfb41ba99ce7eefc35c267be3a78d8cb",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+        "check",
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/format_field_default/source.yv",
+        "--json"
+      ],
+      "exit_code": 1,
+      "stdout": "{\"diagnostics\":[{\"code\":\"E0001\",\"column\":20,\"end_column\":31,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/format_field_default/source.yv\",\"fixes\":[],\"line\":2,\"message\":\"the default of field `text` must be a constant\",\"notes\":[\"allowed: a number, `true`/`false`, a byte, a string literal, `none`, `[]` or `[:]`\"],\"primary\":{\"column\":20,\"end\":44,\"end_column\":31,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/format_field_default/source.yv\",\"line\":2,\"start\":33},\"severity\":\"ERROR\"},{\"code\":\"E0018\",\"column\":25,\"end_column\":29,\"end_line\":4,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/format_field_default/source.yv\",\"fixes\":[],\"line\":4,\"message\":\"missing 1 field in `Item`: `text`\",\"notes\":[\"give every field that has no declared default (`field: T = value`); optional fields default to `none`\"],\"primary\":{\"column\":25,\"end\":75,\"end_column\":29,\"end_line\":4,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/format_field_default/source.yv\",\"line\":4,\"start\":71},\"severity\":\"ERROR\"}],\"error_count\":2,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/format_field_default/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"ab59a6ee01db4a77c0c3ceb1b8207241dfb41ba99ce7eefc35c267be3a78d8cb\",\"warning_count\":0}\n",
+      "stderr": "",
+      "first_error": {
+        "code": "E0001",
+        "line": 2,
+        "column": 20,
+        "message": "the default of field `text` must be a constant"
+      }
+    },
+    {
+      "id": "format_nested_owner_outer_lock",
+      "source": "fn change(value: inout String) -> int {\n    value = \"replacement\".toString()\n    return 7\n}\nfn main() {\n    var owner = \"original\".toString()\n    println(\"${owner} ${format(\"${owner}\")} ${change(&owner)}\")\n}\n",
+      "source_sha256": "562074f4eabeb1e27477cf6d357851a73cc0c3c6bc5ebc5ac02eecd73bdbd4d8",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+        "check",
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/format_nested_owner_outer_lock/source.yv",
+        "--json"
+      ],
+      "exit_code": 0,
+      "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/format_nested_owner_outer_lock/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"562074f4eabeb1e27477cf6d357851a73cc0c3c6bc5ebc5ac02eecd73bdbd4d8\",\"warning_count\":0}\n",
+      "stderr": "",
+      "first_error": null
+    },
+    {
+      "id": "format_nested_copy_releases",
+      "source": "fn change(value: inout String) -> int {\n    value = \"replacement\".toString()\n    return 7\n}\nfn main() {\n    var owner = \"original\".toString()\n    println(\"${format(\"${owner}\")} ${change(&owner)}\")\n}\n",
+      "source_sha256": "ee9e26c593a7e640ee017127531e71b5f04bc8d278d1c017e227a5e7e111ac31",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+        "check",
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/format_nested_copy_releases/source.yv",
+        "--json"
+      ],
+      "exit_code": 0,
+      "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/format_nested_copy_releases/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"ee9e26c593a7e640ee017127531e71b5f04bc8d278d1c017e227a5e7e111ac31\",\"warning_count\":0}\n",
+      "stderr": "",
+      "first_error": null
+    },
+    {
+      "id": "interpolation_copy_mutation",
+      "source": "fn bump(value: inout int) -> int { value += 1\n    return value }\nfn main() { var count = 2\n    println(\"${count} ${bump(&count)} ${count}\") }\n",
+      "source_sha256": "329d5b70e1ef35b203cf2cbd9ffa0d88bdb0a9cc53b3e13dbb3853d2c948c12a",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+        "check",
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/interpolation_copy_mutation/source.yv",
+        "--json"
+      ],
+      "exit_code": 0,
+      "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/interpolation_copy_mutation/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"329d5b70e1ef35b203cf2cbd9ffa0d88bdb0a9cc53b3e13dbb3853d2c948c12a\",\"warning_count\":0}\n",
+      "stderr": "",
+      "first_error": null
+    },
+    {
+      "id": "print_zero",
+      "source": "fn main() { print() }\n",
+      "source_sha256": "0be9db9973bfd6e031aa9e8713f5430171189fb111c6faa6cd32efd6266d99c8",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+        "check",
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/print_zero/source.yv",
+        "--json"
+      ],
+      "exit_code": 1,
+      "stdout": "{\"diagnostics\":[{\"code\":\"E0012\",\"column\":13,\"end_column\":20,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/print_zero/source.yv\",\"fixes\":[],\"line\":1,\"message\":\"`print` takes exactly one argument\",\"notes\":[\"use interpolation to print several values: `println(\\\"${a} ${b}\\\")`\"],\"primary\":{\"column\":13,\"end\":19,\"end_column\":20,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/print_zero/source.yv\",\"line\":1,\"start\":12},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/print_zero/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"0be9db9973bfd6e031aa9e8713f5430171189fb111c6faa6cd32efd6266d99c8\",\"warning_count\":0}\n",
+      "stderr": "",
+      "first_error": {
+        "code": "E0012",
+        "line": 1,
+        "column": 13,
+        "message": "`print` takes exactly one argument"
+      }
+    },
+    {
+      "id": "println_zero",
+      "source": "fn main() { println() }\n",
+      "source_sha256": "3393e8238d75348322681dcc4d1e8fbce55a1980fc44bc7129c28c12a8be9794",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+        "check",
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/println_zero/source.yv",
+        "--json"
+      ],
+      "exit_code": 0,
+      "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/println_zero/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"3393e8238d75348322681dcc4d1e8fbce55a1980fc44bc7129c28c12a8be9794\",\"warning_count\":0}\n",
+      "stderr": "",
+      "first_error": null
+    },
+    {
+      "id": "eprintln_zero",
+      "source": "fn main() { eprintln() }\n",
+      "source_sha256": "a963bdc37361bf2eca5816749eb8e0ee94b7e1d9085be6994256e26026b005a4",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+        "check",
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/eprintln_zero/source.yv",
+        "--json"
+      ],
+      "exit_code": 0,
+      "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/eprintln_zero/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"a963bdc37361bf2eca5816749eb8e0ee94b7e1d9085be6994256e26026b005a4\",\"warning_count\":0}\n",
+      "stderr": "",
+      "first_error": null
+    },
+    {
+      "id": "format_optional",
+      "source": "fn main() { println(format(some(1))) }\n",
+      "source_sha256": "c7f8f87fbf890438c25e07bb1a0fa0b862571ffbf6e3fb8b3e50d582b9438a4c",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+        "check",
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/format_optional/source.yv",
+        "--json"
+      ],
+      "exit_code": 1,
+      "stdout": "{\"diagnostics\":[{\"code\":\"U0001\",\"column\":28,\"end_column\":35,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/format_optional/source.yv\",\"fixes\":[],\"line\":1,\"message\":\"printing an optional value (`?int`) is not supported yet\",\"notes\":[\"print the value inside with `if let`, or give a default with `??`\"],\"primary\":{\"column\":28,\"end\":34,\"end_column\":35,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/format_optional/source.yv\",\"line\":1,\"start\":27},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/format_optional/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"c7f8f87fbf890438c25e07bb1a0fa0b862571ffbf6e3fb8b3e50d582b9438a4c\",\"warning_count\":0}\n",
+      "stderr": "",
+      "first_error": {
+        "code": "U0001",
+        "line": 1,
+        "column": 28,
+        "message": "printing an optional value (`?int`) is not supported yet"
+      }
+    },
+    {
+      "id": "format_vector",
+      "source": "fn main() { println(format([1, 2])) }\n",
+      "source_sha256": "cbd03a55e6a40b9b591b5e963a98eeeca0efa03ffa7928a2ee2193fe9304ce68",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+        "check",
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/format_vector/source.yv",
+        "--json"
+      ],
+      "exit_code": 1,
+      "stdout": "{\"diagnostics\":[{\"code\":\"E0001\",\"column\":28,\"end_column\":34,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/format_vector/source.yv\",\"fixes\":[],\"line\":1,\"message\":\"a value of type `Vec[int]` cannot be printed directly\",\"notes\":[\"print its parts instead, e.g. `println(\\\"${p.x} ${p.y}\\\")`\"],\"primary\":{\"column\":28,\"end\":33,\"end_column\":34,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/format_vector/source.yv\",\"line\":1,\"start\":27},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/format_vector/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"cbd03a55e6a40b9b591b5e963a98eeeca0efa03ffa7928a2ee2193fe9304ce68\",\"warning_count\":0}\n",
+      "stderr": "",
+      "first_error": {
+        "code": "E0001",
+        "line": 1,
+        "column": 28,
+        "message": "a value of type `Vec[int]` cannot be printed directly"
+      }
+    },
+    {
+      "id": "format_struct",
+      "source": "struct Point {\n    value: int\n}\nfn main() { println(format(Point{value: 1})) }\n",
+      "source_sha256": "c5fca6a5966a31ffbc0c951004c746bfaadf4866b657b5a59d64e69a9d1184de",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+        "check",
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/format_struct/source.yv",
+        "--json"
+      ],
+      "exit_code": 1,
+      "stdout": "{\"diagnostics\":[{\"code\":\"E0001\",\"column\":28,\"end_column\":43,\"end_line\":4,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/format_struct/source.yv\",\"fixes\":[],\"line\":4,\"message\":\"a value of type `Point` cannot be printed directly\",\"notes\":[\"print its parts instead, e.g. `println(\\\"${p.x} ${p.y}\\\")`\"],\"primary\":{\"column\":28,\"end\":74,\"end_column\":43,\"end_line\":4,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/format_struct/source.yv\",\"line\":4,\"start\":59},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/format_struct/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"c5fca6a5966a31ffbc0c951004c746bfaadf4866b657b5a59d64e69a9d1184de\",\"warning_count\":0}\n",
+      "stderr": "",
+      "first_error": {
+        "code": "E0001",
+        "line": 4,
+        "column": 28,
+        "message": "a value of type `Point` cannot be printed directly"
+      }
+    },
+    {
+      "id": "format_result",
+      "source": "fn value() -> int ! int { return 1 }\nfn main() { println(format(value())) }\n",
+      "source_sha256": "10644503bef703f39a1041313d615a4769698a6eb1f33d8f7ca7dd52ed547843",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+        "check",
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/format_result/source.yv",
+        "--json"
+      ],
+      "exit_code": 1,
+      "stdout": "{\"diagnostics\":[{\"code\":\"E0001\",\"column\":28,\"end_column\":35,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/format_result/source.yv\",\"fixes\":[],\"line\":2,\"message\":\"a value that can fail (`int ! int`) cannot be printed directly\",\"notes\":[\"handle the error first with `try`, `catch` or `match`\"],\"primary\":{\"column\":28,\"end\":71,\"end_column\":35,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/format_result/source.yv\",\"line\":2,\"start\":64},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/format_result/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"10644503bef703f39a1041313d615a4769698a6eb1f33d8f7ca7dd52ed547843\",\"warning_count\":0}\n",
+      "stderr": "",
+      "first_error": {
+        "code": "E0001",
+        "line": 2,
+        "column": 28,
+        "message": "a value that can fail (`int ! int`) cannot be printed directly"
+      }
+    },
+    {
+      "id": "embedded_unknown_unicode_position",
+      "source": "fn main() {\n    println(\"汉🙂${missing}\")\n}\n",
+      "source_sha256": "b056408c450c3cbb4c6bc9c96f69bad8b39d2336d7bf9949f50931569a4f06f0",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+        "check",
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/embedded_unknown_unicode_position/source.yv",
+        "--json"
+      ],
+      "exit_code": 1,
+      "stdout": "{\"diagnostics\":[{\"code\":\"E0010\",\"column\":18,\"end_column\":25,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/embedded_unknown_unicode_position/source.yv\",\"fixes\":[],\"line\":2,\"message\":\"cannot find `missing` in this scope\",\"notes\":[],\"primary\":{\"column\":18,\"end\":41,\"end_column\":25,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/embedded_unknown_unicode_position/source.yv\",\"line\":2,\"start\":34},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/embedded_unknown_unicode_position/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"b056408c450c3cbb4c6bc9c96f69bad8b39d2336d7bf9949f50931569a4f06f0\",\"warning_count\":0}\n",
+      "stderr": "",
+      "first_error": {
+        "code": "E0010",
+        "line": 2,
+        "column": 18,
+        "message": "cannot find `missing` in this scope"
+      }
+    },
+    {
+      "id": "embedded_operator_position",
+      "source": "fn main() {\n    println(\"ok${1 + true}\")\n}\n",
+      "source_sha256": "7b34d4c6b3450e8e26e29dbc0e1fdf0562b6077b39d0a53ddaf52774aa8f2a4a",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+        "check",
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/embedded_operator_position/source.yv",
+        "--json"
+      ],
+      "exit_code": 1,
+      "stdout": "{\"diagnostics\":[{\"code\":\"E0001\",\"column\":18,\"end_column\":26,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/embedded_operator_position/source.yv\",\"fixes\":[],\"line\":2,\"message\":\"operator `+` needs integer operands, found `int` and `bool`\",\"notes\":[],\"primary\":{\"column\":18,\"end\":37,\"end_column\":26,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/embedded_operator_position/source.yv\",\"line\":2,\"start\":29},\"severity\":\"ERROR\"}],\"error_count\":1,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/embedded_operator_position/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"7b34d4c6b3450e8e26e29dbc0e1fdf0562b6077b39d0a53ddaf52774aa8f2a4a\",\"warning_count\":0}\n",
+      "stderr": "",
+      "first_error": {
+        "code": "E0001",
+        "line": 2,
+        "column": 18,
+        "message": "operator `+` needs integer operands, found `int` and `bool`"
+      }
+    },
+    {
+      "id": "interpolation_unclosed_eof",
+      "source": "fn main() {\n    println(\"${1\n",
+      "source_sha256": "0d97dce5b6e924f750f784e43ee1010fc6234a5c1b226e93d9d8884234d7ef26",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+        "check",
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/interpolation_unclosed_eof/source.yv",
+        "--json"
+      ],
+      "exit_code": 1,
+      "stdout": "{\"diagnostics\":[{\"code\":\"E0020\",\"column\":11,\"end_column\":12,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/interpolation_unclosed_eof/source.yv\",\"fixes\":[],\"line\":1,\"message\":\"this `{` is never closed\",\"notes\":[],\"primary\":{\"column\":11,\"end\":11,\"end_column\":12,\"end_line\":1,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/interpolation_unclosed_eof/source.yv\",\"line\":1,\"start\":10},\"severity\":\"ERROR\"},{\"code\":\"E0020\",\"column\":13,\"end_column\":17,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/interpolation_unclosed_eof/source.yv\",\"fixes\":[],\"line\":2,\"message\":\"unterminated string literal\",\"notes\":[],\"primary\":{\"column\":13,\"end\":28,\"end_column\":17,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/interpolation_unclosed_eof/source.yv\",\"line\":2,\"start\":24},\"severity\":\"ERROR\"},{\"code\":\"E0020\",\"column\":14,\"end_column\":17,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/interpolation_unclosed_eof/source.yv\",\"fixes\":[],\"line\":2,\"message\":\"unterminated `${` in string; close it with `}`\",\"notes\":[\"to write a literal `${` in a string, escape it as `\\\\${`\"],\"primary\":{\"column\":14,\"end\":28,\"end_column\":17,\"end_line\":2,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/interpolation_unclosed_eof/source.yv\",\"line\":2,\"start\":25},\"severity\":\"ERROR\"},{\"code\":\"E0020\",\"column\":1,\"end_column\":1,\"end_line\":3,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/interpolation_unclosed_eof/source.yv\",\"fixes\":[],\"line\":3,\"message\":\"expected `,` or `)`, found a newline\",\"notes\":[],\"primary\":{\"column\":1,\"end\":29,\"end_column\":1,\"end_line\":3,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/interpolation_unclosed_eof/source.yv\",\"line\":3,\"start\":29},\"severity\":\"ERROR\"}],\"error_count\":4,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/interpolation_unclosed_eof/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"0d97dce5b6e924f750f784e43ee1010fc6234a5c1b226e93d9d8884234d7ef26\",\"warning_count\":0}\n",
+      "stderr": "",
+      "first_error": {
+        "code": "E0020",
+        "line": 1,
+        "column": 11,
+        "message": "this `{` is never closed"
+      }
+    },
+    {
+      "id": "format_nested_syntax",
+      "source": "struct Point {\n    value: int\n}\nfn length(value: str) -> int { return value.len() }\nfn main() { println(\"${Point{value: 7}.value}:${[3, 4][1]}:${format(\"v${2 + 3}\")}:${length(\"x}y:z\")}\") }\n",
+      "source_sha256": "a31c244be92cf3999836195cb43df509bf3815450c059cbdddcd040bd4f53ddb",
+      "command": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-stage0/yavo",
+        "check",
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/format_nested_syntax/source.yv",
+        "--json"
+      ],
+      "exit_code": 0,
+      "stdout": "{\"diagnostics\":[],\"error_count\":0,\"file\":\"/data1/workspace/github/workspace/yavo/compiler/target/ci/batch32-oracle/syntax-checks-1/format_nested_syntax/source.yv\",\"schema\":\"yavo-diagnostics/p0\",\"source_sha256\":\"a31c244be92cf3999836195cb43df509bf3815450c059cbdddcd040bd4f53ddb\",\"warning_count\":0}\n",
+      "stderr": "",
+      "first_error": null
+    }
+  ],
+  "inputs_changed": []
+}

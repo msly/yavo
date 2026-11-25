@@ -1,0 +1,100 @@
+[
+  {
+    "id": "format_scalar_types",
+    "kind": "run",
+    "stdout": "17\n65\ntrue\ntext\nowned\nHot\n\n",
+    "source": "enum Mark {\n    Cold\n    Hot\n}\nfn main() {\n    println(format(17))\n    println(format(byte(65)))\n    println(format(true))\n    println(format(\"text\"))\n    println(format(\"owned\".toString()))\n    println(format(Mark.Hot))\n    println(format(\"\"))\n}\n"
+  },
+  {
+    "id": "interpolation_literal_bytes",
+    "kind": "run",
+    "stdout": "汉🙂 ${literal} 65\u0000end\nquote:\" slash:\\ tab:\t:2\n",
+    "source": "fn main() {\n    println(\"汉🙂 \\${literal} ${'A'}\\0end\")\n    println(\"quote:\\\" slash:\\\\ tab:\\t:${2}\")\n}\n"
+  },
+  {
+    "id": "format_eprintln",
+    "kind": "run",
+    "stdout": "stdout:1\n",
+    "stderr": "err:汉🙂:66:true\n",
+    "source": "fn main() {\n    println(\"stdout:${1}\")\n    eprintln(\"err:汉🙂:${byte(66)}:${true}\")\n}\n"
+  },
+  {
+    "id": "format_evaluation_order",
+    "kind": "run",
+    "stdout": "1\n2\nouter:1:2\n3\n4\nfmt:3:4\n",
+    "source": "fn mark(value: int) -> int {\n    println(value)\n    return value\n}\nfn main() {\n    println(\"outer:${mark(1)}:${mark(2)}\")\n    let text = format(\"fmt:${mark(3)}:${mark(4)}\")\n    println(text)\n}\n"
+  },
+  {
+    "id": "format_owned_views",
+    "kind": "run",
+    "stdout": "owner:ow:own:value:汉\n",
+    "source": "struct Row {\n    text: String\n}\nfn main() {\n    let owner = \"owner\".toString()\n    let values = [\"value\".toString()]\n    println(\"${owner}:${owner[0..2]}:${Row{text: \"own\".toString()}.text}:${values[0]}:${\"汉🙂\".toString()[0..3]}\")\n}\n"
+  },
+  {
+    "id": "format_owned_containers",
+    "kind": "run",
+    "stdout": "row:7\nv:8\nv:9\ndone:10\n",
+    "source": "struct Row {\n    text: String\n}\nfn produce(value: int) -> String { return format(\"done:${value}\") }\nfn main() {\n    var row = Row{text: format(\"row:${7}\")}\n    var values = [format(\"v:${8}\")]\n    values.push(format(\"v:${9}\"))\n    println(row.text)\n    println(values[0])\n    println(values[1])\n    row.text = produce(10)\n    println(row.text)\n}\n"
+  },
+  {
+    "id": "format_later_failure_cleanup",
+    "kind": "run",
+    "stdout": "vec\nstruct\ncall\n",
+    "source": "struct Row {\n    left: String\n    right: String\n}\nfn fail(label: str) -> String ! String { return err(label.toString()) }\nfn failInt() -> int ! String { return err(\"call\".toString()) }\nfn use(first: String, second: int) -> int { return first.len() + second }\nfn vector() -> Vec[String] ! String {\n    return [format(\"first:${1}\"), try fail(\"vec\")]\n}\nfn object() -> Row ! String {\n    return Row{left: format(\"left:${2}\"), right: try fail(\"struct\")}\n}\nfn argument() -> int ! String {\n    return use(format(\"arg:${3}\"), try failInt())\n}\nfn checkVector() {\n    let _ = vector() catch error {\n        println(error)\n        return\n    }\n}\nfn checkObject() {\n    let _ = object() catch error {\n        println(error)\n        return\n    }\n}\nfn checkArgument() {\n    let _ = argument() catch error {\n        println(error)\n        return\n    }\n}\nfn main() {\n    checkVector()\n    checkObject()\n    checkArgument()\n}\n"
+  },
+  {
+    "id": "format_try_output_atomicity",
+    "kind": "run",
+    "stdout": "print\nstderr\nformat\n",
+    "source": "fn fail(label: str) -> int ! String { return err(label.toString()) }\nfn printFailure() -> () ! String {\n    println(\"BAD:${\"hold\".toString()}:${try fail(\"print\")}:TAIL\")\n}\nfn stderrFailure() -> () ! String {\n    eprintln(\"BAD:${format(\"hold\")}:${try fail(\"stderr\")}:TAIL\")\n}\nfn formatFailure() -> String ! String {\n    return format(\"BAD:${format(\"hold\")}:${try fail(\"format\")}:TAIL\")\n}\nfn checkPrint() {\n    let _ = printFailure() catch error {\n        println(error)\n        return\n    }\n}\nfn checkStderr() {\n    let _ = stderrFailure() catch error {\n        println(error)\n        return\n    }\n}\nfn checkFormat() {\n    let _ = formatFailure() catch error {\n        println(error)\n        return\n    }\n}\nfn main() {\n    checkPrint()\n    checkStderr()\n    checkFormat()\n}\n"
+  },
+  {
+    "id": "format_catch_return_cleanup",
+    "kind": "run",
+    "stdout": "9\n",
+    "source": "fn fail() -> int ! String { return err(\"discarded\".toString()) }\nfn work() -> int {\n    println(\"BAD:${format(\"hold\")}:${fail() catch error { return 9 }}:TAIL\")\n    return 0\n}\nfn main() { println(work()) }\n"
+  },
+  {
+    "id": "format_catch_loop_cleanup",
+    "kind": "run",
+    "stdout": "row:hold:1\n3\n",
+    "source": "fn choose(value: int) -> int ! String {\n    if value == 1 { return value }\n    return err(\"discarded\".toString())\n}\nfn main() {\n    var seen = 0\n    for value in 0..4 {\n        seen += 1\n        println(\"row:${format(\"hold\")}:${choose(value) catch error { if value == 0 { continue } else { break } }}\")\n    }\n    println(seen)\n}\n"
+  },
+  {
+    "id": "format_lazy_fallback",
+    "kind": "run",
+    "stdout": "5\nallocate\n6\n",
+    "source": "fn build() -> String {\n    println(\"allocate\")\n    return format(\"val:${22}\")\n}\nfn main() {\n    let present: ?int = 5\n    let absent: ?int = none\n    println(present ?? build().len())\n    println(absent ?? build().len())\n}\n"
+  },
+  {
+    "id": "format_nested_parentheses",
+    "kind": "run",
+    "stdout": "7:4:v5:5\n6\n",
+    "source": "struct Point {\n    value: int\n}\nfn length(value: str) -> int { return value.len() }\nfn main() {\n    println(\"${Point{value: 7}.value}:${[3, 4][1]}:${format(\"v${2 + 3}\")}:${length(\"x}y:z\")}\")\n    println((format(\"${6}\")))\n}\n"
+  },
+  {
+    "id": "interpolation_copy_mutation",
+    "kind": "run",
+    "source": "fn bump(value: inout int) -> int { value += 1\n    return value }\nfn main() { var count = 2\n    println(\"${count} ${bump(&count)} ${count}\") }\n",
+    "stdout": "2 3 3\n"
+  },
+  {
+    "id": "format_nested_copy_releases",
+    "kind": "run",
+    "source": "fn change(value: inout String) -> int {\n    value = \"replacement\".toString()\n    return 7\n}\nfn main() {\n    var owner = \"original\".toString()\n    println(\"${format(\"${owner}\")} ${change(&owner)}\")\n}\n",
+    "stdout": "original 7\n"
+  },
+  {
+    "id": "format_user_shadow",
+    "kind": "run",
+    "source": "fn format(value: int) -> int { return value + 1 }\nfn main() { println(format(3)) }\n",
+    "stdout": "4\n"
+  },
+  {
+    "id": "interpolation_basic",
+    "kind": "run",
+    "source": "fn main() { println(\"${1}\") }\n",
+    "stdout": "1\n",
+    "promotes": "unsupported_interpolation"
+  }
+]

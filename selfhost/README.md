@@ -13,13 +13,13 @@ The compiler sources were rewritten into a *bootstrap dialect*: a strict
 subset of the stage0 language that the compiler itself implements (see
 [decision 20–24](../docs/decisions.md)). It is not yet the default compiler:
 stage0 accepts far more of the language (owned optionals, reference iteration,
-interpolation, modules, methods, generics, Map/Set, closures, threads...).
-Batch 31 implements int/byte range `for` and read-only Copy Vec traversal,
-with four migrations in the compiler and production lexer unit; local and three-platform native
-acceptance have passed. Batch 30's Copy Optional, `Vec.pop`, value-form `??`
-and removal of five copying truncation helpers remain part of the subset,
-along with batch 29's user-function results and `lex → compile → main`
-propagation. SH-3 is still incomplete.
+float formatting, modules, methods, generics, Map/Set, closures, threads...).
+Batch 32 adds `${expr}` interpolation in direct print/println/eprintln/format
+arguments (int, byte, bool, str, String, payload-free enum) and an owned
+`format` result; the compiler's diagnostic line and C name/position helpers now
+use it. Batch 31's int/byte range `for` and read-only Copy Vec traversal,
+batch 30's Copy Optional, `Vec.pop` and value-form `??`, and batch 29's
+user-function results remain part of the subset. SH-3 is still incomplete.
 
 ## Build and validate
 
@@ -503,7 +503,8 @@ or unit vector elements, owned-element pop, vector slices, other collections, us
 enum payloads, sink parameters and general references, owned/nested Optionals,
 Optional fields/container/Result combinations, Result fields,
 `Vec[Result]`, nested Results, arrow catch,
-user-defined methods, generics, interpolation, float/nondecimal literals,
+user-defined methods, generics, interpolation outside direct output/format
+arguments, format specifiers, float/nondecimal literals,
 integer separators, owned/reference/two-binding collection iteration,
 field or temporary iterables, closures and concurrency. String temporary
 receivers cannot be modified. This list describes the new frontend's input,
@@ -538,10 +539,9 @@ executable fixtures from earlier increments.
 
 ## Next steps
 
-Self-hosting remains a regression gate. Batch 31's range and Copy Vec loops
-have passed local and three-platform native acceptance.
-The next increment is interpolation/`format`, followed
-by modules. Each increment must replace real compiler-source workarounds,
+Self-hosting remains a regression gate. Batch 32's interpolation and `format`
+have passed local acceptance. The next increment is source modules, followed by
+a separate commit that turns the compiler itself into `use`-linked files. Each increment must replace real compiler-source workarounds,
 retain independent behavior and cleanup oracles, and renew the fixed point
 on Linux, Windows and macOS. [SH-3](../docs/self-hosting.md) remains incomplete;
 SH-4 has one of three independent applications validated.

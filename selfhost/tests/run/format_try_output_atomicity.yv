@@ -1,0 +1,33 @@
+fn fail(label: str) -> int ! String { return err(label.toString()) }
+fn printFailure() -> () ! String {
+    println("BAD:${"hold".toString()}:${try fail("print")}:TAIL")
+}
+fn stderrFailure() -> () ! String {
+    eprintln("BAD:${format("hold")}:${try fail("stderr")}:TAIL")
+}
+fn formatFailure() -> String ! String {
+    return format("BAD:${format("hold")}:${try fail("format")}:TAIL")
+}
+fn checkPrint() {
+    let _ = printFailure() catch error {
+        println(error)
+        return
+    }
+}
+fn checkStderr() {
+    let _ = stderrFailure() catch error {
+        println(error)
+        return
+    }
+}
+fn checkFormat() {
+    let _ = formatFailure() catch error {
+        println(error)
+        return
+    }
+}
+fn main() {
+    checkPrint()
+    checkStderr()
+    checkFormat()
+}

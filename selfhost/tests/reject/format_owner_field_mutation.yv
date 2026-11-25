@@ -1,0 +1,11 @@
+struct Row {
+    text: String
+}
+fn change(value: inout String) -> int {
+    value = "replacement".toString()
+    return 7
+}
+fn main() {
+    var row = Row{text: "original".toString()}
+    println("${row.text} ${change(&row.text)}")
+}

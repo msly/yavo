@@ -1,0 +1,8 @@
+fn change(value: inout String) -> int {
+    value = "replacement".toString()
+    return 7
+}
+fn main() {
+    var owner = "original".toString()
+    println("${owner[0..1]} ${change(&owner)}")
+}

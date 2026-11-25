@@ -1,0 +1,1680 @@
+{
+  "schema": "yavo-format-oracle-index/1",
+  "baseline": "08f19faf834f1b89ddad39fb4e77f97753cc8641",
+  "scope": "Independent fixed Rust stage0 checks and first-error observations for all 58 registered Batch 32 cases, with source-matched Debug and Release execution for all 16 run sources. Original check-only borrow gaps and initial candidate failures are preserved. Selfhost acceptance is recorded separately by the full bootstrap.",
+  "manifest_sha256": "a93dacf80303412bd3816768ec309f72045dde94c21f0a4c2526fda5c397fd95",
+  "candidates_sha256": "fbe72c9c22e0d70caff300bea6790408f3493d52133bb6a47bfc06a8183c589d",
+  "manifest_counts": {
+    "run": 160,
+    "panic": 28,
+    "reject": 279,
+    "unsupported": 64,
+    "shared_unsupported": 16
+  },
+  "registered_cases": 58,
+  "registered_counts": {
+    "run": 16,
+    "reject": 36,
+    "shared_unsupported": 2,
+    "unsupported": 4
+  },
+  "stage0_reference": {
+    "path": "compiler/target/ci/batch32-stage0-fixed/yavo",
+    "sha256": "05fde861598f401f00e748e09b366a4c3654d1e4b181adfbd3edc0820fbf82ab"
+  },
+  "stage0_initial_reference": {
+    "path": "compiler/target/ci/batch32-stage0/yavo",
+    "sha256": "2f5e7da56f11898371b0243e1d14cd9f57cd666266e3939f86811991dbac4814"
+  },
+  "stage0_runtime_final_source_profiles": 32,
+  "reference_oracle_complete": true,
+  "unsafe_reference_programs_built_or_executed": false,
+  "cases": [
+    {
+      "id": "format_scalar_types",
+      "kind": "run",
+      "file": "run/format_scalar_types.yv",
+      "source_sha256": "cc031d589a219160ffec4184b304bca86e67d8a6bee341dd48697d493659ae14",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_scalar_types",
+          "profile": "Debug",
+          "runtime": true,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_scalar_types",
+          "profile": "Release",
+          "runtime": true,
+          "record_passed": true
+        }
+      ]
+    },
+    {
+      "id": "interpolation_literal_bytes",
+      "kind": "run",
+      "file": "run/interpolation_literal_bytes.yv",
+      "source_sha256": "fe2955bf5c4a70e2621b1f17d870014ae9b20b8c1515b1a27f7e1c8a2a1ae576",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "interpolation_literal_bytes",
+          "profile": "Debug",
+          "runtime": true,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "interpolation_literal_bytes",
+          "profile": "Release",
+          "runtime": true,
+          "record_passed": true
+        }
+      ]
+    },
+    {
+      "id": "format_eprintln",
+      "kind": "run",
+      "file": "run/format_eprintln.yv",
+      "source_sha256": "f44b90e9d33c7a0ddf44d16c9ee33bc9bbd5d9bd405e9b395ba01281705a2223",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_eprintln",
+          "profile": "Debug",
+          "runtime": true,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_eprintln",
+          "profile": "Release",
+          "runtime": true,
+          "record_passed": true
+        }
+      ]
+    },
+    {
+      "id": "format_evaluation_order",
+      "kind": "run",
+      "file": "run/format_evaluation_order.yv",
+      "source_sha256": "21b1ca92bfa1a526133e842ba9e7a5762ed63839c4be2e049ad515629188f4ff",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-order-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_evaluation_order",
+          "profile": "Debug",
+          "runtime": true,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-order-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_evaluation_order",
+          "profile": "Release",
+          "runtime": true,
+          "record_passed": true
+        }
+      ]
+    },
+    {
+      "id": "format_owned_views",
+      "kind": "run",
+      "file": "run/format_owned_views.yv",
+      "source_sha256": "71b20f7af4672bb84681968ad55681da044fdb61871aa1eb9bd2f28f9e274790",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_owned_views",
+          "profile": "Debug",
+          "runtime": true,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_owned_views",
+          "profile": "Release",
+          "runtime": true,
+          "record_passed": true
+        }
+      ]
+    },
+    {
+      "id": "format_owned_containers",
+      "kind": "run",
+      "file": "run/format_owned_containers.yv",
+      "source_sha256": "3ba35292ff3171b3db45184592640812a1680acc3c0537f2c44e9c58d76b5278",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_owned_containers",
+          "profile": "Debug",
+          "runtime": true,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_owned_containers",
+          "profile": "Release",
+          "runtime": true,
+          "record_passed": true
+        }
+      ]
+    },
+    {
+      "id": "format_later_failure_cleanup",
+      "kind": "run",
+      "file": "run/format_later_failure_cleanup.yv",
+      "source_sha256": "18f6613436ed23efc88b257ecaeb443ef8850c996e82c30d2f22829544d49cdd",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_later_failure_cleanup",
+          "profile": "Debug",
+          "runtime": true,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_later_failure_cleanup",
+          "profile": "Release",
+          "runtime": true,
+          "record_passed": true
+        }
+      ]
+    },
+    {
+      "id": "format_try_output_atomicity",
+      "kind": "run",
+      "file": "run/format_try_output_atomicity.yv",
+      "source_sha256": "867676e35aebdd350c778a5358f4c032a5cf0cf3e13542a5609503ddab63a88a",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_try_output_atomicity",
+          "profile": "Debug",
+          "runtime": true,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_try_output_atomicity",
+          "profile": "Release",
+          "runtime": true,
+          "record_passed": true
+        }
+      ]
+    },
+    {
+      "id": "format_catch_return_cleanup",
+      "kind": "run",
+      "file": "run/format_catch_return_cleanup.yv",
+      "source_sha256": "cc06d00918e00b7fb1f7bedec97aebc8cea3ff281ac85830452e156b697f0c19",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_catch_return_cleanup",
+          "profile": "Debug",
+          "runtime": true,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_catch_return_cleanup",
+          "profile": "Release",
+          "runtime": true,
+          "record_passed": true
+        }
+      ]
+    },
+    {
+      "id": "format_catch_loop_cleanup",
+      "kind": "run",
+      "file": "run/format_catch_loop_cleanup.yv",
+      "source_sha256": "a2db546342fd033052a8285cd65038771c92ded623b46b18dfe74fbced01ca9a",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_catch_loop_cleanup",
+          "profile": "Debug",
+          "runtime": true,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_catch_loop_cleanup",
+          "profile": "Release",
+          "runtime": true,
+          "record_passed": true
+        }
+      ]
+    },
+    {
+      "id": "format_lazy_fallback",
+      "kind": "run",
+      "file": "run/format_lazy_fallback.yv",
+      "source_sha256": "325d4eb0089b17b7c215b4deb2e17c173b3dfc89661b404589d7aa509fcca334",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_lazy_fallback",
+          "profile": "Debug",
+          "runtime": true,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_lazy_fallback",
+          "profile": "Release",
+          "runtime": true,
+          "record_passed": true
+        }
+      ]
+    },
+    {
+      "id": "format_nested_parentheses",
+      "kind": "run",
+      "file": "run/format_nested_parentheses.yv",
+      "source_sha256": "9c9d61aff2a37879dc1257377378a943c5f122f50ddfc012274a51888a642366",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_nested_parentheses",
+          "profile": "Debug",
+          "runtime": true,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_nested_parentheses",
+          "profile": "Release",
+          "runtime": true,
+          "record_passed": true
+        }
+      ]
+    },
+    {
+      "id": "interpolation_copy_mutation",
+      "kind": "run",
+      "file": "run/interpolation_copy_mutation.yv",
+      "source_sha256": "1e9565e84cbf3cee67e4fc5df3c71201f33c22e21c2a5fa49b15209bd8b15430",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "interpolation_copy_mutation",
+          "profile": "Debug",
+          "runtime": true,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "interpolation_copy_mutation",
+          "profile": "Release",
+          "runtime": true,
+          "record_passed": true
+        }
+      ]
+    },
+    {
+      "id": "format_nested_copy_releases",
+      "kind": "run",
+      "file": "run/format_nested_copy_releases.yv",
+      "source_sha256": "ee9e26c593a7e640ee017127531e71b5f04bc8d278d1c017e227a5e7e111ac31",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_nested_copy_releases",
+          "profile": "Debug",
+          "runtime": true,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_nested_copy_releases",
+          "profile": "Release",
+          "runtime": true,
+          "record_passed": true
+        }
+      ]
+    },
+    {
+      "id": "format_user_shadow",
+      "kind": "run",
+      "file": "run/format_user_shadow.yv",
+      "source_sha256": "0aff1d8fe74ea1e9f2ec5ffa40334f4fb5beb5d02cd4d0ac66567575157a16e1",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_user_shadow",
+          "profile": "Debug",
+          "runtime": true,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_user_shadow",
+          "profile": "Release",
+          "runtime": true,
+          "record_passed": true
+        }
+      ]
+    },
+    {
+      "id": "interpolation_basic",
+      "kind": "run",
+      "file": "run/interpolation_basic.yv",
+      "source_sha256": "2391757f4bbfef054e7fed3f45bbc645c937b72f67023ceadbc8b16f27028a60",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "interpolation_basic",
+          "profile": "Debug",
+          "runtime": true,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "interpolation_basic",
+          "profile": "Release",
+          "runtime": true,
+          "record_passed": true
+        }
+      ]
+    },
+    {
+      "id": "owner_string_print_mutate",
+      "kind": "reject",
+      "file": "reject/owner_string_print_mutate.yv",
+      "source_sha256": "cbfaa7743a194b4ac4f89f0fa18ae2be4c30a02ffabcadbb72d61bdcec73a0cf",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "owner_string_print_mutate",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "owner_string_print_mutate",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0102",
+        "message": "`owner` is already borrowed by an earlier argument of this call",
+        "line": 7,
+        "column": 32
+      },
+      "reference_correction": "The original frozen reference accepts this unsafe deferred-output borrow. Final expectations come from the corrected independent Rust checker."
+    },
+    {
+      "id": "owner_string_format_mutate",
+      "kind": "reject",
+      "file": "reject/owner_string_format_mutate.yv",
+      "source_sha256": "8c0fd51b5cca662cc78ab1bd2961cde7e1fb3352daf434d07bf860936024fde2",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "owner_string_format_mutate",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "owner_string_format_mutate",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0102",
+        "message": "`owner` is already borrowed by an earlier argument of this call",
+        "line": 7,
+        "column": 44
+      },
+      "reference_correction": "The original frozen reference accepts this unsafe deferred-output borrow. Final expectations come from the corrected independent Rust checker."
+    },
+    {
+      "id": "owner_slice_print_mutate",
+      "kind": "reject",
+      "file": "reject/owner_slice_print_mutate.yv",
+      "source_sha256": "10eb4a3712e2699349b85739eb1d3c5b5f6411ae59120cc52ccde7bf487041ea",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "owner_slice_print_mutate",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "owner_slice_print_mutate",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0102",
+        "message": "`owner` is already borrowed by an earlier argument of this call",
+        "line": 7,
+        "column": 38
+      },
+      "reference_correction": "The original frozen reference accepts this unsafe deferred-output borrow. Final expectations come from the corrected independent Rust checker."
+    },
+    {
+      "id": "owner_vec_print_mutate",
+      "kind": "reject",
+      "file": "reject/owner_vec_print_mutate.yv",
+      "source_sha256": "8a47cc4dc27971d4822c0771a229ff066d1b90a9147822e7832babf79fd0a89a",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "owner_vec_print_mutate",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "owner_vec_print_mutate",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0102",
+        "message": "`owners` is already borrowed by an earlier argument of this call",
+        "line": 7,
+        "column": 36
+      },
+      "reference_correction": "The original frozen reference accepts this unsafe deferred-output borrow. Final expectations come from the corrected independent Rust checker."
+    },
+    {
+      "id": "plain_interpolation_binding",
+      "kind": "reject",
+      "file": "reject/plain_interpolation_binding.yv",
+      "source_sha256": "cb8429c47ee7c3c9d25e14e9fc5f8b921238199e165439e16c94ebf3fad137be",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "plain_interpolation_binding",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "plain_interpolation_binding",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0001",
+        "message": "string interpolation can only be passed directly to `println`, `print` or `eprintln` in P0",
+        "line": 1,
+        "column": 25
+      }
+    },
+    {
+      "id": "plain_interpolation_return",
+      "kind": "reject",
+      "file": "reject/plain_interpolation_return.yv",
+      "source_sha256": "12e2316f7d34d7d83c06a0af6c4d7c08211940fa005c0683389dcbbcf09cb92b",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "plain_interpolation_return",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "plain_interpolation_return",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0001",
+        "message": "string interpolation can only be passed directly to `println`, `print` or `eprintln` in P0",
+        "line": 1,
+        "column": 31
+      }
+    },
+    {
+      "id": "plain_interpolation_argument",
+      "kind": "reject",
+      "file": "reject/plain_interpolation_argument.yv",
+      "source_sha256": "b5086b268611fb2b7391e515707c68d53021ca6343dd449599190a8f07b29a3f",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "plain_interpolation_argument",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "plain_interpolation_argument",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0001",
+        "message": "string interpolation can only be passed directly to `println`, `print` or `eprintln` in P0",
+        "line": 2,
+        "column": 18
+      }
+    },
+    {
+      "id": "parenthesized_print",
+      "kind": "reject",
+      "file": "reject/parenthesized_print.yv",
+      "source_sha256": "828ce2a016e48a83dd9db6d2c83e687a77bf043810caba86545fb27a0d75e6a7",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "parenthesized_print",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "parenthesized_print",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0001",
+        "message": "string interpolation can only be passed directly to `println`, `print` or `eprintln` in P0",
+        "line": 1,
+        "column": 22
+      }
+    },
+    {
+      "id": "parenthesized_format",
+      "kind": "reject",
+      "file": "reject/parenthesized_format.yv",
+      "source_sha256": "dbb25786b5b192da61a282479374179d3ec81e79e6ad9741f2ab4e91e39bfecd",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "parenthesized_format",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "parenthesized_format",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0001",
+        "message": "string interpolation can only be passed directly to `println`, `print` or `eprintln` in P0",
+        "line": 1,
+        "column": 29
+      }
+    },
+    {
+      "id": "format_zero_arity",
+      "kind": "reject",
+      "file": "reject/format_zero_arity.yv",
+      "source_sha256": "d75e310b8e54b4befca541f92fbcab484b6f22699501ada0c4b1fee43d724eba",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_zero_arity",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_zero_arity",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0012",
+        "message": "`format` takes exactly one argument (an interpolated string)",
+        "line": 1,
+        "column": 25
+      }
+    },
+    {
+      "id": "format_two_arity",
+      "kind": "reject",
+      "file": "reject/format_two_arity.yv",
+      "source_sha256": "360b9046c5f1bb66926d772b06b1b40b6e44ca8386c2421ffd77c03028d4f900",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_two_arity",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_two_arity",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0012",
+        "message": "`format` takes exactly one argument (an interpolated string)",
+        "line": 1,
+        "column": 25
+      }
+    },
+    {
+      "id": "format_unit",
+      "kind": "reject",
+      "file": "reject/format_unit.yv",
+      "source_sha256": "bb96ebc141a0eae2089b4937a4e78caa0f51879326ef7602105dded28d6d77d8",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_unit",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_unit",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0001",
+        "message": "this call returns nothing, so there is nothing to print",
+        "line": 2,
+        "column": 32
+      }
+    },
+    {
+      "id": "specifier_int_fixed",
+      "kind": "reject",
+      "file": "reject/specifier_int_fixed.yv",
+      "source_sha256": "3d9890777f62516927b9f85583f5e8fca8ed5c232417ff3677835a84a7ddbfb8",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "specifier_int_fixed",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "specifier_int_fixed",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0001",
+        "message": "`:.2` formats a float, but this value has type `int`",
+        "line": 1,
+        "column": 24
+      }
+    },
+    {
+      "id": "specifier_unknown",
+      "kind": "shared_unsupported",
+      "file": "unsupported/specifier_unknown.yv",
+      "source_sha256": "9b1527c8146553d4c4525ddc507bbec2cf3da032083d7939068e65079362f0c6",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "specifier_unknown",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "specifier_unknown",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "U0001",
+        "message": "the format specifier `:x` is not supported; only `:.N` (fixed decimals) is",
+        "line": 1,
+        "column": 24
+      }
+    },
+    {
+      "id": "specifier_too_large",
+      "kind": "reject",
+      "file": "reject/specifier_too_large.yv",
+      "source_sha256": "d79cd8319613aee4a0a0606989488d3bff6db7b8b518bf6c1de5c5699f83ffcf",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "specifier_too_large",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "specifier_too_large",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0001",
+        "message": "at most 17 decimal places can be printed (`:.0` to `:.17`)",
+        "line": 1,
+        "column": 24
+      }
+    },
+    {
+      "id": "interpolation_empty",
+      "kind": "reject",
+      "file": "reject/interpolation_empty.yv",
+      "source_sha256": "5f0163c561884b5ccd3e3816825180b3f1b5381c79cc58edbe7109137eaa7aeb",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "interpolation_empty",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "interpolation_empty",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0020",
+        "message": "empty `${}` in string literal",
+        "line": 1,
+        "column": 24
+      }
+    },
+    {
+      "id": "interpolation_unclosed",
+      "kind": "reject",
+      "file": "reject/interpolation_unclosed.yv",
+      "source_sha256": "ed2b6e162a5e8542ce4d5f9f11bce95a142cfed6f37b70f223d2cfb2a76d64c7",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "interpolation_unclosed",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "interpolation_unclosed",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0020",
+        "message": "this `{` is never closed",
+        "line": 1,
+        "column": 11
+      }
+    },
+    {
+      "id": "format_shadow_interpolation",
+      "kind": "reject",
+      "file": "reject/format_shadow_interpolation.yv",
+      "source_sha256": "674ae15d2bfed4001725c133b283d75bdc9aa7fecdebf9badc036febb3ed582d",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_shadow_interpolation",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_shadow_interpolation",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0001",
+        "message": "string interpolation can only be passed directly to `println`, `print` or `eprintln` in P0",
+        "line": 2,
+        "column": 28
+      }
+    },
+    {
+      "id": "nested_fragment_lex_priority",
+      "kind": "reject",
+      "file": "reject/nested_fragment_lex_priority.yv",
+      "source_sha256": "2e0a2413e3097d8313df5215765351306077fe8663835f28cae5ab48751633ee",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "nested_fragment_lex_priority",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "nested_fragment_lex_priority",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0020",
+        "message": "only a single expression is allowed inside `${...}`",
+        "line": 1,
+        "column": 26
+      }
+    },
+    {
+      "id": "earlier_parse_later_fragment",
+      "kind": "reject",
+      "file": "reject/earlier_parse_later_fragment.yv",
+      "source_sha256": "3b25c0fb7c27077598a18e4036b1b8e735da106fea373aa94d389bc0e76040c7",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "earlier_parse_later_fragment",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "earlier_parse_later_fragment",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0020",
+        "message": "expected an expression, found `)`",
+        "line": 2,
+        "column": 17
+      }
+    },
+    {
+      "id": "byte_closing_brace",
+      "kind": "reject",
+      "file": "reject/byte_closing_brace.yv",
+      "source_sha256": "866e684b599db0119804307cfb0b7448f5fe087fdbebe0f54a7aff234663c5d7",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "byte_closing_brace",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "byte_closing_brace",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0020",
+        "message": "invalid byte literal: write one ASCII character or an escape between single quotes, e.g. 'a' or '\\n'",
+        "line": 1,
+        "column": 24
+      }
+    },
+    {
+      "id": "byte_colon",
+      "kind": "reject",
+      "file": "reject/byte_colon.yv",
+      "source_sha256": "2206469a4622fd58f88ecd210133647e9e0026f44cc6700032a777f849ed1af3",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "byte_colon",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "byte_colon",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0020",
+        "message": "invalid byte literal: write one ASCII character or an escape between single quotes, e.g. 'a' or '\\n'",
+        "line": 1,
+        "column": 24
+      }
+    },
+    {
+      "id": "format_field_default",
+      "kind": "reject",
+      "file": "reject/format_field_default.yv",
+      "source_sha256": "ab59a6ee01db4a77c0c3ceb1b8207241dfb41ba99ce7eefc35c267be3a78d8cb",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_field_default",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_field_default",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0001",
+        "message": "the default of field `text` must be a constant",
+        "line": 2,
+        "column": 20
+      }
+    },
+    {
+      "id": "format_nested_owner_outer_lock",
+      "kind": "reject",
+      "file": "reject/format_nested_owner_outer_lock.yv",
+      "source_sha256": "562074f4eabeb1e27477cf6d357851a73cc0c3c6bc5ebc5ac02eecd73bdbd4d8",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_nested_owner_outer_lock",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_nested_owner_outer_lock",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0102",
+        "message": "`owner` is already borrowed by an earlier argument of this call",
+        "line": 7,
+        "column": 54
+      },
+      "reference_correction": "The original frozen reference accepts this unsafe deferred-output borrow. Final expectations come from the corrected independent Rust checker."
+    },
+    {
+      "id": "print_zero",
+      "kind": "reject",
+      "file": "reject/print_zero.yv",
+      "source_sha256": "0be9db9973bfd6e031aa9e8713f5430171189fb111c6faa6cd32efd6266d99c8",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "print_zero",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "print_zero",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0012",
+        "message": "`print` takes exactly one argument",
+        "line": 1,
+        "column": 13
+      }
+    },
+    {
+      "id": "unsupported_println_zero",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_println_zero.yv",
+      "source_sha256": "3393e8238d75348322681dcc4d1e8fbce55a1980fc44bc7129c28c12a8be9794",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "unsupported_println_zero",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "unsupported_println_zero",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ]
+    },
+    {
+      "id": "unsupported_eprintln_zero",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_eprintln_zero.yv",
+      "source_sha256": "a963bdc37361bf2eca5816749eb8e0ee94b7e1d9085be6994256e26026b005a4",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "unsupported_eprintln_zero",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "unsupported_eprintln_zero",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ]
+    },
+    {
+      "id": "format_optional",
+      "kind": "shared_unsupported",
+      "file": "unsupported/format_optional.yv",
+      "source_sha256": "c7f8f87fbf890438c25e07bb1a0fa0b862571ffbf6e3fb8b3e50d582b9438a4c",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_optional",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_optional",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "U0001",
+        "message": "printing an optional value (`?int`) is not supported yet",
+        "line": 1,
+        "column": 28
+      }
+    },
+    {
+      "id": "format_vector",
+      "kind": "reject",
+      "file": "reject/format_vector.yv",
+      "source_sha256": "cbd03a55e6a40b9b591b5e963a98eeeca0efa03ffa7928a2ee2193fe9304ce68",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_vector",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_vector",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0001",
+        "message": "a value of type `Vec[int]` cannot be printed directly",
+        "line": 1,
+        "column": 28
+      }
+    },
+    {
+      "id": "format_struct",
+      "kind": "reject",
+      "file": "reject/format_struct.yv",
+      "source_sha256": "c5fca6a5966a31ffbc0c951004c746bfaadf4866b657b5a59d64e69a9d1184de",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_struct",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_struct",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0001",
+        "message": "a value of type `Point` cannot be printed directly",
+        "line": 4,
+        "column": 28
+      }
+    },
+    {
+      "id": "format_result",
+      "kind": "reject",
+      "file": "reject/format_result.yv",
+      "source_sha256": "10644503bef703f39a1041313d615a4769698a6eb1f33d8f7ca7dd52ed547843",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_result",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_result",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0001",
+        "message": "a value that can fail (`int ! int`) cannot be printed directly",
+        "line": 2,
+        "column": 28
+      }
+    },
+    {
+      "id": "embedded_unknown_unicode_position",
+      "kind": "reject",
+      "file": "reject/embedded_unknown_unicode_position.yv",
+      "source_sha256": "b056408c450c3cbb4c6bc9c96f69bad8b39d2336d7bf9949f50931569a4f06f0",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "embedded_unknown_unicode_position",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "embedded_unknown_unicode_position",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0010",
+        "message": "cannot find `missing` in this scope",
+        "line": 2,
+        "column": 18
+      }
+    },
+    {
+      "id": "embedded_operator_position",
+      "kind": "reject",
+      "file": "reject/embedded_operator_position.yv",
+      "source_sha256": "7b34d4c6b3450e8e26e29dbc0e1fdf0562b6077b39d0a53ddaf52774aa8f2a4a",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "embedded_operator_position",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "embedded_operator_position",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0001",
+        "message": "operator `+` needs integer operands, found `int` and `bool`",
+        "line": 2,
+        "column": 18
+      }
+    },
+    {
+      "id": "fragment_operator_lex_error",
+      "kind": "reject",
+      "file": "reject/fragment_operator_lex_error.yv",
+      "source_sha256": "7a437b507cbd3d8e42a1b15b3b76f125317e6846ab918dbd10286f9fc1103035",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "fragment_operator_lex_error",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "fragment_operator_lex_error",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0020",
+        "message": "unexpected character `@`",
+        "line": 1,
+        "column": 28
+      }
+    },
+    {
+      "id": "fragment_then_outer_lex_error",
+      "kind": "reject",
+      "file": "reject/fragment_then_outer_lex_error.yv",
+      "source_sha256": "4aab9d89d0ae8307dab975bd45a16b0f83864bd8d5a67cbbaa6963375e609740",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "fragment_then_outer_lex_error",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "fragment_then_outer_lex_error",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0020",
+        "message": "unexpected character `@`",
+        "line": 2,
+        "column": 16
+      }
+    },
+    {
+      "id": "format_owner_field_mutation",
+      "kind": "reject",
+      "file": "reject/format_owner_field_mutation.yv",
+      "source_sha256": "f28592cdfdfc35dd208d6358c90480a3f642c7110891dc12418a18fd62c594e2",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_owner_field_mutation",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_owner_field_mutation",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0102",
+        "message": "cannot modify `row`: an earlier call argument still borrows it",
+        "line": 10,
+        "column": 36
+      }
+    },
+    {
+      "id": "format_owner_take",
+      "kind": "reject",
+      "file": "reject/format_owner_take.yv",
+      "source_sha256": "cc68be6d609ff549bc0e70b7941028c93be368d688be8d3a7ccf1cdfd0eabb3a",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_owner_take",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_owner_take",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0102",
+        "message": "cannot modify `owner`: an earlier call argument still borrows it",
+        "line": 3,
+        "column": 31
+      }
+    },
+    {
+      "id": "format_catch_fallthrough",
+      "kind": "reject",
+      "file": "reject/format_catch_fallthrough.yv",
+      "source_sha256": "86108dcd941a6bb81275445122989ce8e0aac3d242bdbb5808bb18295aa90609",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_catch_fallthrough",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_catch_fallthrough",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0601",
+        "message": "this `catch` block can reach its closing `}`",
+        "line": 3,
+        "column": 29
+      }
+    },
+    {
+      "id": "format_wrong_result_type",
+      "kind": "reject",
+      "file": "reject/format_wrong_result_type.yv",
+      "source_sha256": "c63e7cb743c3c13ee418684e670007f72db017ece5a0c3f8064d14065d4bd754",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_wrong_result_type",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "format_wrong_result_type",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0001",
+        "message": "mismatched types: expected `int`, found `String`",
+        "line": 2,
+        "column": 22
+      }
+    },
+    {
+      "id": "unsupported_format_float",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_format_float.yv",
+      "source_sha256": "42cb9c0049b00fa2428392f68a15d6f8b22edf1bea1d12daf8e2533c08afb40c",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "unsupported_format_float",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "unsupported_format_float",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ]
+    },
+    {
+      "id": "owner_slice_chain_mutate",
+      "kind": "reject",
+      "file": "reject/owner_slice_chain_mutate.yv",
+      "source_sha256": "7bc1f45c7087000b23343c1824814e13c07a77bd16ee2e68e25a463728374082",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "owner_slice_chain_mutate",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "owner_slice_chain_mutate",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ],
+      "stage0_first_error": {
+        "code": "E0102",
+        "message": "`owner` is already borrowed by an earlier argument of this call",
+        "line": 7,
+        "column": 44
+      },
+      "reference_correction": "An additional slice must preserve the original owner loan through the deferred-output window."
+    },
+    {
+      "id": "unsupported_format_owned_double_slice_binding",
+      "kind": "unsupported",
+      "file": "unsupported/unsupported_format_owned_double_slice_binding.yv",
+      "source_sha256": "4c8efbf72cc815903c41b72cc67c8e8a54030ea2c0c86abdfb4a8c10bcf8f171",
+      "stage0_proofs": [
+        {
+          "receipt": "stage0-fixed-debug-1.json",
+          "receipt_status": "passed",
+          "record_id": "unsupported_format_owned_double_slice_binding",
+          "profile": "Debug",
+          "runtime": false,
+          "record_passed": true
+        },
+        {
+          "receipt": "stage0-fixed-release-1.json",
+          "receipt_status": "passed",
+          "record_id": "unsupported_format_owned_double_slice_binding",
+          "profile": "Release",
+          "runtime": false,
+          "record_passed": true
+        }
+      ]
+    }
+  ],
+  "evidence": {
+    "candidate-history.json": "033a0005bb1555fe9449d4f19399abcaa9e510c4fe707af4bbf943ed170bc969",
+    "candidates-initial.json": "9c2dc7e3494f167ff4297506a0e901571795b8c5d30f6638a79d589ef4ad55d3",
+    "candidates.json": "fbe72c9c22e0d70caff300bea6790408f3493d52133bb6a47bfc06a8183c589d",
+    "reference-correction.json": "a1c21692920e873864a3acc1fe1034ef32e571bac20a244f3b5d45794381c4bd",
+    "run-candidates-initial.json": "a0e4b6d783eae3c2ce23e02bea2798be8c86033a9160e3eb0fe953a59a0eba67",
+    "rust-borrow-after.json": "b68ce621b2f6e7af66b273b963b047f8e746d4bd9168b587572f78e1b6b71859",
+    "rust-borrow-before.json": "ae159471f457bddb01a517d101ddc0063ce5a1e97fe70c722df8d13d9165d7a4",
+    "rust-borrow-snapshots.json": "9836f73cfec96509baaa0f9d5aa3c1e02663d017874caf001c952836eb30f5d0",
+    "stage0-core-initial-checks.json": "f312836b8a7809dfadc2c3d494eb92c36b29a24ae065d32be80bb31a438c3e0d",
+    "stage0-diagnostic-priority.json": "f77e6ac870b9abefc206d1f2d06362b0352e6e484ff076a15ce104bde193f134",
+    "stage0-driver.py": "1ead24ae1f03216ec9208d3d6544c9f5932668623081d0c9eb82e604dcd46207",
+    "stage0-fixed-debug-1.json": "8b12fd8cb10a20899762c9e3745ff993257ae38d12d3326b75d69b8b151adce3",
+    "stage0-fixed-order-debug-1.json": "cf3cd27be24525eed82c802e0da96416b554c6c36f88079c68d9f4f5401368e2",
+    "stage0-fixed-order-release-1.json": "adae759a0aa513d3dcc735f680cb888168799187ad02d3216ba7be20e55f625f",
+    "stage0-fixed-release-1.json": "ef7adfd9f1957a156234cd97dd9094a3a72f7d43186a3dad45a9f9d9d0b3afe1",
+    "stage0-initial-safe-debug-1.json": "7f77482451b697f2912f31292728f2a809bd06a6c25919b6feb7ff3627f2f971",
+    "stage0-initial-safe-debug-2.json": "b61b9d673fe6c2823280ef958e969babe55305a6e0282621861ce675bff2151f",
+    "stage0-syntax-initial-checks.json": "db6b6cdca1c47e83fb545c75ab692f01d414e7425dfacb6e9674611488972852"
+  }
+}
