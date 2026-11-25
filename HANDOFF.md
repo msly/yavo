@@ -330,4 +330,4 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - 扫描又发现一处越界并修复：内建 `max`/`min`/`abs`（及 `Box`/`Rc`/`Arc`/`Mutex` 构造）原报 E0010，现为 U0001。
 - 覆盖：全仓 stage0 接受的 391 个程序中 selfhost 接受 88 个（第四十批 70 个），0 越界；stage0 拒绝的 220 个仍无一被接受。
 - 用例：新增 23 个（run 5、reject 11、unsupported 7），原样提升 11 个旧 unsupported 用例为 run（记录在 promotions）；约 290 个旧探针无回退（8 个由 U0001 变为接受，均与 stage0 一致）。
-- 验收：本机 756/756、13/13、0 skip，stage2/stage3 C 953,599 字节、Linux 二进制 443,536 字节一致；本批未改 Rust（沿用：各 145/0/1，冻结 124/3/2）。CI：待回填。
+- 验收：本机 756/756、13/13、0 skip，stage2/stage3 C 953,599 字节、Linux 二进制 443,536 字节一致；本批未改 Rust（沿用：各 145/0/1，冻结 124/3/2）。CI：`0c270fa` 的 run 45653050661 中 Windows 在 setup 下载 Zig（约 70 KB/s）时撞上 tools/ci/run.py 单命令 20 分钟上限（第二次出现，未进入测试）；随后 `87623d6` 给原生作业加了按 `toolchain.lock` 键控的 Zig 工具链缓存（actions/cache v6.1.0），冷缓存时安装命令放宽到 45 分钟。`87623d6`（含本批全部代码）的 [run 45657470106](https://github.com/msly/yavo/actions/runs/45657470106) **6/6 成功**（Linux 含 stage2 ASan/UBSan、Windows、macOS；Windows 冷下载 22 分钟后成功并写入缓存）。
