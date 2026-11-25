@@ -28,7 +28,9 @@ jobs:
   native:
     name: Native ${{ matrix.platform }}
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 45
+    # Windows runners vary widely: the same run has taken 17 to 44 minutes, and a
+    # slow toolchain download alone has taken 24.
+    timeout-minutes: 75
     strategy:
       fail-fast: false
       matrix:
