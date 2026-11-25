@@ -1,0 +1,37 @@
+// Owned temporaries of a jumping ?? fallback are cleaned inside its branch.
+fn number(w: str) -> int ! String {
+    let n = w.parseInt() ?? return err(format("bad ${w}"))
+    return ok(n)
+}
+
+fn present(o: ?int) -> int ! String {
+    let n = o ?? return err("none".toString())
+    return ok(n)
+}
+
+fn show(o: ?int) {
+    let c = present(o) catch e {
+        println(e)
+        return
+    }
+    println(c)
+}
+
+fn main() {
+    let a = number("41") catch e {
+        println(e)
+        return
+    }
+    println(a + 1)
+    let b = present(some(7)) catch e {
+        println(e)
+        return
+    }
+    println(b)
+    show(none)
+    let d = number("x") catch e {
+        println(e)
+        return
+    }
+    println(d)
+}

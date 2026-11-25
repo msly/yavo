@@ -14,6 +14,8 @@ subset of the stage0 language that the compiler itself implements (see
 [decision 20–24](../docs/decisions.md)). It is not yet the default compiler:
 stage0 accepts far more of the language (owned optionals, reference iteration,
 float formatting, methods, generics, Map/Set, closures, threads...).
+Batch 39 adds read-only iteration over owned `String` and struct elements; the
+loop variable is a view of the element and the vector stays locked.
 Batch 38 adds the str queries `startsWith`, `endsWith`, `contains`, `find`,
 `split` and `parseInt`; the receiver is locked while the argument is evaluated.
 Batch 37 adds read-only `[]T` parameters; a `Vec[T]` argument is passed as a
@@ -555,10 +557,9 @@ executable fixtures from earlier increments.
 
 ## Next steps
 
-Self-hosting remains a regression gate. Batch 38's str queries have passed
-local acceptance (675/675 cases, 12/12 checks); the compiler itself is
-`use`-linked files. The next real-program blockers in examples/test-summary are
-`Map` and iterating a `Vec[String]`. Each increment must replace real compiler-source workarounds,
+Self-hosting remains a regression gate. Batch 39's owned-element iteration has
+passed local acceptance (693/693 cases, 12/12 checks); the compiler itself is
+`use`-linked files. `Map` is the only remaining blocker in examples/test-summary. Each increment must replace real compiler-source workarounds,
 retain independent behavior and cleanup oracles, and renew the fixed point
 on Linux, Windows and macOS. [SH-3](../docs/self-hosting.md) remains incomplete;
 SH-4 has one of three independent applications validated.

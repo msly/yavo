@@ -17,6 +17,8 @@ struct Local {
     moved: bool = false
     byRef: bool = false
     sources: int = 0
+    // A read-only view of an owned element of the vector a for loop iterates.
+    element: bool = false
 }
 
 // transient: a str view into an owned String; it may not outlive its statement.
@@ -443,6 +445,9 @@ fn takeValue(g: inout Generator, reg: Registry, ts: Vec[Token], token: int, v: V
         readable(g, ts, v.local, token)
         if g.locals[v.local].byRef {
             lexer.fail(ts, token, "E0401", "cannot move out of an inout parameter; use take or clone")
+        }
+        if g.locals[v.local].element {
+            lexer.fail(ts, token, "E0404", "an iterated element is borrowed; clone it to obtain an owned value")
         }
         if g.locals[v.local].borrowed {
             lexer.fail(ts, token, "E0401", "cannot move out of a read-only parameter; clone it")
@@ -959,6 +964,9 @@ fn returnedSources(g: Generator, p: Program, ts: Vec[Token], id: int, returned: 
     let token = p.expressions[id].token
     if returned.transient {
         let root = returned.root
+        if root >= 0 && g.locals[root].element {
+            lexer.fail(ts, token, "U0001", "returning a view of an iterated element is outside this subset")
+        }
         if root >= 62 && (g.locals[root].borrowed || g.locals[root].byRef) {
             lexer.fail(ts, token, "U0001", "returning a view of a String parameter is outside this subset")
         }
@@ -1333,6 +1341,7 @@ fn coalesceValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, 
         let jump = p.expressions[e.right]
         let movedBefore = movedState(g)
         let sourcesBefore = sourceState(g)
+        let jumpTemps = g.temps.len()
         emit(&g, support.join3("if (!(", lhs.name, ").has) {"))
         if ts[jump.token].text == "return" {
             let _left = returnStatement(&g, p, ts, reg, jump.token, jump.left)
@@ -1340,6 +1349,9 @@ fn coalesceValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, 
             let _left = loopExit(&g, ts, reg, jump.token, ts[jump.token].text == "break")
         }
         emit(&g, "}")
+        // Temporaries of the fallback are declared and cleaned inside its block,
+        // which never falls through; the statement must not drop them again.
+        while g.temps.len() > jumpTemps { let _ = g.temps.pop() }
         restoreState(&g, movedBefore)
         restoreSources(&g, sourcesBefore)
         return output
@@ -2395,14 +2407,18 @@ fn forLoopStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registr
             lexer.fail(ts, s.token, "U0001", "iteration requires a stable Vec local or parameter in this subset")
         }
         let elem = types.element(value.ty)
-        if types.owned(reg, elem) ||
+        // Owned String and struct elements are bound as read-only views of the
+        // element (A2): never dropped or moved, and the vector stays locked.
+        let owned = types.owned(reg, elem)
+        if (owned && elem.kind != .String && elem.kind != .Named) ||
             (elem.kind != .Int && elem.kind != .Byte && elem.kind != .Bool && elem.kind != .Str &&
-            elem.kind != .Named) {
-            lexer.fail(ts, s.token, "U0001", "iteration over this vector element type is outside the Copy subset")
+            elem.kind != .Named && elem.kind != .String) {
+            lexer.fail(ts, s.token, "U0001", "iteration over this vector element type is outside the selfhost subset")
         }
         g.iterationLocks.push(value.root)
-        declare(&g, ts, s.name, elem, false, false, false)
+        declare(&g, ts, s.name, elem, false, owned, false)
         g.locals[g.locals.len() - 1].sources = value.sources
+        g.locals[g.locals.len() - 1].element = owned
         let index = support.join2("iter_", support.decimal(g.counter))
         g.counter += 1
         put(&g, support.join5("for (int64_t ", index, " = 0; ", index, " < ("))
@@ -2447,6 +2463,10 @@ fn emitStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, 
         }
         if ty.kind == .Unknown { ty = initial.ty }
         require(reg, ts, s.token, initial.ty, ty)
+        if initial.local >= 0 && g.locals[initial.local].element && ts[s.name].text != "_" {
+            // stage0 binds a second read-only alias of the element.
+            lexer.fail(ts, s.token, "U0001", "aliasing an iterated element is outside this subset")
+        }
         let taken = takeValue(&g, reg, ts, s.token, initial)
         if ts[s.name].text != "_" {
             declare(&g, ts, s.name, ty, s.mutable, false, false)

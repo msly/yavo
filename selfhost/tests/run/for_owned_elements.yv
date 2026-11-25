@@ -1,0 +1,53 @@
+struct Row {
+    name: String
+    score: int
+}
+fn show(s: str) -> int { return s.len() }
+fn total(rows: Vec[Row]) -> int {
+    var sum = 0
+    for row in rows { sum += row.score }
+    return sum
+}
+fn longest(words: Vec[String]) -> int {
+    var best = 0
+    for w in words {
+        if w.len() > best { best = w.len() }
+    }
+    return best
+}
+fn main() {
+    var paths: Vec[String] = []
+    paths.push("a.log".toString())
+    paths.push("bb.txt".toString())
+    paths.push("-x".toString())
+    var copies: Vec[String] = []
+    for path in paths {
+        if path.startsWith("-") { continue }
+        println(path)
+        println(show(path))
+        copies.push(path.clone())
+        println(path.split(".").len())
+        println("${path}!")
+    }
+    println(copies.len())
+    var rows: Vec[Row] = []
+    rows.push(Row{name: "ann".toString(), score: 3})
+    rows.push(Row{name: "bo".toString(), score: 4})
+    for row in rows {
+        println(row.name)
+        if row.score > 3 { break }
+    }
+    println(total(rows))
+    println(longest(paths))
+    var hits = 0
+    for path in paths {
+        if path == "bb.txt" { hits += 1 }
+        if path.endsWith(".log") { hits += 10 }
+    }
+    println(hits)
+    for p in paths {
+        for q in paths {
+            if p == q { println(p) }
+        }
+    }
+}

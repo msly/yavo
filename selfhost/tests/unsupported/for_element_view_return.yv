@@ -1,0 +1,8 @@
+fn first(v: Vec[String]) -> Vec[str] of v {
+    for x in v { return x.split(",") }
+    return []
+}
+fn main() {
+    let v: Vec[String] = ["a,b".toString()]
+    println(first(v).len())
+}

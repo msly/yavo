@@ -1,0 +1,5 @@
+fn grow(s: inout String) { s.push("a") }
+fn main() {
+    var v: Vec[String] = ["a".toString()]
+    for x in v { grow(&x) }
+}

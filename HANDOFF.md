@@ -1,16 +1,16 @@
-# Yavo 交接文档（2026-11-25，第三十八批：str 查询方法）
+# Yavo 交接文档（2026-11-25，第三十九批：遍历拥有元素）
 
-给下一个会话：先读第 1、2、10、17、18 节及 docs/self-hosting.md、selfhost/README.md 再开工。第二十七至第三十批在 `history/handoff-batches-2026-11-23-to-24.md`，第十二至第二十六批在 `history/handoff-batches-2026-11-21-to-23.md`，第六至第十一批在 `history/handoff-batches-2026-11-19-to-21.md`。
+给下一个会话：先读第 1、2、10、18、19 节及 docs/self-hosting.md、selfhost/README.md 再开工。第二十七至第三十批在 `history/handoff-batches-2026-11-23-to-24.md`，第十二至第二十六批在 `history/handoff-batches-2026-11-21-to-23.md`，第六至第十一批在 `history/handoff-batches-2026-11-19-to-21.md`。
 
 ## 1. 一句话状态
 
-**SH-2 引导子集固定点保持；第三十八批让 selfhost 支持 str 查询方法 `startsWith`/`endsWith`/`contains`/`find`/`split`/`parseInt`，并修复 Rust stage0 文本方法接收者在实参求值期间未被锁住的释放后使用缺陷（见第 18 节）；第三十七批支持只读 `[]T` 参数与 `Vec[T]` → `[]T` 自动视图（第 17 节）；第三十六批支持 `?? return`/`?? break`/`?? continue`（第 16 节）；第三十五批让 selfhost 支持 `Vec[str]`，并修复 Rust stage0 对拥有型实参（`Vec[String]` 等）返回视图的释放后使用缺陷（见第 15 节）；第三十四批加入借用返回 `-> str of …` 并修复 loans 在分支与循环中丢失的缺陷（第 14 节）。** 第三十三批起 selfhost 支持多文件源模块： `use a`、`use a/b`、`use a/{b, c}` 以入口文件目录为根加载，允许循环导入与自导入；顶层 `pub` 决定导出；导入逐文件生效、不传递；函数一律写 `module.f(...)`，公开类型可用短名或 `module.T`（含 `module.T{...}`、`module.E.V`），短名二义报 E0010；诊断和运行时 panic 都指向原文件行列。第三十二批的插值与 format（含 Rust 输出片段借用修复）见第 12 节。
+**SH-2 引导子集固定点保持；第三十九批让 selfhost 只读遍历 `Vec[String]` 与拥有型结构体元素，并修复跳转式 `??` 回退分支的拥有型临时值在分支外被再次释放的子集缺陷（见第 19 节）。至此把 test-summary 的 `Map` 换成 `Vec` 后，selfhost 能编译整个程序，70 个场景与两份归档日志的输出与 stage0 构建逐字节一致；Map 是 SH-3 判据前的最后一个阻塞。第三十八批支持 str 查询方法 `startsWith`/`endsWith`/`contains`/`find`/`split`/`parseInt`，并修复 Rust stage0 文本方法接收者在实参求值期间未被锁住的释放后使用缺陷（见第 18 节）；第三十七批支持只读 `[]T` 参数与 `Vec[T]` → `[]T` 自动视图（第 17 节）；第三十六批支持 `?? return`/`?? break`/`?? continue`（第 16 节）；第三十五批让 selfhost 支持 `Vec[str]`，并修复 Rust stage0 对拥有型实参（`Vec[String]` 等）返回视图的释放后使用缺陷（见第 15 节）；第三十四批加入借用返回 `-> str of …` 并修复 loans 在分支与循环中丢失的缺陷（第 14 节）。** 第三十三批起 selfhost 支持多文件源模块： `use a`、`use a/b`、`use a/{b, c}` 以入口文件目录为根加载，允许循环导入与自导入；顶层 `pub` 决定导出；导入逐文件生效、不传递；函数一律写 `module.f(...)`，公开类型可用短名或 `module.T`（含 `module.T{...}`、`module.E.V`），短名二义报 E0010；诊断和运行时 panic 都指向原文件行列。第三十二批的插值与 format（含 Rust 输出片段借用修复）见第 12 节。
 
-当前语料 **675 cases**。第三十八批本机完整自举 **675/675、12/12、0 skip**，固定点数字见第 18 节；Rust Debug/Release 各 145/0/1（p0 用例文件计在同一测试内）、冻结 124/3/2。
+当前语料 **693 cases**。第三十九批本机完整自举 **693/693、12/12、0 skip**，固定点数字见第 19 节；Rust Debug/Release 各 145/0/1（p0 用例文件计在同一测试内）、冻结 124/3/2。
 
 编译器自身也已改为以 `selfhost/main.yv` 为入口的 `use` 多文件（决定 28），bootstrap 不再拼接源码；改后本机 568/568、12/12，stage2/stage3 C（785,468 字节）与二进制（366,936 字节）一致。
 
-**SH-3 尚未接替，Rust stage0 仍承担日常编译；SH-4 完成 1/3 个独立应用。** 验收流程按 decisions.md 第九节。下一步见第 10 节：test-summary 的借用返回、`Vec[str]`、`?? return`、`[]str` 与 str 查询方法已解除，首错仍是 101 行的 `Map[String, int]`，绕开后是 `main.yv:31` 遍历 `Vec[String]`。
+**SH-3 尚未接替，Rust stage0 仍承担日常编译；SH-4 完成 1/3 个独立应用。** 验收流程按 decisions.md 第九节。下一步见第 10 节：test-summary 只剩 101 行起的 `Map[String, int]`（类型、`[:]`、`has`/`set`）。
 
 ## 2. 仓库与环境
 
@@ -197,7 +197,7 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 ## 10. 下一个会话的第一步
 
 1. 检查 Git 状态、最新提交与 CI；先读第 12 节、[自举路线](docs/self-hosting.md)、[selfhost 说明](selfhost/README.md)。
-2. **下一步：继续让 selfhost 编译 examples/test-summary（SH-3 的实际判据）。** 第三十四至三十八批解除了借用返回、`Vec[str]`、`?? return`、`[]str` 与 str 查询方法。首错仍是解析期的 `parser.yv:101:19: U0001: type suffix is outside the selfhost subset`（`var cases: Map[String, int] = [:]`）。把 Map 换成 `Vec[String]` 绕开后，下一个阻塞是 `main.yv:31:5` 的 `for path in paths`（遍历 `Vec[String]`，循环变量是元素的视图），之后可见 `catch problem { }`、`toString`、`FileRow{path: path.clone(), ...}` 等。建议下一批二选一：Map 一批（类型、`[:]` 字面量、`has`/`set`/`get`、String 键的所有权与 drop），或先做遍历拥有元素的 `Vec`（循环变量为借用视图、循环体内锁住 Vec）。每项先用 stage0 定标拒绝码，并迁移编译器自身里对应的变通写法。
+2. **下一步：Map，然后用 selfhost 编译原样的 examples/test-summary（SH-3 的实际判据）。** 第三十四至三十九批解除了借用返回、`Vec[str]`、`?? return`、`[]str`、str 查询方法与遍历拥有元素。现在唯一阻塞是 parser.yv 101–142 行的 `var cases: Map[String, int] = [:]`、`cases.has(words[0])`（str 查询）、`cases.set(words[0].toString(), lineNumber)`（消费 String 键）及 `requirements` 的同样用法。第十九节记录了临时把 Map 换成 `Vec[String]` 后 selfhost 构建与 stage0 构建 70/70 场景一致的验证方法；Map 完成后应在原样源码上重做这项比对（`tools/ci/test_summary.py` 需要 `build` 命令，selfhost 只有 `emit-c`，可沿用第十九节的差分脚本思路），并考虑把它加入 bootstrap 或 CI。Map 一批：类型 `Map[K, V]`（先限 K 为 String/int、V 为 Copy）、`[:]` 字面量、`has`（String 键可用 str 查询）、`set`（消费键与值）、`get`（`?V`）、`len`、drop；先用 stage0 定标拒绝码（键类型、重复 set、遍历顺序等）。
 3. 模块尚缺：包依赖与锁文件（stage0 也没有）、`use` 出现在其他项之后（stage0 接受，子集 U0001）、跨模块的枚举载荷/方法/泛型（子集本身没有）。
 
 4. 拥有型 Optional/pop、if let/match、跳转式 ??、Result 字段/容器、方法、泛型按实际阻塞另列；SH-3 的判据是能否编译 examples/test-summary 这样的真实程序，而不是特性数量。
@@ -299,3 +299,13 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - 编译器自身迁移：`main.yv` 的 `.yv` 后缀判断改为 `path.endsWith(".yv")`。
 - 用例：新增 12 个（run 1、reject 7、unsupported 2、shared_unsupported 2）；无旧 unsupported 用例被提升；约 200 个旧探针无回退。
 - 验收：本机 675/675、12/12、0 skip，stage2/stage3 C 864,824 字节、Linux 二进制 406,680 字节一致；Rust Debug/Release 各 145/0/1，冻结 124/3/2。CI：`72cafa1` 的 [run 45586217122](https://github.com/msly/yavo/actions/runs/45586217122) **5/6**：Linux x86-64（含 stage2 ASan/UBSan）、macOS arm64 与三个独立作业成功；Windows x86-64 在 setup 步骤下载 95 MB 工具链时速度约 60 KB/s，约 20 分钟后被终止（环境问题，未进入测试）。服务器上的令牌没有 actions 写权限（rerun 返回 403），需在 GitHub 页面手动重跑，或由下一个改代码的提交覆盖；下一会话先确认 Windows 结果。
+
+## 19. 第三十九批：遍历拥有元素（2026-11-25）
+
+- 基线 `919c42f`。目标是 test-summary `main.yv:31` 的 `for path in paths`（`Vec[String]`）。
+- selfhost：`for x in v` 的元素可以是 `String` 或拥有型结构体（其余拥有元素如 `Vec`、Optional 仍 U0001）。循环变量是元素的只读视图（`Local.element`，按 borrowed 处理：不 drop、不可移动），C 中按值复制描述符；被遍历的 Vec 在循环内加 iterationLock。规则与 stage0 定标一致：移动元素（push、赋值、结构体字段、返回）E0404，修改/赋值/`&x` E0014，移动元素的字段 E0401，循环内 push 或移动该 Vec E0102，`let s: str = x` E0001。stage0 接受而子集 U0001：`let y = x`（stage0 生成第二个只读别名）、遍历临时 Vec、返回元素的视图（如 `x.split(",")`）。
+- **子集缺陷修复**：第三十六批的跳转式 `??` 回退分支里创建的拥有型临时值（如 `?? return err(format(...))`、`?? return err("x".toString())`）在分支内清理后仍留在语句的临时列表中，分支后再次 drop，生成的 C 引用未声明的变量，无法编译。现在分支结束时丢弃这些记录。旧用例未覆盖，新增 run 用例 `optional_jump_owned_fallback`。
+- test-summary 里程碑：把 parser.yv 的两个 Map 临时换成 `Vec[String]`（`has` 改为恒假，`set` 改为 `push`）后，selfhost `check` 通过，`emit-c` + zig 构建的程序与 stage0 构建在 `tests/cases.json` 的 70 个可在本机执行的场景（跳过需要仓库文件与目录输入的 2 个）及两份归档 R4 日志上 stdout/stderr/退出码逐字节一致（`YAVO_ALLOC_CHECK=1`）。差分脚本思路：逐场景建临时目录写入 `files`，分别运行两个二进制比较三元组。
+- 编译器自身：没有可迁移的写法（`Vec[String]` 只有 main.yv 的 `keys`/`paths`，循环需要下标）。
+- 用例：新增 18 个（run 3、reject 11、unsupported 4），并把 `unsupported_for_owned_string`、`unsupported_for_owned_struct` 原样提升为 run（`for_owned_string`、`for_owned_struct`，记录在 promotions）；约 220 个旧探针无回退。
+- 验收：本机 693/693、12/12、0 skip，stage2/stage3 C 868,714 字节、Linux 二进制 407,544 字节一致；本批未改 Rust（沿用第三十八批：各 145/0/1，冻结 124/3/2）。CI：待回填。

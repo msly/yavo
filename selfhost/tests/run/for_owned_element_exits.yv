@@ -1,0 +1,64 @@
+struct Row {
+    name: String
+    tags: Vec[String]
+}
+fn size(s: String) -> int { return s.len() }
+fn find(rows: Vec[Row], wanted: str) -> int {
+    var i = 0
+    for row in rows {
+        let label = row.name.clone()
+        if row.name == wanted { return i }
+        println(label)
+        i += 1
+    }
+    return -1
+}
+fn count(items: inout Vec[String]) -> int {
+    var n = 0
+    for item in items { n += size(item) }
+    items.push("z".toString())
+    return n
+}
+fn parse(words: Vec[String]) -> int ! String {
+    var total = 0
+    for w in words {
+        let n = w.parseInt() ?? return err(format("bad ${w}"))
+        total += n
+    }
+    return ok(total)
+}
+fn main() {
+    var rows: Vec[Row] = []
+    rows.push(Row{name: "a".toString(), tags: ["x".toString()]})
+    rows.push(Row{name: "b".toString(), tags: []})
+    println(find(rows, "b"))
+    println(find(rows, "q"))
+    for row in rows {
+        println(row.tags.len())
+        let first = row.tags.len() > 0
+        if first { println(row.tags[0]) }
+    }
+    var items: Vec[String] = ["ab".toString(), "c".toString()]
+    println(count(&items))
+    println(items.len())
+    var k = 0
+    while k < 2 {
+        for item in items {
+            if item == "c" { break }
+            let copy = item.clone()
+            println(copy)
+        }
+        k += 1
+    }
+    let good: Vec[String] = ["1".toString(), "22".toString()]
+    let bad: Vec[String] = ["1".toString(), "x".toString()]
+    let a = parse(good) catch _e {
+        return
+    }
+    println(a)
+    let b = parse(bad) catch e {
+        println(e)
+        return
+    }
+    println(b)
+}

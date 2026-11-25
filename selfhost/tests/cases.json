@@ -1,6 +1,6 @@
 {
   "schema": "yavo-selfhost-cases/1",
-  "description": "Independent fixed-oracle probes for the Yavo-written scalar, byte, aggregate, String, owned-vector, user-function Result and Copy Optional/pop, interpolation, source-module, borrowed-return, Vec[str], jumping ??, []T parameter and text query subset; not the frozen full-language conformance suite.",
+  "description": "Independent fixed-oracle probes for the Yavo-written scalar, byte, aggregate, String, owned-vector, user-function Result and Copy Optional/pop, interpolation, source-module, borrowed-return, Vec[str], jumping ??, []T parameter, text query and owned-element iteration subset; not the frozen full-language conformance suite.",
   "cases": [
     {
       "id": "arithmetic",
@@ -3359,20 +3359,16 @@
       "batch": "range-copy-for"
     },
     {
-      "id": "unsupported_for_owned_string",
-      "kind": "unsupported",
-      "diagnostic": "U0001",
-      "reason": "Iteration over owned elements yields borrowed elements in Rust and remains outside this Copy-only batch.",
-      "file": "unsupported/unsupported_for_owned_string.yv",
-      "batch": "range-copy-for"
+      "id": "for_owned_string",
+      "kind": "run",
+      "stdout": "one\ntwo\n",
+      "file": "run/for_owned_string.yv"
     },
     {
-      "id": "unsupported_for_owned_struct",
-      "kind": "unsupported",
-      "diagnostic": "U0001",
-      "reason": "Struct elements owning String require borrowed iteration; this batch only copies nonowning elements.",
-      "file": "unsupported/unsupported_for_owned_struct.yv",
-      "batch": "range-copy-for"
+      "id": "for_owned_struct",
+      "kind": "run",
+      "stdout": "one\n",
+      "file": "run/for_owned_struct.yv"
     },
     {
       "id": "unsupported_for_mutable",
@@ -4603,6 +4599,114 @@
       "kind": "shared_unsupported",
       "diagnostic": "U0001",
       "file": "unsupported/text_unknown_method.yv"
+    },
+    {
+      "id": "for_owned_elements",
+      "kind": "run",
+      "stdout": "a.log\n5\n2\na.log!\nbb.txt\n6\n2\nbb.txt!\n2\nann\nbo\n7\n6\n11\na.log\nbb.txt\n-x\n",
+      "file": "run/for_owned_elements.yv"
+    },
+    {
+      "id": "for_owned_element_exits",
+      "kind": "run",
+      "stdout": "a\n1\na\nb\n-1\n1\nx\n0\n3\n3\nab\nab\n23\nbad x\n",
+      "file": "run/for_owned_element_exits.yv"
+    },
+    {
+      "id": "optional_jump_owned_fallback",
+      "kind": "run",
+      "stdout": "42\n7\nnone\nbad x\n",
+      "file": "run/optional_jump_owned_fallback.yv"
+    },
+    {
+      "id": "for_element_push",
+      "kind": "reject",
+      "diagnostic": "E0404",
+      "file": "reject/for_element_push.yv"
+    },
+    {
+      "id": "for_element_struct_field",
+      "kind": "reject",
+      "diagnostic": "E0404",
+      "file": "reject/for_element_struct_field.yv"
+    },
+    {
+      "id": "for_element_return_owned",
+      "kind": "reject",
+      "diagnostic": "E0404",
+      "file": "reject/for_element_return_owned.yv"
+    },
+    {
+      "id": "for_element_assign_from",
+      "kind": "reject",
+      "diagnostic": "E0404",
+      "file": "reject/for_element_assign_from.yv"
+    },
+    {
+      "id": "for_element_mutate",
+      "kind": "reject",
+      "diagnostic": "E0014",
+      "file": "reject/for_element_mutate.yv"
+    },
+    {
+      "id": "for_element_assign",
+      "kind": "reject",
+      "diagnostic": "E0014",
+      "file": "reject/for_element_assign.yv"
+    },
+    {
+      "id": "for_element_inout",
+      "kind": "reject",
+      "diagnostic": "E0014",
+      "file": "reject/for_element_inout.yv"
+    },
+    {
+      "id": "for_element_field_move",
+      "kind": "reject",
+      "diagnostic": "E0401",
+      "file": "reject/for_element_field_move.yv"
+    },
+    {
+      "id": "for_owned_vector_push",
+      "kind": "reject",
+      "diagnostic": "E0102",
+      "file": "reject/for_owned_vector_push.yv"
+    },
+    {
+      "id": "for_owned_vector_move",
+      "kind": "reject",
+      "diagnostic": "E0102",
+      "file": "reject/for_owned_vector_move.yv"
+    },
+    {
+      "id": "for_element_bind_str",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/for_element_bind_str.yv"
+    },
+    {
+      "id": "for_element_alias",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/for_element_alias.yv"
+    },
+    {
+      "id": "for_element_alias_then_push",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/for_element_alias_then_push.yv"
+    },
+    {
+      "id": "for_temporary_owned_vector",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/for_temporary_owned_vector.yv"
+    },
+    {
+      "id": "for_element_view_return",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/for_element_view_return.yv"
     }
   ],
   "promotions": [
@@ -4759,6 +4863,28 @@
       "kind": "run",
       "source_sha256": "2666637b23db5c05db4e2153107e3256e2a27b5a095a16d680878c13c9f067d9",
       "reason": "Jumping ?? fallbacks are now in the accepted input subset; the original source bytes are unchanged."
+    },
+    {
+      "previous_id": "unsupported_for_owned_string",
+      "previous_file": "unsupported/unsupported_for_owned_string.yv",
+      "previous_kind": "unsupported",
+      "baseline_commit": "919c42f4f00d8a3933337bd62491b4f07a7d1398",
+      "id": "for_owned_string",
+      "file": "run/for_owned_string.yv",
+      "kind": "run",
+      "source_sha256": "b50520cc18c6425628771f1219dc21ffdcd1190887d2730fb0ebc41234a03b59",
+      "reason": "Read-only iteration over owned String and struct elements is now in the accepted input subset; the original source bytes are unchanged."
+    },
+    {
+      "previous_id": "unsupported_for_owned_struct",
+      "previous_file": "unsupported/unsupported_for_owned_struct.yv",
+      "previous_kind": "unsupported",
+      "baseline_commit": "919c42f4f00d8a3933337bd62491b4f07a7d1398",
+      "id": "for_owned_struct",
+      "file": "run/for_owned_struct.yv",
+      "kind": "run",
+      "source_sha256": "411ac080ff2d8fcf01456bc692be25ed9934d98a27f8a0164d98b584a5b5436d",
+      "reason": "Read-only iteration over owned String and struct elements is now in the accepted input subset; the original source bytes are unchanged."
     }
   ]
 }
