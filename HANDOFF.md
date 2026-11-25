@@ -1,16 +1,16 @@
-# Yavo 交接文档（2026-11-25，第四十批：Map 与 test-summary 自举构建）
+# Yavo 交接文档（2026-11-26，第四十一批：std/io、视图绑定与 str 方法）
 
-给下一个会话：先读第 1、2、10、19、20 节及 docs/self-hosting.md、selfhost/README.md 再开工。第二十七至第三十批在 `history/handoff-batches-2026-11-23-to-24.md`，第十二至第二十六批在 `history/handoff-batches-2026-11-21-to-23.md`，第六至第十一批在 `history/handoff-batches-2026-11-19-to-21.md`。
+给下一个会话：先读第 1、2、10、20、21 节及 docs/self-hosting.md、selfhost/README.md 再开工。第二十七至第三十批在 `history/handoff-batches-2026-11-23-to-24.md`，第十二至第二十六批在 `history/handoff-batches-2026-11-21-to-23.md`，第六至第十一批在 `history/handoff-batches-2026-11-19-to-21.md`。
 
 ## 1. 一句话状态
 
-**SH-2 引导子集固定点保持；第四十批让 selfhost 支持 `Map[String, int|bool|byte]`，selfhost 现在能编译原样的 examples/test-summary：生成的程序在 Debug/Release 下通过其 71 个本机适用场景并与 stage0 构建逐字节一致，这项检查已成为 bootstrap 的第 13 项（`test_summary_application`，三平台 CI 都跑）。同批修复 4 处子集越界（stage0 接受而 selfhost 报 E 码），并新增全仓扫描工具确认 391 个 stage0 接受的程序无越界、220 个 stage0 拒绝的程序无一被 selfhost 接受（见第 20 节）。第三十九批让 selfhost 只读遍历 `Vec[String]` 与拥有型结构体元素，并修复跳转式 `??` 回退分支的拥有型临时值在分支外被再次释放的子集缺陷（见第 19 节）。至此把 test-summary 的 `Map` 换成 `Vec` 后，selfhost 能编译整个程序，70 个场景与两份归档日志的输出与 stage0 构建逐字节一致；Map 是 SH-3 判据前的最后一个阻塞。第三十八批支持 str 查询方法 `startsWith`/`endsWith`/`contains`/`find`/`split`/`parseInt`，并修复 Rust stage0 文本方法接收者在实参求值期间未被锁住的释放后使用缺陷（见第 18 节）；第三十七批支持只读 `[]T` 参数与 `Vec[T]` → `[]T` 自动视图（第 17 节）；第三十六批支持 `?? return`/`?? break`/`?? continue`（第 16 节）；第三十五批让 selfhost 支持 `Vec[str]`，并修复 Rust stage0 对拥有型实参（`Vec[String]` 等）返回视图的释放后使用缺陷（见第 15 节）；第三十四批加入借用返回 `-> str of …` 并修复 loans 在分支与循环中丢失的缺陷（第 14 节）。** 第三十三批起 selfhost 支持多文件源模块： `use a`、`use a/b`、`use a/{b, c}` 以入口文件目录为根加载，允许循环导入与自导入；顶层 `pub` 决定导出；导入逐文件生效、不传递；函数一律写 `module.f(...)`，公开类型可用短名或 `module.T`（含 `module.T{...}`、`module.E.V`），短名二义报 E0010；诊断和运行时 panic 都指向原文件行列。第三十二批的插值与 format（含 Rust 输出片段借用修复）见第 12 节。
+**SH-2 引导子集固定点保持；第四十一批加入 `std/io` 的 `io.readAll() catch _`、`trim`/`lines`/`fields`、指向拥有值的视图绑定（`let lines = text.lines()`）与遍历临时 Vec，全仓覆盖从 70 升到 88 个程序，扫描仍 0 越界（见第 21 节）。第四十批让 selfhost 支持 `Map[String, int|bool|byte]`，selfhost 现在能编译原样的 examples/test-summary：生成的程序在 Debug/Release 下通过其 71 个本机适用场景并与 stage0 构建逐字节一致，这项检查已成为 bootstrap 的第 13 项（`test_summary_application`，三平台 CI 都跑）。同批修复 4 处子集越界（stage0 接受而 selfhost 报 E 码），并新增全仓扫描工具确认 391 个 stage0 接受的程序无越界、220 个 stage0 拒绝的程序无一被 selfhost 接受（见第 20 节）。第三十九批让 selfhost 只读遍历 `Vec[String]` 与拥有型结构体元素，并修复跳转式 `??` 回退分支的拥有型临时值在分支外被再次释放的子集缺陷（见第 19 节）。至此把 test-summary 的 `Map` 换成 `Vec` 后，selfhost 能编译整个程序，70 个场景与两份归档日志的输出与 stage0 构建逐字节一致；Map 是 SH-3 判据前的最后一个阻塞。第三十八批支持 str 查询方法 `startsWith`/`endsWith`/`contains`/`find`/`split`/`parseInt`，并修复 Rust stage0 文本方法接收者在实参求值期间未被锁住的释放后使用缺陷（见第 18 节）；第三十七批支持只读 `[]T` 参数与 `Vec[T]` → `[]T` 自动视图（第 17 节）；第三十六批支持 `?? return`/`?? break`/`?? continue`（第 16 节）；第三十五批让 selfhost 支持 `Vec[str]`，并修复 Rust stage0 对拥有型实参（`Vec[String]` 等）返回视图的释放后使用缺陷（见第 15 节）；第三十四批加入借用返回 `-> str of …` 并修复 loans 在分支与循环中丢失的缺陷（第 14 节）。** 第三十三批起 selfhost 支持多文件源模块： `use a`、`use a/b`、`use a/{b, c}` 以入口文件目录为根加载，允许循环导入与自导入；顶层 `pub` 决定导出；导入逐文件生效、不传递；函数一律写 `module.f(...)`，公开类型可用短名或 `module.T`（含 `module.T{...}`、`module.E.V`），短名二义报 E0010；诊断和运行时 panic 都指向原文件行列。第三十二批的插值与 format（含 Rust 输出片段借用修复）见第 12 节。
 
-当前语料 **733 cases**。第四十批本机完整自举 **733/733、13/13、0 skip**，固定点数字见第 20 节；Rust Debug/Release 各 145/0/1（p0 用例文件计在同一测试内）、冻结 124/3/2。
+当前语料 **756 cases**。第四十一批本机完整自举 **756/756、13/13、0 skip**，固定点数字见第 21 节；Rust Debug/Release 各 145/0/1（p0 用例文件计在同一测试内）、冻结 124/3/2。
 
 编译器自身也已改为以 `selfhost/main.yv` 为入口的 `use` 多文件（决定 28），bootstrap 不再拼接源码；改后本机 568/568、12/12，stage2/stage3 C（785,468 字节）与二进制（366,936 字节）一致。
 
-**SH-3 尚未接替，Rust stage0 仍承担日常编译；SH-4 完成 1/3 个独立应用。** 验收流程按 decisions.md 第九节。下一步见第 10 节：test-summary 已由 selfhost 原样编译；接下来按 `selfhost/subset_sweep.py` 的覆盖统计（391 个程序中 selfhost 接受 70 个）选择下一批。
+**SH-3 尚未接替，Rust stage0 仍承担日常编译；SH-4 完成 1/3 个独立应用。** 验收流程按 decisions.md 第九节。下一步见第 10 节：test-summary 已由 selfhost 原样编译；接下来按 `selfhost/subset_sweep.py` 的覆盖统计（391 个程序中 selfhost 接受 88 个）选择下一批。
 
 ## 2. 仓库与环境
 
@@ -197,7 +197,7 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 ## 10. 下一个会话的第一步
 
 1. 检查 Git 状态、最新提交与 CI；先读第 12 节、[自举路线](docs/self-hosting.md)、[selfhost 说明](selfhost/README.md)。
-2. **下一步：扩大覆盖，朝 SH-3 正式接替推进。** 第四十批后 selfhost 已原样编译 examples/test-summary（bootstrap 第 13 项），即第三十四批起追踪的实际判据已达到；但 docs/self-hosting.md 的 SH-3 正式条件（覆盖既有回归与冻结规格、日常默认使用自举编译器）仍未满足，不要宣称 SH-3 完成。`python3 selfhost/subset_sweep.py --selfhost <stage1>` 扫描全仓：stage0 接受 391 个程序，selfhost 接受 70 个，其余首个 U0001 原因前几位是标准模块（138，主要是 `std/io` 等）、类型形式（24）、str 方法（21，如 `trim`/`lines`/`fields`/`bytes`）、浮点（16）、泛型/接口（16）。建议下一批选量大且编译器自身也会用到的：str 方法余下部分（`trim`/`lines`/`fields`/`bytes` 等），或标准模块里 test-summary 之外最常见的那个；每批先跑扫描、定标，完成后扫描必须仍是 0 越界。也可以开始 SH-4 的第二个独立应用。
+2. **下一步：扩大覆盖，朝 SH-3 正式接替推进。** selfhost 已原样编译 examples/test-summary（bootstrap 第 13 项）；SH-3 正式条件（覆盖既有回归与冻结规格、日常默认使用）仍未满足，不要宣称完成。第四十一批后 `python3 selfhost/subset_sweep.py --selfhost <stage1>`：stage0 接受 391 个，selfhost 接受 88 个，0 越界；首个 U0001 原因前几位是标准模块（35，主要是 `std/sync`）、元组类型（28）、其他类型形式（24）、类型后缀（18，如 `Map[String, String]`、`Vec[Vec[T]]`）、泛型/接口（17）、浮点（16）、带下标遍历 `for (i, x) in`（14）、`if let`（12）、Map 非标量值（10）。建议下一批做 `if let`/Optional 拥有载荷，或元组/带下标遍历，或 Map 的 String 值；每批先跑扫描定标，完成后扫描必须仍为 0 越界。也可以开始 SH-4 第二个独立应用。
 3. 模块尚缺：包依赖与锁文件（stage0 也没有）、`use` 出现在其他项之后（stage0 接受，子集 U0001）、跨模块的枚举载荷/方法/泛型（子集本身没有）。
 
 4. 拥有型 Optional/pop、if let/match、跳转式 ??、Result 字段/容器、方法、泛型按实际阻塞另列；SH-3 的判据是能否编译 examples/test-summary 这样的真实程序，而不是特性数量。
@@ -319,3 +319,15 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - **子集越界修复**（均为旧缺陷，新扫描发现）：块语句 `{ ... }`（原 E0020）、`assert(cond, "msg")`（原 E0012）、`*x` 解引用（原 E0020）、数值类型转换与常量 `i32(x)`/`u8(x)`/`i64.min`（原 E0010），现在都报 U0001。新增 `selfhost/subset_sweep.py`：全仓 391 个 stage0 接受的程序 0 越界（selfhost 接受 70 个），220 个 stage0 拒绝的程序 selfhost 一个也不接受。
 - 用例：新增 40 个（run 7、reject 18、unsupported 13、shared_unsupported 2）；无旧用例提升；约 250 个旧探针无回退。
 - 验收：本机 733/733、13/13、0 skip，stage2/stage3 C 937,451 字节、Linux 二进制 439,760 字节一致；本批未改 Rust（沿用第三十八批：各 145/0/1，冻结 124/3/2）。CI：`3e14afc` 的 [run 45608756237](https://github.com/msly/yavo/actions/runs/45608756237) Linux（含 stage2 ASan/UBSan）、macOS 与三个独立作业成功，bootstrap 第 13 项在这两个平台通过；Windows 因慢 runner 超过 45 分钟作业上限被取消（工具链下载 24 分钟，bootstrap 进行到模块用例时到时，此前已通过的 Windows 运行同一作业耗时 17–44 分钟），未出现失败。随后把原生作业上限调到 75 分钟（`.github/workflows/ci.yml`），`82c4254` 的 [run 45616232256](https://github.com/msly/yavo/actions/runs/45616232256) **6/6 成功**（Linux 含 stage2 ASan/UBSan、Windows、macOS；三平台的 bootstrap 均含 `test_summary_application`）。
+
+## 21. 第四十一批：std/io、视图绑定与 str 方法（2026-11-26）
+
+- 基线 `4afc1f6`。按第四十批扫描选择：`std/io`（107 个程序的首个阻塞）与 str 方法 `fields`/`trim`/`lines`（21 个）。
+- `std/io`：`use std/io`（含 `use std/{io, os}`）；`io.readAll() catch _ { ... }` 产生拥有 String（`yv_io_read_all`，任何失败进入处理块，块必须离开）。`catch e` 绑定标准库错误、`io.readLine()`（返回 `?String`）、不带 catch 的调用为 U0001；实参个数 E0012、处理块可落空 E0601、未导入 E0010，同 stage0。
+- str 方法：`trim`（str）、`lines`/`fields`（`Vec[str]`），C 用 `yv_str_trim/lines/fields`，来源规则与 `split` 相同；带实参 E0012。
+- **视图绑定**（原 U0001 “persistent views of owned strings”）：`let lines = text.lines()`、`let t = s.trim()`、`let w = rows[0].trim()` 等指向拥有局部（或循环元素）的视图现在可以绑定，记为 `Local.viewOf`；读出时仍是带所有者的瞬时值（`Value.owner`），可以再绑定、移动、下标、`clone`、遍历，但不能赋给外层变量、push 进别的 Vec、放进 Result 或返回（指向局部 E0303）。视图在作用域内时，修改或移动所有者为 U0001（stage0 只在视图之后仍被使用时报 E0102，子集没有活跃性分析）。指向只读 String 参数的视图按普通来源处理，可以经 `of` 返回（以前是 U0001）；指向 inout 参数或临时值的视图仍为 U0001（stage0 对临时值报 E0305）。
+- 遍历临时 Vec：`for x in make()`、`for w in text.fields()`、`for x in v.clone()` 等；临时 Vec 作为循环头的所有者活到循环结束后释放，遍历视图会锁住其所有者，遍历字段锁住整个结构体（E0102，同 stage0）。
+- 扫描又发现一处越界并修复：内建 `max`/`min`/`abs`（及 `Box`/`Rc`/`Arc`/`Mutex` 构造）原报 E0010，现为 U0001。
+- 覆盖：全仓 stage0 接受的 391 个程序中 selfhost 接受 88 个（第四十批 70 个），0 越界；stage0 拒绝的 220 个仍无一被接受。
+- 用例：新增 23 个（run 5、reject 11、unsupported 7），原样提升 11 个旧 unsupported 用例为 run（记录在 promotions）；约 290 个旧探针无回退（8 个由 U0001 变为接受，均与 stage0 一致）。
+- 验收：本机 756/756、13/13、0 skip，stage2/stage3 C 953,599 字节、Linux 二进制 443,536 字节一致；本批未改 Rust（沿用：各 145/0/1，冻结 124/3/2）。CI：待回填。

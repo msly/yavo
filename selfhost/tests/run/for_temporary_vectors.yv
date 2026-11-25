@@ -1,0 +1,28 @@
+struct Row { name: String }
+fn make() -> Vec[String] { return ["a".toString(), "bb".toString()] }
+fn rows() -> Vec[Row] { return [Row{name: "r".toString()}] }
+fn first(xs: Vec[String]) -> int {
+    for x in xs.clone() { return x.len() }
+    return -1
+}
+fn main() {
+    for x in make() { println(x) }
+    var n = 0
+    for x in make() {
+        if x == "a" { continue }
+        n += x.len()
+    }
+    println(n)
+    for r in rows() { println(r.name) }
+    let text = " p q  r ".toString()
+    for w in text.fields() { println(w) }
+    for w in "s t".split(" ") { println(w) }
+    println(first(make()))
+    var v: Vec[int] = [1, 2]
+    for x in v.clone() { v.push(x) }
+    println(v.len())
+    for x in make() {
+        if x.len() == 2 { break }
+        println(x)
+    }
+}

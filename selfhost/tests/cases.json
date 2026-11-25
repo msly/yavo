@@ -1,6 +1,6 @@
 {
   "schema": "yavo-selfhost-cases/1",
-  "description": "Independent fixed-oracle probes for the Yavo-written scalar, byte, aggregate, String, owned-vector, user-function Result and Copy Optional/pop, interpolation, source-module, borrowed-return, Vec[str], jumping ??, []T parameter, text query, owned-element iteration and Map[String, scalar] subset; not the frozen full-language conformance suite.",
+  "description": "Independent fixed-oracle probes for the Yavo-written scalar, byte, aggregate, String, owned-vector, user-function Result and Copy Optional/pop, interpolation, source-module, borrowed-return, Vec[str], jumping ??, []T parameter, text query, owned-element iteration, Map[String, scalar], owned-value view and std/io subset; not the frozen full-language conformance suite.",
   "cases": [
     {
       "id": "arithmetic",
@@ -269,10 +269,10 @@
       "stdout": ""
     },
     {
-      "id": "unsupported_module",
-      "kind": "unsupported",
-      "diagnostic": "U0001",
-      "file": "unsupported/unsupported_module.yv"
+      "id": "io_import_only",
+      "kind": "run",
+      "stdout": "",
+      "file": "run/io_import_only.yv"
     },
     {
       "id": "vector_basic",
@@ -2279,12 +2279,10 @@
       "reason": "stage0 accepts only variables and their fields as inout arguments; both compilers report U0001."
     },
     {
-      "id": "unsupported_string_view_binding",
-      "kind": "unsupported",
-      "diagnostic": "U0001",
-      "file": "unsupported/unsupported_string_view_binding.yv",
-      "batch": "bootstrap-fixed-point",
-      "reason": "stage0 allows a local str view of an owned String; the bootstrap subset keeps such views expression-local."
+      "id": "string_view_binding",
+      "kind": "run",
+      "stdout": "he\n",
+      "file": "run/string_view_binding.yv"
     },
     {
       "id": "unsupported_catch_binding",
@@ -3335,28 +3333,22 @@
       "batch": "range-copy-for"
     },
     {
-      "id": "unsupported_for_field",
-      "kind": "unsupported",
-      "diagnostic": "U0001",
-      "reason": "The subset accepts stable Vec names; field iteration remains outside this batch.",
-      "file": "unsupported/unsupported_for_field.yv",
-      "batch": "range-copy-for"
+      "id": "for_field",
+      "kind": "run",
+      "stdout": "1\n2\n",
+      "file": "run/for_field.yv"
     },
     {
-      "id": "unsupported_for_temporary",
-      "kind": "unsupported",
-      "diagnostic": "U0001",
-      "reason": "Temporary iterable ownership and lifetime are outside this stable-name iteration batch.",
-      "file": "unsupported/unsupported_for_temporary.yv",
-      "batch": "range-copy-for"
+      "id": "for_temporary",
+      "kind": "run",
+      "stdout": "1\n2\n",
+      "file": "run/for_temporary.yv"
     },
     {
-      "id": "unsupported_for_literal",
-      "kind": "unsupported",
-      "diagnostic": "U0001",
-      "reason": "Vector literal iterables are temporary containers, outside this stable-name iteration batch.",
-      "file": "unsupported/unsupported_for_literal.yv",
-      "batch": "range-copy-for"
+      "id": "for_literal",
+      "kind": "run",
+      "stdout": "1\n2\n",
+      "file": "run/for_literal.yv"
     },
     {
       "id": "for_owned_string",
@@ -3823,12 +3815,10 @@
       "batch": "format-interpolation"
     },
     {
-      "id": "unsupported_format_owned_double_slice_binding",
-      "kind": "unsupported",
-      "diagnostic": "U0001",
-      "reason": "A chained view into owned String storage remains a borrowed binding outside the selfhost subset.",
-      "file": "unsupported/unsupported_format_owned_double_slice_binding.yv",
-      "batch": "format-interpolation"
+      "id": "format_owned_double_slice_binding",
+      "kind": "run",
+      "stdout": "o\n",
+      "file": "run/format_owned_double_slice_binding.yv"
     },
     {
       "id": "modules_basic",
@@ -4109,9 +4099,9 @@
     },
     {
       "id": "borrowed_return_string_source",
-      "kind": "unsupported",
-      "diagnostic": "U0001",
-      "file": "unsupported/borrowed_return_string_source.yv"
+      "kind": "run",
+      "stdout": "h\n",
+      "file": "run/borrowed_return_string_source.yv"
     },
     {
       "id": "borrowed_return_inout_source",
@@ -4121,9 +4111,9 @@
     },
     {
       "id": "borrowed_return_persistent_view",
-      "kind": "unsupported",
-      "diagnostic": "U0001",
-      "file": "unsupported/borrowed_return_persistent_view.yv"
+      "kind": "run",
+      "stdout": "h\n",
+      "file": "run/borrowed_return_persistent_view.yv"
     },
     {
       "id": "borrowed_return_result",
@@ -4488,9 +4478,9 @@
     },
     {
       "id": "slice_result_from_owned_vec",
-      "kind": "unsupported",
-      "diagnostic": "U0001",
-      "file": "unsupported/slice_result_from_owned_vec.yv"
+      "kind": "run",
+      "stdout": "2\n",
+      "file": "run/slice_result_from_owned_vec.yv"
     },
     {
       "id": "slice_return_vec",
@@ -4578,9 +4568,9 @@
     },
     {
       "id": "text_split_owned_bind",
-      "kind": "unsupported",
-      "diagnostic": "U0001",
-      "file": "unsupported/text_split_owned_bind.yv"
+      "kind": "run",
+      "stdout": "2\n",
+      "file": "run/text_split_owned_bind.yv"
     },
     {
       "id": "text_query_str_receiver_reassigned",
@@ -4698,9 +4688,9 @@
     },
     {
       "id": "for_temporary_owned_vector",
-      "kind": "unsupported",
-      "diagnostic": "U0001",
-      "file": "unsupported/for_temporary_owned_vector.yv"
+      "kind": "run",
+      "stdout": "a\n",
+      "file": "run/for_temporary_owned_vector.yv"
     },
     {
       "id": "for_element_view_return",
@@ -4947,6 +4937,144 @@
       "kind": "unsupported",
       "diagnostic": "U0001",
       "file": "unsupported/mutable_iteration_deref.yv"
+    },
+    {
+      "id": "text_trim_lines_fields",
+      "kind": "run",
+      "stdout": "[alpha beta\tgamma]\n3\n3\nc\n4\n[one]\n1\n0\n[pad]\n3\n2\n1\nalpha\nbeta\tgamma\n",
+      "file": "run/text_trim_lines_fields.yv"
+    },
+    {
+      "id": "io_read_all",
+      "kind": "run",
+      "stdout": "0\n0\n",
+      "file": "run/io_read_all.yv"
+    },
+    {
+      "id": "owned_view_bindings",
+      "kind": "run",
+      "stdout": "4\na b\n4\nd\n2\nhello\n[hello world]\nr1\nr1\n",
+      "file": "run/owned_view_bindings.yv"
+    },
+    {
+      "id": "for_temporary_vectors",
+      "kind": "run",
+      "stdout": "a\nbb\n2\nr\np\nq\nr\ns\nt\n1\n4\na\n",
+      "file": "run/for_temporary_vectors.yv"
+    },
+    {
+      "id": "owned_view_vector_push",
+      "kind": "run",
+      "stdout": "3\n",
+      "file": "run/owned_view_vector_push.yv"
+    },
+    {
+      "id": "text_trim_argument",
+      "kind": "reject",
+      "diagnostic": "E0012",
+      "file": "reject/text_trim_argument.yv"
+    },
+    {
+      "id": "text_fields_argument",
+      "kind": "reject",
+      "diagnostic": "E0012",
+      "file": "reject/text_fields_argument.yv"
+    },
+    {
+      "id": "io_read_all_argument",
+      "kind": "reject",
+      "diagnostic": "E0012",
+      "file": "reject/io_read_all_argument.yv"
+    },
+    {
+      "id": "io_read_all_fallthrough",
+      "kind": "reject",
+      "diagnostic": "E0601",
+      "file": "reject/io_read_all_fallthrough.yv"
+    },
+    {
+      "id": "io_not_imported",
+      "kind": "reject",
+      "diagnostic": "E0010",
+      "file": "reject/io_not_imported.yv"
+    },
+    {
+      "id": "owned_view_return_local",
+      "kind": "reject",
+      "diagnostic": "E0303",
+      "file": "reject/owned_view_return_local.yv"
+    },
+    {
+      "id": "owned_view_return_unlisted",
+      "kind": "reject",
+      "diagnostic": "E0303",
+      "file": "reject/owned_view_return_unlisted.yv"
+    },
+    {
+      "id": "for_temporary_view_mutate_owner",
+      "kind": "reject",
+      "diagnostic": "E0102",
+      "file": "reject/for_temporary_view_mutate_owner.yv"
+    },
+    {
+      "id": "for_field_mutate_struct",
+      "kind": "reject",
+      "diagnostic": "E0102",
+      "file": "reject/for_field_mutate_struct.yv"
+    },
+    {
+      "id": "owned_view_iterate_mutate",
+      "kind": "reject",
+      "diagnostic": "E0102",
+      "file": "reject/owned_view_iterate_mutate.yv"
+    },
+    {
+      "id": "text_trim_unlisted",
+      "kind": "reject",
+      "diagnostic": "E0303",
+      "file": "reject/text_trim_unlisted.yv"
+    },
+    {
+      "id": "io_read_all_binding",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/io_read_all_binding.yv"
+    },
+    {
+      "id": "io_read_line",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/io_read_line.yv"
+    },
+    {
+      "id": "owned_view_owner_mutated_later",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/owned_view_owner_mutated_later.yv"
+    },
+    {
+      "id": "owned_view_inout_owner",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/owned_view_inout_owner.yv"
+    },
+    {
+      "id": "owned_view_assign_outer",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/owned_view_assign_outer.yv"
+    },
+    {
+      "id": "owned_view_push",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/owned_view_push.yv"
+    },
+    {
+      "id": "builtin_max",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/builtin_max.yv"
     }
   ],
   "promotions": [
@@ -5125,6 +5253,127 @@
       "kind": "run",
       "source_sha256": "411ac080ff2d8fcf01456bc692be25ed9934d98a27f8a0164d98b584a5b5436d",
       "reason": "Read-only iteration over owned String and struct elements is now in the accepted input subset; the original source bytes are unchanged."
+    },
+    {
+      "previous_id": "unsupported_module",
+      "previous_file": "unsupported/unsupported_module.yv",
+      "previous_kind": "unsupported",
+      "baseline_commit": "4afc1f6103e7650823acf36bd0a88e3fabe89b55",
+      "id": "io_import_only",
+      "file": "run/io_import_only.yv",
+      "kind": "run",
+      "source_sha256": "627a49d39da180749aa8dfb67ffe757ff7fc38af269da04c3a06099a73f49685",
+      "reason": "std/io imports are now in the accepted input subset; the original source bytes are unchanged."
+    },
+    {
+      "previous_id": "unsupported_string_view_binding",
+      "previous_file": "unsupported/unsupported_string_view_binding.yv",
+      "previous_kind": "unsupported",
+      "baseline_commit": "4afc1f6103e7650823acf36bd0a88e3fabe89b55",
+      "id": "string_view_binding",
+      "file": "run/string_view_binding.yv",
+      "kind": "run",
+      "source_sha256": "208c2b33643f226ffc14795866740565c51accc22b3adab5c399df0aff4eaafb",
+      "reason": "persistent views of owned values, temporary iterables and std/io are now in the accepted input subset; the original source bytes are unchanged."
+    },
+    {
+      "previous_id": "unsupported_for_field",
+      "previous_file": "unsupported/unsupported_for_field.yv",
+      "previous_kind": "unsupported",
+      "baseline_commit": "4afc1f6103e7650823acf36bd0a88e3fabe89b55",
+      "id": "for_field",
+      "file": "run/for_field.yv",
+      "kind": "run",
+      "source_sha256": "65df56d7b9e0321c42709d50af9a6a233f56e5d1dcaa5cc3cb63cb6472d1793c",
+      "reason": "persistent views of owned values, temporary iterables and std/io are now in the accepted input subset; the original source bytes are unchanged."
+    },
+    {
+      "previous_id": "unsupported_for_temporary",
+      "previous_file": "unsupported/unsupported_for_temporary.yv",
+      "previous_kind": "unsupported",
+      "baseline_commit": "4afc1f6103e7650823acf36bd0a88e3fabe89b55",
+      "id": "for_temporary",
+      "file": "run/for_temporary.yv",
+      "kind": "run",
+      "source_sha256": "7300a1e650183b5237bc8d410c7a9fe78be600a944c2b47d4d198d4fbfcc4ae2",
+      "reason": "persistent views of owned values, temporary iterables and std/io are now in the accepted input subset; the original source bytes are unchanged."
+    },
+    {
+      "previous_id": "unsupported_for_literal",
+      "previous_file": "unsupported/unsupported_for_literal.yv",
+      "previous_kind": "unsupported",
+      "baseline_commit": "4afc1f6103e7650823acf36bd0a88e3fabe89b55",
+      "id": "for_literal",
+      "file": "run/for_literal.yv",
+      "kind": "run",
+      "source_sha256": "f8f8e62095f346e3627a502404cff8e64cc805188b36febd5f564fdb62b671e0",
+      "reason": "persistent views of owned values, temporary iterables and std/io are now in the accepted input subset; the original source bytes are unchanged."
+    },
+    {
+      "previous_id": "unsupported_format_owned_double_slice_binding",
+      "previous_file": "unsupported/unsupported_format_owned_double_slice_binding.yv",
+      "previous_kind": "unsupported",
+      "baseline_commit": "4afc1f6103e7650823acf36bd0a88e3fabe89b55",
+      "id": "format_owned_double_slice_binding",
+      "file": "run/format_owned_double_slice_binding.yv",
+      "kind": "run",
+      "source_sha256": "4c8efbf72cc815903c41b72cc67c8e8a54030ea2c0c86abdfb4a8c10bcf8f171",
+      "reason": "persistent views of owned values, temporary iterables and std/io are now in the accepted input subset; the original source bytes are unchanged."
+    },
+    {
+      "previous_id": "borrowed_return_string_source",
+      "previous_file": "unsupported/borrowed_return_string_source.yv",
+      "previous_kind": "unsupported",
+      "baseline_commit": "4afc1f6103e7650823acf36bd0a88e3fabe89b55",
+      "id": "borrowed_return_string_source",
+      "file": "run/borrowed_return_string_source.yv",
+      "kind": "run",
+      "source_sha256": "ad75fdd175d721bc2bc737e49b6e10c556dd8305d01e52bc884c9cee32fb15e0",
+      "reason": "persistent views of owned values, temporary iterables and std/io are now in the accepted input subset; the original source bytes are unchanged."
+    },
+    {
+      "previous_id": "borrowed_return_persistent_view",
+      "previous_file": "unsupported/borrowed_return_persistent_view.yv",
+      "previous_kind": "unsupported",
+      "baseline_commit": "4afc1f6103e7650823acf36bd0a88e3fabe89b55",
+      "id": "borrowed_return_persistent_view",
+      "file": "run/borrowed_return_persistent_view.yv",
+      "kind": "run",
+      "source_sha256": "5e37466470f3d256babe014d61d251a4b14a52da9ae26571655520e0a3403a08",
+      "reason": "persistent views of owned values, temporary iterables and std/io are now in the accepted input subset; the original source bytes are unchanged."
+    },
+    {
+      "previous_id": "slice_result_from_owned_vec",
+      "previous_file": "unsupported/slice_result_from_owned_vec.yv",
+      "previous_kind": "unsupported",
+      "baseline_commit": "4afc1f6103e7650823acf36bd0a88e3fabe89b55",
+      "id": "slice_result_from_owned_vec",
+      "file": "run/slice_result_from_owned_vec.yv",
+      "kind": "run",
+      "source_sha256": "b2947716697e981cea64876ea974525fe426c1d4745bcb67fb73bbd7390f6d91",
+      "reason": "persistent views of owned values, temporary iterables and std/io are now in the accepted input subset; the original source bytes are unchanged."
+    },
+    {
+      "previous_id": "text_split_owned_bind",
+      "previous_file": "unsupported/text_split_owned_bind.yv",
+      "previous_kind": "unsupported",
+      "baseline_commit": "4afc1f6103e7650823acf36bd0a88e3fabe89b55",
+      "id": "text_split_owned_bind",
+      "file": "run/text_split_owned_bind.yv",
+      "kind": "run",
+      "source_sha256": "50585512027d4e3030a1d87155d128135523e99de2e107ef2ca4eb725c94bed0",
+      "reason": "persistent views of owned values, temporary iterables and std/io are now in the accepted input subset; the original source bytes are unchanged."
+    },
+    {
+      "previous_id": "for_temporary_owned_vector",
+      "previous_file": "unsupported/for_temporary_owned_vector.yv",
+      "previous_kind": "unsupported",
+      "baseline_commit": "4afc1f6103e7650823acf36bd0a88e3fabe89b55",
+      "id": "for_temporary_owned_vector",
+      "file": "run/for_temporary_owned_vector.yv",
+      "kind": "run",
+      "source_sha256": "adbd7a92f2ba266ce069938daff371163d4324b21178a4b46d38e337d22f70ab",
+      "reason": "persistent views of owned values, temporary iterables and std/io are now in the accepted input subset; the original source bytes are unchanged."
     }
   ]
 }

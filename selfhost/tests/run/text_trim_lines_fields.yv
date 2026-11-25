@@ -1,0 +1,23 @@
+fn words(text: str) -> Vec[str] of text { return text.fields() }
+fn rows(text: str) -> Vec[str] of text { return text.lines() }
+fn clean(text: str) -> str of text { return text.trim() }
+fn main() {
+    let s = "  alpha beta\tgamma \n"
+    println("[${s.trim()}]")
+    println(s.fields().len())
+    let ws = words("a  b c")
+    println(ws.len())
+    println(ws[2])
+    let rs = rows("one\r\ntwo\n\nthree")
+    println(rs.len())
+    println("[${rs[0]}]")
+    println(rows("x\n").len())
+    println(rows("").len())
+    println("[${clean("  pad  ")}]")
+    let owned = "  k v ".toString()
+    println(owned.trim().len())
+    println(owned.fields().len())
+    println(owned.lines().len())
+    let pieces = s.trim().split(" ")
+    for w in pieces { println(w) }
+}

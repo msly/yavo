@@ -1,0 +1,38 @@
+fn count(text: String) -> int {
+    let lines = text.lines()
+    var n = 0
+    for line in lines {
+        let t = line.trim()
+        if t.len() > 0 { n += 1 }
+    }
+    return n
+}
+fn firstWord(text: String) -> str of text {
+    let words = text.fields()
+    if words.len() == 0 { return "" }
+    return words[0]
+}
+fn main() {
+    let text = "a b\n\n  c  \nd".toString()
+    let lines = text.lines()
+    println(lines.len())
+    let first = lines[0]
+    println(first)
+    let copy = lines.clone()
+    println(copy.len())
+    let moved = lines
+    println(moved[3])
+    println(count("x\n y\n\n".toString()))
+    let owner = "  hello world ".toString()
+    println(firstWord(owner))
+    let t = owner.trim()
+    println("[${t}]")
+    var rows: Vec[String] = []
+    rows.push(" r1 ".toString())
+    for r in rows {
+        let v = r.trim()
+        println(v)
+    }
+    let x = rows[0].trim()
+    println(x)
+}

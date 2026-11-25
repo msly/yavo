@@ -1,0 +1,8 @@
+use std/io
+fn main() {
+    let text = io.readAll() catch e {
+        eprintln("${e}")
+        return
+    }
+    println(text.len())
+}

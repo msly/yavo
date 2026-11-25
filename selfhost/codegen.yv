@@ -19,6 +19,9 @@ struct Local {
     sources: int = 0
     // A read-only view of an owned element of the vector a for loop iterates.
     element: bool = false
+    // A str or Vec[str] binding that points into the owned value of local
+    // viewOf; while it is in scope that owner may not be modified or moved.
+    viewOf: int = -1
 }
 
 // transient: a str view into an owned String; it may not outlive its statement.
@@ -33,6 +36,9 @@ struct Value {
     temporary: bool = false
     transient: bool = false
     sources: int = 0
+    // For a transient value that is itself a local (a view binding), the owner
+    // it points into; otherwise root is the owner.
+    owner: int = -1
 }
 
 // Expected types can acquire extra Optional layers while checking ??, even
@@ -459,12 +465,29 @@ fn writable(g: Generator, ts: Vec[Token], root: int, token: int) {
     if root >= 0 && contains(g.inoutLocks, root) {
         lexer.fail(ts, token, "E0102", "an earlier call argument has exclusive access to this value")
     }
+    if root >= 0 {
+        // Stage0 reports E0102 only if the view is used afterwards; without
+        // liveness any bound view keeps its owner unchanged (U0001).
+        var i = 0
+        while i < g.locals.len() {
+            if g.locals[i].viewOf == root {
+                lexer.fail(ts, token, "U0001", "modifying or moving a value while a view of it is bound is outside this subset")
+            }
+            i += 1
+        }
+    }
 }
 
 fn copyValue(v: Value) -> Value {
     return Value{ty: v.ty, name: v.name.clone(), local: v.local,
         root: v.root, field: v.field, indexedBorrow: v.indexedBorrow, temporary: v.temporary,
-        transient: v.transient, sources: v.sources}
+        transient: v.transient, sources: v.sources, owner: v.owner}
+}
+
+// The owned local a transient value points into, or -1 for a temporary.
+fn ownerOf(v: Value) -> int {
+    if v.owner >= 0 { return v.owner }
+    return v.root
 }
 
 fn takeValue(g: inout Generator, reg: Registry, ts: Vec[Token], token: int, v: Value) -> Value {
@@ -492,6 +515,10 @@ fn takeValue(g: inout Generator, reg: Registry, ts: Vec[Token], token: int, v: V
         }
         var taken = typedValue(&g, reg, v.ty, v.name)
         taken.sources = v.sources
+        if v.transient {
+            taken.transient = true
+            taken.owner = ownerOf(v)
+        }
         zeroValue(&g, reg, v)
         g.locals[v.local].moved = true
         return taken
@@ -845,7 +872,8 @@ fn callValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: E
     }
     if index < 0 {
         if name == "bool" || name == "panic" ||
-            name == "some" || name == "replace" || name == "swap" {
+            name == "some" || name == "replace" || name == "swap" || name == "min" || name == "max" ||
+            name == "abs" || name == "Box" || name == "Rc" || name == "Arc" || name == "Mutex" {
             lexer.fail(ts, e.token, "U0001", "builtin is outside the selfhost subset")
         }
         if numericTypeName(name) {
@@ -918,11 +946,11 @@ fn userCall(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Ex
                 if result.kind == .Vec {
                     lexer.fail(ts, argToken, "U0001", "vectors of views into owned values are outside this subset")
                 }
-                if viewed && viewRoot != arg.root {
+                if viewed && viewRoot != ownerOf(arg) {
                     lexer.fail(ts, argToken, "U0001", "borrowed returns viewing several owned strings are outside this subset")
                 }
                 viewed = true
-                viewRoot = arg.root
+                viewRoot = ownerOf(arg)
             } else if named {
                 sources = sources | arg.sources
             }
@@ -1003,7 +1031,7 @@ fn allowedSources(p: Program, ts: Vec[Token], reg: Registry, index: int) -> int 
 fn returnedSources(g: Generator, p: Program, ts: Vec[Token], id: int, returned: Value) {
     let token = p.expressions[id].token
     if returned.transient {
-        let root = returned.root
+        let root = ownerOf(returned)
         if root >= 0 && g.locals[root].element {
             lexer.fail(ts, token, "U0001", "returning a view of an iterated element is outside this subset")
         }
@@ -1014,7 +1042,9 @@ fn returnedSources(g: Generator, p: Program, ts: Vec[Token], id: int, returned: 
             if (g.allowed & sourceBit(root)) == 0 {
                 lexer.fail(ts, token, "E0303", "the returned value points into a parameter that of does not list")
             }
-            lexer.fail(ts, token, "U0001", "returning a view of a String parameter is outside this subset")
+            // A read-only parameter outlives the call; an inout one may change.
+            if !g.locals[root].byRef { return }
+            lexer.fail(ts, token, "U0001", "returning a view of an inout parameter is outside this subset")
         }
         lexer.fail(ts, token, "E0303", "the returned value points into a local or temporary that is dropped here")
     }
@@ -1055,11 +1085,12 @@ fn storeSources(g: inout Generator, ts: Vec[Token], token: int, root: int, sourc
 }
 
 fn standardModule(g: Generator, p: Program, ts: Vec[Token], receiver: Expression) -> int {
-    // 1: os, 2: fs, 3: String; 0 otherwise.
+    // 1: os, 2: fs, 3: String, 4: io; 0 otherwise.
     if receiver.kind != .Name || localIndex(g, ts, receiver.token) >= 0 { return 0 }
     if ts[receiver.token].text == "os" && p.files[g.file].importsOs { return 1 }
     if ts[receiver.token].text == "fs" && p.files[g.file].importsFs { return 2 }
     if ts[receiver.token].text == "String" { return 3 }
+    if ts[receiver.token].text == "io" && p.files[g.file].importsIo { return 4 }
     return 0
 }
 
@@ -1092,7 +1123,7 @@ fn methodValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
     }
     let module = standardModule(g, p, ts, receiver)
     if module == 1 { return osCall(&g, p, ts, reg, e) }
-    if module == 2 || (module == 3 && name == "fromUtf8") {
+    if module == 2 || module == 4 || (module == 3 && name == "fromUtf8") {
         lexer.fail(ts, e.token, "U0001", "fallible standard calls require `catch _ { ... }` in this subset")
     }
     if receiver.kind == .Name && localIndex(g, ts, receiver.token) < 0 {
@@ -1188,7 +1219,7 @@ fn methodValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
     let base = emitExpr(&g, p, ts, reg, e.left)
     if stringLike(base.ty) {
         if name == "startsWith" || name == "endsWith" || name == "contains" || name == "find" ||
-            name == "split" || name == "parseInt" {
+            name == "split" || name == "parseInt" || name == "trim" || name == "lines" || name == "fields" {
             return textQuery(&g, p, ts, reg, e, base)
         }
         if name == "len" || (name == "toString" && base.ty.kind == .Str) ||
@@ -1211,6 +1242,10 @@ fn methodValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
             // A cloned Vec[str] owns new storage; its elements keep their sources.
             var copied = typedValue(&g, reg, base.ty, cloned)
             copied.sources = base.sources
+            if base.transient {
+                copied.transient = true
+                copied.owner = ownerOf(base)
+            }
             return copied
         }
         lexer.fail(ts, e.token, "U0001", "vector method is outside the selfhost subset")
@@ -1314,14 +1349,14 @@ fn mapQuery(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Ex
 // local's own slot is guarded too, which stage0 decides by its loans (U0001 here).
 fn textQuery(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression, base: Value) -> Value {
     let name = ts[e.token].text.clone()
-    let wantsArgument = name != "parseInt"
+    let wantsArgument = name != "parseInt" && name != "trim" && name != "lines" && name != "fields"
     var arity = 0
     if wantsArgument { arity = 1 }
     if e.argCount != arity {
         if wantsArgument {
             lexer.fail(ts, e.token, "E0012", format("${name} takes exactly one argument"))
         }
-        lexer.fail(ts, e.token, "E0012", "parseInt takes no arguments")
+        lexer.fail(ts, e.token, "E0012", format("${name} takes no arguments"))
     }
     var argument = String{}
     if wantsArgument {
@@ -1350,14 +1385,22 @@ fn textQuery(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: E
     if name == "contains" {
         return scalar(&g, .Bool, format("(yv_str_find(${text}, ${argument}) >= 0)"))
     }
-    if name == "split" {
-        // The pieces point where the receiver points; pieces of an owned String
-        // are a statement-local view of it.
+    if name == "trim" || name == "split" || name == "lines" || name == "fields" {
+        // The result points where the receiver points; a view of an owned
+        // String is statement-local.
         let pieces = Type{kind: .Vec, elementKind: .Str, elementDecl: -1}
-        var result = typedValue(&g, reg, pieces, format("yv_str_split(${text}, ${argument}, ${lineColumn(ts, e.token)})"))
+        var code = format("yv_str_split(${text}, ${argument}, ${lineColumn(ts, e.token)})")
+        if name == "lines" { code = format("yv_str_lines(${text}, ${lineColumn(ts, e.token)})") }
+        if name == "fields" { code = format("yv_str_fields(${text}, ${lineColumn(ts, e.token)})") }
+        var result = Value{ty: types.primitive(.Unit), name: String{}}
+        if name == "trim" {
+            result = scalar(&g, .Str, format("yv_str_trim(${text})"))
+        } else {
+            result = typedValue(&g, reg, pieces, code)
+        }
         if base.ty.kind == .String || base.transient {
             result.transient = true
-            result.root = base.root
+            result.root = ownerOf(base)
         } else {
             result.sources = base.sources
         }
@@ -1603,6 +1646,7 @@ fn catchValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: 
         if module == 2 && ts[call.token].text == "readText" { op = 1 }
         if module == 2 && ts[call.token].text == "writeNewText" { op = 2 }
         if module == 3 && ts[call.token].text == "fromUtf8" { op = 3 }
+        if module == 4 && ts[call.token].text == "readAll" { op = 4 }
     }
     if op == 0 { return userCatchValue(&g, p, ts, reg, e) }
     if ts[e.extra].text != "_" {
@@ -1610,6 +1654,7 @@ fn catchValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: 
     }
     var arity = 1
     if op == 2 { arity = 2 }
+    if op == 4 { arity = 0 }
     if call.argCount != arity { lexer.fail(ts, call.token, "E0012", "wrong number of function arguments") }
     let n = g.counter
     g.counter += 1
@@ -1656,6 +1701,10 @@ fn catchValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: 
         if op == 1 {
             emit(&g, support.join3("yv_string ", result, " = {0};"))
             put(&g, support.join5("if (yv_fs_read_text(", args, "&", result, ", &"))
+        } else if op == 4 {
+            // io.readAll(): the rest of standard input; any failure takes the handler.
+            emit(&g, support.join3("yv_string ", result, " = {0};"))
+            put(&g, support.join3("if (yv_io_read_all(&", result, ", &"))
         } else {
             resultType = types.primitive(.Unit)
             put(&g, support.join2("if (yv_fs_write_new_text(", args))
@@ -1663,7 +1712,7 @@ fn catchValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: 
         }
         put(&g, support.join3(status, ", ", lineColumn(ts, call.token)))
         emit(&g, ") != 0) {")
-        if op == 1 {
+        if op == 1 || op == 4 {
             emit(&g, support.join3("yv_string_drop(&", result, ");"))
             emit(&g, support.join2(result, " = (yv_string){0};"))
         }
@@ -2093,6 +2142,10 @@ fn indexValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: 
     var element = typedValue(&g, reg, elem,
         support.join5("*(", et, " *)yv_vec_at(&(", base.name, support.join4("), (int64_t)sizeof(", et, ")", at)))
     element.sources = base.sources
+    if base.transient {
+        element.transient = true
+        element.owner = ownerOf(base)
+    }
     return element
 }
 
@@ -2119,7 +2172,7 @@ fn sliceValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: 
     var result = scalar(&g, .Str, code)
     if base.ty.kind == .String || base.transient {
         result.transient = true
-        result.root = base.root
+        result.root = ownerOf(base)
     } else {
         result.sources = base.sources
     }
@@ -2170,10 +2223,15 @@ fn expressionValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry
         let local = g.locals[index]
         let name = localName(local)
         if types.owned(reg, local.ty) {
-            return Value{ty: local.ty, name: name, local: index, root: index, sources: local.sources}
+            return Value{ty: local.ty, name: name, local: index, root: index, sources: local.sources,
+                transient: local.viewOf >= 0, owner: local.viewOf}
         }
         var value = typedValue(&g, reg, local.ty, name)
         value.sources = local.sources
+        if local.viewOf >= 0 {
+            value.transient = true
+            value.owner = local.viewOf
+        }
         return value
     }
     if e.kind == .Unary {
@@ -2527,14 +2585,12 @@ fn forLoopStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registr
         // The half-open comparison guarantees the increment cannot overflow.
         emit(&g, support.join3("; ", name, "++) {"))
     } else {
-        let iterable = p.expressions[unparenthesized(p, s.expr)]
         let value = emitExpr(&g, p, ts, reg, s.expr)
         if value.ty.kind != .Vec && value.ty.kind != .Slice {
             lexer.fail(ts, s.token, "E0001", "iteration requires a vector or an integer range")
         }
-        if iterable.kind != .Name {
-            lexer.fail(ts, s.token, "U0001", "iteration requires a stable Vec local or parameter in this subset")
-        }
+        // A temporary vector is a header owner: it lives until the loop has
+        // ended and is dropped after it. Iterating a view locks its owner.
         let elem = types.element(value.ty)
         // Owned String and struct elements are bound as read-only views of the
         // element (A2): never dropped or moved, and the vector stays locked.
@@ -2548,6 +2604,7 @@ fn forLoopStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registr
         declare(&g, ts, s.name, elem, false, owned, false)
         g.locals[g.locals.len() - 1].sources = value.sources
         g.locals[g.locals.len() - 1].element = owned
+        if value.transient { g.locals[g.locals.len() - 1].viewOf = ownerOf(value) }
         let index = support.join2("iter_", support.decimal(g.counter))
         g.counter += 1
         put(&g, support.join5("for (int64_t ", index, " = 0; ", index, " < ("))
@@ -2584,8 +2641,12 @@ fn emitStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, 
             if ts[s.name].text == "_" { return Flow{} }
             lexer.fail(ts, s.token, "U0001", "persistent indexed-element borrows are outside this subset")
         }
+        var viewOwner = -1
         if initial.transient && ts[s.name].text != "_" {
-            lexer.fail(ts, s.token, "U0001", "persistent views of owned strings are outside this subset")
+            viewOwner = ownerOf(initial)
+            if viewOwner < 0 || g.locals[viewOwner].byRef {
+                lexer.fail(ts, s.token, "U0001", "persistent views of temporaries or inout values are outside this subset")
+            }
         }
         if ty.kind == .Slice && initial.ty.kind == .Vec {
             lexer.fail(ts, s.token, "U0001", "persistent slice views of vectors are outside this subset")
@@ -2600,6 +2661,18 @@ fn emitStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, 
         if ts[s.name].text != "_" {
             declare(&g, ts, s.name, ty, s.mutable, false, false)
             g.locals[g.locals.len() - 1].sources = taken.sources
+            if viewOwner >= 0 {
+                let owner = g.locals[viewOwner]
+                if owner.borrowed && !owner.element {
+                    // A read-only parameter outlives the function: an ordinary source.
+                    if viewOwner >= 62 {
+                        lexer.fail(ts, s.token, "U0001", "views of parameters after the 62nd are outside this subset")
+                    }
+                    g.locals[g.locals.len() - 1].sources = taken.sources | sourceBit(viewOwner)
+                } else {
+                    g.locals[g.locals.len() - 1].viewOf = viewOwner
+                }
+            }
             put(&g, types.cType(ty))
             put(&g, support.join3(" v_", support.decimal(s.name), " = "))
             emit(&g, support.join2(taken.name, ";"))

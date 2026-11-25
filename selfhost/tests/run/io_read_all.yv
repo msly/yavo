@@ -1,0 +1,15 @@
+use std/io
+fn main() {
+    let text = io.readAll() catch _ {
+        eprintln("read failed")
+        return
+    }
+    let lines = text.lines()
+    var total = 0
+    for line in lines {
+        let n = line.trim().parseInt() ?? 0
+        total += n
+    }
+    println(lines.len())
+    println(total)
+}

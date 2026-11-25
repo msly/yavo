@@ -21,6 +21,7 @@ struct State {
     imports: Vec[ModuleImport] = []
     file: int = 0
     importsFs: bool = false
+    importsIo: bool = false
     importsOs: bool = false
 }
 
@@ -922,6 +923,7 @@ fn importItem(s: inout State, ts: Vec[Token]) {
     var i = 0
     while i < names.len() {
         if ts[names[i]].text == "fs" { s.importsFs = true
+        } else if ts[names[i]].text == "io" { s.importsIo = true
         } else if ts[names[i]].text == "os" { s.importsOs = true
         } else {
             lexer.fail(ts, names[i], "U0001", "this standard module is outside the selfhost subset")
@@ -976,6 +978,7 @@ pub fn parseFile(s: inout State, ts: Vec[Token]) {
     s.files.push(SourceFile{firstToken: s.pos, importStart: s.imports.len()})
     s.items = 0
     s.importsFs = false
+    s.importsIo = false
     s.importsOs = false
     loop {
         newlines(&s, ts)
@@ -1006,6 +1009,7 @@ pub fn parseFile(s: inout State, ts: Vec[Token]) {
     }
     s.pos += 1
     s.files[s.file].importsFs = s.importsFs
+    s.files[s.file].importsIo = s.importsIo
     s.files[s.file].importsOs = s.importsOs
     s.files[s.file].importCount = s.imports.len() - s.files[s.file].importStart
     // A module name may not also name a top-level declaration of this file.
