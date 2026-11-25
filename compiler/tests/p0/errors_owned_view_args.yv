@@ -1,0 +1,43 @@
+// expect-error: E0102 25:5
+// expect-error: E0102 32:5
+// expect-error: E0102 39:5
+// A view returned `of` an argument that owns its storage points into that
+// storage, so the owner may not change while the view is used.
+struct Holder {
+    name: String
+}
+
+fn firstText(v: Vec[String]) -> str of v {
+    return v[0][0..1]
+}
+
+fn head(v: Vec[int]) -> []int of v {
+    return v[0..1]
+}
+
+fn initial(h: Holder) -> str of h {
+    return h.name[0..1]
+}
+
+fn ownedText() {
+    var owned = ["abc".toString()]
+    let s = firstText(owned)
+    owned = ["replacement".toString()]
+    println(s)
+}
+
+fn ownedSlice() {
+    var owned = [1, 2, 3]
+    let s = head(owned)
+    owned = [9]
+    println(s[0])
+}
+
+fn ownedStruct() {
+    var h = Holder{name: "abc".toString()}
+    let s = initial(h)
+    h = Holder{name: "replacement".toString()}
+    println(s)
+}
+
+fn main() {}

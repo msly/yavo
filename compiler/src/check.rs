@@ -946,6 +946,27 @@ fn loans_grew(before: &Loans, after: &Loans) -> bool {
     before.iter().zip(after).any(|(b, a)| a.iter().any(|l| !b.contains(l)))
 }
 
+/// Whether every borrow a value of this type may carry is a `str` (text), so it
+/// cannot point into the element storage of a container.
+fn only_text_borrows(ty: Ty) -> bool {
+    match ty {
+        Ty::Ref(_) | Ty::RefMut(_) | Ty::Slice(_) | Ty::Sync(_) | Ty::Dyn(_) => false,
+        Ty::Vec(id) | Ty::Deque(id) | Ty::Heap(id) | Ty::Arena(id) => only_text_borrows(vec_elem(id)),
+        Ty::Opt(id) => only_text_borrows(opt_inner(id)),
+        Ty::Box(id) => only_text_borrows(box_inner(id)),
+        Ty::Tuple(id) => tuple_elems(id).iter().all(|t| only_text_borrows(*t)),
+        Ty::Res(id) => {
+            let (o, e) = res_parts(id);
+            only_text_borrows(o) && only_text_borrows(e)
+        }
+        Ty::Map(id) | Ty::Set(id) => {
+            let (k, v) = map_parts(id);
+            only_text_borrows(k) && only_text_borrows(v)
+        }
+        _ => true,
+    }
+}
+
 /// Merge the end states of alternative paths; paths that cannot fall through
 /// do not reach the join unless every path diverges.
 fn loans_join(ends: &[(Loans, bool)], before: &Loans) -> Loans {
@@ -4183,6 +4204,7 @@ impl Checker<'_> {
 
     /// The variables a value of a borrow-carrying type points into.
     fn loans_of(&self, h: &HExpr, cx: &FnCx) -> Vec<Loan> {
+        let ret = h.ty;
         let recv_loans = |r: &HExpr| -> Vec<Loan> {
             match (&r.kind, r.ty) {
                 (HExprKind::Local(id), Ty::String) => vec![Loan::Local(*id)],
@@ -4203,6 +4225,22 @@ impl Checker<'_> {
                     self.storage_loans(r, cx)
                 }
                 (_, Ty::Struct(_) | Ty::Enum(_)) => vec![Loan::Temp],
+                // Other owning containers (`Vec[String]`, `Map`, `Box`, ...): a returned view may
+                // point into their storage. Only a vector of Copy elements cannot hold text that a
+                // `str` could view, so a result whose borrows are all `str` keeps just its elements'
+                // loans (`fn first(ws: Vec[str]) -> str of ws`).
+                (kind, ty) if !ty.is_copy() && ty.needs_drop() => {
+                    let text_only = matches!(ty, Ty::Vec(id) if vec_elem(id).is_copy()) && only_text_borrows(ret);
+                    if text_only {
+                        self.loans_of(r, cx)
+                    } else if matches!(kind, HExprKind::Local(_) | HExprKind::Field { .. } | HExprKind::Deref(_) | HExprKind::Unbox(_) | HExprKind::Index { .. }) {
+                        self.storage_loans(r, cx)
+                    } else {
+                        let mut out = vec![Loan::Temp];
+                        out.extend(self.loans_of(r, cx));
+                        out
+                    }
+                }
                 _ => self.loans_of(r, cx),
             }
         };

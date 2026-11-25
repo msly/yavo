@@ -1,0 +1,33 @@
+// expect-stdout:
+// | a
+// | c
+// | b
+// A str returned `of` a vector of str points where its elements point, not
+// into the vector: the vector may change or be dropped while the str is used.
+fn words(text: str) -> Vec[str] of text {
+    var out: Vec[str] = []
+    out.push(text[0..1])
+    out.push(text[2..3])
+    return out
+}
+
+fn first(ws: Vec[str]) -> str of ws {
+    return ws[0]
+}
+
+fn last(ws: Vec[str]) -> str of ws {
+    return ws[ws.len() - 1]
+}
+
+fn main() {
+    var ws = words("abc")
+    let a = first(ws)
+    ws = []
+    println(a)
+    var vs = words("abc")
+    let c = last(vs)
+    vs.push("z")
+    println(c)
+    let b = first(words("bcd"))
+    println(b)
+}
