@@ -1,0 +1,11 @@
+fn main() {
+    var m: Map[String, int] = [:]
+    m.set("a".toString(), 1)
+    m.set("b".toString(), 2)
+    m.set("a".toString(), 3)
+    println(m.has("a"))
+    println(m.has("z"))
+    println(m.len())
+    println(m.getCopy("a") ?? -1)
+    println(m.getCopy("q") ?? -1)
+}

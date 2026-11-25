@@ -14,6 +14,7 @@ import argparse
 import base64
 from collections import Counter
 import hashlib
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -25,6 +26,7 @@ import sys
 import tempfile
 import time
 
+sys.dont_write_bytecode = True
 ROOT = Path(__file__).resolve().parents[1]
 SELFHOST = ROOT / "selfhost"
 COMPILER = ROOT / "compiler"
@@ -45,6 +47,13 @@ CC_FLAGS = {"debug": ["-std=c17", "-fno-strict-aliasing", "-DYV_ALLOC_CHECK", "-
 
 def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def application_module():
+    spec = importlib.util.spec_from_file_location("selfhost_application", SELFHOST / "application.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 def save(path, value):
@@ -256,6 +265,7 @@ def main():
             "source_prefixes": {case["source_prefix"]: digest(prefix_path(case))
                                 for case in cases if "source_prefix" in case},
             "assembled_sources": {},
+            "application": application_module().inputs(),
         }
         version_result = command("zig-version", [zig, "version"])
         check("locked_zig", succeeded(version_result) and
@@ -535,6 +545,14 @@ def main():
             check("symlink_output_guard", guard["record"]["exit_code"] == 3
                   and not guard["record"]["timed_out"] and guard_source.read_bytes() == original
                   and symlink.is_symlink() and symlink.read_bytes() == original, command=guard["record"])
+        # SH-3: the Yavo-written compiler builds the unmodified test-summary
+        # application, which then matches its frozen scenarios and stage0's build.
+        app_record = application_module().check(binary, stage0, zig, work / "test-summary", environment,
+                                                frontend_env, CC_FLAGS, EXE)
+        report["test_summary_application"] = app_record
+        check("test_summary_application", app_record["passed"], applicable=app_record.get("applicable"),
+              error=app_record.get("error"))
+
         # A receipt must not attribute binaries to a source tree edited during the run.
         bound_paths = {
             str(stage0): report["inputs"]["stage0"]["sha256"],
@@ -552,6 +570,7 @@ def main():
             **{str(SELFHOST / "examples" / name): value for name, value in report["inputs"]["examples"].items()},
             **{str(SELFHOST / name): value for name, value in report["inputs"]["source_prefixes"].items()},
             **report["inputs"]["assembled_sources"],
+            **report["inputs"]["application"],
         }
         changed = [name for name, expected in bound_paths.items()
                    if not Path(name).is_file() or digest(Path(name)) != expected]

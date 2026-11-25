@@ -71,7 +71,7 @@ pub fn same(a: Type, b: Type) -> bool {
     }
     if a.kind != b.kind { return false }
     if a.kind == .Named || a.kind == .Result { return a.decl == b.decl }
-    if a.kind == .Vec || a.kind == .Optional || a.kind == .Slice {
+    if a.kind == .Vec || a.kind == .Optional || a.kind == .Slice || a.kind == .Map {
         return a.elementKind == b.elementKind &&
             (a.elementKind != .Named || a.elementDecl == b.elementDecl)
     }
@@ -79,7 +79,7 @@ pub fn same(a: Type, b: Type) -> bool {
 }
 
 pub fn owned(reg: Registry, ty: Type) -> bool {
-    if ty.kind == .String || ty.kind == .Vec { return true }
+    if ty.kind == .String || ty.kind == .Vec || ty.kind == .Map { return true }
     // optional() admits only Copy payloads after named ownership is known.
     if ty.kind == .Optional { return false }
     if ty.kind == .Result {
@@ -104,6 +104,7 @@ pub fn cType(t: Type) -> String {
     if t.kind == .Str { return "yv_str".toString() }
     if t.kind == .String { return "yv_string".toString() }
     if t.kind == .Vec || t.kind == .Args || t.kind == .Slice { return "yv_vec".toString() }
+    if t.kind == .Map { return "yv_map".toString() }
     if t.kind == .Named { return support.join2("sh_type_", support.decimal(t.decl)) }
     if t.kind == .Result { return support.join2("sh_result_", support.decimal(t.decl)) }
     if t.kind == .Optional {
@@ -123,6 +124,7 @@ pub fn describe(reg: Registry, ts: Vec[Token], t: Type) -> String {
     if t.kind == .String { return "String".toString() }
     if t.kind == .Vec { return support.join3("Vec[", describe(reg, ts, element(t)), "]") }
     if t.kind == .Optional { return support.join2("?", describe(reg, ts, element(t))) }
+    if t.kind == .Map { return support.join3("Map[String, ", describe(reg, ts, element(t)), "]") }
     if t.kind == .Args { return "[]str".toString() }
     if t.kind == .Slice { return support.join2("[]", describe(reg, ts, element(t))) }
     if t.kind == .Unit { return "()".toString() }
@@ -271,6 +273,10 @@ pub fn resolve(reg: Registry, ts: Vec[Token], syn: TypeRef) -> Type {
             name: syn.elementName, elementKind: .Unknown})
         return vector(ts, syn.elementName, elem)
     }
+    if syn.kind == .Map {
+        // mapType() admitted only scalar values.
+        return Type{kind: .Map, elementKind: syn.elementKind}
+    }
     if syn.kind == .Slice {
         let elem = resolve(reg, ts, TypeRef{kind: syn.elementKind,
             name: syn.elementName, elementKind: .Unknown})
@@ -359,6 +365,8 @@ fn checkDefault(p: Program, reg: Registry, ts: Vec[Token], item: Field) {
         }
     } else if e.kind == .Vector && e.argCount == 0 && e.elementKind == .Unknown {
         if item.ty.kind == .Vec { actual = item.ty }
+    } else if e.kind == .EmptyMap {
+        if item.ty.kind == .Map { actual = item.ty }
     } else if e.kind == .Unary && ts[e.token].text == "-" && p.expressions[e.left].kind == .Number {
         // FieldDefault::of accepts a directly negated numeric token only.
         // Integer range is checked when a constructor instantiates the default.

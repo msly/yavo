@@ -116,6 +116,9 @@ struct Generator {
     jumpExpr: int = -1
     loopCondition: bool = false
     file: int = 0
+    // Map[String, V] instances whose helpers are spliced in at mapAt.
+    maps: Vec[Type] = []
+    mapAt: int = 0
 }
 
 fn require(reg: Registry, ts: Vec[Token], token: int, actual: Type, expected: Type) {
@@ -206,8 +209,32 @@ fn vectorHelper(ty: Type) -> String {
     return support.join2("type_", support.decimal(ty.elementDecl))
 }
 
+// Built-in numeric type names, used as conversions (`u8(x)`) and constant
+// namespaces (`i64.min`) by stage0; the subset has only int and byte values.
+fn numericTypeName(name: str) -> bool {
+    return name == "int" || name == "byte" || name == "i8" || name == "i16" || name == "i32" ||
+        name == "i64" || name == "u8" || name == "u16" || name == "u32" || name == "u64" ||
+        name == "f32" || name == "f64"
+}
+
+fn mapHelper(ty: Type) -> String {
+    if ty.elementKind == .Int { return "int".toString() }
+    if ty.elementKind == .Bool { return "bool".toString() }
+    return "byte".toString()
+}
+
+fn useMap(g: inout Generator, ty: Type) {
+    var i = 0
+    while i < g.maps.len() {
+        if g.maps[i].elementKind == ty.elementKind { return }
+        i += 1
+    }
+    g.maps.push(ty)
+}
+
 fn dropName(reg: Registry, ty: Type) -> String {
     if ty.kind == .String { return "yv_string_drop".toString() }
+    if ty.kind == .Map { return support.join2("sh_map_drop_", mapHelper(ty)) }
     if ty.kind == .Result { return support.join2("sh_result_drop_", support.decimal(ty.decl)) }
     if ty.kind == .Vec {
         if types.owned(reg, types.element(ty)) {
@@ -241,6 +268,12 @@ fn cloneExpression(reg: Registry, ty: Type, source: str, lineText: str, columnTe
             out.push(types.cType(elem))
             out.push("), ")
         }
+    } else if ty.kind == .Map {
+        out.push("sh_map_clone_")
+        out.push(mapHelper(ty))
+        out.push("(&(")
+        out.push(source)
+        out.push("), ")
     } else if types.owned(reg, ty) {
         out.push("sh_clone_")
         out.push(support.decimal(ty.decl))
@@ -258,6 +291,7 @@ fn cloneExpression(reg: Registry, ty: Type, source: str, lineText: str, columnTe
 }
 
 fn dropValue(g: inout Generator, reg: Registry, ty: Type, name: str) {
+    if ty.kind == .Map { useMap(&g, ty) }
     if types.owned(reg, ty) {
         put(&g, dropName(reg, ty))
         put(&g, "(&(")
@@ -779,6 +813,9 @@ fn callValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: E
             if e.argCount == 0 && (name == "println" || name == "eprintln") {
                 lexer.fail(ts, e.token, "U0001", "zero-argument output is outside the selfhost subset")
             }
+            if e.argCount == 2 && name == "assert" {
+                lexer.fail(ts, e.token, "U0001", "assert messages are outside the selfhost subset")
+            }
             lexer.fail(ts, e.token, "E0012", "selfhost output/assert calls require one argument")
         }
         if name == "assert" {
@@ -810,6 +847,9 @@ fn callValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: E
         if name == "bool" || name == "panic" ||
             name == "some" || name == "replace" || name == "swap" {
             lexer.fail(ts, e.token, "U0001", "builtin is outside the selfhost subset")
+        }
+        if numericTypeName(name) {
+            lexer.fail(ts, e.token, "U0001", "numeric conversions are outside the selfhost subset")
         }
         lexer.fail(ts, e.token, "E0010", support.join3("unknown function '", name, "'"))
     }
@@ -1079,6 +1119,7 @@ fn methodValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
         emit(&g, "}")
         return result
     }
+    if name == "set" || name == "remove" { return mapUpdate(&g, p, ts, reg, e) }
     if name == "push" || name == "reserve" {
         let target = placeOf(&g, p, ts, reg, e.left, 0)
         readable(g, ts, target.root, e.token)
@@ -1174,6 +1215,7 @@ fn methodValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
         }
         lexer.fail(ts, e.token, "U0001", "vector method is outside the selfhost subset")
     }
+    if base.ty.kind == .Map { return mapQuery(&g, p, ts, reg, e, base) }
     if base.ty.kind == .Optional && (name == "isSome" || name == "isNone") {
         if e.argCount != 0 { lexer.fail(ts, e.token, "E0012", "this Optional method takes no arguments") }
         var code = support.join3("(", base.name, ").has")
@@ -1185,6 +1227,85 @@ fn methodValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
     }
     lexer.fail(ts, e.token, "U0001", "method is outside the selfhost subset")
     return Value{ty: types.primitive(.Unit), name: "".toString()}
+}
+
+// Map.set consumes an owned String key and a value; Map.remove takes a text
+// query. Like push, the receiver is reserved while the arguments are evaluated
+// (reads are allowed, E0403 on writes), and the key is taken before the value
+// is evaluated (stage0: `m.set(k, m.getCopy(k) ?? 0)` is E0402).
+fn mapUpdate(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression) -> Value {
+    let name = ts[e.token].text.clone()
+    let target = placeOf(&g, p, ts, reg, e.left, 0)
+    readable(g, ts, target.root, e.token)
+    if target.ty.kind != .Map {
+        lexer.fail(ts, e.token, "U0001", "this modifying method is outside the selfhost subset")
+    }
+    if !target.mutable { lexer.fail(ts, e.token, "E0014", "cannot modify a read-only value") }
+    let s = mapHelper(target.ty)
+    useMap(&g, target.ty)
+    if name == "set" {
+        if e.argCount != 2 { lexer.fail(ts, e.token, "E0012", "set takes a key and a value") }
+    } else if e.argCount != 1 {
+        lexer.fail(ts, e.token, "E0012", "remove takes exactly one argument")
+    }
+    writable(g, ts, target.root, e.token)
+    let reservations = g.reservations.len()
+    g.reservations.push(target.root)
+    let keyId = p.lists[e.argStart]
+    if name == "remove" {
+        let query = emitExpected(&g, p, ts, reg, keyId, types.primitive(.Str))
+        if !stringLike(query.ty) { require(reg, ts, p.expressions[keyId].token, query.ty, types.primitive(.Str)) }
+        while g.reservations.len() > reservations { let _ = g.reservations.pop() }
+        let ty = types.optional(reg, ts, e.token, types.element(target.ty))
+        return typedValue(&g, reg, ty, format("sh_map_remove_${s}(&(${target.name}), ${view(query)})"))
+    }
+    let keyType = types.primitive(.String)
+    let key = emitExpected(&g, p, ts, reg, keyId, keyType)
+    require(reg, ts, p.expressions[keyId].token, key.ty, keyType)
+    if key.root == target.root {
+        lexer.fail(ts, p.expressions[keyId].token, "E0403", "the key still borrows the receiver")
+    }
+    let takenKey = takeValue(&g, reg, ts, p.expressions[keyId].token, key)
+    let valueId = p.lists[e.argStart + 1]
+    let valueType = types.element(target.ty)
+    let value = emitExpected(&g, p, ts, reg, valueId, valueType)
+    require(reg, ts, p.expressions[valueId].token, value.ty, valueType)
+    while g.reservations.len() > reservations { let _ = g.reservations.pop() }
+    put(&g, format("sh_map_set_${s}(&(${target.name}), ${takenKey.name}, ${value.name}, "))
+    put(&g, lineColumn(ts, e.token))
+    emit(&g, ");")
+    zeroValue(&g, reg, takenKey)
+    return Value{ty: types.primitive(.Unit), name: "".toString()}
+}
+
+// Read-only Map methods. Stage0 reads the receiver after the text query, so an
+// argument that modifies or moves the Map is accepted there; this subset keeps
+// it out (U0001). get returns a reference into the Map, which it does not model.
+fn mapQuery(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression, base: Value) -> Value {
+    let name = ts[e.token].text.clone()
+    let s = mapHelper(base.ty)
+    useMap(&g, base.ty)
+    if name == "len" || name == "clone" {
+        if e.argCount != 0 { lexer.fail(ts, e.token, "E0012", "this Map method takes no arguments") }
+        if name == "len" { return scalar(&g, .Int, format("(${base.name}).live")) }
+        let line = support.decimal(ts[e.token].line + ts[e.token].lineBase)
+        return typedValue(&g, reg, base.ty, cloneExpression(reg, base.ty, base.name, line, support.decimal(ts[e.token].column)))
+    }
+    if name != "has" && name != "getCopy" {
+        lexer.fail(ts, e.token, "U0001", "this Map method is outside the selfhost subset")
+    }
+    if e.argCount != 1 { lexer.fail(ts, e.token, "E0012", format("${name} takes exactly one argument")) }
+    let guards = g.accessLocks.len()
+    if base.root >= 0 { g.accessLocks.push(base.root) }
+    let argId = p.lists[e.argStart]
+    let query = emitExpected(&g, p, ts, reg, argId, types.primitive(.Str))
+    if !stringLike(query.ty) { require(reg, ts, p.expressions[argId].token, query.ty, types.primitive(.Str)) }
+    while g.accessLocks.len() > guards { let _ = g.accessLocks.pop() }
+    if name == "has" {
+        return scalar(&g, .Bool, format("(sh_map_find_${s}(&(${base.name}), ${view(query)}) >= 0)"))
+    }
+    let ty = types.optional(reg, ts, e.token, types.element(base.ty))
+    return typedValue(&g, reg, ty, format("sh_map_get_${s}(&(${base.name}), ${view(query)})"))
 }
 
 // Text queries (stdlib contract section 2), lowered to the runtime helpers stage0
@@ -1648,6 +1769,7 @@ fn binaryValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
             lexer.fail(ts, e.token, "E0001", "operator is not defined for this type")
         }
         if lhs.ty.kind == .Vec || lhs.ty.kind == .Args || lhs.ty.kind == .Slice || lhs.ty.kind == .Result ||
+            lhs.ty.kind == .Map ||
             (lhs.ty.kind == .Named && (reg.entries[lhs.ty.decl].kind == .Struct || !equality)) {
             lexer.fail(ts, e.token, "E0501", "this aggregate does not implement the required comparison")
         }
@@ -2013,6 +2135,10 @@ fn expressionValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry
         lexer.fail(ts, e.token, "E0001", "interpolation must be a direct output or format argument")
     }
     if e.kind == .Unit { return Value{ty: types.primitive(.Unit), name: "".toString()} }
+    if e.kind == .EmptyMap {
+        if expected.kind != .Map { lexer.fail(ts, e.token, "E0001", "cannot infer the type of [:]; annotate it as a Map") }
+        return typedValue(&g, reg, expected, "(yv_map){0}")
+    }
     if e.kind == .Number {
         let number = support.parseDecimal(ts[e.token].text)
         if number < 0 { lexer.fail(ts, e.token, "E0003", "integer literal is outside int range") }
@@ -2034,6 +2160,9 @@ fn expressionValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry
         if index < 0 {
             if types.lookup(reg, ts, e.token) >= 0 {
                 lexer.fail(ts, e.token, "E0001", "a type name is not a value")
+            }
+            if numericTypeName(ts[e.token].text) {
+                lexer.fail(ts, e.token, "U0001", "numeric type constants are outside the selfhost subset")
             }
             lexer.fail(ts, e.token, "E0010", support.join3("unknown local '", ts[e.token].text, "'"))
         }
@@ -2750,6 +2879,9 @@ fn declarations(g: inout Generator, reg: Registry) {
 
     optionalLayouts(&g, reg)
     resultLayouts(&g, reg)
+    // Map helpers need only these layouts; generate() splices them in here once
+    // every instance is known.
+    g.mapAt = g.out.len()
 
     // Every named C layout is complete. Lifecycle prototypes break indirect
     // dependency cycles such as Node -> Vec[Node] without recursive discovery.
@@ -2909,5 +3041,118 @@ pub fn generate(p: Program, ts: Vec[Token], filename: str) -> String {
     emit(&g, support.join3("sh_fn_", support.decimal(entry), "();"))
     emit(&g, "return yv_rt_exit();")
     emit(&g, "}")
+    // Instances reached only through struct fields or Result payloads.
+    i = 0
+    while i < reg.fields.len() {
+        if reg.fields[i].ty.kind == .Map { useMap(&g, reg.fields[i].ty) }
+        i += 1
+    }
+    i = 0
+    while i < reg.results.len() {
+        if reg.results[i].ok.kind == .Map { useMap(&g, reg.results[i].ok) }
+        if reg.results[i].error.kind == .Map { useMap(&g, reg.results[i].error) }
+        i += 1
+    }
+    let text = take(&g.out)
+    g.out = text[0..g.mapAt].toString()
+    i = 0
+    while i < g.maps.len() {
+        let instance = g.maps[i]
+        mapLifecycle(&g, instance)
+        i += 1
+    }
+    g.out.push(text[g.mapAt..text.len()])
     return take(&g.out)
+}
+
+// The helpers stage0 generates for Map[String, V] with a Copy V: entries in
+// insertion order, open-addressing slots, and a rebuild that drops removed
+// entries. All-zero is the empty map.
+fn mapLifecycle(g: inout Generator, ty: Type) {
+    let s = mapHelper(ty)
+    let v = types.cType(types.element(ty))
+    let o = types.cType(Type{kind: .Optional, elementKind: ty.elementKind})
+    let e = format("sh_ment_${s}")
+    emit(&g, format("typedef struct ${e} {"))
+    emit(&g, "bool live;")
+    emit(&g, "yv_string key;")
+    emit(&g, format("${v} val;"))
+    emit(&g, format("} ${e};"))
+    emit(&g, format("static int64_t sh_map_find_${s}(const yv_map *m, yv_str q) {"))
+    emit(&g, "if (m->nslots == 0) return -1;")
+    emit(&g, "uint64_t mask = (uint64_t)m->nslots - 1, i = yv_hash_bytes((const uint8_t *)q.ptr, q.len) & mask;")
+    emit(&g, "for (;;) {")
+    emit(&g, "int64_t s = m->slots[i];")
+    emit(&g, "if (s == 0) return -1;")
+    emit(&g, format("const ${e} *e = &((const ${e} *)m->ents.ptr)[s - 1];"))
+    emit(&g, "if (e->live && yv_str_eq(yv_string_view(&e->key), q)) return s - 1;")
+    emit(&g, "i = (i + 1) & mask;")
+    emit(&g, "}")
+    emit(&g, "}")
+    emit(&g, format("static void sh_map_rebuild_${s}(yv_map *m, uint32_t line, uint32_t col) {"))
+    emit(&g, format("${e} *es = (${e} *)m->ents.ptr;"))
+    emit(&g, "int64_t j = 0;")
+    emit(&g, "for (int64_t i = 0; i < m->ents.len; i++) {")
+    emit(&g, "if (es[i].live) {")
+    emit(&g, "if (i != j) es[j] = es[i];")
+    emit(&g, "j++;")
+    emit(&g, "}")
+    emit(&g, "}")
+    emit(&g, "m->ents.len = j;")
+    emit(&g, "yv_map_slots_reset(m, yv_map_slot_count(j, line, col), line, col);")
+    emit(&g, "for (int64_t i = 0; i < j; i++) {")
+    emit(&g, "yv_str k = yv_string_view(&es[i].key);")
+    emit(&g, "yv_map_slot_put(m, yv_hash_bytes((const uint8_t *)k.ptr, k.len), i);")
+    emit(&g, "}")
+    emit(&g, "}")
+    emit(&g, format("static void sh_map_set_${s}(yv_map *m, yv_string key, ${v} val, uint32_t line, uint32_t col) {"))
+    emit(&g, format("int64_t i = sh_map_find_${s}(m, yv_string_view(&key));"))
+    emit(&g, "if (i >= 0) {")
+    emit(&g, "yv_string_drop(&key);")
+    emit(&g, format("((${e} *)m->ents.ptr)[i].val = val;"))
+    emit(&g, "return;")
+    emit(&g, "}")
+    emit(&g, format("if ((m->ents.len + 1) * 2 > m->nslots) sh_map_rebuild_${s}(m, line, col);"))
+    emit(&g, format("${e} *e = (${e} *)yv_vec_push_slot(&m->ents, (int64_t)sizeof(${e}), line, col);"))
+    emit(&g, "e->live = true;")
+    emit(&g, "e->key = key;")
+    emit(&g, "e->val = val;")
+    emit(&g, "m->live++;")
+    emit(&g, "yv_str k = yv_string_view(&e->key);")
+    emit(&g, "yv_map_slot_put(m, yv_hash_bytes((const uint8_t *)k.ptr, k.len), m->ents.len - 1);")
+    emit(&g, "}")
+    emit(&g, format("static ${o} sh_map_get_${s}(const yv_map *m, yv_str q) {"))
+    emit(&g, format("${o} r = {0};"))
+    emit(&g, format("int64_t i = sh_map_find_${s}(m, q);"))
+    emit(&g, format("if (i >= 0) { r.has = true; r.val = ((const ${e} *)m->ents.ptr)[i].val; }"))
+    emit(&g, "return r;")
+    emit(&g, "}")
+    emit(&g, format("static ${o} sh_map_remove_${s}(yv_map *m, yv_str q) {"))
+    emit(&g, format("${o} r = {0};"))
+    emit(&g, format("int64_t i = sh_map_find_${s}(m, q);"))
+    emit(&g, "if (i < 0) return r;")
+    emit(&g, format("${e} *e = &((${e} *)m->ents.ptr)[i];"))
+    emit(&g, "r.has = true;")
+    emit(&g, "r.val = e->val;")
+    emit(&g, "yv_string_drop(&e->key);")
+    emit(&g, "e->live = false;")
+    emit(&g, "m->live--;")
+    emit(&g, "return r;")
+    emit(&g, "}")
+    emit(&g, format("static void sh_map_drop_${s}(yv_map *p) {"))
+    emit(&g, format("${e} *es = (${e} *)p->ents.ptr;"))
+    emit(&g, "for (int64_t i = 0; i < p->ents.len; i++) {")
+    emit(&g, "if (es[i].live) yv_string_drop(&es[i].key);")
+    emit(&g, "}")
+    emit(&g, "yv_map_free(p);")
+    emit(&g, "*p = (yv_map){0};")
+    emit(&g, "}")
+    emit(&g, format("static yv_map sh_map_clone_${s}(const yv_map *p, uint32_t line, uint32_t col) {"))
+    emit(&g, "yv_map m = {0};")
+    emit(&g, format("const ${e} *es = (const ${e} *)p->ents.ptr;"))
+    emit(&g, "for (int64_t i = 0; i < p->ents.len; i++) {")
+    emit(&g, format("if (es[i].live) sh_map_set_${s}(&m, yv_string_from(yv_string_view(&es[i].key), line, col), es[i].val, line, col);"))
+    emit(&g, "}")
+    emit(&g, "return m;")
+    emit(&g, "}")
 }

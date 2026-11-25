@@ -1,0 +1,66 @@
+struct Counter {
+    seen: Map[String, int]
+    total: int
+}
+fn bump(c: inout Counter, word: str) {
+    let n = c.seen.getCopy(word) ?? 0
+    c.seen.set(word.toString(), n + 1)
+    c.total += 1
+}
+fn build(words: []str) -> Map[String, int] ! String {
+    var m: Map[String, int] = [:]
+    for w in words {
+        if w == "" { return err("empty word".toString()) }
+        if m.has(w) { continue }
+        m.set(w.toString(), w.len())
+    }
+    return ok(m)
+}
+fn flags() -> Map[String, bool] {
+    var m: Map[String, bool] = [:]
+    m.set("on".toString(), true)
+    return m
+}
+fn report(words: []str) {
+    let m = build(words) catch e {
+        println(e)
+        return
+    }
+    println(m.len())
+}
+fn main() {
+    var c = Counter{seen: [:], total: 0}
+    let text = "a b a c b a"
+    let parts = text.split(" ")
+    for w in parts { bump(&c, w) }
+    println(c.total)
+    println(c.seen.len())
+    println(c.seen.getCopy("a") ?? 0)
+    let words: Vec[str] = ["x", "yy", "x"]
+    let m = build(words) catch e {
+        println(e)
+        return
+    }
+    println(m.len())
+    println(m.getCopy("yy") ?? 0)
+    let bad: Vec[str] = ["x", ""]
+    report(bad)
+    println(flags().len())
+    println(flags().getCopy("on") ?? false)
+    var r: Map[String, int] = [:]
+    r.set("k".toString(), 1)
+    r = [:]
+    println(r.len())
+    var i = 0
+    while i < 3 {
+        let key = format("n${i}")
+        if !r.has(key) { r.set(key, i) }
+        i += 1
+    }
+    println(r.len())
+    let moved = r
+    println(moved.getCopy("n2") ?? -1)
+    var holder = Counter{seen: moved, total: 0}
+    holder.seen.set("z".toString(), 9)
+    println(holder.seen.len())
+}

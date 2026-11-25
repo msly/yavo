@@ -1,0 +1,6 @@
+fn main() {
+    var m: Map[String, int] = [:]
+    m.set("a".toString(), m.len())
+    m.set("b".toString(), m.getCopy("a") ?? 9)
+    println(m.getCopy("b") ?? 0)
+}

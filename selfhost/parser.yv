@@ -86,6 +86,40 @@ fn store(s: inout State, items: []int) -> int {
     return start
 }
 
+// `Map[String, V]`: the reference keeps the Map token in name and the value
+// type in elementKind/elementName; only String keys and scalar values are in
+// this subset (resolve() checks the value).
+fn mapType(s: inout State, ts: Vec[Token]) -> TypeRef {
+    let name = s.pos
+    s.pos += 1
+    expect(&s, ts, "[")
+    let keyToken = s.pos
+    let key = typeName(&s, ts)
+    var count = 1
+    var valueToken = -1
+    var value = TypeRef{elementKind: .Unknown, kind: .Unknown}
+    while eat(&s, ts, ",") {
+        if count == 1 {
+            valueToken = s.pos
+            value = typeName(&s, ts)
+        } else {
+            let _extra = typeName(&s, ts)
+        }
+        count += 1
+    }
+    expect(&s, ts, "]")
+    if count != 2 {
+        lexer.fail(ts, name, "E0001", "Map takes exactly two type arguments")
+    }
+    if key.kind != .String {
+        lexer.fail(ts, keyToken, "U0001", "Map keys other than String are outside the selfhost subset")
+    }
+    if value.kind != .Int && value.kind != .Bool && value.kind != .Byte {
+        lexer.fail(ts, valueToken, "U0001", "Map values other than int, bool and byte are outside the selfhost subset")
+    }
+    return TypeRef{kind: .Map, name: name, elementKind: value.kind, elementName: valueToken}
+}
+
 fn vectorType(s: inout State, ts: Vec[Token], name: int) -> TypeRef {
     expect(&s, ts, "[")
     let token = s.pos
@@ -137,6 +171,8 @@ fn typeAtom(s: inout State, ts: Vec[Token]) -> TypeRef {
             lexer.fail(ts, token, "U0001", "slices of containers, Optionals or Results are outside the selfhost subset")
         }
         result = TypeRef{kind: .Slice, name: open, elementKind: inner.kind, elementName: token}
+    } else if at(s, ts, "Map") && ts[s.pos + 1].text == "[" {
+        result = mapType(&s, ts)
     } else if at(s, ts, "Vec") {
         let name = s.pos
         s.pos += 1
@@ -245,6 +281,12 @@ fn vectorLiteral(s: inout State, ts: Vec[Token]) -> int {
     enter(&s, ts)
     let token = expect(&s, ts, "[")
     var args: Vec[int] = []
+    if at(s, ts, ":") && ts[s.pos + 1].text == "]" {
+        // `[:]`, the empty Map; its type comes from the expected type.
+        s.pos += 2
+        s.nesting -= 1
+        return pushExpr(&s, .EmptyMap, token, -1, -1)
+    }
     loop {
         while ts[s.pos].kind == .Newline || at(s, ts, ",") { s.pos += 1 }
         if eat(&s, ts, "]") { break }
@@ -389,6 +431,7 @@ fn primary(s: inout State, ts: Vec[Token]) -> int {
     if at(s, ts, "match") || at(s, ts, "spawn") {
         syntax(s, ts, "U0001", "expression is outside the selfhost SH-1 subset")
     }
+    if at(s, ts, "*") { syntax(s, ts, "U0001", "dereference is outside the selfhost subset") }
     syntax(s, ts, "E0020", "expected an expression")
     return -1
 }
@@ -694,6 +737,7 @@ fn forStatement(s: inout State, ts: Vec[Token]) -> int {
 
 fn parseStatement(s: inout State, ts: Vec[Token]) -> int {
     let p = s.pos
+    if at(s, ts, "{") { syntax(s, ts, "U0001", "block statements are outside the selfhost subset") }
     if at(s, ts, "let") || at(s, ts, "var") {
         let mutable = at(s, ts, "var")
         s.pos += 1

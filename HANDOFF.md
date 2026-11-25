@@ -1,16 +1,16 @@
-# Yavo 交接文档（2026-11-25，第三十九批：遍历拥有元素）
+# Yavo 交接文档（2026-11-25，第四十批：Map 与 test-summary 自举构建）
 
-给下一个会话：先读第 1、2、10、18、19 节及 docs/self-hosting.md、selfhost/README.md 再开工。第二十七至第三十批在 `history/handoff-batches-2026-11-23-to-24.md`，第十二至第二十六批在 `history/handoff-batches-2026-11-21-to-23.md`，第六至第十一批在 `history/handoff-batches-2026-11-19-to-21.md`。
+给下一个会话：先读第 1、2、10、19、20 节及 docs/self-hosting.md、selfhost/README.md 再开工。第二十七至第三十批在 `history/handoff-batches-2026-11-23-to-24.md`，第十二至第二十六批在 `history/handoff-batches-2026-11-21-to-23.md`，第六至第十一批在 `history/handoff-batches-2026-11-19-to-21.md`。
 
 ## 1. 一句话状态
 
-**SH-2 引导子集固定点保持；第三十九批让 selfhost 只读遍历 `Vec[String]` 与拥有型结构体元素，并修复跳转式 `??` 回退分支的拥有型临时值在分支外被再次释放的子集缺陷（见第 19 节）。至此把 test-summary 的 `Map` 换成 `Vec` 后，selfhost 能编译整个程序，70 个场景与两份归档日志的输出与 stage0 构建逐字节一致；Map 是 SH-3 判据前的最后一个阻塞。第三十八批支持 str 查询方法 `startsWith`/`endsWith`/`contains`/`find`/`split`/`parseInt`，并修复 Rust stage0 文本方法接收者在实参求值期间未被锁住的释放后使用缺陷（见第 18 节）；第三十七批支持只读 `[]T` 参数与 `Vec[T]` → `[]T` 自动视图（第 17 节）；第三十六批支持 `?? return`/`?? break`/`?? continue`（第 16 节）；第三十五批让 selfhost 支持 `Vec[str]`，并修复 Rust stage0 对拥有型实参（`Vec[String]` 等）返回视图的释放后使用缺陷（见第 15 节）；第三十四批加入借用返回 `-> str of …` 并修复 loans 在分支与循环中丢失的缺陷（第 14 节）。** 第三十三批起 selfhost 支持多文件源模块： `use a`、`use a/b`、`use a/{b, c}` 以入口文件目录为根加载，允许循环导入与自导入；顶层 `pub` 决定导出；导入逐文件生效、不传递；函数一律写 `module.f(...)`，公开类型可用短名或 `module.T`（含 `module.T{...}`、`module.E.V`），短名二义报 E0010；诊断和运行时 panic 都指向原文件行列。第三十二批的插值与 format（含 Rust 输出片段借用修复）见第 12 节。
+**SH-2 引导子集固定点保持；第四十批让 selfhost 支持 `Map[String, int|bool|byte]`，selfhost 现在能编译原样的 examples/test-summary：生成的程序在 Debug/Release 下通过其 71 个本机适用场景并与 stage0 构建逐字节一致，这项检查已成为 bootstrap 的第 13 项（`test_summary_application`，三平台 CI 都跑）。同批修复 4 处子集越界（stage0 接受而 selfhost 报 E 码），并新增全仓扫描工具确认 391 个 stage0 接受的程序无越界、220 个 stage0 拒绝的程序无一被 selfhost 接受（见第 20 节）。第三十九批让 selfhost 只读遍历 `Vec[String]` 与拥有型结构体元素，并修复跳转式 `??` 回退分支的拥有型临时值在分支外被再次释放的子集缺陷（见第 19 节）。至此把 test-summary 的 `Map` 换成 `Vec` 后，selfhost 能编译整个程序，70 个场景与两份归档日志的输出与 stage0 构建逐字节一致；Map 是 SH-3 判据前的最后一个阻塞。第三十八批支持 str 查询方法 `startsWith`/`endsWith`/`contains`/`find`/`split`/`parseInt`，并修复 Rust stage0 文本方法接收者在实参求值期间未被锁住的释放后使用缺陷（见第 18 节）；第三十七批支持只读 `[]T` 参数与 `Vec[T]` → `[]T` 自动视图（第 17 节）；第三十六批支持 `?? return`/`?? break`/`?? continue`（第 16 节）；第三十五批让 selfhost 支持 `Vec[str]`，并修复 Rust stage0 对拥有型实参（`Vec[String]` 等）返回视图的释放后使用缺陷（见第 15 节）；第三十四批加入借用返回 `-> str of …` 并修复 loans 在分支与循环中丢失的缺陷（第 14 节）。** 第三十三批起 selfhost 支持多文件源模块： `use a`、`use a/b`、`use a/{b, c}` 以入口文件目录为根加载，允许循环导入与自导入；顶层 `pub` 决定导出；导入逐文件生效、不传递；函数一律写 `module.f(...)`，公开类型可用短名或 `module.T`（含 `module.T{...}`、`module.E.V`），短名二义报 E0010；诊断和运行时 panic 都指向原文件行列。第三十二批的插值与 format（含 Rust 输出片段借用修复）见第 12 节。
 
-当前语料 **693 cases**。第三十九批本机完整自举 **693/693、12/12、0 skip**，固定点数字见第 19 节；Rust Debug/Release 各 145/0/1（p0 用例文件计在同一测试内）、冻结 124/3/2。
+当前语料 **733 cases**。第四十批本机完整自举 **733/733、13/13、0 skip**，固定点数字见第 20 节；Rust Debug/Release 各 145/0/1（p0 用例文件计在同一测试内）、冻结 124/3/2。
 
 编译器自身也已改为以 `selfhost/main.yv` 为入口的 `use` 多文件（决定 28），bootstrap 不再拼接源码；改后本机 568/568、12/12，stage2/stage3 C（785,468 字节）与二进制（366,936 字节）一致。
 
-**SH-3 尚未接替，Rust stage0 仍承担日常编译；SH-4 完成 1/3 个独立应用。** 验收流程按 decisions.md 第九节。下一步见第 10 节：test-summary 只剩 101 行起的 `Map[String, int]`（类型、`[:]`、`has`/`set`）。
+**SH-3 尚未接替，Rust stage0 仍承担日常编译；SH-4 完成 1/3 个独立应用。** 验收流程按 decisions.md 第九节。下一步见第 10 节：test-summary 已由 selfhost 原样编译；接下来按 `selfhost/subset_sweep.py` 的覆盖统计（391 个程序中 selfhost 接受 70 个）选择下一批。
 
 ## 2. 仓库与环境
 
@@ -197,7 +197,7 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 ## 10. 下一个会话的第一步
 
 1. 检查 Git 状态、最新提交与 CI；先读第 12 节、[自举路线](docs/self-hosting.md)、[selfhost 说明](selfhost/README.md)。
-2. **下一步：Map，然后用 selfhost 编译原样的 examples/test-summary（SH-3 的实际判据）。** 第三十四至三十九批解除了借用返回、`Vec[str]`、`?? return`、`[]str`、str 查询方法与遍历拥有元素。现在唯一阻塞是 parser.yv 101–142 行的 `var cases: Map[String, int] = [:]`、`cases.has(words[0])`（str 查询）、`cases.set(words[0].toString(), lineNumber)`（消费 String 键）及 `requirements` 的同样用法。第十九节记录了临时把 Map 换成 `Vec[String]` 后 selfhost 构建与 stage0 构建 70/70 场景一致的验证方法；Map 完成后应在原样源码上重做这项比对（`tools/ci/test_summary.py` 需要 `build` 命令，selfhost 只有 `emit-c`，可沿用第十九节的差分脚本思路），并考虑把它加入 bootstrap 或 CI。Map 一批：类型 `Map[K, V]`（先限 K 为 String/int、V 为 Copy）、`[:]` 字面量、`has`（String 键可用 str 查询）、`set`（消费键与值）、`get`（`?V`）、`len`、drop；先用 stage0 定标拒绝码（键类型、重复 set、遍历顺序等）。
+2. **下一步：扩大覆盖，朝 SH-3 正式接替推进。** 第四十批后 selfhost 已原样编译 examples/test-summary（bootstrap 第 13 项），即第三十四批起追踪的实际判据已达到；但 docs/self-hosting.md 的 SH-3 正式条件（覆盖既有回归与冻结规格、日常默认使用自举编译器）仍未满足，不要宣称 SH-3 完成。`python3 selfhost/subset_sweep.py --selfhost <stage1>` 扫描全仓：stage0 接受 391 个程序，selfhost 接受 70 个，其余首个 U0001 原因前几位是标准模块（138，主要是 `std/io` 等）、类型形式（24）、str 方法（21，如 `trim`/`lines`/`fields`/`bytes`）、浮点（16）、泛型/接口（16）。建议下一批选量大且编译器自身也会用到的：str 方法余下部分（`trim`/`lines`/`fields`/`bytes` 等），或标准模块里 test-summary 之外最常见的那个；每批先跑扫描、定标，完成后扫描必须仍是 0 越界。也可以开始 SH-4 的第二个独立应用。
 3. 模块尚缺：包依赖与锁文件（stage0 也没有）、`use` 出现在其他项之后（stage0 接受，子集 U0001）、跨模块的枚举载荷/方法/泛型（子集本身没有）。
 
 4. 拥有型 Optional/pop、if let/match、跳转式 ??、Result 字段/容器、方法、泛型按实际阻塞另列；SH-3 的判据是能否编译 examples/test-summary 这样的真实程序，而不是特性数量。
@@ -309,3 +309,13 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - 编译器自身：没有可迁移的写法（`Vec[String]` 只有 main.yv 的 `keys`/`paths`，循环需要下标）。
 - 用例：新增 18 个（run 3、reject 11、unsupported 4），并把 `unsupported_for_owned_string`、`unsupported_for_owned_struct` 原样提升为 run（`for_owned_string`、`for_owned_struct`，记录在 promotions）；约 220 个旧探针无回退。
 - 验收：本机 693/693、12/12、0 skip，stage2/stage3 C 868,714 字节、Linux 二进制 407,544 字节一致；本批未改 Rust（沿用第三十八批：各 145/0/1，冻结 124/3/2）。CI：`aa3097d` 的 [run 45594410475](https://github.com/msly/yavo/actions/runs/45594410475) **6/6 成功**（Linux x86-64 含 stage2 ASan/UBSan、Windows x86-64、macOS arm64），同时补上第三十八批 Windows 未跑完的覆盖（`aa3097d` 包含其全部代码）。
+
+## 20. 第四十批：Map 与 test-summary 自举构建（2026-11-25）
+
+- 基线 `fd7333f`。目标是 test-summary parser.yv 101–142 行的两个 `Map[String, int]`。
+- selfhost Map：类型 `Map[String, V]`（`BasicType.Map`，V 为 int/bool/byte；其他键类型、`str` 键、拥有值或枚举值 U0001），`[:]`（`ExprKind.EmptyMap`，需要期望类型，否则 E0001；也可作结构体字段默认值），方法 `set`（消费 String 键，键先于值取走，同 stage0：`m.set(k, m.getCopy(k) ?? 0)` 报 E0402；接收者预留期间修改它报 E0403）、`remove`/`getCopy`（`?V`）、`has`（str 或 String 查询）、`len`、`clone`；可作局部、参数（只读/inout）、返回值、Result 载荷、结构体字段，drop 与 clone 按值类型生成辅助函数（`sh_map_*_<int|bool|byte>`，与 stage0 生成的辅助函数同结构：插入顺序条目 + 开放寻址槽 + 重建），按需拼接在布局之后。`get`（返回引用）、非空字面量、遍历、比较（E0501）与打印（E0001）同 stage0 或为 U0001。stage0 对 `m.has(grow(&m))` 不持有接收者（生成的 C 在实参之后才读 Map，安全），子集为 U0001。
+- 编译器自身迁移：main.yv 的模块键线性查找改为 `Map[String, int]`。
+- **SH-3 实际判据达成**：selfhost 原样编译 examples/test-summary（生成 C 约 56.6 KB），zig 构建的 Debug/Release 程序在 `tests/cases.json` 的 71 个本机适用场景上都符合人工期望（stdout、诊断顺序、退出码），且与 stage0 构建逐字节一致（`YAVO_ALLOC_CHECK=1`）。实现为 `selfhost/application.py`（复用 `tools/ci/test_summary.py` 的场景加载、冻结 oracle 校验与期望匹配），由 bootstrap 作为第 13 项检查 `test_summary_application` 运行，三平台 CI 自动覆盖；相关输入纳入 bootstrap 的输入不变检查。
+- **子集越界修复**（均为旧缺陷，新扫描发现）：块语句 `{ ... }`（原 E0020）、`assert(cond, "msg")`（原 E0012）、`*x` 解引用（原 E0020）、数值类型转换与常量 `i32(x)`/`u8(x)`/`i64.min`（原 E0010），现在都报 U0001。新增 `selfhost/subset_sweep.py`：全仓 391 个 stage0 接受的程序 0 越界（selfhost 接受 70 个），220 个 stage0 拒绝的程序 selfhost 一个也不接受。
+- 用例：新增 40 个（run 7、reject 18、unsupported 13、shared_unsupported 2）；无旧用例提升；约 250 个旧探针无回退。
+- 验收：本机 733/733、13/13、0 skip，stage2/stage3 C 937,451 字节、Linux 二进制 439,760 字节一致；本批未改 Rust（沿用第三十八批：各 145/0/1，冻结 124/3/2）。CI：待回填。

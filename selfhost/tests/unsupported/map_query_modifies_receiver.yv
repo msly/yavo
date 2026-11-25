@@ -1,0 +1,8 @@
+fn grow(m: inout Map[String, int]) -> str of static {
+    m.set("g".toString(), 1)
+    return "g"
+}
+fn main() {
+    var m: Map[String, int] = [:]
+    println(m.has(grow(&m)))
+}

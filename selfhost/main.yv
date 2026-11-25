@@ -43,6 +43,9 @@ fn compile(source: str, path: str) -> String ! Diagnostic {
     var keys: Vec[String] = [path[cut + 1..stemEnd].toString()]
     var paths: Vec[String] = [path.toString()]
     var sites: Vec[int] = [-1]
+    // Module key -> file index; keys[i] is the key of file i.
+    var fileIndex: Map[String, int] = [:]
+    fileIndex.set(keys[0].clone(), 0)
     var state = parser.startParse()
     var file = 0
     while file < keys.len() {
@@ -61,12 +64,7 @@ fn compile(source: str, path: str) -> String ! Diagnostic {
         var j = 0
         while j < state.files[file].importCount {
             let key = moduleKey(tokens, state.imports[start + j])
-            var found = -1
-            var k = 0
-            while k < keys.len() {
-                if keys[k] == key { found = k }
-                k += 1
-            }
+            var found = fileIndex.getCopy(key) ?? -1
             if found < 0 {
                 found = keys.len()
                 var modulePath = path[0..cut + 1].toString()
@@ -74,6 +72,7 @@ fn compile(source: str, path: str) -> String ! Diagnostic {
                 modulePath.push(".yv")
                 paths.push(modulePath)
                 sites.push(state.imports[start + j].alias)
+                fileIndex.set(key.clone(), found)
                 keys.push(key)
             }
             state.imports[start + j].file = found

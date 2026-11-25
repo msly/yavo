@@ -1,6 +1,6 @@
 # Yavo 自举路线与实用验收
 
-2026-11-25 · 第三十九批加入遍历拥有元素（test-summary 只剩 Map）；第三十八批加入 str 查询方法并修复 Rust 文本方法接收者锁
+2026-11-25 · 第四十批加入 Map，selfhost 原样编译 test-summary 并纳入 bootstrap；第三十九批加入遍历拥有元素
 
 近期主目标改为：**用 Yavo 实现 Yavo 编译器，完成可重放的自举闭环，再让它承担日常编译工作。** 自举用于暴露真实工程中的语言和工具链缺口；实用验收继续独立执行。
 
@@ -47,7 +47,13 @@ SH-1 的结果只标为“子集编译器”。SH-2 可以标为“子集自举�
 
 ## 当前进度
 
-### 第三十九批：遍历拥有元素
+### 第四十批：Map 与 test-summary
+
+`Map[String, V]`（V 为 int、bool 或 byte）可以作局部、参数、返回值、Result 载荷和结构体字段；`[:]` 需要期望类型。`set` 消费 String 键，`has`/`getCopy`/`remove` 接受 str 或 String 查询，`getCopy`/`remove` 返回 `?V`，另有 `len` 与 `clone`。插入顺序与重复键处理同 stage0。selfhost 现在能编译原样的 examples/test-summary，构建出的程序在 71 个本机场景上与人工期望和 stage0 构建一致；这项检查是 bootstrap 的第 13 项。同时修复了块语句、带消息的 assert、解引用和数值类型转换在子集中报错误 E 码的问题，并用 `selfhost/subset_sweep.py` 确认全仓无子集越界。新增 40 例。
+
+这达到了第三十四批起追踪的“编译真实程序”判据，但 SH-3 的正式接替条件（覆盖既有回归与冻结规格、日常默认使用）尚未满足。
+
+### 第三十九批：遍历拥有元素（历史记录）
 
 `for x in v` 现在可以遍历 `Vec[String]` 与拥有型结构体元素：`x` 是元素的只读视图，不被释放也不能移动，循环期间 `v` 不能修改或移动。移动元素报 E0404，修改元素或 `&x` 报 E0014，移动元素的字段报 E0401，循环内修改 `v` 报 E0102。`let y = x`、遍历临时 Vec、返回元素视图仍是 U0001。同时修复了跳转式 `??` 回退中拥有型临时值被重复释放（生成的 C 无法编译）的问题。把 test-summary 的 Map 临时换成 Vec 后，selfhost 已能编译整个程序，70 个场景输出与 stage0 构建一致。新增 18 例并提升 2 个旧 unsupported 用例。
 
@@ -181,7 +187,8 @@ str 与 String 接收者支持 `startsWith`/`endsWith`/`contains`（bool）、`f
 | 已完成 | 只读 `[]T` 参数 | 第三十七批：663 例；`Vec[T]` 自动视图、len/下标/for |
 | 已完成 | str 查询方法 | 第三十八批：675 例；startsWith/endsWith/contains/find/split/parseInt；修复 Rust 接收者锁 |
 | 已完成 | 遍历拥有元素 | 第三十九批：693 例；`for x in Vec[String]`/结构体元素；Map 以外的 test-summary 已可编译 |
-| 下一步 | Map，然后编译原样 test-summary | 实现 `Map[K, V]` 后在原样源码上比对 selfhost 与 stage0 构建，达到 SH-3 判据 |
+| 已完成 | Map 与 test-summary | 第四十批：733 例；selfhost 原样编译 test-summary，71 场景与 stage0 一致，纳入 bootstrap |
+| 下一步 | 扩大覆盖 | 按 `selfhost/subset_sweep.py` 统计（全仓 391 个程序中接受 70 个）补 str 方法、标准模块等 |
 | 接替阶段 | SH-3 接替 | 子集覆盖既有回归与冻结规格后，再讨论让 Yavo 编译器承担日常 `check`/`build` |
 
 固定点现在是回归门：任何修改 `selfhost/` 的提交都必须保持 stage2.c = stage3.c 与 stage1/stage2 全用例一致。

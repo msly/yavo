@@ -1,6 +1,6 @@
 {
   "schema": "yavo-selfhost-cases/1",
-  "description": "Independent fixed-oracle probes for the Yavo-written scalar, byte, aggregate, String, owned-vector, user-function Result and Copy Optional/pop, interpolation, source-module, borrowed-return, Vec[str], jumping ??, []T parameter, text query and owned-element iteration subset; not the frozen full-language conformance suite.",
+  "description": "Independent fixed-oracle probes for the Yavo-written scalar, byte, aggregate, String, owned-vector, user-function Result and Copy Optional/pop, interpolation, source-module, borrowed-return, Vec[str], jumping ??, []T parameter, text query, owned-element iteration and Map[String, scalar] subset; not the frozen full-language conformance suite.",
   "cases": [
     {
       "id": "arithmetic",
@@ -4707,6 +4707,246 @@
       "kind": "unsupported",
       "diagnostic": "U0001",
       "file": "unsupported/for_element_view_return.yv"
+    },
+    {
+      "id": "map_basic",
+      "kind": "run",
+      "stdout": "true\nfalse\n2\n3\n-1\n",
+      "file": "run/map_basic.yv"
+    },
+    {
+      "id": "map_operations",
+      "kind": "run",
+      "stdout": "2\n1\ntrue\n2\n-1\n1\n1\n2\ntrue\n1\ntrue\n7\n",
+      "file": "run/map_operations.yv"
+    },
+    {
+      "id": "map_rehash_remove",
+      "kind": "run",
+      "stdout": "10\n93\n5\n1\n",
+      "file": "run/map_rehash_remove.yv"
+    },
+    {
+      "id": "map_two_phase_set",
+      "kind": "run",
+      "stdout": "0\n",
+      "file": "run/map_two_phase_set.yv"
+    },
+    {
+      "id": "map_fields_results",
+      "kind": "run",
+      "stdout": "6\n3\n3\n2\n2\nempty word\n1\ntrue\n0\n3\n2\n4\n",
+      "file": "run/map_fields_results.yv"
+    },
+    {
+      "id": "map_field_default",
+      "kind": "run",
+      "stdout": "0\n",
+      "file": "run/map_field_default.yv"
+    },
+    {
+      "id": "map_has_owned_temporary",
+      "kind": "run",
+      "stdout": "false\n",
+      "file": "run/map_has_owned_temporary.yv"
+    },
+    {
+      "id": "map_empty_without_type",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/map_empty_without_type.yv"
+    },
+    {
+      "id": "map_one_type_argument",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/map_one_type_argument.yv"
+    },
+    {
+      "id": "map_three_type_arguments",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/map_three_type_arguments.yv"
+    },
+    {
+      "id": "map_set_str_key",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/map_set_str_key.yv"
+    },
+    {
+      "id": "map_set_value_type",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/map_set_value_type.yv"
+    },
+    {
+      "id": "map_has_int",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/map_has_int.yv"
+    },
+    {
+      "id": "map_set_immutable",
+      "kind": "reject",
+      "diagnostic": "E0014",
+      "file": "reject/map_set_immutable.yv"
+    },
+    {
+      "id": "map_compare",
+      "kind": "reject",
+      "diagnostic": "E0501",
+      "file": "reject/map_compare.yv"
+    },
+    {
+      "id": "map_print",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/map_print.yv"
+    },
+    {
+      "id": "map_iterate",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/map_iterate.yv"
+    },
+    {
+      "id": "map_key_moved",
+      "kind": "reject",
+      "diagnostic": "E0402",
+      "file": "reject/map_key_moved.yv"
+    },
+    {
+      "id": "map_key_then_read",
+      "kind": "reject",
+      "diagnostic": "E0402",
+      "file": "reject/map_key_then_read.yv"
+    },
+    {
+      "id": "map_key_indexed",
+      "kind": "reject",
+      "diagnostic": "E0404",
+      "file": "reject/map_key_indexed.yv"
+    },
+    {
+      "id": "map_set_arity",
+      "kind": "reject",
+      "diagnostic": "E0012",
+      "file": "reject/map_set_arity.yv"
+    },
+    {
+      "id": "map_getcopy_arity",
+      "kind": "reject",
+      "diagnostic": "E0012",
+      "file": "reject/map_getcopy_arity.yv"
+    },
+    {
+      "id": "map_value_modifies_receiver",
+      "kind": "reject",
+      "diagnostic": "E0403",
+      "file": "reject/map_value_modifies_receiver.yv"
+    },
+    {
+      "id": "map_empty_for_vec",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/map_empty_for_vec.yv"
+    },
+    {
+      "id": "map_field_default_vec",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/map_field_default_vec.yv"
+    },
+    {
+      "id": "map_get_reference",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/map_get_reference.yv"
+    },
+    {
+      "id": "map_int_key",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/map_int_key.yv"
+    },
+    {
+      "id": "map_string_value",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/map_string_value.yv"
+    },
+    {
+      "id": "map_str_key",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/map_str_key.yv"
+    },
+    {
+      "id": "map_literal",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/map_literal.yv"
+    },
+    {
+      "id": "map_query_modifies_receiver",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/map_query_modifies_receiver.yv"
+    },
+    {
+      "id": "map_in_vec",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/map_in_vec.yv"
+    },
+    {
+      "id": "map_enum_value",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/map_enum_value.yv"
+    },
+    {
+      "id": "map_unknown_method",
+      "kind": "shared_unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/map_unknown_method.yv"
+    },
+    {
+      "id": "map_set_temporary_receiver",
+      "kind": "shared_unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/map_set_temporary_receiver.yv"
+    },
+    {
+      "id": "block_statement",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/block_statement.yv"
+    },
+    {
+      "id": "assert_message",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/assert_message.yv"
+    },
+    {
+      "id": "numeric_conversion",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/numeric_conversion.yv"
+    },
+    {
+      "id": "numeric_type_constant",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/numeric_type_constant.yv"
+    },
+    {
+      "id": "mutable_iteration_deref",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "file": "unsupported/mutable_iteration_deref.yv"
     }
   ],
   "promotions": [

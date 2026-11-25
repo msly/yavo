@@ -1,0 +1,8 @@
+fn grow(m: inout Map[String, int]) -> int {
+    m.set("g".toString(), 1)
+    return 1
+}
+fn main() {
+    var m: Map[String, int] = [:]
+    m.set("a".toString(), grow(&m))
+}

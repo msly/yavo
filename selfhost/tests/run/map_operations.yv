@@ -1,0 +1,38 @@
+struct Index {
+    names: Map[String, int]
+    count: int
+}
+fn total(m: Map[String, int]) -> int { return m.len() }
+fn add(m: inout Map[String, int], key: str) { m.set(key.toString(), m.len()) }
+fn make() -> Map[String, bool] {
+    var m: Map[String, bool] = [:]
+    m.set("yes".toString(), true)
+    return m
+}
+fn main() {
+    var m: Map[String, int] = [:]
+    add(&m, "x")
+    add(&m, "y")
+    add(&m, "x")
+    println(total(m))
+    println(m.getCopy("y") ?? -1)
+    let owned = "y".toString()
+    println(m.has(owned))
+    println(m.remove("x") ?? -1)
+    println(m.remove("x") ?? -1)
+    println(m.len())
+    let c = m.clone()
+    m.set("z".toString(), 5)
+    println(c.len())
+    println(m.len())
+    let flags = make()
+    println(flags.getCopy("yes") ?? false)
+    var idx = Index{names: [:], count: 0}
+    idx.names.set("n".toString(), 1)
+    idx.count = idx.names.len()
+    println(idx.count)
+    println(idx.names.has("n"))
+    var bytes: Map[String, byte] = [:]
+    bytes.set("b".toString(), 7)
+    println(bytes.getCopy("b") ?? 0)
+}
