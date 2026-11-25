@@ -58,6 +58,13 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      # Windows runners have downloaded the Zig archive at about 60 KB/s; reuse the
+      # installed toolchain, keyed by the lock file that pins its URL and hash.
+      - name: Restore the locked Zig toolchain
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/yavo-home/toolchains
+          key: yavo-zig-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('compiler/toolchain.lock') }}
       - name: Build compiler and install the locked Zig toolchain
         env:
           YAVO_HOME: ${{ runner.temp }}/yavo-home

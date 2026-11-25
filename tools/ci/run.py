@@ -190,7 +190,8 @@ def main():
             report["setup_warmup"] = {"fixture": "compiler/tests/p0/run_arith.yv",
                                       "modes": ["debug", "release"], "included_in_test_totals": False}
         for label, command in commands:
-            row, _ = invoke(report, label, command)
+            # A cold Zig download has taken over 20 minutes on hosted Windows runners.
+            row, _ = invoke(report, label, command, timeout=2700 if label == "zig-install" else 1200)
             if row["exit_code"] != 0:
                 report["status"] = "setup_failed"
                 write_report(report)
