@@ -889,6 +889,8 @@ fn hlocals(locals: Vec<LocalState>) -> Vec<HLocal> {
 struct LoopFlow {
     breaks: Option<Moved>,
     continues: Option<Moved>,
+    loan_breaks: Option<Loans>,
+    loan_continues: Option<Loans>,
 }
 
 /// Locals that may be moved on either path.
@@ -901,6 +903,58 @@ fn union_into(slot: &mut Option<Moved>, state: &Moved) {
         Some(prev) => union(&prev, state),
         None => state.clone(),
     });
+}
+
+/// What each local points into at one program point. Like `Moved`, it is
+/// restored before each alternative path and merged where paths join, so a
+/// loan taken on one branch or a later loop iteration is not lost (E4, O2).
+type Loans = Vec<Vec<Loan>>;
+
+fn loans_snapshot(cx: &FnCx) -> Loans {
+    cx.locals.iter().map(|l| l.loans.clone()).collect()
+}
+
+fn loans_restore(cx: &mut FnCx, state: &Loans) {
+    for (local, loans) in cx.locals.iter_mut().zip(state) {
+        local.loans = loans.clone();
+    }
+}
+
+fn loans_union(a: &Loans, b: &Loans) -> Loans {
+    (0..a.len().max(b.len()))
+        .map(|i| {
+            let mut out = a.get(i).cloned().unwrap_or_default();
+            for l in b.get(i).into_iter().flatten() {
+                if !out.contains(l) {
+                    out.push(*l);
+                }
+            }
+            out
+        })
+        .collect()
+}
+
+fn loans_union_into(slot: &mut Option<Loans>, state: &Loans) {
+    *slot = Some(match slot.take() {
+        Some(prev) => loans_union(&prev, state),
+        None => state.clone(),
+    });
+}
+
+/// Whether `after` adds a loan to one of the locals that existed in `before`.
+fn loans_grew(before: &Loans, after: &Loans) -> bool {
+    before.iter().zip(after).any(|(b, a)| a.iter().any(|l| !b.contains(l)))
+}
+
+/// Merge the end states of alternative paths; paths that cannot fall through
+/// do not reach the join unless every path diverges.
+fn loans_join(ends: &[(Loans, bool)], before: &Loans) -> Loans {
+    let live: Vec<&Loans> = ends.iter().filter(|(_, d)| !d).map(|(l, _)| l).collect();
+    let merged: Vec<&Loans> = if live.is_empty() { ends.iter().map(|(l, _)| l).collect() } else { live };
+    match merged.split_first() {
+        Some((first, rest)) => rest.iter().fold((*first).clone(), |acc, l| loans_union(&acc, l)),
+        None => before.clone(),
+    }
 }
 
 /// Whether control can never fall off the end of these statements.
@@ -4552,6 +4606,7 @@ impl Checker<'_> {
     /// at the end of the first iteration.
     fn loop_body(&mut self, body: &Block, cx: &mut FnCx, infinite: bool) -> Vec<HStmt> {
         let before = cx.moved.clone();
+        let loans_before = loans_snapshot(cx);
         let start_cur = cx.cur;
         cx.loops.push(LoopFlow::default());
         cx.loop_depth += 1;
@@ -4564,22 +4619,55 @@ impl Checker<'_> {
         }
         let next = union(&before, &end);
         let grew = next.iter().enumerate().any(|(i, m)| m.is_some() && before.get(i).copied().flatten().is_none());
-        if grew {
+        // Loans written late in the body reach the next iteration's earlier statements:
+        // replay the body until the loan state at its start stops growing.
+        let loan_end = |cx: &FnCx, flow: &LoopFlow| {
+            let mut end = loans_snapshot(cx);
+            if let Some(c) = &flow.loan_continues {
+                end = loans_union(&end, c);
+            }
+            let mut next = loans_union(&loans_before, &end);
+            next.truncate(loans_before.len());
+            next
+        };
+        let mut loans_next = loan_end(cx, &flow);
+        if grew || loans_grew(&loans_before, &loans_next) {
             let saved = std::mem::take(&mut *self.diags);
             let end_cur = cx.cur;
-            cx.cur = start_cur;
-            cx.moved = next.clone();
-            cx.loops.push(LoopFlow::default());
-            cx.loop_depth += 1;
-            let _ = self.block(body, cx);
-            cx.loop_depth -= 1;
-            cx.cur = end_cur;
-            if let Some(b) = cx.loops.pop().and_then(|f| f.breaks) {
-                union_into(&mut flow.breaks, &b);
+            let mut kept: Vec<crate::diag::Diagnostic> = Vec::new();
+            let mut rounds = 0;
+            loop {
+                cx.cur = start_cur;
+                cx.moved = next.clone();
+                loans_restore(cx, &loans_next);
+                cx.loops.push(LoopFlow::default());
+                cx.loop_depth += 1;
+                let _ = self.block(body, cx);
+                cx.loop_depth -= 1;
+                let replay = cx.loops.pop().unwrap_or_default();
+                if let Some(b) = &replay.breaks {
+                    union_into(&mut flow.breaks, b);
+                }
+                if let Some(b) = &replay.loan_breaks {
+                    loans_union_into(&mut flow.loan_breaks, b);
+                }
+                for d in std::mem::take(&mut self.diags.items) {
+                    let kind = matches!(d.code, "E0402" | "E0303" | "E0305" | "E0306" | "E0102" | "E0703");
+                    if kind && !kept.iter().any(|x| x.code == d.code && x.span == d.span) {
+                        kept.push(d);
+                    }
+                }
+                let widened = loans_union(&loans_next, &loan_end(cx, &replay));
+                rounds += 1;
+                if !loans_grew(&loans_next, &widened) || rounds >= 256 {
+                    break;
+                }
+                loans_next = widened;
             }
-            let recheck = std::mem::replace(&mut *self.diags, saved);
-            for d in recheck.items {
-                if d.code == "E0402" && !self.diags.items.iter().any(|x| x.code == d.code && x.span == d.span) {
+            cx.cur = end_cur;
+            *self.diags = saved;
+            for d in kept {
+                if !self.diags.items.iter().any(|x| x.code == d.code && x.span == d.span) {
                     self.diags.items.push(d);
                 }
             }
@@ -4589,6 +4677,11 @@ impl Checker<'_> {
             (false, Some(b)) => union(&next, &b),
             (_, None) => next,
         };
+        let after = match &flow.loan_breaks {
+            Some(b) => loans_union(&loans_next, b),
+            None => loans_next,
+        };
+        loans_restore(cx, &after);
         out
     }
 
@@ -5169,14 +5262,18 @@ impl Checker<'_> {
             StmtKind::If { cond, then, els } => {
                 let cond = self.cond(cond, cx);
                 let before = cx.moved.clone();
+                let loans_before = loans_snapshot(cx);
                 let then_h = self.block(then, cx);
                 let after_then = std::mem::replace(&mut cx.moved, before);
+                let loans_then = loans_snapshot(cx);
+                loans_restore(cx, &loans_before);
                 let els_h = match els {
                     None => Vec::new(),
                     Some(Else::Block(b)) => self.block(b, cx),
                     Some(Else::If(s)) => self.stmt(s, cx).into_iter().collect(),
                 };
                 let after_else = std::mem::take(&mut cx.moved);
+                let loans_else = loans_snapshot(cx);
                 // A branch that cannot fall through does not affect the code after the `if`.
                 let then_div = diverges(&then.stmts, cx);
                 let else_div = match els {
@@ -5189,6 +5286,8 @@ impl Checker<'_> {
                     (false, true) => after_then,
                     _ => union(&after_then, &after_else),
                 };
+                let joined = loans_join(&[(loans_then, then_div), (loans_else, else_div)], &loans_before);
+                loans_restore(cx, &joined);
                 HStmtKind::If { cond, then: then_h, els: els_h }
             }
             StmtKind::IfLet { name, name_span, value, then, els } => {
@@ -5264,8 +5363,10 @@ impl Checker<'_> {
                     return None;
                 }
                 let state = cx.moved.clone();
+                let loans = loans_snapshot(cx);
                 if let Some(flow) = cx.loops.last_mut() {
                     union_into(if is_break { &mut flow.breaks } else { &mut flow.continues }, &state);
+                    loans_union_into(if is_break { &mut flow.loan_breaks } else { &mut flow.loan_continues }, &loans);
                 }
                 if is_break {
                     HStmtKind::Break
@@ -5629,12 +5730,15 @@ impl Checker<'_> {
         }
 
         let before = cx.moved.clone();
+        let loans_before = loans_snapshot(cx);
         let mut local = None;
         let (mut then_h, mut els_h) = (Vec::new(), Vec::new());
         let mut both_h = None;
         let mut ends: Vec<(Moved, bool)> = Vec::new();
+        let mut loan_ends: Vec<(Loans, bool)> = Vec::new();
         for (i, (arm, role)) in arms.iter().zip(&roles).enumerate() {
             cx.moved = before.clone();
+            loans_restore(cx, &loans_before);
             if *role == Role::Unreachable {
                 self.diags
                     .warn("W0002", arm.span, "this arm can never run: an earlier arm already handles its case")
@@ -5686,6 +5790,7 @@ impl Checker<'_> {
                 Role::Unreachable => continue,
             }
             ends.push((std::mem::take(&mut cx.moved), div));
+            loan_ends.push((loans_snapshot(cx), div));
         }
         // A branch that cannot fall through does not affect the code after the `match`.
         let live: Vec<&Moved> = ends.iter().filter(|(_, d)| !d).map(|(m, _)| m).collect();
@@ -5694,6 +5799,8 @@ impl Checker<'_> {
             Some((first, rest)) => rest.iter().fold((*first).clone(), |acc, m| union(&acc, m)),
             None => before,
         };
+        let joined = loans_join(&loan_ends, &loans_before);
+        loans_restore(cx, &joined);
         if !exhaustive || inner == Ty::Error {
             return None;
         }
@@ -6255,8 +6362,10 @@ impl Checker<'_> {
                 }
                 // The jumping path does not reach the code after this expression.
                 let before = cx.moved.clone();
+                let loans_before = loans_snapshot(cx);
                 let r = self.diverge(rhs, cx);
                 cx.moved = before;
+                loans_restore(cx, &loans_before);
                 r
             }
             _ => {
@@ -6289,8 +6398,10 @@ impl Checker<'_> {
                     return err_expr(span);
                 }
                 let state = cx.moved.clone();
+                let loans = loans_snapshot(cx);
                 if let Some(flow) = cx.loops.last_mut() {
                     union_into(if is_break { &mut flow.breaks } else { &mut flow.continues }, &state);
+                    loans_union_into(if is_break { &mut flow.loan_breaks } else { &mut flow.loan_continues }, &loans);
                 }
                 if is_break {
                     HExprKind::Break
@@ -8353,6 +8464,7 @@ impl Checker<'_> {
         };
         let v = self.consume(v, cx);
         let before = cx.moved.clone();
+        let loans_before = loans_snapshot(cx);
         cx.scopes.push(Vec::new());
         let bind = if name == "_" {
             None
@@ -8419,6 +8531,9 @@ impl Checker<'_> {
         let after = std::mem::replace(&mut cx.moved, before.clone());
         // The error path continues after the expression only when the handler gives a value.
         cx.moved = if div { before } else { union(&before, &after) };
+        let loans_after = loans_snapshot(cx);
+        let joined = if div { loans_before } else { loans_union(&loans_before, &loans_after) };
+        loans_restore(cx, &joined);
         if okt == Ty::Error {
             return err_expr(span);
         }
@@ -8461,13 +8576,16 @@ impl Checker<'_> {
             (if writable { LocalKind::BindMut } else { LocalKind::Bind }, l)
         };
         let before = cx.moved.clone();
+        let loans_before = loans_snapshot(cx);
         let mut harms: Vec<HArm> = Vec::new();
         let mut ends: Vec<(Moved, bool)> = Vec::new();
+        let mut loan_ends: Vec<(Loans, bool)> = Vec::new();
         let mut all_ok = mty != Ty::Error;
         let mut pats_ok: Vec<bool> = Vec::new();
         let mut result_ty = expected.filter(|t| !matches!(t, Ty::Error | Ty::Unit));
         for (i, arm) in arms.iter().enumerate() {
             cx.moved = before.clone();
+            loans_restore(cx, &loans_before);
             cx.scopes.push(Vec::new());
             let scope_end = match expr_start {
                 None => cx.pre.bind_end.get(&(stmt_idx, i)).copied(),
@@ -8513,6 +8631,7 @@ impl Checker<'_> {
             };
             self.pop_scope(cx);
             ends.push((std::mem::take(&mut cx.moved), div));
+            loan_ends.push((loans_snapshot(cx), div));
             harms.push(HArm { pat, body, value });
         }
         // A branch that cannot fall through does not affect the code after the `match`.
@@ -8522,6 +8641,8 @@ impl Checker<'_> {
             Some((first, rest)) => rest.iter().fold((*first).clone(), |acc, m| union(&acc, m)),
             None => before,
         };
+        let joined = loans_join(&loan_ends, &loans_before);
+        loans_restore(cx, &joined);
         if !all_ok {
             return None;
         }

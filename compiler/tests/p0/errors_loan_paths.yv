@@ -1,0 +1,109 @@
+// expect-error: E0303 21:12
+// expect-error: E0303 30:12
+// expect-error: E0303 37:28
+// expect-error: E0303 48:28
+// expect-error: E0303 57:28
+// expect-error: E0303 72:12
+// expect-error: E0303 80:28
+// expect-error: E0303 96:12
+// expect-error: E0306 103:13
+// A returned or stored borrow is checked against every path that reaches it:
+// loans taken on one branch, in a later loop iteration, or on a continue/break
+// path are merged at the join instead of being replaced by the last write.
+enum Kind {
+    X
+    Y
+}
+
+fn elseBranch(a: str, b: str, c: bool) -> str of a {
+    var t = a
+    if c { t = b } else { t = a }
+    return t
+}
+
+fn matchArm(a: str, b: str, k: Kind) -> str of a {
+    var t = a
+    match k {
+        .X => { t = b }
+        .Y => { t = a }
+    }
+    return t
+}
+
+fn whileIteration(a: str, b: str) -> str of a {
+    var t = a
+    var i = 0
+    while i < 2 {
+        if i == 1 { return t }
+        t = b
+        i += 1
+    }
+    return a
+}
+
+fn loopIteration(a: str, b: str) -> str of a {
+    var t = a
+    var i = 0
+    loop {
+        if i == 1 { return t }
+        t = b
+        i += 1
+    }
+}
+
+fn forIteration(a: str, b: str) -> str of a {
+    var t = a
+    for i in 0..2 {
+        if i == 1 { return t }
+        t = b
+    }
+    return a
+}
+
+fn chainedIterations(a: str, b: str) -> str of a {
+    var t = a
+    var u = a
+    var i = 0
+    while i < 3 {
+        t = u
+        u = b
+        i += 1
+    }
+    return t
+}
+
+fn continuePath(a: str, b: str) -> str of a {
+    var t = a
+    var i = 0
+    while i < 3 {
+        i += 1
+        if i == 2 { return t }
+        if i == 1 {
+            t = b
+            continue
+        }
+        t = a
+    }
+    return a
+}
+
+fn breakPath(a: str, b: str, c: bool) -> str of a {
+    var t = a
+    while c {
+        t = b
+        break
+    }
+    return t
+}
+
+fn storedOnReplay(s: inout str, b: str, n: int) {
+    var t = "static"
+    var i = 0
+    while i < n {
+        s = t
+        t = b
+        i += 1
+    }
+}
+
+fn main() {}

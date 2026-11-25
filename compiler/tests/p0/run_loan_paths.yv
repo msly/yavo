@@ -1,0 +1,57 @@
+// expect-stdout:
+// | x
+// | x
+// | x
+// | static
+// | x
+// Loans follow control flow: a later write replaces the earlier one on a path,
+// and branches or iterations that do not reach the use add nothing.
+fn reassigned(a: str, b: str) -> str of a {
+    var t = b
+    t = a
+    return t
+}
+
+fn bothBranches(a: str, b: str, c: bool) -> str of a {
+    var t = b
+    if c { t = a } else { t = a }
+    return t
+}
+
+fn divergingBranch(a: str, b: str, c: bool) -> str of a {
+    var t = a
+    if c {
+        t = b
+        return a
+    }
+    return t
+}
+
+fn staticAfterLoop(a: str, b: str) -> str of (a, static) {
+    var t = a
+    var i = 0
+    while i < 2 {
+        t = b
+        t = "static"
+        i += 1
+    }
+    return t
+}
+
+fn calleeSources(a: str, b: str) -> str of a {
+    return pick(a, b)
+}
+
+fn pick(x: str, y: str) -> str of x {
+    if y.len() == 0 { return x[0..0] }
+    return x
+}
+
+fn main() {
+    let owned = "temporary".toString()
+    println(reassigned("x", owned))
+    println(bothBranches("x", owned, true))
+    println(divergingBranch("x", owned, false))
+    println(staticAfterLoop("x", owned))
+    println(calleeSources("x", "y"))
+}
