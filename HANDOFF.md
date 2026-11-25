@@ -288,4 +288,4 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - 不支持（U0001）：`let ys: []T = v`、返回 `Vec` 当切片、子切片、`toVec`、拥有元素切片、`inout []T` 参数；`clone` 两边都是 U0001。
 - 编译器自身迁移：`contains`、`restoreState`、`restoreSources`、`joinSources`、`sourcesGrew`、`iterationSources` 与 parser 的 `store` 改为 `[]T` 参数（`joinStates` 用 `clone`，保持 Vec）；用户程序生成的 C 不变。
 - 用例：新增 26 个（run 1、panic 1、reject 16、unsupported 7、shared_unsupported 1）；约 160 个旧探针无回退。
-- 验收：本机 663/663、12/12、0 skip，stage2/stage3 C 849,712 字节、Linux 二进制 394,552 字节一致；本批未改 Rust（Rust 全量沿用第三十五批：各 145/0/1，冻结 124/3/2）。CI：待回填。
+- 验收：本机 663/663、12/12、0 skip，stage2/stage3 C 849,712 字节、Linux 二进制 394,552 字节一致；本批未改 Rust（Rust 全量沿用第三十五批：各 145/0/1，冻结 124/3/2）。CI：`0889cb8` 的 [run 45576210191](https://github.com/msly/yavo/actions/runs/45576210191) **6/6 成功**（Linux x86-64 含 stage2 ASan/UBSan、Windows x86-64、macOS arm64）。
