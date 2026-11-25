@@ -13,6 +13,9 @@ struct State {
     fields: Vec[FieldDecl] = []
     resultTypes: Vec[ResultRef] = []
     stringParts: Vec[StringPart] = []
+    files: Vec[SourceFile] = []
+    imports: Vec[ModuleImport] = []
+    file: int = 0
     importsFs: bool = false
     importsOs: bool = false
 }
@@ -147,6 +150,11 @@ fn typeAtom(s: inout State, ts: Vec[Token]) -> TypeRef {
     } else if ts[s.pos].kind == .Word && !reservedWord(ts[s.pos].text) {
         let name = s.pos
         s.pos += 1
+        // `module.Type`: the reference keeps the module token; resolve() sees
+        // the "." after it and looks the type up in that module.
+        if at(s, ts, ".") && ts[s.pos + 1].kind == .Word && !reservedWord(ts[s.pos + 1].text) {
+            s.pos += 2
+        }
         result = TypeRef{elementKind: .Unknown, kind: .Named, name: name}
     } else if at(s, ts, "inout") || at(s, ts, "sink") || at(s, ts, "Self") ||
         at(s, ts, "[") || at(s, ts, "??") || at(s, ts, "&") {
@@ -486,12 +494,20 @@ fn postfix(s: inout State, ts: Vec[Token]) -> int {
                     current = pushExpr(&s, .Index, token, current, index)
                 }
             }
-        } else if at(s, ts, "{") && s.expressions[current].kind == .Name {
+        } else if at(s, ts, "{") && (s.expressions[current].kind == .Name ||
+            (s.expressions[current].kind == .Field &&
+             s.expressions[s.expressions[current].left].kind == .Name)) {
             let name = s.expressions[current].token
             if ts[s.pos].start != ts[name].end || ts[name].text[0] < 'A' || ts[name].text[0] > 'Z' {
                 break
             }
+            var qualifier = -1
+            if s.expressions[current].kind == .Field {
+                qualifier = s.expressions[s.expressions[current].left].token
+            }
             current = construction(&s, ts, name)
+            // A module-qualified construction keeps the module token in extra.
+            s.expressions[current].extra = qualifier
         } else {
             break
         }
@@ -800,14 +816,16 @@ fn aggregate(s: inout State, ts: Vec[Token]) -> TypeDecl {
         variantStart: variantStart, variantCount: variants.len()}
 }
 
-// Only the standard fs and os modules are available, and only before other items.
-fn importStd(s: inout State, ts: Vec[Token]) {
+// Standard fs/os imports set per-file flags; any other path names a user
+// module relative to the entry file's directory. Imports precede other items.
+fn importItem(s: inout State, ts: Vec[Token]) {
     let token = expect(&s, ts, "use")
     if s.items > 0 {
         fail(ts, token, "U0001", "imports after other items are outside the selfhost subset")
     }
     if !at(s, ts, "std") {
-        syntax(s, ts, "U0001", "module imports are outside the selfhost subset")
+        moduleImport(&s, ts)
+        return
     }
     s.pos += 1
     expect(&s, ts, "/")
@@ -832,22 +850,71 @@ fn importStd(s: inout State, ts: Vec[Token]) {
     }
 }
 
-pub fn parse(ts: Vec[Token]) -> Program {
-    var s = State{}
+fn moduleImport(s: inout State, ts: Vec[Token]) {
+    let prefixStart = s.pos
+    var prefixCount = 0
+    var names: Vec[int] = [identifier(&s, ts)]
+    while eat(&s, ts, "/") {
+        if eat(&s, ts, "{") {
+            prefixCount = names.len()
+            names = []
+            loop {
+                names.push(identifier(&s, ts))
+                if !eat(&s, ts, ",") { break }
+            }
+            expect(&s, ts, "}")
+            break
+        }
+        names.push(identifier(&s, ts))
+    }
+    if prefixCount == 0 {
+        // Without braces, every segment but the last is prefix.
+        prefixCount = names.len() - 1
+        names = [names[names.len() - 1]]
+    }
+    let first = s.files[s.file].importStart
+    for alias in names {
+        var j = first
+        while j < s.imports.len() {
+            if ts[s.imports[j].alias].text == ts[alias].text {
+                fail(ts, alias, "E0011", join3("module name '", ts[alias].text, "' is imported more than once"))
+            }
+            j += 1
+        }
+        s.imports.push(ModuleImport{alias: alias, prefixStart: prefixStart, prefixCount: prefixCount})
+    }
+}
+
+pub fn startParse() -> State {
+    return State{}
+}
+
+// Parses one file whose tokens start at s.pos (the file's first token) and
+// stops after that file's Eof. Items record their file and visibility.
+pub fn parseFile(s: inout State, ts: Vec[Token]) {
+    s.file = s.files.len()
+    s.files.push(SourceFile{firstToken: s.pos, importStart: s.imports.len()})
+    s.items = 0
+    s.importsFs = false
+    s.importsOs = false
     loop {
         newlines(&s, ts)
         if ts[s.pos].kind == .Eof { break }
         if at(s, ts, "use") {
-            importStd(&s, ts)
+            importItem(&s, ts)
             continue
         }
         s.items += 1
-        if at(s, ts, "pub") { s.pos += 1 }
+        let public = eat(&s, ts, "pub")
         if at(s, ts, "struct") || at(s, ts, "enum") {
-            let declaration = aggregate(&s, ts)
+            var declaration = aggregate(&s, ts)
+            declaration.file = s.file
+            declaration.public = public
             s.types.push(declaration)
         } else if at(s, ts, "fn") {
-            let f = parseFunction(&s, ts)
+            var f = parseFunction(&s, ts)
+            f.file = s.file
+            f.public = public
             s.functions.push(f)
         } else {
             if at(s, ts, "interface") || at(s, ts, "impl") ||
@@ -857,9 +924,42 @@ pub fn parse(ts: Vec[Token]) -> Program {
             syntax(s, ts, "E0020", "expected a function or type item")
         }
     }
+    s.pos += 1
+    s.files[s.file].importsFs = s.importsFs
+    s.files[s.file].importsOs = s.importsOs
+    s.files[s.file].importCount = s.imports.len() - s.files[s.file].importStart
+    // A module name may not also name a top-level declaration of this file.
+    var j = s.files[s.file].importStart
+    while j < s.imports.len() {
+        let alias = s.imports[j].alias
+        var clash = false
+        var k = 0
+        while k < s.functions.len() {
+            if s.functions[k].file == s.file && ts[s.functions[k].name].text == ts[alias].text { clash = true }
+            k += 1
+        }
+        k = 0
+        while k < s.types.len() {
+            if s.types[k].file == s.file && ts[s.types[k].name].text == ts[alias].text { clash = true }
+            k += 1
+        }
+        if clash {
+            fail(ts, alias, "E0011", join3("module name '", ts[alias].text, "' conflicts with a local declaration"))
+        }
+        j += 1
+    }
+}
+
+pub fn finishParse(s: inout State) -> Program {
     return Program{expressions: take(&s.expressions), statements: take(&s.statements),
         functions: take(&s.functions), types: take(&s.types), lists: take(&s.lists),
         params: take(&s.params), fields: take(&s.fields),
         resultTypes: take(&s.resultTypes), stringParts: take(&s.stringParts),
-        importsFs: s.importsFs, importsOs: s.importsOs}
+        files: take(&s.files), imports: take(&s.imports)}
+}
+
+pub fn parse(ts: Vec[Token]) -> Program {
+    var s = State{}
+    parseFile(&s, ts)
+    return finishParse(&s)
 }

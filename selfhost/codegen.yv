@@ -89,6 +89,7 @@ struct Generator {
     nesting: int = 0
     outputRoot: int = -1
     loopCondition: bool = false
+    file: int = 0
 }
 
 fn require(reg: Registry, ts: Vec[Token], token: int, actual: Type, expected: Type) {
@@ -413,13 +414,25 @@ fn declare(g: inout Generator, ts: Vec[Token], token: int, ty: Type, mutable: bo
     g.locals.push(Local{token: token, ty: ty, mutable: mutable, borrowed: borrowed, byRef: mode})
 }
 
-fn functionIndex(p: Program, ts: Vec[Token], token: int) -> int {
+// Unqualified calls see only the current file's functions; other modules'
+// functions are always called as module.name(...).
+fn functionIndex(g: Generator, p: Program, ts: Vec[Token], token: int) -> int {
+    return functionIn(p, ts, g.file, token)
+}
+
+fn functionIn(p: Program, ts: Vec[Token], file: int, token: int) -> int {
     var i = 0
     while i < p.functions.len() {
-        if ts[p.functions[i].name].text == ts[token].text { return i }
+        if p.functions[i].file == file && ts[p.functions[i].name].text == ts[token].text { return i }
         i += 1
     }
     return -1
+}
+
+// A module alias names an import of the current file unless a local shadows it.
+fn moduleOf(g: Generator, reg: Registry, ts: Vec[Token], receiver: Expression) -> int {
+    if receiver.kind != .Name || localIndex(g, ts, receiver.token) >= 0 { return -1 }
+    return importedFile(reg, ts, receiver.token)
 }
 
 fn outputBuiltin(name: str) -> bool {
@@ -461,7 +474,7 @@ fn integerOperation(ts: Vec[Token], token: int, kind: BasicType, op: str, left: 
     out.push(right)
     if !wrapping {
         out.push(", ")
-        out.push(decimal(ts[token].line))
+        out.push(decimal(ts[token].line + ts[token].lineBase))
         out.push(", ")
         out.push(decimal(ts[token].column))
     }
@@ -469,8 +482,10 @@ fn integerOperation(ts: Vec[Token], token: int, kind: BasicType, op: str, left: 
     return out
 }
 
+// Run-time locations use program-wide line numbers; the runtime maps them back
+// to a file through the source table that generate() emits for module programs.
 fn lineColumn(ts: Vec[Token], token: int) -> String {
-    return format("${ts[token].line}, ${ts[token].column}")
+    return format("${ts[token].line + ts[token].lineBase}, ${ts[token].column}")
 }
 
 fn printValue(g: inout Generator, reg: Registry, ts: Vec[Token], token: int, arg: Value, output: int) {
@@ -630,7 +645,7 @@ fn callValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: E
     if localIndex(g, ts, e.token) >= 0 {
         fail(ts, e.token, "E0001", "a local value cannot be called as a function")
     }
-    let index = functionIndex(p, ts, e.token)
+    let index = functionIndex(g, p, ts, e.token)
     if index < 0 && (name == "int" || name == "byte") {
         if e.argCount != 1 {
             fail(ts, e.token, "E0012", "an integer conversion requires one argument")
@@ -702,6 +717,11 @@ fn callValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: E
         }
         fail(ts, e.token, "E0010", join3("unknown function '", name, "'"))
     }
+    return userCall(&g, p, ts, reg, e, index)
+}
+
+// A call of user function `index`; e supplies the argument list and location.
+fn userCall(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression, index: int) -> Value {
     let f = p.functions[index]
     if f.paramCount != e.argCount {
         fail(ts, e.token, "E0012", "wrong number of function arguments")
@@ -755,8 +775,8 @@ fn callValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: E
 fn standardModule(g: Generator, p: Program, ts: Vec[Token], receiver: Expression) -> int {
     // 1: os, 2: fs, 3: String; 0 otherwise.
     if receiver.kind != .Name || localIndex(g, ts, receiver.token) >= 0 { return 0 }
-    if ts[receiver.token].text == "os" && p.importsOs { return 1 }
-    if ts[receiver.token].text == "fs" && p.importsFs { return 2 }
+    if ts[receiver.token].text == "os" && p.files[g.file].importsOs { return 1 }
+    if ts[receiver.token].text == "fs" && p.files[g.file].importsFs { return 2 }
     if ts[receiver.token].text == "String" { return 3 }
     return 0
 }
@@ -780,6 +800,14 @@ fn osCall(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expr
 fn methodValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression) -> Value {
     let name = ts[e.token].text.clone()
     let receiver = p.expressions[e.left]
+    let userModule = moduleOf(g, reg, ts, receiver)
+    if userModule >= 0 {
+        let index = functionIn(p, ts, userModule, e.token)
+        if index < 0 || !p.functions[index].public {
+            fail(ts, e.token, "E0010", join5("module '", ts[receiver.token].text, "' has no exported function '", name, "'"))
+        }
+        return userCall(&g, p, ts, reg, e, index)
+    }
     let module = standardModule(g, p, ts, receiver)
     if module == 1 { return osCall(&g, p, ts, reg, e) }
     if module == 2 || (module == 3 && name == "fromUtf8") {
@@ -883,7 +911,7 @@ fn methodValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
             if e.argCount != 0 { fail(ts, e.token, "E0012", "this vector method takes no arguments") }
             if name == "len" { return scalar(&g, .Int, join3("(", base.name, ").len")) }
             let cloned = cloneExpression(reg, base.ty, base.name,
-                decimal(ts[e.token].line), decimal(ts[e.token].column))
+                decimal(ts[e.token].line + ts[e.token].lineBase), decimal(ts[e.token].column))
             return typedValue(&g, reg, base.ty, cloned)
         }
         fail(ts, e.token, "U0001", "vector method is outside the selfhost subset")
@@ -1290,7 +1318,7 @@ fn hintedExpression(g: inout Generator, p: Program, ts: Vec[Token], reg: Registr
         return HintedValue{value: value}
     }
     if e.kind == .Call && ts[e.token].text == "some" &&
-        functionIndex(p, ts, e.token) < 0 && localIndex(g, ts, e.token) < 0 {
+        functionIndex(g, p, ts, e.token) < 0 && localIndex(g, ts, e.token) < 0 {
         return HintedValue{value: someConstructor(&g, p, ts, reg, e, expected)}
     }
     if e.kind == .Coalesce {
@@ -1347,7 +1375,15 @@ fn constructValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry,
         if e.nameCount > 0 { fail(ts, p.lists[e.nameStart], "E0010", "String has no constructor fields") }
         return typedValue(&g, reg, primitive(.String), "(yv_string){0}")
     }
-    let index = lookup(reg, ts, e.token)
+    var index = -1
+    if e.extra >= 0 {
+        index = qualifiedType(reg, ts, e.extra, e.token)
+        if index < 0 {
+            fail(ts, e.extra, "E0010", join3("module '", ts[e.extra].text, "' is not in scope"))
+        }
+    } else {
+        index = lookup(reg, ts, e.token)
+    }
     if index < 0 {
         if ts[e.token].text == "Vec" {
             fail(ts, e.token, "E0001", "Vec takes exactly one type argument")
@@ -1415,6 +1451,19 @@ fn constructValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry,
 
 fn fieldValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression) -> Value {
     let baseExpr = p.expressions[e.left]
+    if moduleOf(g, reg, ts, baseExpr) >= 0 {
+        // module.Name as a value: only types are exported in this subset.
+        let _ = qualifiedType(reg, ts, baseExpr.token, e.token)
+        fail(ts, e.token, "E0001", "a type name is not a value")
+    }
+    if baseExpr.kind == .Field && moduleOf(g, reg, ts, p.expressions[baseExpr.left]) >= 0 {
+        // module.Enum.Case
+        let declared = qualifiedType(reg, ts, p.expressions[baseExpr.left].token, baseExpr.token)
+        if reg.entries[declared].kind == .Enum {
+            return enumValue(&g, reg, ts, e.token, Type{kind: .Named, decl: declared, elementKind: .Unknown})
+        }
+        fail(ts, e.token, "U0001", "member access on this type is outside the selfhost subset")
+    }
     if baseExpr.kind == .Name && localIndex(g, ts, baseExpr.token) < 0 {
         let declared = lookup(reg, ts, baseExpr.token)
         if declared >= 0 && reg.entries[declared].kind == .Enum {
@@ -1656,7 +1705,7 @@ fn expressionValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry
         fail(ts, e.token, "U0001", "borrow expressions outside inout and take arguments are outside this subset")
     }
     if (ts[e.token].text == "ok" || ts[e.token].text == "err") &&
-        functionIndex(p, ts, e.token) < 0 && localIndex(g, ts, e.token) < 0 {
+        functionIndex(g, p, ts, e.token) < 0 && localIndex(g, ts, e.token) < 0 {
         return resultConstructor(&g, p, ts, reg, e, expected)
     }
     return callValue(&g, p, ts, reg, e, id)
@@ -2314,12 +2363,13 @@ pub fn generate(p: Program, ts: Vec[Token], filename: str) -> String {
         if reservedFunction(name) { fail(ts, f.name, "E0011", "cannot redefine a builtin") }
         var j = 0
         while j < i {
-            if ts[p.functions[j].name].text == name {
+            if p.functions[j].file == f.file && ts[p.functions[j].name].text == name {
                 fail(ts, f.name, "E0011", "duplicate function")
             }
             j += 1
         }
-        if name == "main" {
+        // Only the entry file's main is the program entry point.
+        if name == "main" && f.file == 0 {
             if f.paramCount != 0 || f.result.kind != .Unit {
                 fail(ts, f.name, "E0016", "entry point must be fn main()")
             }
@@ -2340,6 +2390,7 @@ pub fn generate(p: Program, ts: Vec[Token], filename: str) -> String {
     i = 0
     while i < p.functions.len() {
         let f = p.functions[i]
+        g.file = f.file
         g.result = resolve(reg, ts, f.result)
         var k = 0
         while k < f.paramCount {
@@ -2363,8 +2414,23 @@ pub fn generate(p: Program, ts: Vec[Token], filename: str) -> String {
         g.locals = []
         i += 1
     }
+    if p.files.len() > 1 {
+        emit(&g, "static const yv_source_entry yv_source_files[] = {")
+        var k = 0
+        while k < p.files.len() {
+            var eof = ts.len() - 1
+            if k + 1 < p.files.len() { eof = p.files[k + 1].firstToken - 1 }
+            let first = p.files[k].firstToken
+            emit(&g, format("    {${cString(ts[eof].text)}, ${ts[first].lineBase + 1}},"))
+            k += 1
+        }
+        emit(&g, "};")
+    }
     emit(&g, "int main(int argc, char **argv) {")
     emit(&g, join3("yv_rt_init(", cString(filename), ");"))
+    if p.files.len() > 1 {
+        emit(&g, "yv_rt_set_sources(yv_source_files, sizeof(yv_source_files) / sizeof(yv_source_files[0]));")
+    }
     emit(&g, "yv_rt_args(argc, argv);")
     emit(&g, join3("sh_fn_", decimal(entry), "();"))
     emit(&g, "return yv_rt_exit();")

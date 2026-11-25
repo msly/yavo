@@ -29,6 +29,7 @@ pub struct Token {
     line: int
     column: int
     message: String = ""
+    lineBase: int = 0
 }
 
 // A lexical failure is recorded once; callers stop at the first one.
@@ -36,6 +37,7 @@ struct Cursor {
     pos: int = 0
     line: int = 1
     column: int = 1
+    lineBase: int = 0
     failed: bool = false
     code: String = ""
     message: String = ""
@@ -54,9 +56,12 @@ struct InterpolationRange {
     closeColumn: int = 0
 }
 
-// Fatal diagnostic at a token; the path is the Eof token's text.
+// Fatal diagnostic at a token; the path is the text of that file's Eof token.
 pub fn fail(ts: Vec[Token], token: int, code: str, message: str) {
-    report(ts[ts.len() - 1].text, ts[token].line, ts[token].column, code, message)
+    // The token's own file ends at the next Eof token, which holds its path.
+    var eof = token
+    while ts[eof].kind != .Eof { eof += 1 }
+    report(ts[eof].text, ts[token].line, ts[token].column, code, message)
 }
 
 fn stop(cursor: inout Cursor, code: str, message: str, offset: int, line: int, column: int) {
@@ -217,7 +222,7 @@ fn stringInterpolationRange(cursor: inout Cursor, source: str, start: int, line:
 }
 
 fn stringErrorToken(cursor: Cursor) -> Token {
-    return Token{kind: .DeferredError, text: cursor.code.clone(),
+    return Token{lineBase: cursor.lineBase, kind: .DeferredError, text: cursor.code.clone(),
         message: cursor.message.clone(), start: cursor.failOffset, end: cursor.pos,
         line: cursor.failLine, column: cursor.failColumn}
 }
@@ -248,14 +253,14 @@ fn stringTokens(cursor: inout Cursor, source: str, tokens: inout Vec[Token], dep
             let closeColumn = cursor.column
             bump(&cursor, source)
             if head < 0 {
-                tokens.push(Token{kind: .Text, text: take(&text), start: start,
+                tokens.push(Token{lineBase: cursor.lineBase, kind: .Text, text: take(&text), start: start,
                     end: cursor.pos, line: line, column: column})
             } else {
                 if text.len() > 0 {
-                    tokens.push(Token{kind: .Text, text: take(&text), start: partStart,
+                    tokens.push(Token{lineBase: cursor.lineBase, kind: .Text, text: take(&text), start: partStart,
                         end: close, line: partLine, column: partColumn})
                 }
-                tokens.push(Token{kind: .StringEnd, text: String{}, start: close,
+                tokens.push(Token{lineBase: cursor.lineBase, kind: .StringEnd, text: String{}, start: close,
                     end: cursor.pos, line: closeLine, column: closeColumn})
             }
             return
@@ -293,11 +298,11 @@ fn stringTokens(cursor: inout Cursor, source: str, tokens: inout Vec[Token], dep
             let atColumn = cursor.column
             if head < 0 {
                 head = tokens.len()
-                tokens.push(Token{kind: .StringStart, text: String{}, start: start,
+                tokens.push(Token{lineBase: cursor.lineBase, kind: .StringStart, text: String{}, start: start,
                     end: start + 1, line: line, column: column})
             }
             if text.len() > 0 {
-                tokens.push(Token{kind: .Text, text: take(&text), start: partStart,
+                tokens.push(Token{lineBase: cursor.lineBase, kind: .Text, text: take(&text), start: partStart,
                     end: at, line: partLine, column: partColumn})
             }
             bump(&cursor, source)
@@ -307,21 +312,22 @@ fn stringTokens(cursor: inout Cursor, source: str, tokens: inout Vec[Token], dep
             let expressionColumn = cursor.column
             let range = stringInterpolationRange(&cursor, source, at, atLine, atColumn)
             if cursor.failed { return }
-            tokens.push(Token{kind: .InterpolationStart, text: source[expressionStart..range.expressionEnd].toString(),
+            tokens.push(Token{lineBase: cursor.lineBase, kind: .InterpolationStart, text: source[expressionStart..range.expressionEnd].toString(),
                 start: expressionStart, end: range.expressionEnd,
                 line: expressionLine, column: expressionColumn})
-            var inner = Cursor{pos: expressionStart, line: expressionLine, column: expressionColumn}
+            var inner = Cursor{pos: expressionStart, line: expressionLine, column: expressionColumn,
+                lineBase: cursor.lineBase}
             // The prefix preserves original offsets while bounding the re-lex.
             lexTokenRange(&inner, source[0..range.expressionEnd], &tokens, false, depth + 1)
             if inner.failed {
                 tokens.push(stringErrorToken(inner))
             }
             if range.specStart >= 0 {
-                tokens.push(Token{kind: .FormatSpec, text: source[range.specStart..range.close].toString(),
+                tokens.push(Token{lineBase: cursor.lineBase, kind: .FormatSpec, text: source[range.specStart..range.close].toString(),
                     start: range.specStart, end: range.close,
                     line: range.specLine, column: range.specColumn})
             }
-            tokens.push(Token{kind: .InterpolationEnd, text: String{},
+            tokens.push(Token{lineBase: cursor.lineBase, kind: .InterpolationEnd, text: String{},
                 start: range.close, end: range.close + 1,
                 line: range.closeLine, column: range.closeColumn})
             partStart = cursor.pos
@@ -434,7 +440,7 @@ fn lexTokenRange(cursor: inout Cursor, source: str, tokens: inout Vec[Token], fi
                 significant = delimiters[delimiters.len() - 1] == '{'
             }
             if significant && endsStatement {
-                tokens.push(Token{kind: .Newline, text: String{}, start: start, end: start + 1, line: line, column: column})
+                tokens.push(Token{lineBase: cursor.lineBase, kind: .Newline, text: String{}, start: start, end: start + 1, line: line, column: column})
                 endsStatement = false
             }
             continue
@@ -522,23 +528,30 @@ fn lexTokenRange(cursor: inout Cursor, source: str, tokens: inout Vec[Token], fi
                 if delimiters.len() > 0 { delimiters = withoutLast(delimiters) }
             }
         }
-        tokens.push(Token{kind: kind, text: text, start: start, end: cursor.pos, line: line, column: column})
+        tokens.push(Token{lineBase: cursor.lineBase, kind: kind, text: text, start: start, end: cursor.pos, line: line, column: column})
     }
     if finalNewline && endsStatement {
-        tokens.push(Token{kind: .Newline, text: String{}, start: cursor.pos, end: cursor.pos, line: cursor.line, column: cursor.column})
+        tokens.push(Token{lineBase: cursor.lineBase, kind: .Newline, text: String{}, start: cursor.pos, end: cursor.pos, line: cursor.line, column: cursor.column})
     }
 }
 
-pub fn lex(source: str, path: str) -> Vec[Token] ! Diagnostic {
+// Appends one file's tokens, ending with an Eof token whose text is the path.
+// Several files share one token vector; each file's tokens end at its own Eof.
+pub fn lexInto(source: str, path: str, tokens: inout Vec[Token]) -> int ! Diagnostic {
+    let firstToken = tokens.len()
     var cursor = Cursor{}
-    var tokens: Vec[Token] = []
+    if firstToken > 0 {
+        // Generated programs number lines across files; each file starts after
+        // the previous file's last line (stage0's runtime source table).
+        cursor.lineBase = tokens[firstToken - 1].lineBase + tokens[firstToken - 1].line
+    }
     lexTokenRange(&cursor, source, &tokens, true, 0)
     if cursor.failed {
         // Keep an earlier interpolation lexical fault when a later outer
         // lexical fault aborts the file. General multi-error recovery is not
         // part of this first-error frontend.
         var first = -1
-        var i = 0
+        var i = firstToken
         while i < tokens.len() {
             if tokens[i].kind == .DeferredError && tokens[i].start < cursor.failOffset {
                 if first < 0 || tokens[i].start < tokens[first].start { first = i }
@@ -552,6 +565,12 @@ pub fn lex(source: str, path: str) -> Vec[Token] ! Diagnostic {
         }
         return err(lexFailure(cursor))
     }
-    tokens.push(Token{kind: .Eof, text: path.toString(), start: cursor.pos, end: cursor.pos, line: cursor.line, column: cursor.column})
+    tokens.push(Token{lineBase: cursor.lineBase, kind: .Eof, text: path.toString(), start: cursor.pos, end: cursor.pos, line: cursor.line, column: cursor.column})
+    return ok(tokens.len() - 1)
+}
+
+pub fn lex(source: str, path: str) -> Vec[Token] ! Diagnostic {
+    var tokens: Vec[Token] = []
+    let _ = try lexInto(source, path, &tokens)
     return ok(tokens)
 }

@@ -13,8 +13,12 @@ The compiler sources were rewritten into a *bootstrap dialect*: a strict
 subset of the stage0 language that the compiler itself implements (see
 [decision 20–24](../docs/decisions.md)). It is not yet the default compiler:
 stage0 accepts far more of the language (owned optionals, reference iteration,
-float formatting, modules, methods, generics, Map/Set, closures, threads...).
-Batch 32 adds `${expr}` interpolation in direct print/println/eprintln/format
+float formatting, methods, generics, Map/Set, closures, threads...).
+Batch 33 adds multi-file source modules: `use a`, `use a/b` and `use a/{b, c}`
+load files relative to the entry directory (cycles allowed), `pub` items are
+exported, functions are called as `module.f(...)`, public types may be named
+short or as `module.T`, and diagnostics and run-time panics name the original
+file. Batch 32 adds `${expr}` interpolation in direct print/println/eprintln/format
 arguments (int, byte, bool, str, String, payload-free enum) and an owned
 `format` result; the compiler's diagnostic line and C name/position helpers now
 use it. Batch 31's int/byte range `for` and read-only Copy Vec traversal,
@@ -499,7 +503,7 @@ the fixtures do not execute these programs or add new known_gap records.
 
 Unsupported input includes persistent bindings of borrowed elements and
 mutation through non-Copy indexes, direct nested Vec elements, borrowed `str`
-or unit vector elements, owned-element pop, vector slices, other collections, user modules,
+or unit vector elements, owned-element pop, vector slices, other collections, imports after other items,
 enum payloads, sink parameters and general references, owned/nested Optionals,
 Optional fields/container/Result combinations, Result fields,
 `Vec[Result]`, nested Results, arrow catch,
@@ -539,9 +543,9 @@ executable fixtures from earlier increments.
 
 ## Next steps
 
-Self-hosting remains a regression gate. Batch 32's interpolation and `format`
-have passed local acceptance. The next increment is source modules, followed by
-a separate commit that turns the compiler itself into `use`-linked files. Each increment must replace real compiler-source workarounds,
+Self-hosting remains a regression gate. Batch 33's source modules have passed
+local acceptance. The next step is a separate commit that turns the compiler
+itself into `use`-linked files instead of the `COMPILER_PARTS` concatenation. Each increment must replace real compiler-source workarounds,
 retain independent behavior and cleanup oracles, and renew the fixed point
 on Linux, Windows and macOS. [SH-3](../docs/self-hosting.md) remains incomplete;
 SH-4 has one of three independent applications validated.

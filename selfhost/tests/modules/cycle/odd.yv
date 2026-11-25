@@ -1,0 +1,17 @@
+use even
+use odd
+use shared
+
+pub fn isOdd(n: int) -> bool {
+    if n == 0 { return false }
+    return even.isEven(n - 1)
+}
+
+pub fn countOf(c: Counter) -> int {
+    return shared.bump(shared.bump(c)).value
+}
+
+// A module may import itself; the call goes through its own public name.
+pub fn viaSelf(n: int) -> bool {
+    return odd.isOdd(n)
+}

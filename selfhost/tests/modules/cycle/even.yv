@@ -1,0 +1,11 @@
+use odd
+use shared
+
+pub fn isEven(n: int) -> bool {
+    if n == 0 { return true }
+    return odd.isOdd(n - 1)
+}
+
+pub fn countOf(c: shared.Counter) -> int {
+    return shared.bump(c).value
+}

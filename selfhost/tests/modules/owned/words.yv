@@ -1,0 +1,32 @@
+use std/{os}
+
+pub struct ParseError {
+    text: String
+}
+
+pub fn collect(list: inout Vec[String], word: str) {
+    list.push(word.toString())
+}
+
+pub fn joined(list: Vec[String]) -> String {
+    var out = String{}
+    for i in 0..list.len() {
+        if i > 0 { out.push(",") }
+        out.push(list[i])
+    }
+    return out
+}
+
+pub fn parse(text: str) -> int ! ParseError {
+    var value = 0
+    for i in 0..text.len() {
+        let c = text[i]
+        if c < '0' || c > '9' { return err(ParseError{text: text.toString()}) }
+        value = value * 10 + int(c) - int('0')
+    }
+    return ok(value)
+}
+
+pub fn argumentCount() -> int {
+    return os.args().len()
+}

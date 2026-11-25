@@ -1,6 +1,6 @@
 {
   "schema": "yavo-selfhost-cases/1",
-  "description": "Independent fixed-oracle probes for the Yavo-written scalar, byte, aggregate, String, owned-vector, user-function Result and Copy Optional/pop subset; not the frozen full-language conformance suite.",
+  "description": "Independent fixed-oracle probes for the Yavo-written scalar, byte, aggregate, String, owned-vector, user-function Result and Copy Optional/pop, interpolation and source-module subset; not the frozen full-language conformance suite.",
   "cases": [
     {
       "id": "arithmetic",
@@ -3840,6 +3840,133 @@
       "reason": "A chained view into owned String storage remains a borrowed binding outside the selfhost subset.",
       "file": "unsupported/unsupported_format_owned_double_slice_binding.yv",
       "batch": "format-interpolation"
+    },
+    {
+      "id": "modules_basic",
+      "kind": "run",
+      "stdout": "6\n20\n8\nOn Off 2 4\nlight=On\n",
+      "file": "modules/basic/main.yv"
+    },
+    {
+      "id": "modules_cycle",
+      "kind": "run",
+      "stdout": "true\ntrue\n4\n6\ntrue\n",
+      "file": "modules/cycle/main.yv"
+    },
+    {
+      "id": "modules_scopes",
+      "kind": "run",
+      "stdout": "200\n2\n9\n5\n7\n",
+      "file": "modules/scopes/main.yv"
+    },
+    {
+      "id": "modules_owned",
+      "kind": "run",
+      "stdout": "alpha,beta\n13\ncaught\n",
+      "file": "modules/owned/main.yv"
+    },
+    {
+      "id": "modules_panic_in_module",
+      "kind": "panic",
+      "stdout": "2\n",
+      "panic": "P-DIV-ZERO",
+      "file": "modules/panic_in_module/main.yv"
+    },
+    {
+      "id": "modules_missing_module",
+      "kind": "reject",
+      "diagnostic": "E0010",
+      "file": "modules/rejects/missing_module.yv"
+    },
+    {
+      "id": "modules_private_function",
+      "kind": "reject",
+      "diagnostic": "E0010",
+      "file": "modules/rejects/private_function.yv"
+    },
+    {
+      "id": "modules_unqualified_function",
+      "kind": "reject",
+      "diagnostic": "E0010",
+      "file": "modules/rejects/unqualified_function.yv"
+    },
+    {
+      "id": "modules_not_transitive",
+      "kind": "reject",
+      "diagnostic": "E0010",
+      "file": "modules/rejects/not_transitive.yv"
+    },
+    {
+      "id": "modules_ambiguous_type",
+      "kind": "reject",
+      "diagnostic": "E0010",
+      "file": "modules/rejects/ambiguous_type.yv"
+    },
+    {
+      "id": "modules_duplicate_alias",
+      "kind": "reject",
+      "diagnostic": "E0011",
+      "file": "modules/rejects/duplicate_alias.yv"
+    },
+    {
+      "id": "modules_missing_qualified_type",
+      "kind": "reject",
+      "diagnostic": "E0010",
+      "file": "modules/rejects/missing_qualified_type.yv"
+    },
+    {
+      "id": "modules_type_as_value",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "modules/rejects/type_as_value.yv"
+    },
+    {
+      "id": "modules_private_qualified_type",
+      "kind": "reject",
+      "diagnostic": "E0010",
+      "file": "modules/rejects/private_qualified_type.yv"
+    },
+    {
+      "id": "modules_private_short_type",
+      "kind": "reject",
+      "diagnostic": "E0010",
+      "file": "modules/rejects/private_short_type.yv"
+    },
+    {
+      "id": "modules_error_in_module",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "modules/rejects/error_in_module.yv"
+    },
+    {
+      "id": "modules_lex_error_in_module",
+      "kind": "reject",
+      "diagnostic": "E0020",
+      "file": "modules/rejects/lex_error_in_module.yv"
+    },
+    {
+      "id": "modules_duplicate_in_module",
+      "kind": "reject",
+      "diagnostic": "E0011",
+      "file": "modules/rejects/duplicate_in_module.yv"
+    },
+    {
+      "id": "modules_alias_conflict",
+      "kind": "reject",
+      "diagnostic": "E0011",
+      "file": "modules/rejects/alias_conflict.yv"
+    },
+    {
+      "id": "modules_alias_type_conflict",
+      "kind": "reject",
+      "diagnostic": "E0011",
+      "file": "modules/rejects/alias_type_conflict.yv"
+    },
+    {
+      "id": "modules_import_after_item",
+      "kind": "unsupported",
+      "diagnostic": "U0001",
+      "file": "modules/rejects/import_after_item.yv"
     }
   ],
   "promotions": [

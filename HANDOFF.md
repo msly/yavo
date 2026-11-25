@@ -1,16 +1,14 @@
-# Yavo 交接文档（2026-11-25，第三十二批：插值与 format）
+# Yavo 交接文档（2026-11-25，第三十三批：源模块）
 
-给下一个会话：先读第 1、2、10、12 节及 docs/self-hosting.md、selfhost/README.md 再开工。第二十七至第三十批在 `history/handoff-batches-2026-11-23-to-24.md`，第十二至第二十六批在 `history/handoff-batches-2026-11-21-to-23.md`，第六至第十一批在 `history/handoff-batches-2026-11-19-to-21.md`。
+给下一个会话：先读第 1、2、10、12、13 节及 docs/self-hosting.md、selfhost/README.md 再开工。第二十七至第三十批在 `history/handoff-batches-2026-11-23-to-24.md`，第十二至第二十六批在 `history/handoff-batches-2026-11-21-to-23.md`，第六至第十一批在 `history/handoff-batches-2026-11-19-to-21.md`。
 
 ## 1. 一句话状态
 
-**SH-2 引导子集固定点保持；第三十二批加入 `${expr}` 插值与 `format`，并把 support.report、codegen.temporaryName/localName/lineColumn 迁移为插值写法。** 插值只出现在 print/println/eprintln/format 的直接字符串参数中，类型限 int/byte/bool/str/String/无载荷 enum；全部片段先求值、后统一写出，失败路径不留外层输出前缀。其他位置的裸插值按 stage0 报 E0001，float 格式化与零参数 println 为 U0001。
+**SH-2 引导子集固定点保持；第三十三批让 selfhost 支持多文件源模块。** `use a`、`use a/b`、`use a/{b, c}` 以入口文件目录为根加载，允许循环导入与自导入；顶层 `pub` 决定导出；导入逐文件生效、不传递；函数一律写 `module.f(...)`，公开类型可用短名或 `module.T`（含 `module.T{...}`、`module.E.V`），短名二义报 E0010；诊断和运行时 panic 都指向原文件行列。第三十二批的插值与 format（含 Rust 输出片段借用修复）见第 12 节。
 
-本批同时修复一处 **Rust stage0 的内存安全缺陷**：插值各片段先求值再写出，旧检查器没有在后续片段求值期间持有前面 String/切片片段的借用，后续 `&inout` 改写可让已快照的描述符指向被释放的存储（`check.rs` 的 `print_parts`；新 P0：`errors_output_part_borrows.yv` 11 处 E0102、`run_output_part_borrows.yv`）。
+当前语料 **568 cases**。本机完整自举 **568/568、12/12、0 skip**；stage2/stage3 C（783,814 字节）与 Linux 二进制（365,864 字节）分别一致。第三十二批 Rust Debug/Release 各 145/0/1、冻结 124/3/2；第三十三批未改 Rust。
 
-当前语料 **547 cases（160 run、28 panic、279 reject、64 unsupported、16 shared）**。本机完整自举 **547/547、12/12、0 skip**；stage2/stage3 的 C（727,751 字节）和 Linux 二进制（339,512 字节）分别逐字节一致，真实 lexer 两种构建通过。完整 Rust Debug/Release 各 **145/0/1**；冻结 129 项保持 124/3/2。CI 结果见第 12 节。
-
-**SH-3 尚未接替，Rust stage0 仍承担日常编译；SH-4 完成 1/3 个独立应用。** 从本批起验收流程按 decisions.md 第九节收敛。下一批为源模块（第 10 节）。
+**SH-3 尚未接替，Rust stage0 仍承担日常编译；SH-4 完成 1/3 个独立应用。** 验收流程按 decisions.md 第九节。下一步：把编译器自身从源码拼接改为 `use` 多文件（第 10 节）。
 
 ## 2. 仓库与环境
 
@@ -197,8 +195,9 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 ## 10. 下一个会话的第一步
 
 1. 检查 Git 状态、最新提交与 CI；先读第 12 节、[自举路线](docs/self-hosting.md)、[selfhost 说明](selfhost/README.md)。
-2. **下一批为 selfhost 源模块。** 范围对齐 stage0：入口目录为项目根，`use a`、`use a/b`、`use a/{b, c}` 加载相对文件；顶层 `pub`；导入逐文件生效、不传递；允许循环导入；函数必须写模块名限定，公开类型可用短名或 `m.T`，同名类型须限定；找不到或未导出报 E0010。诊断必须指向原文件的行列（Token 需要文件身份，Eof 文本存路径的做法要改）。每项拒绝码先用 stage0 实测。
-3. 模块落地后再把编译器自身从 `COMPILER_PARTS` 拼接改为真正的 `use` 多文件（跨文件调用加模块限定、补 `pub`），bootstrap.py 改为只交入口文件，并重新达到固定点。这一步是机械改写，单独提交，便于审查。
+2. **下一步：编译器自身改为 `use` 多文件。** 跨文件调用加模块限定、跨文件使用的项补 `pub`、各文件补 `use`；注意局部变量会遮蔽同名模块别名（例如 main.yv 里不能再有名为 `parser` 的局部）。bootstrap.py 及 tools/ci 下拼接 `COMPILER_PARTS` 的脚本改为复制源文件目录、只交入口文件；lexer 单元测试同样改为以 lexer_test.yv 为入口。这是机械改写，单独提交，并重新达到三平台固定点。
+3. 模块尚缺：包依赖与锁文件（stage0 也没有）、`use` 出现在其他项之后（stage0 接受，子集 U0001）、跨模块的枚举载荷/方法/泛型（子集本身没有）。
+
 4. 拥有型 Optional/pop、if let/match、跳转式 ??、Result 字段/容器、方法、泛型按实际阻塞另列；SH-3 的判据是能否编译 examples/test-summary 这样的真实程序，而不是特性数量。
 5. SH-4 继续用 stage0，后续选结构化文本校验和多文件依赖/索引工具。不要同时运行共用临时目录的两条 cargo test。
 6. 第六轮文档实验有可计量环境才恢复；当前工程推进不受它阻塞。
@@ -227,5 +226,14 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - 真实迁移四处：support.report 的完整诊断行、codegen.temporaryName、localName、lineColumn；诊断与生成 C 中对应字符串保持逐字节不变（固定点与全用例 stage1/stage2 一致即为证明）。其余 join/decimal 调用未改。
 - 接手时的偏差与修正：上一会话的实现在 lexer 里写了 `tokens[head].end = …` 和 `tokens[marker].extra = …`，即给拥有型 Vec 元素的字段赋值——stage0 接受但超出引导子集，stage1 编译自身时报 U0001，固定点断开，全部 559 项失败。修正为不回写已入栈的记号：StringStart/StringEnd 只覆盖各自的引号；删掉只写不读的 `Token.extra`，DeferredError 紧跟在片段内记号之后。lexer_test 两处断言相应改为 `end == 3` 与 `fault == marker + 1`。此后 559/559 通过。
 - Rust 修复见第 1 节；本批独立定标材料在 `selfhost/tests/evidence/batch32-format-oracle/`（58 例：16 run、36 reject、4 unsupported、2 shared；原 `unsupported_interpolation` 原字节晋升为 `run/interpolation_basic.yv`）。这是按旧流程生成的最后一份 oracle 包。
-- 验收（新流程）：本机自举 547/547、12/12、0 skip，stage2/stage3 C 727,751 字节、Linux 二进制 339,512 字节一致；Rust Debug/Release 各 145/0/1、冻结 124/3/2。CI：待回填。
+- 验收（新流程）：本机自举 547/547、12/12、0 skip，stage2/stage3 C 727,751 字节、Linux 二进制 339,512 字节一致；Rust Debug/Release 各 145/0/1、冻结 124/3/2。CI：`cc21ae5` 的 [run 45533511159](https://github.com/msly/yavo/actions/runs/45533511159)，见第 13 节末尾。
+
+## 13. 第三十三批：源模块（2026-11-25）
+
+- 基线 `cc21ae5`。词法：新增 `lexInto(source, path, &tokens)`，多个文件共用一个 token 向量，每个文件以自己的 Eof（文本为路径）结尾；`fail` 从出错 token 向后找到所属文件的 Eof 取路径，单文件行为不变。token 新增创建时写入的 `lineBase`（前面各文件的行数之和），生成程序的运行时位置使用程序级行号，并在多文件时输出与 stage0 相同的 `yv_source_entry` 源文件表，panic 因此报在模块原文件。
+- 解析：`parse` 拆为 `startParse`/`parseFile`/`finishParse`；Function/TypeDecl 记录 `file` 与 `public`；`SourceFile` 记录每个文件的首 token、std 导入与模块导入区间；`ModuleImport` 记录别名与路径前缀，文件号由加载器回填（Copy 元素，可在子集内写回）。别名在同一文件内重复报 E0011，与本文件顶层函数/类型同名报 E0011。类型位置的 `m.T` 以模块 token 为名、后随 `.`；表达式里的 `m.T{...}` 把模块 token 存在 Construct 的 extra。
+- 加载（main.yv `compile`）：以入口文件所在目录为根（同时识别 `/` 与 `\`），按模块路径（`a/b`）去重、广度优先；入口自身的路径键是其文件名去掉 `.yv`，所以自导入与循环导入都复用已有文件号。读不到文件报 E0010（位置在导入别名），模块里的词法错误以模块路径报告。
+- 名字解析：无限定调用只看本文件的函数；`m.f()` 需要 m 是本文件的导入且 f 为 pub；类型短名先找本文件，再找导入模块中唯一的公开类型（二义 E0010）；`m.T` 当值是 E0001；局部变量遮蔽模块名。只有入口文件的 `main` 是程序入口，模块中的 `main` 是普通函数。函数、类型的 C 名称本来就按下标编号，跨文件同名不冲突。
+- 用例 21 个（`selfhost/tests/modules/`）：run 4（basic 含子目录与传递使用、cycle 含互递归/菱形/自导入、scopes 含同名类型/函数/局部遮蔽/模块 main、owned 含 String/Vec/inout/Result/per-file `use std/{os}`），panic 1（模块中除零，位置为 math.yv），reject 15，unsupported 1（`use` 在其他项之后）。所有错误码先用 stage0 实测；`modules_duplicate_in_module` 中 stage0 先报入口里的 E0010、随后报 E0011，selfhost 首错即停报 E0011。
+- 验收：本机 568/568、12/12、0 skip，stage2/stage3 C 783,814 字节、Linux 二进制 365,864 字节一致。未改 Rust。CI：待回填。
 

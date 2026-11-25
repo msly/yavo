@@ -1,0 +1,18 @@
+use words
+
+fn main() {
+    var list: Vec[String] = []
+    words.collect(&list, "alpha")
+    words.collect(&list, "beta")
+    println(words.joined(list))
+    let n = words.parse("12") catch _ {
+        println("bad")
+        return
+    }
+    println(n + words.argumentCount())
+    let failed = words.parse("x") catch _ {
+        println("caught")
+        return
+    }
+    println(failed)
+}

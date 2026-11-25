@@ -52,6 +52,8 @@ pub struct TypeDecl {
     fieldCount: int = 0
     variantStart: int = 0
     variantCount: int = 0
+    file: int = 0
+    public: bool = false
 }
 
 pub enum ExprKind {
@@ -149,6 +151,28 @@ pub struct Function {
     paramCount: int = 0
     bodyStart: int = 0
     bodyCount: int = 0
+    file: int = 0
+    public: bool = false
+}
+
+// One source file of a module program. Its tokens run from firstToken to its
+// own Eof token, whose text is the file path. imports index Program.imports.
+pub struct SourceFile {
+    firstToken: int
+    importsFs: bool = false
+    importsOs: bool = false
+    importStart: int = 0
+    importCount: int = 0
+}
+
+// `use a/b/c` or `use a/b/{c, d}`: alias is the last segment's token; the
+// prefixCount segments before it are at prefixStart, prefixStart + 2, ...
+// file is filled by the loader once the module's source file is known.
+pub struct ModuleImport {
+    alias: int
+    prefixStart: int = 0
+    prefixCount: int = 0
+    file: int = -1
 }
 
 pub struct Program {
@@ -161,6 +185,6 @@ pub struct Program {
     fields: Vec[FieldDecl] = []
     resultTypes: Vec[ResultRef] = []
     stringParts: Vec[StringPart] = []
-    importsFs: bool = false
-    importsOs: bool = false
+    files: Vec[SourceFile] = []
+    imports: Vec[ModuleImport] = []
 }

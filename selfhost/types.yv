@@ -23,6 +23,8 @@ pub struct Info {
     variantStart: int = 0
     variantCount: int = 0
     owned: bool = false
+    file: int = 0
+    public: bool = false
 }
 
 pub struct ResultInfo {
@@ -37,6 +39,8 @@ pub struct Registry {
     order: Vec[int] = []
     results: Vec[ResultInfo] = []
     resultRefs: Vec[int] = []
+    files: Vec[SourceFile] = []
+    imports: Vec[ModuleImport] = []
 }
 
 pub fn primitive(kind: BasicType) -> Type {
@@ -114,13 +118,67 @@ pub fn describe(reg: Registry, ts: Vec[Token], t: Type) -> String {
     return "<unknown>".toString()
 }
 
-pub fn lookup(reg: Registry, ts: Vec[Token], nameToken: int) -> int {
+// The source file containing a token; files are contiguous token runs.
+pub fn fileOf(reg: Registry, token: int) -> int {
+    var file = reg.files.len() - 1
+    while file > 0 && reg.files[file].firstToken > token { file -= 1 }
+    return file
+}
+
+// The module file imported under `alias` by the alias token's own file, or -1.
+pub fn importedFile(reg: Registry, ts: Vec[Token], alias: int) -> int {
+    let from = reg.files[fileOf(reg, alias)]
     var i = 0
-    while i < reg.entries.len() {
-        if ts[reg.entries[i].name].text == ts[nameToken].text { return i }
+    while i < from.importCount {
+        let item = reg.imports[from.importStart + i]
+        if ts[item.alias].text == ts[alias].text { return item.file }
         i += 1
     }
     return -1
+}
+
+fn declaredIn(reg: Registry, ts: Vec[Token], file: int, nameToken: int) -> int {
+    var i = 0
+    while i < reg.entries.len() {
+        if reg.entries[i].file == file && ts[reg.entries[i].name].text == ts[nameToken].text { return i }
+        i += 1
+    }
+    return -1
+}
+
+// An unqualified type name: the token's own file first, then public types of
+// the modules that file imports. Two different imported candidates are
+// ambiguous (E0010), as in stage0.
+pub fn lookup(reg: Registry, ts: Vec[Token], nameToken: int) -> int {
+    let file = fileOf(reg, nameToken)
+    let own = declaredIn(reg, ts, file, nameToken)
+    if own >= 0 { return own }
+    var found = -1
+    var i = 0
+    while i < reg.files[file].importCount {
+        let module = reg.imports[reg.files[file].importStart + i].file
+        let decl = declaredIn(reg, ts, module, nameToken)
+        if decl >= 0 && reg.entries[decl].public && decl != found {
+            if found >= 0 {
+                fail(ts, nameToken, "E0010", join3("type '", ts[nameToken].text, "' is ambiguous; qualify it with its module name"))
+            }
+            found = decl
+        }
+        i += 1
+    }
+    return found
+}
+
+// `module.Name` where module is an import of the alias token's file. Returns
+// -1 when the alias is not a module; a missing or private name is E0010.
+pub fn qualifiedType(reg: Registry, ts: Vec[Token], alias: int, nameToken: int) -> int {
+    let module = importedFile(reg, ts, alias)
+    if module < 0 { return -1 }
+    let decl = declaredIn(reg, ts, module, nameToken)
+    if decl < 0 || !reg.entries[decl].public {
+        fail(ts, nameToken, "E0010", join5("module '", ts[alias].text, "' has no exported type '", ts[nameToken].text, "'"))
+    }
+    return decl
 }
 
 pub fn fieldIndex(reg: Registry, ts: Vec[Token], decl: int, nameToken: int) -> int {
@@ -206,6 +264,14 @@ pub fn resolve(reg: Registry, ts: Vec[Token], syn: TypeRef) -> Type {
     if unsupportedType(ts[syn.name].text) {
         fail(ts, syn.name, "U0001", join3("type '", ts[syn.name].text, "' is outside the selfhost subset"))
     }
+    if ts[syn.name + 1].kind == .Symbol && ts[syn.name + 1].text == "." {
+        // Type positions spell a module-qualified type as module.Name.
+        let qualified = qualifiedType(reg, ts, syn.name, syn.name + 2)
+        if qualified < 0 {
+            fail(ts, syn.name, "E0010", join3("module '", ts[syn.name].text, "' is not in scope"))
+        }
+        return Type{elementKind: .Unknown, kind: .Named, decl: qualified}
+    }
     let decl = lookup(reg, ts, syn.name)
     if decl < 0 {
         fail(ts, syn.name, "E0010", join3("unknown type '", ts[syn.name].text, "'"))
@@ -290,16 +356,26 @@ fn checkDefault(p: Program, reg: Registry, ts: Vec[Token], item: Field) {
 pub fn collect(p: Program, ts: Vec[Token]) -> Registry {
     var reg = Registry{}
     var i = 0
+    while i < p.files.len() {
+        reg.files.push(p.files[i])
+        i += 1
+    }
+    i = 0
+    while i < p.imports.len() {
+        reg.imports.push(p.imports[i])
+        i += 1
+    }
+    i = 0
     // Register all names before resolving fields to support forward references.
     while i < p.types.len() {
         let d = p.types[i]
         if reservedType(ts[d.name].text) {
             fail(ts, d.name, "E0011", join3("'", ts[d.name].text, "' is a built-in name and cannot be redefined"))
         }
-        if lookup(reg, ts, d.name) >= 0 {
+        if declaredIn(reg, ts, d.file, d.name) >= 0 {
             fail(ts, d.name, "E0011", join3("type '", ts[d.name].text, "' is already declared"))
         }
-        reg.entries.push(Info{kind: d.kind, name: d.name})
+        reg.entries.push(Info{kind: d.kind, name: d.name, file: d.file, public: d.public})
         i += 1
     }
     // Every annotation was pooled by the parser; intern before any signature or

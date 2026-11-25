@@ -1,0 +1,16 @@
+use geom
+use shapes/text
+
+fn main() {
+    // Public types by short name and by module name; functions are qualified.
+    let r = Rect{w: 2, h: 3}
+    let q = geom.Rect{w: 4, h: 5}
+    let light: Light = .On
+    let other = geom.Light.Off
+    let lights: Vec[geom.Light] = [light, other]
+    println(geom.area(r))
+    println(geom.area(q))
+    println(text.twice(4))
+    println("${light} ${other} ${lights.len()} ${q.w}")
+    println(text.label(geom.Light.On))
+}
