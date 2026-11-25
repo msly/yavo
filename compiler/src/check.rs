@@ -9135,7 +9135,14 @@ impl Checker<'_> {
         }
         let mut hargs = Vec::new();
         if let (Some(t), [a]) = (arg_ty, args) {
+            // The receiver's text is read after the argument has been evaluated, so the
+            // argument may not modify or move what the receiver points into.
+            let shared_mark = cx.call_shared.len();
+            let mutable_mark = cx.call_mut.len();
+            self.hold_call_argument(&recv, false, false, cx);
             let h = self.expr(a, Some(t), cx);
+            cx.call_shared.truncate(shared_mark);
+            cx.call_mut.truncate(mutable_mark);
             let h = self.deref(h);
             let h = if t == Ty::Str && h.ty == Ty::String {
                 let (span, at) = (h.span, h.at);

@@ -1,0 +1,38 @@
+// expect-error: E0102 15:34
+// expect-error: E0102 20:32
+// expect-error: E0102 25:32
+// expect-error: E0102 30:28
+// expect-error: E0102 35:29
+// A built-in text method reads its receiver after evaluating the argument, so
+// the argument may not modify the String the receiver views.
+fn grow(s: inout String) -> str of static {
+    s.push("a longer tail that forces the buffer to move")
+    return "ab"
+}
+
+fn starts() -> bool {
+    var owned = "abc".toString()
+    return owned.startsWith(grow(&owned))
+}
+
+fn ends() -> bool {
+    var owned = "abc".toString()
+    return owned.endsWith(grow(&owned))
+}
+
+fn contains() -> bool {
+    var owned = "abc".toString()
+    return owned.contains(grow(&owned))
+}
+
+fn find() -> int {
+    var owned = "abc".toString()
+    return owned.find(grow(&owned)) ?? -1
+}
+
+fn parts() -> int {
+    var owned = "abc".toString()
+    return owned.split(grow(&owned)).len()
+}
+
+fn main() {}
