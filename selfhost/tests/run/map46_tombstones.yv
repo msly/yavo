@@ -1,0 +1,25 @@
+fn main() {
+    var values: Map[String, int] = [:]
+    for key, value in values { assert(false) }
+    for i in 0..40 { values.set(format("k${i}"), i) }
+    for i in 0..20 { let _ = values.remove(format("k${i * 2}")) }
+    values.set("k0".toString(), 100)
+    var count = 0
+    var total = 0
+    for key, value in values { count += 1
+        if count <= 20 { assert(value == count * 2 - 1) } else { assert(key == "k0" && value == 100) }
+        total += value
+        assert(key.len() > 0) }
+    assert(count == 21 && total == 500)
+    var pairs = 0
+    for key, value in values { for other, second in values {
+        assert(key.len() > 0 && other.len() > 0)
+        assert(value >= 0 && second >= 0)
+        pairs += 1
+    } }
+    assert(pairs == 441)
+    for i in 0..40 { let _ = values.remove(format("k${i}")) }
+    assert(values.len() == 0)
+    for key, value in values { assert(false) }
+    println("map tombstones ok")
+}

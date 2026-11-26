@@ -1,14 +1,16 @@
-# Yavo 交接文档（2026-11-26，第四十五批：整数 Vec 排序与原始窗口中位数 CLI）
+# Yavo 交接文档（2026-11-26，第四十六批：Map 遍历、String 排序与原始原子账本 CLI）
 
-给下一个会话：先读第 1、2、10、24、25 节及 docs/self-hosting.md、selfhost/README.md 再开工。第二十七至第三十批在 `history/handoff-batches-2026-11-23-to-24.md`，第十二至第二十六批在 `history/handoff-batches-2026-11-21-to-23.md`，第六至第十一批在 `history/handoff-batches-2026-11-19-to-21.md`。
+给下一个会话：先读第 1、2、10、25、26 节及 docs/self-hosting.md、selfhost/README.md 再开工。第二十七至第三十批在 `history/handoff-batches-2026-11-23-to-24.md`，第十二至第二十六批在 `history/handoff-batches-2026-11-21-to-23.md`，第六至第十一批在 `history/handoff-batches-2026-11-19-to-21.md`。
 
 ## 1. 一句话状态
 
-**第四十五批加入 Vec[int].sort()，原样打通滑动窗口下中位数 CLI。** 排序稳定、原地升序、无参数、返回 Unit；复用 yv_sort/yv_cmp_i64，接收者沿用可写性、移动与借用检查。支持变量、inout 和嵌套结构体字段，保留 stage0 对括号裸变量和临时接收者的 U0001 边界。全仓覆盖 **100 → 106/392，退步 0、越界 0**；新增六个路径是 r5/yavo-a 和 yavo-b 的 T11 各三份快照，共两种入口源码，221 个 stage0 拒绝输入均未被放行。
+**第四十六批加入只读 Map[String,int/bool/byte] 遍历和 Vec[String].sort()，原样打通原子转账账本 CLI。** Map 键保持借用、只读且不可搬移，Copy 值只读；整个 Map 或字段所有者在循环中冻结。完整临时 Map 活到循环结束，临时结构体的 Map 字段按 stage0 拒绝为 E0305。String 排序稳定、原地、按 UTF-8 字节升序，描述符移位不增加所有者。
 
-当前语料 **897 cases**（新增 22，无提升），完整本机自举 **897/897、16/16、0 skip**；本批未改 Rust，Debug/Release 全量各 **145/0/1**，冻结 **124/3/2**。新增第 16 项 sliding_median_application：原始 yavo-b/T11 的 28 个固定场景、1,405 个输入值、1,112 个窗口，双方 Debug/Release 共 **112 次正常返回分配检查执行**全部通过。实现提交 `67407bb` 的 [run 45794313520](https://github.com/msly/yavo/actions/runs/45794313520) **6/6 成功**；三平台原生自举和应用门、Linux ASan/UBSan 全部通过。
+全仓覆盖 **106 → 112/392，退步 0、越界 0**；613 个原路径与字节未变，新增六路径是 r5/yavo-a、yavo-b 的 T01 各三份快照、两种入口源码。按入口文件字节去重为 **52/222**，剩余170份不同输入源码；路径或源码覆盖率均不是项目完成率。
 
-**SH-2 引导子集固定点已闭合；SH-3 尚未接替，Rust stage0 仍承担日常编译；SH-4 正式交付完成 1/3 个独立应用。** bootstrap 现有 test-summary、原始单位换算、原始文本 diff、原始窗口中位数四项应用回归；兼容性回归不替代正式独立项目交付。每批门槛保持 `docs/decisions.md` 第九节。
+当前语料 **925 cases**（新增28、原样提升2），完整本机自举 **925/925、17/17、0 skip**；本批未改 Rust，Debug/Release 全量各 **145/0/1**，冻结 **124/3/2**。第五项 atomic_ledger_application 保留原 judge14组并补18组合同内边界，共32场景、783命令、517条batch支付行，双方Debug/Release共 **128次正常返回分配检查执行**全部通过。本批实现的三平台 CI 待推送后确认。
+
+**SH-2 引导子集固定点已闭合；SH-3 尚未接替，Rust stage0 仍承担日常编译；SH-4 正式交付完成 1/3 个独立应用。** selfhost 当前只有 check/emit-c；普通 build/run、结构化诊断与其他工具入口仍需移植。五项应用兼容性回归不替代正式独立项目交付。下一批优先第二个正式结构化文本校验项目，由其实际依赖推动拥有 Optional 等能力。每批门槛保持 `docs/decisions.md` 第九节。
 
 ## 2. 仓库与环境
 
@@ -194,14 +196,14 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 
 ## 10. 下一个会话的第一步
 
-1. 检查 Git 状态、最新实现提交与 CI；先读第 25 节、[自举路线](docs/self-hosting.md)、[selfhost 说明](selfhost/README.md)。
-2. **下一批以原样编译原子转账账本 CLI 为目标**：`experiments/coldstart-2026-11-22-r5/runs/yavo-b/tasks/T01/final/main.yv`，SHA256 `8a8403e63b51d427f57da3c052f9ea50c5e9c4f8a039123d707ab36976a0d4d9`。79 行，只导入 std/io。原文件 stage0 接受；当前 selfhost 首拒第 70 行 Map 遍历，再隔离后首拒第 71 行 Vec[String].sort()。最小范围是只读 Map[String,int] 遍历和拥有 String 向量排序：`for name, _value in accounts { names.push(name.clone()) }`，然后 `names.sort()`。
-3. 两处临时隔离后双方 check 通过，未观察到第三项独立编译阻塞；诊断副本已删除，不能算原始应用通过。正式验收用原文件、public/T01.md 与 judge/cases.json 的原 14 组输入（2 公开），补空 Map、ASCII 名称排序、克隆键/排序/Map 释放、batch 0/100、事务首中尾失败后回滚且消费剩余输入、检查顺序与余额/总额超过32位。名称最多16字符、输入金额0..10^9、最多200命令；转账后余额允许超过10^9，空文件合法。保持源哈希和正常返回分配检查。
-4. 拥有 Optional 的备选是原始 r5/yavo-b/T02 严格 CSV：首拒 ?Vec[String]，还需拥有返回及 if-let 临时载荷生命周期。Map 的 String 值和拥有型 pop 仍是后续候选；扩展时同时覆盖移动、析构、借用绑定和提前退出。
-5. 模块尚缺包依赖与锁文件（stage0 也没有）、后置 use、跨模块的枚举载荷/方法/泛型；按真实应用阻塞安排。
-6. SH-4 第二个独立应用建议结构化文本校验或多文件依赖/索引工具。不要同时运行共用临时目录的两条 cargo test。第六轮文档实验有可计量环境才恢复，不阻塞工程推进。
+1. 检查 Git 状态、最新实现提交与 CI；先读第26节、[自举路线](docs/self-hosting.md)、[selfhost说明](selfhost/README.md)。第四十六批本机925/925、17/17已通过；CI状态以第26节回填为准。
+2. **下一批优先第二个正式独立应用：结构化文本校验 CLI。** 先冻结真实输入格式、模块划分、成功/错误输出和独立 oracle，用现有 stage0 交付；验收应包含非法UTF-8、I/O失败、资源清理、离线与空缓存复现、含空格/非ASCII路径及三平台原生。保持应用原文，再补 selfhost 的实际阻塞，使这项工作推进 SH-4 第二个项目，而不只增加单文件兼容门。
+3. **拥有型 Optional 的现成回归目标**为原始 `experiments/coldstart-2026-11-22-r5/runs/yavo-b/tasks/T02/final/main.yv`，SHA256 `8e03caaec0bf7d2b8ccef92b9ab485035fc91cd88d8e8c159f224df178c470f7`。最终本批stage2首拒3:24的 `?Vec[String]`；需处理拥有载荷构造、移动/返回、if-let临时值与借用、分支及提前退出析构。原CSV可作语义回归，不能自动计为正式第二应用。
+4. **SH-3 正常入口单列验收**：当前selfhost只有check/emit-c。先补稳定源位置/错误码/结构化诊断与普通build/run、锁定工具链驱动，再按依赖迁移cache/fix/verify；默认切换还须满足既有回归、冻结规格、资源与三平台条件。保持U0001显式，不静默转交Rust前端。
+5. 当前未接受输入的前列首拒包括标准模块、其他类型写法、元组Vec、闭包、类型后缀、拥有Map值、泛型/接口及浮点。一个输入可能有后续阻塞，不能以首拒桶大小预测收益。Map键别名/视图逃逸、可变遍历、拥有pop仍有子集边界；模块还缺包依赖/项目锁文件与跨模块更广的语义。第三个正式应用方向为多文件依赖/索引工具。
+6. R5仍缺token/金额，R6真实请求、会话和交付均为0；有已授权且完成资格验证的计量环境才恢复。成本实验不阻塞当前工程，但不能用语言特性或兼容门数量代替成本验收。
 
-正式门槛仍按 `docs/plan.md`：配对通过率差的单侧 95% 下界至少 −5 个百分点，单位成功交付成本较 Rust 低至少 20% 并独立复现；冻结运行基准几何均值不超过 C 的 1.5 倍。工程目标包括小程序编译 P50 ≤200 ms、Linux strip 后 ≤250 KB、Windows 原生测试及可复现产物。
+正式门槛仍按 `docs/plan.md`：配对通过率差的单侧95%下界至少−5个百分点，单位成功交付成本较Rust低至少20%并独立复现；冻结运行基准几何均值不超过C的1.5倍。工程指标包括小程序编译P50≤200ms、Linux小程序strip产物≤250KB、Windows原生测试及可复现构建。历史四微基准和PCH测量不代表当前stage2；编译器自身的484,496字节也不是小程序体积门槛的测量值。
 
 ## 历史批次（已移出）
 
@@ -380,3 +382,18 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - **Rust 验收**：本批无 Rust 改动，仍重新完成 Debug/Release 全量，各 145 通过、0 失败、1 个既有忽略；冻结规格 124 pass、3 unsupported、2 superseded。stage0 固定副本 SHA256 为 `3db1eb23f6abf2478081f2e805e0491fac00d71800ef699f796a76710cf2fddd`。
 - **本机验收**：完整自举 **897/897、16/16、0 skip**；stage2/stage3 C **1,027,977 字节**、Linux 二进制 **479,152 字节**逐字节一致。真实 lexer、四项应用门和输入不变检查全部通过；最终 stage2 对全 613 个路径复核，与候选的 106 个接受成员完全一致；旧 100 个接受路径全部保留。
 - **CI**：实现提交 `67407bb` 的 [run 45794313520](https://github.com/msly/yavo/actions/runs/45794313520) **6/6 成功**（首次运行）。Linux x86-64、Windows x86-64、macOS arm64 原生 Rust Debug/Release、自举及应用门全部通过；Linux 生成 C/stage2 ASan/UBSan 与三个独立作业成功。已核对 run/head 精确绑定 `67407bbcf25cf7b737ec372961d2348b722a3b9b`，分支 main，六个 job 均 completed/success。
+
+## 26. 第四十六批：Map 遍历、String 排序与原始原子账本 CLI（2026-11-26）
+
+- 基线 `9d55af8`。目标为原样编译运行 `experiments/coldstart-2026-11-22-r5/runs/yavo-b/tasks/T01/final/main.yv`，SHA256 `8a8403e63b51d427f57da3c052f9ea50c5e9c4f8a039123d707ab36976a0d4d9`；历史应用、冻结规格及Rust源码未改。
+- **Map遍历**：`for key, value in map`支持Map[String,V]，V为int/bool/byte；必须两绑定，可用 `_`。按插入顺序扫描entries并跳过删除空槽，更新已有键不换位，重插键到尾部。键为只读借用String，不独立析构或移动；值为只读Copy局部。支持具名Map、普通字段、只读/inout参数及完整临时Map；循环期间其根不可修改、移动或inout访问（E0102），可查询、clone及嵌套只读遍历。
+- **键与生命周期诊断**：键赋值/push/take为E0103；显式String绑定、入Vec或拥有返回为E0404；inout String(&key)首E0404，inout int/str首E0001，值赋值E0014。`let _ = key`只读取，推断引用别名仍U0001；`key.trim()`可在循环内绑定，返回、赋外层或放入另一Vec仍U0001。独立审查发现 `for k,v in makeHolder().values` 原先误放行，已在头部按stage0报E0305；直接makeMap()等合法控制项保留。
+- **String排序**：沿用上一批接收者和借用规则，将Vec[String]接入稳定的yv_sort/yv_cmp_String。按UTF-8字节比较，支持空串、重复、NUL、组合/预组合Unicode和emoji。只排列String描述符，不clone或析构其分配；最终由Vec逐元素释放。byte/str排序、sortBy和拥有索引place仍U0001。
+- **用例**：新增28（run5、reject18、unsupported5），indexed_map与sort45_string两条旧源码逐字节提升为run；合计925（run238、panic32、reject503、unsupported117、shared_unsupported35），270个可执行输入。60次双方分类定标和7个运行程序双方D/R的28次分配检查执行全部通过；覆盖Map三种Copy值、顺序/删除/重插/扩容、借用键、临时拥有者、return/break/continue及String排序资源边界。
+- **应用门**：新增ledger_application.py及tests/applications/atomic-ledger.json，纳入bootstrap第17项atomic_ledger_application，优先用最终stage2。原judge14组（含2公开）逐字节保留，补18组合同内边界；32场景、783命令、517条batch支付行，双方D/R共128次正常返回分配检查执行全部通过。独立差额日志oracle与第二套clone账本模型逐条输出一致。
+- **合同与绑定**：有效ASCII/LF，账户名1..16字节、输入金额0..10^9、最多200命令、batch0..100，支付行不计命令数；空文件合法。覆盖失败批次首/中/末回滚且消费剩余行、来源/目的/资金检查顺序、自转账、零金额、前导零、ASCII排序、Map扩容、99,000,000,000单户余额和200,000,000,000总额。8项源/契约/场景/验收器/共享runner输入及编译器首尾哈希一致。
+- **全仓覆盖**：全工作区rglob的613源路径及552,219字节与冻结基线完全一致；本批stage0重新定标为392接受/221拒绝。最终stage2覆盖106→112，新增6路径来自yavo-a/yavo-b T01各final/work/snapshots/0001、只有两种入口hash；旧106路径全部保留，221拒绝输入无放行，越界/超时0。最终接受集合SHA256 `06f02862e4844c751cf7cc2d1d8cb1f8208ae13afd402ef0d36fd8c968fadf7d`。
+- **距目标的计数口径**：剩余280路径首拒全部U0001；入口源码hash去重后，stage0接受222份、selfhost接受52份、剩余170份。前十首拒桶涉及181路径，仍可能存在后续阻塞。该计数不衡量等权任务、完整依赖图或项目完成率；SH-3的build/run/诊断入口与SH-4剩余两个正式项目另计。
+- **Rust验收**：本批无Rust改动，Debug/Release全量各19组、145通过/0失败/1既有忽略；冻结124pass/3unsupported/2superseded。本批固定stage0 SHA256 `0aa26645f51df9f0ddb1429f9bbf7b32145eca0a513193deffb7d81f0e262992`，不同于上批构建副本，因此基线分类已重跑。
+- **本机验收**：完整自举925/925、17/17、0 skip；stage2/stage3 C **1,039,982字节**、Linux二进制 **484,496字节**逐字节一致。C SHA256 `661b1a564a2af55946b44fc3717419a99cd3cb35050edc291eaa300496ae8b2d`，二进制SHA256 `cebfe5fe704adbe56ca7c44b6462a19503050d569109af96dec6a48bd08d8aa6`。真实lexer、五项应用门及输入不变检查通过；回执在compiler/target/ci/selfhost-batch46/receipt.json，work为run-_nhr3raf。
+- **CI**：本机门全部通过；本批实现提交推送后的三平台六作业结果待回填。

@@ -1,0 +1,44 @@
+fn textLength(text: str) -> int { return text.len() }
+fn ownedLength(text: String) -> int { return text.len() }
+fn main() {
+    var numbers: Map[String, int] = [:]
+    numbers.set("b".toString(), 2)
+    numbers.set("a".toString(), 1)
+    numbers.set("a".toString(), 3)
+    var keys: Vec[String] = []
+    var total = 0
+    for key, value in numbers {
+        let _ = key
+        assert(textLength(key) == ownedLength(key))
+        assert((numbers.getCopy(key) ?? -1) == value)
+        var copied = value
+        copied += 100
+        total += value
+        assert(copied == value + 100)
+        keys.push(key.clone())
+    }
+    assert(keys[0] == "b" && keys[1] == "a")
+    keys.sort()
+    assert(total == 5 && keys.len() == 2)
+    assert(keys[0] == "a" && keys[1] == "b")
+    var flags: Map[String, bool] = [:]
+    flags.set("on".toString(), true)
+    flags.set("off".toString(), false)
+    var enabled = 0
+    for key, value in flags { if value { enabled += 1 }
+        assert(key.len() > 0) }
+    assert(enabled == 1)
+    var bytes: Map[String, byte] = [:]
+    bytes.set("zero".toString(), 0)
+    bytes.set("max".toString(), 255)
+    bytes.set("small".toString(), 7)
+    var byteTotal = 0
+    for key, value in bytes {
+        var copied: byte = value
+        byteTotal += int(copied)
+        copied = 0
+        assert(key.len() > 0 && int(copied) == 0)
+    }
+    assert(byteTotal == 262 && (bytes.getCopy("max") ?? 0) == 255)
+    println("map values ok")
+}

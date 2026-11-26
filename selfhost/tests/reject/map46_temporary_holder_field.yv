@@ -1,0 +1,10 @@
+struct Holder { values: Map[String, int] }
+fn make() -> Holder {
+    var values: Map[String, int] = [:]
+    values.set("temporary".toString(), 1)
+    return Holder{values: values}
+}
+fn main() {
+    for key, value in make().values { println(key)
+        println(value) }
+}

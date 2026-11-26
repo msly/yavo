@@ -17,8 +17,10 @@ struct Local {
     moved: bool = false
     byRef: bool = false
     sources: int = 0
-    // A read-only view of an owned element of the vector a for loop iterates.
+    // A read-only view of an owned element or key a for loop iterates.
     element: bool = false
+    // Map keys remain immutable even when the collection itself is writable.
+    mapKey: bool = false
     // A str or Vec[str] binding that points into the owned value of local
     // viewOf; while it is in scope that owner may not be modified or moved.
     viewOf: int = -1
@@ -464,6 +466,9 @@ fn readable(g: Generator, ts: Vec[Token], root: int, token: int) {
 }
 
 fn writable(g: Generator, ts: Vec[Token], root: int, token: int) {
+    if root >= 0 && g.locals[root].mapKey {
+        lexer.fail(ts, token, "E0103", "a Map key cannot be modified")
+    }
     if contains(g.reservations, root) {
         lexer.fail(ts, token, "E0403", "mutation conflicts with a reserved receiver")
     }
@@ -980,6 +985,18 @@ fn userCall(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Ex
             if named {
                 lexer.fail(ts, argToken, "U0001", "borrowed returns from inout arguments are outside this subset")
             }
+            let operand = p.expressions[unparenthesized(p, p.expressions[argId].left)]
+            if operand.kind == .Name {
+                let source = localIndex(g, ts, operand.token)
+                if source >= 0 && g.locals[source].mapKey {
+                    // Stage0 checks the borrowed key's value conversion before
+                    // its mutability when supplying an inout argument.
+                    if expected.kind == .String {
+                        lexer.fail(ts, argToken, "E0404", "an inout String argument cannot consume a borrowed Map key")
+                    }
+                    lexer.fail(ts, argToken, "E0001", "a borrowed Map key does not have the expected inout type")
+                }
+            }
             let target = refPlace(&g, p, ts, reg, argId)
             require(reg, ts, argToken, target.ty, expected)
             args.push("&(")
@@ -1213,8 +1230,15 @@ fn sortValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: E
     if elem.kind == .Bool || elem.kind == .Named {
         lexer.fail(ts, e.token, "E0501", "this vector element type cannot be ordered")
     }
-    if elem.kind != .Int { lexer.fail(ts, e.token, "U0001", "sorting this vector element type is outside the selfhost subset") }
-    put(&g, support.join3("yv_sort(&(", target.name, "), sizeof(int64_t), yv_cmp_i64, "))
+    if elem.kind != .Int && elem.kind != .String {
+        lexer.fail(ts, e.token, "U0001", "sorting this vector element type is outside the selfhost subset")
+    }
+    var comparator = "yv_cmp_i64"
+    if elem.kind == .String { comparator = "yv_cmp_String" }
+    // The stable runtime sort moves descriptors, not their owned allocations.
+    // Only the vector's eventual element cleanup drops the strings.
+    put(&g, support.join5("yv_sort(&(", target.name, "), sizeof(", types.cType(elem), "), "))
+    put(&g, support.join2(comparator, ", "))
     put(&g, lineColumn(ts, e.token))
     emit(&g, ");")
     return Value{ty: types.primitive(.Unit), name: "".toString()}
@@ -2464,6 +2488,9 @@ fn placeType(g: Generator, p: Program, ts: Vec[Token], reg: Registry, id: int, d
         let index = localIndex(g, ts, e.token)
         if index < 0 { lexer.fail(ts, e.token, "E0010", "assignment to an unknown local") }
         let local = g.locals[index]
+        if local.mapKey {
+            lexer.fail(ts, e.token, "E0103", "a Map key cannot be modified")
+        }
         if local.matchBinding == 1 {
             lexer.fail(ts, e.token, "E0101", "cannot modify an if-let binding of a read-only value")
         }
@@ -2709,6 +2736,36 @@ fn loopStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, 
     return emitLoopBody(&g, p, ts, reg, s)
 }
 
+fn mapLoopHeader(g: inout Generator, ts: Vec[Token], s: Statement, value: Value) {
+    // A temporary Map itself owns its header for the whole loop. A field
+    // borrowed from a temporary owner instead expires with that expression.
+    if value.field && value.root < 0 {
+        lexer.fail(ts, s.token, "E0305", "iteration borrows a Map field of a temporary owner")
+    }
+    if s.target < 0 {
+        lexer.fail(ts, s.name, "E0001", "Map iteration requires a key and a value binding")
+    }
+    useMap(&g, value.ty)
+    g.iterationLocks.push(value.root)
+    // The key descriptor is a borrowed view. The map owns its allocation and
+    // stays unchanged throughout the loop; neither binding owns that storage.
+    declare(&g, ts, s.name, types.primitive(.String), false, true, false)
+    g.locals[g.locals.len() - 1].element = true
+    g.locals[g.locals.len() - 1].mapKey = true
+    let elem = types.element(value.ty)
+    declare(&g, ts, s.target, elem, false, false, false)
+    let suffix = support.decimal(g.counter)
+    g.counter += 1
+    let index = support.join2("iter_", suffix)
+    let entry = support.join2("entry_", suffix)
+    let entryType = support.join2("sh_ment_", mapHelper(value.ty))
+    emit(&g, format("for (int64_t ${index} = 0; ${index} < (${value.name}).ents.len; ${index}++) {"))
+    emit(&g, format("const ${entryType} *${entry} = &((const ${entryType} *)(${value.name}).ents.ptr)[${index}];"))
+    emit(&g, format("if (!${entry}->live) continue;"))
+    emit(&g, format("yv_string v_${s.name} = ${entry}->key;"))
+    emit(&g, format("${types.cType(elem)} v_${s.target} = ${entry}->val;"))
+}
+
 fn forLoopStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, s: Statement) -> Flow {
     let localCount = g.locals.len()
     let lockCount = g.iterationLocks.len()
@@ -2742,43 +2799,44 @@ fn forLoopStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registr
         emit(&g, support.join3("; ", name, "++) {"))
     } else {
         let value = emitExpr(&g, p, ts, reg, s.expr)
-        if value.ty.kind == .Map && s.target >= 0 {
-            lexer.fail(ts, s.token, "U0001", "Map iteration is outside the selfhost subset")
+        if value.ty.kind == .Map {
+            mapLoopHeader(&g, ts, s, value)
+        } else {
+            if value.ty.kind != .Vec && value.ty.kind != .Slice && value.ty.kind != .Args {
+                lexer.fail(ts, s.token, "E0001", "iteration requires a vector or an integer range")
+            }
+            // A temporary vector is a header owner: it lives until the loop has
+            // ended and is dropped after it. Iterating a view locks its owner.
+            var elem = types.element(value.ty)
+            if value.ty.kind == .Args { elem = types.primitive(.Str) }
+            // Owned String and struct elements are bound as read-only views of the
+            // element (A2): never dropped or moved, and the vector stays locked.
+            let owned = types.owned(reg, elem)
+            if (owned && elem.kind != .String && elem.kind != .Named) ||
+                (elem.kind != .Int && elem.kind != .Byte && elem.kind != .Bool && elem.kind != .Str &&
+                elem.kind != .Named && elem.kind != .String) {
+                lexer.fail(ts, s.token, "U0001", "iteration over this vector element type is outside the selfhost subset")
+            }
+            g.iterationLocks.push(value.root)
+            var itemName = s.name
+            if s.target >= 0 {
+                declare(&g, ts, s.name, types.primitive(.Int), false, false, false)
+                itemName = s.target
+            }
+            declare(&g, ts, itemName, elem, false, owned, false)
+            g.locals[g.locals.len() - 1].sources = value.sources
+            g.locals[g.locals.len() - 1].element = owned
+            if value.transient { g.locals[g.locals.len() - 1].viewOf = ownerOf(value) }
+            let index = support.join2("iter_", support.decimal(g.counter))
+            g.counter += 1
+            put(&g, support.join5("for (int64_t ", index, " = 0; ", index, " < ("))
+            emit(&g, support.join5(value.name, ").len; ", index, "++", ") {"))
+            if s.target >= 0 {
+                emit(&g, support.join5("const int64_t v_", support.decimal(s.name), " = ", index, ";"))
+            }
+            put(&g, support.join5(types.cType(elem), " v_", support.decimal(itemName), " = ((", types.cType(elem)))
+            emit(&g, support.join5(" *)(", value.name, ").ptr)[", index, "];"))
         }
-        if value.ty.kind != .Vec && value.ty.kind != .Slice && value.ty.kind != .Args {
-            lexer.fail(ts, s.token, "E0001", "iteration requires a vector or an integer range")
-        }
-        // A temporary vector is a header owner: it lives until the loop has
-        // ended and is dropped after it. Iterating a view locks its owner.
-        var elem = types.element(value.ty)
-        if value.ty.kind == .Args { elem = types.primitive(.Str) }
-        // Owned String and struct elements are bound as read-only views of the
-        // element (A2): never dropped or moved, and the vector stays locked.
-        let owned = types.owned(reg, elem)
-        if (owned && elem.kind != .String && elem.kind != .Named) ||
-            (elem.kind != .Int && elem.kind != .Byte && elem.kind != .Bool && elem.kind != .Str &&
-            elem.kind != .Named && elem.kind != .String) {
-            lexer.fail(ts, s.token, "U0001", "iteration over this vector element type is outside the selfhost subset")
-        }
-        g.iterationLocks.push(value.root)
-        var itemName = s.name
-        if s.target >= 0 {
-            declare(&g, ts, s.name, types.primitive(.Int), false, false, false)
-            itemName = s.target
-        }
-        declare(&g, ts, itemName, elem, false, owned, false)
-        g.locals[g.locals.len() - 1].sources = value.sources
-        g.locals[g.locals.len() - 1].element = owned
-        if value.transient { g.locals[g.locals.len() - 1].viewOf = ownerOf(value) }
-        let index = support.join2("iter_", support.decimal(g.counter))
-        g.counter += 1
-        put(&g, support.join5("for (int64_t ", index, " = 0; ", index, " < ("))
-        emit(&g, support.join5(value.name, ").len; ", index, "++", ") {"))
-        if s.target >= 0 {
-            emit(&g, support.join5("const int64_t v_", support.decimal(s.name), " = ", index, ";"))
-        }
-        put(&g, support.join5(types.cType(elem), " v_", support.decimal(itemName), " = ((", types.cType(elem)))
-        emit(&g, support.join5(" *)(", value.name, ").ptr)[", index, "];"))
     }
     // A header catch still targets the enclosing loop. Enter this loop only
     // after its input expressions and read-only binding have been checked.
@@ -2828,6 +2886,14 @@ fn emitStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, 
         g.jumpExpr = s.expr
         let initial = emitExpected(&g, p, ts, reg, s.expr, ty)
         g.jumpExpr = -1
+        let mapKey = initial.local >= 0 && g.locals[initial.local].mapKey
+        if mapKey && ty.kind == .Unknown {
+            // Stage0 infers a borrowed &String here, including discarded keys.
+            // Discarding reads it without moving; persistent aliases need the
+            // reference type that this subset does not yet represent.
+            if ts[s.name].text == "_" { return Flow{} }
+            lexer.fail(ts, s.token, "U0001", "aliasing a borrowed Map key is outside this subset")
+        }
         if ty.kind == .Unknown && initial.indexedBorrow && !initial.field {
             if ts[s.name].text == "_" { return Flow{} }
             lexer.fail(ts, s.token, "U0001", "persistent indexed-element borrows are outside this subset")
@@ -2844,7 +2910,7 @@ fn emitStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, 
         }
         if ty.kind == .Unknown { ty = initial.ty }
         require(reg, ts, s.token, initial.ty, ty)
-        if initial.local >= 0 && g.locals[initial.local].element && ts[s.name].text != "_" {
+        if initial.local >= 0 && g.locals[initial.local].element && !mapKey && ts[s.name].text != "_" {
             // stage0 binds a second read-only alias of the element.
             lexer.fail(ts, s.token, "U0001", "aliasing an iterated element is outside this subset")
         }

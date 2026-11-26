@@ -1,0 +1,16 @@
+struct Bucket { words: Vec[String], label: String }
+fn order(words: inout Vec[String]) { words.sort() }
+fn orderBucket(bucket: inout Bucket) { bucket.words.sort() }
+fn main() {
+    var bucket = Bucket{words: ["z".toString(), "a".toString()], label: "kept".toString()}
+    if true { let view = bucket.words[0].trim()
+        assert(view == "z") }
+    (bucket.words).sort()
+    bucket.words.push("b".toString())
+    order(&bucket.words)
+    orderBucket(&bucket)
+    assert(bucket.words[0] == "a" && bucket.words[1] == "b" && bucket.words[2] == "z")
+    let moved = bucket
+    assert(moved.label == "kept")
+    println("string sort receivers ok")
+}

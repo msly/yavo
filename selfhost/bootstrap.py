@@ -269,6 +269,7 @@ def main():
             "unit_conversion_application": application_module("conversion_application").inputs(),
             "text_diff_application": application_module("diff_application").inputs(),
             "sliding_median_application": application_module("median_application").inputs(),
+            "atomic_ledger_application": application_module("ledger_application").inputs(),
         }
         version_result = command("zig-version", [zig, "version"])
         check("locked_zig", succeeded(version_result) and
@@ -579,6 +580,13 @@ def main():
         check("sliding_median_application", median_record["passed"],
               applicable=median_record.get("applicable"), error=median_record.get("error"))
 
+        ledger_record = application_module("ledger_application").check(
+            stage2 if stage2 is not None else binary, stage0, zig, work / "atomic-ledger",
+            environment, frontend_env, CC_FLAGS, EXE)
+        report["atomic_ledger_application"] = ledger_record
+        check("atomic_ledger_application", ledger_record["passed"],
+              applicable=ledger_record.get("applicable"), error=ledger_record.get("error"))
+
         # A receipt must not attribute binaries to a source tree edited during the run.
         bound_paths = {
             str(stage0): report["inputs"]["stage0"]["sha256"],
@@ -600,6 +608,7 @@ def main():
             **report["inputs"]["unit_conversion_application"],
             **report["inputs"]["text_diff_application"],
             **report["inputs"]["sliding_median_application"],
+            **report["inputs"]["atomic_ledger_application"],
         }
         changed = [name for name, expected in bound_paths.items()
                    if not Path(name).is_file() or digest(Path(name)) != expected]

@@ -1,0 +1,5 @@
+fn grow(s: inout String) { s.push("!") }
+fn main() { var m: Map[String, int] = [:]
+ m.set(" a ".toString(), 7)
+ for key,value in m { grow(&key)
+ println(value) } }

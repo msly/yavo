@@ -1,6 +1,6 @@
 {
   "schema": "yavo-selfhost-cases/1",
-  "description": "Independent fixed-oracle probes for the Yavo-written scalar, byte, aggregate, String, owned-vector, user-function Result and Copy Optional/pop, interpolation, source-module, borrowed-return, Vec[str], jumping ??, []T parameter, text query, owned-element iteration, Map[String, scalar], owned-value view and std/io subset; not the frozen full-language conformance suite.",
+  "description": "Independent fixed-oracle probes for the Yavo-written scalar, byte, aggregate, String, owned-vector, user-function Result and Copy Optional/pop, interpolation, source-module, borrowed-return, Vec[str], jumping ??, []T parameter, text query, owned-element iteration, Map[String, scalar] with read-only traversal, owned String vector sorting, owned-value view and std/io subset; not the frozen full-language conformance suite.",
   "cases": [
     {
       "id": "arithmetic",
@@ -5175,10 +5175,10 @@
     },
     {
       "id": "indexed_map",
-      "kind": "unsupported",
-      "file": "unsupported/indexed_map.yv",
-      "diagnostic": "U0001",
-      "batch": "indexed-for-if-let"
+      "kind": "run",
+      "file": "run/indexed_map.yv",
+      "batch": "indexed-for-if-let",
+      "stdout": "x:4\n"
     },
     {
       "id": "indexed_args",
@@ -6045,11 +6045,10 @@
     },
     {
       "id": "sort45_string",
-      "kind": "unsupported",
-      "file": "unsupported/sort45_string.yv",
+      "kind": "run",
+      "file": "run/sort45_string.yv",
       "batch": "int-sort-window-median",
-      "diagnostic": "U0001",
-      "reason": "Sorting vectors of owned text remains outside the subset."
+      "stdout": "a\n"
     },
     {
       "id": "sort45_parenthesized_local",
@@ -6088,6 +6087,210 @@
       "file": "unsupported/sort45_unknown_name.yv",
       "batch": "int-sort-window-median",
       "diagnostic": "U0001"
+    },
+    {
+      "id": "map46_values",
+      "kind": "run",
+      "file": "run/map46_values.yv",
+      "batch": "map-iteration-string-sort",
+      "stdout": "map values ok\n"
+    },
+    {
+      "id": "map46_tombstones",
+      "kind": "run",
+      "file": "run/map46_tombstones.yv",
+      "batch": "map-iteration-string-sort",
+      "stdout": "map tombstones ok\n"
+    },
+    {
+      "id": "map46_lifetimes",
+      "kind": "run",
+      "file": "run/map46_lifetimes.yv",
+      "batch": "map-iteration-string-sort",
+      "stdout": "map lifetimes ok\n"
+    },
+    {
+      "id": "sort46_strings_values",
+      "kind": "run",
+      "file": "run/sort46_strings_values.yv",
+      "batch": "map-iteration-string-sort",
+      "stdout": "string sort values ok\n"
+    },
+    {
+      "id": "sort46_strings_receivers",
+      "kind": "run",
+      "file": "run/sort46_strings_receivers.yv",
+      "batch": "map-iteration-string-sort",
+      "stdout": "string sort receivers ok\n"
+    },
+    {
+      "id": "map46_single_binding",
+      "kind": "reject",
+      "file": "reject/map46_single_binding.yv",
+      "batch": "map-iteration-string-sort",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "map46_key_assign",
+      "kind": "reject",
+      "file": "reject/map46_key_assign.yv",
+      "batch": "map-iteration-string-sort",
+      "diagnostic": "E0103"
+    },
+    {
+      "id": "map46_key_push",
+      "kind": "reject",
+      "file": "reject/map46_key_push.yv",
+      "batch": "map-iteration-string-sort",
+      "diagnostic": "E0103"
+    },
+    {
+      "id": "map46_key_take",
+      "kind": "reject",
+      "file": "reject/map46_key_take.yv",
+      "batch": "map-iteration-string-sort",
+      "diagnostic": "E0103"
+    },
+    {
+      "id": "map46_key_inout_string",
+      "kind": "reject",
+      "file": "reject/map46_key_inout_string.yv",
+      "batch": "map-iteration-string-sort",
+      "diagnostic": "E0404"
+    },
+    {
+      "id": "map46_key_typed_string",
+      "kind": "reject",
+      "file": "reject/map46_key_typed_string.yv",
+      "batch": "map-iteration-string-sort",
+      "diagnostic": "E0404"
+    },
+    {
+      "id": "map46_key_typed_str",
+      "kind": "reject",
+      "file": "reject/map46_key_typed_str.yv",
+      "batch": "map-iteration-string-sort",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "map46_key_into_vec",
+      "kind": "reject",
+      "file": "reject/map46_key_into_vec.yv",
+      "batch": "map-iteration-string-sort",
+      "diagnostic": "E0404"
+    },
+    {
+      "id": "map46_key_return_owned",
+      "kind": "reject",
+      "file": "reject/map46_key_return_owned.yv",
+      "batch": "map-iteration-string-sort",
+      "diagnostic": "E0404"
+    },
+    {
+      "id": "map46_value_assign",
+      "kind": "reject",
+      "file": "reject/map46_value_assign.yv",
+      "batch": "map-iteration-string-sort",
+      "diagnostic": "E0014"
+    },
+    {
+      "id": "map46_set_lock",
+      "kind": "reject",
+      "file": "reject/map46_set_lock.yv",
+      "batch": "map-iteration-string-sort",
+      "diagnostic": "E0102"
+    },
+    {
+      "id": "map46_move_lock",
+      "kind": "reject",
+      "file": "reject/map46_move_lock.yv",
+      "batch": "map-iteration-string-sort",
+      "diagnostic": "E0102"
+    },
+    {
+      "id": "map46_temp_view_return",
+      "kind": "reject",
+      "file": "reject/map46_temp_view_return.yv",
+      "batch": "map-iteration-string-sort",
+      "diagnostic": "U0001",
+      "reason": "Stage0 reports E0303; the subset conservatively rejects returned views of iterated elements with U0001."
+    },
+    {
+      "id": "sort46_string_live_view",
+      "kind": "reject",
+      "file": "reject/sort46_string_live_view.yv",
+      "batch": "map-iteration-string-sort",
+      "diagnostic": "U0001",
+      "reason": "Stage0 reports E0102 for the live view; the subset keeps local view loans for their scope and reports U0001."
+    },
+    {
+      "id": "sort46_string_loop_lock",
+      "kind": "reject",
+      "file": "reject/sort46_string_loop_lock.yv",
+      "batch": "map-iteration-string-sort",
+      "diagnostic": "E0102"
+    },
+    {
+      "id": "map46_key_inout_int",
+      "kind": "reject",
+      "file": "reject/map46_key_inout_int.yv",
+      "batch": "map-iteration-string-sort",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "map46_key_inout_str",
+      "kind": "reject",
+      "file": "reject/map46_key_inout_str.yv",
+      "batch": "map-iteration-string-sort",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "map46_key_alias",
+      "kind": "unsupported",
+      "file": "unsupported/map46_key_alias.yv",
+      "batch": "map-iteration-string-sort",
+      "diagnostic": "U0001",
+      "reason": "Stage0 infers a borrowed &String alias; the subset does not support persistent Map key aliases."
+    },
+    {
+      "id": "map46_parameter_view_return",
+      "kind": "unsupported",
+      "file": "unsupported/map46_parameter_view_return.yv",
+      "batch": "map-iteration-string-sort",
+      "diagnostic": "U0001",
+      "reason": "Returning a key view tied to a Map parameter is outside the current iteration subset."
+    },
+    {
+      "id": "map46_outer_view",
+      "kind": "unsupported",
+      "file": "unsupported/map46_outer_view.yv",
+      "batch": "map-iteration-string-sort",
+      "diagnostic": "U0001",
+      "reason": "Storing an iterated key view in an outer binding is outside the subset."
+    },
+    {
+      "id": "map46_push_view",
+      "kind": "unsupported",
+      "file": "unsupported/map46_push_view.yv",
+      "batch": "map-iteration-string-sort",
+      "diagnostic": "U0001",
+      "reason": "Storing iterated key views in another vector is outside the subset."
+    },
+    {
+      "id": "sort46_string_dead_view",
+      "kind": "unsupported",
+      "file": "unsupported/sort46_string_dead_view.yv",
+      "batch": "map-iteration-string-sort",
+      "diagnostic": "U0001",
+      "reason": "Stage0 proves the prior view is dead; the subset keeps its loan through the lexical scope."
+    },
+    {
+      "id": "map46_temporary_holder_field",
+      "kind": "reject",
+      "file": "reject/map46_temporary_holder_field.yv",
+      "batch": "map-iteration-string-sort",
+      "diagnostic": "E0305",
+      "reason": "A field borrowed from a temporary owning struct cannot survive as a Map iteration source."
     }
   ],
   "promotions": [
@@ -6420,6 +6623,28 @@
       "kind": "run",
       "source_sha256": "b0562cb50ac60ecadbc2a431bfb19ba5a53425500e4b1cc5626a9e4b3aa336d1",
       "reason": "Integer min/max are now supported; the original source bytes are unchanged."
+    },
+    {
+      "previous_id": "indexed_map",
+      "previous_file": "unsupported/indexed_map.yv",
+      "previous_kind": "unsupported",
+      "baseline_commit": "9d55af8b147b0feccb74d464a5a852401bfaf46a",
+      "id": "indexed_map",
+      "file": "run/indexed_map.yv",
+      "kind": "run",
+      "source_sha256": "bd3ea6507fce09c2aeb8bcd4591425d196eb4f00ad944b8c1c4dc78a7f12735a",
+      "reason": "Read-only Map iteration and owned String vector sorting are now supported; the original source bytes are unchanged."
+    },
+    {
+      "previous_id": "sort45_string",
+      "previous_file": "unsupported/sort45_string.yv",
+      "previous_kind": "unsupported",
+      "baseline_commit": "9d55af8b147b0feccb74d464a5a852401bfaf46a",
+      "id": "sort45_string",
+      "file": "run/sort45_string.yv",
+      "kind": "run",
+      "source_sha256": "704c1d0e1a9511f308b29c8e5f97a466bce03a4a6d360fa31579c6e34f51f21c",
+      "reason": "Read-only Map iteration and owned String vector sorting are now supported; the original source bytes are unchanged."
     }
   ]
 }

@@ -1,0 +1,44 @@
+struct Holder { values: Map[String, int], label: String }
+fn make() -> Map[String, int] {
+    var values: Map[String, int] = [:]
+    values.set(" key ".toString(), 7)
+    return values
+}
+fn total(values: Map[String, int]) -> int {
+    var result = 0
+    for key, value in values { result += value
+        assert(key.len() > 0) }
+    return result
+}
+fn update(values: inout Map[String, int]) {
+    var count = 0
+    for key, value in values { count += 1
+        assert(key.len() > 0 && value == 7) }
+    values.set("after".toString(), count)
+}
+fn ownedKey() -> String {
+    for key, value in make() { assert(value == 7)
+        return key.clone() }
+    return "none".toString()
+}
+fn main() {
+    let values = make()
+    assert(total(values) == 7)
+    var holder = Holder{values: values, label: "kept".toString()}
+    for key, value in holder.values {
+        let view = key.trim()
+        assert(view == "key" && value == 7)
+    }
+    update(&holder.values)
+    assert(holder.values.len() == 2)
+    for i in 0..3 { for key, value in make() {
+        let view = key.trim()
+        assert(view == "key" && value == 7 && i >= 0)
+        continue
+    } }
+    for key, value in make() { assert(key.len() == 5 && value == 7)
+        break }
+    let owned = ownedKey()
+    assert(owned == " key " && holder.label == "kept")
+    println("map lifetimes ok")
+}

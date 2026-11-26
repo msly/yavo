@@ -1,0 +1,18 @@
+fn main() {
+    var empty: Vec[String] = []
+    empty.reserve(8)
+    empty.sort()
+    assert(empty.len() == 0)
+    var one = ["x".toString()]
+    one.sort()
+    assert(one[0] == "x")
+    var words = ["中".toString(), "é".toString(), "a".toString(), "".toString(), "😀".toString(), "é".toString(), "a\0".toString(), "é".toString(), "A".toString()]
+    words.sort()
+    words.sort()
+    assert(words.len() == 9)
+    assert(words[0] == "" && words[1] == "A" && words[2] == "a")
+    assert(words[3] == "a\0" && words[3].len() == 2)
+    assert(words[4] == "é" && words[5] == "é" && words[6] == "é")
+    assert(words[7] == "中" && words[8] == "😀")
+    println("string sort values ok")
+}

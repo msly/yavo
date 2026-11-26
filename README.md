@@ -42,7 +42,7 @@ Recent changes implement index assignment, two-phase variable/field receivers, S
 
 | Check | Recorded local result | Scope |
 | --- | --- | --- |
-| Release suite | **145 passed, 0 failed, 1 ignored** | Batch 45: complete suite rerun; no Rust changes and frozen cases unchanged |
+| Release suite | **145 passed, 0 failed, 1 ignored** | Batch 46: complete suite rerun; no Rust changes and frozen cases unchanged |
 | Debug suite | **145 passed, 0 failed, 1 ignored** | Same source, all 19 groups, independent completed local log |
 | Frozen specification | **124 pass, 0 wrong, 3 unsupported, 0 not_run, 2 superseded** | 129 frozen cases; a different counting unit from Cargo test functions |
 | Cross-compilation | Six target formats/architectures build | Linux (static musl), Windows and macOS on x86-64/aarch64; native CI now covers Linux x86-64 plus the Windows x86-64/macOS arm64 selections below |
@@ -52,7 +52,34 @@ The ignored Cargo test is the old exploratory P0 conformance report; the current
 
 Source modules support top-level exports, per-file imports, cyclic imports and original-file diagnostics. Package dependencies and a program lockfile remain open. Multi-file `fix` returns `U0001` without writing; symlink module aliases are unsupported.
 
-### Selfhost integer Vec sorting and original window-median CLI (batch 45, 2026-11-26)
+### Selfhost Map iteration, String sorting and original atomic ledger (batch 46, 2026-11-26)
+
+Read-only two-binding traversal now supports Map[String,int/bool/byte], including
+named fields and whole temporary Maps. Keys remain borrowed and immutable;
+Copy values are read-only, and the Map's owner is frozen throughout the loop.
+Temporary-owner fields are rejected with E0305, matching stage0.
+Vec[String].sort() is stable and ascending by UTF-8 bytes; rearranging its
+owned descriptors leaves one owner for each string allocation.
+
+The unchanged r5/yavo-b/T01 atomic-transfer ledger is the fifth bootstrap
+application gate: 32 scenarios retain all 14 archived cases and add valid
+contract boundaries for rollback/commit, consuming failed-batch rows, ordering,
+Map growth, 200 commands and balances/totals beyond 32 bits. Independent delta
+and clone-ledger models agree. Both compilers in Debug/Release pass all 128
+normal-return executions with allocation checking; eight inputs are bound.
+
+The matrix has **925 cases**, with 28 new fixtures and two unchanged-source
+promotions. Complete local bootstrap passes **925/925, 17/17, zero skips**;
+stage2/stage3 C (1,039,982 bytes) and Linux binaries (484,496 bytes) match.
+Final stage2 coverage rises **106 to 112/392**, with zero losses or subset
+violations; six gained paths represent two ledger implementations. By entry
+source bytes, coverage is **52/222 distinct inputs**, not a project completion
+percentage. Rust Debug/Release remains 145/0/1, frozen conformance 124/3/2.
+Batch 46 native CI is pending the implementation push. SH-3 is incomplete;
+formal SH-4 delivery remains one of three, with a second structured-text
+validation project next.
+
+### Selfhost integer Vec sorting and original window-median CLI (batch 45, historical)
 
 `Vec[int].sort()` now performs a stable, in-place ascending sort with no
 arguments and a Unit result. Writable locals, inout parameters and nested

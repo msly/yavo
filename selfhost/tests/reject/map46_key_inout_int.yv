@@ -1,0 +1,5 @@
+fn edit(value: inout int) { value=0 }
+fn main() { var m: Map[String,int]=[:]
+ m.set("k".toString(),1)
+ for key,value in m { edit(&key)
+ println(value) } }

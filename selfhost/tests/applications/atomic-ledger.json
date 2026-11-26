@@ -1,0 +1,321 @@
+{
+  "schema": "yavo-atomic-ledger-scenarios/1",
+  "application": "experiments/coldstart-2026-11-22-r5/runs/yavo-b/tasks/T01/final/main.yv",
+  "source_sha256": "8a8403e63b51d427f57da3c052f9ea50c5e9c4f8a039123d707ab36976a0d4d9",
+  "contracts": {
+    "experiments/coldstart-2026-11-22-r5/TASKS.md": "68281940838e3bfbe4fb4bc30fa895f662a408315461921c493899a4fe45065b",
+    "experiments/coldstart-2026-11-22-r5/public/T01.md": "3a90a3d4c1d8e91e8e738e380ddc0033f6f47b340202843de4f00fc6965898f0"
+  },
+  "original_cases": {
+    "path": "experiments/coldstart-2026-11-22-r5/judge/cases.json",
+    "sha256": "2cf5d0c505d65b52b85a8264dd647ffce6d2f49979da22338341035e45402ec1",
+    "task": "T01",
+    "count": 14
+  },
+  "oracle": "Fixed before application execution and checked independently with a balance-delta journal. Each payment observes base balance plus earlier journal entries; any first error discards the journal, while success commits all deltas at once. Commands are parsed only after every declared batch row has been consumed. Final account names are ordered by ASCII bytes. All 14 archived expectations and manually checked rollback/upper-bound traces agree. Application output never determines expectations.",
+  "scope": "Only published valid ASCII/LF inputs: empty input allowed; at most 200 commands, with batch payment rows excluded from the command count; batch K in 0..100; names [A-Za-z][A-Za-z0-9_]{0,15}; initial balances and transfer amounts in 0..1000000000 with leading zeros allowed. Blank command lines are ignored; batch payment rows are nonempty and syntactically valid.",
+  "cases": [
+    {
+      "id": "t01_public_01",
+      "origin": "r5_judge",
+      "source_case": "T01-public-01",
+      "reason": "published example",
+      "stdin": "account bob 20\naccount ann 10\npay bob ann 3\nbalance ann\nbatch 2\nann bob 4\nbob ann 100\nbalance ann\n",
+      "stdout": "paid\nann: 13\nbatch: row 2 funds bob\nann: 13\nann=13\nbob=17\ntotal: 30\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "t01_public_02",
+      "origin": "r5_judge",
+      "source_case": "T01-public-02",
+      "reason": "published example",
+      "stdin": "account a 0007\naccount a 99\npay a a 7\nbatch 0\npay ghost absent 0\n",
+      "stdout": "error: duplicate a\npaid\nbatch: ok\nerror: unknown ghost\na=7\ntotal: 7\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "t01_hidden_01",
+      "origin": "r5_judge",
+      "source_case": "T01-hidden-01",
+      "reason": "empty",
+      "stdin": "",
+      "stdout": "total: 0\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "t01_hidden_02",
+      "origin": "r5_judge",
+      "source_case": "T01-hidden-02",
+      "reason": "self-funds-before-noop",
+      "stdin": "account a 3\npay a a 4\npay a a 0\n",
+      "stdout": "error: funds a\npaid\na=3\ntotal: 3\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "t01_hidden_03",
+      "origin": "r5_judge",
+      "source_case": "T01-hidden-03",
+      "reason": "destination-check-before-funds",
+      "stdin": "account a 0\npay a missing 5\npay missing absent 5\n",
+      "stdout": "error: unknown missing\nerror: unknown missing\na=0\ntotal: 0\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "t01_hidden_04",
+      "origin": "r5_judge",
+      "source_case": "T01-hidden-04",
+      "reason": "batch-rollback-and-consume",
+      "stdin": "account a 10\naccount b 0\nbatch 3\na b 6\na b 6\nb a 1\nbalance a\nbalance b\npay b a 0\n",
+      "stdout": "batch: row 2 funds a\na: 10\nb: 0\npaid\na=10\nb=0\ntotal: 10\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "t01_hidden_05",
+      "origin": "r5_judge",
+      "source_case": "T01-hidden-05",
+      "reason": "batch-sequential-credit",
+      "stdin": "account a 10\naccount b 0\naccount c 0\nbatch 3\na b 10\nb c 10\nc a 10\n",
+      "stdout": "batch: ok\na=10\nb=0\nc=0\ntotal: 10\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "t01_hidden_06",
+      "origin": "r5_judge",
+      "source_case": "T01-hidden-06",
+      "reason": "duplicates-sort-and-zero",
+      "stdin": "account z 0\naccount Aa 3\naccount A 7\naccount z 9\nbatch 0\nbalance nope\n",
+      "stdout": "error: duplicate z\nbatch: ok\nerror: unknown nope\nA=7\nAa=3\nz=0\ntotal: 10\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "t01_hidden_07",
+      "origin": "r5_judge",
+      "source_case": "T01-hidden-07",
+      "reason": "large-sums",
+      "stdin": "account a 1000000000\naccount b 1000000000\naccount c 1000000000\nbatch 2\na c 1000000000\nb c 1000000000\n",
+      "stdout": "batch: ok\na=0\nb=0\nc=3000000000\ntotal: 3000000000\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "t01_hidden_08",
+      "origin": "r5_judge",
+      "source_case": "T01-hidden-08",
+      "reason": "whitespace-and-leading-zero",
+      "stdin": " \n\taccount\ta\t0000\naccount b 000010\n batch 2\nb a 000001\na b 000000\nbalance a\n",
+      "stdout": "batch: ok\na: 1\na=1\nb=9\ntotal: 10\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "t01_hidden_09",
+      "origin": "r5_judge",
+      "source_case": "T01-hidden-09",
+      "reason": "seed-2026112205",
+      "stdin": "account a 13\naccount b 9\naccount c 3\naccount d 25\npay a a 4\nbatch 3\nc d 13\nx x 2\na c 14\nbatch 3\nd x 0\nb c 1\nx c 13\npay d x 5\npay b a 1\nbatch 3\na a 4\nb c 17\nc a 10\npay b d 2\npay x d 10\nbatch 1\nx c 0\nbatch 3\nb x 9\na x 4\nx b 2\npay d b 15\npay b a 1\nbatch 0\npay b c 12\npay c d 11\npay b x 17\nbatch 4\nb x 6\nc d 19\nd x 14\nc c 1\nbatch 1\nc x 5\npay d b 6\nbatch 4\nd a 15\na x 10\na x 0\nc b 3\nbatch 4\nx d 8\nx d 2\na a 19\na c 2\npay b x 17\npay d a 1\npay b c 17\npay d a 19\n",
+      "stdout": "paid\nbatch: row 1 funds c\nbatch: row 1 unknown x\nerror: unknown x\npaid\nbatch: row 2 funds b\npaid\nerror: unknown x\nbatch: row 1 unknown x\nbatch: row 1 unknown x\npaid\npaid\nbatch: ok\npaid\npaid\nerror: unknown x\nbatch: row 1 unknown x\nbatch: row 1 unknown x\npaid\nbatch: row 2 unknown x\nbatch: row 1 unknown x\nerror: unknown x\npaid\nerror: funds b\nerror: funds d\na=16\nb=14\nc=4\nd=16\ntotal: 50\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "t01_hidden_10",
+      "origin": "r5_judge",
+      "source_case": "T01-hidden-10",
+      "reason": "seed-2026112206",
+      "stdin": "account a 20\naccount b 6\naccount c 10\naccount d 10\nbatch 0\npay b x 6\npay x d 12\nbatch 3\nc b 8\na c 13\nc b 12\npay x d 11\npay a b 15\npay b b 11\npay c d 0\nbatch 1\na b 18\nbatch 3\nx a 8\nc a 2\nc x 17\npay b d 0\npay b x 8\nbatch 2\nc a 6\nd x 12\npay c b 7\npay d x 11\npay c b 1\nbatch 3\na x 3\nb b 11\na c 15\npay d a 17\npay c x 4\npay b c 12\npay d c 17\npay d c 19\nbatch 2\na c 13\nd b 6\npay x c 17\nbatch 0\n",
+      "stdout": "batch: ok\nerror: unknown x\nerror: unknown x\nbatch: ok\nerror: unknown x\nerror: funds a\npaid\npaid\nbatch: row 1 funds a\nbatch: row 1 unknown x\npaid\nerror: unknown x\nbatch: row 1 funds c\nerror: funds c\nerror: unknown x\npaid\nbatch: row 1 unknown x\nerror: funds d\nerror: unknown x\npaid\nerror: funds d\nerror: funds d\nbatch: row 1 funds a\nerror: unknown x\nbatch: ok\na=7\nb=15\nc=14\nd=10\ntotal: 46\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "t01_hidden_11",
+      "origin": "r5_judge",
+      "source_case": "T01-hidden-11",
+      "reason": "seed-2026112207",
+      "stdin": "account a 4\naccount b 10\naccount c 10\naccount d 2\nbatch 1\nd b 19\nbatch 4\nc d 14\na c 3\nb b 4\na a 4\npay a x 14\nbatch 2\nx a 14\na a 2\npay x a 14\npay a x 11\npay b d 18\npay b b 7\nbatch 4\nd b 15\nx d 17\na c 4\nb a 16\npay b d 7\nbatch 4\nx x 18\nx a 3\nd a 16\nd b 19\npay a b 1\nbatch 3\nb a 10\nc a 17\nc d 9\npay c a 18\npay b c 18\nbatch 2\nb c 17\nb a 2\npay d a 12\npay c b 9\npay x b 8\npay a d 15\nbatch 1\nb c 10\npay x b 6\npay c d 5\npay x b 10\nbatch 3\nd a 11\na b 18\nb x 9\n",
+      "stdout": "batch: row 1 funds d\nbatch: row 1 funds c\nerror: unknown x\nbatch: row 1 unknown x\nerror: unknown x\nerror: unknown x\nerror: funds b\npaid\nbatch: row 1 funds d\npaid\nbatch: row 1 unknown x\npaid\nbatch: row 1 funds b\nerror: funds c\nerror: funds b\nbatch: row 1 funds b\nerror: funds d\npaid\nerror: unknown x\nerror: funds a\nbatch: ok\nerror: unknown x\npaid\nerror: unknown x\nbatch: row 2 funds a\na=3\nb=3\nc=6\nd=14\ntotal: 26\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "t01_hidden_12",
+      "origin": "r5_judge",
+      "source_case": "T01-hidden-12",
+      "reason": "seed-2026112208",
+      "stdin": "account a 11\naccount b 14\naccount c 29\naccount d 14\nbatch 4\nb c 13\nb x 7\nc d 15\nc b 17\npay x b 11\npay c c 8\npay x a 2\npay c d 15\npay x d 0\npay b d 14\nbatch 1\nx d 15\npay d c 18\nbatch 3\nb a 1\nc x 7\nd b 4\npay x b 17\npay d b 4\npay d b 10\npay c d 2\npay d c 1\npay d c 9\nbatch 4\nx b 6\na a 19\nx c 19\nc x 5\npay d a 12\npay c c 10\npay b x 14\nbatch 1\nc x 4\nbatch 4\na c 7\nx d 19\nd x 1\nb x 6\npay c c 7\nbatch 0\nbatch 4\na x 11\nd b 14\na x 12\na c 14\n",
+      "stdout": "batch: row 2 unknown x\nerror: unknown x\npaid\nerror: unknown x\npaid\nerror: unknown x\npaid\nbatch: row 1 unknown x\npaid\nbatch: row 1 funds b\nerror: unknown x\npaid\npaid\npaid\npaid\npaid\nbatch: row 1 unknown x\nerror: funds d\npaid\nerror: unknown x\nbatch: row 1 unknown x\nbatch: row 2 unknown x\npaid\nbatch: ok\nbatch: row 1 unknown x\na=11\nb=14\nc=40\nd=3\ntotal: 68\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "blank_only",
+      "origin": "contract_boundary",
+      "reason": "Blank command lines leave an empty map and empty sorting input.",
+      "stdin": " \n\t\n\n",
+      "stdout": "total: 0\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "single_maximum_name",
+      "origin": "contract_boundary",
+      "reason": "A 16-byte legal name and maximum initial balance; singleton string sorting.",
+      "stdin": "account Abcdef0123456789 1000000000\nbalance Abcdef0123456789\n",
+      "stdout": "Abcdef0123456789: 1000000000\nAbcdef0123456789=1000000000\ntotal: 1000000000\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "ascii_name_order",
+      "origin": "contract_boundary",
+      "reason": "ASCII ordering distinguishes uppercase/lowercase, digits, underscores and prefixes.",
+      "stdin": "account b 1\naccount B 2\naccount z0 3\naccount Z0 4\naccount aa 5\naccount a_ 6\naccount a0 7\naccount z 8\naccount Z 9\naccount Aa0 10\naccount AA 11\naccount A_ 12\naccount A0 13\naccount A 14\naccount Aa 15\naccount a 16\n",
+      "stdout": "A=14\nA0=13\nAA=11\nA_=12\nAa=15\nAa0=10\nB=2\nZ=9\nZ0=4\na=16\na0=7\na_=6\naa=5\nb=1\nz=8\nz0=3\ntotal: 136\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "duplicate_after_transfer",
+      "origin": "contract_boundary",
+      "reason": "Duplicate creation preserves a balance already changed by a payment.",
+      "stdin": "account a 10\naccount b 20\npay a b 5\naccount a 999\nbalance a\nbalance b\n",
+      "stdout": "paid\nerror: duplicate a\na: 5\nb: 25\na=5\nb=25\ntotal: 30\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "self_transfer_checks",
+      "origin": "contract_boundary",
+      "reason": "Self transfers still check account existence and sufficient funds before their no-op.",
+      "stdin": "account a 3\npay a a 4\npay a a 3\npay a a 0\npay ghost ghost 0\nbalance a\n",
+      "stdout": "error: funds a\npaid\npaid\nerror: unknown ghost\na: 3\na=3\ntotal: 3\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "error_priority_and_zero",
+      "origin": "contract_boundary",
+      "reason": "Source then destination then funds checks, including zero-amount transfers.",
+      "stdin": "account a 0\npay lost absent 0\npay a lost 1\npay a a 1\npay a a 0\n",
+      "stdout": "error: unknown lost\nerror: unknown lost\nerror: funds a\npaid\na=0\ntotal: 0\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "zero_batches_on_empty_map",
+      "origin": "contract_boundary",
+      "reason": "Zero-row batches repeatedly commit an empty ledger; leading-zero K is valid.",
+      "stdin": "batch 0\nbatch 000\nbalance missing\n",
+      "stdout": "batch: ok\nbatch: ok\nerror: unknown missing\ntotal: 0\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "first_failure_consumes_command_like_rows",
+      "origin": "contract_boundary",
+      "reason": "After failure, account/balance/pay/batch tokens are legal payment source names and must not become commands.",
+      "stdin": "account a 10\naccount b 0\nbatch 5\nmissing a 0\naccount Ghost 7\nbalance a 0\npay b 0\nbatch a 0\nbalance a\nbalance b\nbalance Ghost\n",
+      "stdout": "batch: row 1 unknown missing\na: 10\nb: 0\nerror: unknown Ghost\na=10\nb=0\ntotal: 10\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "middle_failure_rolls_back_and_consumes",
+      "origin": "contract_boundary",
+      "reason": "A successful trial payment is rolled back, and the later account-like payment row stays inside the failed batch.",
+      "stdin": "account a 10\naccount b 0\nbatch 3\na b 10\nb missing 1\naccount Ghost 1\nbalance a\nbalance b\nbalance Ghost\n",
+      "stdout": "batch: row 2 unknown missing\na: 10\nb: 0\nerror: unknown Ghost\na=10\nb=0\ntotal: 10\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "last_failure_rolls_back_sequential_credit",
+      "origin": "contract_boundary",
+      "reason": "Sequential credits allow earlier rows, but the last insufficient-funds row rolls all of them back.",
+      "stdin": "account a 10\naccount b 0\naccount c 0\nbatch 3\na b 10\nb c 10\nc a 11\nbalance a\nbalance b\nbalance c\n",
+      "stdout": "batch: row 3 funds c\na: 10\nb: 0\nc: 0\na=10\nb=0\nc=0\ntotal: 10\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "batch_100_success",
+      "origin": "contract_boundary",
+      "reason": "Maximum K=100, with each odd payment credited back by the next row.",
+      "stdin": "account a 100\naccount b 0\nbatch 100\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\nbalance a\nbalance b\n",
+      "stdout": "batch: ok\na: 100\nb: 0\na=100\nb=0\ntotal: 100\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "batch_100_first_failure_consumes",
+      "origin": "contract_boundary",
+      "reason": "The first row fails; all other 99 valid rows, including an account-like row, must be consumed without execution.",
+      "stdin": "account a 10\naccount b 0\nbatch 100\nmissing b 1\naccount Extra 7\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\na b 1\nbalance a\nbalance Extra\npay a b 1\nbalance b\n",
+      "stdout": "batch: row 1 unknown missing\na: 10\nerror: unknown Extra\npaid\nb: 1\na=9\nb=1\ntotal: 10\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "batch_100_last_failure_rolls_back",
+      "origin": "contract_boundary",
+      "reason": "The first 99 rows succeed in the trial ledger; row 100 fails and none of their credits survives.",
+      "stdin": "account a 100\naccount b 0\nbatch 100\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\nb a 1\na b 1\na b 100\nbalance a\nbalance b\npay b a 1\n",
+      "stdout": "batch: row 100 funds a\na: 100\nb: 0\nerror: funds b\na=100\nb=0\ntotal: 100\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "consecutive_commit_rollback_and_empty",
+      "origin": "contract_boundary",
+      "reason": "A committed batch survives a later failed batch and a zero-row commit.",
+      "stdin": "account a 9\naccount b 0\naccount c 0\nbatch 3\na b 6\nb c 6\nc a 2\nbatch 2\na b 4\nb c 5\nbatch 0\nbalance a\nbalance b\nbalance c\n",
+      "stdout": "batch: ok\nbatch: row 2 funds b\nbatch: ok\na: 5\nb: 0\nc: 4\na=5\nb=0\nc=4\ntotal: 9\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "mixed_whitespace_leading_zeros",
+      "origin": "contract_boundary",
+      "reason": "Only spaces/tabs/LF separate fields; command and payment amounts and K retain leading zeros in input.",
+      "stdin": " \t\n\taccount\tAlpha\t0000000010\n account beta 0000 \t\n batch\t0002\n Alpha beta 0003 \n beta Alpha 0001\npay\tAlpha\tAlpha\t0008\nbalance Alpha\nbalance beta\n",
+      "stdout": "batch: ok\npaid\nAlpha: 8\nbeta: 2\nAlpha=8\nbeta=2\ntotal: 10\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "max_200_accounts_rehash",
+      "origin": "contract_boundary",
+      "reason": "Exactly 200 account commands force repeated map growth; all names have length 16 and total reaches 200,000,000,000.",
+      "stdin": "account Acct000000000000 1000000000\naccount Acct000000000073 1000000000\naccount Acct000000000146 1000000000\naccount Acct000000000019 1000000000\naccount Acct000000000092 1000000000\naccount Acct000000000165 1000000000\naccount Acct000000000038 1000000000\naccount Acct000000000111 1000000000\naccount Acct000000000184 1000000000\naccount Acct000000000057 1000000000\naccount Acct000000000130 1000000000\naccount Acct000000000003 1000000000\naccount Acct000000000076 1000000000\naccount Acct000000000149 1000000000\naccount Acct000000000022 1000000000\naccount Acct000000000095 1000000000\naccount Acct000000000168 1000000000\naccount Acct000000000041 1000000000\naccount Acct000000000114 1000000000\naccount Acct000000000187 1000000000\naccount Acct000000000060 1000000000\naccount Acct000000000133 1000000000\naccount Acct000000000006 1000000000\naccount Acct000000000079 1000000000\naccount Acct000000000152 1000000000\naccount Acct000000000025 1000000000\naccount Acct000000000098 1000000000\naccount Acct000000000171 1000000000\naccount Acct000000000044 1000000000\naccount Acct000000000117 1000000000\naccount Acct000000000190 1000000000\naccount Acct000000000063 1000000000\naccount Acct000000000136 1000000000\naccount Acct000000000009 1000000000\naccount Acct000000000082 1000000000\naccount Acct000000000155 1000000000\naccount Acct000000000028 1000000000\naccount Acct000000000101 1000000000\naccount Acct000000000174 1000000000\naccount Acct000000000047 1000000000\naccount Acct000000000120 1000000000\naccount Acct000000000193 1000000000\naccount Acct000000000066 1000000000\naccount Acct000000000139 1000000000\naccount Acct000000000012 1000000000\naccount Acct000000000085 1000000000\naccount Acct000000000158 1000000000\naccount Acct000000000031 1000000000\naccount Acct000000000104 1000000000\naccount Acct000000000177 1000000000\naccount Acct000000000050 1000000000\naccount Acct000000000123 1000000000\naccount Acct000000000196 1000000000\naccount Acct000000000069 1000000000\naccount Acct000000000142 1000000000\naccount Acct000000000015 1000000000\naccount Acct000000000088 1000000000\naccount Acct000000000161 1000000000\naccount Acct000000000034 1000000000\naccount Acct000000000107 1000000000\naccount Acct000000000180 1000000000\naccount Acct000000000053 1000000000\naccount Acct000000000126 1000000000\naccount Acct000000000199 1000000000\naccount Acct000000000072 1000000000\naccount Acct000000000145 1000000000\naccount Acct000000000018 1000000000\naccount Acct000000000091 1000000000\naccount Acct000000000164 1000000000\naccount Acct000000000037 1000000000\naccount Acct000000000110 1000000000\naccount Acct000000000183 1000000000\naccount Acct000000000056 1000000000\naccount Acct000000000129 1000000000\naccount Acct000000000002 1000000000\naccount Acct000000000075 1000000000\naccount Acct000000000148 1000000000\naccount Acct000000000021 1000000000\naccount Acct000000000094 1000000000\naccount Acct000000000167 1000000000\naccount Acct000000000040 1000000000\naccount Acct000000000113 1000000000\naccount Acct000000000186 1000000000\naccount Acct000000000059 1000000000\naccount Acct000000000132 1000000000\naccount Acct000000000005 1000000000\naccount Acct000000000078 1000000000\naccount Acct000000000151 1000000000\naccount Acct000000000024 1000000000\naccount Acct000000000097 1000000000\naccount Acct000000000170 1000000000\naccount Acct000000000043 1000000000\naccount Acct000000000116 1000000000\naccount Acct000000000189 1000000000\naccount Acct000000000062 1000000000\naccount Acct000000000135 1000000000\naccount Acct000000000008 1000000000\naccount Acct000000000081 1000000000\naccount Acct000000000154 1000000000\naccount Acct000000000027 1000000000\naccount Acct000000000100 1000000000\naccount Acct000000000173 1000000000\naccount Acct000000000046 1000000000\naccount Acct000000000119 1000000000\naccount Acct000000000192 1000000000\naccount Acct000000000065 1000000000\naccount Acct000000000138 1000000000\naccount Acct000000000011 1000000000\naccount Acct000000000084 1000000000\naccount Acct000000000157 1000000000\naccount Acct000000000030 1000000000\naccount Acct000000000103 1000000000\naccount Acct000000000176 1000000000\naccount Acct000000000049 1000000000\naccount Acct000000000122 1000000000\naccount Acct000000000195 1000000000\naccount Acct000000000068 1000000000\naccount Acct000000000141 1000000000\naccount Acct000000000014 1000000000\naccount Acct000000000087 1000000000\naccount Acct000000000160 1000000000\naccount Acct000000000033 1000000000\naccount Acct000000000106 1000000000\naccount Acct000000000179 1000000000\naccount Acct000000000052 1000000000\naccount Acct000000000125 1000000000\naccount Acct000000000198 1000000000\naccount Acct000000000071 1000000000\naccount Acct000000000144 1000000000\naccount Acct000000000017 1000000000\naccount Acct000000000090 1000000000\naccount Acct000000000163 1000000000\naccount Acct000000000036 1000000000\naccount Acct000000000109 1000000000\naccount Acct000000000182 1000000000\naccount Acct000000000055 1000000000\naccount Acct000000000128 1000000000\naccount Acct000000000001 1000000000\naccount Acct000000000074 1000000000\naccount Acct000000000147 1000000000\naccount Acct000000000020 1000000000\naccount Acct000000000093 1000000000\naccount Acct000000000166 1000000000\naccount Acct000000000039 1000000000\naccount Acct000000000112 1000000000\naccount Acct000000000185 1000000000\naccount Acct000000000058 1000000000\naccount Acct000000000131 1000000000\naccount Acct000000000004 1000000000\naccount Acct000000000077 1000000000\naccount Acct000000000150 1000000000\naccount Acct000000000023 1000000000\naccount Acct000000000096 1000000000\naccount Acct000000000169 1000000000\naccount Acct000000000042 1000000000\naccount Acct000000000115 1000000000\naccount Acct000000000188 1000000000\naccount Acct000000000061 1000000000\naccount Acct000000000134 1000000000\naccount Acct000000000007 1000000000\naccount Acct000000000080 1000000000\naccount Acct000000000153 1000000000\naccount Acct000000000026 1000000000\naccount Acct000000000099 1000000000\naccount Acct000000000172 1000000000\naccount Acct000000000045 1000000000\naccount Acct000000000118 1000000000\naccount Acct000000000191 1000000000\naccount Acct000000000064 1000000000\naccount Acct000000000137 1000000000\naccount Acct000000000010 1000000000\naccount Acct000000000083 1000000000\naccount Acct000000000156 1000000000\naccount Acct000000000029 1000000000\naccount Acct000000000102 1000000000\naccount Acct000000000175 1000000000\naccount Acct000000000048 1000000000\naccount Acct000000000121 1000000000\naccount Acct000000000194 1000000000\naccount Acct000000000067 1000000000\naccount Acct000000000140 1000000000\naccount Acct000000000013 1000000000\naccount Acct000000000086 1000000000\naccount Acct000000000159 1000000000\naccount Acct000000000032 1000000000\naccount Acct000000000105 1000000000\naccount Acct000000000178 1000000000\naccount Acct000000000051 1000000000\naccount Acct000000000124 1000000000\naccount Acct000000000197 1000000000\naccount Acct000000000070 1000000000\naccount Acct000000000143 1000000000\naccount Acct000000000016 1000000000\naccount Acct000000000089 1000000000\naccount Acct000000000162 1000000000\naccount Acct000000000035 1000000000\naccount Acct000000000108 1000000000\naccount Acct000000000181 1000000000\naccount Acct000000000054 1000000000\naccount Acct000000000127 1000000000\n",
+      "stdout": "Acct000000000000=1000000000\nAcct000000000001=1000000000\nAcct000000000002=1000000000\nAcct000000000003=1000000000\nAcct000000000004=1000000000\nAcct000000000005=1000000000\nAcct000000000006=1000000000\nAcct000000000007=1000000000\nAcct000000000008=1000000000\nAcct000000000009=1000000000\nAcct000000000010=1000000000\nAcct000000000011=1000000000\nAcct000000000012=1000000000\nAcct000000000013=1000000000\nAcct000000000014=1000000000\nAcct000000000015=1000000000\nAcct000000000016=1000000000\nAcct000000000017=1000000000\nAcct000000000018=1000000000\nAcct000000000019=1000000000\nAcct000000000020=1000000000\nAcct000000000021=1000000000\nAcct000000000022=1000000000\nAcct000000000023=1000000000\nAcct000000000024=1000000000\nAcct000000000025=1000000000\nAcct000000000026=1000000000\nAcct000000000027=1000000000\nAcct000000000028=1000000000\nAcct000000000029=1000000000\nAcct000000000030=1000000000\nAcct000000000031=1000000000\nAcct000000000032=1000000000\nAcct000000000033=1000000000\nAcct000000000034=1000000000\nAcct000000000035=1000000000\nAcct000000000036=1000000000\nAcct000000000037=1000000000\nAcct000000000038=1000000000\nAcct000000000039=1000000000\nAcct000000000040=1000000000\nAcct000000000041=1000000000\nAcct000000000042=1000000000\nAcct000000000043=1000000000\nAcct000000000044=1000000000\nAcct000000000045=1000000000\nAcct000000000046=1000000000\nAcct000000000047=1000000000\nAcct000000000048=1000000000\nAcct000000000049=1000000000\nAcct000000000050=1000000000\nAcct000000000051=1000000000\nAcct000000000052=1000000000\nAcct000000000053=1000000000\nAcct000000000054=1000000000\nAcct000000000055=1000000000\nAcct000000000056=1000000000\nAcct000000000057=1000000000\nAcct000000000058=1000000000\nAcct000000000059=1000000000\nAcct000000000060=1000000000\nAcct000000000061=1000000000\nAcct000000000062=1000000000\nAcct000000000063=1000000000\nAcct000000000064=1000000000\nAcct000000000065=1000000000\nAcct000000000066=1000000000\nAcct000000000067=1000000000\nAcct000000000068=1000000000\nAcct000000000069=1000000000\nAcct000000000070=1000000000\nAcct000000000071=1000000000\nAcct000000000072=1000000000\nAcct000000000073=1000000000\nAcct000000000074=1000000000\nAcct000000000075=1000000000\nAcct000000000076=1000000000\nAcct000000000077=1000000000\nAcct000000000078=1000000000\nAcct000000000079=1000000000\nAcct000000000080=1000000000\nAcct000000000081=1000000000\nAcct000000000082=1000000000\nAcct000000000083=1000000000\nAcct000000000084=1000000000\nAcct000000000085=1000000000\nAcct000000000086=1000000000\nAcct000000000087=1000000000\nAcct000000000088=1000000000\nAcct000000000089=1000000000\nAcct000000000090=1000000000\nAcct000000000091=1000000000\nAcct000000000092=1000000000\nAcct000000000093=1000000000\nAcct000000000094=1000000000\nAcct000000000095=1000000000\nAcct000000000096=1000000000\nAcct000000000097=1000000000\nAcct000000000098=1000000000\nAcct000000000099=1000000000\nAcct000000000100=1000000000\nAcct000000000101=1000000000\nAcct000000000102=1000000000\nAcct000000000103=1000000000\nAcct000000000104=1000000000\nAcct000000000105=1000000000\nAcct000000000106=1000000000\nAcct000000000107=1000000000\nAcct000000000108=1000000000\nAcct000000000109=1000000000\nAcct000000000110=1000000000\nAcct000000000111=1000000000\nAcct000000000112=1000000000\nAcct000000000113=1000000000\nAcct000000000114=1000000000\nAcct000000000115=1000000000\nAcct000000000116=1000000000\nAcct000000000117=1000000000\nAcct000000000118=1000000000\nAcct000000000119=1000000000\nAcct000000000120=1000000000\nAcct000000000121=1000000000\nAcct000000000122=1000000000\nAcct000000000123=1000000000\nAcct000000000124=1000000000\nAcct000000000125=1000000000\nAcct000000000126=1000000000\nAcct000000000127=1000000000\nAcct000000000128=1000000000\nAcct000000000129=1000000000\nAcct000000000130=1000000000\nAcct000000000131=1000000000\nAcct000000000132=1000000000\nAcct000000000133=1000000000\nAcct000000000134=1000000000\nAcct000000000135=1000000000\nAcct000000000136=1000000000\nAcct000000000137=1000000000\nAcct000000000138=1000000000\nAcct000000000139=1000000000\nAcct000000000140=1000000000\nAcct000000000141=1000000000\nAcct000000000142=1000000000\nAcct000000000143=1000000000\nAcct000000000144=1000000000\nAcct000000000145=1000000000\nAcct000000000146=1000000000\nAcct000000000147=1000000000\nAcct000000000148=1000000000\nAcct000000000149=1000000000\nAcct000000000150=1000000000\nAcct000000000151=1000000000\nAcct000000000152=1000000000\nAcct000000000153=1000000000\nAcct000000000154=1000000000\nAcct000000000155=1000000000\nAcct000000000156=1000000000\nAcct000000000157=1000000000\nAcct000000000158=1000000000\nAcct000000000159=1000000000\nAcct000000000160=1000000000\nAcct000000000161=1000000000\nAcct000000000162=1000000000\nAcct000000000163=1000000000\nAcct000000000164=1000000000\nAcct000000000165=1000000000\nAcct000000000166=1000000000\nAcct000000000167=1000000000\nAcct000000000168=1000000000\nAcct000000000169=1000000000\nAcct000000000170=1000000000\nAcct000000000171=1000000000\nAcct000000000172=1000000000\nAcct000000000173=1000000000\nAcct000000000174=1000000000\nAcct000000000175=1000000000\nAcct000000000176=1000000000\nAcct000000000177=1000000000\nAcct000000000178=1000000000\nAcct000000000179=1000000000\nAcct000000000180=1000000000\nAcct000000000181=1000000000\nAcct000000000182=1000000000\nAcct000000000183=1000000000\nAcct000000000184=1000000000\nAcct000000000185=1000000000\nAcct000000000186=1000000000\nAcct000000000187=1000000000\nAcct000000000188=1000000000\nAcct000000000189=1000000000\nAcct000000000190=1000000000\nAcct000000000191=1000000000\nAcct000000000192=1000000000\nAcct000000000193=1000000000\nAcct000000000194=1000000000\nAcct000000000195=1000000000\nAcct000000000196=1000000000\nAcct000000000197=1000000000\nAcct000000000198=1000000000\nAcct000000000199=1000000000\ntotal: 200000000000\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "max_200_commands_accumulated_balance",
+      "origin": "contract_boundary",
+      "reason": "Exactly 200 commands: 99 maximum deposits are transferred into one account, giving balance and total 99,000,000,000.",
+      "stdin": "account Sink 0\naccount D000 1000000000\naccount D001 1000000000\naccount D002 1000000000\naccount D003 1000000000\naccount D004 1000000000\naccount D005 1000000000\naccount D006 1000000000\naccount D007 1000000000\naccount D008 1000000000\naccount D009 1000000000\naccount D010 1000000000\naccount D011 1000000000\naccount D012 1000000000\naccount D013 1000000000\naccount D014 1000000000\naccount D015 1000000000\naccount D016 1000000000\naccount D017 1000000000\naccount D018 1000000000\naccount D019 1000000000\naccount D020 1000000000\naccount D021 1000000000\naccount D022 1000000000\naccount D023 1000000000\naccount D024 1000000000\naccount D025 1000000000\naccount D026 1000000000\naccount D027 1000000000\naccount D028 1000000000\naccount D029 1000000000\naccount D030 1000000000\naccount D031 1000000000\naccount D032 1000000000\naccount D033 1000000000\naccount D034 1000000000\naccount D035 1000000000\naccount D036 1000000000\naccount D037 1000000000\naccount D038 1000000000\naccount D039 1000000000\naccount D040 1000000000\naccount D041 1000000000\naccount D042 1000000000\naccount D043 1000000000\naccount D044 1000000000\naccount D045 1000000000\naccount D046 1000000000\naccount D047 1000000000\naccount D048 1000000000\naccount D049 1000000000\naccount D050 1000000000\naccount D051 1000000000\naccount D052 1000000000\naccount D053 1000000000\naccount D054 1000000000\naccount D055 1000000000\naccount D056 1000000000\naccount D057 1000000000\naccount D058 1000000000\naccount D059 1000000000\naccount D060 1000000000\naccount D061 1000000000\naccount D062 1000000000\naccount D063 1000000000\naccount D064 1000000000\naccount D065 1000000000\naccount D066 1000000000\naccount D067 1000000000\naccount D068 1000000000\naccount D069 1000000000\naccount D070 1000000000\naccount D071 1000000000\naccount D072 1000000000\naccount D073 1000000000\naccount D074 1000000000\naccount D075 1000000000\naccount D076 1000000000\naccount D077 1000000000\naccount D078 1000000000\naccount D079 1000000000\naccount D080 1000000000\naccount D081 1000000000\naccount D082 1000000000\naccount D083 1000000000\naccount D084 1000000000\naccount D085 1000000000\naccount D086 1000000000\naccount D087 1000000000\naccount D088 1000000000\naccount D089 1000000000\naccount D090 1000000000\naccount D091 1000000000\naccount D092 1000000000\naccount D093 1000000000\naccount D094 1000000000\naccount D095 1000000000\naccount D096 1000000000\naccount D097 1000000000\naccount D098 1000000000\npay D000 Sink 1000000000\npay D001 Sink 1000000000\npay D002 Sink 1000000000\npay D003 Sink 1000000000\npay D004 Sink 1000000000\npay D005 Sink 1000000000\npay D006 Sink 1000000000\npay D007 Sink 1000000000\npay D008 Sink 1000000000\npay D009 Sink 1000000000\npay D010 Sink 1000000000\npay D011 Sink 1000000000\npay D012 Sink 1000000000\npay D013 Sink 1000000000\npay D014 Sink 1000000000\npay D015 Sink 1000000000\npay D016 Sink 1000000000\npay D017 Sink 1000000000\npay D018 Sink 1000000000\npay D019 Sink 1000000000\npay D020 Sink 1000000000\npay D021 Sink 1000000000\npay D022 Sink 1000000000\npay D023 Sink 1000000000\npay D024 Sink 1000000000\npay D025 Sink 1000000000\npay D026 Sink 1000000000\npay D027 Sink 1000000000\npay D028 Sink 1000000000\npay D029 Sink 1000000000\npay D030 Sink 1000000000\npay D031 Sink 1000000000\npay D032 Sink 1000000000\npay D033 Sink 1000000000\npay D034 Sink 1000000000\npay D035 Sink 1000000000\npay D036 Sink 1000000000\npay D037 Sink 1000000000\npay D038 Sink 1000000000\npay D039 Sink 1000000000\npay D040 Sink 1000000000\npay D041 Sink 1000000000\npay D042 Sink 1000000000\npay D043 Sink 1000000000\npay D044 Sink 1000000000\npay D045 Sink 1000000000\npay D046 Sink 1000000000\npay D047 Sink 1000000000\npay D048 Sink 1000000000\npay D049 Sink 1000000000\npay D050 Sink 1000000000\npay D051 Sink 1000000000\npay D052 Sink 1000000000\npay D053 Sink 1000000000\npay D054 Sink 1000000000\npay D055 Sink 1000000000\npay D056 Sink 1000000000\npay D057 Sink 1000000000\npay D058 Sink 1000000000\npay D059 Sink 1000000000\npay D060 Sink 1000000000\npay D061 Sink 1000000000\npay D062 Sink 1000000000\npay D063 Sink 1000000000\npay D064 Sink 1000000000\npay D065 Sink 1000000000\npay D066 Sink 1000000000\npay D067 Sink 1000000000\npay D068 Sink 1000000000\npay D069 Sink 1000000000\npay D070 Sink 1000000000\npay D071 Sink 1000000000\npay D072 Sink 1000000000\npay D073 Sink 1000000000\npay D074 Sink 1000000000\npay D075 Sink 1000000000\npay D076 Sink 1000000000\npay D077 Sink 1000000000\npay D078 Sink 1000000000\npay D079 Sink 1000000000\npay D080 Sink 1000000000\npay D081 Sink 1000000000\npay D082 Sink 1000000000\npay D083 Sink 1000000000\npay D084 Sink 1000000000\npay D085 Sink 1000000000\npay D086 Sink 1000000000\npay D087 Sink 1000000000\npay D088 Sink 1000000000\npay D089 Sink 1000000000\npay D090 Sink 1000000000\npay D091 Sink 1000000000\npay D092 Sink 1000000000\npay D093 Sink 1000000000\npay D094 Sink 1000000000\npay D095 Sink 1000000000\npay D096 Sink 1000000000\npay D097 Sink 1000000000\npay D098 Sink 1000000000\nbalance Sink\n",
+      "stdout": "paid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\npaid\nSink: 99000000000\nD000=0\nD001=0\nD002=0\nD003=0\nD004=0\nD005=0\nD006=0\nD007=0\nD008=0\nD009=0\nD010=0\nD011=0\nD012=0\nD013=0\nD014=0\nD015=0\nD016=0\nD017=0\nD018=0\nD019=0\nD020=0\nD021=0\nD022=0\nD023=0\nD024=0\nD025=0\nD026=0\nD027=0\nD028=0\nD029=0\nD030=0\nD031=0\nD032=0\nD033=0\nD034=0\nD035=0\nD036=0\nD037=0\nD038=0\nD039=0\nD040=0\nD041=0\nD042=0\nD043=0\nD044=0\nD045=0\nD046=0\nD047=0\nD048=0\nD049=0\nD050=0\nD051=0\nD052=0\nD053=0\nD054=0\nD055=0\nD056=0\nD057=0\nD058=0\nD059=0\nD060=0\nD061=0\nD062=0\nD063=0\nD064=0\nD065=0\nD066=0\nD067=0\nD068=0\nD069=0\nD070=0\nD071=0\nD072=0\nD073=0\nD074=0\nD075=0\nD076=0\nD077=0\nD078=0\nD079=0\nD080=0\nD081=0\nD082=0\nD083=0\nD084=0\nD085=0\nD086=0\nD087=0\nD088=0\nD089=0\nD090=0\nD091=0\nD092=0\nD093=0\nD094=0\nD095=0\nD096=0\nD097=0\nD098=0\nSink=99000000000\ntotal: 99000000000\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "rehash_clone_rollback_then_commit",
+      "origin": "contract_boundary",
+      "reason": "Clone a grown 128-account map, roll back 99 trial writes on row 100, then commit a later batch and iterate/sort all surviving keys.",
+      "stdin": "account A000 1000\naccount A001 1000\naccount A002 1000\naccount A003 1000\naccount A004 1000\naccount A005 1000\naccount A006 1000\naccount A007 1000\naccount A008 1000\naccount A009 1000\naccount A010 1000\naccount A011 1000\naccount A012 1000\naccount A013 1000\naccount A014 1000\naccount A015 1000\naccount A016 1000\naccount A017 1000\naccount A018 1000\naccount A019 1000\naccount A020 1000\naccount A021 1000\naccount A022 1000\naccount A023 1000\naccount A024 1000\naccount A025 1000\naccount A026 1000\naccount A027 1000\naccount A028 1000\naccount A029 1000\naccount A030 1000\naccount A031 1000\naccount A032 1000\naccount A033 1000\naccount A034 1000\naccount A035 1000\naccount A036 1000\naccount A037 1000\naccount A038 1000\naccount A039 1000\naccount A040 1000\naccount A041 1000\naccount A042 1000\naccount A043 1000\naccount A044 1000\naccount A045 1000\naccount A046 1000\naccount A047 1000\naccount A048 1000\naccount A049 1000\naccount A050 1000\naccount A051 1000\naccount A052 1000\naccount A053 1000\naccount A054 1000\naccount A055 1000\naccount A056 1000\naccount A057 1000\naccount A058 1000\naccount A059 1000\naccount A060 1000\naccount A061 1000\naccount A062 1000\naccount A063 1000\naccount A064 1000\naccount A065 1000\naccount A066 1000\naccount A067 1000\naccount A068 1000\naccount A069 1000\naccount A070 1000\naccount A071 1000\naccount A072 1000\naccount A073 1000\naccount A074 1000\naccount A075 1000\naccount A076 1000\naccount A077 1000\naccount A078 1000\naccount A079 1000\naccount A080 1000\naccount A081 1000\naccount A082 1000\naccount A083 1000\naccount A084 1000\naccount A085 1000\naccount A086 1000\naccount A087 1000\naccount A088 1000\naccount A089 1000\naccount A090 1000\naccount A091 1000\naccount A092 1000\naccount A093 1000\naccount A094 1000\naccount A095 1000\naccount A096 1000\naccount A097 1000\naccount A098 1000\naccount A099 1000\naccount A100 1000\naccount A101 1000\naccount A102 1000\naccount A103 1000\naccount A104 1000\naccount A105 1000\naccount A106 1000\naccount A107 1000\naccount A108 1000\naccount A109 1000\naccount A110 1000\naccount A111 1000\naccount A112 1000\naccount A113 1000\naccount A114 1000\naccount A115 1000\naccount A116 1000\naccount A117 1000\naccount A118 1000\naccount A119 1000\naccount A120 1000\naccount A121 1000\naccount A122 1000\naccount A123 1000\naccount A124 1000\naccount A125 1000\naccount A126 1000\naccount A127 1000\nbatch 100\nA000 A001 1\nA017 A030 1\nA034 A059 1\nA051 A088 1\nA068 A117 1\nA085 A018 1\nA102 A047 1\nA119 A076 1\nA008 A105 1\nA025 A006 1\nA042 A035 1\nA059 A064 1\nA076 A093 1\nA093 A122 1\nA110 A023 1\nA127 A052 1\nA016 A081 1\nA033 A110 1\nA050 A011 1\nA067 A040 1\nA084 A069 1\nA101 A098 1\nA118 A127 1\nA007 A028 1\nA024 A057 1\nA041 A086 1\nA058 A115 1\nA075 A016 1\nA092 A045 1\nA109 A074 1\nA126 A103 1\nA015 A004 1\nA032 A033 1\nA049 A062 1\nA066 A091 1\nA083 A120 1\nA100 A021 1\nA117 A050 1\nA006 A079 1\nA023 A108 1\nA040 A009 1\nA057 A038 1\nA074 A067 1\nA091 A096 1\nA108 A125 1\nA125 A026 1\nA014 A055 1\nA031 A084 1\nA048 A113 1\nA065 A014 1\nA082 A043 1\nA099 A072 1\nA116 A101 1\nA005 A002 1\nA022 A031 1\nA039 A060 1\nA056 A089 1\nA073 A118 1\nA090 A019 1\nA107 A048 1\nA124 A077 1\nA013 A106 1\nA030 A007 1\nA047 A036 1\nA064 A065 1\nA081 A094 1\nA098 A123 1\nA115 A024 1\nA004 A053 1\nA021 A082 1\nA038 A111 1\nA055 A012 1\nA072 A041 1\nA089 A070 1\nA106 A099 1\nA123 A000 1\nA012 A029 1\nA029 A058 1\nA046 A087 1\nA063 A116 1\nA080 A017 1\nA097 A046 1\nA114 A075 1\nA003 A104 1\nA020 A005 1\nA037 A034 1\nA054 A063 1\nA071 A092 1\nA088 A121 1\nA105 A022 1\nA122 A051 1\nA011 A080 1\nA028 A109 1\nA045 A010 1\nA062 A039 1\nA079 A068 1\nA096 A097 1\nA113 A126 1\nA002 A027 1\nA000 missing 0\nbalance A000\nbalance A001\nbalance A127\nbatch 2\nA000 A127 5\nA127 A001 7\nbalance A000\nbalance A001\nbalance A127\n",
+      "stdout": "batch: row 100 unknown missing\nA000: 1000\nA001: 1000\nA127: 1000\nbatch: ok\nA000: 995\nA001: 1007\nA127: 998\nA000=995\nA001=1007\nA002=1000\nA003=1000\nA004=1000\nA005=1000\nA006=1000\nA007=1000\nA008=1000\nA009=1000\nA010=1000\nA011=1000\nA012=1000\nA013=1000\nA014=1000\nA015=1000\nA016=1000\nA017=1000\nA018=1000\nA019=1000\nA020=1000\nA021=1000\nA022=1000\nA023=1000\nA024=1000\nA025=1000\nA026=1000\nA027=1000\nA028=1000\nA029=1000\nA030=1000\nA031=1000\nA032=1000\nA033=1000\nA034=1000\nA035=1000\nA036=1000\nA037=1000\nA038=1000\nA039=1000\nA040=1000\nA041=1000\nA042=1000\nA043=1000\nA044=1000\nA045=1000\nA046=1000\nA047=1000\nA048=1000\nA049=1000\nA050=1000\nA051=1000\nA052=1000\nA053=1000\nA054=1000\nA055=1000\nA056=1000\nA057=1000\nA058=1000\nA059=1000\nA060=1000\nA061=1000\nA062=1000\nA063=1000\nA064=1000\nA065=1000\nA066=1000\nA067=1000\nA068=1000\nA069=1000\nA070=1000\nA071=1000\nA072=1000\nA073=1000\nA074=1000\nA075=1000\nA076=1000\nA077=1000\nA078=1000\nA079=1000\nA080=1000\nA081=1000\nA082=1000\nA083=1000\nA084=1000\nA085=1000\nA086=1000\nA087=1000\nA088=1000\nA089=1000\nA090=1000\nA091=1000\nA092=1000\nA093=1000\nA094=1000\nA095=1000\nA096=1000\nA097=1000\nA098=1000\nA099=1000\nA100=1000\nA101=1000\nA102=1000\nA103=1000\nA104=1000\nA105=1000\nA106=1000\nA107=1000\nA108=1000\nA109=1000\nA110=1000\nA111=1000\nA112=1000\nA113=1000\nA114=1000\nA115=1000\nA116=1000\nA117=1000\nA118=1000\nA119=1000\nA120=1000\nA121=1000\nA122=1000\nA123=1000\nA124=1000\nA125=1000\nA126=1000\nA127=998\ntotal: 128000\n",
+      "stderr": "",
+      "exit_code": 0
+    }
+  ]
+}
