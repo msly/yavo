@@ -75,7 +75,10 @@ Final stage2 coverage rises **106 to 112/392**, with zero losses or subset
 violations; six gained paths represent two ledger implementations. By entry
 source bytes, coverage is **52/222 distinct inputs**, not a project completion
 percentage. Rust Debug/Release remains 145/0/1, frozen conformance 124/3/2.
-Batch 46 native CI is pending the implementation push. SH-3 is incomplete;
+[CI run 45826605112](https://github.com/msly/yavo/actions/runs/45826605112)
+for implementation `bc8aefa` passes **6/6 jobs**: native Linux, Windows and
+macOS bootstrap/application gates, Linux selfhost ASan/UBSan and the independent
+checks. SH-3 is incomplete;
 formal SH-4 delivery remains one of three, with a second structured-text
 validation project next.
 

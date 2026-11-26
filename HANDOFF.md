@@ -8,7 +8,7 @@
 
 全仓覆盖 **106 → 112/392，退步 0、越界 0**；613 个原路径与字节未变，新增六路径是 r5/yavo-a、yavo-b 的 T01 各三份快照、两种入口源码。按入口文件字节去重为 **52/222**，剩余170份不同输入源码；路径或源码覆盖率均不是项目完成率。
 
-当前语料 **925 cases**（新增28、原样提升2），完整本机自举 **925/925、17/17、0 skip**；本批未改 Rust，Debug/Release 全量各 **145/0/1**，冻结 **124/3/2**。第五项 atomic_ledger_application 保留原 judge14组并补18组合同内边界，共32场景、783命令、517条batch支付行，双方Debug/Release共 **128次正常返回分配检查执行**全部通过。本批实现的三平台 CI 待推送后确认。
+当前语料 **925 cases**（新增28、原样提升2），完整本机自举 **925/925、17/17、0 skip**；本批未改 Rust，Debug/Release 全量各 **145/0/1**，冻结 **124/3/2**。第五项 atomic_ledger_application 保留原 judge14组并补18组合同内边界，共32场景、783命令、517条batch支付行，双方Debug/Release共 **128次正常返回分配检查执行**全部通过。实现提交 `bc8aefa` 的 [run 45826605112](https://github.com/msly/yavo/actions/runs/45826605112) **6/6成功**；三平台原生自举、应用门及Linux selfhost ASan/UBSan全部通过。
 
 **SH-2 引导子集固定点已闭合；SH-3 尚未接替，Rust stage0 仍承担日常编译；SH-4 正式交付完成 1/3 个独立应用。** selfhost 当前只有 check/emit-c；普通 build/run、结构化诊断与其他工具入口仍需移植。五项应用兼容性回归不替代正式独立项目交付。下一批优先第二个正式结构化文本校验项目，由其实际依赖推动拥有 Optional 等能力。每批门槛保持 `docs/decisions.md` 第九节。
 
@@ -196,11 +196,11 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 
 ## 10. 下一个会话的第一步
 
-1. 检查 Git 状态、最新实现提交与 CI；先读第26节、[自举路线](docs/self-hosting.md)、[selfhost说明](selfhost/README.md)。第四十六批本机925/925、17/17已通过；CI状态以第26节回填为准。
+1. 检查 Git 状态、最新实现提交与 CI；先读第26节、[自举路线](docs/self-hosting.md)、[selfhost说明](selfhost/README.md)。第四十六批本机925/925、17/17及三平台CI 6/6均已通过，精确提交与运行见第26节。
 2. **下一批优先第二个正式独立应用：结构化文本校验 CLI。** 先冻结真实输入格式、模块划分、成功/错误输出和独立 oracle，用现有 stage0 交付；验收应包含非法UTF-8、I/O失败、资源清理、离线与空缓存复现、含空格/非ASCII路径及三平台原生。保持应用原文，再补 selfhost 的实际阻塞，使这项工作推进 SH-4 第二个项目，而不只增加单文件兼容门。
 3. **拥有型 Optional 的现成回归目标**为原始 `experiments/coldstart-2026-11-22-r5/runs/yavo-b/tasks/T02/final/main.yv`，SHA256 `8e03caaec0bf7d2b8ccef92b9ab485035fc91cd88d8e8c159f224df178c470f7`。最终本批stage2首拒3:24的 `?Vec[String]`；需处理拥有载荷构造、移动/返回、if-let临时值与借用、分支及提前退出析构。原CSV可作语义回归，不能自动计为正式第二应用。
 4. **SH-3 正常入口单列验收**：当前selfhost只有check/emit-c。先补稳定源位置/错误码/结构化诊断与普通build/run、锁定工具链驱动，再按依赖迁移cache/fix/verify；默认切换还须满足既有回归、冻结规格、资源与三平台条件。保持U0001显式，不静默转交Rust前端。
-5. 当前未接受输入的前列首拒包括标准模块、其他类型写法、元组Vec、闭包、类型后缀、拥有Map值、泛型/接口及浮点。一个输入可能有后续阻塞，不能以首拒桶大小预测收益。Map键别名/视图逃逸、可变遍历、拥有pop仍有子集边界；模块还缺包依赖/项目锁文件与跨模块更广的语义。第三个正式应用方向为多文件依赖/索引工具。
+5. 当前未接受输入的前列首拒包括标准模块、其他类型写法、元组Vec、闭包、类型后缀、更广Map值类型、泛型/接口及浮点。一个输入可能有后续阻塞，不能以首拒桶大小预测收益。Map键别名/视图逃逸、可变遍历、拥有pop仍有子集边界；模块还缺包依赖/项目锁文件与跨模块更广的语义。第三个正式应用方向为多文件依赖/索引工具。
 6. R5仍缺token/金额，R6真实请求、会话和交付均为0；有已授权且完成资格验证的计量环境才恢复。成本实验不阻塞当前工程，但不能用语言特性或兼容门数量代替成本验收。
 
 正式门槛仍按 `docs/plan.md`：配对通过率差的单侧95%下界至少−5个百分点，单位成功交付成本较Rust低至少20%并独立复现；冻结运行基准几何均值不超过C的1.5倍。工程指标包括小程序编译P50≤200ms、Linux小程序strip产物≤250KB、Windows原生测试及可复现构建。历史四微基准和PCH测量不代表当前stage2；编译器自身的484,496字节也不是小程序体积门槛的测量值。
@@ -396,4 +396,4 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - **距目标的计数口径**：剩余280路径首拒全部U0001；入口源码hash去重后，stage0接受222份、selfhost接受52份、剩余170份。前十首拒桶涉及181路径，仍可能存在后续阻塞。该计数不衡量等权任务、完整依赖图或项目完成率；SH-3的build/run/诊断入口与SH-4剩余两个正式项目另计。
 - **Rust验收**：本批无Rust改动，Debug/Release全量各19组、145通过/0失败/1既有忽略；冻结124pass/3unsupported/2superseded。本批固定stage0 SHA256 `0aa26645f51df9f0ddb1429f9bbf7b32145eca0a513193deffb7d81f0e262992`，不同于上批构建副本，因此基线分类已重跑。
 - **本机验收**：完整自举925/925、17/17、0 skip；stage2/stage3 C **1,039,982字节**、Linux二进制 **484,496字节**逐字节一致。C SHA256 `661b1a564a2af55946b44fc3717419a99cd3cb35050edc291eaa300496ae8b2d`，二进制SHA256 `cebfe5fe704adbe56ca7c44b6462a19503050d569109af96dec6a48bd08d8aa6`。真实lexer、五项应用门及输入不变检查通过；回执在compiler/target/ci/selfhost-batch46/receipt.json，work为run-_nhr3raf。
-- **CI**：本机门全部通过；本批实现提交推送后的三平台六作业结果待回填。
+- **CI**：实现提交 `bc8aefa` 的 [run 45826605112](https://github.com/msly/yavo/actions/runs/45826605112) **6/6成功**（首次运行）。Linux x86-64、Windows x86-64、macOS arm64的Rust Debug/Release、自举及应用门全部通过；Linux selfhost生成C/stage2 ASan/UBSan与三个独立作业成功。已分别核对run及jobs：head为 `bc8aefa53a469de4cdc888652efbf8bae4e559b4`、main、push、attempt1，六job均completed/success；Windows最后作业于2026-11-26北京时间21:52:15完成。

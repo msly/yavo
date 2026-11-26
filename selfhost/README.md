@@ -133,8 +133,11 @@ Full local bootstrap passes **925/925 cases, 17/17 checks, zero skips**.
 Stage2/stage3 C is byte-identical (1,039,982 bytes), as are the Linux binaries
 (484,496 bytes). All five application gates, lexer and input identity checks
 pass. Rust was unchanged; complete Debug and Release suites each pass
-145/0/1, with frozen conformance 124/3/2. Batch 46 native CI is pending the
-implementation push.
+145/0/1, with frozen conformance 124/3/2.
+[CI run 45826605112](https://github.com/msly/yavo/actions/runs/45826605112)
+for implementation `bc8aefa` passes **6/6 jobs** on its first attempt: native
+Linux, Windows and macOS bootstrap/application gates, Linux selfhost ASan/UBSan
+and the independent checks.
 
 The frozen 613-source corpus and its 392 stage0-accepted members are unchanged.
 Final stage2 coverage is **106 to 112/392**, with no losses, subset violations
