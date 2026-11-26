@@ -42,7 +42,7 @@ Recent changes implement index assignment, two-phase variable/field receivers, S
 
 | Check | Recorded local result | Scope |
 | --- | --- | --- |
-| Release suite | **145 passed, 0 failed, 1 ignored** | Batch 31: complete suite after the range-bound snapshot fix; runtime and frozen cases unchanged |
+| Release suite | **145 passed, 0 failed, 1 ignored** | Batch 43: complete suite after the tuple-print diagnostic fix; frozen cases unchanged |
 | Debug suite | **145 passed, 0 failed, 1 ignored** | Same source, all 19 groups, independent completed local log |
 | Frozen specification | **124 pass, 0 wrong, 3 unsupported, 0 not_run, 2 superseded** | 129 frozen cases; a different counting unit from Cargo test functions |
 | Cross-compilation | Six target formats/architectures build | Linux (static musl), Windows and macOS on x86-64/aarch64; native CI now covers Linux x86-64 plus the Windows x86-64/macOS arm64 selections below |
@@ -52,27 +52,28 @@ The ignored Cargo test is the old exploratory P0 conformance report; the current
 
 Source modules support top-level exports, per-file imports, cyclic imports and original-file diagnostics. Package dependencies and a program lockfile remain open. Multi-file `fix` returns `U0001` without writing; symlink module aliases are unsupported.
 
-### Selfhost indexed loops and Copy Optional if-let (batch 42, 2026-11-26)
+### Selfhost Copy tuples and original unit-conversion CLI (batch 43, 2026-11-26)
 
-`for index, item in values` now covers the existing Vec/read-only-slice subset,
-including owned elements and temporary vectors, plus `os.args()` as static []str.
-The index is a read-only int; element borrowing and loop cleanup are unchanged.
-`if let name = value` handles supported Copy Optional payloads, including else,
-else-if-let and `_`. A named binding conservatively keeps its source unchanged
-through the then scope. Owned Optional payloads remain outside the subset.
-The compiler's type-table search and qualified-type lookup now use the new forms.
+Flat tuples of supported Copy values now support construction, numeric projection,
+arguments, returns, whole-value assignment and inout, including Optional tuples
+with `some`, `none`, `??` and `if let`. Nested, owned and borrowed tuple elements,
+tuple containers and destructuring remain outside this subset. `abs(int)` checks
+overflow; `abs(byte)` preserves the byte type. The Rust checker now rejects direct
+tuple output with E0001 instead of reaching an internal codegen panic.
 
-The matrix has **792 cases**: 36 new fixtures and two unchanged-source promotions.
-The stage2 repository sweep covers **92 of 391** stage0-accepted programs (source-rebuilt baseline: 91),
-with zero strict-subset violations and none of 220 rejected programs admitted.
-The previous recorded count of 88 was not reproduced from baseline `3ce5d36`;
-the [minimal coverage record](compiler/validation/batch42-coverage-2026-11-26.json)
-records one newly accepted program and no lost coverage.
-The complete local bootstrap passes **792/792 cases, 13/13 checks, zero skips**;
-stage2/stage3 C (967,346 bytes) and Linux binaries (448,416 bytes) match.
-[CI run 45763574200](https://github.com/msly/yavo/actions/runs/45763574200)
-passed all six jobs at `819ea1e`, including Linux, Windows and macOS native
-gates and Linux ASan/UBSan. See [HANDOFF section 22](HANDOFF.md).
+The original two-module r5/yavo-b/T04 unit-conversion CLI is now a bootstrap
+application gate: 20 fixed scenarios, 330 input records and 80 allocation-checked
+stage0/selfhost executions across Debug and Release. Its source files are unchanged
+and hash-pinned. This is an additional compiler application regression; the formal
+SH-4 delivery count remains one of three.
+
+The matrix has **847 cases**, including 55 new fixtures. The stage2 repository sweep
+covers **98 of 391** stage0-accepted programs, up from 92, with zero lost coverage
+or strict-subset violations; none of 221 rejected programs is admitted. The six
+new paths represent two unit-conversion implementations with three snapshots each.
+The complete local bootstrap passes **847/847 cases, 14/14 checks, zero skips**;
+stage2/stage3 C (1,010,808 bytes) and Linux binaries (472,064 bytes) match exactly.
+Three-platform CI is pending. See [HANDOFF section 23](HANDOFF.md).
 
 ### Selfhost for loops and compiler traversal (batch 31, historical)
 

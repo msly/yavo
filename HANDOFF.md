@@ -1,14 +1,14 @@
-# Yavo 交接文档（2026-11-26，第四十二批：带下标遍历与 Copy Optional if let）
+# Yavo 交接文档（2026-11-26，第四十三批：Copy 元组与原始单位换算 CLI）
 
-给下一个会话：先读第 1、2、10、21、22 节及 docs/self-hosting.md、selfhost/README.md 再开工。第二十七至第三十批在 `history/handoff-batches-2026-11-23-to-24.md`，第十二至第二十六批在 `history/handoff-batches-2026-11-21-to-23.md`，第六至第十一批在 `history/handoff-batches-2026-11-19-to-21.md`。
+给下一个会话：先读第 1、2、10、22、23 节及 docs/self-hosting.md、selfhost/README.md 再开工。第二十七至第三十批在 `history/handoff-batches-2026-11-23-to-24.md`，第十二至第二十六批在 `history/handoff-batches-2026-11-21-to-23.md`，第六至第十一批在 `history/handoff-batches-2026-11-19-to-21.md`。
 
 ## 1. 一句话状态
 
-**第四十二批加入 `for index, item in values` 与现有 Copy Optional 的 `if let`。** 带下标遍历适用于已有 Vec、只读切片及 `os.args()`，索引为只读 int；元素沿用 Copy 或只读借用规则。`if let` 支持 int/byte/bool/非拥有结构体/无载荷枚举，具名绑定在 then 作用域内保守保持匹配源的借用，`_` 除外；拥有型 Optional 仍为 U0001。`types.declaredIn` 和 `types.qualifiedType` 已分别改用两种新语法，编译器自身参与验证。全仓 stage2 扫描覆盖 **92/391**，相对源码重建的基线 **91 → 92**（旧记录 88 的校正见第 22 节），**0 子集越界**，stage0 拒绝的 220 个程序仍无一被接受。
+**第四十三批加入平坦 Copy 元组、Optional 元组和整数 abs，原样打通双模块单位换算 CLI。** 支持元组构造、数字投影、局部值、参数/返回、整体赋值与 inout；Optional 元组沿用 some/none、隐式包装、两类 ?? 与 if-let。嵌套、拥有/借用元素、元组容器/字段和解构仍为 U0001。全仓 stage2 扫描覆盖 **92 → 98 / 391**，新增 6 个路径是两份单位换算实现各 3 份快照，**退步 0、子集越界 0**；stage0 拒绝的 221 个程序均未被接受。
 
-当前语料 **792 cases**（新增 36，原样提升 2）。第四十二批本机完整自举 **792/792、13/13、0 skip**；stage2/stage3 C（967,346 字节）与 Linux 二进制（448,416 字节）逐字节一致，CI 记录见第 22 节。本批不改 Rust，既有 Rust Debug/Release 各 145/0/1、冻结 124/3/2；三平台原生 CI 已重跑对应套件并通过。
+当前语料 **847 cases**（新增 55，无提升）；完整本机自举 **847/847、14/14、0 skip**，stage2/stage3 C（1,010,808 字节）与 Linux 二进制（472,064 字节）逐字节一致；三平台 CI 待运行。本批修复 Rust stage0 直接打印元组触发 codegen panic 的缺陷，改为 E0001 并加 8 个 P0 诊断；Rust Debug/Release 全量各 **145/0/1**，冻结 **124/3/2**。新增 bootstrap 第 14 项单位换算应用门，20 个固定场景、330 条输入、双方 Debug/Release 共 80 次分配检查执行。
 
-**SH-2 引导子集固定点已闭合；SH-3 尚未接替，Rust stage0 仍承担日常编译；SH-4 完成 1/3 个独立应用。** 第四十批起 selfhost 能原样编译 examples/test-summary，其 71 个本机场景通过 bootstrap 第 13 项检查；第四十一批加入 std/io、trim/lines/fields、拥有值视图绑定及临时 Vec 遍历。验收条件保持 `docs/decisions.md` 第九节，不以新增语法数量替代 SH-3/SH-4 完成条件。
+**SH-2 引导子集固定点已闭合；SH-3 尚未接替，Rust stage0 仍承担日常编译；SH-4 正式交付完成 1/3 个独立应用。** test-summary 与原始单位换算 CLI 都进入 bootstrap 应用回归；后者尚不等于 SH-4 第二项独立项目交付。验收条件保持 `docs/decisions.md` 第九节。
 
 ## 2. 仓库与环境
 
@@ -194,9 +194,9 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 
 ## 10. 下一个会话的第一步
 
-1. 检查 Git 状态、最新实现提交与 CI；先读第 22 节、[自举路线](docs/self-hosting.md)、[selfhost 说明](selfhost/README.md)。
-2. **下一批以原样编译双模块单位换算 CLI 为目标**：`experiments/coldstart-2026-11-22-r5/runs/yavo-b/tasks/T04/final/main.yv` 与 `conversion.yv`。最小缺口是 Copy `(int, int)` 类型/构造/函数返回/局部值、`.0`/`.1` 读取、`?(int, int)` 包装与 `?? return`，以及整数 `abs()`（包括溢出诊断）；此目标不要求 Vec[tuple]、拥有元组、解构、闭包或线程。原样源码通过构建和运行才算达到目标，不能把诊断性改写当成验收。
-3. 第四十二批后覆盖 92/391；首个阻塞为标准模块 35（以 std/sync 为主）、元组类型 34、其他类型形式 24、类型后缀 18、泛型/接口 17、浮点 16、"元组表达式" 12、Map 非标量值 11。元组类型和表达式的 46 个路径按入口源码去重只有 17 种；其中全部 12 个"元组表达式"首诊断实际来自 `sortBy` 比较器闭包。不能把首诊断次数当作新增覆盖预测；每批仍用实际覆盖和零越界验收。
+1. 检查 Git 状态、最新实现提交与 CI；先读第 23 节、[自举路线](docs/self-hosting.md)、[selfhost 说明](selfhost/README.md)。
+2. **下一批以原样编译文本 diff CLI 为目标**：`experiments/coldstart-2026-11-21-r4/yavo/T11.yv` 读取两份文本文件，以 LCS 输出保留/删除/新增行和汇总。当前首个阻塞是第 37 行整数 `max()`，其余使用既有 fs/os、catch _、String 视图、Vec[int]、下标赋值、循环和插值。补整数 min/max 后，原样核对相同/空文件、插入/删除/替换、重复行平局、参数不足/读失败，以及 0/1/2 退出码；源码检查尚不等于通过运行，不预先承诺覆盖增量。
+3. 第四十三批后覆盖 98/391；首个阻塞为标准模块 35、其他类型形式 24、Vec 元组元素 21、类型后缀 18、闭包 18、泛型/接口 17、Map 非标量值 17、浮点 16。首诊断次数不是新增覆盖预测：r5 T03 的两个区间集合实现仍需要 sortBy 闭包，T05 连通区域需要 Vec[CopyTuple]、while-let 和 min/max，均比上述 diff CLI 范围大。每批仍以实际覆盖和零越界验收。
 4. 拥有型 Optional/pop、Map 的 String 值仍是后续候选。若扩展 Optional，必须同时覆盖移动、析构、借用绑定及 `??` 提前退出，不能只放开解析。
 5. 模块尚缺包依赖与锁文件（stage0 也没有）、后置 use、跨模块的枚举载荷/方法/泛型；按真实应用阻塞安排。
 6. SH-4 第二个独立应用建议结构化文本校验或多文件依赖/索引工具。不要同时运行共用临时目录的两条 cargo test。第六轮文档实验有可计量环境才恢复，不阻塞工程推进。
@@ -341,3 +341,16 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - **独立核对**：35 个额外差分检查无越界，5 个运行组合在分配检查下与 stage0 输出/退出一致。最终 stage2 全仓扫描覆盖 92/391、0 越界；220 个 stage0 拒绝程序均未被放行。
 - **覆盖基线校正**：从精确基线 `3ce5d36` 提取全部 selfhost 源码并禁用缓存重建，得到 **91/391**；有缓存和无缓存构建的基线二进制哈希一致，391/220 的语料成员及内容复查一致。故本批实际是 **91 → 92，新增 1、退步 0**，新增路径为 `experiments/coldstart-2026-11-20/yavo/T07.yv`（罗马数字与整数转换 CLI，原首阻塞为 if-let）。该原文件经 stage2 生成 C、构建并运行 21 个输入，双向转换、1/3999 边界与非法输入均符合固定期望及 stage0，分配检查无错误。旧记录 88 无法从该基线复现，原因未定位；不能用它宣称本批新增 4 个。最小复核记录见 [coverage 记录](compiler/validation/batch42-coverage-2026-11-26.json)。
 - **本机验收**：792/792、13/13、0 skip；stage2/stage3 C 967,346 字节、Linux 二进制 448,416 字节一致；真实 lexer、test-summary 的 71 个本机场景、输入不变检查全部通过。最终 stage2 全仓复扫仍为 92/391、0 越界。CI：实现提交 `819ea1e` 的 [run 45763574200](https://github.com/msly/yavo/actions/runs/45763574200) **6/6 成功**；Linux x86-64（含 Yavo 前端生成 C 与 stage2 自身 ASan/UBSan）、Windows x86-64、macOS arm64 原生作业及三个独立作业全部通过。
+
+## 23. 第四十三批：Copy 元组与原始单位换算 CLI（2026-11-26）
+
+- 基线 `dcb562f`。以原样编译 `experiments/coldstart-2026-11-22-r5/runs/yavo-b/tasks/T04/final/{main,conversion}.yv` 为目标；没有修改历史程序或冻结规格用例。
+- **Copy 元组**：平坦的 int/byte/bool/非拥有结构体/无载荷枚举元素；支持类型注解、构造、数字投影、参数/返回、局部值、整体赋值与 inout，以及 Optional 元组的 some/none、隐式包装、两类 ?? 和 if-let。逐元素从左到右求值并保存 Copy 快照，后续元素的 inout 副作用不改变前面的元素。
+- **表示与布局**：TypeRef 的 tupleStart/tupleCount 指向共享元素类型池；解析后的 Type 继续为 Copy，以命名类型数加 4 为基数编码结构签名，逐步检查 int 溢出并报 U0001，无哈希碰撞。无命名类型时 31 个 int 元素可编码、32 个拒绝；容量随命名类型数变化。C tuple/Optional tuple 布局位于完整命名布局之后、函数声明之前；只出现在未调用函数签名中的元组也生成布局。
+- **边界与诊断**：嵌套/拥有/借用/Optional 元素、元组字段、Vec/Slice/Result 元组、引用和解构仍 U0001；unit 元素表达式 E0001。推导单元素 `(x,)` 可用，显式单元素类型 E0020。十进制数字投影（包括 `.01`）可用，越界/未知字段 E0010；同形比较 E0501、异形 E0001；元素写入经不可变根 E0014，否则 E0001。Optional 不透传隐式包装的字面量上下文：`?(byte, byte) = (1, 2)` 为 E0001，`some((1, 2))` 可接受。
+- **abs**：支持 int 与 byte，参数只求值一次，保留期望 byte 上下文；负 int 调用既有检查式取负，最小值报 P-OVERFLOW，byte 原样返回。用户同名函数优先，局部遮蔽保持原诊断；其他数字类型、min/max 仍 U0001。
+- **Rust 修复**：元组直接输出原先到 codegen 才 panic；`compiler/src/check.rs` 现在与结构体/容器一样在检查期报 E0001。`compiler/tests/p0/errors_tuple_print.yv` 覆盖 8 处 print/println/eprintln、format/插值、assert 消息及拥有元组诊断。完整 Rust Debug/Release 各 145 通过、0 失败、1 个既有忽略，冻结规格仍为 124/3/2。
+- **用例**：新增 55（abs 14、tuple 41），无原样提升；合计 847（run 222、panic 31、reject 452、unsupported 111、shared_unsupported 31）。新增支持、拒绝与保守边界均先定标 stage0；额外差分审查覆盖求值快照、上下文、仅签名类型和长签名边界。全仓扫描暴露的解构误报 E0020 已改为 U0001，未开放解构。
+- **应用门**：新增 `selfhost/conversion_application.py` 与 `tests/applications/unit-conversion.json`，纳入 bootstrap 第 14 项 `unit_conversion_application`。固定两份原文件哈希，20 场景/330 条输入，双方 Debug/Release 共 80 次分配检查执行；固定 stdout 独立来自公开契约与精确分数，覆盖 16 种单位对、符号/约分/零、数值/精度/长度限制、非法行、空白/编号及 200 行输入。验收器、契约、场景和两份源码参与输入首尾哈希；优先用固定点 stage2。超时杀进程树并有界回收，临时普通文件承载输入输出，避免后代持有管道导致永久等待。
+- **全仓覆盖**：最终 stage2 **92 → 98 / 391，新增 6、退步 0、越界 0**；新增均为 r5 的 yavo-a/yavo-b T04 各 final/work/snapshots/0001，入口源码只有两种。stage0 接受集合仍为原来 391 个；拒绝数增至 221，唯一新增是上述 P0 元组输出 fixture，全部未被 selfhost 放行。
+- **本机与 CI**：最终完整自举 **847/847、14/14、0 skip**；stage2/stage3 C **1,010,808 字节**、Linux 二进制 **472,064 字节**逐字节一致；真实 lexer、test-summary 的 71 个本机场景、新单位换算的 20 场景/80 次执行、输入不变检查全部通过。首轮新增应用构建曾因宿主磁盘耗尽失败，清除可再生 Zig 缓存后完整复验通过。三平台 CI 待推送后补回。

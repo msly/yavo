@@ -1,0 +1,27 @@
+fn show(value: byte) { println(int(value)) }
+fn positive() -> byte { return abs(254) }
+fn next(counter: inout int) -> int {
+    counter += 1
+    return -counter
+}
+fn main() {
+    println(abs(0))
+    println(abs(-7))
+    println(abs(9))
+    println(abs(9223372036854775807))
+    let high: byte = 255
+    println(int(abs(high)))
+    let inferred: byte = abs(250)
+    let nested: byte = abs(abs(249))
+    println(int(inferred))
+    println(int(nested))
+    show(abs(248))
+    println(int(positive()))
+    let wrapped: ?int = abs(-5)
+    println(wrapped ?? 0)
+    let wrappedByte: ?byte = abs(high)
+    println(int(wrappedByte ?? byte(0)))
+    var calls = 0
+    println(abs(next(&calls)))
+    println("${abs(next(&calls))}:${calls}")
+}

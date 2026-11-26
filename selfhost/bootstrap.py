@@ -49,8 +49,8 @@ def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def application_module():
-    spec = importlib.util.spec_from_file_location("selfhost_application", SELFHOST / "application.py")
+def application_module(name="application"):
+    spec = importlib.util.spec_from_file_location("selfhost_" + name, SELFHOST / (name + ".py"))
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -266,6 +266,7 @@ def main():
                                 for case in cases if "source_prefix" in case},
             "assembled_sources": {},
             "application": application_module().inputs(),
+            "unit_conversion_application": application_module("conversion_application").inputs(),
         }
         version_result = command("zig-version", [zig, "version"])
         check("locked_zig", succeeded(version_result) and
@@ -553,6 +554,15 @@ def main():
         check("test_summary_application", app_record["passed"], applicable=app_record.get("applicable"),
               error=app_record.get("error"))
 
+        # The original two-module T04 converter must also match fixed rational
+        # arithmetic scenarios and stage0 in both optimization modes.
+        conversion_record = application_module("conversion_application").check(
+            stage2 if stage2 is not None else binary, stage0, zig, work / "unit-conversion",
+            environment, frontend_env, CC_FLAGS, EXE)
+        report["unit_conversion_application"] = conversion_record
+        check("unit_conversion_application", conversion_record["passed"],
+              applicable=conversion_record.get("applicable"), error=conversion_record.get("error"))
+
         # A receipt must not attribute binaries to a source tree edited during the run.
         bound_paths = {
             str(stage0): report["inputs"]["stage0"]["sha256"],
@@ -571,6 +581,7 @@ def main():
             **{str(SELFHOST / name): value for name, value in report["inputs"]["source_prefixes"].items()},
             **report["inputs"]["assembled_sources"],
             **report["inputs"]["application"],
+            **report["inputs"]["unit_conversion_application"],
         }
         changed = [name for name, expected in bound_paths.items()
                    if not Path(name).is_file() or digest(Path(name)) != expected]

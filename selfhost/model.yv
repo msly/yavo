@@ -15,6 +15,7 @@ pub enum BasicType {
     Optional
     Slice
     Map
+    Tuple
 }
 
 pub struct TypeRef {
@@ -23,10 +24,13 @@ pub struct TypeRef {
     elementKind: BasicType
     elementName: int = -1
     result: int = -1
+    tupleStart: int = -1
+    tupleCount: int = 0
 }
 
-// Vec and Copy Optional share the flat elementKind/elementName representation;
-// neither admits another container or Result as its element in this subset.
+// Vec and Copy Optional share the flat elementKind/elementName representation.
+// Flat tuple members index Program.tupleAtoms; Optional tuples carry the same
+// tupleStart/tupleCount so TypeRef remains Copy. Other nested containers stay out.
 
 // Result payloads are non-Result types. The syntax pool keeps TypeRef Copy.
 pub struct ResultRef {
@@ -84,6 +88,7 @@ pub enum ExprKind {
     Interpolated
     Jump
     EmptyMap
+    Tuple
 }
 
 // args/names index Program.lists. A Slice keeps its end in extra; a Catch
@@ -199,6 +204,7 @@ pub struct Program {
     params: Vec[Parameter] = []
     fields: Vec[FieldDecl] = []
     resultTypes: Vec[ResultRef] = []
+    tupleAtoms: Vec[TypeRef] = []
     stringParts: Vec[StringPart] = []
     files: Vec[SourceFile] = []
     imports: Vec[ModuleImport] = []

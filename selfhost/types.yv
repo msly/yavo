@@ -3,7 +3,8 @@ use lexer
 use model
 
 // Resolved aggregates for the bootstrap compiler. Type identity is a
-// registry index; source names remain lexer token indices throughout checking.
+// registry index for named types, and a collision-free structural code for flat
+// Copy tuples; source names remain lexer token indices throughout checking.
 
 pub struct Type {
     kind: BasicType
@@ -43,6 +44,7 @@ pub struct Registry {
     order: Vec[int] = []
     results: Vec[ResultInfo] = []
     resultRefs: Vec[int] = []
+    tupleAtoms: Vec[TypeRef] = []
     files: Vec[SourceFile] = []
     imports: Vec[ModuleImport] = []
 }
@@ -70,10 +72,10 @@ pub fn same(a: Type, b: Type) -> bool {
         return true
     }
     if a.kind != b.kind { return false }
-    if a.kind == .Named || a.kind == .Result { return a.decl == b.decl }
+    if a.kind == .Named || a.kind == .Result || a.kind == .Tuple { return a.decl == b.decl }
     if a.kind == .Vec || a.kind == .Optional || a.kind == .Slice || a.kind == .Map {
         return a.elementKind == b.elementKind &&
-            (a.elementKind != .Named || a.elementDecl == b.elementDecl)
+            ((a.elementKind != .Named && a.elementKind != .Tuple) || a.elementDecl == b.elementDecl)
     }
     return true
 }
@@ -107,13 +109,71 @@ pub fn cType(t: Type) -> String {
     if t.kind == .Map { return "yv_map".toString() }
     if t.kind == .Named { return support.join2("sh_type_", support.decimal(t.decl)) }
     if t.kind == .Result { return support.join2("sh_result_", support.decimal(t.decl)) }
+    if t.kind == .Tuple { return support.join2("sh_tuple_", support.decimal(t.decl)) }
     if t.kind == .Optional {
         if t.elementKind == .Int { return "sh_optional_int".toString() }
         if t.elementKind == .Byte { return "sh_optional_byte".toString() }
         if t.elementKind == .Bool { return "sh_optional_bool".toString() }
         if t.elementKind == .Named { return support.join2("sh_optional_", support.decimal(t.elementDecl)) }
+        if t.elementKind == .Tuple { return support.join2("sh_optional_tuple_", support.decimal(t.elementDecl)) }
     }
     return "void".toString()
+}
+
+// A tuple signature is a radix representation with a leading 1 sentinel.
+// Atomic digits are nonzero and less than radix: int=1, byte=2, bool=3,
+// named type k=k+4. Registry names are complete before any tuple is resolved,
+// so the radix is stable. Overflow is unsupported, never truncation or hashing.
+pub fn tuple(reg: Registry, ts: Vec[Token], token: int, items: []Type) -> Type {
+    if items.len() == 0 {
+        lexer.fail(ts, token, "U0001", "empty tuples use the unit value in this subset")
+    }
+    let radix = reg.entries.len() + 4
+    var signature = 1
+    for item in items {
+        var digit = 0
+        if item.kind == .Int { digit = 1
+        } else if item.kind == .Byte { digit = 2
+        } else if item.kind == .Bool { digit = 3
+        } else if item.kind == .Named && !owned(reg, item) {
+            digit = item.decl + 4
+        } else {
+            lexer.fail(ts, token, "U0001", "tuples require flat Copy int, byte, bool or named elements in this subset")
+        }
+        if signature > (9223372036854775807 - digit) / radix {
+            lexer.fail(ts, token, "U0001", "tuple type exceeds the selfhost structural signature limit")
+        }
+        signature = signature * radix + digit
+    }
+    return Type{kind: .Tuple, decl: signature, elementKind: .Unknown}
+}
+
+pub fn tupleCount(reg: Registry, ty: Type) -> int {
+    let radix = reg.entries.len() + 4
+    var signature = ty.decl
+    var count = 0
+    while signature > 1 {
+        signature /= radix
+        count += 1
+    }
+    return count
+}
+
+pub fn tupleElement(reg: Registry, ty: Type, index: int) -> Type {
+    let count = tupleCount(reg, ty)
+    assert(index >= 0 && index < count)
+    let radix = reg.entries.len() + 4
+    var signature = ty.decl
+    var rest = count - index - 1
+    while rest > 0 {
+        signature /= radix
+        rest -= 1
+    }
+    let digit = signature % radix
+    if digit == 1 { return primitive(.Int) }
+    if digit == 2 { return primitive(.Byte) }
+    if digit == 3 { return primitive(.Bool) }
+    return Type{kind: .Named, decl: digit - 4, elementKind: .Unknown}
 }
 
 pub fn describe(reg: Registry, ts: Vec[Token], t: Type) -> String {
@@ -128,6 +188,17 @@ pub fn describe(reg: Registry, ts: Vec[Token], t: Type) -> String {
     if t.kind == .Args { return "[]str".toString() }
     if t.kind == .Slice { return support.join2("[]", describe(reg, ts, element(t))) }
     if t.kind == .Unit { return "()".toString() }
+    if t.kind == .Tuple {
+        var text = "(".toString()
+        let count = tupleCount(reg, t)
+        for index in 0..count {
+            if index > 0 { text.push(", ") }
+            text.push(describe(reg, ts, tupleElement(reg, t, index)))
+        }
+        if count == 1 { text.push(",") }
+        text.push(")")
+        return text
+    }
     if t.kind == .Named { return ts[reg.entries[t.decl].name].text.clone() }
     if t.kind == .Result {
         return support.join3(describe(reg, ts, resultOk(reg, t)), " ! ", describe(reg, ts, resultError(reg, t)))
@@ -250,7 +321,7 @@ pub fn optional(reg: Registry, ts: Vec[Token], token: int, elem: Type) -> Type {
     if elem.kind == .Unknown {
         lexer.fail(ts, token, "E0001", "cannot infer the Optional payload type")
     }
-    if elem.kind != .Int && elem.kind != .Byte && elem.kind != .Bool && elem.kind != .Named {
+    if elem.kind != .Int && elem.kind != .Byte && elem.kind != .Bool && elem.kind != .Named && elem.kind != .Tuple {
         lexer.fail(ts, token, "U0001", "this Optional payload type is outside the selfhost subset")
     }
     if owned(reg, elem) {
@@ -263,9 +334,22 @@ pub fn resolve(reg: Registry, ts: Vec[Token], syn: TypeRef) -> Type {
     if syn.kind == .Result {
         return Type{kind: .Result, decl: reg.resultRefs[syn.result], elementKind: .Unknown}
     }
+    if syn.kind == .Tuple {
+        var items: Vec[Type] = []
+        for index in 0..syn.tupleCount {
+            let part = reg.tupleAtoms[syn.tupleStart + index]
+            if part.kind == .Tuple || part.kind == .Optional || part.kind == .Result ||
+                part.kind == .Vec || part.kind == .Slice || part.kind == .Map {
+                lexer.fail(ts, syn.name, "U0001", "nested tuples and tuple container payloads are outside the selfhost subset")
+            }
+            items.push(resolve(reg, ts, part))
+        }
+        return tuple(reg, ts, syn.name, items)
+    }
     if syn.kind == .Optional {
         let elem = resolve(reg, ts, TypeRef{kind: syn.elementKind,
-            name: syn.elementName, elementKind: .Unknown})
+            name: syn.elementName, elementKind: .Unknown,
+            tupleStart: syn.tupleStart, tupleCount: syn.tupleCount})
         return optional(reg, ts, syn.name, elem)
     }
     if syn.kind == .Vec {
@@ -317,6 +401,9 @@ fn collectResults(p: Program, ts: Vec[Token], reg: inout Registry) {
         // Reject the combination before resolving any Optional payload here.
         if syntax.ok.kind == .Optional || syntax.error.kind == .Optional {
             lexer.fail(ts, syntax.errorToken, "U0001", "Optional/Result combinations are outside the selfhost subset")
+        }
+        if syntax.ok.kind == .Tuple || syntax.error.kind == .Tuple {
+            lexer.fail(ts, syntax.errorToken, "U0001", "Tuple/Result combinations are outside the selfhost subset")
         }
         let ok = resolve(reg, ts, syntax.ok)
         let error = resolve(reg, ts, syntax.error)
@@ -387,6 +474,7 @@ fn checkDefault(p: Program, reg: Registry, ts: Vec[Token], item: Field) {
 
 pub fn collect(p: Program, ts: Vec[Token]) -> Registry {
     var reg = Registry{}
+    for atom in p.tupleAtoms { reg.tupleAtoms.push(atom) }
     var i = 0
     while i < p.files.len() {
         reg.files.push(p.files[i])
@@ -422,6 +510,9 @@ pub fn collect(p: Program, ts: Vec[Token]) -> Registry {
             let f = p.fields[d.fieldStart + j]
             if f.ty.kind == .Optional {
                 lexer.fail(ts, f.name, "U0001", "Optional fields are outside the selfhost subset")
+            }
+            if f.ty.kind == .Tuple {
+                lexer.fail(ts, f.name, "U0001", "tuple fields are outside the selfhost subset")
             }
             var k = fieldStart
             while k < reg.fields.len() {

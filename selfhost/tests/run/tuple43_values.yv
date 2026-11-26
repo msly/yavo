@@ -1,0 +1,17 @@
+enum Color { Red, Green }
+struct Point { x: int
+ y: int }
+fn identity(value: (int, bool, byte)) -> (int, bool, byte) { return value }
+fn made() -> (int, bool, byte) { return (7, true, 65) }
+fn main() {
+ let value = identity(made())
+ println("${value.0} ${value.1} ${int(value.2)}")
+ let again = identity((8, false, 66))
+ println("${again.0} ${again.1} ${int(again.2)}")
+ let single = (9,)
+ println(single.0)
+ let trailing: (int, bool,) = (10, true,)
+ println("${trailing.00} ${trailing.01}")
+ let aggregate = (Point{x: 3, y: 4}, Color.Green)
+ println("${aggregate.0.x + aggregate.0.y} ${aggregate.1 == Color.Green}")
+}

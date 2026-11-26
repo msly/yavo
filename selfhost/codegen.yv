@@ -129,6 +129,8 @@ struct Generator {
     // Map[String, V] instances whose helpers are spliced in at mapAt.
     maps: Vec[Type] = []
     mapAt: int = 0
+    // Flat Copy tuple layouts, discovered by annotations and inferred values.
+    tuples: Vec[Type] = []
 }
 
 fn require(reg: Registry, ts: Vec[Token], token: int, actual: Type, expected: Type) {
@@ -185,7 +187,18 @@ fn temporaryName(id: int) -> String {
     return format("t_${id}")
 }
 
+fn useTuple(g: inout Generator, ty: Type) {
+    var item = ty
+    if item.kind == .Optional { item = types.element(item) }
+    if item.kind != .Tuple { return }
+    for known in g.tuples {
+        if types.same(known, item) { return }
+    }
+    g.tuples.push(item)
+}
+
 fn typedValue(g: inout Generator, reg: Registry, ty: Type, expression: str) -> Value {
+    useTuple(&g, ty)
     let n = g.counter
     g.counter += 1
     let name = temporaryName(n)
@@ -804,7 +817,8 @@ fn takeCall(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Ex
     return taken
 }
 
-fn callValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression, id: int) -> Value {
+fn callValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression, id: int,
+    expected: Type) -> Value {
     let name = ts[e.token].text.clone()
     if localIndex(g, ts, e.token) >= 0 {
         lexer.fail(ts, e.token, "E0001", "a local value cannot be called as a function")
@@ -824,6 +838,18 @@ fn callValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: E
         var helper = "yv_conv_u8_i64(".toString()
         if target == .Byte { helper = "yv_conv_i64_u8(".toString() }
         return scalar(&g, target, support.join5(helper, arg.name, ", ", lineColumn(ts, e.token), ")"))
+    }
+    if index < 0 && name == "abs" {
+        if e.argCount != 1 { lexer.fail(ts, e.token, "E0012", "abs requires one argument") }
+        let argId = p.lists[e.argStart]
+        // Context guides byte literals, but Optional/Result wrapping belongs to
+        // the outer assignment or argument boundary, not this operand.
+        let arg = emitContext(&g, p, ts, reg, argId, expected)
+        requireInteger(ts, p.expressions[argId].token, arg.ty)
+        if arg.ty.kind == .Byte { return copyValue(arg) }
+        let negated = support.join5("yv_neg_i64(", arg.name, ", ", lineColumn(ts, e.token), ")")
+        return scalar(&g, .Int, support.join5("(", arg.name, " < 0 ? ", negated,
+            support.join3(" : ", arg.name, ")")))
     }
     if index < 0 && name == "take" { return takeCall(&g, p, ts, reg, e) }
     if index < 0 && name == "format" {
@@ -1434,7 +1460,7 @@ fn wrapOptional(g: inout Generator, reg: Registry, ty: Type, value: Value) -> Va
 
 fn liftHint(reg: Registry, expected: Hint) -> Hint {
     let ty = expected.ty
-    if expected.extra == 0 && (ty.kind == .Int || ty.kind == .Byte || ty.kind == .Bool ||
+    if expected.extra == 0 && (ty.kind == .Int || ty.kind == .Byte || ty.kind == .Bool || ty.kind == .Tuple ||
         (ty.kind == .Named && !types.owned(reg, ty))) {
         return Hint{ty: Type{kind: .Optional, elementKind: ty.kind, elementDecl: ty.decl}}
     }
@@ -1825,7 +1851,7 @@ fn binaryValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
             lexer.fail(ts, e.token, "E0001", "operator is not defined for this type")
         }
         if lhs.ty.kind == .Vec || lhs.ty.kind == .Args || lhs.ty.kind == .Slice || lhs.ty.kind == .Result ||
-            lhs.ty.kind == .Map ||
+            lhs.ty.kind == .Map || lhs.ty.kind == .Tuple ||
             (lhs.ty.kind == .Named && (reg.entries[lhs.ty.decl].kind == .Struct || !equality)) {
             lexer.fail(ts, e.token, "E0501", "this aggregate does not implement the required comparison")
         }
@@ -2017,6 +2043,14 @@ fn fieldValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: 
         }
     }
     let base = emitExpr(&g, p, ts, reg, e.left)
+    if base.ty.kind == .Tuple {
+        let index = support.parseDecimal(ts[e.token].text)
+        if ts[e.token].kind != .Number || index < 0 || index >= types.tupleCount(reg, base.ty) {
+            lexer.fail(ts, e.token, "E0010", "unknown tuple element")
+        }
+        let ty = types.tupleElement(reg, base.ty, index)
+        return typedValue(&g, reg, ty, support.join4("(", base.name, ").f_", support.decimal(index)))
+    }
     if base.ty.kind != .Named || reg.entries[base.ty.decl].kind != .Struct {
         lexer.fail(ts, e.token, "U0001", "member access on this type is outside the selfhost subset")
     }
@@ -2028,6 +2062,33 @@ fn fieldValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: 
         return Value{ty: ty, name: name, root: base.root, field: true, indexedBorrow: base.indexedBorrow}
     }
     return typedValue(&g, reg, ty, name)
+}
+
+fn tupleValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression, expected: Type) -> Value {
+    if expected.kind == .Tuple && types.tupleCount(reg, expected) != e.argCount {
+        lexer.fail(ts, e.token, "E0001", "tuple arity does not match the expected type")
+    }
+    var items: Vec[Type] = []
+    var fields = String{}
+    var i = 0
+    while i < e.argCount {
+        let arg = p.lists[e.argStart + i]
+        var hint = types.primitive(.Unknown)
+        if expected.kind == .Tuple { hint = types.tupleElement(reg, expected, i) }
+        let item = emitContext(&g, p, ts, reg, arg, hint)
+        if item.ty.kind == .Unit {
+            lexer.fail(ts, p.expressions[arg].token, "E0001", "a tuple element must have a value")
+        }
+        if hint.kind != .Unknown { require(reg, ts, p.expressions[arg].token, item.ty, hint) }
+        items.push(item.ty)
+        if i > 0 { fields.push(", ") }
+        fields.push(format(".f_${i} = ${item.name}"))
+        i += 1
+    }
+    // Each element is already materialized in source order, before any later
+    // element's effects. Only flat Copy values reach the C compound literal.
+    let ty = types.tuple(reg, ts, e.token, items)
+    return typedValue(&g, reg, ty, support.join5("(", types.cType(ty), "){", fields, "}"))
 }
 
 fn vectorValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression, expected: Type) -> Value {
@@ -2188,6 +2249,7 @@ fn sliceValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: 
 
 fn expressionValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, id: int, expected: Type) -> Value {
     let e = p.expressions[id]
+    if e.kind == .Tuple { return tupleValue(&g, p, ts, reg, e, expected) }
     if e.kind == .Jump {
         lexer.fail(ts, e.token, "U0001", "?? return, ?? break and ?? continue are only supported as a whole let initializer or assigned value")
     }
@@ -2287,7 +2349,7 @@ fn expressionValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry
         functionIndex(g, p, ts, e.token) < 0 && localIndex(g, ts, e.token) < 0 {
         return resultConstructor(&g, p, ts, reg, e, expected)
     }
-    return callValue(&g, p, ts, reg, e, id)
+    return callValue(&g, p, ts, reg, e, id, expected)
 }
 
 fn placeRoot(p: Program, id: int) -> int {
@@ -2301,6 +2363,9 @@ fn placeRoot(p: Program, id: int) -> int {
 }
 
 fn fieldPlace(reg: Registry, ts: Vec[Token], e: Expression, base: Place) -> Place {
+    if base.ty.kind == .Tuple && !base.mutable {
+        lexer.fail(ts, e.token, "E0014", "cannot modify a read-only tuple")
+    }
     if base.ty.kind != .Named || reg.entries[base.ty.decl].kind != .Struct {
         lexer.fail(ts, e.token, "E0001", "field assignment requires a struct")
     }
@@ -2943,6 +3008,19 @@ fn optionalLayout(g: inout Generator, elem: Type) {
     emit(&g, support.join5("typedef struct { bool has; ", types.cType(elem), " val; } ", types.cType(ty), ";"))
 }
 
+fn tupleLayout(g: inout Generator, reg: Registry, ty: Type) {
+    let name = types.cType(ty)
+    emit(&g, support.join3("typedef struct ", name, " {"))
+    var i = 0
+    while i < types.tupleCount(reg, ty) {
+        let elem = types.tupleElement(reg, ty, i)
+        emit(&g, support.join4(types.cType(elem), " f_", support.decimal(i), ";"))
+        i += 1
+    }
+    emit(&g, support.join3("} ", name, ";"))
+    optionalLayout(&g, ty)
+}
+
 fn optionalLayouts(g: inout Generator, reg: Registry) {
     optionalLayout(&g, types.primitive(.Int))
     optionalLayout(&g, types.primitive(.Byte))
@@ -3123,11 +3201,14 @@ pub fn generate(p: Program, ts: Vec[Token], filename: str) -> String {
         let f = p.functions[i]
         g.file = f.file
         g.result = types.resolve(reg, ts, f.result)
+        let resultType = g.result
+        useTuple(&g, resultType)
         g.allowed = allowedSources(p, ts, reg, i)
         var k = 0
         while k < f.paramCount {
             let param = p.params[f.paramStart + k]
             let ty = types.resolve(reg, ts, param.ty)
+            useTuple(&g, ty)
             declare(&g, ts, param.name, ty, param.byRef, param.byRef || types.owned(reg, ty), param.byRef)
             if param.byRef && ty.kind == .Slice {
                 lexer.fail(ts, param.name, "U0001", "inout slice parameters are outside this subset")
@@ -3190,6 +3271,12 @@ pub fn generate(p: Program, ts: Vec[Token], filename: str) -> String {
     }
     let text = take(&g.out)
     g.out = text[0..g.mapAt].toString()
+    i = 0
+    while i < g.tuples.len() {
+        let instance = g.tuples[i]
+        tupleLayout(&g, reg, instance)
+        i += 1
+    }
     i = 0
     while i < g.maps.len() {
         let instance = g.maps[i]

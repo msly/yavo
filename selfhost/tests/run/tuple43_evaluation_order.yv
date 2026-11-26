@@ -1,0 +1,18 @@
+fn mark(label: str, value: int) -> int { print(label)
+ return value }
+fn advance(value: inout int) -> int { value += 1
+ return value }
+fn main() {
+ var count = 4
+ let snapshot = (count, advance(&count))
+ println("${snapshot.0} ${snapshot.1} ${count}")
+ let all = (mark("A", 1), mark("B", 2), mark("C", 3))
+ println("${all.0} ${all.1} ${all.2}")
+ println((mark("D", 4), mark("E", 5)).0)
+ let present: ?(int, int) = some((6, 7))
+ let skipped = present ?? (mark("X", 8), mark("Y", 9))
+ println(skipped.1)
+ let absent: ?(int, int) = none
+ let used = absent ?? (mark("F", 8), mark("G", 9))
+ println(used.0 + used.1)
+}

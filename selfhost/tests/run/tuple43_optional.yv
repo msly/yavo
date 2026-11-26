@@ -1,0 +1,30 @@
+fn get(present: bool) -> ?(int, int) {
+ if present { return (4, 5) }
+ return none
+}
+fn sum(value: ?(int, int)) -> int {
+ let pair = value ?? return -1
+ return pair.0 + pair.1
+}
+fn pick(value: ?(int, int)) -> (int, int) { return value ?? (6, 7) }
+fn bytes() -> ?(byte, byte) { return some((65, 66)) }
+fn main() {
+ println(sum(get(true)))
+ println(sum(get(false)))
+ let chosen = pick(none)
+ println("${chosen.0} ${chosen.1}")
+ var updated: ?(int, int) = none
+ println(updated.isNone())
+ updated = (3, 4)
+ println(sum(updated))
+ updated = none
+ updated = some((5, 6))
+ println(sum(updated))
+ if let bound = get(true) { println(bound.0 * bound.1) } else { println(-2) }
+ if let absent = get(false) { println(absent.0) } else { println(99) }
+ let one = some((11,))
+ let payload = one ?? (0,)
+ println(payload.0)
+ let text = bytes() ?? (67, 68)
+ println("${int(text.0)} ${int(text.1)}")
+}

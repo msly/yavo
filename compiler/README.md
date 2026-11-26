@@ -7,13 +7,21 @@ scoped OS threads. Native CI runs complete Linux x86-64 suites and selected
 Windows x86-64/macOS arm64 suites. Complete phase acceptance still requires the
 remaining tools, features and full target-platform acceptance coverage.
 
-### Self-hosting work (updated 2026-11-24)
+### Self-hosting work (updated 2026-11-26)
 
 This Rust implementation is now **stage0** for the
 [Yavo-written compiler](../selfhost/README.md). The declared bootstrap subset
 compiles itself to a stage2/stage3 fixed point, originally confirmed on Linux,
 Windows and macOS. Batch 29 adds user-function Result/try and migrates the actual
 lexer error path. Rust remains the daily compiler while SH-3 coverage expands.
+
+Batch 43 fixes a stage0 diagnostic defect found while adding Copy tuples to the
+selfhost: direct tuple printing reached an internal codegen panic. The checker
+now reports E0001 for tuple output, including direct print calls, format and
+interpolation paths. `tests/p0/errors_tuple_print.yv` covers eight diagnostics.
+Complete local Debug and Release suites each pass 145 tests, with zero failures
+and one existing ignored test; frozen conformance remains 124 pass / 3 unsupported /
+2 superseded.
 
 Two concrete issues found while building it are addressed here:
 `fs.writeNewText` exclusively creates a new file, preserving existing paths and

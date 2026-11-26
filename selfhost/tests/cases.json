@@ -5326,6 +5326,409 @@
       "file": "run/indexed_header_catch_combo.yv",
       "stdout": "skip\n0\nant\n1\n1\nstop\n",
       "batch": "indexed-for-if-let"
+    },
+    {
+      "kind": "run",
+      "id": "abs43_scalar",
+      "stdout": "0\n7\n9\n9223372036854775807\n255\n250\n249\n248\n254\n5\n255\n1\n2:2\n",
+      "file": "run/abs43_scalar.yv",
+      "batch": "copy-tuples-unit-conversion"
+    },
+    {
+      "kind": "run",
+      "id": "abs43_user_override",
+      "stdout": "user\nother\n",
+      "file": "run/abs43_user_override.yv",
+      "batch": "copy-tuples-unit-conversion"
+    },
+    {
+      "kind": "panic",
+      "id": "abs43_minimum",
+      "stdout": "",
+      "panic": "P-OVERFLOW",
+      "file": "panic/abs43_minimum.yv",
+      "batch": "copy-tuples-unit-conversion"
+    },
+    {
+      "kind": "reject",
+      "id": "abs43_arity_zero",
+      "diagnostic": "E0012",
+      "file": "reject/abs43_arity_zero.yv",
+      "batch": "copy-tuples-unit-conversion"
+    },
+    {
+      "kind": "reject",
+      "id": "abs43_arity_many",
+      "diagnostic": "E0012",
+      "file": "reject/abs43_arity_many.yv",
+      "batch": "copy-tuples-unit-conversion"
+    },
+    {
+      "kind": "reject",
+      "id": "abs43_bool",
+      "diagnostic": "E0001",
+      "file": "reject/abs43_bool.yv",
+      "batch": "copy-tuples-unit-conversion"
+    },
+    {
+      "kind": "reject",
+      "id": "abs43_text",
+      "diagnostic": "E0001",
+      "file": "reject/abs43_text.yv",
+      "batch": "copy-tuples-unit-conversion"
+    },
+    {
+      "kind": "reject",
+      "id": "abs43_optional",
+      "diagnostic": "E0001",
+      "file": "reject/abs43_optional.yv",
+      "batch": "copy-tuples-unit-conversion"
+    },
+    {
+      "kind": "reject",
+      "id": "abs43_shadowed_local",
+      "diagnostic": "E0001",
+      "file": "reject/abs43_shadowed_local.yv",
+      "batch": "copy-tuples-unit-conversion"
+    },
+    {
+      "kind": "reject",
+      "id": "abs43_byte_negative",
+      "diagnostic": "E0003",
+      "file": "reject/abs43_byte_negative.yv",
+      "batch": "copy-tuples-unit-conversion"
+    },
+    {
+      "kind": "reject",
+      "id": "abs43_byte_range",
+      "diagnostic": "E0003",
+      "file": "reject/abs43_byte_range.yv",
+      "batch": "copy-tuples-unit-conversion"
+    },
+    {
+      "kind": "reject",
+      "id": "abs43_optional_byte_context",
+      "diagnostic": "E0001",
+      "file": "reject/abs43_optional_byte_context.yv",
+      "batch": "copy-tuples-unit-conversion"
+    },
+    {
+      "kind": "unsupported",
+      "id": "abs43_float",
+      "diagnostic": "U0001",
+      "file": "unsupported/abs43_float.yv",
+      "batch": "copy-tuples-unit-conversion"
+    },
+    {
+      "kind": "unsupported",
+      "id": "abs43_other_integer",
+      "diagnostic": "U0001",
+      "file": "unsupported/abs43_other_integer.yv",
+      "batch": "copy-tuples-unit-conversion"
+    },
+    {
+      "id": "tuple43_values",
+      "kind": "run",
+      "file": "run/tuple43_values.yv",
+      "batch": "copy-tuples-unit-conversion",
+      "stdout": "7 true 65\n8 false 66\n9\n10 true\n7 true\n"
+    },
+    {
+      "id": "tuple43_optional",
+      "kind": "run",
+      "file": "run/tuple43_optional.yv",
+      "batch": "copy-tuples-unit-conversion",
+      "stdout": "9\n-1\n6 7\ntrue\n7\n11\n20\n99\n11\n65 66\n"
+    },
+    {
+      "id": "tuple43_evaluation_order",
+      "kind": "run",
+      "file": "run/tuple43_evaluation_order.yv",
+      "batch": "copy-tuples-unit-conversion",
+      "stdout": "4 5 5\nABC1 2 3\nDE4\n7\nFG17\n"
+    },
+    {
+      "id": "tuple43_cleanup",
+      "kind": "run",
+      "file": "run/tuple43_cleanup.yv",
+      "batch": "copy-tuples-unit-conversion",
+      "stdout": "AB2\nABbad\nL1\nLbad\nL3\n"
+    },
+    {
+      "id": "tuple43_inout_copy",
+      "kind": "run",
+      "file": "run/tuple43_inout_copy.yv",
+      "batch": "copy-tuples-unit-conversion",
+      "stdout": "1 2 2 1\n1 2\n5 6\n"
+    },
+    {
+      "id": "tuple43_context",
+      "kind": "run",
+      "file": "run/tuple43_context.yv",
+      "batch": "copy-tuples-unit-conversion",
+      "stdout": "65 66\n67 68\n69 70\n71 72\n"
+    },
+    {
+      "id": "tuple43_signature_layout",
+      "kind": "run",
+      "file": "run/tuple43_signature_layout.yv",
+      "batch": "copy-tuples-unit-conversion",
+      "stdout": "ok\n"
+    },
+    {
+      "id": "tuple43_pair_arity_mismatch",
+      "kind": "reject",
+      "file": "reject/tuple43_pair_arity_mismatch.yv",
+      "batch": "copy-tuples-unit-conversion",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "tuple43_pair_type_mismatch",
+      "kind": "reject",
+      "file": "reject/tuple43_pair_type_mismatch.yv",
+      "batch": "copy-tuples-unit-conversion",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "tuple43_pair_oob",
+      "kind": "reject",
+      "file": "reject/tuple43_pair_oob.yv",
+      "batch": "copy-tuples-unit-conversion",
+      "diagnostic": "E0010"
+    },
+    {
+      "id": "tuple43_pair_named_field",
+      "kind": "reject",
+      "file": "reject/tuple43_pair_named_field.yv",
+      "batch": "copy-tuples-unit-conversion",
+      "diagnostic": "E0010"
+    },
+    {
+      "id": "tuple43_projection_huge",
+      "kind": "reject",
+      "file": "reject/tuple43_projection_huge.yv",
+      "batch": "copy-tuples-unit-conversion",
+      "diagnostic": "E0010"
+    },
+    {
+      "id": "tuple43_pair_write",
+      "kind": "reject",
+      "file": "reject/tuple43_pair_write.yv",
+      "batch": "copy-tuples-unit-conversion",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "tuple43_pair_ro_write",
+      "kind": "reject",
+      "file": "reject/tuple43_pair_ro_write.yv",
+      "batch": "copy-tuples-unit-conversion",
+      "diagnostic": "E0014"
+    },
+    {
+      "id": "tuple43_projection_ref",
+      "kind": "reject",
+      "file": "reject/tuple43_projection_ref.yv",
+      "batch": "copy-tuples-unit-conversion",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "tuple43_pair_compare",
+      "kind": "reject",
+      "file": "reject/tuple43_pair_compare.yv",
+      "batch": "copy-tuples-unit-conversion",
+      "diagnostic": "E0501"
+    },
+    {
+      "id": "tuple43_pair_different_compare",
+      "kind": "reject",
+      "file": "reject/tuple43_pair_different_compare.yv",
+      "batch": "copy-tuples-unit-conversion",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "tuple43_pair_index_syntax",
+      "kind": "reject",
+      "file": "reject/tuple43_pair_index_syntax.yv",
+      "batch": "copy-tuples-unit-conversion",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "tuple43_pair_unit",
+      "kind": "reject",
+      "file": "reject/tuple43_pair_unit.yv",
+      "batch": "copy-tuples-unit-conversion",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "tuple43_opt_context_implicit_bind",
+      "kind": "reject",
+      "file": "reject/tuple43_opt_context_implicit_bind.yv",
+      "batch": "copy-tuples-unit-conversion",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "tuple43_opt_context_implicit_return",
+      "kind": "reject",
+      "file": "reject/tuple43_opt_context_implicit_return.yv",
+      "batch": "copy-tuples-unit-conversion",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "tuple43_pair_print",
+      "kind": "reject",
+      "file": "reject/tuple43_pair_print.yv",
+      "batch": "copy-tuples-unit-conversion",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "tuple43_singleton_type",
+      "kind": "reject",
+      "file": "reject/tuple43_singleton_type.yv",
+      "batch": "copy-tuples-unit-conversion",
+      "diagnostic": "E0020"
+    },
+    {
+      "id": "tuple43_format_print",
+      "kind": "reject",
+      "file": "reject/tuple43_format_print.yv",
+      "batch": "copy-tuples-unit-conversion",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "tuple43_pair_nested",
+      "kind": "unsupported",
+      "file": "unsupported/tuple43_pair_nested.yv",
+      "batch": "copy-tuples-unit-conversion",
+      "diagnostic": "U0001",
+      "reason": "Nested tuples remain outside this flat Copy tuple batch."
+    },
+    {
+      "id": "tuple43_pair_owned",
+      "kind": "unsupported",
+      "file": "unsupported/tuple43_pair_owned.yv",
+      "batch": "copy-tuples-unit-conversion",
+      "diagnostic": "U0001",
+      "reason": "Owned tuple payloads remain outside the Copy tuple subset."
+    },
+    {
+      "id": "tuple43_pair_borrowed",
+      "kind": "unsupported",
+      "file": "unsupported/tuple43_pair_borrowed.yv",
+      "batch": "copy-tuples-unit-conversion",
+      "diagnostic": "U0001",
+      "reason": "Borrowed tuple payloads and their return provenance remain outside this batch."
+    },
+    {
+      "id": "tuple43_pair_optional_element",
+      "kind": "unsupported",
+      "file": "unsupported/tuple43_pair_optional_element.yv",
+      "batch": "copy-tuples-unit-conversion",
+      "diagnostic": "U0001",
+      "reason": "Optional elements inside tuples remain outside this flat scalar/named subset."
+    },
+    {
+      "id": "tuple43_pair_vec",
+      "kind": "unsupported",
+      "file": "unsupported/tuple43_pair_vec.yv",
+      "batch": "copy-tuples-unit-conversion",
+      "diagnostic": "U0001",
+      "reason": "Vectors of tuples are not admitted by this batch."
+    },
+    {
+      "id": "tuple43_pair_struct_field",
+      "kind": "unsupported",
+      "file": "unsupported/tuple43_pair_struct_field.yv",
+      "batch": "copy-tuples-unit-conversion",
+      "diagnostic": "U0001",
+      "reason": "Tuple fields in named aggregates remain outside this batch."
+    },
+    {
+      "id": "tuple43_pair_readonly_ref",
+      "kind": "unsupported",
+      "file": "unsupported/tuple43_pair_readonly_ref.yv",
+      "batch": "copy-tuples-unit-conversion",
+      "diagnostic": "U0001",
+      "reason": "Explicit tuple references remain outside the subset."
+    },
+    {
+      "id": "tuple43_projection_hex",
+      "kind": "unsupported",
+      "file": "unsupported/tuple43_projection_hex.yv",
+      "batch": "copy-tuples-unit-conversion",
+      "diagnostic": "U0001",
+      "reason": "Hex numeric projections remain at the lexer U0001 boundary."
+    },
+    {
+      "id": "tuple43_projection_binary",
+      "kind": "unsupported",
+      "file": "unsupported/tuple43_projection_binary.yv",
+      "batch": "copy-tuples-unit-conversion",
+      "diagnostic": "U0001",
+      "reason": "Binary numeric projections remain at the lexer U0001 boundary."
+    },
+    {
+      "id": "tuple43_projection_underscores",
+      "kind": "unsupported",
+      "file": "unsupported/tuple43_projection_underscores.yv",
+      "batch": "copy-tuples-unit-conversion",
+      "diagnostic": "U0001",
+      "reason": "Numeric projections with separators remain at the lexer U0001 boundary."
+    },
+    {
+      "id": "tuple43_pair_closure_boundary",
+      "kind": "unsupported",
+      "file": "unsupported/tuple43_pair_closure_boundary.yv",
+      "batch": "copy-tuples-unit-conversion",
+      "diagnostic": "U0001",
+      "reason": "Comparator closures must keep U0001 when tuple syntax becomes supported."
+    },
+    {
+      "id": "tuple43_slice",
+      "kind": "unsupported",
+      "file": "unsupported/tuple43_slice.yv",
+      "batch": "copy-tuples-unit-conversion",
+      "diagnostic": "U0001",
+      "reason": "Slices of tuples remain outside this batch."
+    },
+    {
+      "id": "tuple43_result",
+      "kind": "unsupported",
+      "file": "unsupported/tuple43_result.yv",
+      "batch": "copy-tuples-unit-conversion",
+      "diagnostic": "U0001",
+      "reason": "Result payloads containing tuples remain outside this batch."
+    },
+    {
+      "id": "tuple43_destructure",
+      "kind": "unsupported",
+      "file": "unsupported/tuple43_destructure.yv",
+      "batch": "copy-tuples-unit-conversion",
+      "diagnostic": "U0001",
+      "reason": "Tuple destructuring remains outside this batch."
+    },
+    {
+      "id": "tuple43_large_signature",
+      "kind": "unsupported",
+      "file": "unsupported/tuple43_large_signature.yv",
+      "batch": "copy-tuples-unit-conversion",
+      "diagnostic": "U0001",
+      "reason": "Tuple signatures that exceed the checked compact representation are rejected explicitly."
+    },
+    {
+      "id": "tuple43_pair_clone",
+      "kind": "shared_unsupported",
+      "file": "unsupported/tuple43_pair_clone.yv",
+      "batch": "copy-tuples-unit-conversion",
+      "diagnostic": "U0001",
+      "reason": "Stage0 itself does not support this tuple method."
+    },
+    {
+      "id": "tuple43_pair_len",
+      "kind": "shared_unsupported",
+      "file": "unsupported/tuple43_pair_len.yv",
+      "batch": "copy-tuples-unit-conversion",
+      "diagnostic": "U0001",
+      "reason": "Stage0 itself does not support this tuple method."
     }
   ],
   "promotions": [

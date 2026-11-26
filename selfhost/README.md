@@ -14,6 +14,9 @@ subset of the stage0 language that the compiler itself implements (see
 [decision 20–24](../docs/decisions.md)). It is not yet the default compiler:
 stage0 accepts far more of the language (owned optionals, mutable/reference iteration,
 float formatting, methods, generics, broader Map/Set APIs, closures, threads...).
+Batch 43 adds flat Copy tuples, numeric projection, Optional tuples and integer
+`abs`. The unchanged two-module r5/yavo-b/T04 unit-conversion CLI is checked by
+`conversion_application.py` as a second bootstrap application gate.
 Batch 42 adds `for index, item in values`, Copy Optional `if let`, and static
 `os.args()` iteration. The compiler itself uses both new binding forms;
 a named match of an existing Optional keeps it unchanged for the then scope.
@@ -91,32 +94,33 @@ and writes `receipt.json` with `achieved: "self-hosted-fixed-point"` and
 `self_hosted: true` only when everything passes. Native CI runs this gate on
 Linux, Windows and macOS; a configured job is not itself a passing result.
 
-## Current validation: batch 42 (2026-11-26)
+## Current validation: batch 43 (2026-11-26)
 
-The matrix contains **792 cases / 243 executable inputs**: 213 run, 30 panic,
-426 reject, 94 unsupported and 29 shared unsupported. There are 36 new cases;
-two old unsupported fixtures are promoted without changing their bytes.
-The complete local bootstrap passes **792/792 cases, 13/13 checks, zero skips**.
-Stage2/stage3 C (967,346 bytes) and Linux binaries (448,416 bytes) match exactly;
-the real lexer and all 71 applicable test-summary scenarios pass.
-[CI run 45763574200](https://github.com/msly/yavo/actions/runs/45763574200)
-passed all six jobs at `819ea1e`, including Linux/Windows/macOS native gates
-and Linux generated-code/stage2 ASan/UBSan.
+The matrix contains **847 cases / 253 executable inputs**: 222 run, 31 panic,
+452 reject, 111 unsupported and 31 shared unsupported. All 55 additions have
+stage0 oracles: 14 abs cases and 41 tuple cases, with no source promotions.
+The complete local bootstrap passes **847/847 cases, 14/14 checks, zero skips**.
+Stage2/stage3 C (1,010,808 bytes) and Linux binaries (472,064 bytes) match exactly;
+the real lexer, 71 applicable test-summary scenarios and all 20 unit-conversion
+scenarios pass. Three-platform CI is pending.
 
-The stage2 repository sweep accepts 92 of 391 stage0-accepted programs,
-reports no strict-subset violation and admits none of 220 rejected programs.
-An uncached reconstruction of baseline `3ce5d36` accepts 91, not the previously
-recorded 88: this batch gains the Roman-numeral CLI T07 and loses no program.
-The [minimal coverage record](../compiler/validation/batch42-coverage-2026-11-26.json)
-binds this correction to source, compiler and corpus hashes. The first remaining blockers include tuple types (34), in addition
-to unsupported standard modules (35); first-blocker counts are not predicted
-coverage gains. All 12 current "tuple expression" first errors are actually
-comparator closures. The next concrete target is the unmodified r5/yavo-b/T04
-unit-conversion CLI, needing Copy int pairs, Optional pairs/projection and abs,
-not the larger closure/threading work exposed by other tuple-blocked programs.
-An independent check audit has 35 probes and five allocation-
-checked runtime combinations, including header catch exits around an owned
-Vec temporary and indexed/if-let body control flow.
+The new `unit_conversion_application` check builds the original r5/yavo-b/T04
+`main.yv` and `conversion.yv` unchanged. Its 20 fixed scenarios contain 330 input
+records; stage0 and the fixed-point stage2 each run both Debug and Release, giving
+80 allocation-checked executions. Expected output follows the public contract and
+exact rational arithmetic. Cases cover all 16 unit pairs, signs, reduction, zero,
+numeric/precision/length limits, malformed records, blanks and numbering, and 200
+records in one input. The harness, contract, scenario manifest and both original
+modules are included in the input-unchanged check.
+
+The stage2 repository sweep accepts **98 of 391** stage0-accepted programs,
+up from 92, with no lost coverage, no strict-subset violation and none of 221
+rejected programs admitted. The six new paths are two T04 implementations with
+three snapshots each. The additional stage0 rejection is the new tuple-print P0
+fixture: stage0 now reports E0001 instead of panicking during C generation.
+Complete Rust Debug/Release suites each pass 145/0/1; frozen conformance remains
+124 pass / 3 unsupported / 2 superseded. The next bounded application target is
+the original r4/yavo/T11 text-diff CLI, whose first blocker is integer `max()`.
 
 ## Historical validation: batch 31 (2026-11-24)
 
@@ -299,21 +303,22 @@ JSON diagnostics, suggestions and recovery remain future work.
 | Area | Implemented |
 | --- | --- |
 | Files | Source modules via leading `use a`, `use a/b`, `use a/{b, c}`; per-file imports and top-level `pub`, cyclic imports, qualified functions and original source locations; standard fs/io/os imports; required entry `fn main()` |
-| Types | `int` (signed 64-bit), `byte` (unsigned 8-bit), `bool`, borrowed `str`, owned `String`, `Vec[T]` with Copy or owned String/struct elements, unit return; nominal structs, payload-free enums, supported `T ! E` results and Copy `?T` |
+| Types | `int` (signed 64-bit), `byte` (unsigned 8-bit), `bool`, borrowed `str`, owned `String`, `Vec[T]` with existing scalar/struct/String element forms, unit return; nominal structs, payload-free enums, flat Copy tuples, supported `T ! E` results and Copy `?T` |
 | String | Empty construction, str.toString, len, clone, push, output, String/str comparison, UTF-8/NUL; byte indexing; startsWith/endsWith/contains/find/split/parseInt/trim/lines/fields |
 | Vec | Typed empty construction, empty/nonempty literals including Vec[byte], len, consuming push, reserve, recursive clone/drop; zero-argument pop for Copy elements on mutable local/field/inout places; checked reads and index/field/compound assignments for Copy elements; expression-local read-only indexing and field projection for owned elements |
 | Aggregates | Forward/nested fields, construction, reads and mutable fields; Copy values or owned String/Vec/nested struct fields; constant defaults and empty aggregates; by-value cycles rejected |
+| Tuples | Flat int/byte/bool/non-owning struct/payload-free enum elements; construction, numeric `.0`/`.1` projection, locals, arguments, returns, whole-value assignment/inout and Optional payloads; bounded structural signatures |
 | Enums | Qualified and context-inferred cases, nominal type checks, equality/inequality, case-name output |
 | Literals | Decimal integers including negative `INT64_MIN`, contextual byte-range integers, single-quoted ASCII byte literals and seven escapes, booleans, unit, non-interpolated UTF-8 strings with supported escapes and NUL; vector literals with contextual or first-element type inference |
-| Functions | Typed parameters, scalar/String/Vec/struct/unit returns, forward calls and recursion; owned ordinary parameters borrow read-only; `inout` parameters with `&variable` or `&variable.field` arguments (later arguments may not use that root, E0102); borrowed str/Vec[str]/slice returns carry their required `of` sources |
+| Functions | Typed parameters, scalar/String/Vec/struct/Copy-tuple/unit returns, forward calls and recursion; owned ordinary parameters borrow read-only; `inout` parameters with `&variable` or `&variable.field` arguments (later arguments may not use that root, E0102); borrowed str/Vec[str]/slice returns carry their required `of` sources |
 | Results | User-function `T ! E`, contextual `ok(value)`/`err(error)` and implicit success wrapping, `try`, terminating `catch name { ... }`/`catch _ { ... }`; owned String/Vec/struct payloads and cleanup on propagation |
-| Optionals | `?T` for int/byte/bool/non-owning struct/payload-free enum; `some`, contextual `none`, implicit wrapping, isSome/isNone, lazy `??` and terminating `??` fallbacks; `if let` with else/else-if-let and `_` |
+| Optionals | `?T` for int/byte/bool/non-owning struct/payload-free enum/flat Copy tuple; `some`, contextual `none`, implicit wrapping, isSome/isNone, lazy `??` and terminating `??` fallbacks; `if let` with else/else-if-let and `_` |
 | Text slices | `s[start..end]` on str/String with int bounds and P-INDEX/P-STR-BOUNDARY checks; views of owned values may be bound locally while their owner stays unchanged; escaping the owner scope remains rejected |
 | Standard calls | `take(&place)` for String/Vec places; `os.args()` (len, indexing to static str), `os.exit(code)`; `io.readAll`, `fs.readText`, `fs.writeNewText` and `String.fromUtf8` only with a `catch _ { ... }` handler that cannot fall through (E0601) |
 | Locals | `let`/`var`, inferred or explicit types, assignment and arithmetic compound assignment; active locals cannot be shadowed |
 | Control flow | if/else-if/else and Copy Optional if-let; while/loop; int/byte half-open range for; one/two-binding read-only Vec/slice/args traversal including fields and temporary vectors; break/continue/return and return-path checks |
 | Expressions | Parentheses, int unary minus, boolean not, checked int/byte arithmetic, wrapping arithmetic, bit operations/shifts, contextual integer arithmetic, equality/order, short-circuit boolean operators |
-| Builtins | Single-argument `print`/`println`/`eprintln` as direct statements including decimal byte output, `assert(bool)`, explicit `int(...)`/`byte(...)` conversions; user functions take precedence over the assert prelude |
+| Builtins | Single-argument `print`/`println`/`eprintln` as direct statements including decimal byte output, `assert(bool)`, explicit `int(...)`/`byte(...)` conversions, checked `abs(int)` and identity `abs(byte)`; user functions take precedence over assert/abs preludes |
 | Ownership | Consuming bindings/assignment/construction/returns; moved-value checking, read-only parameters, expression-local element borrows, root-based argument/receiver protection |
 | Runtime behavior | Checked arithmetic/panic/output, ordered evaluation, moved-source zeroing and cleanup on scope/statement/control-flow exits |
 
@@ -376,10 +381,34 @@ uses indexed traversal in `types.declaredIn`:
 The migrations preserve the original input strings, loop bodies and assertions;
 `parser.store` replaces the indexed element read with the copied loop binding.
 
+### Copy tuples
+
+Tuple elements may be int, byte, bool, non-owning structs or payload-free enums.
+Element expressions are evaluated and copied left to right, so a later inout
+argument cannot change an earlier element's snapshot. Structural type identity
+uses a collision-free radix encoding bounded by signed int capacity; exceeding
+that capacity is U0001. Capacity depends on the program's named-type count: a
+program with no named types can encode 31 int elements, while 32 is unsupported.
+Layouts are emitted after complete named layouts and before function declarations,
+including tuple signatures used only by otherwise-unused functions.
+
+Tuples support local bindings, whole-value assignment, parameters, return values
+and inout. Numeric projection accepts decimal ordinals (including `.01`) and
+reports E0010 for unknown/out-of-range members. A singleton `(value,)` is inferred;
+an explicit singleton tuple type remains E0020, matching stage0. Nested, owned,
+borrowed or Optional elements, tuple fields/containers, tuple Results, references
+and destructuring are not implemented. Unit element expressions are E0001. Tuple element writes are
+rejected (E0014 through an immutable root, otherwise E0001); comparison is E0501
+for matching tuple types and E0001 for different types; direct output is E0001.
+
+`abs` evaluates its argument once and preserves int/byte context. Negative int
+values use checked negation, so `abs(INT64_MIN)` panics with P-OVERFLOW; byte
+arguments are returned unchanged. Other numeric types and min/max remain U0001.
+
 ### Copy Optional and pop
 
-Optional payloads are limited to int, byte, bool, non-owning structs and
-payload-free enums. `some(value)` infers its actual payload type; `none` needs
+Optional payloads are limited to int, byte, bool, non-owning structs,
+payload-free enums and supported Copy tuples. `some(value)` infers its actual payload type; `none` needs
 an Optional context. Bindings, assignments, arguments and returns can wrap a
 matching Copy payload implicitly. Both tag methods take zero arguments.
 
@@ -396,6 +425,8 @@ are merged into the following ownership state. The RHS must have the exact
 payload type; it does not receive implicit wrapping. Context is also distinct
 from wrapping for literals: `?byte = some(1)` is valid, while `?byte = 1` is
 E0001; use `byte(1)`, a byte literal or an existing byte for implicit wrapping.
+The same rule holds for tuples: `?(byte, byte) = some((1, 2))` supplies element
+context, while implicit wrapping of `(1, 2)` yields an int pair and is E0001.
 The same raw-context rule applies to Result success values: `return ok(1)`
 can provide byte context, but `return 1` in a `byte ! E` function is E0001.
 
@@ -417,7 +448,7 @@ direct printing are also U0001, matching stage0.
 ### Results and error propagation
 
 `T ! E` is supported in function signatures and local annotations. Its success
-payload may use an existing supported non-Result, non-Optional type, including `String`,
+payload may use an existing supported non-Result, non-Optional, non-tuple type, including `String`,
 `Vec[Token]` and owned structs. The error payload may be an owned struct or
 another supported non-Result value; unit errors are rejected with E0001 and
 borrowed errors with E0301. Local results can carry static `str`; borrowed
@@ -565,16 +596,16 @@ an indexed borrow is used in a comparison, a nested index is evaluated, or
 a text index expression consumes its receiver. Stage0 accepts those inputs;
 the fixtures do not execute these programs or add new known_gap records.
 
-Unsupported input includes persistent bindings of borrowed elements and
-mutation through non-Copy indexes, direct nested Vec elements, borrowed `str`
-or unit vector elements, owned-element pop, vector slices, other collections, imports after other items,
+Unsupported input includes persistent bindings of borrowed collection elements and
+mutation through non-Copy indexes, direct nested Vec elements, unit or tuple
+vector elements, owned-element pop, vector slices, other collections, imports after other items,
 enum payloads, sink parameters and general references, owned/nested Optionals,
 Optional fields/container/Result combinations, Result fields,
 `Vec[Result]`, nested Results, arrow catch,
 user-defined methods, generics, interpolation outside direct output/format
 arguments, format specifiers, float/nondecimal literals,
-integer separators, owned/reference/two-binding collection iteration,
-field or temporary iterables, closures and concurrency. String temporary
+integer separators, mutable/reference iteration, Map iteration, owned or nested
+tuples and tuple fields/containers/Results, destructuring, closures and concurrency. String temporary
 receivers cannot be modified. This list describes the new frontend's input,
 not the broader Rust frontend.
 
@@ -586,7 +617,7 @@ not the broader Rust frontend.
 | `lexer.yv` | UTF-8-aware tokens, escapes, source spans, newline termination; returns `Vec[Token] ! Diagnostic` |
 | `model.yv` | Copy AST nodes; child lists are ranges in shared Program pools |
 | `parser.yv` | Aggregate/function/statement/expression grammar, imports, slices, borrows, catch, unsupported boundaries |
-| `types.yv` | Resolved nominal/vector/Copy Optional types, Result pool, field/default checks, cycles/layout order, transitive ownership |
+| `types.yv` | Resolved nominal/vector/Copy Optional/flat tuple types, bounded tuple signatures, Result pool, field/default checks, cycles/layout order, transitive ownership |
 | `codegen.yv` | Places, borrowed/consuming values, Optional/Result wrapping, lazy coalesce, Result propagation, inout/take/pop, move-state joins, cleanup, loop replay and ordered C |
 | `main.yv` | `compile` returns `String ! Diagnostic`; CLI reports errors, reads input and creates output exclusively |
 | `lexer_test.yv` | Lexer boundary assertions, including owned error propagation and cleanup on normal test returns |
@@ -607,13 +638,14 @@ executable fixtures from earlier increments.
 
 ## Next steps
 
-Self-hosting remains a regression gate. Batch 41 has passed local acceptance
-(756/756 cases, 13/13 checks, including building and running
-examples/test-summary); the compiler itself is `use`-linked files. The next
-increments follow `subset_sweep.py`'s coverage (88 of 391 repository programs). Each increment must replace real compiler-source workarounds,
-retain independent behavior and cleanup oracles, and renew the fixed point
-on Linux, Windows and macOS. [SH-3](../docs/self-hosting.md) remains incomplete;
-SH-4 has one of three independent applications validated.
+Self-hosting remains a regression gate. Batch 43 has 847 fixtures and two
+application checks (test-summary and the original unit-conversion CLI); current
+results are recorded above. Coverage is 98 of 391 repository programs. The next
+target is `experiments/coldstart-2026-11-21-r4/yavo/T11.yv`, an unchanged text-diff
+CLI currently blocked by integer `max()`. Each increment retains independent
+behavior and cleanup oracles and renews the fixed point on Linux, Windows and
+macOS. [SH-3](../docs/self-hosting.md) remains incomplete; formal SH-4 delivery
+still has one of three independent applications validated.
 
 ## Historical snapshots
 

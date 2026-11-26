@@ -1,0 +1,171 @@
+{
+  "schema": "yavo-unit-converter-scenarios/1",
+  "application": "experiments/coldstart-2026-11-22-r5/runs/yavo-b/tasks/T04/final/main.yv",
+  "source_sha256": {
+    "experiments/coldstart-2026-11-22-r5/runs/yavo-b/tasks/T04/final/main.yv": "beb85b017433598ead7e1a1651d7bc76d43a965e26ce0645e5363a4d33283e1b",
+    "experiments/coldstart-2026-11-22-r5/runs/yavo-b/tasks/T04/final/conversion.yv": "162fea991ec55945b120288141e6b453968aa221aa83752d8c17eadc7741eb89"
+  },
+  "oracle": "Expected output derived from the published T04 grammar and unit ratios; Python Fraction used only when preparing fixed valid-number expectations, never from application output. Invalid cases are explicitly classified.",
+  "cases": [
+    {
+      "id": "empty",
+      "stdin": "",
+      "stdout": "",
+      "stderr": "",
+      "exit_code": 0,
+      "reason": "Empty input produces no records."
+    },
+    {
+      "id": "public_valid",
+      "stdin": "1.5 m cm\n001 mm cm\n-0.125 km m\n",
+      "stdout": "1: 150 cm\n2: 1/10 cm\n3: -125 m\n",
+      "stderr": "",
+      "exit_code": 0,
+      "reason": "Published valid example, exact integer and rational output."
+    },
+    {
+      "id": "public_invalid",
+      "stdin": "+1 m mm\n.5 m cm\n-0.000 km mm\n1 m inch\n",
+      "stdout": "1: invalid\n2: invalid\n3: 0 mm\n4: invalid\n",
+      "stderr": "",
+      "exit_code": 0,
+      "reason": "Published invalid example and normalized negative zero."
+    },
+    {
+      "id": "all_unit_pairs",
+      "stdin": "1 mm mm\n1 mm cm\n1 mm m\n1 mm km\n1 cm mm\n1 cm cm\n1 cm m\n1 cm km\n1 m mm\n1 m cm\n1 m m\n1 m km\n1 km mm\n1 km cm\n1 km m\n1 km km\n",
+      "stdout": "1: 1 mm\n2: 1/10 cm\n3: 1/1000 m\n4: 1/1000000 km\n5: 10 mm\n6: 1 cm\n7: 1/100 m\n8: 1/100000 km\n9: 1000 mm\n10: 100 cm\n11: 1 m\n12: 1/1000 km\n13: 1000000 mm\n14: 100000 cm\n15: 1000 m\n16: 1 km\n",
+      "stderr": "",
+      "exit_code": 0,
+      "reason": "Every one of the sixteen source/target unit pairs."
+    },
+    {
+      "id": "signed_fraction_reduction",
+      "stdin": "2.500 m km\n-1.250 cm m\n0.001 mm km\n123.456 cm m\n-0.125 m cm\n0.010 m cm\n-1.005 km m\n12.345 mm cm\n",
+      "stdout": "1: 1/400 km\n2: -1/80 m\n3: 1/1000000000 km\n4: 3858/3125 m\n5: -25/2 cm\n6: 1 cm\n7: -1005 m\n8: 2469/2000 cm\n",
+      "stderr": "",
+      "exit_code": 0,
+      "reason": "Reduced fractions with positive denominators, signed numerators, and exact integer reductions."
+    },
+    {
+      "id": "negative_zero",
+      "stdin": "0 mm km\n-0 km mm\n000 cm m\n-000.000 km mm\n0.000 m cm\n-0000.00 mm km\n",
+      "stdout": "1: 0 km\n2: 0 mm\n3: 0 m\n4: 0 mm\n5: 0 cm\n6: 0 km\n",
+      "stderr": "",
+      "exit_code": 0,
+      "reason": "All lexical zero variants normalize to integer zero."
+    },
+    {
+      "id": "maximum_valid",
+      "stdin": "1000000 km mm\n-1000000 km mm\n1000000.000 mm km\n-1000000.000 mm km\n999999.999 km mm\n-999999.999 mm km\n0001000000.000 m cm\n999999.001 cm m\n",
+      "stdout": "1: 1000000000000 mm\n2: -1000000000000 mm\n3: 1 km\n4: -1 km\n5: 999999999000 mm\n6: -999999999/1000000000 km\n7: 100000000 cm\n8: 999999001/100000 m\n",
+      "stderr": "",
+      "exit_code": 0,
+      "reason": "Inclusive magnitude bound and largest supported exact intermediates."
+    },
+    {
+      "id": "over_magnitude_limit",
+      "stdin": "1000001 m mm\n-1000001 m mm\n1000000.001 m mm\n-1000000.001 m mm\n9999999 m mm\n0001000001.000 m mm\n",
+      "stdout": "1: invalid\n2: invalid\n3: invalid\n4: invalid\n5: invalid\n6: invalid\n",
+      "stderr": "",
+      "exit_code": 0,
+      "reason": "Reject magnitude above the inclusive limit, including fractional overrun."
+    },
+    {
+      "id": "numeric_grammar_invalid",
+      "stdin": "+1 cm m\n.5 cm m\n1. cm m\n1e3 cm m\n1E3 cm m\n--1 cm m\n- cm m\n-.1 cm m\n0x10 cm m\nNaN cm m\ninf cm m\n1_000 cm m\n1,0 cm m\n1..0 cm m\n1-2 cm m\n2.5x cm m\n+0 cm m\n-. cm m\n",
+      "stdout": "1: invalid\n2: invalid\n3: invalid\n4: invalid\n5: invalid\n6: invalid\n7: invalid\n8: invalid\n9: invalid\n10: invalid\n11: invalid\n12: invalid\n13: invalid\n14: invalid\n15: invalid\n16: invalid\n17: invalid\n18: invalid\n",
+      "stderr": "",
+      "exit_code": 0,
+      "reason": "Reject noncontract amount syntax independently of unit validation."
+    },
+    {
+      "id": "fractional_precision",
+      "stdin": "1 m mm\n1.0 m mm\n1.00 m mm\n1.000 m mm\n1.0000 m mm\n0.0001 km mm\n1.234 cm mm\n-1.234 cm mm\n",
+      "stdout": "1: 1000 mm\n2: 1000 mm\n3: 1000 mm\n4: 1000 mm\n5: invalid\n6: invalid\n7: 617/50 mm\n8: -617/50 mm\n",
+      "stderr": "",
+      "exit_code": 0,
+      "reason": "Zero to three fractional digits allowed; four rejected even when numerically integral."
+    },
+    {
+      "id": "leading_zeros",
+      "stdin": "000001 mm cm\n-000001 mm cm\n000001.250 m cm\n0000.001 km mm\n000000.010 cm mm\n-000000.010 cm mm\n",
+      "stdout": "1: 1/10 cm\n2: -1/10 cm\n3: 125 cm\n4: 1000 mm\n5: 1/10 mm\n6: -1/10 mm\n",
+      "stderr": "",
+      "exit_code": 0,
+      "reason": "Leading zeros remain decimal and do not alter sign or fraction reduction."
+    },
+    {
+      "id": "amount_length_64",
+      "stdin": "0000000000000000000000000000000000000000000000000000000000000000 m m\n0000000000000000000000000000000000000000000000000000000000000001 m m\n-000000000000000000000000000000000000000000000000000000000000001 m m\n000000000000000000000000000000000000000000000000000000000001.234 m m\n-00000000000000000000000000000000000000000000000000000000001.234 m m\n",
+      "stdout": "1: 0 m\n2: 1 m\n3: -1 m\n4: 617/500 m\n5: -617/500 m\n",
+      "stderr": "",
+      "exit_code": 0,
+      "reason": "Inclusive 64-byte amount limit; signs and decimal separators count."
+    },
+    {
+      "id": "amount_length_65",
+      "stdin": "00000000000000000000000000000000000000000000000000000000000000000 m m\n00000000000000000000000000000000000000000000000000000000000000001 m m\n-0000000000000000000000000000000000000000000000000000000000000001 m m\n0000000000000000000000000000000000000000000000000000000000001.234 m m\n-000000000000000000000000000000000000000000000000000000000001.234 m m\n",
+      "stdout": "1: invalid\n2: invalid\n3: invalid\n4: invalid\n5: invalid\n",
+      "stderr": "",
+      "exit_code": 0,
+      "reason": "Reject 65-byte amounts even when their numeric value would be valid."
+    },
+    {
+      "id": "field_counts",
+      "stdin": "1\n1 m\n1 m cm extra\n1 m cm 2\nmm m\n1 m cm cm cm\n",
+      "stdout": "1: invalid\n2: invalid\n3: invalid\n4: invalid\n5: invalid\n6: invalid\n",
+      "stderr": "",
+      "exit_code": 0,
+      "reason": "Every record needs exactly three fields."
+    },
+    {
+      "id": "unit_validation",
+      "stdin": "1 MM m\n1 m CM\n1 cm inch\n1 inches mm\n1 meter mm\n1 mm kms\n1 cm/cm mm\n1 km2 mm\n1 M m\n1 mm Mm\n",
+      "stdout": "1: invalid\n2: invalid\n3: invalid\n4: invalid\n5: invalid\n6: invalid\n7: invalid\n8: invalid\n9: invalid\n10: invalid\n",
+      "stderr": "",
+      "exit_code": 0,
+      "reason": "Unit names are exact and case-sensitive."
+    },
+    {
+      "id": "whitespace_fields",
+      "stdin": "\t2.500  m\tcm  \n   -1.25\tcm\t m\n\t0\tmm\tkm\t\n1\t m  cm\n",
+      "stdout": "1: 250 cm\n2: -1/80 m\n3: 0 km\n4: 100 cm\n",
+      "stderr": "",
+      "exit_code": 0,
+      "reason": "Spaces and tabs may repeat and surround fields."
+    },
+    {
+      "id": "blank_lines",
+      "stdin": "\n  \n\t\n1 m cm\n\n",
+      "stdout": "1: invalid\n2: invalid\n3: invalid\n4: 100 cm\n5: invalid\n",
+      "stderr": "",
+      "exit_code": 0,
+      "reason": "Blank physical records remain numbered; final LF itself adds no extra record."
+    },
+    {
+      "id": "independent_record_failures",
+      "stdin": "1 m cm\nbogus m cm\n2 km m\n1 mm inch\n-0 m cm\n1.0000 m cm\n0.125 m cm\n",
+      "stdout": "1: 100 cm\n2: invalid\n3: 2000 m\n4: invalid\n5: 0 cm\n6: invalid\n7: 25/2 cm\n",
+      "stderr": "",
+      "exit_code": 0,
+      "reason": "An invalid record does not stop later records or disturb numbering."
+    },
+    {
+      "id": "long_out_of_range_integer",
+      "stdin": "9999999999999999999999999999999999999999999999999999999999999999 km mm\n-999999999999999999999999999999999999999999999999999999999999999 m mm\n9223372036854775808 m mm\n18446744073709551616 cm m\n100000000000000000000.000 mm km\n",
+      "stdout": "1: invalid\n2: invalid\n3: invalid\n4: invalid\n5: invalid\n",
+      "stderr": "",
+      "exit_code": 0,
+      "reason": "Reject out-of-range decimal input before checked integer intermediates could overflow."
+    },
+    {
+      "id": "row_number_200",
+      "stdin": "0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n0.001 mm km\n-2.500 m cm\n1000000 km mm\n0 cm m\n",
+      "stdout": "1: 1/1000000000 km\n2: -250 cm\n3: 1000000000000 mm\n4: 0 m\n5: 1/1000000000 km\n6: -250 cm\n7: 1000000000000 mm\n8: 0 m\n9: 1/1000000000 km\n10: -250 cm\n11: 1000000000000 mm\n12: 0 m\n13: 1/1000000000 km\n14: -250 cm\n15: 1000000000000 mm\n16: 0 m\n17: 1/1000000000 km\n18: -250 cm\n19: 1000000000000 mm\n20: 0 m\n21: 1/1000000000 km\n22: -250 cm\n23: 1000000000000 mm\n24: 0 m\n25: 1/1000000000 km\n26: -250 cm\n27: 1000000000000 mm\n28: 0 m\n29: 1/1000000000 km\n30: -250 cm\n31: 1000000000000 mm\n32: 0 m\n33: 1/1000000000 km\n34: -250 cm\n35: 1000000000000 mm\n36: 0 m\n37: 1/1000000000 km\n38: -250 cm\n39: 1000000000000 mm\n40: 0 m\n41: 1/1000000000 km\n42: -250 cm\n43: 1000000000000 mm\n44: 0 m\n45: 1/1000000000 km\n46: -250 cm\n47: 1000000000000 mm\n48: 0 m\n49: 1/1000000000 km\n50: -250 cm\n51: 1000000000000 mm\n52: 0 m\n53: 1/1000000000 km\n54: -250 cm\n55: 1000000000000 mm\n56: 0 m\n57: 1/1000000000 km\n58: -250 cm\n59: 1000000000000 mm\n60: 0 m\n61: 1/1000000000 km\n62: -250 cm\n63: 1000000000000 mm\n64: 0 m\n65: 1/1000000000 km\n66: -250 cm\n67: 1000000000000 mm\n68: 0 m\n69: 1/1000000000 km\n70: -250 cm\n71: 1000000000000 mm\n72: 0 m\n73: 1/1000000000 km\n74: -250 cm\n75: 1000000000000 mm\n76: 0 m\n77: 1/1000000000 km\n78: -250 cm\n79: 1000000000000 mm\n80: 0 m\n81: 1/1000000000 km\n82: -250 cm\n83: 1000000000000 mm\n84: 0 m\n85: 1/1000000000 km\n86: -250 cm\n87: 1000000000000 mm\n88: 0 m\n89: 1/1000000000 km\n90: -250 cm\n91: 1000000000000 mm\n92: 0 m\n93: 1/1000000000 km\n94: -250 cm\n95: 1000000000000 mm\n96: 0 m\n97: 1/1000000000 km\n98: -250 cm\n99: 1000000000000 mm\n100: 0 m\n101: 1/1000000000 km\n102: -250 cm\n103: 1000000000000 mm\n104: 0 m\n105: 1/1000000000 km\n106: -250 cm\n107: 1000000000000 mm\n108: 0 m\n109: 1/1000000000 km\n110: -250 cm\n111: 1000000000000 mm\n112: 0 m\n113: 1/1000000000 km\n114: -250 cm\n115: 1000000000000 mm\n116: 0 m\n117: 1/1000000000 km\n118: -250 cm\n119: 1000000000000 mm\n120: 0 m\n121: 1/1000000000 km\n122: -250 cm\n123: 1000000000000 mm\n124: 0 m\n125: 1/1000000000 km\n126: -250 cm\n127: 1000000000000 mm\n128: 0 m\n129: 1/1000000000 km\n130: -250 cm\n131: 1000000000000 mm\n132: 0 m\n133: 1/1000000000 km\n134: -250 cm\n135: 1000000000000 mm\n136: 0 m\n137: 1/1000000000 km\n138: -250 cm\n139: 1000000000000 mm\n140: 0 m\n141: 1/1000000000 km\n142: -250 cm\n143: 1000000000000 mm\n144: 0 m\n145: 1/1000000000 km\n146: -250 cm\n147: 1000000000000 mm\n148: 0 m\n149: 1/1000000000 km\n150: -250 cm\n151: 1000000000000 mm\n152: 0 m\n153: 1/1000000000 km\n154: -250 cm\n155: 1000000000000 mm\n156: 0 m\n157: 1/1000000000 km\n158: -250 cm\n159: 1000000000000 mm\n160: 0 m\n161: 1/1000000000 km\n162: -250 cm\n163: 1000000000000 mm\n164: 0 m\n165: 1/1000000000 km\n166: -250 cm\n167: 1000000000000 mm\n168: 0 m\n169: 1/1000000000 km\n170: -250 cm\n171: 1000000000000 mm\n172: 0 m\n173: 1/1000000000 km\n174: -250 cm\n175: 1000000000000 mm\n176: 0 m\n177: 1/1000000000 km\n178: -250 cm\n179: 1000000000000 mm\n180: 0 m\n181: 1/1000000000 km\n182: -250 cm\n183: 1000000000000 mm\n184: 0 m\n185: 1/1000000000 km\n186: -250 cm\n187: 1000000000000 mm\n188: 0 m\n189: 1/1000000000 km\n190: -250 cm\n191: 1000000000000 mm\n192: 0 m\n193: 1/1000000000 km\n194: -250 cm\n195: 1000000000000 mm\n196: 0 m\n197: 1/1000000000 km\n198: -250 cm\n199: 1000000000000 mm\n200: 0 m\n",
+      "stderr": "",
+      "exit_code": 0,
+      "reason": "Contract maximum of 200 records with row numbers spanning one, two, and three digits."
+    }
+  ]
+}

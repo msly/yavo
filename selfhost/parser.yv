@@ -16,6 +16,7 @@ struct State {
     params: Vec[Parameter] = []
     fields: Vec[FieldDecl] = []
     resultTypes: Vec[ResultRef] = []
+    tupleAtoms: Vec[TypeRef] = []
     stringParts: Vec[StringPart] = []
     files: Vec[SourceFile] = []
     imports: Vec[ModuleImport] = []
@@ -143,6 +144,9 @@ fn vectorType(s: inout State, ts: Vec[Token], name: int) -> TypeRef {
     if elem.kind == .Optional {
         lexer.fail(ts, token, "U0001", "Optional vector elements are outside the selfhost subset")
     }
+    if elem.kind == .Tuple {
+        lexer.fail(ts, token, "U0001", "tuple vector elements are outside the selfhost subset")
+    }
     return TypeRef{kind: .Vec, name: name, elementKind: elem.kind, elementName: token}
 }
 
@@ -161,15 +165,16 @@ fn typeAtom(s: inout State, ts: Vec[Token]) -> TypeRef {
         if inner.kind == .Optional || inner.kind == .Vec || inner.kind == .Result {
             lexer.fail(ts, question, "U0001", "nested Optional and container payloads are outside the selfhost subset")
         }
-        result = TypeRef{kind: .Optional, name: question, elementKind: inner.kind, elementName: token}
+        result = TypeRef{kind: .Optional, name: question, elementKind: inner.kind, elementName: token,
+            tupleStart: inner.tupleStart, tupleCount: inner.tupleCount}
     } else if at(s, ts, "[") && ts[s.pos + 1].text == "]" {
         // A read-only view `[]T`; like Vec, the element is a single atom.
         let open = s.pos
         s.pos += 2
         let token = s.pos
         let inner = typeAtom(&s, ts)
-        if inner.kind == .Optional || inner.kind == .Vec || inner.kind == .Result || inner.kind == .Slice {
-            lexer.fail(ts, token, "U0001", "slices of containers, Optionals or Results are outside the selfhost subset")
+        if inner.kind == .Optional || inner.kind == .Vec || inner.kind == .Result || inner.kind == .Slice || inner.kind == .Tuple {
+            lexer.fail(ts, token, "U0001", "slices of containers, Optionals, Results or tuples are outside the selfhost subset")
         }
         result = TypeRef{kind: .Slice, name: open, elementKind: inner.kind, elementName: token}
     } else if at(s, ts, "Map") && ts[s.pos + 1].text == "[" {
@@ -182,22 +187,24 @@ fn typeAtom(s: inout State, ts: Vec[Token]) -> TypeRef {
         }
     } else if eat(&s, ts, "(") {
         let open = s.pos - 1
-        if !at(s, ts, ")") {
-            let _first = typeName(&s, ts)
-            var count = 1
+        if eat(&s, ts, ")") {
+            result = TypeRef{elementKind: .Unknown, kind: .Unit}
+        } else {
+            var parts: Vec[TypeRef] = []
+            parts.push(typeName(&s, ts))
             while eat(&s, ts, ",") {
                 if at(s, ts, ")") { break }
-                let _next = typeName(&s, ts)
-                count += 1
+                parts.push(typeName(&s, ts))
             }
             expect(&s, ts, ")")
-            if count < 2 {
+            if parts.len() < 2 {
                 lexer.fail(ts, open, "E0020", "a tuple type needs at least two elements")
             }
-            lexer.fail(ts, open, "U0001", "tuple types are outside the selfhost subset")
+            let first = s.tupleAtoms.len()
+            for part in parts { s.tupleAtoms.push(part) }
+            result = TypeRef{kind: .Tuple, name: open, elementKind: .Unknown,
+                tupleStart: first, tupleCount: parts.len()}
         }
-        expect(&s, ts, ")")
-        result = TypeRef{elementKind: .Unknown, kind: .Unit}
     } else if ts[s.pos].kind == .Word && !reservedWord(ts[s.pos].text) {
         let name = s.pos
         s.pos += 1
@@ -374,6 +381,27 @@ fn interpolatedString(s: inout State, ts: Vec[Token]) -> int {
     return id
 }
 
+// The same lookahead as stage0: a parenthesized header immediately followed
+// by => is a closure, not a tuple expression. Closures remain unsupported.
+fn closureAhead(s: State, ts: Vec[Token]) -> bool {
+    var depth = 0
+    var i = s.pos
+    while i < ts.len() {
+        if ts[i].kind == .Symbol && ts[i].text == "(" { depth += 1
+        } else if ts[i].kind == .Symbol && ts[i].text == ")" {
+            depth -= 1
+            if depth == 0 {
+                return i + 1 < ts.len() && ts[i + 1].kind == .Symbol && ts[i + 1].text == "=>"
+            }
+        } else if ts[i].kind == .Eof || ts[i].kind == .Newline ||
+            (ts[i].kind == .Symbol && (ts[i].text == "{" || ts[i].text == "}")) {
+            return false
+        }
+        i += 1
+    }
+    return false
+}
+
 fn primary(s: inout State, ts: Vec[Token]) -> int {
     let p = s.pos
     if ts[p].kind == .StringStart { return interpolatedString(&s, ts) }
@@ -394,13 +422,22 @@ fn primary(s: inout State, ts: Vec[Token]) -> int {
         return pushExpr(&s, .Boolean, p, -1, -1)
     }
     if eat(&s, ts, "none") { return pushExpr(&s, .None, p, -1, -1) }
+    if at(s, ts, "(") && closureAhead(s, ts) {
+        syntax(s, ts, "U0001", "closures are outside the selfhost subset")
+    }
     if eat(&s, ts, "(") {
         if eat(&s, ts, ")") {
             return pushExpr(&s, .Unit, p, -1, -1)
         }
         let inner = parseExpression(&s, ts)
-        if at(s, ts, ",") {
-            syntax(s, ts, "U0001", "tuple expressions are outside the selfhost subset")
+        if eat(&s, ts, ",") {
+            var items: Vec[int] = [inner]
+            while !at(s, ts, ")") {
+                items.push(parseExpression(&s, ts))
+                if !eat(&s, ts, ",") { break }
+            }
+            expect(&s, ts, ")")
+            return pushList(&s, .Tuple, p, -1, items)
         }
         expect(&s, ts, ")")
         return pushExpr(&s, .Paren, p, inner, -1)
@@ -490,7 +527,8 @@ fn postfix(s: inout State, ts: Vec[Token]) -> int {
     var current = primary(&s, ts)
     loop {
         if eat(&s, ts, ".") {
-            let field = identifier(&s, ts)
+            var field = s.pos
+            if ts[field].kind == .Number { s.pos += 1 } else { field = identifier(&s, ts) }
             current = pushExpr(&s, .Field, field, current, -1)
         } else if at(s, ts, "(") {
             let target = s.expressions[current].token
@@ -753,6 +791,9 @@ fn parseStatement(s: inout State, ts: Vec[Token]) -> int {
     if at(s, ts, "let") || at(s, ts, "var") {
         let mutable = at(s, ts, "var")
         s.pos += 1
+        if at(s, ts, "(") {
+            syntax(s, ts, "U0001", "tuple destructuring is outside the selfhost subset")
+        }
         let name = identifier(&s, ts)
         var annotation = TypeRef{elementKind: .Unknown, kind: .Unknown}
         if eat(&s, ts, ":") { annotation = typeName(&s, ts) }
@@ -1049,7 +1090,7 @@ pub fn finishParse(s: inout State) -> Program {
     return Program{expressions: take(&s.expressions), statements: take(&s.statements),
         functions: take(&s.functions), types: take(&s.types), lists: take(&s.lists),
         params: take(&s.params), fields: take(&s.fields),
-        resultTypes: take(&s.resultTypes), stringParts: take(&s.stringParts),
+        resultTypes: take(&s.resultTypes), tupleAtoms: take(&s.tupleAtoms), stringParts: take(&s.stringParts),
         files: take(&s.files), imports: take(&s.imports)}
 }
 

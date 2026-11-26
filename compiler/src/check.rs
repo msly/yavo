@@ -5941,7 +5941,7 @@ impl Checker<'_> {
                 .error("E0001", h.span, format!("a value that can fail (`{}`) cannot be printed directly", h.ty))
                 .note("handle the error first with `try`, `catch` or `match`");
         }
-        if let Ty::Struct(_) | Ty::Vec(_) | Ty::Map(_) | Ty::Set(_) | Ty::Slice(_) = h.ty {
+        if let Ty::Struct(_) | Ty::Tuple(_) | Ty::Vec(_) | Ty::Map(_) | Ty::Set(_) | Ty::Slice(_) = h.ty {
             self.diags
                 .error("E0001", h.span, format!("a value of type `{}` cannot be printed directly", h.ty))
                 .note("print its parts instead, e.g. `println(\"${p.x} ${p.y}\")`");

@@ -1,6 +1,6 @@
 # Yavo 自举路线与实用验收
 
-2026-11-26 · 第四十二批加入带下标遍历与 Copy Optional if let；全仓覆盖 92/391，SH-3 尚未接替
+2026-11-26 · 第四十三批加入 Copy 元组、Optional 元组与 abs；全仓覆盖 98/391，SH-3 尚未接替
 
 近期主目标改为：**用 Yavo 实现 Yavo 编译器，完成可重放的自举闭环，再让它承担日常编译工作。** 自举用于暴露真实工程中的语言和工具链缺口；实用验收继续独立执行。
 
@@ -47,7 +47,15 @@ SH-1 的结果只标为“子集编译器”。SH-2 可以标为“子集自举�
 
 ## 当前进度
 
-### 第四十二批：带下标遍历与 Copy Optional if let
+### 第四十三批：Copy 元组与原始单位换算 CLI
+
+支持由 int/byte/bool/非拥有结构体/无载荷枚举组成的平坦 Copy 元组，包括构造、数字投影、局部值、参数/返回、整体赋值和 inout；Optional 元组可用 some/none、隐式包装、两类 ?? 和 if-let。类型签名使用有界的无碰撞整数编码，超出容量为 U0001；嵌套、拥有或借用元素、元组容器/字段、解构仍未开放。整数 abs 保留 byte 上下文并检查 int 最小值溢出。定标发现 Rust stage0 直接打印元组会触发 codegen panic，已在检查期以 E0001 拒绝，新增 P0 回归。
+
+原始 `r5/runs/yavo-b/tasks/T04/final` 的 main.yv 与 conversion.yv 未改动，新增 bootstrap 第 14 项应用门，以 20 个固定场景、330 条输入、Debug/Release 下 stage0/selfhost 共 80 次分配检查执行核对输出。公开契约、固定场景、两份源码和验收器均绑定哈希。该门验证真实程序兼容性，SH-4 正式应用交付计数仍为 1/3。
+
+新增 55 例，合计 847；最终 stage2 全仓扫描 **92 → 98 / 391**，新增 6 个路径来自两份单位换算实现各 3 份快照，退步 0、越界 0，221 个 stage0 拒绝输入均未被接受。本机完整自举 **847/847、14/14、0 skip**；stage2/stage3 C 1,010,808 字节、Linux 二进制 472,064 字节逐字节一致，两个应用门全部通过。三平台 CI 待推送后运行。下一批针对原始 `experiments/coldstart-2026-11-21-r4/yavo/T11.yv` 的文本 diff CLI 补整数 min/max，并核对差异文本和退出码。
+
+### 第四十二批：带下标遍历与 Copy Optional if let（历史记录）
 
 `for index, item in values` 支持既有 Vec/只读切片及 os.args()；索引只读 int，元素继续按 Copy 或只读借用处理，临时集合与控制流清理保持原规则。`if let name = value` 支持现有 int/byte/bool/非拥有结构体/无载荷枚举 Optional，支持 else、else-if-let 与 `_`；具名绑定在 then 作用域内保守保持匹配源的借用，`_` 不保留该借用；拥有型 Optional 尚未开放。编译器内类型查找和限定类型解析已分别迁移到两种语法。
 
@@ -200,7 +208,8 @@ str 与 String 接收者支持 `startsWith`/`endsWith`/`contains`（bool）、`f
 | 已完成 | Map 与 test-summary | 第四十批：733 例；selfhost 原样编译 test-summary，71 场景与 stage0 一致，纳入 bootstrap |
 | 已完成 | std/io、视图绑定 | 第四十一批：756 例；`io.readAll`、trim/lines/fields、视图绑定、遍历临时 Vec；原记录 88/391，第四十二批重建基线为 91 |
 | 已完成 | 带下标遍历与 if let | 第四十二批：本机 792/792、13/13、零跳过；三平台 CI 6/6；覆盖 91→92/391 |
-| 下一步 | 单位换算 CLI 原样构建 | Copy 二元组、Optional 二元组、.0/.1 与 abs；目标为 r5/yavo-b/T04 的两个原文件，保持覆盖扫描零越界 |
+| 本批 | Copy 元组与单位换算 CLI | 第四十三批：本机 847/847、14/14、0 skip；原始双模块程序 20 场景全部通过；覆盖 92→98/391、0 越界；CI 待完成 |
+| 下一步 | 文本 diff CLI 原样构建 | 整数 min/max；目标为 r4/yavo/T11.yv，核对 LCS 差异文本、汇总和 0/1/2 退出码 |
 | 接替阶段 | SH-3 接替 | 子集覆盖既有回归与冻结规格后，再讨论让 Yavo 编译器承担日常 `check`/`build` |
 
 固定点现在是回归门：任何修改 `selfhost/` 的提交都必须保持 stage2.c = stage3.c 与 stage1/stage2 全用例一致。

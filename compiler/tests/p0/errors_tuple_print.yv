@@ -1,0 +1,19 @@
+// expect-error: E0001 11:11
+// expect-error: E0001 12:13
+// expect-error: E0001 13:14
+// expect-error: E0001 14:26
+// expect-error: E0001 15:30
+// expect-error: E0001 16:16
+// expect-error: E0001 17:21
+// expect-error: E0001 18:13
+fn main() {
+    let pair = (1, 2)
+    print(pair)
+    println(pair)
+    eprintln(pair)
+    let _direct = format(pair)
+    let _message = format("${pair}")
+    println("${pair}")
+    assert(true, "${pair}")
+    println(("owned".toString(), 1))
+}
