@@ -102,7 +102,9 @@ stage0 oracles: 14 abs cases and 41 tuple cases, with no source promotions.
 The complete local bootstrap passes **847/847 cases, 14/14 checks, zero skips**.
 Stage2/stage3 C (1,010,808 bytes) and Linux binaries (472,064 bytes) match exactly;
 the real lexer, 71 applicable test-summary scenarios and all 20 unit-conversion
-scenarios pass. Three-platform CI is pending.
+scenarios pass. [CI run 45771997599](https://github.com/msly/yavo/actions/runs/45771997599)
+passed all six jobs at `7a2d08f`: Linux/Windows/macOS native bootstrap and
+application gates, Linux generated-code/stage2 ASan/UBSan and all independent jobs.
 
 The new `unit_conversion_application` check builds the original r5/yavo-b/T04
 `main.yv` and `conversion.yv` unchanged. Its 20 fixed scenarios contain 330 input

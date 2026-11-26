@@ -53,7 +53,7 @@ SH-1 的结果只标为“子集编译器”。SH-2 可以标为“子集自举�
 
 原始 `r5/runs/yavo-b/tasks/T04/final` 的 main.yv 与 conversion.yv 未改动，新增 bootstrap 第 14 项应用门，以 20 个固定场景、330 条输入、Debug/Release 下 stage0/selfhost 共 80 次分配检查执行核对输出。公开契约、固定场景、两份源码和验收器均绑定哈希。该门验证真实程序兼容性，SH-4 正式应用交付计数仍为 1/3。
 
-新增 55 例，合计 847；最终 stage2 全仓扫描 **92 → 98 / 391**，新增 6 个路径来自两份单位换算实现各 3 份快照，退步 0、越界 0，221 个 stage0 拒绝输入均未被接受。本机完整自举 **847/847、14/14、0 skip**；stage2/stage3 C 1,010,808 字节、Linux 二进制 472,064 字节逐字节一致，两个应用门全部通过。三平台 CI 待推送后运行。下一批针对原始 `experiments/coldstart-2026-11-21-r4/yavo/T11.yv` 的文本 diff CLI 补整数 min/max，并核对差异文本和退出码。
+新增 55 例，合计 847；最终 stage2 全仓扫描 **92 → 98 / 391**，新增 6 个路径来自两份单位换算实现各 3 份快照，退步 0、越界 0，221 个 stage0 拒绝输入均未被接受。本机完整自举 **847/847、14/14、0 skip**；stage2/stage3 C 1,010,808 字节、Linux 二进制 472,064 字节逐字节一致，两个应用门全部通过。实现提交 `7a2d08f` 的 [run 45771997599](https://github.com/msly/yavo/actions/runs/45771997599) **6/6 成功**；三平台原生自举/应用门、Linux ASan/UBSan 和独立作业全部通过。下一批针对原始 `experiments/coldstart-2026-11-21-r4/yavo/T11.yv` 的文本 diff CLI 补整数 min/max，并核对差异文本和退出码。
 
 ### 第四十二批：带下标遍历与 Copy Optional if let（历史记录）
 
@@ -208,7 +208,7 @@ str 与 String 接收者支持 `startsWith`/`endsWith`/`contains`（bool）、`f
 | 已完成 | Map 与 test-summary | 第四十批：733 例；selfhost 原样编译 test-summary，71 场景与 stage0 一致，纳入 bootstrap |
 | 已完成 | std/io、视图绑定 | 第四十一批：756 例；`io.readAll`、trim/lines/fields、视图绑定、遍历临时 Vec；原记录 88/391，第四十二批重建基线为 91 |
 | 已完成 | 带下标遍历与 if let | 第四十二批：本机 792/792、13/13、零跳过；三平台 CI 6/6；覆盖 91→92/391 |
-| 本批 | Copy 元组与单位换算 CLI | 第四十三批：本机 847/847、14/14、0 skip；原始双模块程序 20 场景全部通过；覆盖 92→98/391、0 越界；CI 待完成 |
+| 已完成 | Copy 元组与单位换算 CLI | 第四十三批：本机 847/847、14/14、0 skip；原始双模块程序 20 场景全部通过；覆盖 92→98/391、0 越界；三平台 CI 6/6 |
 | 下一步 | 文本 diff CLI 原样构建 | 整数 min/max；目标为 r4/yavo/T11.yv，核对 LCS 差异文本、汇总和 0/1/2 退出码 |
 | 接替阶段 | SH-3 接替 | 子集覆盖既有回归与冻结规格后，再讨论让 Yavo 编译器承担日常 `check`/`build` |
 

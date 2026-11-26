@@ -73,7 +73,9 @@ or strict-subset violations; none of 221 rejected programs is admitted. The six
 new paths represent two unit-conversion implementations with three snapshots each.
 The complete local bootstrap passes **847/847 cases, 14/14 checks, zero skips**;
 stage2/stage3 C (1,010,808 bytes) and Linux binaries (472,064 bytes) match exactly.
-Three-platform CI is pending. See [HANDOFF section 23](HANDOFF.md).
+[CI run 45771997599](https://github.com/msly/yavo/actions/runs/45771997599)
+passed all six jobs at `7a2d08f`, including Linux/Windows/macOS native bootstrap
+and application gates plus Linux ASan/UBSan. See [HANDOFF section 23](HANDOFF.md).
 
 ### Selfhost for loops and compiler traversal (batch 31, historical)
 

@@ -6,7 +6,7 @@
 
 **第四十三批加入平坦 Copy 元组、Optional 元组和整数 abs，原样打通双模块单位换算 CLI。** 支持元组构造、数字投影、局部值、参数/返回、整体赋值与 inout；Optional 元组沿用 some/none、隐式包装、两类 ?? 与 if-let。嵌套、拥有/借用元素、元组容器/字段和解构仍为 U0001。全仓 stage2 扫描覆盖 **92 → 98 / 391**，新增 6 个路径是两份单位换算实现各 3 份快照，**退步 0、子集越界 0**；stage0 拒绝的 221 个程序均未被接受。
 
-当前语料 **847 cases**（新增 55，无提升）；完整本机自举 **847/847、14/14、0 skip**，stage2/stage3 C（1,010,808 字节）与 Linux 二进制（472,064 字节）逐字节一致；三平台 CI 待运行。本批修复 Rust stage0 直接打印元组触发 codegen panic 的缺陷，改为 E0001 并加 8 个 P0 诊断；Rust Debug/Release 全量各 **145/0/1**，冻结 **124/3/2**。新增 bootstrap 第 14 项单位换算应用门，20 个固定场景、330 条输入、双方 Debug/Release 共 80 次分配检查执行。
+当前语料 **847 cases**（新增 55，无提升）；完整本机自举 **847/847、14/14、0 skip**，stage2/stage3 C（1,010,808 字节）与 Linux 二进制（472,064 字节）逐字节一致；实现提交 `7a2d08f` 的 [run 45771997599](https://github.com/msly/yavo/actions/runs/45771997599) **6/6 成功**，三平台原生自举/应用门及 Linux ASan/UBSan 均通过。本批修复 Rust stage0 直接打印元组触发 codegen panic 的缺陷，改为 E0001 并加 8 个 P0 诊断；Rust Debug/Release 全量各 **145/0/1**，冻结 **124/3/2**。新增 bootstrap 第 14 项单位换算应用门，20 个固定场景、330 条输入、双方 Debug/Release 共 80 次分配检查执行。
 
 **SH-2 引导子集固定点已闭合；SH-3 尚未接替，Rust stage0 仍承担日常编译；SH-4 正式交付完成 1/3 个独立应用。** test-summary 与原始单位换算 CLI 都进入 bootstrap 应用回归；后者尚不等于 SH-4 第二项独立项目交付。验收条件保持 `docs/decisions.md` 第九节。
 
@@ -353,4 +353,4 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - **用例**：新增 55（abs 14、tuple 41），无原样提升；合计 847（run 222、panic 31、reject 452、unsupported 111、shared_unsupported 31）。新增支持、拒绝与保守边界均先定标 stage0；额外差分审查覆盖求值快照、上下文、仅签名类型和长签名边界。全仓扫描暴露的解构误报 E0020 已改为 U0001，未开放解构。
 - **应用门**：新增 `selfhost/conversion_application.py` 与 `tests/applications/unit-conversion.json`，纳入 bootstrap 第 14 项 `unit_conversion_application`。固定两份原文件哈希，20 场景/330 条输入，双方 Debug/Release 共 80 次分配检查执行；固定 stdout 独立来自公开契约与精确分数，覆盖 16 种单位对、符号/约分/零、数值/精度/长度限制、非法行、空白/编号及 200 行输入。验收器、契约、场景和两份源码参与输入首尾哈希；优先用固定点 stage2。超时杀进程树并有界回收，临时普通文件承载输入输出，避免后代持有管道导致永久等待。
 - **全仓覆盖**：最终 stage2 **92 → 98 / 391，新增 6、退步 0、越界 0**；新增均为 r5 的 yavo-a/yavo-b T04 各 final/work/snapshots/0001，入口源码只有两种。stage0 接受集合仍为原来 391 个；拒绝数增至 221，唯一新增是上述 P0 元组输出 fixture，全部未被 selfhost 放行。
-- **本机与 CI**：最终完整自举 **847/847、14/14、0 skip**；stage2/stage3 C **1,010,808 字节**、Linux 二进制 **472,064 字节**逐字节一致；真实 lexer、test-summary 的 71 个本机场景、新单位换算的 20 场景/80 次执行、输入不变检查全部通过。首轮新增应用构建曾因宿主磁盘耗尽失败，清除可再生 Zig 缓存后完整复验通过。三平台 CI 待推送后补回。
+- **本机与 CI**：最终完整自举 **847/847、14/14、0 skip**；stage2/stage3 C **1,010,808 字节**、Linux 二进制 **472,064 字节**逐字节一致；真实 lexer、test-summary 的 71 个本机场景、新单位换算的 20 场景/80 次执行、输入不变检查全部通过。首轮新增应用构建曾因宿主磁盘耗尽失败，清除可再生 Zig 缓存后完整复验通过。CI：实现提交 `7a2d08f` 的 [run 45771997599](https://github.com/msly/yavo/actions/runs/45771997599) **6/6 成功**（首次运行）；Linux x86-64、Windows x86-64、macOS arm64 原生自举和应用门均成功，Linux 生成 C/stage2 ASan/UBSan 与三个独立作业全部通过。
