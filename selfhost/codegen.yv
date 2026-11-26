@@ -817,6 +817,37 @@ fn takeCall(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Ex
     return taken
 }
 
+fn minMaxValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression,
+    expected: Type) -> Value {
+    if e.argCount != 2 { lexer.fail(ts, e.token, "E0012", "min and max require two arguments") }
+    let left = p.lists[e.argStart]
+    let right = p.lists[e.argStart + 1]
+    var lhs = Value{ty: types.primitive(.Unknown), name: String{}}
+    var rhs = Value{ty: types.primitive(.Unknown), name: String{}}
+    if untypedInteger(p, ts, left) && !untypedInteger(p, ts, right) {
+        // Infer from the typed operand, but put the literal's checked operations
+        // before the RHS effects. The literal expression has no owner or loan.
+        let before = take(&g.out)
+        rhs = emitContext(&g, p, ts, reg, right, expected)
+        let rightCode = take(&g.out)
+        g.out = before
+        let hint = operandHint(reg, rhs.ty, expected)
+        lhs = emitContext(&g, p, ts, reg, left, hint)
+        g.out.push(rightCode)
+    } else {
+        // Scalar reads are materialized immediately, before a later inout call
+        // can change the source. Numeric arguments keep no borrow on that source.
+        lhs = emitContext(&g, p, ts, reg, left, expected)
+        let hint = operandHint(reg, lhs.ty, expected)
+        rhs = emitContext(&g, p, ts, reg, right, hint)
+    }
+    requireInteger(ts, e.token, lhs.ty)
+    require(reg, ts, e.token, rhs.ty, lhs.ty)
+    var op = "<"
+    if ts[e.token].text == "max" { op = ">" }
+    return scalar(&g, lhs.ty.kind, format("(${lhs.name} ${op} ${rhs.name} ? ${lhs.name} : ${rhs.name})"))
+}
+
 fn callValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression, id: int,
     expected: Type) -> Value {
     let name = ts[e.token].text.clone()
@@ -850,6 +881,9 @@ fn callValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: E
         let negated = support.join5("yv_neg_i64(", arg.name, ", ", lineColumn(ts, e.token), ")")
         return scalar(&g, .Int, support.join5("(", arg.name, " < 0 ? ", negated,
             support.join3(" : ", arg.name, ")")))
+    }
+    if index < 0 && (name == "min" || name == "max") {
+        return minMaxValue(&g, p, ts, reg, e, expected)
     }
     if index < 0 && name == "take" { return takeCall(&g, p, ts, reg, e) }
     if index < 0 && name == "format" {

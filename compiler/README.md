@@ -15,6 +15,12 @@ compiles itself to a stage2/stage3 fixed point, originally confirmed on Linux,
 Windows and macOS. Batch 29 adds user-function Result/try and migrates the actual
 lexer error path. Rust remains the daily compiler while SH-3 coverage expands.
 
+Batch 44 fixes MinMax operand snapshots: the old backend kept a local/field
+expression until after evaluating the second argument, so an inout mutation there
+changed the first operand's value. Both operands are now bound once in source
+order before selection. `tests/p0/run_min_max_snapshot.yv` covers int/byte locals,
+fields, inout parameters, indexed reads, nested calls and single evaluation.
+
 Batch 43 fixes a stage0 diagnostic defect found while adding Copy tuples to the
 selfhost: direct tuple printing reached an internal codegen panic. The checker
 now reports E0001 for tuple output, including direct print calls, format and

@@ -42,7 +42,7 @@ Recent changes implement index assignment, two-phase variable/field receivers, S
 
 | Check | Recorded local result | Scope |
 | --- | --- | --- |
-| Release suite | **145 passed, 0 failed, 1 ignored** | Batch 43: complete suite after the tuple-print diagnostic fix; frozen cases unchanged |
+| Release suite | **145 passed, 0 failed, 1 ignored** | Batch 44: complete suite after the min/max operand-snapshot fix; frozen cases unchanged |
 | Debug suite | **145 passed, 0 failed, 1 ignored** | Same source, all 19 groups, independent completed local log |
 | Frozen specification | **124 pass, 0 wrong, 3 unsupported, 0 not_run, 2 superseded** | 129 frozen cases; a different counting unit from Cargo test functions |
 | Cross-compilation | Six target formats/architectures build | Linux (static musl), Windows and macOS on x86-64/aarch64; native CI now covers Linux x86-64 plus the Windows x86-64/macOS arm64 selections below |
@@ -52,30 +52,31 @@ The ignored Cargo test is the old exploratory P0 conformance report; the current
 
 Source modules support top-level exports, per-file imports, cyclic imports and original-file diagnostics. Package dependencies and a program lockfile remain open. Multi-file `fix` returns `U0001` without writing; symlink module aliases are unsupported.
 
-### Selfhost Copy tuples and original unit-conversion CLI (batch 43, 2026-11-26)
+### Selfhost integer min/max and original text-diff CLI (batch 44, 2026-11-26)
 
-Flat tuples of supported Copy values now support construction, numeric projection,
-arguments, returns, whole-value assignment and inout, including Optional tuples
-with `some`, `none`, `??` and `if let`. Nested, owned and borrowed tuple elements,
-tuple containers and destructuring remain outside this subset. `abs(int)` checks
-overflow; `abs(byte)` preserves the byte type. The Rust checker now rejects direct
-tuple output with E0001 instead of reaching an internal codegen panic.
+`min(a, b)` and `max(a, b)` now accept matching int/byte operands. Untyped
+integer expressions can adopt the other operand's type; Optional/Result wrapping
+retains its existing context rules. Operands are evaluated once, left to right,
+and the first value is saved before any mutation in the second operand.
 
-The original two-module r5/yavo-b/T04 unit-conversion CLI is now a bootstrap
-application gate: 20 fixed scenarios, 330 input records and 80 allocation-checked
-stage0/selfhost executions across Debug and Release. Its source files are unchanged
-and hash-pinned. This is an additional compiler application regression; the formal
-SH-4 delivery count remains one of three.
+An independent probe found that Rust stage0 previously reread a local or field
+after the second operand changed it. Its MinMax lowering now snapshots both
+operands in order; the new P0 regression covers locals, fields, inout parameters,
+byte values, indexing and nested calls. Floating-point and other integer widths
+remain outside the selfhost subset.
 
-The matrix has **847 cases**, including 55 new fixtures. The stage2 repository sweep
-covers **98 of 391** stage0-accepted programs, up from 92, with zero lost coverage
-or strict-subset violations; none of 221 rejected programs is admitted. The six
-new paths represent two unit-conversion implementations with three snapshots each.
-The complete local bootstrap passes **847/847 cases, 14/14 checks, zero skips**;
-stage2/stage3 C (1,010,808 bytes) and Linux binaries (472,064 bytes) match exactly.
-[CI run 45771997599](https://github.com/msly/yavo/actions/runs/45771997599)
-passed all six jobs at `7a2d08f`, including Linux/Windows/macOS native bootstrap
-and application gates plus Linux ASan/UBSan. See [HANDOFF section 23](HANDOFF.md).
+The unchanged r4/yavo/T11 text-diff CLI is now the third bootstrap application
+gate. Its 35 fixed scenarios run through both compilers in Debug and Release:
+140 executions must match exact stdout, stderr and exit codes 0/1/2. All builds
+enable allocation instrumentation; 32 executions return normally and reach its
+exit check, while 108 follow the original program's os.exit(1/2) paths.
+
+The matrix has **875 cases**, including 28 new fixtures and one unchanged-source promotion. On the original corpus,
+coverage rises **98 to 99 of 391**, gaining T11 with no lost coverage. Including
+the new accepted P0 regression, the full sweep is **100 of 392**, with zero
+strict-subset violations and none of 221 stage0-rejected programs admitted.
+Complete local bootstrap and three-platform CI are pending.
+See [HANDOFF section 24](HANDOFF.md).
 
 ### Selfhost for loops and compiler traversal (batch 31, historical)
 
@@ -387,7 +388,7 @@ and [module/thread audit](experiments/coldstart-2026-11-22-r5/evidence/manual-re
 ## Next work and acceptance gates
 
 1. Add interpolation and `format` for the existing printable types. Migrate diagnostic `report` and C-name/location construction in `temporaryName`, `localName` and `lineColumn`; preserve exact output bytes, expression order and ownership cleanup. See [HANDOFF.md](HANDOFF.md).
-2. Preserve the completed [SH-2 fixed point](docs/self-hosting.md), Result, Copy Optional/pop, for, real lexer allocation checks and stage2 ASan/UBSan gate. Follow formatting with source modules: file identity, import graphs, per-file visibility and original-file diagnostics must move together.
+2. Preserve the completed [SH-2 fixed point](docs/self-hosting.md), Result, Copy Optional/pop, for, real lexer allocation checks and stage2 ASan/UBSan gate. The next concrete target is integer Vec sorting for the original r5/yavo-b/T11 sliding-window median CLI; retain actual application checks and zero subset violations.
 3. Complete SH-3 before making it the default compiler. SH-4 has one accepted application; add independent structured-text validation and multi-file dependency/index projects, retaining frozen conformance, native checks, diagnostics and resource validation.
 4. Resume the qualified [per-request executor](tools/agent_eval/README.md), [prepared document experiment](experiments/docs-ab-2026-11-22-r6/README.md), 60-task pilot and formal cost study as later product evidence. Live API qualification is still **blocked**, with **0 round-six participant sessions**; it no longer blocks compiler development.
 5. Remaining v1 functionality includes user test blocks and `yavo test`, local/Git dependencies and a lockfile, FFI/unsafe/audit, general closures/higher-order parameters, public movable Join and `spawn inout`. Prioritize these only when required by the declared application scope or a concrete bootstrap blocker.

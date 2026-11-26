@@ -1,14 +1,14 @@
-# Yavo 交接文档（2026-11-26，第四十三批：Copy 元组与原始单位换算 CLI）
+# Yavo 交接文档（2026-11-26，第四十四批：整数 min/max 与原始文本 diff CLI）
 
-给下一个会话：先读第 1、2、10、22、23 节及 docs/self-hosting.md、selfhost/README.md 再开工。第二十七至第三十批在 `history/handoff-batches-2026-11-23-to-24.md`，第十二至第二十六批在 `history/handoff-batches-2026-11-21-to-23.md`，第六至第十一批在 `history/handoff-batches-2026-11-19-to-21.md`。
+给下一个会话：先读第 1、2、10、23、24 节及 docs/self-hosting.md、selfhost/README.md 再开工。第二十七至第三十批在 `history/handoff-batches-2026-11-23-to-24.md`，第十二至第二十六批在 `history/handoff-batches-2026-11-21-to-23.md`，第六至第十一批在 `history/handoff-batches-2026-11-19-to-21.md`。
 
 ## 1. 一句话状态
 
-**第四十三批加入平坦 Copy 元组、Optional 元组和整数 abs，原样打通双模块单位换算 CLI。** 支持元组构造、数字投影、局部值、参数/返回、整体赋值与 inout；Optional 元组沿用 some/none、隐式包装、两类 ?? 与 if-let。嵌套、拥有/借用元素、元组容器/字段和解构仍为 U0001。全仓 stage2 扫描覆盖 **92 → 98 / 391**，新增 6 个路径是两份单位换算实现各 3 份快照，**退步 0、子集越界 0**；stage0 拒绝的 221 个程序均未被接受。
+**第四十四批加入 int/byte 的 min/max，原样打通文本 diff CLI。** 两个参数各求值一次、从左到右保存值快照；无类型数字表达式可从另一参数推导 byte，Optional/Result 裸包装不透传载荷上下文。定标发现 Rust stage0 会在第二参数修改本地/字段后才读第一参数，已修复并加 P0 回归。原有 391 个 stage0 接受程序的覆盖 **98 → 99**，唯一新增为 r4/yavo/T11.yv；加上本批新 P0，当前全仓 **100/392，退步 0、越界 0**，221 个 stage0 拒绝输入均未被放行。
 
-当前语料 **847 cases**（新增 55，无提升）；完整本机自举 **847/847、14/14、0 skip**，stage2/stage3 C（1,010,808 字节）与 Linux 二进制（472,064 字节）逐字节一致；实现提交 `7a2d08f` 的 [run 45771997599](https://github.com/msly/yavo/actions/runs/45771997599) **6/6 成功**，三平台原生自举/应用门及 Linux ASan/UBSan 均通过。本批修复 Rust stage0 直接打印元组触发 codegen panic 的缺陷，改为 E0001 并加 8 个 P0 诊断；Rust Debug/Release 全量各 **145/0/1**，冻结 **124/3/2**。新增 bootstrap 第 14 项单位换算应用门，20 个固定场景、330 条输入、双方 Debug/Release 共 80 次分配检查执行。
+当前语料 **875 cases**（新增 28，原样提升 1），完整本机自举进行中；Rust Debug/Release 全量各 **145/0/1**，冻结 **124/3/2**。新增第 15 项 text_diff_application：原始 T11 35 个固定场景、双方 Debug/Release 共 140 次执行已独立通过；32 次正常返回做分配检查，108 次沿原程序 os.exit(1/2) 路径核对输出和退出状态。
 
-**SH-2 引导子集固定点已闭合；SH-3 尚未接替，Rust stage0 仍承担日常编译；SH-4 正式交付完成 1/3 个独立应用。** test-summary 与原始单位换算 CLI 都进入 bootstrap 应用回归；后者尚不等于 SH-4 第二项独立项目交付。验收条件保持 `docs/decisions.md` 第九节。
+**SH-2 引导子集固定点已闭合；SH-3 尚未接替，Rust stage0 仍承担日常编译；SH-4 正式交付完成 1/3 个独立应用。** bootstrap 现有 test-summary、原始单位换算、原始文本 diff 三项应用回归；后两项是兼容性验收，正式独立项目交付条件仍按自举路线。每批门槛保持 `docs/decisions.md` 第九节。
 
 ## 2. 仓库与环境
 
@@ -194,9 +194,9 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 
 ## 10. 下一个会话的第一步
 
-1. 检查 Git 状态、最新实现提交与 CI；先读第 23 节、[自举路线](docs/self-hosting.md)、[selfhost 说明](selfhost/README.md)。
-2. **下一批以原样编译文本 diff CLI 为目标**：`experiments/coldstart-2026-11-21-r4/yavo/T11.yv` 读取两份文本文件，以 LCS 输出保留/删除/新增行和汇总。当前首个阻塞是第 37 行整数 `max()`，其余使用既有 fs/os、catch _、String 视图、Vec[int]、下标赋值、循环和插值。补整数 min/max 后，原样核对相同/空文件、插入/删除/替换、重复行平局、参数不足/读失败，以及 0/1/2 退出码；源码检查尚不等于通过运行，不预先承诺覆盖增量。
-3. 第四十三批后覆盖 98/391；首个阻塞为标准模块 35、其他类型形式 24、Vec 元组元素 21、类型后缀 18、闭包 18、泛型/接口 17、Map 非标量值 17、浮点 16。首诊断次数不是新增覆盖预测：r5 T03 的两个区间集合实现仍需要 sortBy 闭包，T05 连通区域需要 Vec[CopyTuple]、while-let 和 min/max，均比上述 diff CLI 范围大。每批仍以实际覆盖和零越界验收。
+1. 检查 Git 状态、最新实现提交与 CI；先读第 24 节、[自举路线](docs/self-hosting.md)、[selfhost 说明](selfhost/README.md)。
+2. **下一批以原样编译滑动窗口下中位数 CLI 为目标**：`experiments/coldstart-2026-11-22-r5/runs/yavo-b/tasks/T11/final/main.yv`，唯一已观察阻塞是第 19 行 `Vec[int].sort()`。完整 25 行程序只导入 std/io，其余均为已有输入/解析、整数 Vec、范围遍历、下标与输出。先实现无参原地升序排序、Unit 返回和既有可写 place/借用权限；沿用 runtime 的 yv_sort/yv_cmp_i64，不需要 sortBy 闭包、元组 Vec 或新模块。
+3. 原文件 SHA256 为 `e4d211582198c47570790de1791bba37e3907d6524736e1b3ee73c97e6206828`；仅在 ignored 诊断副本用插入排序替换该调用后两个编译器 check 通过，原文件仍未被 selfhost 接受。正式验收用原文件、现有 14 组 T11 judge 输入（含 2 公开）并补 K=25/长度=200 上界，核对下中位数/总和/窗口数。范围 K=1..25、序列长度0..200、元素±10^9；保留奇偶窗口、重复值、负数、混合空白与总和超过32位场景。不能把诊断性改写算作原应用通过。当前全仓100/392，其中原有语料99/391；首阻塞计数不用于预测下一批覆盖增量。
 4. 拥有型 Optional/pop、Map 的 String 值仍是后续候选。若扩展 Optional，必须同时覆盖移动、析构、借用绑定及 `??` 提前退出，不能只放开解析。
 5. 模块尚缺包依赖与锁文件（stage0 也没有）、后置 use、跨模块的枚举载荷/方法/泛型；按真实应用阻塞安排。
 6. SH-4 第二个独立应用建议结构化文本校验或多文件依赖/索引工具。不要同时运行共用临时目录的两条 cargo test。第六轮文档实验有可计量环境才恢复，不阻塞工程推进。
@@ -354,3 +354,15 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - **应用门**：新增 `selfhost/conversion_application.py` 与 `tests/applications/unit-conversion.json`，纳入 bootstrap 第 14 项 `unit_conversion_application`。固定两份原文件哈希，20 场景/330 条输入，双方 Debug/Release 共 80 次分配检查执行；固定 stdout 独立来自公开契约与精确分数，覆盖 16 种单位对、符号/约分/零、数值/精度/长度限制、非法行、空白/编号及 200 行输入。验收器、契约、场景和两份源码参与输入首尾哈希；优先用固定点 stage2。超时杀进程树并有界回收，临时普通文件承载输入输出，避免后代持有管道导致永久等待。
 - **全仓覆盖**：最终 stage2 **92 → 98 / 391，新增 6、退步 0、越界 0**；新增均为 r5 的 yavo-a/yavo-b T04 各 final/work/snapshots/0001，入口源码只有两种。stage0 接受集合仍为原来 391 个；拒绝数增至 221，唯一新增是上述 P0 元组输出 fixture，全部未被 selfhost 放行。
 - **本机与 CI**：最终完整自举 **847/847、14/14、0 skip**；stage2/stage3 C **1,010,808 字节**、Linux 二进制 **472,064 字节**逐字节一致；真实 lexer、test-summary 的 71 个本机场景、新单位换算的 20 场景/80 次执行、输入不变检查全部通过。首轮新增应用构建曾因宿主磁盘耗尽失败，清除可再生 Zig 缓存后完整复验通过。CI：实现提交 `7a2d08f` 的 [run 45771997599](https://github.com/msly/yavo/actions/runs/45771997599) **6/6 成功**（首次运行）；Linux x86-64、Windows x86-64、macOS arm64 原生自举和应用门均成功，Linux 生成 C/stage2 ASan/UBSan 与三个独立作业全部通过。
+
+## 24. 第四十四批：整数 min/max 与原始文本 diff CLI（2026-11-26）
+
+- 基线 `91bb20a`。目标为原样构建运行 `experiments/coldstart-2026-11-21-r4/yavo/T11.yv`，只补实际阻塞的整数 min/max；原文件和冻结规格均未改。
+- **min/max**：恰好两个同型 int/byte 参数，保留双向数字上下文、用户同名函数优先和局部同名不可调用。用 emitContext 保持包装边界；`?byte = min(1, 2)` 为 E0001，some/ok 等显式构造才传入 byte 提示。参数个数 E0012、不兼容类型 E0001、越界字面量 E0003；浮点及其他整数宽度仍 U0001。
+- **值顺序**：普通路径的标量读取立即物化，右侧 inout 修改不影响第一参数；两个参数均恰好一次。左侧是无类型纯数字树、右侧有类型时，先推导右类型，但把左 C 放回右 C 之前；左侧除零必须先于右侧 assert(false)。没有为数值参数增加借用锁。
+- **Rust 修复**：旧 MinMax 代码生成保留本地/字段表达式到第二实参求值之后，`min(value, writeInt(&value, 100, 10, ...))` 在 value=5 时错误输出 10，正确为 5。`compiler/src/codegen.rs` 现在依次 bind 两个操作数；新增 `compiler/tests/p0/run_min_max_snapshot.yv` 覆盖 int/byte、本地/字段/inout参数/下标/嵌套副作用/单次求值与极值。新 P0 两模式通过，完整 Rust Debug/Release 各 145/0/1，冻结规格仍 124/3/2。
+- **用例**：新增 28（run 5、panic 1、reject 21、unsupported 1），原样提升 builtin_max；合计 875（run 228、panic 32、reject 473、unsupported 111、shared_unsupported 31）。提升记录绑定基线 91bb20a 和原始源码哈希，双方 D/R 固定输出均为 2。各诊断/输出先按修复后的 stage0 定标；新增 12 组 D/R 运行差分全部通过。额外 RHS try 成功/失败与临时拥有 Vec 清理组合也经四次分配检查执行核对，无新增缺陷。
+- **应用门**：`selfhost/diff_application.py` 与 `tests/applications/text-diff.json` 纳入 bootstrap 第 15 项 text_diff_application，复用已验证的进程树超时 runner。原始 T11 SHA256 为 `6caddd13162d57caa859c58323c4993e27809e5c3100bf23b3139d9880f43ec8`，35 场景/140 次执行通过，退出码 0/1/2 各 8/19/8 个场景。期望独立遵循公开 LCS 平局先删除规则并核对公开 fixture；27 contract、3 line API、3 CLI、2 file API 边界区分记录。10 项输入绑定原始源码、验收器、共享 runner、契约、固定场景和公开输入输出。
+- **分配范围**：全部构建启用分配插桩，32 次正常返回执行分配检查；108 次差异/错误按原程序 os.exit(1/2) 退出，不执行正常析构及正常返回分配校验。后者只声明输出、错误和退出码正确，不混作资源检查通过。
+- **覆盖口径**：沿用 subset_sweep.py 的全工作区 rglob（包含已有未跟踪实验快照）。原有 612 源文件内容和 391 个 stage0 接受成员均未变；原有覆盖 98→99，仅新增原始 T11、减少 0。新增 P0 单列后，全仓 100/392，stage0 拒绝 221，越界 0。
+- **本机与 CI**：完整自举和三平台 CI 待完成；本机固定点及最终 stage2 扫描结果随后回填。

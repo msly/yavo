@@ -1,0 +1,101 @@
+// expect-stdout:
+// | local 5 -5
+// | field 5
+// | index 20
+// | parameter 5
+// | byte 5 200
+// | byte-field 250
+// | nested 10
+// | boundary 9223372036854775807 -9223372036854775808
+// | min/max snapshots ok
+
+struct IntSource { value: int }
+struct ByteSource { value: byte }
+
+fn writeInt(value: inout int, next: int, result: int, calls: inout int) -> int {
+    value = next
+    calls += 1
+    return result
+}
+
+fn writeField(source: inout IntSource, calls: inout int) -> int {
+    source.value = 100
+    calls += 1
+    return 10
+}
+
+fn indexOnce(calls: inout int) -> int {
+    calls += 1
+    return 0
+}
+
+fn writeIndex(values: inout Vec[int], calls: inout int) -> int {
+    values[0] = 1
+    calls += 1
+    return 10
+}
+
+fn parameter(value: inout int, calls: inout int) -> int {
+    return min(value, writeInt(&value, 100, 10, &calls))
+}
+
+fn writeByte(value: inout byte, next: byte, result: byte, calls: inout int) -> byte {
+    value = next
+    calls += 1
+    return result
+}
+
+fn main() {
+    var local = 5
+    var localCalls = 0
+    let localMin = min(local, writeInt(&local, 100, 10, &localCalls))
+    local = -5
+    let localMax = max(local, writeInt(&local, -100, -10, &localCalls))
+
+    var field = IntSource{value: 5}
+    var fieldCalls = 0
+    let fieldMin = min(field.value, writeField(&field, &fieldCalls))
+
+    var values = [20]
+    var indexCalls = 0
+    var writeCalls = 0
+    let indexMax = max(values[indexOnce(&indexCalls)], writeIndex(&values, &writeCalls))
+
+    var argument = 5
+    var parameterCalls = 0
+    let parameterMin = parameter(&argument, &parameterCalls)
+
+    var small: byte = 5
+    var byteCalls = 0
+    let byteMin = min(small, writeByte(&small, 200, 10, &byteCalls))
+    let byteMax = max(small, writeByte(&small, 0, 150, &byteCalls))
+    var byteField = ByteSource{value: 250}
+    let byteFieldMax = max(byteField.value, writeByte(&byteField.value, 0, 100, &byteCalls))
+
+    // The outer first operand precedes both mutations inside the inner call.
+    var nested = 5
+    var nestedCalls = 0
+    let nestedMax = max(nested,
+        min(writeInt(&nested, 100, 10, &nestedCalls), writeInt(&nested, 200, 20, &nestedCalls)))
+
+    let greatest = max(9223372036854775807, -9223372036854775808)
+    let least = min(9223372036854775807, -9223372036854775808)
+
+    println("local ${localMin} ${localMax}")
+    println("field ${fieldMin}")
+    println("index ${indexMax}")
+    println("parameter ${parameterMin}")
+    println("byte ${byteMin} ${byteMax}")
+    println("byte-field ${byteFieldMax}")
+    println("nested ${nestedMax}")
+    println("boundary ${greatest} ${least}")
+    assert(localMin == 5 && localMax == -5 && local == -100 && localCalls == 2)
+    assert(fieldMin == 5 && field.value == 100 && fieldCalls == 1)
+    assert(indexMax == 20 && values[0] == 1 && indexCalls == 1 && writeCalls == 1)
+    assert(parameterMin == 5 && argument == 100 && parameterCalls == 1)
+    assert(byteMin == byte(5) && byteMax == byte(200) && small == byte(0) && byteCalls == 3)
+    assert(byteFieldMax == byte(250) && byteField.value == byte(0))
+    assert(nestedMax == 10 && nested == 200 && nestedCalls == 2)
+    assert(greatest == 9223372036854775807 && least == -9223372036854775808)
+    println("min/max snapshots ok")
+}

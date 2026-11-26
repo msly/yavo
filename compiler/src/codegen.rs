@@ -2042,8 +2042,12 @@ impl Gen {
                 s
             }
             HExprKind::MinMax { max, a, b } => {
+                // A later operand may mutate the local or field read by the first.
+                // Capture both values once, in source order, before selecting one.
                 let x = self.expr(a, f);
+                let x = self.bind(a.ty, &x);
                 let y = self.expr(b, f);
+                let y = self.bind(b.ty, &y);
                 let op = if *max { ">" } else { "<" };
                 self.bind(e.ty, &format!("({x} {op} {y} ? {x} : {y})"))
             }

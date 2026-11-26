@@ -1,0 +1,30 @@
+struct Counter { value: int }
+fn down(value: inout int) -> int { value = -100
+ return 7 }
+fn up(value: inout int) -> int { value = 100
+ return 3 }
+fn fieldDown(value: inout Counter) -> int { value.value = -100
+ return 7 }
+fn byteUp(value: inout byte) -> byte { value = 200
+ return 10 }
+fn grow(values: inout Vec[int]) -> int { values.push(99)
+ values[0] = 100
+ return 3 }
+fn mark(label: str, value: int) -> int { print(label)
+ return value }
+fn main() {
+ var low = 5
+ println(min(low, down(&low)))
+ var high = 5
+ println(max(high, up(&high)))
+ var field = Counter{value: 5}
+ println(min(field.value, fieldDown(&field)))
+ var narrow: byte = 5
+ println(int(min(narrow, byteUp(&narrow))))
+ var values = [5]
+ println(max(values[0], grow(&values)))
+ println("${values[0]} ${values.len()}")
+ println(min(mark("A", 5), mark("B", 7)))
+ println(max(mark("C", 4), mark("D", 6)))
+ println(min(3, mark("E", 100)))
+}

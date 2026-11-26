@@ -1,0 +1,818 @@
+{
+  "schema": "yavo-text-diff-scenarios/1",
+  "application": "experiments/coldstart-2026-11-21-r4/yavo/T11.yv",
+  "source_sha256": "6caddd13162d57caa859c58323c4993e27809e5c3100bf23b3139d9880f43ec8",
+  "contract": {
+    "path": "experiments/coldstart-2026-11-21-r4/TASKS.md",
+    "sha256": "4375cd68d1658a25165e16c6a8f19edc6a7b9b9c8b7f2b7d7070ed8b34fe8c17"
+  },
+  "oracle": "Fixed expectations prepared before running either compiler: manually checked small traces and an independent memoized LCS recurrence implementing the published deletion-on-tie rule; published outputs were verified against that recurrence. No application output is used to derive expectations.",
+  "allocation_check": "Enabled for all builds; exit 0 follows main return and checks allocations. Original os.exit(1/2) bypasses destructors and normal-return allocation validation.",
+  "cases": [
+    {
+      "id": "published_different",
+      "scope": "contract",
+      "reason": "Unmodified public fixture and its independently checked published expectation.",
+      "args": [
+        "tasks/T11a.txt",
+        "tasks/T11b.txt"
+      ],
+      "files": [
+        {
+          "path": "tasks/T11a.txt",
+          "repository": "experiments/coldstart-2026-11-21-r4/tasks/T11a.txt",
+          "sha256": "7f294dc5b5b495c7961599990c3b60cb7757f1bc190876d0ab1ac54286700457"
+        },
+        {
+          "path": "tasks/T11b.txt",
+          "repository": "experiments/coldstart-2026-11-21-r4/tasks/T11b.txt",
+          "sha256": "c30310718f833f2cf1ec16f536b8201e02f640b32e9fcd5203c280b1e488ec2c"
+        }
+      ],
+      "expected": {
+        "stdout_repository": "experiments/coldstart-2026-11-21-r4/tasks/T11ab.out",
+        "stdout_sha256": "23b46412beac28c6292b7acef567aa7f3260323142e7c8a32bbf527a023591f1",
+        "stderr": "",
+        "exit_code": 1
+      }
+    },
+    {
+      "id": "published_same",
+      "scope": "contract",
+      "reason": "Unmodified public fixture and its independently checked published expectation.",
+      "args": [
+        "tasks/T11a.txt",
+        "tasks/T11a.txt"
+      ],
+      "files": [
+        {
+          "path": "tasks/T11a.txt",
+          "repository": "experiments/coldstart-2026-11-21-r4/tasks/T11a.txt",
+          "sha256": "7f294dc5b5b495c7961599990c3b60cb7757f1bc190876d0ab1ac54286700457"
+        }
+      ],
+      "expected": {
+        "stdout_repository": "experiments/coldstart-2026-11-21-r4/tasks/T11aa.out",
+        "stdout_sha256": "f0938d4f8c633f744ef033b140670ddd4ad66bd0a321db8e0a5a6db859cbad79",
+        "stderr": "",
+        "exit_code": 0
+      }
+    },
+    {
+      "id": "published_missing_first",
+      "scope": "contract",
+      "reason": "Published read-error contract.",
+      "args": [
+        "tasks/nosuch.txt",
+        "tasks/T11a.txt"
+      ],
+      "files": [
+        {
+          "path": "tasks/T11a.txt",
+          "repository": "experiments/coldstart-2026-11-21-r4/tasks/T11a.txt",
+          "sha256": "7f294dc5b5b495c7961599990c3b60cb7757f1bc190876d0ab1ac54286700457"
+        }
+      ],
+      "expected": {
+        "stdout": "",
+        "stderr": "error: cannot read tasks/nosuch.txt\n",
+        "exit_code": 2
+      }
+    },
+    {
+      "id": "empty_both",
+      "scope": "contract",
+      "reason": "Two empty files have no logical records.",
+      "args": [
+        "a.txt",
+        "b.txt"
+      ],
+      "files": [
+        {
+          "path": "a.txt",
+          "text": ""
+        },
+        {
+          "path": "b.txt",
+          "text": ""
+        }
+      ],
+      "expected": {
+        "stdout": "summary: -0 +0\n",
+        "stderr": "",
+        "exit_code": 0
+      }
+    },
+    {
+      "id": "identical_short",
+      "scope": "contract",
+      "reason": "Equal records retain two-space context prefixes.",
+      "args": [
+        "a.txt",
+        "b.txt"
+      ],
+      "files": [
+        {
+          "path": "a.txt",
+          "text": "alpha\nbeta\n"
+        },
+        {
+          "path": "b.txt",
+          "text": "alpha\nbeta\n"
+        }
+      ],
+      "expected": {
+        "stdout": "  alpha\n  beta\nsummary: -0 +0\n",
+        "stderr": "",
+        "exit_code": 0
+      }
+    },
+    {
+      "id": "insert_all",
+      "scope": "contract",
+      "reason": "Every record from an empty left file is an insertion.",
+      "args": [
+        "a.txt",
+        "b.txt"
+      ],
+      "files": [
+        {
+          "path": "a.txt",
+          "text": ""
+        },
+        {
+          "path": "b.txt",
+          "text": "alpha\nbeta\n"
+        }
+      ],
+      "expected": {
+        "stdout": "+ alpha\n+ beta\nsummary: -0 +2\n",
+        "stderr": "",
+        "exit_code": 1
+      }
+    },
+    {
+      "id": "delete_all",
+      "scope": "contract",
+      "reason": "Every record against an empty right file is a deletion.",
+      "args": [
+        "a.txt",
+        "b.txt"
+      ],
+      "files": [
+        {
+          "path": "a.txt",
+          "text": "alpha\nbeta\n"
+        },
+        {
+          "path": "b.txt",
+          "text": ""
+        }
+      ],
+      "expected": {
+        "stdout": "- alpha\n- beta\nsummary: -2 +0\n",
+        "stderr": "",
+        "exit_code": 1
+      }
+    },
+    {
+      "id": "replace_single",
+      "scope": "contract",
+      "reason": "A replacement is deletion followed by insertion.",
+      "args": [
+        "a.txt",
+        "b.txt"
+      ],
+      "files": [
+        {
+          "path": "a.txt",
+          "text": "alpha\n"
+        },
+        {
+          "path": "b.txt",
+          "text": "beta\n"
+        }
+      ],
+      "expected": {
+        "stdout": "- alpha\n+ beta\nsummary: -1 +1\n",
+        "stderr": "",
+        "exit_code": 1
+      }
+    },
+    {
+      "id": "insert_middle",
+      "scope": "contract",
+      "reason": "Keep context surrounding a middle insertion.",
+      "args": [
+        "a.txt",
+        "b.txt"
+      ],
+      "files": [
+        {
+          "path": "a.txt",
+          "text": "a\nc\n"
+        },
+        {
+          "path": "b.txt",
+          "text": "a\nb\nc\n"
+        }
+      ],
+      "expected": {
+        "stdout": "  a\n+ b\n  c\nsummary: -0 +1\n",
+        "stderr": "",
+        "exit_code": 1
+      }
+    },
+    {
+      "id": "delete_middle",
+      "scope": "contract",
+      "reason": "Keep context surrounding a middle deletion.",
+      "args": [
+        "a.txt",
+        "b.txt"
+      ],
+      "files": [
+        {
+          "path": "a.txt",
+          "text": "a\nb\nc\n"
+        },
+        {
+          "path": "b.txt",
+          "text": "a\nc\n"
+        }
+      ],
+      "expected": {
+        "stdout": "  a\n- b\n  c\nsummary: -1 +0\n",
+        "stderr": "",
+        "exit_code": 1
+      }
+    },
+    {
+      "id": "insert_edges",
+      "scope": "contract",
+      "reason": "Leading and trailing unmatched right records.",
+      "args": [
+        "a.txt",
+        "b.txt"
+      ],
+      "files": [
+        {
+          "path": "a.txt",
+          "text": "core\n"
+        },
+        {
+          "path": "b.txt",
+          "text": "begin\ncore\nend\n"
+        }
+      ],
+      "expected": {
+        "stdout": "+ begin\n  core\n+ end\nsummary: -0 +2\n",
+        "stderr": "",
+        "exit_code": 1
+      }
+    },
+    {
+      "id": "delete_edges",
+      "scope": "contract",
+      "reason": "Leading and trailing unmatched left records.",
+      "args": [
+        "a.txt",
+        "b.txt"
+      ],
+      "files": [
+        {
+          "path": "a.txt",
+          "text": "begin\ncore\nend\n"
+        },
+        {
+          "path": "b.txt",
+          "text": "core\n"
+        }
+      ],
+      "expected": {
+        "stdout": "- begin\n  core\n- end\nsummary: -2 +0\n",
+        "stderr": "",
+        "exit_code": 1
+      }
+    },
+    {
+      "id": "duplicate_alignment",
+      "scope": "contract",
+      "reason": "Equal current records match before considering later duplicate alignments.",
+      "args": [
+        "a.txt",
+        "b.txt"
+      ],
+      "files": [
+        {
+          "path": "a.txt",
+          "text": "x\nx\ny\n"
+        },
+        {
+          "path": "b.txt",
+          "text": "x\ny\n"
+        }
+      ],
+      "expected": {
+        "stdout": "  x\n- x\n  y\nsummary: -1 +0\n",
+        "stderr": "",
+        "exit_code": 1
+      }
+    },
+    {
+      "id": "equal_lcs_tie",
+      "scope": "contract",
+      "reason": "On equal remaining LCS lengths choose deletion first.",
+      "args": [
+        "a.txt",
+        "b.txt"
+      ],
+      "files": [
+        {
+          "path": "a.txt",
+          "text": "a\nb\n"
+        },
+        {
+          "path": "b.txt",
+          "text": "b\na\n"
+        }
+      ],
+      "expected": {
+        "stdout": "- a\n  b\n+ a\nsummary: -1 +1\n",
+        "stderr": "",
+        "exit_code": 1
+      }
+    },
+    {
+      "id": "repeated_lcs_tie",
+      "scope": "contract",
+      "reason": "Repeated records create several equally long alignments.",
+      "args": [
+        "a.txt",
+        "b.txt"
+      ],
+      "files": [
+        {
+          "path": "a.txt",
+          "text": "x\na\nx\nb\n"
+        },
+        {
+          "path": "b.txt",
+          "text": "x\nb\nx\na\n"
+        }
+      ],
+      "expected": {
+        "stdout": "  x\n- a\n- x\n  b\n+ x\n+ a\nsummary: -2 +2\n",
+        "stderr": "",
+        "exit_code": 1
+      }
+    },
+    {
+      "id": "no_common_records",
+      "scope": "contract",
+      "reason": "Zero-length LCS ties delete all left records before additions.",
+      "args": [
+        "a.txt",
+        "b.txt"
+      ],
+      "files": [
+        {
+          "path": "a.txt",
+          "text": "a\nb\nc\n"
+        },
+        {
+          "path": "b.txt",
+          "text": "x\ny\n"
+        }
+      ],
+      "expected": {
+        "stdout": "- a\n- b\n- c\n+ x\n+ y\nsummary: -3 +2\n",
+        "stderr": "",
+        "exit_code": 1
+      }
+    },
+    {
+      "id": "blank_lines_equal",
+      "scope": "contract",
+      "reason": "A blank record differs from an empty file.",
+      "args": [
+        "a.txt",
+        "b.txt"
+      ],
+      "files": [
+        {
+          "path": "a.txt",
+          "text": "\n"
+        },
+        {
+          "path": "b.txt",
+          "text": "\n"
+        }
+      ],
+      "expected": {
+        "stdout": "  \nsummary: -0 +0\n",
+        "stderr": "",
+        "exit_code": 0
+      }
+    },
+    {
+      "id": "insert_blank_record",
+      "scope": "contract",
+      "reason": "An inserted blank record still receives a plus prefix.",
+      "args": [
+        "a.txt",
+        "b.txt"
+      ],
+      "files": [
+        {
+          "path": "a.txt",
+          "text": "a\nb\n"
+        },
+        {
+          "path": "b.txt",
+          "text": "a\n\nb\n"
+        }
+      ],
+      "expected": {
+        "stdout": "  a\n+ \n  b\nsummary: -0 +1\n",
+        "stderr": "",
+        "exit_code": 1
+      }
+    },
+    {
+      "id": "whitespace_is_significant",
+      "scope": "contract",
+      "reason": "The diff compares whole lines, preserving leading spaces and tabs.",
+      "args": [
+        "a.txt",
+        "b.txt"
+      ],
+      "files": [
+        {
+          "path": "a.txt",
+          "text": " a\n\tb\n"
+        },
+        {
+          "path": "b.txt",
+          "text": "a\n\tb\n"
+        }
+      ],
+      "expected": {
+        "stdout": "-  a\n+ a\n  \tb\nsummary: -1 +1\n",
+        "stderr": "",
+        "exit_code": 1
+      }
+    },
+    {
+      "id": "utf8_equal",
+      "scope": "contract",
+      "reason": "The contract has no ASCII restriction; fs.readText accepts valid UTF-8.",
+      "args": [
+        "a.txt",
+        "b.txt"
+      ],
+      "files": [
+        {
+          "path": "a.txt",
+          "text": "雪\n猫🐈\n"
+        },
+        {
+          "path": "b.txt",
+          "text": "雪\n猫🐈\n"
+        }
+      ],
+      "expected": {
+        "stdout": "  雪\n  猫🐈\nsummary: -0 +0\n",
+        "stderr": "",
+        "exit_code": 0
+      }
+    },
+    {
+      "id": "utf8_changed",
+      "scope": "contract",
+      "reason": "Changed multibyte lines are printed byte-exactly.",
+      "args": [
+        "a.txt",
+        "b.txt"
+      ],
+      "files": [
+        {
+          "path": "a.txt",
+          "text": "雪\n猫🐈\n"
+        },
+        {
+          "path": "b.txt",
+          "text": "雪\n狗🐕\n"
+        }
+      ],
+      "expected": {
+        "stdout": "  雪\n- 猫🐈\n+ 狗🐕\nsummary: -1 +1\n",
+        "stderr": "",
+        "exit_code": 1
+      }
+    },
+    {
+      "id": "unicode_not_normalized",
+      "scope": "contract",
+      "reason": "Distinct UTF-8 spellings remain distinct line values.",
+      "args": [
+        "a.txt",
+        "b.txt"
+      ],
+      "files": [
+        {
+          "path": "a.txt",
+          "text": "é\n"
+        },
+        {
+          "path": "b.txt",
+          "text": "é\n"
+        }
+      ],
+      "expected": {
+        "stdout": "- é\n+ é\nsummary: -1 +1\n",
+        "stderr": "",
+        "exit_code": 1
+      }
+    },
+    {
+      "id": "final_lf_ignored",
+      "scope": "line_api_boundary",
+      "reason": "A final LF terminates a record without creating an extra record.",
+      "args": [
+        "a.txt",
+        "b.txt"
+      ],
+      "files": [
+        {
+          "path": "a.txt",
+          "text": "a\n"
+        },
+        {
+          "path": "b.txt",
+          "text": "a"
+        }
+      ],
+      "expected": {
+        "stdout": "  a\nsummary: -0 +0\n",
+        "stderr": "",
+        "exit_code": 0
+      }
+    },
+    {
+      "id": "no_final_lf_changed",
+      "scope": "line_api_boundary",
+      "reason": "Existing lines() also accepts the final unterminated record.",
+      "args": [
+        "a.txt",
+        "b.txt"
+      ],
+      "files": [
+        {
+          "path": "a.txt",
+          "text": "alpha"
+        },
+        {
+          "path": "b.txt",
+          "text": "beta"
+        }
+      ],
+      "expected": {
+        "stdout": "- alpha\n+ beta\nsummary: -1 +1\n",
+        "stderr": "",
+        "exit_code": 1
+      }
+    },
+    {
+      "id": "extra_final_blank",
+      "scope": "contract",
+      "reason": "A second final LF represents a real blank record.",
+      "args": [
+        "a.txt",
+        "b.txt"
+      ],
+      "files": [
+        {
+          "path": "a.txt",
+          "text": "a\n"
+        },
+        {
+          "path": "b.txt",
+          "text": "a\n\n"
+        }
+      ],
+      "expected": {
+        "stdout": "  a\n+ \nsummary: -0 +1\n",
+        "stderr": "",
+        "exit_code": 1
+      }
+    },
+    {
+      "id": "crlf_matches_lf",
+      "scope": "line_api_boundary",
+      "reason": "Existing lines() removes CR immediately before LF.",
+      "args": [
+        "a.txt",
+        "b.txt"
+      ],
+      "files": [
+        {
+          "path": "a.txt",
+          "text": "a\r\nb\r\n"
+        },
+        {
+          "path": "b.txt",
+          "text": "a\nb\n"
+        }
+      ],
+      "expected": {
+        "stdout": "  a\n  b\nsummary: -0 +0\n",
+        "stderr": "",
+        "exit_code": 0
+      }
+    },
+    {
+      "id": "empty_vs_blank",
+      "scope": "contract",
+      "reason": "One LF is one empty record, not an empty file.",
+      "args": [
+        "a.txt",
+        "b.txt"
+      ],
+      "files": [
+        {
+          "path": "a.txt",
+          "text": ""
+        },
+        {
+          "path": "b.txt",
+          "text": "\n"
+        }
+      ],
+      "expected": {
+        "stdout": "+ \nsummary: -0 +1\n",
+        "stderr": "",
+        "exit_code": 1
+      }
+    },
+    {
+      "id": "usage_no_paths",
+      "scope": "cli_boundary",
+      "reason": "Original CLI rejects fewer than two path operands.",
+      "args": [],
+      "files": [],
+      "expected": {
+        "stdout": "",
+        "stderr": "usage: T11 a b\n",
+        "exit_code": 2
+      }
+    },
+    {
+      "id": "usage_one_path",
+      "scope": "cli_boundary",
+      "reason": "One operand still produces usage before reading files.",
+      "args": [
+        "a.txt"
+      ],
+      "files": [
+        {
+          "path": "a.txt",
+          "text": "a\n"
+        }
+      ],
+      "expected": {
+        "stdout": "",
+        "stderr": "usage: T11 a b\n",
+        "exit_code": 2
+      }
+    },
+    {
+      "id": "missing_first",
+      "scope": "contract",
+      "reason": "First input cannot be opened.",
+      "args": [
+        "missing.txt",
+        "b.txt"
+      ],
+      "files": [
+        {
+          "path": "b.txt",
+          "text": "b\n"
+        }
+      ],
+      "expected": {
+        "stdout": "",
+        "stderr": "error: cannot read missing.txt\n",
+        "exit_code": 2
+      }
+    },
+    {
+      "id": "missing_second",
+      "scope": "contract",
+      "reason": "Second input failure emits no partial diff.",
+      "args": [
+        "a.txt",
+        "missing.txt"
+      ],
+      "files": [
+        {
+          "path": "a.txt",
+          "text": "a\n"
+        }
+      ],
+      "expected": {
+        "stdout": "",
+        "stderr": "error: cannot read missing.txt\n",
+        "exit_code": 2
+      }
+    },
+    {
+      "id": "both_missing_first_wins",
+      "scope": "contract",
+      "reason": "Read failures are reported in argument order.",
+      "args": [
+        "first.txt",
+        "second.txt"
+      ],
+      "files": [],
+      "expected": {
+        "stdout": "",
+        "stderr": "error: cannot read first.txt\n",
+        "exit_code": 2
+      }
+    },
+    {
+      "id": "invalid_utf8_first",
+      "scope": "file_api_boundary",
+      "reason": "fs.readText rejects invalid UTF-8; original catch uses the same read error.",
+      "args": [
+        "bad.txt",
+        "b.txt"
+      ],
+      "files": [
+        {
+          "path": "bad.txt",
+          "hex": "ff0a"
+        },
+        {
+          "path": "b.txt",
+          "text": "b\n"
+        }
+      ],
+      "expected": {
+        "stdout": "",
+        "stderr": "error: cannot read bad.txt\n",
+        "exit_code": 2
+      }
+    },
+    {
+      "id": "invalid_utf8_second",
+      "scope": "file_api_boundary",
+      "reason": "Invalid text in the second file emits no partial diff.",
+      "args": [
+        "a.txt",
+        "bad.txt"
+      ],
+      "files": [
+        {
+          "path": "a.txt",
+          "text": "a\n"
+        },
+        {
+          "path": "bad.txt",
+          "hex": "c3280a"
+        }
+      ],
+      "expected": {
+        "stdout": "",
+        "stderr": "error: cannot read bad.txt\n",
+        "exit_code": 2
+      }
+    },
+    {
+      "id": "extra_arguments_ignored",
+      "scope": "cli_boundary",
+      "reason": "The original source checks the minimum operand count and ignores extra operands.",
+      "args": [
+        "a.txt",
+        "b.txt",
+        "unused.txt"
+      ],
+      "files": [
+        {
+          "path": "a.txt",
+          "text": "same\n"
+        },
+        {
+          "path": "b.txt",
+          "text": "same\n"
+        }
+      ],
+      "expected": {
+        "stdout": "  same\nsummary: -0 +0\n",
+        "stderr": "",
+        "exit_code": 0
+      }
+    }
+  ]
+}

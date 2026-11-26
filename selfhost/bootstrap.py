@@ -267,6 +267,7 @@ def main():
             "assembled_sources": {},
             "application": application_module().inputs(),
             "unit_conversion_application": application_module("conversion_application").inputs(),
+            "text_diff_application": application_module("diff_application").inputs(),
         }
         version_result = command("zig-version", [zig, "version"])
         check("locked_zig", succeeded(version_result) and
@@ -563,6 +564,13 @@ def main():
         check("unit_conversion_application", conversion_record["passed"],
               applicable=conversion_record.get("applicable"), error=conversion_record.get("error"))
 
+        diff_record = application_module("diff_application").check(
+            stage2 if stage2 is not None else binary, stage0, zig, work / "text-diff",
+            environment, frontend_env, CC_FLAGS, EXE)
+        report["text_diff_application"] = diff_record
+        check("text_diff_application", diff_record["passed"],
+              applicable=diff_record.get("applicable"), error=diff_record.get("error"))
+
         # A receipt must not attribute binaries to a source tree edited during the run.
         bound_paths = {
             str(stage0): report["inputs"]["stage0"]["sha256"],
@@ -582,6 +590,7 @@ def main():
             **report["inputs"]["assembled_sources"],
             **report["inputs"]["application"],
             **report["inputs"]["unit_conversion_application"],
+            **report["inputs"]["text_diff_application"],
         }
         changed = [name for name, expected in bound_paths.items()
                    if not Path(name).is_file() or digest(Path(name)) != expected]

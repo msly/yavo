@@ -5070,9 +5070,10 @@
     },
     {
       "id": "builtin_max",
-      "kind": "unsupported",
-      "diagnostic": "U0001",
-      "file": "unsupported/builtin_max.yv"
+      "kind": "run",
+      "file": "run/builtin_max.yv",
+      "stdout": "2\n",
+      "batch": "integer-minmax"
     },
     {
       "id": "indexed_copy_types",
@@ -5729,6 +5730,204 @@
       "batch": "copy-tuples-unit-conversion",
       "diagnostic": "U0001",
       "reason": "Stage0 itself does not support this tuple method."
+    },
+    {
+      "id": "minmax44_values",
+      "kind": "run",
+      "file": "run/minmax44_values.yv",
+      "batch": "integer-minmax",
+      "stdout": "3 7\n-8 -3\n5 0\n-9223372036854775808\n9223372036854775807\n-2 7\n"
+    },
+    {
+      "id": "minmax44_context",
+      "kind": "run",
+      "file": "run/minmax44_context.yv",
+      "batch": "integer-minmax",
+      "stdout": "1 1 200\n65 66\n2 3\n1\n9\n1\n255\n"
+    },
+    {
+      "id": "minmax44_evaluation_order",
+      "kind": "run",
+      "file": "run/minmax44_evaluation_order.yv",
+      "batch": "integer-minmax",
+      "stdout": "5\n5\n5\n5\n5\n100 2\nAB5\nCD6\nE3\n"
+    },
+    {
+      "id": "minmax44_cleanup",
+      "kind": "run",
+      "file": "run/minmax44_cleanup.yv",
+      "batch": "integer-minmax",
+      "stdout": "AB1\nABbad\nL0\nLbad\nL1\n"
+    },
+    {
+      "id": "minmax44_user_functions",
+      "kind": "run",
+      "file": "run/minmax44_user_functions.yv",
+      "batch": "integer-minmax",
+      "stdout": "107\nab\n"
+    },
+    {
+      "id": "minmax44_wrong_arity_zero",
+      "kind": "reject",
+      "file": "reject/minmax44_wrong_arity_zero.yv",
+      "batch": "integer-minmax",
+      "diagnostic": "E0012"
+    },
+    {
+      "id": "minmax44_wrong_arity_one",
+      "kind": "reject",
+      "file": "reject/minmax44_wrong_arity_one.yv",
+      "batch": "integer-minmax",
+      "diagnostic": "E0012"
+    },
+    {
+      "id": "minmax44_wrong_arity_three",
+      "kind": "reject",
+      "file": "reject/minmax44_wrong_arity_three.yv",
+      "batch": "integer-minmax",
+      "diagnostic": "E0012"
+    },
+    {
+      "id": "minmax44_wrong_type_bool",
+      "kind": "reject",
+      "file": "reject/minmax44_wrong_type_bool.yv",
+      "batch": "integer-minmax",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "minmax44_wrong_type_str",
+      "kind": "reject",
+      "file": "reject/minmax44_wrong_type_str.yv",
+      "batch": "integer-minmax",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "minmax44_wrong_type_string",
+      "kind": "reject",
+      "file": "reject/minmax44_wrong_type_string.yv",
+      "batch": "integer-minmax",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "minmax44_wrong_type_tuple",
+      "kind": "reject",
+      "file": "reject/minmax44_wrong_type_tuple.yv",
+      "batch": "integer-minmax",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "minmax44_wrong_type_mixed",
+      "kind": "reject",
+      "file": "reject/minmax44_wrong_type_mixed.yv",
+      "batch": "integer-minmax",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "minmax44_wrong_type_optional",
+      "kind": "reject",
+      "file": "reject/minmax44_wrong_type_optional.yv",
+      "batch": "integer-minmax",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "minmax44_wrong_type_result",
+      "kind": "reject",
+      "file": "reject/minmax44_wrong_type_result.yv",
+      "batch": "integer-minmax",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "minmax44_wrong_type_unit",
+      "kind": "reject",
+      "file": "reject/minmax44_wrong_type_unit.yv",
+      "batch": "integer-minmax",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "minmax44_local_shadow",
+      "kind": "reject",
+      "file": "reject/minmax44_local_shadow.yv",
+      "batch": "integer-minmax",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "minmax44_int_overflow",
+      "kind": "reject",
+      "file": "reject/minmax44_int_overflow.yv",
+      "batch": "integer-minmax",
+      "diagnostic": "E0003"
+    },
+    {
+      "id": "minmax44_int_underflow",
+      "kind": "reject",
+      "file": "reject/minmax44_int_underflow.yv",
+      "batch": "integer-minmax",
+      "diagnostic": "E0003"
+    },
+    {
+      "id": "minmax44_byte_overflow",
+      "kind": "reject",
+      "file": "reject/minmax44_byte_overflow.yv",
+      "batch": "integer-minmax",
+      "diagnostic": "E0003"
+    },
+    {
+      "id": "minmax44_byte_overflow_reverse",
+      "kind": "reject",
+      "file": "reject/minmax44_byte_overflow_reverse.yv",
+      "batch": "integer-minmax",
+      "diagnostic": "E0003"
+    },
+    {
+      "id": "minmax44_byte_underflow",
+      "kind": "reject",
+      "file": "reject/minmax44_byte_underflow.yv",
+      "batch": "integer-minmax",
+      "diagnostic": "E0003"
+    },
+    {
+      "id": "minmax44_byte_optional_raw",
+      "kind": "reject",
+      "file": "reject/minmax44_byte_optional_raw.yv",
+      "batch": "integer-minmax",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "minmax44_byte_optional_raw_return",
+      "kind": "reject",
+      "file": "reject/minmax44_byte_optional_raw_return.yv",
+      "batch": "integer-minmax",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "minmax44_byte_result_raw",
+      "kind": "reject",
+      "file": "reject/minmax44_byte_result_raw.yv",
+      "batch": "integer-minmax",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "minmax44_byte_return_int_context",
+      "kind": "reject",
+      "file": "reject/minmax44_byte_return_int_context.yv",
+      "batch": "integer-minmax",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "minmax44_float",
+      "kind": "unsupported",
+      "file": "unsupported/minmax44_float.yv",
+      "batch": "integer-minmax",
+      "diagnostic": "U0001",
+      "reason": "Floating-point min/max remain outside the integer-only selfhost subset."
+    },
+    {
+      "id": "minmax44_left_panic",
+      "kind": "panic",
+      "stdout": "",
+      "panic": "P-DIV-ZERO",
+      "file": "panic/minmax44_left_panic.yv",
+      "batch": "integer-minmax"
     }
   ],
   "promotions": [
@@ -6050,6 +6249,17 @@
       "kind": "run",
       "source_sha256": "60ac53bc4320fabecc3e19b38d5c2fbd715a7c1de54fe8c8559e17e1f4a3cd93",
       "reason": "Indexed vector traversal and Copy Optional if-let are now supported; the original source bytes are unchanged."
+    },
+    {
+      "previous_id": "builtin_max",
+      "previous_file": "unsupported/builtin_max.yv",
+      "previous_kind": "unsupported",
+      "baseline_commit": "91bb20a867aca7375b6fb638b80c19ed207f2753",
+      "id": "builtin_max",
+      "file": "run/builtin_max.yv",
+      "kind": "run",
+      "source_sha256": "b0562cb50ac60ecadbc2a431bfb19ba5a53425500e4b1cc5626a9e4b3aa336d1",
+      "reason": "Integer min/max are now supported; the original source bytes are unchanged."
     }
   ]
 }

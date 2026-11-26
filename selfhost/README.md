@@ -14,6 +14,9 @@ subset of the stage0 language that the compiler itself implements (see
 [decision 20–24](../docs/decisions.md)). It is not yet the default compiler:
 stage0 accepts far more of the language (owned optionals, mutable/reference iteration,
 float formatting, methods, generics, broader Map/Set APIs, closures, threads...).
+Batch 44 adds int/byte `min` and `max`, preserving bidirectional literal inference
+and left-to-right value snapshots. The unchanged r4 T11 diff CLI is checked by
+`diff_application.py` as a third bootstrap application gate.
 Batch 43 adds flat Copy tuples, numeric projection, Optional tuples and integer
 `abs`. The unchanged two-module r5/yavo-b/T04 unit-conversion CLI is checked by
 `conversion_application.py` as a second bootstrap application gate.
@@ -94,35 +97,39 @@ and writes `receipt.json` with `achieved: "self-hosted-fixed-point"` and
 `self_hosted: true` only when everything passes. Native CI runs this gate on
 Linux, Windows and macOS; a configured job is not itself a passing result.
 
-## Current validation: batch 43 (2026-11-26)
+## Current validation: batch 44 (2026-11-26)
 
-The matrix contains **847 cases / 253 executable inputs**: 222 run, 31 panic,
-452 reject, 111 unsupported and 31 shared unsupported. All 55 additions have
-stage0 oracles: 14 abs cases and 41 tuple cases, with no source promotions.
-The complete local bootstrap passes **847/847 cases, 14/14 checks, zero skips**.
-Stage2/stage3 C (1,010,808 bytes) and Linux binaries (472,064 bytes) match exactly;
-the real lexer, 71 applicable test-summary scenarios and all 20 unit-conversion
-scenarios pass. [CI run 45771997599](https://github.com/msly/yavo/actions/runs/45771997599)
-passed all six jobs at `7a2d08f`: Linux/Windows/macOS native bootstrap and
-application gates, Linux generated-code/stage2 ASan/UBSan and all independent jobs.
+The matrix contains **875 cases / 260 executable inputs**: 228 run, 32 panic,
+473 reject, 111 unsupported and 31 shared unsupported. The 28 additions have
+fixed stage0 oracles: five run, one panic, 21 reject and one unsupported case.
+The old builtin_max fixture is promoted unchanged from unsupported to run.
+They cover int/byte inference, raw versus explicit Optional/Result wrapping,
+arity/type/range diagnostics, name shadowing, ordered snapshots, catch exits,
+and a left-side division panic that must precede right-side effects.
+Complete local bootstrap and three-platform CI are pending.
 
-The new `unit_conversion_application` check builds the original r5/yavo-b/T04
-`main.yv` and `conversion.yv` unchanged. Its 20 fixed scenarios contain 330 input
-records; stage0 and the fixed-point stage2 each run both Debug and Release, giving
-80 allocation-checked executions. Expected output follows the public contract and
-exact rational arithmetic. Cases cover all 16 unit pairs, signs, reduction, zero,
-numeric/precision/length limits, malformed records, blanks and numbering, and 200
-records in one input. The harness, contract, scenario manifest and both original
-modules are included in the input-unchanged check.
+The new `text_diff_application` check builds the unchanged original
+`experiments/coldstart-2026-11-21-r4/yavo/T11.yv`. Its 35 fixed scenarios require
+140 stage0/selfhost Debug/Release executions to match exact stdout, stderr and
+exit codes. Expectations come from the public deletion-first LCS tie rule,
+independent recurrences and published fixtures. Cases cover equal/empty files,
+insertions/deletions/replacements, duplicates, blanks, UTF8 and read/argument
+errors; line-API and CLI boundaries are explicitly separated from the public
+LF-only input contract. Ten inputs bind the original source, harness, shared
+runner, fixed scenarios, contracts and public fixtures. All builds enable
+allocation instrumentation: 32 runs return normally and check it, while 108
+use the original os.exit(1/2) paths, which skip normal destructors and that check.
+The previous test-summary and unit-conversion gates remain in bootstrap.
 
-The stage2 repository sweep accepts **98 of 391** stage0-accepted programs,
-up from 92, with no lost coverage, no strict-subset violation and none of 221
-rejected programs admitted. The six new paths are two T04 implementations with
-three snapshots each. The additional stage0 rejection is the new tuple-print P0
-fixture: stage0 now reports E0001 instead of panicking during C generation.
-Complete Rust Debug/Release suites each pass 145/0/1; frozen conformance remains
-124 pass / 3 unsupported / 2 superseded. The next bounded application target is
-the original r4/yavo/T11 text-diff CLI, whose first blocker is integer `max()`.
+The candidate repository sweep preserves all 612 original source files and
+all 391 stage0-accepted members. Original-program coverage is **98 to 99 / 391**,
+gaining only the original T11 CLI and losing none. The new Rust P0 regression
+is accepted by both compilers, so the full corpus is **100 / 392**, with zero
+strict-subset violations and none of 221 stage0-rejected inputs accepted.
+Rust MinMax previously read a local/field only after a later argument mutated it;
+its lowering now binds both operand values before selecting one. The P0 fixture
+preserves the intended snapshots for int/byte, fields, parameters, indexes and
+nested calls. See [HANDOFF section 24](../HANDOFF.md).
 
 ## Historical validation: batch 31 (2026-11-24)
 
@@ -320,7 +327,7 @@ JSON diagnostics, suggestions and recovery remain future work.
 | Locals | `let`/`var`, inferred or explicit types, assignment and arithmetic compound assignment; active locals cannot be shadowed |
 | Control flow | if/else-if/else and Copy Optional if-let; while/loop; int/byte half-open range for; one/two-binding read-only Vec/slice/args traversal including fields and temporary vectors; break/continue/return and return-path checks |
 | Expressions | Parentheses, int unary minus, boolean not, checked int/byte arithmetic, wrapping arithmetic, bit operations/shifts, contextual integer arithmetic, equality/order, short-circuit boolean operators |
-| Builtins | Single-argument `print`/`println`/`eprintln` as direct statements including decimal byte output, `assert(bool)`, explicit `int(...)`/`byte(...)` conversions, checked `abs(int)` and identity `abs(byte)`; user functions take precedence over assert/abs preludes |
+| Builtins | Single-argument `print`/`println`/`eprintln` as direct statements including decimal byte output, `assert(bool)`, explicit `int(...)`/`byte(...)` conversions, checked `abs(int)`, identity `abs(byte)` and matching int/byte `min`/`max`; user functions take precedence over assert/abs/min/max preludes |
 | Ownership | Consuming bindings/assignment/construction/returns; moved-value checking, read-only parameters, expression-local element borrows, root-based argument/receiver protection |
 | Runtime behavior | Checked arithmetic/panic/output, ordered evaluation, moved-source zeroing and cleanup on scope/statement/control-flow exits |
 
@@ -403,9 +410,22 @@ and destructuring are not implemented. Unit element expressions are E0001. Tuple
 rejected (E0014 through an immutable root, otherwise E0001); comparison is E0501
 for matching tuple types and E0001 for different types; direct output is E0001.
 
+### Integer builtins
+
 `abs` evaluates its argument once and preserves int/byte context. Negative int
 values use checked negation, so `abs(INT64_MIN)` panics with P-OVERFLOW; byte
-arguments are returned unchanged. Other numeric types and min/max remain U0001.
+arguments are returned unchanged. Other numeric types remain U0001.
+
+`min(a, b)` and `max(a, b)` require exactly two matching int/byte operands.
+Each operand is evaluated once from left to right, including snapshots of locals,
+fields and indexed elements before a later inout argument can change the source.
+A pure numeric expression may acquire byte context from either an expected byte
+result or the other operand. Its checked arithmetic still executes before RHS
+effects when it is the left operand. Implicit Optional/Result wrapping supplies
+no numeric payload context: `?byte = min(1, 2)` is E0001, while
+`?byte = some(min(1, 2))` is accepted. User functions override the builtins;
+a local with the same name remains uncallable (E0001). Wrong arity is E0012,
+incompatible operands E0001 and out-of-range literals E0003.
 
 ### Copy Optional and pop
 
@@ -640,14 +660,17 @@ executable fixtures from earlier increments.
 
 ## Next steps
 
-Self-hosting remains a regression gate. Batch 43 has 847 fixtures and two
-application checks (test-summary and the original unit-conversion CLI); current
-results are recorded above. Coverage is 98 of 391 repository programs. The next
-target is `experiments/coldstart-2026-11-21-r4/yavo/T11.yv`, an unchanged text-diff
-CLI currently blocked by integer `max()`. Each increment retains independent
-behavior and cleanup oracles and renews the fixed point on Linux, Windows and
-macOS. [SH-3](../docs/self-hosting.md) remains incomplete; formal SH-4 delivery
-still has one of three independent applications validated.
+Self-hosting remains a regression gate. Batch 44 has 875 fixtures and three
+application checks; current results are recorded above. Full local sweep coverage
+is 100/392, including the new accepted P0 regression; the original-corpus gain is
+98 to 99 / 391. The next target is the unchanged
+`experiments/coldstart-2026-11-22-r5/runs/yavo-b/tasks/T11/final/main.yv`, a
+sliding-window lower-median CLI whose only observed blocker is `Vec[int].sort()`.
+It uses already-supported I/O, integer vectors, indexed access and iteration.
+The runtime has integer comparators and stable sorting; add receiver permission
+checks and direct application execution before claiming acceptance. Keep the
+native fixed point and independent behavior/resource oracles on all three
+platforms. SH-3 remains incomplete and formal SH-4 delivery remains one of three.
 
 ## Historical snapshots
 

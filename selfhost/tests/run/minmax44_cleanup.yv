@@ -1,0 +1,23 @@
+fn element(label: String, fail: bool) -> int ! String {
+ print(label)
+ if fail { return err("bad".toString()) }
+ return label.len()
+}
+fn show(fail: bool) {
+ let _guard = ["guard".toString()]
+ let value = max(element("A".toString(), false) catch first { println(first)
+  return }, element("B".toString(), fail) catch second { println(second)
+  return })
+ println(value)
+}
+fn repeat() {
+ for index in 0..3 {
+  let _guard = ["iteration".toString()]
+  let value = min(index, element("L".toString(), index == 1) catch problem { println(problem)
+   continue })
+  println(value)
+ }
+}
+fn main() { show(false)
+ show(true)
+ repeat() }

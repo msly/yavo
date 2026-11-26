@@ -1,0 +1,18 @@
+fn choice() -> byte { return max(250, 255) }
+fn optional() -> ?byte { return some(max(7, 9)) }
+fn result() -> byte ! int { return ok(min(1, 2)) }
+fn main() {
+ let first: byte = min(1, 255)
+ let fixed: byte = 42
+ println("${int(first)} ${int(min(1, fixed))} ${int(max(fixed, 200))}")
+ println("${int(min(65, 'B'))} ${int(max('A', 66))}")
+ let nested: byte = min(max(1, 2), 255)
+ let fallback: byte = none ?? min(3, 4)
+ println("${int(nested)} ${int(fallback)}")
+ let lifted: ?byte = min(byte(1), 2)
+ println(int(lifted ?? 0))
+ println(int(optional() ?? 0))
+ let checked = result() catch _ { return }
+ println(int(checked))
+ println(int(choice()))
+}
