@@ -98,14 +98,23 @@ The matrix contains **792 cases / 243 executable inputs**: 213 run, 30 panic,
 two old unsupported fixtures are promoted without changing their bytes.
 The complete local bootstrap passes **792/792 cases, 13/13 checks, zero skips**.
 Stage2/stage3 C (967,346 bytes) and Linux binaries (448,416 bytes) match exactly;
-the real lexer and all 71 applicable test-summary scenarios pass. Native CI
-results are pending final recording.
+the real lexer and all 71 applicable test-summary scenarios pass.
+[CI run 45763574200](https://github.com/msly/yavo/actions/runs/45763574200)
+passed all six jobs at `819ea1e`, including Linux/Windows/macOS native gates
+and Linux generated-code/stage2 ASan/UBSan.
 
-The repository sweep now accepts 92 of 391 stage0-accepted programs (previously
-88), reports no strict-subset violation, and admits none of 220 stage0-rejected
-programs. The first remaining blockers include tuple types (34), in addition
+The stage2 repository sweep accepts 92 of 391 stage0-accepted programs,
+reports no strict-subset violation and admits none of 220 rejected programs.
+An uncached reconstruction of baseline `3ce5d36` accepts 91, not the previously
+recorded 88: this batch gains the Roman-numeral CLI T07 and loses no program.
+The [minimal coverage record](../compiler/validation/batch42-coverage-2026-11-26.json)
+binds this correction to source, compiler and corpus hashes. The first remaining blockers include tuple types (34), in addition
 to unsupported standard modules (35); first-blocker counts are not predicted
-coverage gains. An independent check audit has 35 probes and five allocation-
+coverage gains. All 12 current "tuple expression" first errors are actually
+comparator closures. The next concrete target is the unmodified r5/yavo-b/T04
+unit-conversion CLI, needing Copy int pairs, Optional pairs/projection and abs,
+not the larger closure/threading work exposed by other tuple-blocked programs.
+An independent check audit has 35 probes and five allocation-
 checked runtime combinations, including header catch exits around an owned
 Vec temporary and indexed/if-let body control flow.
 

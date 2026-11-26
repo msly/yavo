@@ -4,9 +4,9 @@
 
 ## 1. 一句话状态
 
-**第四十二批加入 `for index, item in values` 与现有 Copy Optional 的 `if let`。** 带下标遍历适用于已有 Vec、只读切片及 `os.args()`，索引为只读 int；元素沿用 Copy 或只读借用规则。`if let` 支持 int/byte/bool/非拥有结构体/无载荷枚举，具名绑定在 then 作用域内保守保持匹配源的借用，`_` 除外；拥有型 Optional 仍为 U0001。`types.declaredIn` 和 `types.qualifiedType` 已分别改用两种新语法，编译器自身参与验证。全仓 stage2 扫描覆盖 **92/391**（上一批 88），**0 子集越界**，stage0 拒绝的 220 个程序仍无一被接受。
+**第四十二批加入 `for index, item in values` 与现有 Copy Optional 的 `if let`。** 带下标遍历适用于已有 Vec、只读切片及 `os.args()`，索引为只读 int；元素沿用 Copy 或只读借用规则。`if let` 支持 int/byte/bool/非拥有结构体/无载荷枚举，具名绑定在 then 作用域内保守保持匹配源的借用，`_` 除外；拥有型 Optional 仍为 U0001。`types.declaredIn` 和 `types.qualifiedType` 已分别改用两种新语法，编译器自身参与验证。全仓 stage2 扫描覆盖 **92/391**，相对源码重建的基线 **91 → 92**（旧记录 88 的校正见第 22 节），**0 子集越界**，stage0 拒绝的 220 个程序仍无一被接受。
 
-当前语料 **792 cases**（新增 36，原样提升 2）。第四十二批本机完整自举 **792/792、13/13、0 skip**；stage2/stage3 C（967,346 字节）与 Linux 二进制（448,416 字节）逐字节一致，CI 记录见第 22 节。本批不改 Rust，既有 Rust Debug/Release 各 145/0/1、冻结 124/3/2；原生 CI 会重跑对应套件。
+当前语料 **792 cases**（新增 36，原样提升 2）。第四十二批本机完整自举 **792/792、13/13、0 skip**；stage2/stage3 C（967,346 字节）与 Linux 二进制（448,416 字节）逐字节一致，CI 记录见第 22 节。本批不改 Rust，既有 Rust Debug/Release 各 145/0/1、冻结 124/3/2；三平台原生 CI 已重跑对应套件并通过。
 
 **SH-2 引导子集固定点已闭合；SH-3 尚未接替，Rust stage0 仍承担日常编译；SH-4 完成 1/3 个独立应用。** 第四十批起 selfhost 能原样编译 examples/test-summary，其 71 个本机场景通过 bootstrap 第 13 项检查；第四十一批加入 std/io、trim/lines/fields、拥有值视图绑定及临时 Vec 遍历。验收条件保持 `docs/decisions.md` 第九节，不以新增语法数量替代 SH-3/SH-4 完成条件。
 
@@ -195,10 +195,11 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 ## 10. 下一个会话的第一步
 
 1. 检查 Git 状态、最新实现提交与 CI；先读第 22 节、[自举路线](docs/self-hosting.md)、[selfhost 说明](selfhost/README.md)。
-2. **下一批优先元组类型、构造与字段读取。** 第四十二批后全仓 391 个 stage0 接受程序中覆盖 92 个；首个阻塞为标准模块 35（以 std/sync 为主）、元组类型 34、其他类型形式 24、类型后缀 18、泛型/接口 17、浮点 16、元组表达式 12、Map 非标量值 11。类型与表达式是首个诊断计数，不能直接相加当作能解锁的程序数；每批仍以实际扫描覆盖和零越界验收。
-3. 拥有型 Optional/pop、Map 的 String 值仍是后续候选。若扩展 Optional，必须同时覆盖移动、析构、借用绑定及 `??` 提前退出，不能只放开解析。
-4. 模块尚缺包依赖与锁文件（stage0 也没有）、后置 use、跨模块的枚举载荷/方法/泛型；按真实应用阻塞安排。
-5. SH-4 第二个独立应用建议结构化文本校验或多文件依赖/索引工具。不要同时运行共用临时目录的两条 cargo test。第六轮文档实验有可计量环境才恢复，不阻塞工程推进。
+2. **下一批以原样编译双模块单位换算 CLI 为目标**：`experiments/coldstart-2026-11-22-r5/runs/yavo-b/tasks/T04/final/main.yv` 与 `conversion.yv`。最小缺口是 Copy `(int, int)` 类型/构造/函数返回/局部值、`.0`/`.1` 读取、`?(int, int)` 包装与 `?? return`，以及整数 `abs()`（包括溢出诊断）；此目标不要求 Vec[tuple]、拥有元组、解构、闭包或线程。原样源码通过构建和运行才算达到目标，不能把诊断性改写当成验收。
+3. 第四十二批后覆盖 92/391；首个阻塞为标准模块 35（以 std/sync 为主）、元组类型 34、其他类型形式 24、类型后缀 18、泛型/接口 17、浮点 16、"元组表达式" 12、Map 非标量值 11。元组类型和表达式的 46 个路径按入口源码去重只有 17 种；其中全部 12 个"元组表达式"首诊断实际来自 `sortBy` 比较器闭包。不能把首诊断次数当作新增覆盖预测；每批仍用实际覆盖和零越界验收。
+4. 拥有型 Optional/pop、Map 的 String 值仍是后续候选。若扩展 Optional，必须同时覆盖移动、析构、借用绑定及 `??` 提前退出，不能只放开解析。
+5. 模块尚缺包依赖与锁文件（stage0 也没有）、后置 use、跨模块的枚举载荷/方法/泛型；按真实应用阻塞安排。
+6. SH-4 第二个独立应用建议结构化文本校验或多文件依赖/索引工具。不要同时运行共用临时目录的两条 cargo test。第六轮文档实验有可计量环境才恢复，不阻塞工程推进。
 
 正式门槛仍按 `docs/plan.md`：配对通过率差的单侧 95% 下界至少 −5 个百分点，单位成功交付成本较 Rust 低至少 20% 并独立复现；冻结运行基准几何均值不超过 C 的 1.5 倍。工程目标包括小程序编译 P50 ≤200 ms、Linux strip 后 ≤250 KB、Windows 原生测试及可复现产物。
 
@@ -324,7 +325,7 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - **视图绑定**（原 U0001 “persistent views of owned strings”）：`let lines = text.lines()`、`let t = s.trim()`、`let w = rows[0].trim()` 等指向拥有局部（或循环元素）的视图现在可以绑定，记为 `Local.viewOf`；读出时仍是带所有者的瞬时值（`Value.owner`），可以再绑定、移动、下标、`clone`、遍历，但不能赋给外层变量、push 进别的 Vec、放进 Result 或返回（指向局部 E0303）。视图在作用域内时，修改或移动所有者为 U0001（stage0 只在视图之后仍被使用时报 E0102，子集没有活跃性分析）。指向只读 String 参数的视图按普通来源处理，可以经 `of` 返回（以前是 U0001）；指向 inout 参数或临时值的视图仍为 U0001（stage0 对临时值报 E0305）。
 - 遍历临时 Vec：`for x in make()`、`for w in text.fields()`、`for x in v.clone()` 等；临时 Vec 作为循环头的所有者活到循环结束后释放，遍历视图会锁住其所有者，遍历字段锁住整个结构体（E0102，同 stage0）。
 - 扫描又发现一处越界并修复：内建 `max`/`min`/`abs`（及 `Box`/`Rc`/`Arc`/`Mutex` 构造）原报 E0010，现为 U0001。
-- 覆盖：全仓 stage0 接受的 391 个程序中 selfhost 接受 88 个（第四十批 70 个），0 越界；stage0 拒绝的 220 个仍无一被接受。
+- 覆盖：当时记录全仓 391 个 stage0 接受程序中 selfhost 接受 88 个（第四十批 70 个），0 越界；220 个 stage0 拒绝程序均未被接受。第四十二批对本批最终源码 `3ce5d36` 无缓存重建得到 91/391；88 未能复现，见第 22 节校正。
 - 用例：新增 23 个（run 5、reject 11、unsupported 7），原样提升 11 个旧 unsupported 用例为 run（记录在 promotions）；约 290 个旧探针无回退（8 个由 U0001 变为接受，均与 stage0 一致）。
 - 验收：本机 756/756、13/13、0 skip，stage2/stage3 C 953,599 字节、Linux 二进制 443,536 字节一致；本批未改 Rust（沿用：各 145/0/1，冻结 124/3/2）。CI：`0c270fa` 的 run 45653050661 中 Windows 在 setup 下载 Zig（约 70 KB/s）时撞上 tools/ci/run.py 单命令 20 分钟上限（第二次出现，未进入测试）；随后 `87623d6` 给原生作业加了按 `toolchain.lock` 键控的 Zig 工具链缓存（actions/cache v6.1.0），冷缓存时安装命令放宽到 45 分钟。`87623d6`（含本批全部代码）的 [run 45657470106](https://github.com/msly/yavo/actions/runs/45657470106) **6/6 成功**（Linux 含 stage2 ASan/UBSan、Windows、macOS；Windows 冷下载 22 分钟后成功并写入缓存）。
 
@@ -337,5 +338,6 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - **保守边界**：then 内修改被匹配的源变量 U0001（stage0 按最后一次使用判断接受或 E0102）；`_` 不保留此锁。修改来自只读源的绑定 E0101；来自可写源或临时值的 Copy 绑定修改 U0001，同 stage0。拥有/str 载荷、Optional 字段、解构模式均未开放。
 - **真实迁移**：`types.declaredIn` 用双绑定扫描类型表；`types.qualifiedType` 用 if-let 处理模块查找。两条路径由编译器自身、模块正反例和固定点共同覆盖。
 - **用例**：新增 36（run 8、reject 20、unsupported 4、shared_unsupported 4）；原样提升 `unsupported_optional_if_let` 与 `unsupported_for_two_bindings`，promotions 记录基线与源码哈希。合计 792（run 213、panic 30、reject 426、unsupported 94、shared_unsupported 29）。包含循环头 catch + 拥有临时 Vec + indexed for + if-let 的组合清理回归。
-- **独立核对**：35 个额外差分检查无越界，5 个运行组合在分配检查下与 stage0 输出/退出一致。首轮全仓扫描覆盖 92/391（原 88），0 越界；220 个 stage0 拒绝程序均未被放行。
-- **本机验收**：792/792、13/13、0 skip；stage2/stage3 C 967,346 字节、Linux 二进制 448,416 字节一致；真实 lexer、test-summary 的 71 个本机场景、输入不变检查全部通过。最终 stage2 全仓复扫仍为 92/391、0 越界。原生 CI 待回填。
+- **独立核对**：35 个额外差分检查无越界，5 个运行组合在分配检查下与 stage0 输出/退出一致。最终 stage2 全仓扫描覆盖 92/391、0 越界；220 个 stage0 拒绝程序均未被放行。
+- **覆盖基线校正**：从精确基线 `3ce5d36` 提取全部 selfhost 源码并禁用缓存重建，得到 **91/391**；有缓存和无缓存构建的基线二进制哈希一致，391/220 的语料成员及内容复查一致。故本批实际是 **91 → 92，新增 1、退步 0**，新增路径为 `experiments/coldstart-2026-11-20/yavo/T07.yv`（罗马数字与整数转换 CLI，原首阻塞为 if-let）。该原文件经 stage2 生成 C、构建并运行 21 个输入，双向转换、1/3999 边界与非法输入均符合固定期望及 stage0，分配检查无错误。旧记录 88 无法从该基线复现，原因未定位；不能用它宣称本批新增 4 个。最小复核记录见 [coverage 记录](compiler/validation/batch42-coverage-2026-11-26.json)。
+- **本机验收**：792/792、13/13、0 skip；stage2/stage3 C 967,346 字节、Linux 二进制 448,416 字节一致；真实 lexer、test-summary 的 71 个本机场景、输入不变检查全部通过。最终 stage2 全仓复扫仍为 92/391、0 越界。CI：实现提交 `819ea1e` 的 [run 45763574200](https://github.com/msly/yavo/actions/runs/45763574200) **6/6 成功**；Linux x86-64（含 Yavo 前端生成 C 与 stage2 自身 ASan/UBSan）、Windows x86-64、macOS arm64 原生作业及三个独立作业全部通过。

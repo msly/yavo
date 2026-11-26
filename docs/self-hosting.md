@@ -51,11 +51,11 @@ SH-1 的结果只标为“子集编译器”。SH-2 可以标为“子集自举�
 
 `for index, item in values` 支持既有 Vec/只读切片及 os.args()；索引只读 int，元素继续按 Copy 或只读借用处理，临时集合与控制流清理保持原规则。`if let name = value` 支持现有 int/byte/bool/非拥有结构体/无载荷枚举 Optional，支持 else、else-if-let 与 `_`；具名绑定在 then 作用域内保守保持匹配源的借用，`_` 不保留该借用；拥有型 Optional 尚未开放。编译器内类型查找和限定类型解析已分别迁移到两种语法。
 
-新增 36 个用例，原样提升 2 个，合计 792；stage2 全仓覆盖 **88 → 92 / 391**，0 子集越界，220 个 stage0 拒绝输入均未被放行。本机完整自举 **792/792、13/13、0 skip**；stage2/stage3 C 967,346 字节、Linux 二进制 448,416 字节一致，test-summary 的 71 个本机场景通过。原生 CI 待回填。下一批优先元组类型、构造与字段读取；本批解除首个阻塞后，元组类型成为 34 个程序的下一个首个诊断。
+新增 36 个用例，原样提升 2 个，合计 792；stage2 全仓覆盖 **91 → 92 / 391**，0 子集越界，220 个 stage0 拒绝输入均未被放行。本机完整自举 **792/792、13/13、0 skip**；stage2/stage3 C 967,346 字节、Linux 二进制 448,416 字节一致，test-summary 的 71 个本机场景通过。实现提交 `819ea1e` 的 [run 45763574200](https://github.com/msly/yavo/actions/runs/45763574200) **6/6 成功**，三平台原生门与 Linux ASan/UBSan 通过。基线 91 来自 `3ce5d36` 无缓存重建，旧记录 88 未能复现，已在 [HANDOFF 第 22 节](../HANDOFF.md) 校正。本批新增接受罗马数字转换 CLI、无退步。下一批以原样编译 r5/yavo-b/T04 的双模块单位换算 CLI 为目标：Copy `(int, int)`、函数返回/局部值、`.0/.1`、`?(int, int)` 与 `abs()`；不将只读诊断实验中的改写版算作应用通过。元组类型的 34 个路径包含重复源码，另 12 个“元组表达式”首诊断实际来自 sortBy 闭包，不能据此预测覆盖增量。
 
-### 第四十一批：std/io、视图绑定与 str 方法
+### 第四十一批：std/io、视图绑定与 str 方法（历史记录）
 
-`use std/io` 后可以写 `let text = io.readAll() catch _ { ... }`；str/String 新增 `trim`、`lines`、`fields`。指向拥有局部的视图现在可以绑定（`let lines = text.lines()`），视图在作用域内时其所有者不能修改或移动；视图不能离开所有者的作用域（不能返回、赋给外层变量或放进其他容器）。指向只读 String 参数的视图可以经 `of` 返回。`for` 可以遍历临时 Vec。全仓覆盖从 70 个程序升到 88 个，仍无子集越界。新增 23 例，提升 11 例。
+`use std/io` 后可以写 `let text = io.readAll() catch _ { ... }`；str/String 新增 `trim`、`lines`、`fields`。指向拥有局部的视图现在可以绑定（`let lines = text.lines()`），视图在作用域内时其所有者不能修改或移动；视图不能离开所有者的作用域（不能返回、赋给外层变量或放进其他容器）。指向只读 String 参数的视图可以经 `of` 返回。`for` 可以遍历临时 Vec。当时记录全仓覆盖从 70 升到 88，仍无子集越界；第四十二批重建其最终源码基线为 91，校正见上节。新增 23 例，提升 11 例。
 
 ### 第四十批：Map 与 test-summary（历史记录）
 
@@ -198,9 +198,9 @@ str 与 String 接收者支持 `startsWith`/`endsWith`/`contains`（bool）、`f
 | 已完成 | str 查询方法 | 第三十八批：675 例；startsWith/endsWith/contains/find/split/parseInt；修复 Rust 接收者锁 |
 | 已完成 | 遍历拥有元素 | 第三十九批：693 例；`for x in Vec[String]`/结构体元素；Map 以外的 test-summary 已可编译 |
 | 已完成 | Map 与 test-summary | 第四十批：733 例；selfhost 原样编译 test-summary，71 场景与 stage0 一致，纳入 bootstrap |
-| 已完成 | std/io、视图绑定 | 第四十一批：756 例；`io.readAll`、trim/lines/fields、视图绑定、遍历临时 Vec；覆盖 88/391 |
-| 本机通过，CI 待回填 | 带下标遍历与 if let | 第四十二批：792/792、13/13、零跳过；覆盖 92/391 |
-| 下一步 | 元组 | 类型、构造与字段读取；保持覆盖扫描零越界，拥有 Optional/Map String 值另排 |
+| 已完成 | std/io、视图绑定 | 第四十一批：756 例；`io.readAll`、trim/lines/fields、视图绑定、遍历临时 Vec；原记录 88/391，第四十二批重建基线为 91 |
+| 已完成 | 带下标遍历与 if let | 第四十二批：本机 792/792、13/13、零跳过；三平台 CI 6/6；覆盖 91→92/391 |
+| 下一步 | 单位换算 CLI 原样构建 | Copy 二元组、Optional 二元组、.0/.1 与 abs；目标为 r5/yavo-b/T04 的两个原文件，保持覆盖扫描零越界 |
 | 接替阶段 | SH-3 接替 | 子集覆盖既有回归与冻结规格后，再讨论让 Yavo 编译器承担日常 `check`/`build` |
 
 固定点现在是回归门：任何修改 `selfhost/` 的提交都必须保持 stage2.c = stage3.c 与 stage1/stage2 全用例一致。

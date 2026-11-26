@@ -1,0 +1,117 @@
+{
+  "schema": "yavo-selfhost-coverage-comparison/1",
+  "date": "2026-11-26",
+  "batch": 42,
+  "baseline": {
+    "commit": "3ce5d369030f6b24b3b13a6a6f05a10422a14cc8",
+    "source": "Each top-level selfhost/*.yv read with git show <commit>:<path> into an isolated directory; all bytes verified against git show.",
+    "source_sha256": {
+      "codegen.yv": "36c7c685de4690c70582ba47b2ca778746e3b6b29d2caeb2c20bd3a2e6bee8b9",
+      "lexer.yv": "704f57d5c3c925bf3b296b87840209e7970e66e5021bf2d5461c7bd6f2b735b7",
+      "lexer_test.yv": "ee2f072e5f7b0cde0e7bf17cf4667b17b28873f56577357b3327df7c7bdb6556",
+      "main.yv": "de148ff9dd1c79957d38048c412ed4ff21734319111255ab38194437d40d35a8",
+      "model.yv": "38a4ced541129d023549797b755d798d5dfae82831e5c616fc2d5b1746578749",
+      "parser.yv": "a78e489a1e3f6db87b930f7eafaa23373ba566f4e7e90a897a5426b64e987910",
+      "support.yv": "ee73a0c05671b3c607372ab43d2f5376042145d1a77a82d005b51f14b46ca6e9",
+      "types.yv": "4280ed5479ff54a2297e52cff8fa59beeb23d9cac2d167e4b18576eacd99b4e1"
+    },
+    "binary_sha256": "c1c3408b4aa34b7ab8480f2788e672c75d50b601333f0fd2287e8741228805e2",
+    "build_argv": [
+      "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+      "build",
+      "/tmp/yavo-b42-audit-baseline/selfhost/main.yv",
+      "--release",
+      "-o",
+      "/tmp/yavo-b42-audit-baseline/yavo-selfhost-no-cache"
+    ],
+    "build_env": {
+      "YAVO_NO_CACHE": "1"
+    },
+    "cached_and_uncached_binary_identical": true
+  },
+  "current": {
+    "binary": "compiler/target/ci/selfhost-batch42/run-z5fackok/stages/stage2/yavo-selfhost",
+    "binary_sha256": "ede25b5824cd263b50d7831c82d2497cde7de83f68d44d95061094f4af43cb3c",
+    "compiler_source_sha256": {
+      "codegen.yv": "3a33a491f0098b872bb7a8a277b57b5daec9b831392db86efd607ff657d2700b",
+      "lexer.yv": "704f57d5c3c925bf3b296b87840209e7970e66e5021bf2d5461c7bd6f2b735b7",
+      "types.yv": "7f6541148a15f8da653f4a30fa2942dc570d703d2fddf3a71dc48dce12d7e21a",
+      "lexer_test.yv": "ee2f072e5f7b0cde0e7bf17cf4667b17b28873f56577357b3327df7c7bdb6556",
+      "support.yv": "ee73a0c05671b3c607372ab43d2f5376042145d1a77a82d005b51f14b46ca6e9",
+      "parser.yv": "032fbc9304366fdc89565a24e289b54ba924f3431313c24fe112bd7f97cc1908",
+      "model.yv": "302d66c1e2f1c1b3dbf516dfac471bfdf293dfde994f0fb0a6dead168737aae1",
+      "main.yv": "de148ff9dd1c79957d38048c412ed4ff21734319111255ab38194437d40d35a8"
+    },
+    "commit": "819ea1e98d281a482d3946035e49b780d805445a"
+  },
+  "stage0": {
+    "binary": "compiler/target/release/yavo",
+    "binary_sha256": "9b7ac4a8f21256302b163f8beef5c494202749b2e134845da3aa53fab797ea43",
+    "source_fingerprint_scope": "compiler/src/**/* files, compiler/Cargo.lock, compiler/toolchain.lock; recorded beside binary identity, not a claim of independent binary reproduction",
+    "source_manifest_sha256": "c4ea3ef1a8e5d1beffdb4ec245951a2547b3e157f74e0015064f0ffd7b1f206d",
+    "source_unchanged_since_baseline": true
+  },
+  "corpus": {
+    "scope": "All repository .yv files excluding selfhost/ and any target/ path, same as selfhost/subset_sweep.py.",
+    "programs": 611,
+    "source_manifest_sha256": "23b75050d667a039a8cea1b9df368c78969112dd1517d1ab5ac2155033747123",
+    "digest_encoding": "sha256 of sorted path + NUL + file_sha256 + newline; membership digests use sorted path + newline",
+    "stage0_accepts": 391,
+    "stage0_rejects": 220,
+    "accepted_membership_sha256": "23889a244bf518608a61975c704c0c1e9043a19fc98dd29b07190a1a314a6144",
+    "rejected_membership_sha256": "a828d93fa5c230058d87fb53162ea79ec2c22b830fcb6b0373b654f94d1030cb",
+    "stage0_membership_repeated_unchanged": true
+  },
+  "comparison": {
+    "source_rebuilt_baseline_accepts": 91,
+    "current_accepts": 92,
+    "baseline_accepted_membership_sha256": "c0885e22f2fcb44c9630dc38baec56dcb92f222c9f3b1928ad1148927b6c7ff1",
+    "current_accepted_membership_sha256": "f6bdec7e7b1441ccae1b1e4cbbd684121398986f9c03596f41c34f482f3b7d84",
+    "gained": [
+      "experiments/coldstart-2026-11-20/yavo/T07.yv"
+    ],
+    "lost": [],
+    "historical_recorded_baseline": 88,
+    "historical_record_reproduced": false,
+    "historical_discrepancy_cause": "Unknown; historical 88 is not reproduced from exact baseline source. Do not infer four newly accepted programs."
+  },
+  "newly_accepted_runtime": {
+    "source": "experiments/coldstart-2026-11-20/yavo/T07.yv",
+    "source_sha256": "f3a87f3adf51219b7feeb47c4bd88fed95643862b6fa43c2c922389a15efba32",
+    "feature": "if let over str.parseInt() result in Roman numeral/integer CLI",
+    "passed": true,
+    "argv": [
+      "1",
+      "4",
+      "9",
+      "58",
+      "1994",
+      "3999",
+      "0",
+      "4000",
+      "-1",
+      "I",
+      "IV",
+      "IX",
+      "LVIII",
+      "MCMXCIV",
+      "MMMCMXCIX",
+      "IIII",
+      "IC",
+      "VX",
+      "xiv",
+      "",
+      "12x"
+    ],
+    "expected_stdout": "1 -> I\n4 -> IV\n9 -> IX\n58 -> LVIII\n1994 -> MCMXCIV\n3999 -> MMMCMXCIX\n0: invalid\n4000: invalid\n-1: invalid\nI -> 1\nIV -> 4\nIX -> 9\nLVIII -> 58\nMCMXCIV -> 1994\nMMMCMXCIX -> 3999\nIIII: invalid\nIC: invalid\nVX: invalid\nxiv: invalid\n: invalid\n12x: invalid\n",
+    "stage0_and_stage2_outputs_match_expected": true,
+    "exit_codes": [
+      0,
+      0
+    ],
+    "stderr_empty": true,
+    "allocation_check": true,
+    "stage0_build": "YAVO_NO_CACHE=1 YAVO_ALLOC_CHECK=1 <stage0> build <source> --release -o <reference>",
+    "stage2_build": "<stage2> emit-c <source> -o <generated.c>; <locked-zig> cc -std=c17 -fno-strict-aliasing -DYV_ALLOC_CHECK -O0 -g -I compiler/runtime <generated.c> -o <program>"
+  }
+}

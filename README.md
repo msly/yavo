@@ -63,11 +63,16 @@ through the then scope. Owned Optional payloads remain outside the subset.
 The compiler's type-table search and qualified-type lookup now use the new forms.
 
 The matrix has **792 cases**: 36 new fixtures and two unchanged-source promotions.
-The stage2 repository sweep covers **92 of 391** stage0-accepted programs (was 88),
+The stage2 repository sweep covers **92 of 391** stage0-accepted programs (source-rebuilt baseline: 91),
 with zero strict-subset violations and none of 220 rejected programs admitted.
+The previous recorded count of 88 was not reproduced from baseline `3ce5d36`;
+the [minimal coverage record](compiler/validation/batch42-coverage-2026-11-26.json)
+records one newly accepted program and no lost coverage.
 The complete local bootstrap passes **792/792 cases, 13/13 checks, zero skips**;
 stage2/stage3 C (967,346 bytes) and Linux binaries (448,416 bytes) match.
-Native CI results will be recorded in [HANDOFF section 22](HANDOFF.md).
+[CI run 45763574200](https://github.com/msly/yavo/actions/runs/45763574200)
+passed all six jobs at `819ea1e`, including Linux, Windows and macOS native
+gates and Linux ASan/UBSan. See [HANDOFF section 22](HANDOFF.md).
 
 ### Selfhost for loops and compiler traversal (batch 31, historical)
 
