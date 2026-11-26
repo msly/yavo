@@ -106,7 +106,13 @@ The old builtin_max fixture is promoted unchanged from unsupported to run.
 They cover int/byte inference, raw versus explicit Optional/Result wrapping,
 arity/type/range diagnostics, name shadowing, ordered snapshots, catch exits,
 and a left-side division panic that must precede right-side effects.
-Complete local bootstrap and three-platform CI are pending.
+Complete local bootstrap passes **875/875 cases, 15/15 checks, zero skips**.
+Stage2/stage3 C is byte-identical at 1,018,462 bytes; both Linux binaries are
+476,112 bytes and byte-identical. The final stage2 sweep confirms 100/392
+accepted programs and zero subset violations. Exact-commit
+[CI run 45783874254](https://github.com/msly/yavo/actions/runs/45783874254)
+for implementation `1c8207d` passes **6/6 jobs**: native Linux, Windows and macOS
+bootstrap/application gates, Linux ASan/UBSan and the independent checks.
 
 The new `text_diff_application` check builds the unchanged original
 `experiments/coldstart-2026-11-21-r4/yavo/T11.yv`. Its 35 fixed scenarios require

@@ -75,7 +75,12 @@ The matrix has **875 cases**, including 28 new fixtures and one unchanged-source
 coverage rises **98 to 99 of 391**, gaining T11 with no lost coverage. Including
 the new accepted P0 regression, the full sweep is **100 of 392**, with zero
 strict-subset violations and none of 221 stage0-rejected programs admitted.
-Complete local bootstrap and three-platform CI are pending.
+Complete local bootstrap passes **875/875 cases, 15/15 checks, zero skips**.
+Stage2/stage3 C (1,018,462 bytes) and Linux binaries (476,112 bytes) are byte-identical;
+the final stage2 sweep confirms 100/392 accepted programs and zero subset violations.
+[CI run 45783874254](https://github.com/msly/yavo/actions/runs/45783874254)
+for implementation `1c8207d` passes **6/6 jobs**: native Linux, Windows and macOS
+bootstrap/application gates, Linux ASan/UBSan and the independent checks.
 See [HANDOFF section 24](HANDOFF.md).
 
 ### Selfhost for loops and compiler traversal (batch 31, historical)

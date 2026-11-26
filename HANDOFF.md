@@ -6,7 +6,7 @@
 
 **第四十四批加入 int/byte 的 min/max，原样打通文本 diff CLI。** 两个参数各求值一次、从左到右保存值快照；无类型数字表达式可从另一参数推导 byte，Optional/Result 裸包装不透传载荷上下文。定标发现 Rust stage0 会在第二参数修改本地/字段后才读第一参数，已修复并加 P0 回归。原有 391 个 stage0 接受程序的覆盖 **98 → 99**，唯一新增为 r4/yavo/T11.yv；加上本批新 P0，当前全仓 **100/392，退步 0、越界 0**，221 个 stage0 拒绝输入均未被放行。
 
-当前语料 **875 cases**（新增 28，原样提升 1），完整本机自举进行中；Rust Debug/Release 全量各 **145/0/1**，冻结 **124/3/2**。新增第 15 项 text_diff_application：原始 T11 35 个固定场景、双方 Debug/Release 共 140 次执行已独立通过；32 次正常返回做分配检查，108 次沿原程序 os.exit(1/2) 路径核对输出和退出状态。
+当前语料 **875 cases**（新增 28，原样提升 1），完整本机自举 **875/875、15/15、0 skip**；Rust Debug/Release 全量各 **145/0/1**，冻结 **124/3/2**。新增第 15 项 text_diff_application：原始 T11 35 个固定场景、双方 Debug/Release 共 140 次执行全部通过；32 次正常返回做分配检查，108 次沿原程序 os.exit(1/2) 路径核对输出和退出状态。实现提交 `1c8207d` 的 [run 45783874254](https://github.com/msly/yavo/actions/runs/45783874254) **6/6 成功**，三平台原生自举和应用门、Linux ASan/UBSan 全部通过。
 
 **SH-2 引导子集固定点已闭合；SH-3 尚未接替，Rust stage0 仍承担日常编译；SH-4 正式交付完成 1/3 个独立应用。** bootstrap 现有 test-summary、原始单位换算、原始文本 diff 三项应用回归；后两项是兼容性验收，正式独立项目交付条件仍按自举路线。每批门槛保持 `docs/decisions.md` 第九节。
 
@@ -365,4 +365,5 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - **应用门**：`selfhost/diff_application.py` 与 `tests/applications/text-diff.json` 纳入 bootstrap 第 15 项 text_diff_application，复用已验证的进程树超时 runner。原始 T11 SHA256 为 `6caddd13162d57caa859c58323c4993e27809e5c3100bf23b3139d9880f43ec8`，35 场景/140 次执行通过，退出码 0/1/2 各 8/19/8 个场景。期望独立遵循公开 LCS 平局先删除规则并核对公开 fixture；27 contract、3 line API、3 CLI、2 file API 边界区分记录。10 项输入绑定原始源码、验收器、共享 runner、契约、固定场景和公开输入输出。
 - **分配范围**：全部构建启用分配插桩，32 次正常返回执行分配检查；108 次差异/错误按原程序 os.exit(1/2) 退出，不执行正常析构及正常返回分配校验。后者只声明输出、错误和退出码正确，不混作资源检查通过。
 - **覆盖口径**：沿用 subset_sweep.py 的全工作区 rglob（包含已有未跟踪实验快照）。原有 612 源文件内容和 391 个 stage0 接受成员均未变；原有覆盖 98→99，仅新增原始 T11、减少 0。新增 P0 单列后，全仓 100/392，stage0 拒绝 221，越界 0。
-- **本机与 CI**：完整自举和三平台 CI 待完成；本机固定点及最终 stage2 扫描结果随后回填。
+- **本机验收**：完整自举 **875/875、15/15、0 skip**；stage2/stage3 C **1,018,462 字节**、Linux 二进制 **476,112 字节**逐字节一致。真实 lexer、test-summary 的 71 个本机场景、单位换算 20 场景/80 次执行、文本 diff 35 场景/140 次执行和输入不变检查全部通过。最终 stage2 全仓扫描 **100/392、0 越界**；再逐一复核原有 98 路径及新增 T11/P0，100/100 接受，确认接受集合一致、退步 0。首轮仅旧 builtin_max 的 unsupported 分类过时，源码原样提升后完整复验通过。
+- **CI**：实现提交 `1c8207d` 的 [run 45783874254](https://github.com/msly/yavo/actions/runs/45783874254) **6/6 成功**（首次运行）。Linux x86-64、Windows x86-64、macOS arm64 原生 Rust Debug/Release、自举及应用门全部通过；Linux 生成 C/stage2 ASan/UBSan 与三个独立作业成功。已核对 run/head 精确绑定 `1c8207dcd77a193b7ccf3ec3e42abedb089c0681`，分支 main，六个 job 均 completed/success。
