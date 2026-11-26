@@ -1,16 +1,14 @@
-# Yavo 交接文档（2026-11-26，第四十一批：std/io、视图绑定与 str 方法）
+# Yavo 交接文档（2026-11-26，第四十二批：带下标遍历与 Copy Optional if let）
 
-给下一个会话：先读第 1、2、10、20、21 节及 docs/self-hosting.md、selfhost/README.md 再开工。第二十七至第三十批在 `history/handoff-batches-2026-11-23-to-24.md`，第十二至第二十六批在 `history/handoff-batches-2026-11-21-to-23.md`，第六至第十一批在 `history/handoff-batches-2026-11-19-to-21.md`。
+给下一个会话：先读第 1、2、10、21、22 节及 docs/self-hosting.md、selfhost/README.md 再开工。第二十七至第三十批在 `history/handoff-batches-2026-11-23-to-24.md`，第十二至第二十六批在 `history/handoff-batches-2026-11-21-to-23.md`，第六至第十一批在 `history/handoff-batches-2026-11-19-to-21.md`。
 
 ## 1. 一句话状态
 
-**SH-2 引导子集固定点保持；第四十一批加入 `std/io` 的 `io.readAll() catch _`、`trim`/`lines`/`fields`、指向拥有值的视图绑定（`let lines = text.lines()`）与遍历临时 Vec，全仓覆盖从 70 升到 88 个程序，扫描仍 0 越界（见第 21 节）。第四十批让 selfhost 支持 `Map[String, int|bool|byte]`，selfhost 现在能编译原样的 examples/test-summary：生成的程序在 Debug/Release 下通过其 71 个本机适用场景并与 stage0 构建逐字节一致，这项检查已成为 bootstrap 的第 13 项（`test_summary_application`，三平台 CI 都跑）。同批修复 4 处子集越界（stage0 接受而 selfhost 报 E 码），并新增全仓扫描工具确认 391 个 stage0 接受的程序无越界、220 个 stage0 拒绝的程序无一被 selfhost 接受（见第 20 节）。第三十九批让 selfhost 只读遍历 `Vec[String]` 与拥有型结构体元素，并修复跳转式 `??` 回退分支的拥有型临时值在分支外被再次释放的子集缺陷（见第 19 节）。至此把 test-summary 的 `Map` 换成 `Vec` 后，selfhost 能编译整个程序，70 个场景与两份归档日志的输出与 stage0 构建逐字节一致；Map 是 SH-3 判据前的最后一个阻塞。第三十八批支持 str 查询方法 `startsWith`/`endsWith`/`contains`/`find`/`split`/`parseInt`，并修复 Rust stage0 文本方法接收者在实参求值期间未被锁住的释放后使用缺陷（见第 18 节）；第三十七批支持只读 `[]T` 参数与 `Vec[T]` → `[]T` 自动视图（第 17 节）；第三十六批支持 `?? return`/`?? break`/`?? continue`（第 16 节）；第三十五批让 selfhost 支持 `Vec[str]`，并修复 Rust stage0 对拥有型实参（`Vec[String]` 等）返回视图的释放后使用缺陷（见第 15 节）；第三十四批加入借用返回 `-> str of …` 并修复 loans 在分支与循环中丢失的缺陷（第 14 节）。** 第三十三批起 selfhost 支持多文件源模块： `use a`、`use a/b`、`use a/{b, c}` 以入口文件目录为根加载，允许循环导入与自导入；顶层 `pub` 决定导出；导入逐文件生效、不传递；函数一律写 `module.f(...)`，公开类型可用短名或 `module.T`（含 `module.T{...}`、`module.E.V`），短名二义报 E0010；诊断和运行时 panic 都指向原文件行列。第三十二批的插值与 format（含 Rust 输出片段借用修复）见第 12 节。
+**第四十二批加入 `for index, item in values` 与现有 Copy Optional 的 `if let`。** 带下标遍历适用于已有 Vec、只读切片及 `os.args()`，索引为只读 int；元素沿用 Copy 或只读借用规则。`if let` 支持 int/byte/bool/非拥有结构体/无载荷枚举，具名绑定在 then 作用域内保守保持匹配源的借用，`_` 除外；拥有型 Optional 仍为 U0001。`types.declaredIn` 和 `types.qualifiedType` 已分别改用两种新语法，编译器自身参与验证。全仓 stage2 扫描覆盖 **92/391**（上一批 88），**0 子集越界**，stage0 拒绝的 220 个程序仍无一被接受。
 
-当前语料 **756 cases**。第四十一批本机完整自举 **756/756、13/13、0 skip**，固定点数字见第 21 节；Rust Debug/Release 各 145/0/1（p0 用例文件计在同一测试内）、冻结 124/3/2。
+当前语料 **792 cases**（新增 36，原样提升 2）。第四十二批本机完整自举 **792/792、13/13、0 skip**；stage2/stage3 C（967,346 字节）与 Linux 二进制（448,416 字节）逐字节一致，CI 记录见第 22 节。本批不改 Rust，既有 Rust Debug/Release 各 145/0/1、冻结 124/3/2；原生 CI 会重跑对应套件。
 
-编译器自身也已改为以 `selfhost/main.yv` 为入口的 `use` 多文件（决定 28），bootstrap 不再拼接源码；改后本机 568/568、12/12，stage2/stage3 C（785,468 字节）与二进制（366,936 字节）一致。
-
-**SH-3 尚未接替，Rust stage0 仍承担日常编译；SH-4 完成 1/3 个独立应用。** 验收流程按 decisions.md 第九节。下一步见第 10 节：test-summary 已由 selfhost 原样编译；接下来按 `selfhost/subset_sweep.py` 的覆盖统计（391 个程序中 selfhost 接受 88 个）选择下一批。
+**SH-2 引导子集固定点已闭合；SH-3 尚未接替，Rust stage0 仍承担日常编译；SH-4 完成 1/3 个独立应用。** 第四十批起 selfhost 能原样编译 examples/test-summary，其 71 个本机场景通过 bootstrap 第 13 项检查；第四十一批加入 std/io、trim/lines/fields、拥有值视图绑定及临时 Vec 遍历。验收条件保持 `docs/decisions.md` 第九节，不以新增语法数量替代 SH-3/SH-4 完成条件。
 
 ## 2. 仓库与环境
 
@@ -196,13 +194,11 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 
 ## 10. 下一个会话的第一步
 
-1. 检查 Git 状态、最新提交与 CI；先读第 12 节、[自举路线](docs/self-hosting.md)、[selfhost 说明](selfhost/README.md)。
-2. **下一步：扩大覆盖，朝 SH-3 正式接替推进。** selfhost 已原样编译 examples/test-summary（bootstrap 第 13 项）；SH-3 正式条件（覆盖既有回归与冻结规格、日常默认使用）仍未满足，不要宣称完成。第四十一批后 `python3 selfhost/subset_sweep.py --selfhost <stage1>`：stage0 接受 391 个，selfhost 接受 88 个，0 越界；首个 U0001 原因前几位是标准模块（35，主要是 `std/sync`）、元组类型（28）、其他类型形式（24）、类型后缀（18，如 `Map[String, String]`、`Vec[Vec[T]]`）、泛型/接口（17）、浮点（16）、带下标遍历 `for (i, x) in`（14）、`if let`（12）、Map 非标量值（10）。建议下一批做 `if let`/Optional 拥有载荷，或元组/带下标遍历，或 Map 的 String 值；每批先跑扫描定标，完成后扫描必须仍为 0 越界。也可以开始 SH-4 第二个独立应用。
-3. 模块尚缺：包依赖与锁文件（stage0 也没有）、`use` 出现在其他项之后（stage0 接受，子集 U0001）、跨模块的枚举载荷/方法/泛型（子集本身没有）。
-
-4. 拥有型 Optional/pop、if let/match、跳转式 ??、Result 字段/容器、方法、泛型按实际阻塞另列；SH-3 的判据是能否编译 examples/test-summary 这样的真实程序，而不是特性数量。
-5. SH-4 继续用 stage0，后续选结构化文本校验和多文件依赖/索引工具。不要同时运行共用临时目录的两条 cargo test。
-6. 第六轮文档实验有可计量环境才恢复；当前工程推进不受它阻塞。
+1. 检查 Git 状态、最新实现提交与 CI；先读第 22 节、[自举路线](docs/self-hosting.md)、[selfhost 说明](selfhost/README.md)。
+2. **下一批优先元组类型、构造与字段读取。** 第四十二批后全仓 391 个 stage0 接受程序中覆盖 92 个；首个阻塞为标准模块 35（以 std/sync 为主）、元组类型 34、其他类型形式 24、类型后缀 18、泛型/接口 17、浮点 16、元组表达式 12、Map 非标量值 11。类型与表达式是首个诊断计数，不能直接相加当作能解锁的程序数；每批仍以实际扫描覆盖和零越界验收。
+3. 拥有型 Optional/pop、Map 的 String 值仍是后续候选。若扩展 Optional，必须同时覆盖移动、析构、借用绑定及 `??` 提前退出，不能只放开解析。
+4. 模块尚缺包依赖与锁文件（stage0 也没有）、后置 use、跨模块的枚举载荷/方法/泛型；按真实应用阻塞安排。
+5. SH-4 第二个独立应用建议结构化文本校验或多文件依赖/索引工具。不要同时运行共用临时目录的两条 cargo test。第六轮文档实验有可计量环境才恢复，不阻塞工程推进。
 
 正式门槛仍按 `docs/plan.md`：配对通过率差的单侧 95% 下界至少 −5 个百分点，单位成功交付成本较 Rust 低至少 20% 并独立复现；冻结运行基准几何均值不超过 C 的 1.5 倍。工程目标包括小程序编译 P50 ≤200 ms、Linux strip 后 ≤250 KB、Windows 原生测试及可复现产物。
 
@@ -331,3 +327,15 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - 覆盖：全仓 stage0 接受的 391 个程序中 selfhost 接受 88 个（第四十批 70 个），0 越界；stage0 拒绝的 220 个仍无一被接受。
 - 用例：新增 23 个（run 5、reject 11、unsupported 7），原样提升 11 个旧 unsupported 用例为 run（记录在 promotions）；约 290 个旧探针无回退（8 个由 U0001 变为接受，均与 stage0 一致）。
 - 验收：本机 756/756、13/13、0 skip，stage2/stage3 C 953,599 字节、Linux 二进制 443,536 字节一致；本批未改 Rust（沿用：各 145/0/1，冻结 124/3/2）。CI：`0c270fa` 的 run 45653050661 中 Windows 在 setup 下载 Zig（约 70 KB/s）时撞上 tools/ci/run.py 单命令 20 分钟上限（第二次出现，未进入测试）；随后 `87623d6` 给原生作业加了按 `toolchain.lock` 键控的 Zig 工具链缓存（actions/cache v6.1.0），冷缓存时安装命令放宽到 45 分钟。`87623d6`（含本批全部代码）的 [run 45657470106](https://github.com/msly/yavo/actions/runs/45657470106) **6/6 成功**（Linux 含 stage2 ASan/UBSan、Windows、macOS；Windows 冷下载 22 分钟后成功并写入缓存）。
+
+## 22. 第四十二批：带下标遍历与 Copy Optional if let（2026-11-26）
+
+- 基线 `3ce5d36`。根据上批扫描的带下标遍历与 if-let 阻塞扩展现有表示，不在本批加入元组或拥有型 Optional。
+- **带下标遍历**：语法为 `for index, item in values`（没有括号）。索引是只读 int；支持既有 Vec/只读切片、拥有 String/结构体元素、临时 Vec 和 `fields()` 临时视图；`_` 可丢弃任意绑定。循环仍锁住集合根，continue 仍递增，break/return/循环头 catch 的清理保持原规则。重复/遮蔽 E0011、越作用域 E0010、修改绑定 E0014、修改/移动集合 E0102、移动拥有元素 E0404。
+- **旧边界修复**：`os.args()` 的内部 Args 类型现在按静态 []str 遍历，单绑定与双绑定均可用；以前会误报 E0001。双绑定 Map 遍历仍为 U0001。范围仍仅允许一个绑定。
+- **if let**：支持现有 Optional 的 int/byte/bool/非拥有结构体/无载荷枚举载荷，含 else、else-if-let、丢弃 `_`；条件只求值一次，绑定仅在 then 可见。沿用分支 moved/source 合并与循环重放。`Local.matchRoot` 单独记录匹配借用，不把 Copy 载荷伪装成视图，允许复制/返回载荷。
+- **保守边界**：then 内修改被匹配的源变量 U0001（stage0 按最后一次使用判断接受或 E0102）；`_` 不保留此锁。修改来自只读源的绑定 E0101；来自可写源或临时值的 Copy 绑定修改 U0001，同 stage0。拥有/str 载荷、Optional 字段、解构模式均未开放。
+- **真实迁移**：`types.declaredIn` 用双绑定扫描类型表；`types.qualifiedType` 用 if-let 处理模块查找。两条路径由编译器自身、模块正反例和固定点共同覆盖。
+- **用例**：新增 36（run 8、reject 20、unsupported 4、shared_unsupported 4）；原样提升 `unsupported_optional_if_let` 与 `unsupported_for_two_bindings`，promotions 记录基线与源码哈希。合计 792（run 213、panic 30、reject 426、unsupported 94、shared_unsupported 29）。包含循环头 catch + 拥有临时 Vec + indexed for + if-let 的组合清理回归。
+- **独立核对**：35 个额外差分检查无越界，5 个运行组合在分配检查下与 stage0 输出/退出一致。首轮全仓扫描覆盖 92/391（原 88），0 越界；220 个 stage0 拒绝程序均未被放行。
+- **本机验收**：792/792、13/13、0 skip；stage2/stage3 C 967,346 字节、Linux 二进制 448,416 字节一致；真实 lexer、test-summary 的 71 个本机场景、输入不变检查全部通过。最终 stage2 全仓复扫仍为 92/391、0 越界。原生 CI 待回填。

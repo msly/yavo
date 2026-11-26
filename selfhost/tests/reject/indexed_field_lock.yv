@@ -1,0 +1,8 @@
+struct Owner { values: Vec[int]
+    flag: int }
+fn main() {
+    var owner = Owner{values: [1, 2], flag: 0}
+    for index, value in owner.values {
+        owner.flag = index + value
+    }
+}

@@ -17,7 +17,8 @@ replacement and SH-4 non-compiler application acceptance separate from the
 completed SH-2 fixed point. The first application,
 [yavo-test-summary](examples/test-summary/README.md), a verifier for existing
 experiment logs, has passed independent acceptance on all three native platforms.
-This completes **one of the three SH-4 applications**; it uses stage0.
+This completes **one of the three SH-4 applications**; both stage0 and the
+selfhost compiler can build it, with the selfhost build checked by bootstrap.
 
 The specification starts from **v0.5**, with dated revisions in [docs/decisions.md](docs/decisions.md). Historical revisions remain unchanged under `history/v0.x/` and Git tags `v0.1` through `v0.5`.
 
@@ -51,7 +52,24 @@ The ignored Cargo test is the old exploratory P0 conformance report; the current
 
 Source modules support top-level exports, per-file imports, cyclic imports and original-file diagnostics. Package dependencies and a program lockfile remain open. Multi-file `fix` returns `U0001` without writing; symlink module aliases are unsupported.
 
-### Selfhost for loops and compiler traversal (batch 31, 2026-11-24)
+### Selfhost indexed loops and Copy Optional if-let (batch 42, 2026-11-26)
+
+`for index, item in values` now covers the existing Vec/read-only-slice subset,
+including owned elements and temporary vectors, plus `os.args()` as static []str.
+The index is a read-only int; element borrowing and loop cleanup are unchanged.
+`if let name = value` handles supported Copy Optional payloads, including else,
+else-if-let and `_`. A named binding conservatively keeps its source unchanged
+through the then scope. Owned Optional payloads remain outside the subset.
+The compiler's type-table search and qualified-type lookup now use the new forms.
+
+The matrix has **792 cases**: 36 new fixtures and two unchanged-source promotions.
+The stage2 repository sweep covers **92 of 391** stage0-accepted programs (was 88),
+with zero strict-subset violations and none of 220 rejected programs admitted.
+The complete local bootstrap passes **792/792 cases, 13/13 checks, zero skips**;
+stage2/stage3 C (967,346 bytes) and Linux binaries (448,416 bytes) match.
+Native CI results will be recorded in [HANDOFF section 22](HANDOFF.md).
+
+### Selfhost for loops and compiler traversal (batch 31, historical)
 
 The bootstrap compiler now accepts int/byte half-open ranges and read-only
 Copy-element traversal of stable Vec locals and parameters, including inout

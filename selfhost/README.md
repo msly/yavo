@@ -12,8 +12,11 @@ separate behavioral reference; no stage delegates an input back to Rust.
 The compiler sources were rewritten into a *bootstrap dialect*: a strict
 subset of the stage0 language that the compiler itself implements (see
 [decision 20–24](../docs/decisions.md)). It is not yet the default compiler:
-stage0 accepts far more of the language (owned optionals, reference iteration,
-float formatting, methods, generics, Map/Set, closures, threads...).
+stage0 accepts far more of the language (owned optionals, mutable/reference iteration,
+float formatting, methods, generics, broader Map/Set APIs, closures, threads...).
+Batch 42 adds `for index, item in values`, Copy Optional `if let`, and static
+`os.args()` iteration. The compiler itself uses both new binding forms;
+a named match of an existing Optional keeps it unchanged for the then scope.
 Batch 41 adds `std/io` (`io.readAll() catch _`), `trim`/`lines`/`fields`,
 bindings of views into owned locals (the owner stays unchanged while a view is
 in scope) and iteration over temporary vectors.
@@ -88,7 +91,25 @@ and writes `receipt.json` with `achieved: "self-hosted-fixed-point"` and
 `self_hosted: true` only when everything passes. Native CI runs this gate on
 Linux, Windows and macOS; a configured job is not itself a passing result.
 
-## Current validation: batch 31 (2026-11-24)
+## Current validation: batch 42 (2026-11-26)
+
+The matrix contains **792 cases / 243 executable inputs**: 213 run, 30 panic,
+426 reject, 94 unsupported and 29 shared unsupported. There are 36 new cases;
+two old unsupported fixtures are promoted without changing their bytes.
+The complete local bootstrap passes **792/792 cases, 13/13 checks, zero skips**.
+Stage2/stage3 C (967,346 bytes) and Linux binaries (448,416 bytes) match exactly;
+the real lexer and all 71 applicable test-summary scenarios pass. Native CI
+results are pending final recording.
+
+The repository sweep now accepts 92 of 391 stage0-accepted programs (previously
+88), reports no strict-subset violation, and admits none of 220 stage0-rejected
+programs. The first remaining blockers include tuple types (34), in addition
+to unsupported standard modules (35); first-blocker counts are not predicted
+coverage gains. An independent check audit has 35 probes and five allocation-
+checked runtime combinations, including header catch exits around an owned
+Vec temporary and indexed/if-let body control flow.
+
+## Historical validation: batch 31 (2026-11-24)
 
 The matrix contains **490 cases / 172 executable inputs**: 144 run, 28 panic,
 243 reject, 61 unsupported and 14 shared unsupported. There are 51 new cases;
@@ -268,20 +289,20 @@ JSON diagnostics, suggestions and recovery remain future work.
 
 | Area | Implemented |
 | --- | --- |
-| Files | One source file; function and aggregate declarations, including `pub`; required `fn main()`; optional leading `use std/{fs, os}` (other imports are `U0001`) |
+| Files | Source modules via leading `use a`, `use a/b`, `use a/{b, c}`; per-file imports and top-level `pub`, cyclic imports, qualified functions and original source locations; standard fs/io/os imports; required entry `fn main()` |
 | Types | `int` (signed 64-bit), `byte` (unsigned 8-bit), `bool`, borrowed `str`, owned `String`, `Vec[T]` with Copy or owned String/struct elements, unit return; nominal structs, payload-free enums, supported `T ! E` results and Copy `?T` |
-| String | Empty construction, str.toString, len, clone, push, output, String/str equality and ordering, UTF-8/NUL; checked single-byte indexing returns Copy byte |
+| String | Empty construction, str.toString, len, clone, push, output, String/str comparison, UTF-8/NUL; byte indexing; startsWith/endsWith/contains/find/split/parseInt/trim/lines/fields |
 | Vec | Typed empty construction, empty/nonempty literals including Vec[byte], len, consuming push, reserve, recursive clone/drop; zero-argument pop for Copy elements on mutable local/field/inout places; checked reads and index/field/compound assignments for Copy elements; expression-local read-only indexing and field projection for owned elements |
 | Aggregates | Forward/nested fields, construction, reads and mutable fields; Copy values or owned String/Vec/nested struct fields; constant defaults and empty aggregates; by-value cycles rejected |
 | Enums | Qualified and context-inferred cases, nominal type checks, equality/inequality, case-name output |
 | Literals | Decimal integers including negative `INT64_MIN`, contextual byte-range integers, single-quoted ASCII byte literals and seven escapes, booleans, unit, non-interpolated UTF-8 strings with supported escapes and NUL; vector literals with contextual or first-element type inference |
-| Functions | Typed parameters, scalar/String/Vec/struct/unit returns, forward calls and recursion; owned ordinary parameters borrow read-only; `inout` parameters with `&variable` or `&variable.field` arguments (later arguments may not use that root, E0102); str returns remain outside the subset |
+| Functions | Typed parameters, scalar/String/Vec/struct/unit returns, forward calls and recursion; owned ordinary parameters borrow read-only; `inout` parameters with `&variable` or `&variable.field` arguments (later arguments may not use that root, E0102); borrowed str/Vec[str]/slice returns carry their required `of` sources |
 | Results | User-function `T ! E`, contextual `ok(value)`/`err(error)` and implicit success wrapping, `try`, terminating `catch name { ... }`/`catch _ { ... }`; owned String/Vec/struct payloads and cleanup on propagation |
-| Optionals | Explicit/inferred `?T` for int/byte/bool/Copy struct/enum; `some`, contextual `none`, implicit wrapping at fit boundaries, `isSome`/`isNone`, lazy right-associative value-form `??` |
-| Text slices | Expression-local `s[start..end]` on str/String with int bounds, P-INDEX and P-STR-BOUNDARY checks; usable in comparisons, read-only arguments, `push` and `toString()`; a view of an owned String cannot be bound or assigned (U0001) |
-| Standard calls | `take(&place)` for String/Vec places; `os.args()` (len, indexing to static str), `os.exit(code)`; `fs.readText`, `fs.writeNewText` and `String.fromUtf8` only with a `catch _ { ... }` handler that cannot fall through (E0601) |
+| Optionals | `?T` for int/byte/bool/non-owning struct/payload-free enum; `some`, contextual `none`, implicit wrapping, isSome/isNone, lazy `??` and terminating `??` fallbacks; `if let` with else/else-if-let and `_` |
+| Text slices | `s[start..end]` on str/String with int bounds and P-INDEX/P-STR-BOUNDARY checks; views of owned values may be bound locally while their owner stays unchanged; escaping the owner scope remains rejected |
+| Standard calls | `take(&place)` for String/Vec places; `os.args()` (len, indexing to static str), `os.exit(code)`; `io.readAll`, `fs.readText`, `fs.writeNewText` and `String.fromUtf8` only with a `catch _ { ... }` handler that cannot fall through (E0601) |
 | Locals | `let`/`var`, inferred or explicit types, assignment and arithmetic compound assignment; active locals cannot be shadowed |
-| Control flow | `if`/`else if`/`else`, `while`, `loop`, int/byte half-open range `for`, read-only traversal of a stable named Copy Vec, `break`, `continue`, explicit return and return-path checks |
+| Control flow | if/else-if/else and Copy Optional if-let; while/loop; int/byte half-open range for; one/two-binding read-only Vec/slice/args traversal including fields and temporary vectors; break/continue/return and return-path checks |
 | Expressions | Parentheses, int unary minus, boolean not, checked int/byte arithmetic, wrapping arithmetic, bit operations/shifts, contextual integer arithmetic, equality/order, short-circuit boolean operators |
 | Builtins | Single-argument `print`/`println`/`eprintln` as direct statements including decimal byte output, `assert(bool)`, explicit `int(...)`/`byte(...)` conversions; user functions take precedence over the assert prelude |
 | Ownership | Consuming bindings/assignment/construction/returns; moved-value checking, read-only parameters, expression-local element borrows, root-based argument/receiver protection |
@@ -300,7 +321,7 @@ rejected consistently with stage0. Explicit constructor fields are evaluated
 in source order. Bare enum cases use annotation/parameter/return/field/
 assignment/RHS comparison context.
 
-### Range and Copy Vec loops
+### Range and vector loops
 
 Batch 31 local and three-platform native acceptance have passed.
 `for i in start..end` accepts matching `int` or `byte` bounds, with contextual
@@ -311,11 +332,12 @@ iterations. The binding is read-only, and `continue` still advances it.
 Finite loops retain a possible zero-iteration path in return and ownership
 analysis, even when their body always returns.
 
-`for item in items` accepts a stable Vec local, ordinary parameter or `inout`
-parameter, including parentheses around that name. Elements may be `int`,
-`byte`, `bool`, Copy structs or payload-free enums. Each iteration copies an
-element into a read-only binding; it does not consume the vector. The vector
-root remains borrowed throughout the body, including nested loops and calls.
+`for item in items` and `for index, item in items` accept the existing Vec and
+read-only slice types, including locals, ordinary/inout parameters, fields and
+temporary vectors. `os.args()` is a static []str and supports both forms.
+The index is a read-only int; `_` can discard either binding. Copy elements
+are copied and owned String/struct elements are read-only views. The iterable
+is not consumed; its root remains borrowed throughout nested loops and calls.
 An otherwise permitted mutation, move, `take` or inout access to that root
 fails with E0102. Reads and nested read-only traversal remain allowed, and
 the loop releases its borrow when it ends.
@@ -326,12 +348,14 @@ Owned header temporaries survive `continue` in the new loop's body and are
 cleaned when that loop completes or breaks; an enclosing jump, return or
 propagation also cleans the temporaries whose scope it exits.
 
-Owned-element traversal, explicit reference/mutable traversal (`in &items`),
-field or temporary iterables, two-binding collection loops (`for i, item in
-items`), Map/Set traversal and slices remain U0001. A range with two bindings
-is invalid syntax (E0020); an existing non-iterable scalar name is E0001.
+Explicit reference/mutable traversal (`in &items`) and Map/Set traversal
+remain outside the subset. Two bindings use `for i, item in items`, without
+parentheses. A range with two bindings is invalid syntax (E0020); an existing
+non-iterable scalar name is E0001. Collection mutation/move remains E0102,
+and writing either loop binding is E0014.
 
-Four real loops now use the new syntax:
+The earlier batch31 migrations were these four loops; batch42 additionally
+uses indexed traversal in `types.declaredIn`:
 
 | Source function | Migration |
 | --- | --- |
@@ -366,10 +390,20 @@ E0001; use `byte(1)`, a byte literal or an existing byte for implicit wrapping.
 The same raw-context rule applies to Result success values: `return ok(1)`
 can provide byte context, but `return 1` in a `byte ! E` function is E0001.
 
-Owned/String/Vec/borrowed-str/unit payloads, nested Optional, Optional fields
-or container elements, Optional/Result combinations, owned-element pop,
-`if let`, `match` and jumping `?? return/break/continue` remain U0001.
-Optional comparison and direct printing are also U0001, matching stage0.
+`if let name = optional { ... }` evaluates the condition once, copies its
+supported payload only in the then arm, and accepts else/else-if-let. A named
+binding of an existing Optional keeps a scoped loan: modifying that source
+inside the then arm is U0001 even after the binding's last use, because this
+subset has no liveness analysis. Copying or returning the payload is allowed;
+`_` has no source loan. Read-only binding writes are E0101; writes to a Copy
+binding from a mutable source or temporary are U0001, matching stage0.
+Branch move/source joins and loop replays preserve these rules.
+
+Jumping `?? return/break/continue` is accepted for a whole binding initializer
+or assignment RHS. Owned/String/Vec/borrowed-str/unit payloads, nested Optional,
+Optional fields/container elements, Optional/Result combinations, owned-element
+pop, destructuring patterns and match remain U0001. Optional comparison and
+direct printing are also U0001, matching stage0.
 
 ### Results and error propagation
 
@@ -427,16 +461,16 @@ arguments accept int or byte, while `Vec.reserve` still requires int.
 The receiver remains protected during index evaluation. The materialized
 byte immediately detaches from its owner and can survive later movement or
 replacement of that owner. Temporary String receivers live through the
-access. Text indexing is read-only; expression-local text slices are supported,
-while persistent bindings of views into owned strings remain outside the subset.
+access. Text indexing is read-only. Text slices may be bound locally; views
+into an owned value keep that owner unchanged while the binding is in scope.
 
 ### Ownership boundaries
 
 Ordinary string literals are `str`. Binding, assigning, returning or explicitly
 initializing a String field from a literal requires `.toString()`; only a
 String field's constant default has a special literal conversion. String
-arguments may borrow a str view for a call, but persistent String-to-str
-bindings and borrowed return values are not introduced by this increment.
+arguments may borrow a str view for a call. Local view bindings keep the owner
+unchanged in their scope; borrowed returns must carry permitted `of` sources.
 
 Owned locals move into bindings, assignments, constructors and returns.
 Ordinary parameters, output, comparison, len and clone borrow. Moving out of

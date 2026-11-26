@@ -1,0 +1,22 @@
+use std/os
+fn main() {
+    var count = 0
+    for index, arg in os.args() {
+        let position: int = index
+        assert(position == count)
+        assert(arg.len() > 0)
+        count += 1
+    }
+    println(count == os.args().len())
+    let args = os.args()
+    var again = 0
+    for index, arg in args {
+        assert(index == again)
+        assert(arg.len() > 0)
+        again += 1
+    }
+    println(again == count)
+    var plain = 0
+    for arg in os.args() { if arg.len() > 0 { plain += 1 } }
+    println(plain == count)
+}

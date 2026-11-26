@@ -1,0 +1,39 @@
+enum Tone {
+    Low
+    High
+}
+struct Point {
+    x: int
+    y: int
+}
+fn fallback(x: ?int) -> int {
+    if let n = x { return n }
+    return -1
+}
+fn main() {
+    let missing: ?int = none
+    if let n = some(7) { println(n) } else { println(99) }
+    if let n = missing { println(n) } else if let m = some(3) { println(m) }
+    if let flag = some(true) { println(flag) }
+    let small: ?byte = some(255)
+    if let b = small { println(int(b)) }
+    let tone: ?Tone = some(.High)
+    if let t = tone { println(t == .High) }
+    if let p = some(Point{x: 4, y: 5}) { println(p.x + p.y) }
+    println(fallback(missing))
+    println(fallback(some(11)))
+    var changing = some(2)
+    var copied = 0
+    if let n = (changing) {
+        println(changing ?? 0)
+        copied = n
+    }
+    changing = none
+    println(copied)
+    if let _ = some(10) { println("discard") }
+    var ignored = some(1)
+    if let _ = ignored { ignored = some(8) }
+    println(ignored ?? 0)
+    let n = 42
+    println(n)
+}

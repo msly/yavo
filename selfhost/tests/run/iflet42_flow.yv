@@ -1,0 +1,49 @@
+fn option(counter: inout int, yes: bool) -> ?int {
+    counter += 1
+    if yes { return some(6) }
+    return none
+}
+fn number(text: String) -> ?int {
+    return text.find("a")
+}
+fn picked(choice: ?int) -> String {
+    let text = "held".toString()
+    if let n = choice {
+        if n > 0 { return text }
+        return "zero".toString()
+    } else {
+        return text
+    }
+}
+fn main() {
+    var calls = 0
+    if let x = option(&calls, true) { println(x) }
+    if let x = option(&calls, false) { println(x) } else { println(calls) }
+    if let i = number("cat".toString()) { println(i) }
+    var values: Vec[int] = [2, 3, 4]
+    var sum = 0
+    loop {
+        if let n = values.pop() {
+            if n == 3 { continue }
+            sum += n
+        } else {
+            break
+        }
+    }
+    println(sum)
+    println(values.len())
+    var total = 0
+    for i in 0..8 {
+        var next: ?int = none
+        if i % 2 == 0 { next = some(i) }
+        if let n = next {
+            if n == 2 { continue }
+            if n == 6 { break }
+            total += n
+        }
+    }
+    println(total)
+    println(picked(some(1)))
+    println(picked(none))
+    println(picked(some(0)))
+}

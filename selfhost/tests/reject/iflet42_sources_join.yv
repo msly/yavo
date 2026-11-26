@@ -1,0 +1,11 @@
+fn choose(a: str, b: str, choice: ?int) -> str of a {
+    var text = a
+    if let n = choice {
+        text = b
+        println(n)
+    }
+    return text
+}
+fn main() {
+    println(choose("a", "b", some(1)))
+}

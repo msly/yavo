@@ -1,0 +1,27 @@
+enum Color { Red
+    Blue }
+struct Pair { value: int }
+fn weighted(values: []int) -> int {
+    var total = 0
+    for index, value in values {
+        let position: int = index
+        total += position * value
+    }
+    return total
+}
+fn main() {
+    println(weighted([2, 4, 6]))
+    let bytes: Vec[byte] = [2, 7]
+    var total = 0
+    for index, value in bytes { total += index + int(value) }
+    println(total)
+    for index, value in [true, false] { println("${index}:${value}") }
+    let words: Vec[str] = ["a", "bb"]
+    for index, value in words { println("${index}:${value}") }
+    let colors = [Color.Red, Color.Blue, Color.Red]
+    var red = 0
+    for index, color in colors { if color == .Red { red += index + 1 } }
+    println(red)
+    let pairs = [Pair{value: 8}, Pair{value: 12}]
+    for index, pair in pairs { println(index + pair.value) }
+}

@@ -685,8 +685,16 @@ fn setBody(s: inout State, id: int, body: Vec[int]) {
 fn ifStatement(s: inout State, ts: Vec[Token]) -> int {
     enter(&s, ts)
     let p = expect(&s, ts, "if")
-    if at(s, ts, "let") {
-        syntax(s, ts, "U0001", "if let is outside the selfhost SH-1 subset")
+    var binding = -1
+    if eat(&s, ts, "let") {
+        if at(s, ts, "(") {
+            syntax(s, ts, "U0001", "tuple destructuring is outside the selfhost subset")
+        }
+        binding = identifier(&s, ts)
+        if at(s, ts, "(") {
+            syntax(s, ts, "U0001", "patterns after if let are outside the selfhost subset")
+        }
+        expect(&s, ts, "=")
     }
     let condition = parseExpression(&s, ts)
     let body = parseBlock(&s, ts)
@@ -702,6 +710,10 @@ fn ifStatement(s: inout State, ts: Vec[Token]) -> int {
     }
     s.nesting -= 1
     let id = pushStmt(&s, .If, p, condition)
+    if binding >= 0 {
+        s.statements[id].kind = .IfLet
+        s.statements[id].name = binding
+    }
     setBody(&s, id, body)
     s.statements[id].elseStart = store(&s, other)
     s.statements[id].elseCount = other.len()
@@ -725,13 +737,12 @@ fn forStatement(s: inout State, ts: Vec[Token]) -> int {
         }
         kind = .ForRange
         end = parseExpression(&s, ts)
-    } else if second >= 0 {
-        lexer.fail(ts, second, "U0001", "indexed iteration is outside the selfhost subset")
     }
     let body = parseBlock(&s, ts)
     let id = pushStmt(&s, kind, token, value)
     s.statements[id].name = name
     s.statements[id].target = end
+    if kind == .ForEach { s.statements[id].target = second }
     setBody(&s, id, body)
     return id
 }

@@ -1,0 +1,19 @@
+struct Owner { text: String }
+fn make() -> Vec[String] { return ["red".toString(), "blue".toString()] }
+fn show(words: Vec[String]) {
+    for index, word in words { println("${index}:${word}") }
+}
+fn main() {
+    let words = make()
+    show(words)
+    for index, word in make() { println("${index}:${word}") }
+    for index, word in words.clone() {
+        println("${index}:${word}")
+        break
+    }
+    let owners = [Owner{text: "oak".toString()}, Owner{text: "pine".toString()}]
+    for index, owner in owners { println("${index}:${owner.text}") }
+    let text = "left right".toString()
+    for index, word in text.fields() { println("${index}:${word}") }
+    println(words.len())
+}

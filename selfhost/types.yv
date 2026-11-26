@@ -155,10 +155,8 @@ pub fn importedFile(reg: Registry, ts: Vec[Token], alias: int) -> ?int {
 }
 
 fn declaredIn(reg: Registry, ts: Vec[Token], file: int, nameToken: int) -> int {
-    var i = 0
-    while i < reg.entries.len() {
-        if reg.entries[i].file == file && ts[reg.entries[i].name].text == ts[nameToken].text { return i }
-        i += 1
+    for i, entry in reg.entries {
+        if entry.file == file && ts[entry.name].text == ts[nameToken].text { return i }
     }
     return -1
 }
@@ -189,12 +187,14 @@ pub fn lookup(reg: Registry, ts: Vec[Token], nameToken: int) -> int {
 // `module.Name` where module is an import of the alias token's file. Returns
 // -1 when the alias is not a module; a missing or private name is E0010.
 pub fn qualifiedType(reg: Registry, ts: Vec[Token], alias: int, nameToken: int) -> int {
-    let module = importedFile(reg, ts, alias) ?? return -1
-    let decl = declaredIn(reg, ts, module, nameToken)
-    if decl < 0 || !reg.entries[decl].public {
-        lexer.fail(ts, nameToken, "E0010", support.join5("module '", ts[alias].text, "' has no exported type '", ts[nameToken].text, "'"))
+    if let module = importedFile(reg, ts, alias) {
+        let decl = declaredIn(reg, ts, module, nameToken)
+        if decl < 0 || !reg.entries[decl].public {
+            lexer.fail(ts, nameToken, "E0010", support.join5("module '", ts[alias].text, "' has no exported type '", ts[nameToken].text, "'"))
+        }
+        return decl
     }
-    return decl
+    return -1
 }
 
 pub fn fieldIndex(reg: Registry, ts: Vec[Token], decl: int, nameToken: int) -> int {

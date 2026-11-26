@@ -1,0 +1,28 @@
+fn make() -> Vec[String] { return ["red".toString(), "blue".toString()] }
+fn leave() -> int {
+    for index, word in make() {
+        if index == 0 { continue }
+        let owned = word.clone()
+        if owned == "blue" { return index }
+    }
+    return -1
+}
+fn main() {
+    println(leave())
+    for index, value in [10, 20, 30] {
+        if index == 0 { continue }
+        println("${index}:${value}")
+        break
+    }
+    for outer, first in [1, 2] {
+        for inner, second in [3, 4] {
+            if inner == 0 { continue }
+            println("${outer}:${inner}:${first}:${second}")
+        }
+    }
+    let empty: Vec[int] = []
+    for index, value in empty { println(index + value) }
+    let index = 7
+    let value = 9
+    println(index + value)
+}

@@ -1,0 +1,21 @@
+fn words(mode: int) -> Vec[String] ! String {
+ if mode == 0 { return err("skip".toString()) }
+ if mode == 2 { return err("stop".toString()) }
+ return ["ant".toString(), "bee".toString()]
+}
+fn main() {
+ var attempt = -1
+ loop {
+  attempt += 1
+  for i, word in words(attempt) catch error {
+   println(error)
+   if attempt == 0 { continue }
+   break
+  } {
+   println(i)
+   if let at = word.find("e") { println(at)
+    continue }
+   println(word)
+  }
+ }
+}

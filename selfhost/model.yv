@@ -119,6 +119,7 @@ pub enum StmtKind {
     Expr
     Return
     If
+    IfLet
     While
     Loop
     Break
@@ -127,8 +128,10 @@ pub enum StmtKind {
     ForEach
 }
 
-// body/otherwise index Program.lists. For loops keep the binding token in name;
-// expr is the range start or iterable, and a ForRange keeps its end in target.
+// body/otherwise index Program.lists. For loops keep the first binding token in
+// name; expr is the range start or iterable. ForRange keeps its end in target;
+// ForEach keeps its second binding token in target, or -1 for a single binding.
+// IfLet keeps its payload binding token in name and Optional expression in expr.
 pub struct Statement {
     kind: StmtKind
     token: int

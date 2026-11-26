@@ -2974,12 +2974,11 @@
       "batch": "copy-optional-pop"
     },
     {
-      "id": "unsupported_optional_if_let",
-      "kind": "unsupported",
-      "diagnostic": "U0001",
-      "reason": "Optional if-let binding is outside this batch; ordinary coalescing and predicates provide the supported observations.",
-      "file": "unsupported/unsupported_optional_if_let.yv",
-      "batch": "copy-optional-pop"
+      "id": "optional_if_let_basic",
+      "kind": "run",
+      "file": "run/optional_if_let_basic.yv",
+      "stdout": "1\n",
+      "batch": "indexed-for-if-let"
     },
     {
       "id": "unsupported_optional_match",
@@ -3371,12 +3370,11 @@
       "batch": "range-copy-for"
     },
     {
-      "id": "unsupported_for_two_bindings",
-      "kind": "unsupported",
-      "diagnostic": "U0001",
-      "reason": "Index/value dual bindings are outside this single-binding Vec iteration batch.",
-      "file": "unsupported/unsupported_for_two_bindings.yv",
-      "batch": "range-copy-for"
+      "id": "for_two_bindings_basic",
+      "kind": "run",
+      "file": "run/for_two_bindings_basic.yv",
+      "stdout": "1\n3\n",
+      "batch": "indexed-for-if-let"
     },
     {
       "id": "unsupported_for_slice",
@@ -5075,6 +5073,259 @@
       "kind": "unsupported",
       "diagnostic": "U0001",
       "file": "unsupported/builtin_max.yv"
+    },
+    {
+      "id": "indexed_copy_types",
+      "kind": "run",
+      "file": "run/indexed_copy_types.yv",
+      "stdout": "16\n10\n0:true\n1:false\n0:a\n1:bb\n4\n8\n13\n",
+      "batch": "indexed-for-if-let"
+    },
+    {
+      "id": "indexed_owned_temps",
+      "kind": "run",
+      "file": "run/indexed_owned_temps.yv",
+      "stdout": "0:red\n1:blue\n0:red\n1:blue\n0:red\n0:oak\n1:pine\n0:left\n1:right\n2\n",
+      "batch": "indexed-for-if-let"
+    },
+    {
+      "id": "indexed_control",
+      "kind": "run",
+      "file": "run/indexed_control.yv",
+      "stdout": "1\n1:20\n0:1:1:4\n1:1:2:4\n16\n",
+      "batch": "indexed-for-if-let"
+    },
+    {
+      "id": "indexed_discard",
+      "kind": "run",
+      "file": "run/indexed_discard.yv",
+      "stdout": "2\n0\n1\na\nb\nseen\nseen\n",
+      "batch": "indexed-for-if-let"
+    },
+    {
+      "id": "indexed_index_readonly",
+      "kind": "reject",
+      "file": "reject/indexed_index_readonly.yv",
+      "diagnostic": "E0014",
+      "batch": "indexed-for-if-let"
+    },
+    {
+      "id": "indexed_element_readonly",
+      "kind": "reject",
+      "file": "reject/indexed_element_readonly.yv",
+      "diagnostic": "E0014",
+      "batch": "indexed-for-if-let"
+    },
+    {
+      "id": "indexed_shadow",
+      "kind": "reject",
+      "file": "reject/indexed_shadow.yv",
+      "diagnostic": "E0011",
+      "batch": "indexed-for-if-let"
+    },
+    {
+      "id": "indexed_duplicate",
+      "kind": "reject",
+      "file": "reject/indexed_duplicate.yv",
+      "diagnostic": "E0011",
+      "batch": "indexed-for-if-let"
+    },
+    {
+      "id": "indexed_scope",
+      "kind": "reject",
+      "file": "reject/indexed_scope.yv",
+      "diagnostic": "E0010",
+      "batch": "indexed-for-if-let"
+    },
+    {
+      "id": "indexed_vector_mutation",
+      "kind": "reject",
+      "file": "reject/indexed_vector_mutation.yv",
+      "diagnostic": "E0102",
+      "batch": "indexed-for-if-let"
+    },
+    {
+      "id": "indexed_vector_move",
+      "kind": "reject",
+      "file": "reject/indexed_vector_move.yv",
+      "diagnostic": "E0102",
+      "batch": "indexed-for-if-let"
+    },
+    {
+      "id": "indexed_owned_move",
+      "kind": "reject",
+      "file": "reject/indexed_owned_move.yv",
+      "diagnostic": "E0404",
+      "batch": "indexed-for-if-let"
+    },
+    {
+      "id": "indexed_owned_mutation",
+      "kind": "reject",
+      "file": "reject/indexed_owned_mutation.yv",
+      "diagnostic": "E0014",
+      "batch": "indexed-for-if-let"
+    },
+    {
+      "id": "indexed_field_lock",
+      "kind": "reject",
+      "file": "reject/indexed_field_lock.yv",
+      "diagnostic": "E0102",
+      "batch": "indexed-for-if-let"
+    },
+    {
+      "id": "indexed_map",
+      "kind": "unsupported",
+      "file": "unsupported/indexed_map.yv",
+      "diagnostic": "U0001",
+      "batch": "indexed-for-if-let"
+    },
+    {
+      "id": "indexed_args",
+      "kind": "run",
+      "file": "run/indexed_args.yv",
+      "stdout": "true\ntrue\ntrue\n",
+      "batch": "indexed-for-if-let"
+    },
+    {
+      "id": "iflet42_scalars",
+      "kind": "run",
+      "file": "run/iflet42_scalars.yv",
+      "stdout": "7\n3\ntrue\n255\ntrue\n9\n-1\n11\n2\n2\ndiscard\n8\n42\n",
+      "batch": "indexed-for-if-let"
+    },
+    {
+      "id": "iflet42_flow",
+      "kind": "run",
+      "file": "run/iflet42_flow.yv",
+      "stdout": "6\n2\n1\n6\n0\n4\nheld\nheld\nzero\n",
+      "batch": "indexed-for-if-let"
+    },
+    {
+      "id": "iflet42_nonoptional",
+      "kind": "reject",
+      "file": "reject/iflet42_nonoptional.yv",
+      "diagnostic": "E0001",
+      "batch": "indexed-for-if-let"
+    },
+    {
+      "id": "iflet42_uninferred_none",
+      "kind": "reject",
+      "file": "reject/iflet42_uninferred_none.yv",
+      "diagnostic": "E0001",
+      "batch": "indexed-for-if-let"
+    },
+    {
+      "id": "iflet42_shadow",
+      "kind": "reject",
+      "file": "reject/iflet42_shadow.yv",
+      "diagnostic": "E0011",
+      "batch": "indexed-for-if-let"
+    },
+    {
+      "id": "iflet42_else_scope",
+      "kind": "reject",
+      "file": "reject/iflet42_else_scope.yv",
+      "diagnostic": "E0010",
+      "batch": "indexed-for-if-let"
+    },
+    {
+      "id": "iflet42_after_scope",
+      "kind": "reject",
+      "file": "reject/iflet42_after_scope.yv",
+      "diagnostic": "E0010",
+      "batch": "indexed-for-if-let"
+    },
+    {
+      "id": "iflet42_readonly_write",
+      "kind": "reject",
+      "file": "reject/iflet42_readonly_write.yv",
+      "diagnostic": "E0101",
+      "batch": "indexed-for-if-let"
+    },
+    {
+      "id": "iflet42_readonly_inout",
+      "kind": "reject",
+      "file": "reject/iflet42_readonly_inout.yv",
+      "diagnostic": "E0101",
+      "batch": "indexed-for-if-let"
+    },
+    {
+      "id": "iflet42_moved_branch",
+      "kind": "reject",
+      "file": "reject/iflet42_moved_branch.yv",
+      "diagnostic": "E0402",
+      "batch": "indexed-for-if-let"
+    },
+    {
+      "id": "iflet42_sources_join",
+      "kind": "reject",
+      "file": "reject/iflet42_sources_join.yv",
+      "diagnostic": "E0303",
+      "batch": "indexed-for-if-let"
+    },
+    {
+      "id": "iflet42_live_loan",
+      "kind": "reject",
+      "file": "reject/iflet42_live_loan.yv",
+      "diagnostic": "U0001",
+      "reason": "Stage0 rejects the live loan with E0102; selfhost conservatively keeps the loan through the then scope and reports U0001.",
+      "batch": "indexed-for-if-let"
+    },
+    {
+      "id": "iflet42_dead_loan",
+      "kind": "unsupported",
+      "file": "unsupported/iflet42_dead_loan.yv",
+      "diagnostic": "U0001",
+      "batch": "indexed-for-if-let"
+    },
+    {
+      "id": "iflet42_owned_string",
+      "kind": "unsupported",
+      "file": "unsupported/iflet42_owned_string.yv",
+      "diagnostic": "U0001",
+      "batch": "indexed-for-if-let"
+    },
+    {
+      "id": "iflet42_owned_struct",
+      "kind": "unsupported",
+      "file": "unsupported/iflet42_owned_struct.yv",
+      "diagnostic": "U0001",
+      "batch": "indexed-for-if-let"
+    },
+    {
+      "id": "iflet42_mutable_binding",
+      "kind": "shared_unsupported",
+      "file": "unsupported/iflet42_mutable_binding.yv",
+      "diagnostic": "U0001",
+      "batch": "indexed-for-if-let"
+    },
+    {
+      "id": "iflet42_temporary_binding",
+      "kind": "shared_unsupported",
+      "file": "unsupported/iflet42_temporary_binding.yv",
+      "diagnostic": "U0001",
+      "batch": "indexed-for-if-let"
+    },
+    {
+      "id": "iflet42_pattern",
+      "kind": "shared_unsupported",
+      "file": "unsupported/iflet42_pattern.yv",
+      "diagnostic": "U0001",
+      "batch": "indexed-for-if-let"
+    },
+    {
+      "id": "iflet42_tuple_pattern",
+      "kind": "shared_unsupported",
+      "file": "unsupported/iflet42_tuple_pattern.yv",
+      "diagnostic": "U0001",
+      "batch": "indexed-for-if-let"
+    },
+    {
+      "id": "indexed_header_catch_combo",
+      "kind": "run",
+      "file": "run/indexed_header_catch_combo.yv",
+      "stdout": "skip\n0\nant\n1\n1\nstop\n",
+      "batch": "indexed-for-if-let"
     }
   ],
   "promotions": [
@@ -5374,6 +5625,28 @@
       "kind": "run",
       "source_sha256": "adbd7a92f2ba266ce069938daff371163d4324b21178a4b46d38e337d22f70ab",
       "reason": "persistent views of owned values, temporary iterables and std/io are now in the accepted input subset; the original source bytes are unchanged."
+    },
+    {
+      "previous_id": "unsupported_optional_if_let",
+      "previous_file": "unsupported/unsupported_optional_if_let.yv",
+      "previous_kind": "unsupported",
+      "baseline_commit": "3ce5d369030f6b24b3b13a6a6f05a10422a14cc8",
+      "id": "optional_if_let_basic",
+      "file": "run/optional_if_let_basic.yv",
+      "kind": "run",
+      "source_sha256": "357c47a2c1c9a0ff07193f3129751de45ce5d5f627cc85b12d00d2813cee80ff",
+      "reason": "Indexed vector traversal and Copy Optional if-let are now supported; the original source bytes are unchanged."
+    },
+    {
+      "previous_id": "unsupported_for_two_bindings",
+      "previous_file": "unsupported/unsupported_for_two_bindings.yv",
+      "previous_kind": "unsupported",
+      "baseline_commit": "3ce5d369030f6b24b3b13a6a6f05a10422a14cc8",
+      "id": "for_two_bindings_basic",
+      "file": "run/for_two_bindings_basic.yv",
+      "kind": "run",
+      "source_sha256": "60ac53bc4320fabecc3e19b38d5c2fbd715a7c1de54fe8c8559e17e1f4a3cd93",
+      "reason": "Indexed vector traversal and Copy Optional if-let are now supported; the original source bytes are unchanged."
     }
   ]
 }
