@@ -112,7 +112,9 @@ errors retain stage0's receiver, mutability/loan and arity precedence.
 Complete local bootstrap passes **897/897 cases, 16/16 checks, zero skips**.
 Stage2/stage3 C (1,027,977 bytes) and Linux binaries (479,152 bytes) are
 byte-identical; all four application gates and input-identity checks pass.
-Three-platform CI is pending.
+[CI run 45794313520](https://github.com/msly/yavo/actions/runs/45794313520)
+for implementation `67407bb` passes **6/6 jobs**: native Linux, Windows and macOS
+bootstrap/application gates, Linux ASan/UBSan and the independent checks.
 
 The new `sliding_median_application` check builds the unchanged original
 `experiments/coldstart-2026-11-22-r5/runs/yavo-b/tasks/T11/final/main.yv`.

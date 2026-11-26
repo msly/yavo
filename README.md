@@ -75,7 +75,9 @@ snapshots each. Rust Debug/Release passes 145/0/1 each; no Rust source changed.
 Complete local bootstrap passes **897/897 cases, 16/16 checks, zero skips**.
 Stage2/stage3 C (1,027,977 bytes) and Linux binaries (479,152 bytes) are
 byte-identical; all four application gates and input-identity checks pass.
-Three-platform CI is pending.
+[CI run 45794313520](https://github.com/msly/yavo/actions/runs/45794313520)
+for implementation `67407bb` passes **6/6 jobs**: native Linux, Windows and macOS
+bootstrap/application gates, Linux ASan/UBSan and the independent checks.
 See [HANDOFF section 25](HANDOFF.md).
 
 ### Selfhost for loops and compiler traversal (batch 31, historical)

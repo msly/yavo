@@ -6,7 +6,7 @@
 
 **第四十五批加入 Vec[int].sort()，原样打通滑动窗口下中位数 CLI。** 排序稳定、原地升序、无参数、返回 Unit；复用 yv_sort/yv_cmp_i64，接收者沿用可写性、移动与借用检查。支持变量、inout 和嵌套结构体字段，保留 stage0 对括号裸变量和临时接收者的 U0001 边界。全仓覆盖 **100 → 106/392，退步 0、越界 0**；新增六个路径是 r5/yavo-a 和 yavo-b 的 T11 各三份快照，共两种入口源码，221 个 stage0 拒绝输入均未被放行。
 
-当前语料 **897 cases**（新增 22，无提升），完整本机自举 **897/897、16/16、0 skip**；本批未改 Rust，Debug/Release 全量各 **145/0/1**，冻结 **124/3/2**。新增第 16 项 sliding_median_application：原始 yavo-b/T11 的 28 个固定场景、1,405 个输入值、1,112 个窗口，双方 Debug/Release 共 **112 次正常返回分配检查执行**全部通过。三平台 CI 待运行。
+当前语料 **897 cases**（新增 22，无提升），完整本机自举 **897/897、16/16、0 skip**；本批未改 Rust，Debug/Release 全量各 **145/0/1**，冻结 **124/3/2**。新增第 16 项 sliding_median_application：原始 yavo-b/T11 的 28 个固定场景、1,405 个输入值、1,112 个窗口，双方 Debug/Release 共 **112 次正常返回分配检查执行**全部通过。实现提交 `67407bb` 的 [run 45794313520](https://github.com/msly/yavo/actions/runs/45794313520) **6/6 成功**；三平台原生自举和应用门、Linux ASan/UBSan 全部通过。
 
 **SH-2 引导子集固定点已闭合；SH-3 尚未接替，Rust stage0 仍承担日常编译；SH-4 正式交付完成 1/3 个独立应用。** bootstrap 现有 test-summary、原始单位换算、原始文本 diff、原始窗口中位数四项应用回归；兼容性回归不替代正式独立项目交付。每批门槛保持 `docs/decisions.md` 第九节。
 
@@ -379,4 +379,4 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - **全仓覆盖**：沿用 subset_sweep.py 的全工作区 rglob。613 个源文件、392 个 stage0 接受成员均未变；最终 stage2 覆盖 **100→106/392、新增 6、退步 0、越界 0**。新增是 yavo-a/yavo-b T11 各 final/work/snapshots/0001，只有两种入口源码；221 个 stage0 拒绝输入全部未放行。
 - **Rust 验收**：本批无 Rust 改动，仍重新完成 Debug/Release 全量，各 145 通过、0 失败、1 个既有忽略；冻结规格 124 pass、3 unsupported、2 superseded。stage0 固定副本 SHA256 为 `3db1eb23f6abf2478081f2e805e0491fac00d71800ef699f796a76710cf2fddd`。
 - **本机验收**：完整自举 **897/897、16/16、0 skip**；stage2/stage3 C **1,027,977 字节**、Linux 二进制 **479,152 字节**逐字节一致。真实 lexer、四项应用门和输入不变检查全部通过；最终 stage2 对全 613 个路径复核，与候选的 106 个接受成员完全一致；旧 100 个接受路径全部保留。
-- **CI**：三平台 CI 待运行，成功后回填实现提交和 run 链接。
+- **CI**：实现提交 `67407bb` 的 [run 45794313520](https://github.com/msly/yavo/actions/runs/45794313520) **6/6 成功**（首次运行）。Linux x86-64、Windows x86-64、macOS arm64 原生 Rust Debug/Release、自举及应用门全部通过；Linux 生成 C/stage2 ASan/UBSan 与三个独立作业成功。已核对 run/head 精确绑定 `67407bbcf25cf7b737ec372961d2348b722a3b9b`，分支 main，六个 job 均 completed/success。
