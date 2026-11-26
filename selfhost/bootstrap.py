@@ -268,6 +268,7 @@ def main():
             "application": application_module().inputs(),
             "unit_conversion_application": application_module("conversion_application").inputs(),
             "text_diff_application": application_module("diff_application").inputs(),
+            "sliding_median_application": application_module("median_application").inputs(),
         }
         version_result = command("zig-version", [zig, "version"])
         check("locked_zig", succeeded(version_result) and
@@ -571,6 +572,13 @@ def main():
         check("text_diff_application", diff_record["passed"],
               applicable=diff_record.get("applicable"), error=diff_record.get("error"))
 
+        median_record = application_module("median_application").check(
+            stage2 if stage2 is not None else binary, stage0, zig, work / "sliding-median",
+            environment, frontend_env, CC_FLAGS, EXE)
+        report["sliding_median_application"] = median_record
+        check("sliding_median_application", median_record["passed"],
+              applicable=median_record.get("applicable"), error=median_record.get("error"))
+
         # A receipt must not attribute binaries to a source tree edited during the run.
         bound_paths = {
             str(stage0): report["inputs"]["stage0"]["sha256"],
@@ -591,6 +599,7 @@ def main():
             **report["inputs"]["application"],
             **report["inputs"]["unit_conversion_application"],
             **report["inputs"]["text_diff_application"],
+            **report["inputs"]["sliding_median_application"],
         }
         changed = [name for name, expected in bound_paths.items()
                    if not Path(name).is_file() or digest(Path(name)) != expected]

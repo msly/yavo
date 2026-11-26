@@ -42,7 +42,7 @@ Recent changes implement index assignment, two-phase variable/field receivers, S
 
 | Check | Recorded local result | Scope |
 | --- | --- | --- |
-| Release suite | **145 passed, 0 failed, 1 ignored** | Batch 44: complete suite after the min/max operand-snapshot fix; frozen cases unchanged |
+| Release suite | **145 passed, 0 failed, 1 ignored** | Batch 45: complete suite rerun; no Rust changes and frozen cases unchanged |
 | Debug suite | **145 passed, 0 failed, 1 ignored** | Same source, all 19 groups, independent completed local log |
 | Frozen specification | **124 pass, 0 wrong, 3 unsupported, 0 not_run, 2 superseded** | 129 frozen cases; a different counting unit from Cargo test functions |
 | Cross-compilation | Six target formats/architectures build | Linux (static musl), Windows and macOS on x86-64/aarch64; native CI now covers Linux x86-64 plus the Windows x86-64/macOS arm64 selections below |
@@ -52,36 +52,31 @@ The ignored Cargo test is the old exploratory P0 conformance report; the current
 
 Source modules support top-level exports, per-file imports, cyclic imports and original-file diagnostics. Package dependencies and a program lockfile remain open. Multi-file `fix` returns `U0001` without writing; symlink module aliases are unsupported.
 
-### Selfhost integer min/max and original text-diff CLI (batch 44, 2026-11-26)
+### Selfhost integer Vec sorting and original window-median CLI (batch 45, 2026-11-26)
 
-`min(a, b)` and `max(a, b)` now accept matching int/byte operands. Untyped
-integer expressions can adopt the other operand's type; Optional/Result wrapping
-retains its existing context rules. Operands are evaluated once, left to right,
-and the first value is saved before any mutation in the second operand.
+`Vec[int].sort()` now performs a stable, in-place ascending sort with no
+arguments and a Unit result. Writable locals, inout parameters and nested
+struct fields use the existing move/borrow/reservation checks. The shared
+runtime comparator uses relational comparisons, including at int extrema.
+Byte/text vector sorting, sortBy and owned indexed places remain outside the subset.
 
-An independent probe found that Rust stage0 previously reread a local or field
-after the second operand changed it. Its MinMax lowering now snapshots both
-operands in order; the new P0 regression covers locals, fields, inout parameters,
-byte values, indexing and nested calls. Floating-point and other integer widths
-remain outside the selfhost subset.
+The unchanged r5/yavo-b/T11 sliding-window lower-median CLI is the fourth
+bootstrap application gate. Its 28 fixed scenarios retain all 14 archived
+inputs and add contract-valid bounds: K=25, 200 values, even windows, duplicate
+values and sums of ±25,000,000,000. Independent oracles fix exact output for
+1,405 input values and 1,112 windows. Both compilers in Debug and Release pass
+112 normal-return executions with allocation checking.
 
-The unchanged r4/yavo/T11 text-diff CLI is now the third bootstrap application
-gate. Its 35 fixed scenarios run through both compilers in Debug and Release:
-140 executions must match exact stdout, stderr and exit codes 0/1/2. All builds
-enable allocation instrumentation; 32 executions return normally and reach its
-exit check, while 108 follow the original program's os.exit(1/2) paths.
-
-The matrix has **875 cases**, including 28 new fixtures and one unchanged-source promotion. On the original corpus,
-coverage rises **98 to 99 of 391**, gaining T11 with no lost coverage. Including
-the new accepted P0 regression, the full sweep is **100 of 392**, with zero
-strict-subset violations and none of 221 stage0-rejected programs admitted.
-Complete local bootstrap passes **875/875 cases, 15/15 checks, zero skips**.
-Stage2/stage3 C (1,018,462 bytes) and Linux binaries (476,112 bytes) are byte-identical;
-the final stage2 sweep confirms 100/392 accepted programs and zero subset violations.
-[CI run 45783874254](https://github.com/msly/yavo/actions/runs/45783874254)
-for implementation `1c8207d` passes **6/6 jobs**: native Linux, Windows and macOS
-bootstrap/application gates, Linux ASan/UBSan and the independent checks.
-See [HANDOFF section 24](HANDOFF.md).
+The matrix has **897 cases**, including 22 new fixtures and no promotions.
+Final stage2 coverage rises **100 to 106 of the same 392 stage0-accepted programs**, with
+no lost coverage, zero strict-subset violations and none of 221 rejected
+inputs admitted. The six gained paths are two T11 implementations with three
+snapshots each. Rust Debug/Release passes 145/0/1 each; no Rust source changed.
+Complete local bootstrap passes **897/897 cases, 16/16 checks, zero skips**.
+Stage2/stage3 C (1,027,977 bytes) and Linux binaries (479,152 bytes) are
+byte-identical; all four application gates and input-identity checks pass.
+Three-platform CI is pending.
+See [HANDOFF section 25](HANDOFF.md).
 
 ### Selfhost for loops and compiler traversal (batch 31, historical)
 
@@ -392,8 +387,8 @@ and [module/thread audit](experiments/coldstart-2026-11-22-r5/evidence/manual-re
 
 ## Next work and acceptance gates
 
-1. Add interpolation and `format` for the existing printable types. Migrate diagnostic `report` and C-name/location construction in `temporaryName`, `localName` and `lineColumn`; preserve exact output bytes, expression order and ownership cleanup. See [HANDOFF.md](HANDOFF.md).
-2. Preserve the completed [SH-2 fixed point](docs/self-hosting.md), Result, Copy Optional/pop, for, real lexer allocation checks and stage2 ASan/UBSan gate. The next concrete target is integer Vec sorting for the original r5/yavo-b/T11 sliding-window median CLI; retain actual application checks and zero subset violations.
+1. Extend the subset for the original r5/yavo-b/T01 atomic-transfer ledger: read-only Map[String,int] iteration and Vec[String].sort(). Validate ASCII key order, transaction commit/rollback, exact output and ownership cleanup against its archived contract. See [HANDOFF.md](HANDOFF.md).
+2. Preserve the completed [SH-2 fixed point](docs/self-hosting.md), Result, Copy Optional/pop, for, real lexer allocation checks and stage2 ASan/UBSan gate. Retain all four application regression gates, actual resource checks and zero subset violations.
 3. Complete SH-3 before making it the default compiler. SH-4 has one accepted application; add independent structured-text validation and multi-file dependency/index projects, retaining frozen conformance, native checks, diagnostics and resource validation.
 4. Resume the qualified [per-request executor](tools/agent_eval/README.md), [prepared document experiment](experiments/docs-ab-2026-11-22-r6/README.md), 60-task pilot and formal cost study as later product evidence. Live API qualification is still **blocked**, with **0 round-six participant sessions**; it no longer blocks compiler development.
 5. Remaining v1 functionality includes user test blocks and `yavo test`, local/Git dependencies and a lockfile, FFI/unsafe/audit, general closures/higher-order parameters, public movable Join and `spawn inout`. Prioritize these only when required by the declared application scope or a concrete bootstrap blocker.

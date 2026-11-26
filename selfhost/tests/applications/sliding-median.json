@@ -1,0 +1,285 @@
+{
+  "schema": "yavo-sliding-median-scenarios/1",
+  "application": "experiments/coldstart-2026-11-22-r5/runs/yavo-b/tasks/T11/final/main.yv",
+  "source_sha256": "e4d211582198c47570790de1791bba37e3907d6524736e1b3ee73c97e6206828",
+  "contracts": {
+    "experiments/coldstart-2026-11-22-r5/TASKS.md": "68281940838e3bfbe4fb4bc30fa895f662a408315461921c493899a4fe45065b",
+    "experiments/coldstart-2026-11-22-r5/public/T11.md": "53362f99aa7496c1a9b970f82317cb18bc0fc24e069f0ba406ee36e5b9f184e6"
+  },
+  "original_cases": {
+    "path": "experiments/coldstart-2026-11-22-r5/judge/cases.json",
+    "sha256": "2cf5d0c505d65b52b85a8264dd647ffce6d2f49979da22338341035e45402ec1",
+    "task": "T11",
+    "count": 14
+  },
+  "oracle": "Fixed before compiling or running the application. Each median was independently selected by rank counts: count(x < m) <= (K-1)//2 < count(x <= m), with Python integer sums; no sorting implementation or application output determined these expectations. All 14 archived expectations and manually checked boundary traces agree.",
+  "scope": "Only the published valid ASCII/LF inputs: first-line K in 1..25, 0..200 legal integer fields after it, each in -1000000000..1000000000. No empty file, CR, NUL or invalid fields.",
+  "cases": [
+    {
+      "id": "t11_public_01",
+      "origin": "r5_judge",
+      "source_case": "T11-public-01",
+      "reason": "published example",
+      "stdin": "3\n4 1 7 2 2\n",
+      "stdout": "3: median=4 sum=12\n4: median=2 sum=10\n5: median=2 sum=11\nwindows: 3\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "t11_public_02",
+      "origin": "r5_judge",
+      "source_case": "T11-public-02",
+      "reason": "published example",
+      "stdin": "2\n-3 -1 -1 8\n",
+      "stdout": "2: median=-3 sum=-4\n3: median=-1 sum=-2\n4: median=-1 sum=7\nwindows: 3\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "t11_hidden_01",
+      "origin": "r5_judge",
+      "source_case": "T11-hidden-01",
+      "reason": "empty-sequence",
+      "stdin": "1\n",
+      "stdout": "windows: 0\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "t11_hidden_02",
+      "origin": "r5_judge",
+      "source_case": "T11-hidden-02",
+      "reason": "shorter-than-window",
+      "stdin": "5\n1 2 3 4\n",
+      "stdout": "windows: 0\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "t11_hidden_03",
+      "origin": "r5_judge",
+      "source_case": "T11-hidden-03",
+      "reason": "single-window",
+      "stdin": "3\n8 -2 4\n",
+      "stdout": "3: median=4 sum=10\nwindows: 1\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "t11_hidden_04",
+      "origin": "r5_judge",
+      "source_case": "T11-hidden-04",
+      "reason": "even-lower-median",
+      "stdin": "4\n1 2 8 9 10\n",
+      "stdout": "4: median=2 sum=20\n5: median=8 sum=29\nwindows: 2\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "t11_hidden_05",
+      "origin": "r5_judge",
+      "source_case": "T11-hidden-05",
+      "reason": "duplicates-leaving",
+      "stdin": "3\n2 2 2 1 1 3 3\n",
+      "stdout": "3: median=2 sum=6\n4: median=2 sum=5\n5: median=1 sum=4\n6: median=1 sum=5\n7: median=3 sum=7\nwindows: 5\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "t11_hidden_06",
+      "origin": "r5_judge",
+      "source_case": "T11-hidden-06",
+      "reason": "large-sum",
+      "stdin": "4\n1000000000 1000000000 1000000000 1000000000 -1000000000\n",
+      "stdout": "4: median=1000000000 sum=4000000000\n5: median=1000000000 sum=2000000000\nwindows: 2\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "t11_hidden_07",
+      "origin": "r5_judge",
+      "source_case": "T11-hidden-07",
+      "reason": "size-one",
+      "stdin": "1\n-2 0 5 -1\n",
+      "stdout": "1: median=-2 sum=-2\n2: median=0 sum=0\n3: median=5 sum=5\n4: median=-1 sum=-1\nwindows: 4\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "t11_hidden_08",
+      "origin": "r5_judge",
+      "source_case": "T11-hidden-08",
+      "reason": "multiline-whitespace",
+      "stdin": "2\n\n1\t3\n -5 7\n",
+      "stdout": "2: median=1 sum=4\n3: median=-5 sum=-2\n4: median=-5 sum=2\nwindows: 3\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "t11_hidden_09",
+      "origin": "r5_judge",
+      "source_case": "T11-hidden-09",
+      "reason": "seed-2026112205",
+      "stdin": "2\n9 17 1 -5 -12 0 9 -9 13 -3 11 -16 10 -10 -7 18 5 -16 -20 -17 -5 -8 -2 1 -5 4 -4 9 5 -17 -16 -10 17 17 9 15 -9 5 -11 15\n",
+      "stdout": "2: median=9 sum=26\n3: median=1 sum=18\n4: median=-5 sum=-4\n5: median=-12 sum=-17\n6: median=-12 sum=-12\n7: median=0 sum=9\n8: median=-9 sum=0\n9: median=-9 sum=4\n10: median=-3 sum=10\n11: median=-3 sum=8\n12: median=-16 sum=-5\n13: median=-16 sum=-6\n14: median=-10 sum=0\n15: median=-10 sum=-17\n16: median=-7 sum=11\n17: median=5 sum=23\n18: median=-16 sum=-11\n19: median=-20 sum=-36\n20: median=-20 sum=-37\n21: median=-17 sum=-22\n22: median=-8 sum=-13\n23: median=-8 sum=-10\n24: median=-2 sum=-1\n25: median=-5 sum=-4\n26: median=-5 sum=-1\n27: median=-4 sum=0\n28: median=-4 sum=5\n29: median=5 sum=14\n30: median=-17 sum=-12\n31: median=-17 sum=-33\n32: median=-16 sum=-26\n33: median=-10 sum=7\n34: median=17 sum=34\n35: median=9 sum=26\n36: median=9 sum=24\n37: median=-9 sum=6\n38: median=-9 sum=-4\n39: median=-11 sum=-6\n40: median=-11 sum=4\nwindows: 39\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "t11_hidden_10",
+      "origin": "r5_judge",
+      "source_case": "T11-hidden-10",
+      "reason": "seed-2026112206",
+      "stdin": "3\n-12 11 16 -16 4 -11 12 2 6 2 -2 9 -15 16 14 -20 13 -7 -11 2 -15 16 19 -7 3 -14 7 6 9 -11 10 1 -19 -8 14 19 -10 -13 1 18\n",
+      "stdout": "3: median=11 sum=15\n4: median=11 sum=11\n5: median=4 sum=4\n6: median=-11 sum=-23\n7: median=4 sum=5\n8: median=2 sum=3\n9: median=6 sum=20\n10: median=2 sum=10\n11: median=2 sum=6\n12: median=2 sum=9\n13: median=-2 sum=-8\n14: median=9 sum=10\n15: median=14 sum=15\n16: median=14 sum=10\n17: median=13 sum=7\n18: median=-7 sum=-14\n19: median=-7 sum=-5\n20: median=-7 sum=-16\n21: median=-11 sum=-24\n22: median=2 sum=3\n23: median=16 sum=20\n24: median=16 sum=28\n25: median=3 sum=15\n26: median=-7 sum=-18\n27: median=3 sum=-4\n28: median=6 sum=-1\n29: median=7 sum=22\n30: median=6 sum=4\n31: median=9 sum=8\n32: median=1 sum=0\n33: median=1 sum=-8\n34: median=-8 sum=-26\n35: median=-8 sum=-13\n36: median=14 sum=25\n37: median=14 sum=23\n38: median=-10 sum=-4\n39: median=-10 sum=-22\n40: median=1 sum=6\nwindows: 38\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "t11_hidden_11",
+      "origin": "r5_judge",
+      "source_case": "T11-hidden-11",
+      "reason": "seed-2026112207",
+      "stdin": "4\n10 11 18 0 4 15 17 6 -2 17 -11 2 -6 -3 -13 -14 -3 -10 20 4 -9 10 14 -13 -16 0 -10 -10 -9 8 -9 0 6 10 12 -1 -18 -13 16 8\n",
+      "stdout": "4: median=10 sum=39\n5: median=4 sum=33\n6: median=4 sum=37\n7: median=4 sum=36\n8: median=6 sum=42\n9: median=6 sum=36\n10: median=6 sum=38\n11: median=-2 sum=10\n12: median=-2 sum=6\n13: median=-6 sum=2\n14: median=-6 sum=-18\n15: median=-6 sum=-20\n16: median=-13 sum=-36\n17: median=-13 sum=-33\n18: median=-13 sum=-40\n19: median=-10 sum=-7\n20: median=-3 sum=11\n21: median=-9 sum=5\n22: median=4 sum=25\n23: median=4 sum=19\n24: median=-9 sum=2\n25: median=-13 sum=-5\n26: median=-13 sum=-15\n27: median=-13 sum=-39\n28: median=-10 sum=-36\n29: median=-10 sum=-29\n30: median=-10 sum=-21\n31: median=-9 sum=-20\n32: median=-9 sum=-10\n33: median=0 sum=5\n34: median=0 sum=7\n35: median=6 sum=28\n36: median=6 sum=27\n37: median=-1 sum=3\n38: median=-13 sum=-20\n39: median=-13 sum=-16\n40: median=-13 sum=-7\nwindows: 37\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "t11_hidden_12",
+      "origin": "r5_judge",
+      "source_case": "T11-hidden-12",
+      "reason": "seed-2026112208",
+      "stdin": "5\n5 -14 -16 12 -3 -19 -12 9 8 19 6 -1 -2 5 15 -16 -7 10 -8 -2 -19 -20 3 -4 9 -6 -4 5 -4 -3 -14 -15 -14 -12 4 12 15 1 -19 -18\n",
+      "stdout": "5: median=-3 sum=-16\n6: median=-14 sum=-40\n7: median=-12 sum=-38\n8: median=-3 sum=-13\n9: median=-3 sum=-17\n10: median=8 sum=5\n11: median=8 sum=30\n12: median=8 sum=41\n13: median=6 sum=30\n14: median=5 sum=27\n15: median=5 sum=23\n16: median=-1 sum=1\n17: median=-2 sum=-5\n18: median=5 sum=7\n19: median=-7 sum=-6\n20: median=-7 sum=-23\n21: median=-7 sum=-26\n22: median=-8 sum=-39\n23: median=-8 sum=-46\n24: median=-4 sum=-42\n25: median=-4 sum=-31\n26: median=-4 sum=-18\n27: median=-4 sum=-2\n28: median=-4 sum=0\n29: median=-4 sum=0\n30: median=-4 sum=-12\n31: median=-4 sum=-20\n32: median=-4 sum=-31\n33: median=-14 sum=-50\n34: median=-14 sum=-58\n35: median=-14 sum=-51\n36: median=-12 sum=-25\n37: median=4 sum=5\n38: median=4 sum=20\n39: median=4 sum=13\n40: median=1 sum=-9\nwindows: 36\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "empty_k25",
+      "origin": "contract_boundary",
+      "reason": "Empty sequence at the maximum window size.",
+      "stdin": "25\n",
+      "stdout": "windows: 0\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "k25_short_24",
+      "origin": "contract_boundary",
+      "reason": "One element short of the first complete maximum-size window.",
+      "stdin": "25\n1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24\n",
+      "stdout": "windows: 0\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "k25_exact_ascending",
+      "origin": "contract_boundary",
+      "reason": "Exactly one maximum-size ascending window.",
+      "stdin": "25\n1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25\n",
+      "stdout": "25: median=13 sum=325\nwindows: 1\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "k25_exact_descending",
+      "origin": "contract_boundary",
+      "reason": "Exactly one maximum-size descending window.",
+      "stdin": "25\n25 24 23 22 21 20 19 18 17 16 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1\n",
+      "stdout": "25: median=13 sum=325\nwindows: 1\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "k25_positive_sum_limit",
+      "origin": "contract_boundary",
+      "reason": "Maximum possible positive window sum: 25,000,000,000.",
+      "stdin": "25\n1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000\n",
+      "stdout": "25: median=1000000000 sum=25000000000\nwindows: 1\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "k25_negative_sum_limit",
+      "origin": "contract_boundary",
+      "reason": "Maximum-magnitude negative window sum: -25,000,000,000.",
+      "stdin": "25\n-1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000\n",
+      "stdout": "25: median=-1000000000 sum=-25000000000\nwindows: 1\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "k24_even_extremes",
+      "origin": "contract_boundary",
+      "reason": "Even window takes the lower of the central extremes; duplicates count separately.",
+      "stdin": "24\n-1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000\n",
+      "stdout": "24: median=-1000000000 sum=0\nwindows: 1\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "max_length_k1",
+      "origin": "contract_boundary",
+      "reason": "All 200 input positions produce individual windows, including both element bounds.",
+      "stdin": "1\n1000000000 0 -1000000000 7 -7 1000000000 0 -1000000000 7 -7 1000000000 0 -1000000000 7 -7 1000000000 0 -1000000000 7 -7 1000000000 0 -1000000000 7 -7 1000000000 0 -1000000000 7 -7 1000000000 0 -1000000000 7 -7 1000000000 0 -1000000000 7 -7 1000000000 0 -1000000000 7 -7 1000000000 0 -1000000000 7 -7 1000000000 0 -1000000000 7 -7 1000000000 0 -1000000000 7 -7 1000000000 0 -1000000000 7 -7 1000000000 0 -1000000000 7 -7 1000000000 0 -1000000000 7 -7 1000000000 0 -1000000000 7 -7 1000000000 0 -1000000000 7 -7 1000000000 0 -1000000000 7 -7 1000000000 0 -1000000000 7 -7 1000000000 0 -1000000000 7 -7 1000000000 0 -1000000000 7 -7 1000000000 0 -1000000000 7 -7 1000000000 0 -1000000000 7 -7 1000000000 0 -1000000000 7 -7 1000000000 0 -1000000000 7 -7 1000000000 0 -1000000000 7 -7 1000000000 0 -1000000000 7 -7 1000000000 0 -1000000000 7 -7 1000000000 0 -1000000000 7 -7 1000000000 0 -1000000000 7 -7 1000000000 0 -1000000000 7 -7 1000000000 0 -1000000000 7 -7 1000000000 0 -1000000000 7 -7 1000000000 0 -1000000000 7 -7 1000000000 0 -1000000000 7 -7 1000000000 0 -1000000000 7 -7 1000000000 0 -1000000000 7 -7 1000000000 0 -1000000000 7 -7 1000000000 0 -1000000000 7 -7 1000000000 0 -1000000000 7 -7\n",
+      "stdout": "1: median=1000000000 sum=1000000000\n2: median=0 sum=0\n3: median=-1000000000 sum=-1000000000\n4: median=7 sum=7\n5: median=-7 sum=-7\n6: median=1000000000 sum=1000000000\n7: median=0 sum=0\n8: median=-1000000000 sum=-1000000000\n9: median=7 sum=7\n10: median=-7 sum=-7\n11: median=1000000000 sum=1000000000\n12: median=0 sum=0\n13: median=-1000000000 sum=-1000000000\n14: median=7 sum=7\n15: median=-7 sum=-7\n16: median=1000000000 sum=1000000000\n17: median=0 sum=0\n18: median=-1000000000 sum=-1000000000\n19: median=7 sum=7\n20: median=-7 sum=-7\n21: median=1000000000 sum=1000000000\n22: median=0 sum=0\n23: median=-1000000000 sum=-1000000000\n24: median=7 sum=7\n25: median=-7 sum=-7\n26: median=1000000000 sum=1000000000\n27: median=0 sum=0\n28: median=-1000000000 sum=-1000000000\n29: median=7 sum=7\n30: median=-7 sum=-7\n31: median=1000000000 sum=1000000000\n32: median=0 sum=0\n33: median=-1000000000 sum=-1000000000\n34: median=7 sum=7\n35: median=-7 sum=-7\n36: median=1000000000 sum=1000000000\n37: median=0 sum=0\n38: median=-1000000000 sum=-1000000000\n39: median=7 sum=7\n40: median=-7 sum=-7\n41: median=1000000000 sum=1000000000\n42: median=0 sum=0\n43: median=-1000000000 sum=-1000000000\n44: median=7 sum=7\n45: median=-7 sum=-7\n46: median=1000000000 sum=1000000000\n47: median=0 sum=0\n48: median=-1000000000 sum=-1000000000\n49: median=7 sum=7\n50: median=-7 sum=-7\n51: median=1000000000 sum=1000000000\n52: median=0 sum=0\n53: median=-1000000000 sum=-1000000000\n54: median=7 sum=7\n55: median=-7 sum=-7\n56: median=1000000000 sum=1000000000\n57: median=0 sum=0\n58: median=-1000000000 sum=-1000000000\n59: median=7 sum=7\n60: median=-7 sum=-7\n61: median=1000000000 sum=1000000000\n62: median=0 sum=0\n63: median=-1000000000 sum=-1000000000\n64: median=7 sum=7\n65: median=-7 sum=-7\n66: median=1000000000 sum=1000000000\n67: median=0 sum=0\n68: median=-1000000000 sum=-1000000000\n69: median=7 sum=7\n70: median=-7 sum=-7\n71: median=1000000000 sum=1000000000\n72: median=0 sum=0\n73: median=-1000000000 sum=-1000000000\n74: median=7 sum=7\n75: median=-7 sum=-7\n76: median=1000000000 sum=1000000000\n77: median=0 sum=0\n78: median=-1000000000 sum=-1000000000\n79: median=7 sum=7\n80: median=-7 sum=-7\n81: median=1000000000 sum=1000000000\n82: median=0 sum=0\n83: median=-1000000000 sum=-1000000000\n84: median=7 sum=7\n85: median=-7 sum=-7\n86: median=1000000000 sum=1000000000\n87: median=0 sum=0\n88: median=-1000000000 sum=-1000000000\n89: median=7 sum=7\n90: median=-7 sum=-7\n91: median=1000000000 sum=1000000000\n92: median=0 sum=0\n93: median=-1000000000 sum=-1000000000\n94: median=7 sum=7\n95: median=-7 sum=-7\n96: median=1000000000 sum=1000000000\n97: median=0 sum=0\n98: median=-1000000000 sum=-1000000000\n99: median=7 sum=7\n100: median=-7 sum=-7\n101: median=1000000000 sum=1000000000\n102: median=0 sum=0\n103: median=-1000000000 sum=-1000000000\n104: median=7 sum=7\n105: median=-7 sum=-7\n106: median=1000000000 sum=1000000000\n107: median=0 sum=0\n108: median=-1000000000 sum=-1000000000\n109: median=7 sum=7\n110: median=-7 sum=-7\n111: median=1000000000 sum=1000000000\n112: median=0 sum=0\n113: median=-1000000000 sum=-1000000000\n114: median=7 sum=7\n115: median=-7 sum=-7\n116: median=1000000000 sum=1000000000\n117: median=0 sum=0\n118: median=-1000000000 sum=-1000000000\n119: median=7 sum=7\n120: median=-7 sum=-7\n121: median=1000000000 sum=1000000000\n122: median=0 sum=0\n123: median=-1000000000 sum=-1000000000\n124: median=7 sum=7\n125: median=-7 sum=-7\n126: median=1000000000 sum=1000000000\n127: median=0 sum=0\n128: median=-1000000000 sum=-1000000000\n129: median=7 sum=7\n130: median=-7 sum=-7\n131: median=1000000000 sum=1000000000\n132: median=0 sum=0\n133: median=-1000000000 sum=-1000000000\n134: median=7 sum=7\n135: median=-7 sum=-7\n136: median=1000000000 sum=1000000000\n137: median=0 sum=0\n138: median=-1000000000 sum=-1000000000\n139: median=7 sum=7\n140: median=-7 sum=-7\n141: median=1000000000 sum=1000000000\n142: median=0 sum=0\n143: median=-1000000000 sum=-1000000000\n144: median=7 sum=7\n145: median=-7 sum=-7\n146: median=1000000000 sum=1000000000\n147: median=0 sum=0\n148: median=-1000000000 sum=-1000000000\n149: median=7 sum=7\n150: median=-7 sum=-7\n151: median=1000000000 sum=1000000000\n152: median=0 sum=0\n153: median=-1000000000 sum=-1000000000\n154: median=7 sum=7\n155: median=-7 sum=-7\n156: median=1000000000 sum=1000000000\n157: median=0 sum=0\n158: median=-1000000000 sum=-1000000000\n159: median=7 sum=7\n160: median=-7 sum=-7\n161: median=1000000000 sum=1000000000\n162: median=0 sum=0\n163: median=-1000000000 sum=-1000000000\n164: median=7 sum=7\n165: median=-7 sum=-7\n166: median=1000000000 sum=1000000000\n167: median=0 sum=0\n168: median=-1000000000 sum=-1000000000\n169: median=7 sum=7\n170: median=-7 sum=-7\n171: median=1000000000 sum=1000000000\n172: median=0 sum=0\n173: median=-1000000000 sum=-1000000000\n174: median=7 sum=7\n175: median=-7 sum=-7\n176: median=1000000000 sum=1000000000\n177: median=0 sum=0\n178: median=-1000000000 sum=-1000000000\n179: median=7 sum=7\n180: median=-7 sum=-7\n181: median=1000000000 sum=1000000000\n182: median=0 sum=0\n183: median=-1000000000 sum=-1000000000\n184: median=7 sum=7\n185: median=-7 sum=-7\n186: median=1000000000 sum=1000000000\n187: median=0 sum=0\n188: median=-1000000000 sum=-1000000000\n189: median=7 sum=7\n190: median=-7 sum=-7\n191: median=1000000000 sum=1000000000\n192: median=0 sum=0\n193: median=-1000000000 sum=-1000000000\n194: median=7 sum=7\n195: median=-7 sum=-7\n196: median=1000000000 sum=1000000000\n197: median=0 sum=0\n198: median=-1000000000 sum=-1000000000\n199: median=7 sum=7\n200: median=-7 sum=-7\nwindows: 200\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "max_length_k25_varied",
+      "origin": "contract_boundary",
+      "reason": "Full length 200 with maximum odd windows and deterministic varied signed values.",
+      "stdin": "25\n-999999990 -266666664 466666662 -866666658 -133333332 599999994 -733333326 0 733333326 -599999994 133333332 866666658 -466666662 266666664 999999990 -333333330 399999996 -933333324 -199999998 533333328 -799999992 -66666666 666666660 -666666660 66666666 799999992 -533333328 199999998 933333324 -399999996 333333330 -999999990 -266666664 466666662 -866666658 -133333332 599999994 -733333326 0 733333326 -599999994 133333332 866666658 -466666662 266666664 999999990 -333333330 399999996 -933333324 -199999998 533333328 -799999992 -66666666 666666660 -666666660 66666666 799999992 -533333328 199999998 933333324 -399999996 333333330 -999999990 -266666664 466666662 -866666658 -133333332 599999994 -733333326 0 733333326 -599999994 133333332 866666658 -466666662 266666664 999999990 -333333330 399999996 -933333324 -199999998 533333328 -799999992 -66666666 666666660 -666666660 66666666 799999992 -533333328 199999998 933333324 -399999996 333333330 -999999990 -266666664 466666662 -866666658 -133333332 599999994 -733333326 0 733333326 -599999994 133333332 866666658 -466666662 266666664 999999990 -333333330 399999996 -933333324 -199999998 533333328 -799999992 -66666666 666666660 -666666660 66666666 799999992 -533333328 199999998 933333324 -399999996 333333330 -999999990 -266666664 466666662 -866666658 -133333332 599999994 -733333326 0 733333326 -599999994 133333332 866666658 -466666662 266666664 999999990 -333333330 399999996 -933333324 -199999998 533333328 -799999992 -66666666 666666660 -666666660 66666666 799999992 -533333328 199999998 933333324 -399999996 333333330 -999999990 -266666664 466666662 -866666658 -133333332 599999994 -733333326 0 733333326 -599999994 133333332 866666658 -466666662 266666664 999999990 -333333330 399999996 -933333324 -199999998 533333328 -799999992 -66666666 666666660 -666666660 66666666 799999992 -533333328 199999998 933333324 -399999996 333333330 -999999990 -266666664 466666662 -866666658 -133333332 599999994 -733333326 0 733333326 -599999994 133333332 866666658 -466666662 266666664\n",
+      "stdout": "25: median=-66666666 sum=-1333333320\n26: median=0 sum=466666662\n27: median=0 sum=199999998\n28: median=0 sum=-66666666\n29: median=66666666 sum=1733333316\n30: median=66666666 sum=1466666652\n31: median=66666666 sum=1199999988\n32: median=66666666 sum=933333324\n33: median=66666666 sum=666666660\n34: median=66666666 sum=399999996\n35: median=66666666 sum=133333332\n36: median=-66666666 sum=-133333332\n37: median=-66666666 sum=-399999996\n38: median=-66666666 sum=-666666660\n39: median=-66666666 sum=-933333324\n40: median=-66666666 sum=-1199999988\n41: median=-66666666 sum=-1466666652\n42: median=-66666666 sum=-1733333316\n43: median=0 sum=66666666\n44: median=0 sum=-199999998\n45: median=0 sum=-466666662\n46: median=66666666 sum=1333333320\n47: median=66666666 sum=1066666656\n48: median=66666666 sum=799999992\n49: median=66666666 sum=533333328\n50: median=0 sum=266666664\n51: median=0 sum=0\n52: median=0 sum=-266666664\n53: median=-66666666 sum=-533333328\n54: median=-66666666 sum=-799999992\n55: median=-66666666 sum=-1066666656\n56: median=-66666666 sum=-1333333320\n57: median=0 sum=466666662\n58: median=0 sum=199999998\n59: median=0 sum=-66666666\n60: median=66666666 sum=1733333316\n61: median=66666666 sum=1466666652\n62: median=66666666 sum=1199999988\n63: median=66666666 sum=933333324\n64: median=66666666 sum=666666660\n65: median=66666666 sum=399999996\n66: median=66666666 sum=133333332\n67: median=-66666666 sum=-133333332\n68: median=-66666666 sum=-399999996\n69: median=-66666666 sum=-666666660\n70: median=-66666666 sum=-933333324\n71: median=-66666666 sum=-1199999988\n72: median=-66666666 sum=-1466666652\n73: median=-66666666 sum=-1733333316\n74: median=0 sum=66666666\n75: median=0 sum=-199999998\n76: median=0 sum=-466666662\n77: median=66666666 sum=1333333320\n78: median=66666666 sum=1066666656\n79: median=66666666 sum=799999992\n80: median=66666666 sum=533333328\n81: median=0 sum=266666664\n82: median=0 sum=0\n83: median=0 sum=-266666664\n84: median=-66666666 sum=-533333328\n85: median=-66666666 sum=-799999992\n86: median=-66666666 sum=-1066666656\n87: median=-66666666 sum=-1333333320\n88: median=0 sum=466666662\n89: median=0 sum=199999998\n90: median=0 sum=-66666666\n91: median=66666666 sum=1733333316\n92: median=66666666 sum=1466666652\n93: median=66666666 sum=1199999988\n94: median=66666666 sum=933333324\n95: median=66666666 sum=666666660\n96: median=66666666 sum=399999996\n97: median=66666666 sum=133333332\n98: median=-66666666 sum=-133333332\n99: median=-66666666 sum=-399999996\n100: median=-66666666 sum=-666666660\n101: median=-66666666 sum=-933333324\n102: median=-66666666 sum=-1199999988\n103: median=-66666666 sum=-1466666652\n104: median=-66666666 sum=-1733333316\n105: median=0 sum=66666666\n106: median=0 sum=-199999998\n107: median=0 sum=-466666662\n108: median=66666666 sum=1333333320\n109: median=66666666 sum=1066666656\n110: median=66666666 sum=799999992\n111: median=66666666 sum=533333328\n112: median=0 sum=266666664\n113: median=0 sum=0\n114: median=0 sum=-266666664\n115: median=-66666666 sum=-533333328\n116: median=-66666666 sum=-799999992\n117: median=-66666666 sum=-1066666656\n118: median=-66666666 sum=-1333333320\n119: median=0 sum=466666662\n120: median=0 sum=199999998\n121: median=0 sum=-66666666\n122: median=66666666 sum=1733333316\n123: median=66666666 sum=1466666652\n124: median=66666666 sum=1199999988\n125: median=66666666 sum=933333324\n126: median=66666666 sum=666666660\n127: median=66666666 sum=399999996\n128: median=66666666 sum=133333332\n129: median=-66666666 sum=-133333332\n130: median=-66666666 sum=-399999996\n131: median=-66666666 sum=-666666660\n132: median=-66666666 sum=-933333324\n133: median=-66666666 sum=-1199999988\n134: median=-66666666 sum=-1466666652\n135: median=-66666666 sum=-1733333316\n136: median=0 sum=66666666\n137: median=0 sum=-199999998\n138: median=0 sum=-466666662\n139: median=66666666 sum=1333333320\n140: median=66666666 sum=1066666656\n141: median=66666666 sum=799999992\n142: median=66666666 sum=533333328\n143: median=0 sum=266666664\n144: median=0 sum=0\n145: median=0 sum=-266666664\n146: median=-66666666 sum=-533333328\n147: median=-66666666 sum=-799999992\n148: median=-66666666 sum=-1066666656\n149: median=-66666666 sum=-1333333320\n150: median=0 sum=466666662\n151: median=0 sum=199999998\n152: median=0 sum=-66666666\n153: median=66666666 sum=1733333316\n154: median=66666666 sum=1466666652\n155: median=66666666 sum=1199999988\n156: median=66666666 sum=933333324\n157: median=66666666 sum=666666660\n158: median=66666666 sum=399999996\n159: median=66666666 sum=133333332\n160: median=-66666666 sum=-133333332\n161: median=-66666666 sum=-399999996\n162: median=-66666666 sum=-666666660\n163: median=-66666666 sum=-933333324\n164: median=-66666666 sum=-1199999988\n165: median=-66666666 sum=-1466666652\n166: median=-66666666 sum=-1733333316\n167: median=0 sum=66666666\n168: median=0 sum=-199999998\n169: median=0 sum=-466666662\n170: median=66666666 sum=1333333320\n171: median=66666666 sum=1066666656\n172: median=66666666 sum=799999992\n173: median=66666666 sum=533333328\n174: median=0 sum=266666664\n175: median=0 sum=0\n176: median=0 sum=-266666664\n177: median=-66666666 sum=-533333328\n178: median=-66666666 sum=-799999992\n179: median=-66666666 sum=-1066666656\n180: median=-66666666 sum=-1333333320\n181: median=0 sum=466666662\n182: median=0 sum=199999998\n183: median=0 sum=-66666666\n184: median=66666666 sum=1733333316\n185: median=66666666 sum=1466666652\n186: median=66666666 sum=1199999988\n187: median=66666666 sum=933333324\n188: median=66666666 sum=666666660\n189: median=66666666 sum=399999996\n190: median=66666666 sum=133333332\n191: median=-66666666 sum=-133333332\n192: median=-66666666 sum=-399999996\n193: median=-66666666 sum=-666666660\n194: median=-66666666 sum=-933333324\n195: median=-66666666 sum=-1199999988\n196: median=-66666666 sum=-1466666652\n197: median=-66666666 sum=-1733333316\n198: median=0 sum=66666666\n199: median=0 sum=-199999998\n200: median=0 sum=-466666662\nwindows: 176\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "max_length_k24_duplicates",
+      "origin": "contract_boundary",
+      "reason": "Full length 200 with even windows, duplicate blocks and changing lower medians.",
+      "stdin": "24\n-200 -200 -200 -200 -200 -200 -200 -100 -100 -100 -100 -100 -100 -100 0 0 0 0 0 0 0 100 100 100 100 100 100 100 200 200 200 200 200 200 200 -200 -200 -200 -200 -200 -200 -200 -100 -100 -100 -100 -100 -100 -100 0 0 0 0 0 0 0 100 100 100 100 100 100 100 200 200 200 200 200 200 200 -200 -200 -200 -200 -200 -200 -200 -100 -100 -100 -100 -100 -100 -100 0 0 0 0 0 0 0 100 100 100 100 100 100 100 200 200 200 200 200 200 200 -200 -200 -200 -200 -200 -200 -200 -100 -100 -100 -100 -100 -100 -100 0 0 0 0 0 0 0 100 100 100 100 100 100 100 200 200 200 200 200 200 200 -200 -200 -200 -200 -200 -200 -200 -100 -100 -100 -100 -100 -100 -100 0 0 0 0 0 0 0 100 100 100 100 100 100 100 200 200 200 200 200 200 200 -200 -200 -200 -200 -200 -200 -200 -100 -100 -100 -100 -100 -100 -100 0 0 0 0 0 0 0 100 100 100 100\n",
+      "stdout": "24: median=-100 sum=-1800\n25: median=-100 sum=-1500\n26: median=-100 sum=-1200\n27: median=0 sum=-900\n28: median=0 sum=-600\n29: median=0 sum=-200\n30: median=0 sum=200\n31: median=0 sum=600\n32: median=0 sum=900\n33: median=0 sum=1200\n34: median=100 sum=1500\n35: median=100 sum=1800\n36: median=100 sum=1700\n37: median=100 sum=1600\n38: median=100 sum=1500\n39: median=100 sum=1300\n40: median=100 sum=1100\n41: median=100 sum=900\n42: median=100 sum=700\n43: median=100 sum=600\n44: median=100 sum=500\n45: median=100 sum=400\n46: median=100 sum=200\n47: median=-100 sum=0\n48: median=-100 sum=-200\n49: median=-100 sum=-400\n50: median=-100 sum=-500\n51: median=-100 sum=-600\n52: median=-100 sum=-700\n53: median=-100 sum=-900\n54: median=-100 sum=-1100\n55: median=-100 sum=-1300\n56: median=-100 sum=-1500\n57: median=-100 sum=-1600\n58: median=-100 sum=-1700\n59: median=-100 sum=-1800\n60: median=-100 sum=-1500\n61: median=-100 sum=-1200\n62: median=0 sum=-900\n63: median=0 sum=-600\n64: median=0 sum=-200\n65: median=0 sum=200\n66: median=0 sum=600\n67: median=0 sum=900\n68: median=0 sum=1200\n69: median=100 sum=1500\n70: median=100 sum=1800\n71: median=100 sum=1700\n72: median=100 sum=1600\n73: median=100 sum=1500\n74: median=100 sum=1300\n75: median=100 sum=1100\n76: median=100 sum=900\n77: median=100 sum=700\n78: median=100 sum=600\n79: median=100 sum=500\n80: median=100 sum=400\n81: median=100 sum=200\n82: median=-100 sum=0\n83: median=-100 sum=-200\n84: median=-100 sum=-400\n85: median=-100 sum=-500\n86: median=-100 sum=-600\n87: median=-100 sum=-700\n88: median=-100 sum=-900\n89: median=-100 sum=-1100\n90: median=-100 sum=-1300\n91: median=-100 sum=-1500\n92: median=-100 sum=-1600\n93: median=-100 sum=-1700\n94: median=-100 sum=-1800\n95: median=-100 sum=-1500\n96: median=-100 sum=-1200\n97: median=0 sum=-900\n98: median=0 sum=-600\n99: median=0 sum=-200\n100: median=0 sum=200\n101: median=0 sum=600\n102: median=0 sum=900\n103: median=0 sum=1200\n104: median=100 sum=1500\n105: median=100 sum=1800\n106: median=100 sum=1700\n107: median=100 sum=1600\n108: median=100 sum=1500\n109: median=100 sum=1300\n110: median=100 sum=1100\n111: median=100 sum=900\n112: median=100 sum=700\n113: median=100 sum=600\n114: median=100 sum=500\n115: median=100 sum=400\n116: median=100 sum=200\n117: median=-100 sum=0\n118: median=-100 sum=-200\n119: median=-100 sum=-400\n120: median=-100 sum=-500\n121: median=-100 sum=-600\n122: median=-100 sum=-700\n123: median=-100 sum=-900\n124: median=-100 sum=-1100\n125: median=-100 sum=-1300\n126: median=-100 sum=-1500\n127: median=-100 sum=-1600\n128: median=-100 sum=-1700\n129: median=-100 sum=-1800\n130: median=-100 sum=-1500\n131: median=-100 sum=-1200\n132: median=0 sum=-900\n133: median=0 sum=-600\n134: median=0 sum=-200\n135: median=0 sum=200\n136: median=0 sum=600\n137: median=0 sum=900\n138: median=0 sum=1200\n139: median=100 sum=1500\n140: median=100 sum=1800\n141: median=100 sum=1700\n142: median=100 sum=1600\n143: median=100 sum=1500\n144: median=100 sum=1300\n145: median=100 sum=1100\n146: median=100 sum=900\n147: median=100 sum=700\n148: median=100 sum=600\n149: median=100 sum=500\n150: median=100 sum=400\n151: median=100 sum=200\n152: median=-100 sum=0\n153: median=-100 sum=-200\n154: median=-100 sum=-400\n155: median=-100 sum=-500\n156: median=-100 sum=-600\n157: median=-100 sum=-700\n158: median=-100 sum=-900\n159: median=-100 sum=-1100\n160: median=-100 sum=-1300\n161: median=-100 sum=-1500\n162: median=-100 sum=-1600\n163: median=-100 sum=-1700\n164: median=-100 sum=-1800\n165: median=-100 sum=-1500\n166: median=-100 sum=-1200\n167: median=0 sum=-900\n168: median=0 sum=-600\n169: median=0 sum=-200\n170: median=0 sum=200\n171: median=0 sum=600\n172: median=0 sum=900\n173: median=0 sum=1200\n174: median=100 sum=1500\n175: median=100 sum=1800\n176: median=100 sum=1700\n177: median=100 sum=1600\n178: median=100 sum=1500\n179: median=100 sum=1300\n180: median=100 sum=1100\n181: median=100 sum=900\n182: median=100 sum=700\n183: median=100 sum=600\n184: median=100 sum=500\n185: median=100 sum=400\n186: median=100 sum=200\n187: median=-100 sum=0\n188: median=-100 sum=-200\n189: median=-100 sum=-400\n190: median=-100 sum=-500\n191: median=-100 sum=-600\n192: median=-100 sum=-700\n193: median=-100 sum=-900\n194: median=-100 sum=-1100\n195: median=-100 sum=-1300\n196: median=-100 sum=-1500\n197: median=-100 sum=-1600\n198: median=-100 sum=-1700\n199: median=-100 sum=-1800\n200: median=-100 sum=-1500\nwindows: 177\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "k25_duplicate_departures",
+      "origin": "contract_boundary",
+      "reason": "Repeated values leave and enter maximum-size windows at the median rank boundary.",
+      "stdin": "25\n0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2 2 2 2 0 0 0 0 0 0 0 0 0 0 0 0\n",
+      "stdout": "25: median=0 sum=12\n26: median=1 sum=14\n27: median=1 sum=16\n28: median=1 sum=18\n29: median=1 sum=20\n30: median=1 sum=22\n31: median=1 sum=24\n32: median=1 sum=26\n33: median=1 sum=28\n34: median=1 sum=30\n35: median=1 sum=32\n36: median=1 sum=34\n37: median=1 sum=36\n38: median=2 sum=38\n39: median=2 sum=37\n40: median=2 sum=36\n41: median=2 sum=35\n42: median=2 sum=34\n43: median=2 sum=33\n44: median=2 sum=32\n45: median=2 sum=31\n46: median=2 sum=30\n47: median=2 sum=29\n48: median=2 sum=28\n49: median=2 sum=27\n50: median=2 sum=26\nwindows: 26\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "mixed_whitespace_signed_decimals",
+      "origin": "contract_boundary",
+      "reason": "Valid spaces, tabs, blank lines, leading zeros, plus signs and negative zero.",
+      "stdin": "\t04  \n\t+0003\t-0\n\n0002 -0005 \t\n +0010\t-0010  \n",
+      "stdout": "4: median=0 sum=0\n5: median=0 sum=7\n6: median=-5 sum=-3\nwindows: 3\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "max_length_k25_positive",
+      "origin": "contract_boundary",
+      "reason": "All 176 maximum-size windows attain the positive 64-bit sum boundary allowed by the task.",
+      "stdin": "25\n1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000 1000000000\n",
+      "stdout": "25: median=1000000000 sum=25000000000\n26: median=1000000000 sum=25000000000\n27: median=1000000000 sum=25000000000\n28: median=1000000000 sum=25000000000\n29: median=1000000000 sum=25000000000\n30: median=1000000000 sum=25000000000\n31: median=1000000000 sum=25000000000\n32: median=1000000000 sum=25000000000\n33: median=1000000000 sum=25000000000\n34: median=1000000000 sum=25000000000\n35: median=1000000000 sum=25000000000\n36: median=1000000000 sum=25000000000\n37: median=1000000000 sum=25000000000\n38: median=1000000000 sum=25000000000\n39: median=1000000000 sum=25000000000\n40: median=1000000000 sum=25000000000\n41: median=1000000000 sum=25000000000\n42: median=1000000000 sum=25000000000\n43: median=1000000000 sum=25000000000\n44: median=1000000000 sum=25000000000\n45: median=1000000000 sum=25000000000\n46: median=1000000000 sum=25000000000\n47: median=1000000000 sum=25000000000\n48: median=1000000000 sum=25000000000\n49: median=1000000000 sum=25000000000\n50: median=1000000000 sum=25000000000\n51: median=1000000000 sum=25000000000\n52: median=1000000000 sum=25000000000\n53: median=1000000000 sum=25000000000\n54: median=1000000000 sum=25000000000\n55: median=1000000000 sum=25000000000\n56: median=1000000000 sum=25000000000\n57: median=1000000000 sum=25000000000\n58: median=1000000000 sum=25000000000\n59: median=1000000000 sum=25000000000\n60: median=1000000000 sum=25000000000\n61: median=1000000000 sum=25000000000\n62: median=1000000000 sum=25000000000\n63: median=1000000000 sum=25000000000\n64: median=1000000000 sum=25000000000\n65: median=1000000000 sum=25000000000\n66: median=1000000000 sum=25000000000\n67: median=1000000000 sum=25000000000\n68: median=1000000000 sum=25000000000\n69: median=1000000000 sum=25000000000\n70: median=1000000000 sum=25000000000\n71: median=1000000000 sum=25000000000\n72: median=1000000000 sum=25000000000\n73: median=1000000000 sum=25000000000\n74: median=1000000000 sum=25000000000\n75: median=1000000000 sum=25000000000\n76: median=1000000000 sum=25000000000\n77: median=1000000000 sum=25000000000\n78: median=1000000000 sum=25000000000\n79: median=1000000000 sum=25000000000\n80: median=1000000000 sum=25000000000\n81: median=1000000000 sum=25000000000\n82: median=1000000000 sum=25000000000\n83: median=1000000000 sum=25000000000\n84: median=1000000000 sum=25000000000\n85: median=1000000000 sum=25000000000\n86: median=1000000000 sum=25000000000\n87: median=1000000000 sum=25000000000\n88: median=1000000000 sum=25000000000\n89: median=1000000000 sum=25000000000\n90: median=1000000000 sum=25000000000\n91: median=1000000000 sum=25000000000\n92: median=1000000000 sum=25000000000\n93: median=1000000000 sum=25000000000\n94: median=1000000000 sum=25000000000\n95: median=1000000000 sum=25000000000\n96: median=1000000000 sum=25000000000\n97: median=1000000000 sum=25000000000\n98: median=1000000000 sum=25000000000\n99: median=1000000000 sum=25000000000\n100: median=1000000000 sum=25000000000\n101: median=1000000000 sum=25000000000\n102: median=1000000000 sum=25000000000\n103: median=1000000000 sum=25000000000\n104: median=1000000000 sum=25000000000\n105: median=1000000000 sum=25000000000\n106: median=1000000000 sum=25000000000\n107: median=1000000000 sum=25000000000\n108: median=1000000000 sum=25000000000\n109: median=1000000000 sum=25000000000\n110: median=1000000000 sum=25000000000\n111: median=1000000000 sum=25000000000\n112: median=1000000000 sum=25000000000\n113: median=1000000000 sum=25000000000\n114: median=1000000000 sum=25000000000\n115: median=1000000000 sum=25000000000\n116: median=1000000000 sum=25000000000\n117: median=1000000000 sum=25000000000\n118: median=1000000000 sum=25000000000\n119: median=1000000000 sum=25000000000\n120: median=1000000000 sum=25000000000\n121: median=1000000000 sum=25000000000\n122: median=1000000000 sum=25000000000\n123: median=1000000000 sum=25000000000\n124: median=1000000000 sum=25000000000\n125: median=1000000000 sum=25000000000\n126: median=1000000000 sum=25000000000\n127: median=1000000000 sum=25000000000\n128: median=1000000000 sum=25000000000\n129: median=1000000000 sum=25000000000\n130: median=1000000000 sum=25000000000\n131: median=1000000000 sum=25000000000\n132: median=1000000000 sum=25000000000\n133: median=1000000000 sum=25000000000\n134: median=1000000000 sum=25000000000\n135: median=1000000000 sum=25000000000\n136: median=1000000000 sum=25000000000\n137: median=1000000000 sum=25000000000\n138: median=1000000000 sum=25000000000\n139: median=1000000000 sum=25000000000\n140: median=1000000000 sum=25000000000\n141: median=1000000000 sum=25000000000\n142: median=1000000000 sum=25000000000\n143: median=1000000000 sum=25000000000\n144: median=1000000000 sum=25000000000\n145: median=1000000000 sum=25000000000\n146: median=1000000000 sum=25000000000\n147: median=1000000000 sum=25000000000\n148: median=1000000000 sum=25000000000\n149: median=1000000000 sum=25000000000\n150: median=1000000000 sum=25000000000\n151: median=1000000000 sum=25000000000\n152: median=1000000000 sum=25000000000\n153: median=1000000000 sum=25000000000\n154: median=1000000000 sum=25000000000\n155: median=1000000000 sum=25000000000\n156: median=1000000000 sum=25000000000\n157: median=1000000000 sum=25000000000\n158: median=1000000000 sum=25000000000\n159: median=1000000000 sum=25000000000\n160: median=1000000000 sum=25000000000\n161: median=1000000000 sum=25000000000\n162: median=1000000000 sum=25000000000\n163: median=1000000000 sum=25000000000\n164: median=1000000000 sum=25000000000\n165: median=1000000000 sum=25000000000\n166: median=1000000000 sum=25000000000\n167: median=1000000000 sum=25000000000\n168: median=1000000000 sum=25000000000\n169: median=1000000000 sum=25000000000\n170: median=1000000000 sum=25000000000\n171: median=1000000000 sum=25000000000\n172: median=1000000000 sum=25000000000\n173: median=1000000000 sum=25000000000\n174: median=1000000000 sum=25000000000\n175: median=1000000000 sum=25000000000\n176: median=1000000000 sum=25000000000\n177: median=1000000000 sum=25000000000\n178: median=1000000000 sum=25000000000\n179: median=1000000000 sum=25000000000\n180: median=1000000000 sum=25000000000\n181: median=1000000000 sum=25000000000\n182: median=1000000000 sum=25000000000\n183: median=1000000000 sum=25000000000\n184: median=1000000000 sum=25000000000\n185: median=1000000000 sum=25000000000\n186: median=1000000000 sum=25000000000\n187: median=1000000000 sum=25000000000\n188: median=1000000000 sum=25000000000\n189: median=1000000000 sum=25000000000\n190: median=1000000000 sum=25000000000\n191: median=1000000000 sum=25000000000\n192: median=1000000000 sum=25000000000\n193: median=1000000000 sum=25000000000\n194: median=1000000000 sum=25000000000\n195: median=1000000000 sum=25000000000\n196: median=1000000000 sum=25000000000\n197: median=1000000000 sum=25000000000\n198: median=1000000000 sum=25000000000\n199: median=1000000000 sum=25000000000\n200: median=1000000000 sum=25000000000\nwindows: 176\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "max_length_k25_negative",
+      "origin": "contract_boundary",
+      "reason": "All 176 maximum-size windows attain the negative sum boundary allowed by the task.",
+      "stdin": "25\n-1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000 -1000000000\n",
+      "stdout": "25: median=-1000000000 sum=-25000000000\n26: median=-1000000000 sum=-25000000000\n27: median=-1000000000 sum=-25000000000\n28: median=-1000000000 sum=-25000000000\n29: median=-1000000000 sum=-25000000000\n30: median=-1000000000 sum=-25000000000\n31: median=-1000000000 sum=-25000000000\n32: median=-1000000000 sum=-25000000000\n33: median=-1000000000 sum=-25000000000\n34: median=-1000000000 sum=-25000000000\n35: median=-1000000000 sum=-25000000000\n36: median=-1000000000 sum=-25000000000\n37: median=-1000000000 sum=-25000000000\n38: median=-1000000000 sum=-25000000000\n39: median=-1000000000 sum=-25000000000\n40: median=-1000000000 sum=-25000000000\n41: median=-1000000000 sum=-25000000000\n42: median=-1000000000 sum=-25000000000\n43: median=-1000000000 sum=-25000000000\n44: median=-1000000000 sum=-25000000000\n45: median=-1000000000 sum=-25000000000\n46: median=-1000000000 sum=-25000000000\n47: median=-1000000000 sum=-25000000000\n48: median=-1000000000 sum=-25000000000\n49: median=-1000000000 sum=-25000000000\n50: median=-1000000000 sum=-25000000000\n51: median=-1000000000 sum=-25000000000\n52: median=-1000000000 sum=-25000000000\n53: median=-1000000000 sum=-25000000000\n54: median=-1000000000 sum=-25000000000\n55: median=-1000000000 sum=-25000000000\n56: median=-1000000000 sum=-25000000000\n57: median=-1000000000 sum=-25000000000\n58: median=-1000000000 sum=-25000000000\n59: median=-1000000000 sum=-25000000000\n60: median=-1000000000 sum=-25000000000\n61: median=-1000000000 sum=-25000000000\n62: median=-1000000000 sum=-25000000000\n63: median=-1000000000 sum=-25000000000\n64: median=-1000000000 sum=-25000000000\n65: median=-1000000000 sum=-25000000000\n66: median=-1000000000 sum=-25000000000\n67: median=-1000000000 sum=-25000000000\n68: median=-1000000000 sum=-25000000000\n69: median=-1000000000 sum=-25000000000\n70: median=-1000000000 sum=-25000000000\n71: median=-1000000000 sum=-25000000000\n72: median=-1000000000 sum=-25000000000\n73: median=-1000000000 sum=-25000000000\n74: median=-1000000000 sum=-25000000000\n75: median=-1000000000 sum=-25000000000\n76: median=-1000000000 sum=-25000000000\n77: median=-1000000000 sum=-25000000000\n78: median=-1000000000 sum=-25000000000\n79: median=-1000000000 sum=-25000000000\n80: median=-1000000000 sum=-25000000000\n81: median=-1000000000 sum=-25000000000\n82: median=-1000000000 sum=-25000000000\n83: median=-1000000000 sum=-25000000000\n84: median=-1000000000 sum=-25000000000\n85: median=-1000000000 sum=-25000000000\n86: median=-1000000000 sum=-25000000000\n87: median=-1000000000 sum=-25000000000\n88: median=-1000000000 sum=-25000000000\n89: median=-1000000000 sum=-25000000000\n90: median=-1000000000 sum=-25000000000\n91: median=-1000000000 sum=-25000000000\n92: median=-1000000000 sum=-25000000000\n93: median=-1000000000 sum=-25000000000\n94: median=-1000000000 sum=-25000000000\n95: median=-1000000000 sum=-25000000000\n96: median=-1000000000 sum=-25000000000\n97: median=-1000000000 sum=-25000000000\n98: median=-1000000000 sum=-25000000000\n99: median=-1000000000 sum=-25000000000\n100: median=-1000000000 sum=-25000000000\n101: median=-1000000000 sum=-25000000000\n102: median=-1000000000 sum=-25000000000\n103: median=-1000000000 sum=-25000000000\n104: median=-1000000000 sum=-25000000000\n105: median=-1000000000 sum=-25000000000\n106: median=-1000000000 sum=-25000000000\n107: median=-1000000000 sum=-25000000000\n108: median=-1000000000 sum=-25000000000\n109: median=-1000000000 sum=-25000000000\n110: median=-1000000000 sum=-25000000000\n111: median=-1000000000 sum=-25000000000\n112: median=-1000000000 sum=-25000000000\n113: median=-1000000000 sum=-25000000000\n114: median=-1000000000 sum=-25000000000\n115: median=-1000000000 sum=-25000000000\n116: median=-1000000000 sum=-25000000000\n117: median=-1000000000 sum=-25000000000\n118: median=-1000000000 sum=-25000000000\n119: median=-1000000000 sum=-25000000000\n120: median=-1000000000 sum=-25000000000\n121: median=-1000000000 sum=-25000000000\n122: median=-1000000000 sum=-25000000000\n123: median=-1000000000 sum=-25000000000\n124: median=-1000000000 sum=-25000000000\n125: median=-1000000000 sum=-25000000000\n126: median=-1000000000 sum=-25000000000\n127: median=-1000000000 sum=-25000000000\n128: median=-1000000000 sum=-25000000000\n129: median=-1000000000 sum=-25000000000\n130: median=-1000000000 sum=-25000000000\n131: median=-1000000000 sum=-25000000000\n132: median=-1000000000 sum=-25000000000\n133: median=-1000000000 sum=-25000000000\n134: median=-1000000000 sum=-25000000000\n135: median=-1000000000 sum=-25000000000\n136: median=-1000000000 sum=-25000000000\n137: median=-1000000000 sum=-25000000000\n138: median=-1000000000 sum=-25000000000\n139: median=-1000000000 sum=-25000000000\n140: median=-1000000000 sum=-25000000000\n141: median=-1000000000 sum=-25000000000\n142: median=-1000000000 sum=-25000000000\n143: median=-1000000000 sum=-25000000000\n144: median=-1000000000 sum=-25000000000\n145: median=-1000000000 sum=-25000000000\n146: median=-1000000000 sum=-25000000000\n147: median=-1000000000 sum=-25000000000\n148: median=-1000000000 sum=-25000000000\n149: median=-1000000000 sum=-25000000000\n150: median=-1000000000 sum=-25000000000\n151: median=-1000000000 sum=-25000000000\n152: median=-1000000000 sum=-25000000000\n153: median=-1000000000 sum=-25000000000\n154: median=-1000000000 sum=-25000000000\n155: median=-1000000000 sum=-25000000000\n156: median=-1000000000 sum=-25000000000\n157: median=-1000000000 sum=-25000000000\n158: median=-1000000000 sum=-25000000000\n159: median=-1000000000 sum=-25000000000\n160: median=-1000000000 sum=-25000000000\n161: median=-1000000000 sum=-25000000000\n162: median=-1000000000 sum=-25000000000\n163: median=-1000000000 sum=-25000000000\n164: median=-1000000000 sum=-25000000000\n165: median=-1000000000 sum=-25000000000\n166: median=-1000000000 sum=-25000000000\n167: median=-1000000000 sum=-25000000000\n168: median=-1000000000 sum=-25000000000\n169: median=-1000000000 sum=-25000000000\n170: median=-1000000000 sum=-25000000000\n171: median=-1000000000 sum=-25000000000\n172: median=-1000000000 sum=-25000000000\n173: median=-1000000000 sum=-25000000000\n174: median=-1000000000 sum=-25000000000\n175: median=-1000000000 sum=-25000000000\n176: median=-1000000000 sum=-25000000000\n177: median=-1000000000 sum=-25000000000\n178: median=-1000000000 sum=-25000000000\n179: median=-1000000000 sum=-25000000000\n180: median=-1000000000 sum=-25000000000\n181: median=-1000000000 sum=-25000000000\n182: median=-1000000000 sum=-25000000000\n183: median=-1000000000 sum=-25000000000\n184: median=-1000000000 sum=-25000000000\n185: median=-1000000000 sum=-25000000000\n186: median=-1000000000 sum=-25000000000\n187: median=-1000000000 sum=-25000000000\n188: median=-1000000000 sum=-25000000000\n189: median=-1000000000 sum=-25000000000\n190: median=-1000000000 sum=-25000000000\n191: median=-1000000000 sum=-25000000000\n192: median=-1000000000 sum=-25000000000\n193: median=-1000000000 sum=-25000000000\n194: median=-1000000000 sum=-25000000000\n195: median=-1000000000 sum=-25000000000\n196: median=-1000000000 sum=-25000000000\n197: median=-1000000000 sum=-25000000000\n198: median=-1000000000 sum=-25000000000\n199: median=-1000000000 sum=-25000000000\n200: median=-1000000000 sum=-25000000000\nwindows: 176\n",
+      "stderr": "",
+      "exit_code": 0
+    }
+  ]
+}

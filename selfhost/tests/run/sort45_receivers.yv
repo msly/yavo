@@ -1,0 +1,22 @@
+struct Row { values: Vec[int] }
+struct Store { row: Row, label: String }
+fn order(values: inout Vec[int]) { values.sort() }
+fn orderRow(row: inout Row) { row.values.sort() }
+fn main() {
+    var store = Store{row: Row{values: [4, 2, 3]}, label: "kept".toString()}
+    (store.row.values).sort()
+    assert(store.row.values[0] == 2)
+    store.row.values.push(1)
+    (store).row.values.sort()
+    let last = store.row.values.pop() ?? -1
+    assert(last == 4)
+    store.row.values.push(0)
+    order(&store.row.values)
+    orderRow(&store.row)
+    ((store).row.values).sort()
+    assert(store.row.values.len() == 4)
+    assert(store.row.values[0] == 0 && store.row.values[3] == 3)
+    let moved = store
+    println(moved.label)
+    assert(moved.row.values[1] == 1 && moved.row.values[2] == 2)
+}

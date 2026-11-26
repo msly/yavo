@@ -1177,6 +1177,49 @@ fn osCall(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expr
     return Value{ty: types.primitive(.Unit), name: "".toString()}
 }
 
+fn sortValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression) -> Value {
+    // Stage0 accepts names and field chains, but not `(v).sort()` or temporaries.
+    // Indexed owned places remain outside this subset.
+    var rootId = e.left
+    var fields = false
+    var depth = 0
+    loop {
+        let part = p.expressions[rootId]
+        if depth >= 256 { lexer.fail(ts, part.token, "U0001", "selfhost place nesting limit (256) exceeded") }
+        if part.kind == .Field { fields = true }
+        if part.kind != .Field && part.kind != .Paren { break }
+        rootId = part.left
+        depth += 1
+    }
+    let rootExpr = p.expressions[rootId]
+    if rootExpr.kind != .Name || (!fields && p.expressions[e.left].kind != .Name) {
+        lexer.fail(ts, e.token, "U0001", "sort requires a named vector or a field in this subset")
+    }
+    let root = localIndex(g, ts, rootExpr.token)
+    if root < 0 {
+        if !fields { lexer.fail(ts, e.token, "U0001", "sort receiver is outside the selfhost subset") }
+        lexer.fail(ts, rootExpr.token, "E0010", "sort receiver is an unknown local")
+    }
+    readable(g, ts, root, e.token)
+    // Invalid fields fail in stage0's receiver precheck. For a valid field path,
+    // mutability precedes loans; a plain name checks loans first.
+    if !fields { writable(g, ts, root, e.token) }
+    let target = placeOf(&g, p, ts, reg, e.left, 0)
+    if !g.locals[root].mutable { lexer.fail(ts, e.token, "E0014", "cannot modify a read-only value") }
+    if fields { writable(g, ts, root, e.token) }
+    if e.argCount != 0 { lexer.fail(ts, e.token, "E0012", "sort takes no arguments") }
+    if target.ty.kind != .Vec { lexer.fail(ts, e.token, "U0001", "sort requires a Vec in this subset") }
+    let elem = types.element(target.ty)
+    if elem.kind == .Bool || elem.kind == .Named {
+        lexer.fail(ts, e.token, "E0501", "this vector element type cannot be ordered")
+    }
+    if elem.kind != .Int { lexer.fail(ts, e.token, "U0001", "sorting this vector element type is outside the selfhost subset") }
+    put(&g, support.join3("yv_sort(&(", target.name, "), sizeof(int64_t), yv_cmp_i64, "))
+    put(&g, lineColumn(ts, e.token))
+    emit(&g, ");")
+    return Value{ty: types.primitive(.Unit), name: "".toString()}
+}
+
 fn methodValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression) -> Value {
     let name = ts[e.token].text.clone()
     let receiver = p.expressions[e.left]
@@ -1199,6 +1242,7 @@ fn methodValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
             lexer.fail(ts, e.token, "U0001", "enum payload construction is outside this subset")
         }
     }
+    if name == "sort" { return sortValue(&g, p, ts, reg, e) }
     if name == "pop" {
         let target = placeOf(&g, p, ts, reg, e.left, 0)
         readable(g, ts, target.root, e.token)

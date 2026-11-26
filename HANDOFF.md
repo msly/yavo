@@ -1,14 +1,14 @@
-# Yavo 交接文档（2026-11-26，第四十四批：整数 min/max 与原始文本 diff CLI）
+# Yavo 交接文档（2026-11-26，第四十五批：整数 Vec 排序与原始窗口中位数 CLI）
 
-给下一个会话：先读第 1、2、10、23、24 节及 docs/self-hosting.md、selfhost/README.md 再开工。第二十七至第三十批在 `history/handoff-batches-2026-11-23-to-24.md`，第十二至第二十六批在 `history/handoff-batches-2026-11-21-to-23.md`，第六至第十一批在 `history/handoff-batches-2026-11-19-to-21.md`。
+给下一个会话：先读第 1、2、10、24、25 节及 docs/self-hosting.md、selfhost/README.md 再开工。第二十七至第三十批在 `history/handoff-batches-2026-11-23-to-24.md`，第十二至第二十六批在 `history/handoff-batches-2026-11-21-to-23.md`，第六至第十一批在 `history/handoff-batches-2026-11-19-to-21.md`。
 
 ## 1. 一句话状态
 
-**第四十四批加入 int/byte 的 min/max，原样打通文本 diff CLI。** 两个参数各求值一次、从左到右保存值快照；无类型数字表达式可从另一参数推导 byte，Optional/Result 裸包装不透传载荷上下文。定标发现 Rust stage0 会在第二参数修改本地/字段后才读第一参数，已修复并加 P0 回归。原有 391 个 stage0 接受程序的覆盖 **98 → 99**，唯一新增为 r4/yavo/T11.yv；加上本批新 P0，当前全仓 **100/392，退步 0、越界 0**，221 个 stage0 拒绝输入均未被放行。
+**第四十五批加入 Vec[int].sort()，原样打通滑动窗口下中位数 CLI。** 排序稳定、原地升序、无参数、返回 Unit；复用 yv_sort/yv_cmp_i64，接收者沿用可写性、移动与借用检查。支持变量、inout 和嵌套结构体字段，保留 stage0 对括号裸变量和临时接收者的 U0001 边界。全仓覆盖 **100 → 106/392，退步 0、越界 0**；新增六个路径是 r5/yavo-a 和 yavo-b 的 T11 各三份快照，共两种入口源码，221 个 stage0 拒绝输入均未被放行。
 
-当前语料 **875 cases**（新增 28，原样提升 1），完整本机自举 **875/875、15/15、0 skip**；Rust Debug/Release 全量各 **145/0/1**，冻结 **124/3/2**。新增第 15 项 text_diff_application：原始 T11 35 个固定场景、双方 Debug/Release 共 140 次执行全部通过；32 次正常返回做分配检查，108 次沿原程序 os.exit(1/2) 路径核对输出和退出状态。实现提交 `1c8207d` 的 [run 45783874254](https://github.com/msly/yavo/actions/runs/45783874254) **6/6 成功**，三平台原生自举和应用门、Linux ASan/UBSan 全部通过。
+当前语料 **897 cases**（新增 22，无提升），完整本机自举 **897/897、16/16、0 skip**；本批未改 Rust，Debug/Release 全量各 **145/0/1**，冻结 **124/3/2**。新增第 16 项 sliding_median_application：原始 yavo-b/T11 的 28 个固定场景、1,405 个输入值、1,112 个窗口，双方 Debug/Release 共 **112 次正常返回分配检查执行**全部通过。三平台 CI 待运行。
 
-**SH-2 引导子集固定点已闭合；SH-3 尚未接替，Rust stage0 仍承担日常编译；SH-4 正式交付完成 1/3 个独立应用。** bootstrap 现有 test-summary、原始单位换算、原始文本 diff 三项应用回归；后两项是兼容性验收，正式独立项目交付条件仍按自举路线。每批门槛保持 `docs/decisions.md` 第九节。
+**SH-2 引导子集固定点已闭合；SH-3 尚未接替，Rust stage0 仍承担日常编译；SH-4 正式交付完成 1/3 个独立应用。** bootstrap 现有 test-summary、原始单位换算、原始文本 diff、原始窗口中位数四项应用回归；兼容性回归不替代正式独立项目交付。每批门槛保持 `docs/decisions.md` 第九节。
 
 ## 2. 仓库与环境
 
@@ -194,10 +194,10 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 
 ## 10. 下一个会话的第一步
 
-1. 检查 Git 状态、最新实现提交与 CI；先读第 24 节、[自举路线](docs/self-hosting.md)、[selfhost 说明](selfhost/README.md)。
-2. **下一批以原样编译滑动窗口下中位数 CLI 为目标**：`experiments/coldstart-2026-11-22-r5/runs/yavo-b/tasks/T11/final/main.yv`，唯一已观察阻塞是第 19 行 `Vec[int].sort()`。完整 25 行程序只导入 std/io，其余均为已有输入/解析、整数 Vec、范围遍历、下标与输出。先实现无参原地升序排序、Unit 返回和既有可写 place/借用权限；沿用 runtime 的 yv_sort/yv_cmp_i64，不需要 sortBy 闭包、元组 Vec 或新模块。
-3. 原文件 SHA256 为 `e4d211582198c47570790de1791bba37e3907d6524736e1b3ee73c97e6206828`；仅在 ignored 诊断副本用插入排序替换该调用后两个编译器 check 通过，原文件仍未被 selfhost 接受。正式验收用原文件、现有 14 组 T11 judge 输入（含 2 公开）并补 K=25/长度=200 上界，核对下中位数/总和/窗口数。范围 K=1..25、序列长度0..200、元素±10^9；保留奇偶窗口、重复值、负数、混合空白与总和超过32位场景。不能把诊断性改写算作原应用通过。当前全仓100/392，其中原有语料99/391；首阻塞计数不用于预测下一批覆盖增量。
-4. 拥有型 Optional/pop、Map 的 String 值仍是后续候选。若扩展 Optional，必须同时覆盖移动、析构、借用绑定及 `??` 提前退出，不能只放开解析。
+1. 检查 Git 状态、最新实现提交与 CI；先读第 25 节、[自举路线](docs/self-hosting.md)、[selfhost 说明](selfhost/README.md)。
+2. **下一批以原样编译原子转账账本 CLI 为目标**：`experiments/coldstart-2026-11-22-r5/runs/yavo-b/tasks/T01/final/main.yv`，SHA256 `8a8403e63b51d427f57da3c052f9ea50c5e9c4f8a039123d707ab36976a0d4d9`。79 行，只导入 std/io。原文件 stage0 接受；当前 selfhost 首拒第 70 行 Map 遍历，再隔离后首拒第 71 行 Vec[String].sort()。最小范围是只读 Map[String,int] 遍历和拥有 String 向量排序：`for name, _value in accounts { names.push(name.clone()) }`，然后 `names.sort()`。
+3. 两处临时隔离后双方 check 通过，未观察到第三项独立编译阻塞；诊断副本已删除，不能算原始应用通过。正式验收用原文件、public/T01.md 与 judge/cases.json 的原 14 组输入（2 公开），补空 Map、ASCII 名称排序、克隆键/排序/Map 释放、batch 0/100、事务首中尾失败后回滚且消费剩余输入、检查顺序与余额/总额超过32位。名称最多16字符、输入金额0..10^9、最多200命令；转账后余额允许超过10^9，空文件合法。保持源哈希和正常返回分配检查。
+4. 拥有 Optional 的备选是原始 r5/yavo-b/T02 严格 CSV：首拒 ?Vec[String]，还需拥有返回及 if-let 临时载荷生命周期。Map 的 String 值和拥有型 pop 仍是后续候选；扩展时同时覆盖移动、析构、借用绑定和提前退出。
 5. 模块尚缺包依赖与锁文件（stage0 也没有）、后置 use、跨模块的枚举载荷/方法/泛型；按真实应用阻塞安排。
 6. SH-4 第二个独立应用建议结构化文本校验或多文件依赖/索引工具。不要同时运行共用临时目录的两条 cargo test。第六轮文档实验有可计量环境才恢复，不阻塞工程推进。
 
@@ -367,3 +367,16 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - **覆盖口径**：沿用 subset_sweep.py 的全工作区 rglob（包含已有未跟踪实验快照）。原有 612 源文件内容和 391 个 stage0 接受成员均未变；原有覆盖 98→99，仅新增原始 T11、减少 0。新增 P0 单列后，全仓 100/392，stage0 拒绝 221，越界 0。
 - **本机验收**：完整自举 **875/875、15/15、0 skip**；stage2/stage3 C **1,018,462 字节**、Linux 二进制 **476,112 字节**逐字节一致。真实 lexer、test-summary 的 71 个本机场景、单位换算 20 场景/80 次执行、文本 diff 35 场景/140 次执行和输入不变检查全部通过。最终 stage2 全仓扫描 **100/392、0 越界**；再逐一复核原有 98 路径及新增 T11/P0，100/100 接受，确认接受集合一致、退步 0。首轮仅旧 builtin_max 的 unsupported 分类过时，源码原样提升后完整复验通过。
 - **CI**：实现提交 `1c8207d` 的 [run 45783874254](https://github.com/msly/yavo/actions/runs/45783874254) **6/6 成功**（首次运行）。Linux x86-64、Windows x86-64、macOS arm64 原生 Rust Debug/Release、自举及应用门全部通过；Linux 生成 C/stage2 ASan/UBSan 与三个独立作业成功。已核对 run/head 精确绑定 `1c8207dcd77a193b7ccf3ec3e42abedb089c0681`，分支 main，六个 job 均 completed/success。
+
+## 25. 第四十五批：整数 Vec 排序与原始窗口中位数 CLI（2026-11-26）
+
+- 基线 `1a7fc4a`。目标为原样编译运行 `experiments/coldstart-2026-11-22-r5/runs/yavo-b/tasks/T11/final/main.yv`，SHA256 `e4d211582198c47570790de1791bba37e3907d6524736e1b3ee73c97e6206828`；历史应用、冻结规格和 Rust 源码均未改。
+- **sort**：仅开放无参 Vec[int].sort()，稳定原地升序、返回 Unit。复用 runtime 的 yv_sort 与关系比较器 yv_cmp_i64，比较不做整数减法；空/单元素直接返回，其他情况的辅助缓冲区在调用内释放。支持可写变量、inout 参数、嵌套结构体字段及字段括号，不复制或移动 Vec 描述符。
+- **接收者与诊断**：名称路径先检查借用再检查可变性；有效字段路径先检查可变性再检查借用，坏字段在接收者预检查中先报 E0010。只读根 E0014、已移动 E0402、循环/先前借用 E0102、预留根 E0403；参数个数 E0012、无 Ord 的 bool/Named 元素 E0501。`let _ = values.sort()` 可用；把无值结果作普通绑定或 return 值仍 E0001。裸变量外加括号、临时、未知名称和非 Vec 接收者按 stage0 保持 U0001；拥有元素的下标 place、byte/str/String 排序、sortBy 仍在子集外。
+- **用例**：新增 22（run 3、reject 12、unsupported 3、shared_unsupported 4），无旧用例提升；合计 897（run 231、panic 32、reject 485、unsupported 114、shared_unsupported 35），263 个可执行输入。22 条 stage0/candidate 定标全部匹配，三个运行程序的双方 D/R 共 12 次分配检查执行通过。覆盖整数极值、重复排序、字段/inout、排序后 push/pop/整体移动、return/break/continue 清理及错误优先级。独立组合探针还验证视图作用域结束后排序和资源释放。
+- **应用门**：新增 median_application.py 与 tests/applications/sliding-median.json，纳入 bootstrap 第 16 项 sliding_median_application。原 judge 14 个场景（含两个公开样例）逐字节保留，补 14 个契约内边界，共 28 场景、1,405 个输入值、1,112 个窗口、双方 D/R 112 次正常返回分配检查执行。覆盖 K=25、长度 0/24/25/200、K=24 偶数下中位数、K=1、重复值离窗、混合空白、正号/前导零/负零及窗口和 ±25,000,000,000。期望先用秩计数独立确定，再由另一套窗口排序计算复核，0 不符。
+- **输入范围与绑定**：仅公开有效域：非空 ASCII/LF，独立 K 首行 1..25，后续 0..200 个整数，每项 ±10^9。空序列不等于空文件；不把无效整数、CR 或空文件行为纳入契约。8 项输入绑定原源码、harness、共享 runner、场景 JSON、两份契约和 judge/public cases，首尾哈希一致；优先用最终 stage2 执行。
+- **全仓覆盖**：沿用 subset_sweep.py 的全工作区 rglob。613 个源文件、392 个 stage0 接受成员均未变；最终 stage2 覆盖 **100→106/392、新增 6、退步 0、越界 0**。新增是 yavo-a/yavo-b T11 各 final/work/snapshots/0001，只有两种入口源码；221 个 stage0 拒绝输入全部未放行。
+- **Rust 验收**：本批无 Rust 改动，仍重新完成 Debug/Release 全量，各 145 通过、0 失败、1 个既有忽略；冻结规格 124 pass、3 unsupported、2 superseded。stage0 固定副本 SHA256 为 `3db1eb23f6abf2478081f2e805e0491fac00d71800ef699f796a76710cf2fddd`。
+- **本机验收**：完整自举 **897/897、16/16、0 skip**；stage2/stage3 C **1,027,977 字节**、Linux 二进制 **479,152 字节**逐字节一致。真实 lexer、四项应用门和输入不变检查全部通过；最终 stage2 对全 613 个路径复核，与候选的 106 个接受成员完全一致；旧 100 个接受路径全部保留。
+- **CI**：三平台 CI 待运行，成功后回填实现提交和 run 链接。

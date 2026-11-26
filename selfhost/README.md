@@ -14,6 +14,9 @@ subset of the stage0 language that the compiler itself implements (see
 [decision 20–24](../docs/decisions.md)). It is not yet the default compiler:
 stage0 accepts far more of the language (owned optionals, mutable/reference iteration,
 float formatting, methods, generics, broader Map/Set APIs, closures, threads...).
+Batch 45 adds stable, in-place `Vec[int].sort()` on writable local, field and
+inout receivers. The unchanged r5/yavo-b/T11 window-median CLI is checked by
+`median_application.py` as a fourth bootstrap application gate.
 Batch 44 adds int/byte `min` and `max`, preserving bidirectional literal inference
 and left-to-right value snapshots. The unchanged r4 T11 diff CLI is checked by
 `diff_application.py` as a third bootstrap application gate.
@@ -97,45 +100,40 @@ and writes `receipt.json` with `achieved: "self-hosted-fixed-point"` and
 `self_hosted: true` only when everything passes. Native CI runs this gate on
 Linux, Windows and macOS; a configured job is not itself a passing result.
 
-## Current validation: batch 44 (2026-11-26)
+## Current validation: batch 45 (2026-11-26)
 
-The matrix contains **875 cases / 260 executable inputs**: 228 run, 32 panic,
-473 reject, 111 unsupported and 31 shared unsupported. The 28 additions have
-fixed stage0 oracles: five run, one panic, 21 reject and one unsupported case.
-The old builtin_max fixture is promoted unchanged from unsupported to run.
-They cover int/byte inference, raw versus explicit Optional/Result wrapping,
-arity/type/range diagnostics, name shadowing, ordered snapshots, catch exits,
-and a left-side division panic that must precede right-side effects.
-Complete local bootstrap passes **875/875 cases, 15/15 checks, zero skips**.
-Stage2/stage3 C is byte-identical at 1,018,462 bytes; both Linux binaries are
-476,112 bytes and byte-identical. The final stage2 sweep confirms 100/392
-accepted programs and zero subset violations. Exact-commit
-[CI run 45783874254](https://github.com/msly/yavo/actions/runs/45783874254)
-for implementation `1c8207d` passes **6/6 jobs**: native Linux, Windows and macOS
-bootstrap/application gates, Linux ASan/UBSan and the independent checks.
+The matrix contains **897 cases / 263 executable inputs**: 231 run, 32 panic,
+485 reject, 114 unsupported and 35 shared unsupported. The 22 additions have
+fixed stage0 oracles: three run, 12 reject, three unsupported and four shared
+unsupported cases. No old fixture is promoted. Targeted runs cover empty and
+reserved vectors, int extrema, repeated sorting, field/inout permissions,
+push/pop and whole-owner moves, plus return/break/continue cleanup. Compound
+errors retain stage0's receiver, mutability/loan and arity precedence.
+Complete local bootstrap passes **897/897 cases, 16/16 checks, zero skips**.
+Stage2/stage3 C (1,027,977 bytes) and Linux binaries (479,152 bytes) are
+byte-identical; all four application gates and input-identity checks pass.
+Three-platform CI is pending.
 
-The new `text_diff_application` check builds the unchanged original
-`experiments/coldstart-2026-11-21-r4/yavo/T11.yv`. Its 35 fixed scenarios require
-140 stage0/selfhost Debug/Release executions to match exact stdout, stderr and
-exit codes. Expectations come from the public deletion-first LCS tie rule,
-independent recurrences and published fixtures. Cases cover equal/empty files,
-insertions/deletions/replacements, duplicates, blanks, UTF8 and read/argument
-errors; line-API and CLI boundaries are explicitly separated from the public
-LF-only input contract. Ten inputs bind the original source, harness, shared
-runner, fixed scenarios, contracts and public fixtures. All builds enable
-allocation instrumentation: 32 runs return normally and check it, while 108
-use the original os.exit(1/2) paths, which skip normal destructors and that check.
-The previous test-summary and unit-conversion gates remain in bootstrap.
+The new `sliding_median_application` check builds the unchanged original
+`experiments/coldstart-2026-11-22-r5/runs/yavo-b/tasks/T11/final/main.yv`.
+Its 28 fixed scenarios preserve all 14 archived inputs/outputs and add 14
+contract boundaries: K=25, 0/24/25/200 values, even lower medians, duplicates,
+mixed whitespace and window sums of ±25,000,000,000. Independent rank counts
+and a second window-sort oracle agree on every output. Across 1,405 input
+values and 1,112 windows, 112 stage0/selfhost Debug/Release executions must
+match exact stdout, empty stderr and exit 0. Every run returns normally with
+allocation checking. Eight inputs bind source, harness, shared runner,
+fixed scenarios, two contracts and the archived/public cases. The gate uses
+only the published valid ASCII/LF domain; it does not infer behavior for
+empty files or invalid fields. All three previous application gates remain.
 
-The candidate repository sweep preserves all 612 original source files and
-all 391 stage0-accepted members. Original-program coverage is **98 to 99 / 391**,
-gaining only the original T11 CLI and losing none. The new Rust P0 regression
-is accepted by both compilers, so the full corpus is **100 / 392**, with zero
-strict-subset violations and none of 221 stage0-rejected inputs accepted.
-Rust MinMax previously read a local/field only after a later argument mutated it;
-its lowering now binds both operand values before selecting one. The P0 fixture
-preserves the intended snapshots for int/byte, fields, parameters, indexes and
-nested calls. See [HANDOFF section 24](../HANDOFF.md).
+The final stage2 repository sweep preserves all 613 source files and all 392
+stage0-accepted members. Coverage rises **100 to 106 / 392** with no losses
+or strict-subset violations; none of 221 stage0-rejected inputs is accepted.
+The six additions are yavo-a/yavo-b T11 final/work/snapshot paths, comprising
+two distinct entry sources. Rust is unchanged; full Debug/Release suites
+were rerun and pass 145/0/1 each, with frozen outcomes 124/3/2.
+See [HANDOFF section 25](../HANDOFF.md).
 
 ## Historical validation: batch 31 (2026-11-24)
 
@@ -320,7 +318,7 @@ JSON diagnostics, suggestions and recovery remain future work.
 | Files | Source modules via leading `use a`, `use a/b`, `use a/{b, c}`; per-file imports and top-level `pub`, cyclic imports, qualified functions and original source locations; standard fs/io/os imports; required entry `fn main()` |
 | Types | `int` (signed 64-bit), `byte` (unsigned 8-bit), `bool`, borrowed `str`, owned `String`, `Vec[T]` with existing scalar/struct/String element forms, unit return; nominal structs, payload-free enums, flat Copy tuples, supported `T ! E` results and Copy `?T` |
 | String | Empty construction, str.toString, len, clone, push, output, String/str comparison, UTF-8/NUL; byte indexing; startsWith/endsWith/contains/find/split/parseInt/trim/lines/fields |
-| Vec | Typed empty construction, empty/nonempty literals including Vec[byte], len, consuming push, reserve, recursive clone/drop; zero-argument pop for Copy elements on mutable local/field/inout places; checked reads and index/field/compound assignments for Copy elements; expression-local read-only indexing and field projection for owned elements |
+| Vec | Typed empty construction, empty/nonempty literals including Vec[byte], len, consuming push, reserve, recursive clone/drop; stable in-place int sort on writable local/field/inout places; zero-argument pop for Copy elements on mutable local/field/inout places; checked reads and index/field/compound assignments for Copy elements; expression-local read-only indexing and field projection for owned elements |
 | Aggregates | Forward/nested fields, construction, reads and mutable fields; Copy values or owned String/Vec/nested struct fields; constant defaults and empty aggregates; by-value cycles rejected |
 | Tuples | Flat int/byte/bool/non-owning struct/payload-free enum elements; construction, numeric `.0`/`.1` projection, locals, arguments, returns, whole-value assignment/inout and Optional payloads; bounded structural signatures |
 | Enums | Qualified and context-inferred cases, nominal type checks, equality/inequality, case-name output |
@@ -432,6 +430,26 @@ no numeric payload context: `?byte = min(1, 2)` is E0001, while
 `?byte = some(min(1, 2))` is accepted. User functions override the builtins;
 a local with the same name remains uncallable (E0001). Wrong arity is E0012,
 incompatible operands E0001 and out-of-range literals E0003.
+
+### Integer vector sorting
+
+`Vec[int].sort()` takes no arguments, returns Unit and sorts ascending in place.
+It reuses the stable runtime merge sort and a relational int comparator, so
+comparison itself cannot overflow at either int extreme. The vector descriptor,
+length and ownership are preserved; the auxiliary buffer is released within
+the call. Empty and single-element vectors need no auxiliary buffer.
+
+Writable names, inout parameters and nested struct fields are supported,
+including parentheses around a field chain. Stage0 rejects `(values).sort()`
+when the receiver is only a parenthesized name; this subset keeps that U0001
+boundary and stage0's temporary-receiver restriction. Owned indexed receivers
+are additionally outside this subset. Existing loans, iteration locks and
+reservations block mutation. Read-only receivers are E0014, moved roots E0402,
+earlier call borrows and iteration locks E0102, and reservations E0403;
+bound-view and access-lock restrictions retain their U0001 boundary. Wrong
+arity is E0012 and unordered bool/Named elements are E0501. Byte, str
+and String vector sorting and sortBy remain U0001. `let _ = values.sort()`
+is allowed; a normal binding or return cannot use its no-value result.
 
 ### Copy Optional and pop
 
@@ -646,7 +664,7 @@ not the broader Rust frontend.
 | `model.yv` | Copy AST nodes; child lists are ranges in shared Program pools |
 | `parser.yv` | Aggregate/function/statement/expression grammar, imports, slices, borrows, catch, unsupported boundaries |
 | `types.yv` | Resolved nominal/vector/Copy Optional/flat tuple types, bounded tuple signatures, Result pool, field/default checks, cycles/layout order, transitive ownership |
-| `codegen.yv` | Places, borrowed/consuming values, Optional/Result wrapping, lazy coalesce, Result propagation, inout/take/pop, move-state joins, cleanup, loop replay and ordered C |
+| `codegen.yv` | Places, borrowed/consuming values, Optional/Result wrapping, lazy coalesce, Result propagation, inout/take/pop/sort, move-state joins, cleanup, loop replay and ordered C |
 | `main.yv` | `compile` returns `String ! Diagnostic`; CLI reports errors, reads input and creates output exclusively |
 | `lexer_test.yv` | Lexer boundary assertions, including owned error propagation and cleanup on normal test returns |
 | `tests/` and `bootstrap.py` | Independent behavior/rejection oracles, fixed point and reproducible execution |
@@ -666,17 +684,19 @@ executable fixtures from earlier increments.
 
 ## Next steps
 
-Self-hosting remains a regression gate. Batch 44 has 875 fixtures and three
-application checks; current results are recorded above. Full local sweep coverage
-is 100/392, including the new accepted P0 regression; the original-corpus gain is
-98 to 99 / 391. The next target is the unchanged
-`experiments/coldstart-2026-11-22-r5/runs/yavo-b/tasks/T11/final/main.yv`, a
-sliding-window lower-median CLI whose only observed blocker is `Vec[int].sort()`.
-It uses already-supported I/O, integer vectors, indexed access and iteration.
-The runtime has integer comparators and stable sorting; add receiver permission
-checks and direct application execution before claiming acceptance. Keep the
-native fixed point and independent behavior/resource oracles on all three
-platforms. SH-3 remains incomplete and formal SH-4 delivery remains one of three.
+Self-hosting remains a regression gate. Batch 45 has 897 fixtures and four
+application checks; current results are recorded above. Coverage is 106/392
+with zero losses or subset violations. The next target is the unchanged
+`experiments/coldstart-2026-11-22-r5/runs/yavo-b/tasks/T01/final/main.yv`, an
+atomic-transfer ledger. Its observed blockers are read-only Map[String,int]
+iteration and Vec[String].sort(). It clones each key into an independent
+String vector before sorting; transaction snapshots use existing Map clone
+and ownership transfer. Diagnostic copies isolating the two blockers pass
+both checks, but original-program acceptance still requires implementation
+and direct validation. Preserve the 14 archived scenarios, add ASCII ordering,
+rollback/commit and resource-lifetime boundaries, and keep native fixed points
+on all three platforms. SH-3 remains incomplete and formal SH-4 delivery
+remains one of three.
 
 ## Historical snapshots
 

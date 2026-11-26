@@ -1,0 +1,21 @@
+fn main() {
+    var empty: Vec[int] = []
+    empty.sort()
+    empty.reserve(8)
+    empty.sort()
+    assert(empty.len() == 0)
+    var one = [-8]
+    one.sort()
+    assert(one[0] == -8)
+    var reversed = [5, 4, 3, 2, 1]
+    reversed.sort()
+    reversed.sort()
+    for i in 0..reversed.len() { assert(reversed[i] == i + 1) }
+    var values = [9223372036854775807, 0, -9223372036854775808, -1, 9223372036854775807, -9223372036854775808, 0]
+    values.sort()
+    assert(values.len() == 7)
+    assert(values[0] == -9223372036854775808 && values[1] == -9223372036854775808)
+    assert(values[2] == -1 && values[3] == 0 && values[4] == 0)
+    assert(values[5] == 9223372036854775807 && values[6] == 9223372036854775807)
+    println("sort values ok")
+}

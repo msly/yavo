@@ -5928,6 +5928,166 @@
       "panic": "P-DIV-ZERO",
       "file": "panic/minmax44_left_panic.yv",
       "batch": "integer-minmax"
+    },
+    {
+      "id": "sort45_values",
+      "kind": "run",
+      "file": "run/sort45_values.yv",
+      "batch": "int-sort-window-median",
+      "stdout": "sort values ok\n"
+    },
+    {
+      "id": "sort45_receivers",
+      "kind": "run",
+      "file": "run/sort45_receivers.yv",
+      "batch": "int-sort-window-median",
+      "stdout": "kept\n"
+    },
+    {
+      "id": "sort45_control_flow",
+      "kind": "run",
+      "file": "run/sort45_control_flow.yv",
+      "batch": "int-sort-window-median",
+      "stdout": "sort flow ok\n"
+    },
+    {
+      "id": "sort45_immutable_arity",
+      "kind": "reject",
+      "file": "reject/sort45_immutable_arity.yv",
+      "batch": "int-sort-window-median",
+      "diagnostic": "E0014"
+    },
+    {
+      "id": "sort45_readonly",
+      "kind": "reject",
+      "file": "reject/sort45_readonly.yv",
+      "batch": "int-sort-window-median",
+      "diagnostic": "E0014"
+    },
+    {
+      "id": "sort45_readonly_field",
+      "kind": "reject",
+      "file": "reject/sort45_readonly_field.yv",
+      "batch": "int-sort-window-median",
+      "diagnostic": "E0014"
+    },
+    {
+      "id": "sort45_moved_arity",
+      "kind": "reject",
+      "file": "reject/sort45_moved_arity.yv",
+      "batch": "int-sort-window-median",
+      "diagnostic": "E0402"
+    },
+    {
+      "id": "sort45_moved_field",
+      "kind": "reject",
+      "file": "reject/sort45_moved_field.yv",
+      "batch": "int-sort-window-median",
+      "diagnostic": "E0402"
+    },
+    {
+      "id": "sort45_loop_lock_arity",
+      "kind": "reject",
+      "file": "reject/sort45_loop_lock_arity.yv",
+      "batch": "int-sort-window-median",
+      "diagnostic": "E0102"
+    },
+    {
+      "id": "sort45_field_loop_lock",
+      "kind": "reject",
+      "file": "reject/sort45_field_loop_lock.yv",
+      "batch": "int-sort-window-median",
+      "diagnostic": "E0102"
+    },
+    {
+      "id": "sort45_arity",
+      "kind": "reject",
+      "file": "reject/sort45_arity.yv",
+      "batch": "int-sort-window-median",
+      "diagnostic": "E0012"
+    },
+    {
+      "id": "sort45_binding",
+      "kind": "reject",
+      "file": "reject/sort45_binding.yv",
+      "batch": "int-sort-window-median",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "sort45_return_value",
+      "kind": "reject",
+      "file": "reject/sort45_return_value.yv",
+      "batch": "int-sort-window-median",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "sort45_bool",
+      "kind": "reject",
+      "file": "reject/sort45_bool.yv",
+      "batch": "int-sort-window-median",
+      "diagnostic": "E0501"
+    },
+    {
+      "id": "sort45_byte",
+      "kind": "unsupported",
+      "file": "unsupported/sort45_byte.yv",
+      "batch": "int-sort-window-median",
+      "diagnostic": "U0001",
+      "reason": "Only int vector sorting is in this batch; byte sorting remains outside the subset."
+    },
+    {
+      "id": "sort45_str",
+      "kind": "unsupported",
+      "file": "unsupported/sort45_str.yv",
+      "batch": "int-sort-window-median",
+      "diagnostic": "U0001",
+      "reason": "Sorting vectors of borrowed text remains outside the subset."
+    },
+    {
+      "id": "sort45_string",
+      "kind": "unsupported",
+      "file": "unsupported/sort45_string.yv",
+      "batch": "int-sort-window-median",
+      "diagnostic": "U0001",
+      "reason": "Sorting vectors of owned text remains outside the subset."
+    },
+    {
+      "id": "sort45_parenthesized_local",
+      "kind": "shared_unsupported",
+      "file": "unsupported/sort45_parenthesized_local.yv",
+      "batch": "int-sort-window-median",
+      "diagnostic": "U0001",
+      "reason": "Stage0 only permits a bare local receiver when there is no field path."
+    },
+    {
+      "id": "sort45_temporary",
+      "kind": "shared_unsupported",
+      "file": "unsupported/sort45_temporary.yv",
+      "batch": "int-sort-window-median",
+      "diagnostic": "U0001",
+      "reason": "Stage0 cannot sort a temporary vector receiver."
+    },
+    {
+      "id": "sort45_nonvector",
+      "kind": "shared_unsupported",
+      "file": "unsupported/sort45_nonvector.yv",
+      "batch": "int-sort-window-median",
+      "diagnostic": "U0001",
+      "reason": "Stage0 reports sort on a scalar variable as unsupported."
+    },
+    {
+      "id": "sort45_readonly_bad_field_arity",
+      "kind": "reject",
+      "file": "reject/sort45_readonly_bad_field_arity.yv",
+      "batch": "int-sort-window-median",
+      "diagnostic": "E0010"
+    },
+    {
+      "id": "sort45_unknown_name",
+      "kind": "shared_unsupported",
+      "file": "unsupported/sort45_unknown_name.yv",
+      "batch": "int-sort-window-median",
+      "diagnostic": "U0001"
     }
   ],
   "promotions": [
