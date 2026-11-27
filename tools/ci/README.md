@@ -1,5 +1,87 @@
 # GitHub CI
 
+## Batch 50 structured diagnostics acceptance
+
+`tools/ci/selfhost_diagnostics.py` requires a successful complete current
+bootstrap and checks the Rust-built stage1 and actual final stage2 on all three
+native platforms. Producer identities bind the ten compiler modules and their
+bootstrap copies, runtime, toolchain lock, executable and fixed-point C hashes.
+The gate also binds the current bootstrap manifest, harnesses and frozen inputs,
+then checks the bound files again before reporting a pass.
+
+| Required inventory | Linux / macOS | Windows |
+| --- | ---: | ---: |
+| Primary JSON / CLI scenarios per producer | 98 | 94 |
+| Existing text checks per producer | 80 | 76 |
+| Supplemental legacy CLI checks per producer | 8 | 8 |
+| Stage1 + actual stage2 primary executions | 196 | 188 |
+| Stage1 + actual stage2 text executions | 160 | 152 |
+| Stage1 + actual stage2 supplemental executions | 16 | 16 |
+| Total formal compiler commands | **372** | **356** |
+
+The [frozen diagnostic contract and oracle](../../selfhost/tests/diagnostics50/README.md)
+predate execution or inspection of the new JSON implementation by the oracle
+author. The original contract and expectations remain unchanged; a recorded
+storage-only amendment preserves the earlier freeze while making repository
+filenames safe for Windows checkout. Eight legacy CLI regressions have their own
+supplemental contract, baseline preflight and freeze, established before the
+corrective patch. They preserve leading-dash input names and literal JSON-option
+output names, and reject additional JSON options on `emit-c`.
+
+Each run requires a valid oracle positive control and **10 negative controls**
+covering ranges, hashes, source order, types, extra fields/diagnostics, duplicate
+keys, trailing output and invalid UTF-8. On Linux/macOS, two FIFO scenarios each
+run in JSON and text modes: **four snapshot-barrier executions per producer**.
+They mutate an already loaded root or imported file only after the next import
+has connected to its FIFO. Windows explicitly excludes these two scenarios and
+two POSIX-only filename scenarios.
+
+JSON acceptance checks the first diagnostic's raw half-open byte range and
+one-based Unicode-scalar coordinates against the original UTF-8 bytes. The
+source list records the loaded breadth-first prefix, including a successfully
+read file whose lexing fails; unreadable or invalid-UTF-8 imports are excluded.
+JSON mode retains each loaded source snapshot and its SHA-256 at load time, so
+later diagnostics use those bytes without reopening the source. The runner
+preserves command streams, source inventories and controlled mutation records;
+FIFO payloads become regular files after execution for portable archives.
+
+```sh
+python3 tools/ci/selfhost_diagnostics.py \
+  --bootstrap-output compiler/target/ci/selfhost
+python3 tools/ci/package_test_summary.py \
+  --input compiler/target/ci/selfhost-diagnostics \
+  --output compiler/target/ci/selfhost-diagnostics.tar.gz \
+  --prefix selfhost-diagnostics
+```
+
+The default output contains `receipt.json` with schema
+`yavo-selfhost-diagnostics-acceptance/1` and per-attempt evidence. CI packages
+`compiler/target/ci/selfhost-diagnostics.tar.gz` even after failure.
+`--candidate PATH` produces `formal: false` and `preliminary_passed` on success;
+it cannot establish acceptance of the actual bootstrap producers. A candidate
+`--case` selection also omits the supplemental inventory.
+
+### Compiler sanitizer JSON requirement
+
+The Linux `selfhost_sanitize.py` gate now also requires the ASan/UBSan compiler
+built from actual stage2 C to pass all **98 primary + 80 text + 8 supplemental
+commands**, totaling **186**. `selfhost_compiler_sanitize.py` verifies the full
+case IDs, eight required harness checks, oracle controls, four FIFO executions,
+sanitizer environment, exact instrumented executable identity, source/fixture
+bindings and saved command streams. It rejects partial or substituted candidate
+receipts. This internal candidate retains `formal: false`; the surrounding
+sanitizer receipt separately binds it to the actual stage2 C.
+
+Run the combined gate with
+`python3 tools/ci/selfhost_sanitize.py --bootstrap-output compiler/target/ci/selfhost`.
+CI packages its complete `selfhost-sanitizers` directory as
+`selfhost-sanitizers.tar.gz` and excludes the raw directory from artifact upload;
+this preserves the JSON cases' control-character filenames inside the TAR.
+Its compiler receipt retains the nested `json-diagnostics` evidence alongside
+the existing compiler sanitizer artifacts. These are new required CI checks;
+their platform run is pending. Ordinary candidate success does not establish a
+sanitizer pass. Existing LSan exclusions for fatal `os.exit` paths remain.
+
 ## Batch 49 ordinary selfhost build/run acceptance
 
 `tools/ci/selfhost_driver.py` runs after a successful complete bootstrap on all
@@ -405,3 +487,32 @@ Use `python` on Windows. A setup/download failure is a failing job, never a skip
 Reports and working outputs are under the ignored Cargo target directory; the
 workflow does not publish releases, change repository permissions, or use a
 personal access token.
+
+## Pure Yavo source-digest acceptance
+
+`selfhost_digest.py` runs the frozen SHA-256 vectors only after a successful
+complete bootstrap. It binds the current ten compiler modules, bootstrap
+harness, complete fixture inventory, runtime and toolchain lock to the producer
+receipt, then uses that receipt's stage0, Rust-built stage1, actual final stage2
+and locked Zig executable. There is no candidate fallback in this formal gate.
+
+The unchanged `selfhost/tests/digest50/verify.py` checks **46 vectors across
+three frontends and Debug/Release**, totaling **276 vector executions** with
+`YV_ALLOC_CHECK`. The wrapper verifies the six generated-product records,
+command outcomes, exact output bytes, compiler/source/artifact hashes and
+private-cache cleanup, then checks all bound files again before reporting a
+pass. The original vectors, input recipes, unit source and frozen expectations
+remain under `selfhost/tests/digest50/` and `selfhost/tests/digest50_test.yv`.
+
+```sh
+python3 tools/ci/selfhost_digest.py \
+  --bootstrap-output compiler/target/ci/selfhost \
+  --output compiler/target/ci/selfhost-digest
+```
+
+Both paths above are defaults. The output root contains `receipt.json` with
+schema `yavo-selfhost-digest/1`; each `attempt-*` retains the underlying complete
+vector receipt, commands, logs, copied inputs, generated C and executables for
+artifact packaging. A stale or incomplete producer fails before vector
+compilation. Vector counts are functional acceptance, not compile-latency or
+delivery-cost measurements.

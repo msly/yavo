@@ -2,7 +2,7 @@ use std/os
 use support
 use lexer
 
-// Built by stage0 and the selfhost compiler from the same three source files.
+// Built by stage0 and the selfhost compiler from the same source modules.
 
 fn good(source: str) -> Vec[Token] {
     let tokens = lexer.lex(source, "test.yv") catch diagnostic {
@@ -24,6 +24,99 @@ fn bad(source: str, code: str, offset: int, line: int, column: int) {
         return
     }
     eprintln("expected lexing to fail")
+    os.exit(1)
+}
+
+// Expected half-open ranges are authored from original input bytes, including
+// invalid candidates that never become normal tokens.
+fn badRange(source: str, code: str, start: int, end: int, line: int, column: int) {
+    let _tokens = lexer.lex(source, "range.yv") catch diagnostic {
+        assert(diagnostic.code == code)
+        assert(diagnostic.offset == start && diagnostic.endOffset == end)
+        assert(diagnostic.line == line && diagnostic.column == column)
+        return
+    }
+    eprintln("expected ranged lexical failure")
+    os.exit(1)
+}
+
+fn lexerRangeChecks() {
+    badRange("@", "E0020", 0, 1, 1, 1)
+    badRange("汉", "E0020", 0, 3, 1, 1)
+    badRange("🙂", "E0020", 0, 4, 1, 1)
+    badRange("\r\n  🙂", "E0020", 4, 8, 2, 3)
+    badRange("/* comment */", "E0020", 0, 2, 1, 1)
+    badRange("0xff+2", "U0001", 0, 4, 1, 1)
+    badRange("0xFE+2", "U0001", 0, 4, 1, 1)
+    badRange("0xFE-2", "U0001", 0, 4, 1, 1)
+    badRange("0b10", "U0001", 0, 4, 1, 1)
+    badRange("0o10", "U0001", 0, 4, 1, 1)
+    badRange("1_000", "U0001", 0, 5, 1, 1)
+    badRange("1e-2+3", "U0001", 0, 4, 1, 1)
+    badRange("1.2e+3", "U0001", 0, 6, 1, 1)
+    badRange("1_0e+2", "U0001", 0, 6, 1, 1)
+    badRange("12abcE+3", "E0020", 0, 6, 1, 1)
+    badRange("12name.", "E0020", 0, 6, 1, 1)
+    badRange("1e+", "E0020", 0, 2, 1, 1)
+    badRange("340282366920938463463374607431768211456", "E0003", 0, 39, 1, 1)
+    badRange("\"\\q\"", "E0020", 1, 3, 1, 2)
+    badRange("\"\\u1234\"", "E0020", 1, 4, 1, 2)
+    badRange("\"\\u{}\"", "E0020", 1, 5, 1, 2)
+    badRange("\"\\u{D800}\"", "E0020", 1, 9, 1, 2)
+    badRange("\"\\u{1234567}\"", "E0020", 1, 11, 1, 2)
+    badRange("\"\\u{汉}\"", "E0020", 1, 7, 1, 2)
+    badRange("\"\\u{", "E0020", 1, 4, 1, 2)
+    badRange("\"oops\n", "E0020", 0, 5, 1, 1)
+    badRange("\"\${value\nrest", "E0020", 1, 8, 1, 2)
+    badRange("'ab'", "E0020", 0, 2, 1, 1)
+    badRange("'\n'", "E0020", 0, 3, 1, 1)
+    badRange("'🙂'", "E0020", 0, 6, 1, 1)
+    badRange("\"汉\${@}\" @", "E0020", 6, 7, 1, 5)
+    let range = good("1..3")
+    assert(range[0].text == "1" && range[0].end == 1)
+    assert(range[1].text == ".." && range[1].start == 1 && range[1].end == 3)
+    assert(range[2].text == "3" && range[2].start == 3)
+}
+
+fn lexerSnapshotChecks() {
+    let plain = good("a\r\n")
+    let plainEnd = plain.len() - 1
+    assert(!plain[plainEnd].jsonMode)
+    assert(plain[plainEnd].sourceSnapshot == "" && plain[plainEnd].sourceSha256 == "")
+    assert(lexer.sourceIdentities(plain).len() == 0)
+
+    var tokens: Vec[Token] = []
+    var source = "a\r\n".toString()
+    let first = lexer.lexIntoMode(source, "first 路径.yv", &tokens, true) catch _ {
+        eprintln("expected first snapshot lexing to succeed")
+        os.exit(1)
+    }
+    source = "replacement".toString()
+    assert(tokens[first].jsonMode && tokens[first].sourceSnapshot == "a\r\n")
+    assert(tokens[first].sourceSha256 == "8e4621379786ef42a4fec155cd525c291dd7db3c1fde3478522f4f61c03fd1bd")
+    let second = lexer.lexIntoMode("\"汉🙂\"", "second.yv", &tokens, true) catch _ {
+        eprintln("expected second snapshot lexing to succeed")
+        os.exit(1)
+    }
+    assert(tokens[second].sourceSnapshot == "\"汉🙂\"")
+    assert(tokens[second].sourceSha256 == "b4a7b637639613150b9b550f65fa4ca6b600aefae65512f63dc24a0828d2d923")
+    assert(!tokens[0].jsonMode && tokens[0].sourceSnapshot == "" && tokens[0].sourceSha256 == "")
+    let sources = lexer.sourceIdentities(tokens)
+    assert(sources.len() == 2)
+    assert(sources[0].path == "first 路径.yv" && sources[0].bytes == 3)
+    assert(sources[1].path == "second.yv" && sources[1].bytes == 9)
+    assert(sources[0].sha256 == tokens[first].sourceSha256)
+    assert(sources[1].sha256 == tokens[second].sourceSha256)
+
+    let _failed = lexer.lexIntoMode("x @", "partial.yv", &tokens, true) catch diagnostic {
+        assert(diagnostic.offset == 2 && diagnostic.endOffset == 3)
+        // The caller owns the current failed source; successful Eof snapshots
+        // remain complete and ordered when the partial token suffix is present.
+        assert(tokens.len() == second + 2 && tokens[second + 1].text == "x")
+        assert(lexer.sourceIdentities(tokens).len() == 2)
+        return
+    }
+    eprintln("expected partial snapshot lexing to fail")
     os.exit(1)
 }
 
@@ -132,6 +225,7 @@ fn lexerInterpolationChecks() {
     let marker = lexerTokenIndex(deferred, .InterpolationStart, 0)
     assert(fault >= 0 && deferred[fault].text == "E0020")
     assert(deferred[fault].start == 6 && deferred[fault].line == 1 && deferred[fault].column == 5)
+    assert(deferred[fault].end == 7)
     assert(deferred[fault].message == "unexpected character")
     assert(marker >= 0 && fault == marker + 1)
     // A later outer error must not replace that earlier inner lexical fault.
@@ -289,6 +383,8 @@ fn main() {
     assert(interpolationTokens.len() == 7 && interpolationTokens[0].kind == .StringStart)
     assert(interpolationTokens[1].kind == .InterpolationStart && interpolationTokens[2].text == "x")
     lexerInterpolationChecks()
+    lexerRangeChecks()
+    lexerSnapshotChecks()
 
     let forwarded = throughTemporary("\"owned success 汉🙂\"", "success 路径.yv") catch _ {
         eprintln("expected propagated success")
@@ -301,6 +397,7 @@ fn main() {
         assert(diagnostic.code == "E0020")
         assert(diagnostic.message == "unknown string escape sequence")
         assert(diagnostic.offset == 761)
+        assert(diagnostic.endOffset == 763)
         assert(diagnostic.line == 34 && diagnostic.column == 19)
     }
 
@@ -309,6 +406,7 @@ fn main() {
         assert(problem.code == "E0020")
         assert(problem.message == "unknown string escape sequence")
         assert(problem.offset == 19 && problem.line == 1 && problem.column == 18)
+        assert(problem.endOffset == 21)
     }
 
     println("lexer tests passed")

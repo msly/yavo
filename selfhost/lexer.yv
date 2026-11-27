@@ -33,6 +33,11 @@ pub struct Token {
     column: int
     message: String = ""
     lineBase: int = 0
+    // Only a file's Eof owns its JSON diagnostic context. Text mode retains
+    // neither a source copy nor a hash; ordinary tokens keep these defaults.
+    jsonMode: bool = false
+    sourceSnapshot: String = ""
+    sourceSha256: String = ""
 }
 
 // A lexical failure is recorded once; callers stop at the first one.
@@ -45,6 +50,7 @@ struct Cursor {
     code: String = ""
     message: String = ""
     failOffset: int = 0
+    failEnd: int = 0
     failLine: int = 0
     failColumn: int = 0
 }
@@ -59,22 +65,50 @@ struct InterpolationRange {
     closeColumn: int = 0
 }
 
+// Enumerate the successfully lexed JSON-mode files, in load order. A lexical
+// failure can leave partial tokens after the last Eof; those are not a file.
+pub fn sourceIdentities(ts: Vec[Token]) -> Vec[SourceIdentity] {
+    var sources: Vec[SourceIdentity] = []
+    var i = 0
+    while i < ts.len() {
+        if ts[i].kind == .Eof && ts[i].jsonMode {
+            sources.push(SourceIdentity{path: ts[i].text.clone(),
+                bytes: ts[i].sourceSnapshot.len(), sha256: ts[i].sourceSha256.clone()})
+        }
+        i += 1
+    }
+    return sources
+}
+
 // Fatal diagnostic at a token; the path is the text of that file's Eof token.
 pub fn fail(ts: Vec[Token], token: int, code: str, message: str) {
     // The token's own file ends at the next Eof token, which holds its path.
     var eof = token
     while ts[eof].kind != .Eof { eof += 1 }
+    if ts[eof].jsonMode {
+        let sources = sourceIdentities(ts)
+        support.reportJson(sources, ts[eof].sourceSnapshot, ts[eof].text,
+            ts[token].start, ts[token].end, code, message)
+        return
+    }
     support.report(ts[eof].text, ts[token].line, ts[token].column, code, message)
 }
 
-fn stop(cursor: inout Cursor, code: str, message: str, offset: int, line: int, column: int) {
+// The end is evaluated before borrowing the cursor mutably. Range computation
+// never consumes input or changes the established first-error selection.
+fn stopWithEnd(endOffset: int, cursor: inout Cursor, code: str, message: str, offset: int, line: int, column: int) {
     if cursor.failed { return }
     cursor.failed = true
     cursor.code = code.toString()
     cursor.message = message.toString()
     cursor.failOffset = offset
+    cursor.failEnd = endOffset
     cursor.failLine = line
     cursor.failColumn = column
+}
+
+fn stop(cursor: inout Cursor, code: str, message: str, offset: int, line: int, column: int) {
+    stopWithEnd(cursor.pos, &cursor, code, message, offset, line, column)
 }
 
 fn wordStart(c: byte) -> bool {
@@ -83,6 +117,45 @@ fn wordStart(c: byte) -> bool {
 
 fn digit(c: byte) -> bool {
     return c >= '0' && c <= '9'
+}
+
+// Is source[start..end] a decimal mantissa followed by its first exponent
+// marker? This prevents a suffix or hexadecimal E from absorbing a later sign.
+fn decimalExponentPrefix(source: str, start: int, end: int) -> bool {
+    var pos = start
+    while pos < end && (digit(source[pos]) || source[pos] == '_') { pos += 1 }
+    if pos == start { return false }
+    if pos < end && source[pos] == '.' {
+        pos += 1
+        let fraction = pos
+        while pos < end && (digit(source[pos]) || source[pos] == '_') { pos += 1 }
+        if pos == fraction { return false }
+    }
+    return pos + 1 == end && (source[pos] == 'e' || source[pos] == 'E')
+}
+
+// Frozen lexical-candidate range, independent of how far recognition consumed.
+fn numericEnd(source: str, start: int) -> int {
+    var pos = start
+    while pos < source.len() {
+        let c = source[pos]
+        if wordStart(c) || digit(c) {
+            pos += 1
+        } else if c == '.' && pos + 1 < source.len() && digit(source[pos + 1]) {
+            pos += 1
+        } else if (c == '+' || c == '-') && pos + 1 < source.len() &&
+            digit(source[pos + 1]) && decimalExponentPrefix(source, start, pos) {
+            pos += 1
+        } else {
+            break
+        }
+    }
+    return pos
+}
+
+fn detectedScalarEnd(source: str, pos: int) -> int {
+    if pos == source.len() { return pos }
+    return pos + scalarWidth(source[pos])
 }
 
 fn exponentAhead(source: str, pos: int) -> bool {
@@ -158,7 +231,8 @@ fn scalarText(value: int) -> String {
 
 fn unicodeEscape(cursor: inout Cursor, source: str, start: int, line: int, column: int) -> String {
     if cursor.pos >= source.len() || source[cursor.pos] != '{' {
-        stop(&cursor, "E0020", "invalid unicode escape; expected \\u{XXXX}", start, line, column)
+        stopWithEnd(detectedScalarEnd(source, cursor.pos), &cursor,
+            "E0020", "invalid unicode escape; expected \\u{XXXX}", start, line, column)
         return String{}
     }
     bump(&cursor, source)
@@ -167,7 +241,8 @@ fn unicodeEscape(cursor: inout Cursor, source: str, start: int, line: int, colum
     while cursor.pos < source.len() && source[cursor.pos] != '}' {
         let d = hexDigit(source[cursor.pos])
         if d < 0 || digits == 6 {
-            stop(&cursor, "E0020", "invalid unicode escape; expected \\u{XXXX}", start, line, column)
+            stopWithEnd(detectedScalarEnd(source, cursor.pos), &cursor,
+                "E0020", "invalid unicode escape; expected \\u{XXXX}", start, line, column)
             return String{}
         }
         value = value * 16 + d
@@ -175,7 +250,8 @@ fn unicodeEscape(cursor: inout Cursor, source: str, start: int, line: int, colum
         bump(&cursor, source)
     }
     if digits == 0 || cursor.pos >= source.len() || value > 1114111 || (value >= 55296 && value <= 57343) {
-        stop(&cursor, "E0020", "invalid unicode escape; expected a Unicode scalar", start, line, column)
+        stopWithEnd(detectedScalarEnd(source, cursor.pos), &cursor,
+            "E0020", "invalid unicode escape; expected a Unicode scalar", start, line, column)
         return String{}
     }
     bump(&cursor, source)
@@ -226,7 +302,7 @@ fn stringInterpolationRange(cursor: inout Cursor, source: str, start: int, line:
 
 fn stringErrorToken(cursor: Cursor) -> Token {
     return Token{lineBase: cursor.lineBase, kind: .DeferredError, text: cursor.code.clone(),
-        message: cursor.message.clone(), start: cursor.failOffset, end: cursor.pos,
+        message: cursor.message.clone(), start: cursor.failOffset, end: cursor.failEnd,
         line: cursor.failLine, column: cursor.failColumn}
 }
 
@@ -235,7 +311,7 @@ fn stringTokens(cursor: inout Cursor, source: str, tokens: inout Vec[Token], dep
     let line = cursor.line
     let column = cursor.column
     if depth >= 128 {
-        stop(&cursor, "U0001", "selfhost interpolation nesting limit (128) exceeded", start, line, column)
+        stopWithEnd(start + 1, &cursor, "U0001", "selfhost interpolation nesting limit (128) exceeded", start, line, column)
         return
     }
     bump(&cursor, source)
@@ -420,7 +496,7 @@ fn withoutLast(values: Vec[byte]) -> Vec[byte] {
 
 fn lexFailure(cursor: Cursor) -> Diagnostic {
     return Diagnostic{code: cursor.code.clone(),
-        message: cursor.message.clone(), offset: cursor.failOffset,
+        message: cursor.message.clone(), offset: cursor.failOffset, endOffset: cursor.failEnd,
         line: cursor.failLine, column: cursor.failColumn}
 }
 
@@ -455,7 +531,7 @@ fn lexTokenRange(cursor: inout Cursor, source: str, tokens: inout Vec[Token], fi
             continue
         }
         if c == '/' && start + 1 < source.len() && source[start + 1] == '*' {
-            stop(&cursor, "E0020", "block comments are not part of Yavo; use // on each line", start, line, column)
+            stopWithEnd(start + 2, &cursor, "E0020", "block comments are not part of Yavo; use // on each line", start, line, column)
             return
         }
         var kind: TokenKind = .Symbol
@@ -470,7 +546,7 @@ fn lexTokenRange(cursor: inout Cursor, source: str, tokens: inout Vec[Token], fi
         } else if digit(c) {
             if c == '0' && start + 1 < source.len() &&
                 (source[start + 1] == 'x' || source[start + 1] == 'b' || source[start + 1] == 'o') {
-                stop(&cursor, "U0001", "non-decimal integers are not in the bootstrap subset", start, line, column)
+                stopWithEnd(numericEnd(source, start), &cursor, "U0001", "non-decimal integers are not in the bootstrap subset", start, line, column)
                 return
             }
             bump(&cursor, source)
@@ -480,26 +556,26 @@ fn lexTokenRange(cursor: inout Cursor, source: str, tokens: inout Vec[Token], fi
             if cursor.pos < source.len() {
                 let next = source[cursor.pos]
                 if next == '_' {
-                    stop(&cursor, "U0001", "integer separators are not in the bootstrap subset", start, line, column)
+                    stopWithEnd(numericEnd(source, start), &cursor, "U0001", "integer separators are not in the bootstrap subset", start, line, column)
                     return
                 }
                 if (next == 'e' || next == 'E') && exponentAhead(source, cursor.pos) {
-                    stop(&cursor, "U0001", "floating-point numbers are not in the bootstrap subset", start, line, column)
+                    stopWithEnd(numericEnd(source, start), &cursor, "U0001", "floating-point numbers are not in the bootstrap subset", start, line, column)
                     return
                 }
                 if next == '.' && cursor.pos + 1 < source.len() && digit(source[cursor.pos + 1]) {
-                    stop(&cursor, "U0001", "floating-point numbers are not in the bootstrap subset", start, line, column)
+                    stopWithEnd(numericEnd(source, start), &cursor, "U0001", "floating-point numbers are not in the bootstrap subset", start, line, column)
                     return
                 }
                 if wordStart(next) {
-                    stop(&cursor, "E0020", "invalid integer literal", start, line, column)
+                    stopWithEnd(numericEnd(source, start), &cursor, "E0020", "invalid integer literal", start, line, column)
                     return
                 }
             }
             kind = .Number
             text = source[start..cursor.pos].toString()
             if !integerLiteralFits(text) {
-                stop(&cursor, "E0003", "integer literal is too large for any integer type", start, line, column)
+                stopWithEnd(numericEnd(source, start), &cursor, "E0003", "integer literal is too large for any integer type", start, line, column)
                 return
             }
         } else if c == '"' {
@@ -518,7 +594,7 @@ fn lexTokenRange(cursor: inout Cursor, source: str, tokens: inout Vec[Token], fi
             }
             text = source[start..cursor.pos].toString()
         } else {
-            stop(&cursor, "E0020", "unexpected character", start, line, column)
+            stopWithEnd(detectedScalarEnd(source, start), &cursor, "E0020", "unexpected character", start, line, column)
             return
         }
         endsStatement = kind == .Word || kind == .Number || kind == .Text || kind == .Byte ||
@@ -540,7 +616,8 @@ fn lexTokenRange(cursor: inout Cursor, source: str, tokens: inout Vec[Token], fi
 
 // Appends one file's tokens, ending with an Eof token whose text is the path.
 // Several files share one token vector; each file's tokens end at its own Eof.
-pub fn lexInto(source: str, path: str, tokens: inout Vec[Token]) -> int ! Diagnostic {
+// JSON mode keeps the exact loaded bytes and their identity on that Eof only.
+pub fn lexIntoMode(source: str, path: str, tokens: inout Vec[Token], jsonMode: bool) -> int ! Diagnostic {
     let firstToken = tokens.len()
     var cursor = Cursor{}
     if firstToken > 0 {
@@ -564,12 +641,27 @@ pub fn lexInto(source: str, path: str, tokens: inout Vec[Token]) -> int ! Diagno
         if first >= 0 {
             return err(Diagnostic{code: tokens[first].text.clone(),
                 message: tokens[first].message.clone(), offset: tokens[first].start,
+                endOffset: tokens[first].end,
                 line: tokens[first].line, column: tokens[first].column})
         }
         return err(lexFailure(cursor))
     }
-    tokens.push(Token{lineBase: cursor.lineBase, kind: .Eof, text: path.toString(), start: cursor.pos, end: cursor.pos, line: cursor.line, column: cursor.column})
+    var snapshot = String{}
+    var sourceHash = String{}
+    if jsonMode {
+        snapshot = source.toString()
+        let identity = support.identify(path, source)
+        sourceHash = identity.sha256.clone()
+    }
+    tokens.push(Token{lineBase: cursor.lineBase, kind: .Eof, text: path.toString(),
+        start: cursor.pos, end: cursor.pos, line: cursor.line, column: cursor.column,
+        jsonMode: jsonMode, sourceSnapshot: snapshot, sourceSha256: sourceHash})
     return ok(tokens.len() - 1)
+}
+
+pub fn lexInto(source: str, path: str, tokens: inout Vec[Token]) -> int ! Diagnostic {
+    let eof = try lexIntoMode(source, path, &tokens, false)
+    return ok(eof)
 }
 
 pub fn lex(source: str, path: str) -> Vec[Token] ! Diagnostic {

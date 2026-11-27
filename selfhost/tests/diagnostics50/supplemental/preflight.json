@@ -1,0 +1,129 @@
+{
+  "schema": "yavo-diagnostics50-legacy-cli-preflight/1",
+  "baseline": "db3b4716fe9bea730e544f09b19325c37508a721",
+  "formal": false,
+  "status": "baseline_passed",
+  "compiler": {
+    "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch49-platform-fixed/run-o8iu2m_o/stages/stage2/yavo-selfhost",
+    "sha256": "163025a368ebe8f038eafe01b8a9e0a012327c595a68b07af7b0eefa6068aee0"
+  },
+  "cases": [
+    {
+      "id": "check_double_dash_filename",
+      "arguments": [
+        "check",
+        "--source.yv"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "id": "check_single_dash_filename",
+      "arguments": [
+        "check",
+        "-legacy.yv"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "id": "emit_output_named_json",
+      "arguments": [
+        "emit-c",
+        "main.yv",
+        "-o",
+        "--json"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": "",
+      "output": {
+        "bytes": 2018,
+        "sha256": "d84bc08bf2216cfd2134b6c6807222733d03dc7aa729e9d18909e65d12c78f3c"
+      },
+      "passed": true
+    },
+    {
+      "id": "emit_extra_json_before",
+      "arguments": [
+        "emit-c",
+        "--json",
+        "main.yv",
+        "-o",
+        "out.c"
+      ],
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: yavo-selfhost check <input.yv>\n       yavo-selfhost emit-c <input.yv> -o <output.c>\n       yavo-selfhost build <input.yv> [-o <output>] [--release]\n       yavo-selfhost run <input.yv> [--release] [-- <arguments>...]\n",
+      "passed": true
+    },
+    {
+      "id": "emit_extra_json_after",
+      "arguments": [
+        "emit-c",
+        "main.yv",
+        "-o",
+        "out.c",
+        "--json"
+      ],
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: yavo-selfhost check <input.yv>\n       yavo-selfhost emit-c <input.yv> -o <output.c>\n       yavo-selfhost build <input.yv> [-o <output>] [--release]\n       yavo-selfhost run <input.yv> [--release] [-- <arguments>...]\n",
+      "passed": true
+    },
+    {
+      "id": "emit_output_named_json_diagnostics",
+      "arguments": [
+        "emit-c",
+        "main.yv",
+        "-o",
+        "--json-diagnostics"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": "",
+      "output": {
+        "bytes": 2018,
+        "sha256": "d84bc08bf2216cfd2134b6c6807222733d03dc7aa729e9d18909e65d12c78f3c"
+      },
+      "passed": true
+    },
+    {
+      "id": "emit_extra_json_diagnostics_before",
+      "arguments": [
+        "emit-c",
+        "--json-diagnostics",
+        "main.yv",
+        "-o",
+        "out.c"
+      ],
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: yavo-selfhost check <input.yv>\n       yavo-selfhost emit-c <input.yv> -o <output.c>\n       yavo-selfhost build <input.yv> [-o <output>] [--release]\n       yavo-selfhost run <input.yv> [--release] [-- <arguments>...]\n",
+      "passed": true
+    },
+    {
+      "id": "emit_extra_json_diagnostics_after",
+      "arguments": [
+        "emit-c",
+        "main.yv",
+        "-o",
+        "out.c",
+        "--json-diagnostics"
+      ],
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: yavo-selfhost check <input.yv>\n       yavo-selfhost emit-c <input.yv> -o <output.c>\n       yavo-selfhost build <input.yv> [-o <output>] [--release]\n       yavo-selfhost run <input.yv> [--release] [-- <arguments>...]\n",
+      "passed": true
+    }
+  ],
+  "observed_regression": {
+    "path": "compiler/target/batch50_contract/legacy-option-path-8a2kh8b6/receipt.json",
+    "sha256": "9363c62a3fe46cacc745e081387f6344f58980d6715a11d28764674abb6f0278",
+    "description": "Existing --source.yv is accepted by immutable batch-49 text check and rejected by the initial batch-50 candidate."
+  }
+}

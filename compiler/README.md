@@ -13,7 +13,23 @@ This Rust implementation is now **stage0** for the
 [Yavo-written compiler](../selfhost/README.md). The declared bootstrap subset
 compiles itself to a stage2/stage3 fixed point, originally confirmed on Linux,
 Windows and macOS. Rust remains the daily compiler; SH-3 default replacement
-still requires broader language coverage and structured diagnostics.
+still requires broader language coverage and the remaining tool entrypoints.
+
+### Batch 50: selfhost diagnostics and source identities
+
+The Yavo-written compiler adds first-error `check --json` / `--json-diagnostics`,
+precise UTF-8 ranges, captured source identities and a pure Yavo SHA256 module.
+This batch changes no Rust compiler, production runtime or toolchain-lock bytes;
+all 163 tracked sources in that baseline and the existing 1,063 selfhost fixtures
+remain identical. The formal selfhost gates pass 1,063/1,063 and 20/20;
+actual stage1/stage2 diagnostics pass 196 JSON + 160 text + 16 supplemental CLI,
+and frozen SHA256 vectors pass 276 executions. Ordinary build/run still passes
+114 scenarios and 9 checks. Coverage remains 119/394, or 56/224 unique entry bytes.
+
+Formal local gates pass. Exact-commit three-platform CI and the independent Linux ASan+UBSan diagnostic gate are pending; configuration is not counted as acceptance. Exact sources and the distinction between new CI results and the prior
+same-source local Rust suites are in the [batch 50 index](validation/batch50-json-diagnostics-2026-11-27.json).
+
+### Batch 49: native system interfaces
 
 Batch 49 adds seven public system functions: `os.env`, `os.host`, `fs.tempDir`,
 `fs.removeFile`, `fs.removeDir`, `fs.sameFile` and `process.run`. Their stage0
@@ -24,7 +40,7 @@ selfhost driver has no Yavo build cache; cross-target compilation and toolchain
 installation remain outside its current scope. The API contract is in
 [the standard-library specification](../docs/stdlib_contract.md).
 
-Current complete local Debug and Release suites each pass **151 tests, 0 failed,
+The batch49 complete local Debug and Release suites each pass **151 tests, 0 failed,
 1 ignored** (20 groups), including six new system integration tests. Frozen
 conformance remains **124 pass / 3 unsupported / 2 superseded**. Local acceptance
 and exact-commit CI status are recorded separately in the

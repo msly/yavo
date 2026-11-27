@@ -18,8 +18,9 @@ SH-4 application acceptance and the completed SH-2 fixed point.
 and [dep-index](examples/dep-index/README.md) cover log statistics, structured
 text validation and dependencies across files. **All three formal SH-4 applications are complete within their declared scope.**
 Batch 49 adds public system interfaces and a standalone native `build/run` driver
-using the locked toolchain. Structured diagnostics and broader language semantics
-remain on the SH-3 path; performance and delivery-cost targets retain separate acceptance.
+using the locked toolchain. Batch 50 adds first-error `check --json` with exact
+UTF-8 source ranges and immutable source SHA256 identities. Broader semantics and
+remaining tools still block SH-3; performance and delivery cost retain separate acceptance.
 
 The specification starts from **v0.5**, with dated revisions in [docs/decisions.md](docs/decisions.md). Historical revisions remain unchanged under `history/v0.x/` and Git tags `v0.1` through `v0.5`.
 
@@ -53,7 +54,29 @@ The ignored Cargo test is the old exploratory P0 conformance report; the current
 
 Source modules support top-level exports, per-file imports, cyclic imports and original-file diagnostics. Package dependencies and a program lockfile remain open. Multi-file `fix` returns `U0001` without writing; symlink module aliases are unsupported.
 
-### Native selfhost build/run and public system APIs (batch 49, 2026-11-27)
+### Selfhost structured diagnostics and source snapshots (batch 50, 2026-11-27)
+
+`check INPUT --json` and `check --json INPUT` (also `--json-diagnostics`)
+produce one `yavo-diagnostics/p0` object with explicit selfhost/first-error mode,
+raw UTF-8 byte ranges, Unicode scalar coordinates and SHA256 identities for
+the successfully loaded source prefix. A pure Yavo SHA256 implementation and
+source snapshots keep diagnostics tied to the bytes compiled, including after
+a controlled on-disk edit. Text output and positional legacy filenames remain compatible.
+
+Full local bootstrap passes **1,063/1,063, 20/20, zero skips**; stage2/stage3 C
+(1,684,975 bytes) and Linux binaries (682,864 bytes) match exactly.
+Actual stage1/stage2 pass **196 JSON + 160 text + 16 supplemental CLI** executions;
+the independent SHA256 gate passes **276 vector executions** across three
+frontends and two modes. The unchanged ordinary-driver gate passes **114/114,
+9/9**, including an ordinary compiler rebuild and independent multi-file run.
+The original 1,063-case manifest, Rust and production runtime are unchanged.
+Corpus acceptance remains **119/394**, or **56/224** distinct entry-source bytes,
+with zero regressions, subset violations or timeouts.
+
+Formal local gates pass. Exact-commit three-platform CI and the independent Linux ASan+UBSan diagnostic gate are pending; configuration is not counted as acceptance. See the [validation index](compiler/validation/batch50-json-diagnostics-2026-11-27.json) and
+[frozen diagnostic contract](selfhost/tests/diagnostics50/CONTRACT.md).
+
+### Native selfhost build/run and public system APIs (batch 49, historical)
 
 The Yavo-written compiler now directly builds and runs supported native programs
 with the installed locked Zig, without shell commands or a Rust frontend fallback.
@@ -507,11 +530,11 @@ and [module/thread audit](experiments/coldstart-2026-11-22-r5/evidence/manual-re
 
 ## Next work and acceptance gates
 
-1. SH-4 has two accepted applications. Deliver the third independent multi-file dependency/index CLI: freeze its format, cross-file relationships and missing/conflicting/cyclic input behavior, implement it with stage0, then address the selfhost blockers without rewriting the application. See [HANDOFF.md](HANDOFF.md).
-2. Preserve the completed [SH-2 fixed point](docs/self-hosting.md), ownership and collection behavior, real lexer allocation checks and stage2 ASan/UBSan gate. Retain all six application regression gates, actual resource checks and zero subset violations.
-3. Complete SH-3 before making it the default compiler: ordinary build/run with the locked backend, structured source diagnostics, semantic coverage and subsequent cache/fix/verify migration. Keep frozen conformance, resource checks and native platform acceptance as replacement gates.
-4. Resume the qualified [per-request executor](tools/agent_eval/README.md), [prepared document experiment](experiments/docs-ab-2026-11-22-r6/README.md), 60-task pilot and formal cost study as later product evidence. Live API qualification is still **blocked**, with **0 round-six participant sessions**; it no longer blocks compiler development.
-5. Remaining v1 functionality includes user test blocks and `yavo test`, local/Git dependencies and a lockfile, FFI/unsafe/audit, general closures/higher-order parameters, public movable Join and `spawn inout`. Prioritize these only when required by the declared application scope or a concrete bootstrap blocker.
+1. SH-4's three independent CLI applications are accepted. Preserve all seven bootstrap application gates, native delivery evidence and Linux sanitizer checks.
+2. Preserve the completed SH-2 fixed point, ownership/collection behavior, real lexer allocation checks, source-snapshot diagnostics and stage2 ASan/UBSan gate.
+3. Continue SH-3 with standard-library error values and `catch e`, then broader container/ownership semantics; use unchanged original programs to expose subsequent blockers. Native build/run and first-error check JSON are available. Cross targets, cache/PCH, installation, richer diagnostics and fix/verify still require migration before default replacement.
+4. Resume the qualified [per-request executor](tools/agent_eval/README.md), [prepared document experiment](experiments/docs-ab-2026-11-22-r6/README.md), 60-task pilot and formal cost study as later product evidence. Live API qualification remains blocked, with 0 round-six participant sessions; it does not block compiler development.
+5. Remaining v1 functionality includes user test blocks and `yavo test`, local/Git dependencies and a lockfile, FFI/unsafe/audit, general closures/higher-order parameters, public movable Join and `spawn inout`. Prioritize these when required by the application scope or a concrete bootstrap blocker.
 
 The [frozen goals](docs/plan.md) require success-rate noninferiority to Rust (paired one-sided 95% lower bound at least −5 percentage points), at least **20% lower cost per successful delivery** with independent replication, and runtime geometric mean at most **1.5× C** on a frozen representative benchmark set. Engineering targets include small-program build P50 **≤200 ms**, stripped Linux binaries **≤250 KB**, native Windows tests and reproducible output hashes. Neither frozen-fixture coverage nor the small C pilot closes full v1 acceptance.
 

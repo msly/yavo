@@ -1,0 +1,6939 @@
+{
+  "schema": "yavo-selfhost-diagnostics-cases/1",
+  "baseline": "db3b4716fe9bea730e544f09b19325c37508a721",
+  "cases": [
+    {
+      "id": "success_minimal",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/success_minimal/main.yv",
+          "sha256": "536e506bb90914c243a12b397b9a998f85ae2cbd9ba02dfd03a9e155ca5ca0f4",
+          "bytes": 13
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "legacy_text": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "expected": {
+        "exit": 0,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "536e506bb90914c243a12b397b9a998f85ae2cbd9ba02dfd03a9e155ca5ca0f4",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 13,
+              "sha256": "536e506bb90914c243a12b397b9a998f85ae2cbd9ba02dfd03a9e155ca5ca0f4"
+            }
+          ],
+          "error_count": 0,
+          "warning_count": 0,
+          "diagnostics": []
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "success_unicode",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/success_unicode/main.yv",
+          "sha256": "82f0e26e324432ba98dd9d22176d8f3b7eb99c99c69e5bfcf4f47b09506cc6cc",
+          "bytes": 41
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "legacy_text": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "expected": {
+        "exit": 0,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "82f0e26e324432ba98dd9d22176d8f3b7eb99c99c69e5bfcf4f47b09506cc6cc",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 41,
+              "sha256": "82f0e26e324432ba98dd9d22176d8f3b7eb99c99c69e5bfcf4f47b09506cc6cc"
+            }
+          ],
+          "error_count": 0,
+          "warning_count": 0,
+          "diagnostics": []
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "success_crlf",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/success_crlf/main.yv",
+          "sha256": "20f323894b337c699049c2bad05bc6927efcd39481cdb5d29fb9399bacc4a9a5",
+          "bytes": 39
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "legacy_text": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "expected": {
+        "exit": 0,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "20f323894b337c699049c2bad05bc6927efcd39481cdb5d29fb9399bacc4a9a5",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 39,
+              "sha256": "20f323894b337c699049c2bad05bc6927efcd39481cdb5d29fb9399bacc4a9a5"
+            }
+          ],
+          "error_count": 0,
+          "warning_count": 0,
+          "diagnostics": []
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "success_no_final_lf",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/success_no_final_lf/main.yv",
+          "sha256": "ef32637cb9c3ec2e3968c9cbdf26a5e9c172be94f88af533e14bd43f892d5297",
+          "bytes": 12
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "legacy_text": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "expected": {
+        "exit": 0,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "ef32637cb9c3ec2e3968c9cbdf26a5e9c172be94f88af533e14bd43f892d5297",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 12,
+              "sha256": "ef32637cb9c3ec2e3968c9cbdf26a5e9c172be94f88af533e14bd43f892d5297"
+            }
+          ],
+          "error_count": 0,
+          "warning_count": 0,
+          "diagnostics": []
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "empty_file_no_main",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/empty_file_no_main/main.yv",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 0,
+        "end": 0,
+        "anchor": "",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:1:1: E0016: no fn main() entry point\n"
+      },
+      "diagnostic": {
+        "code": "E0016",
+        "message": "no fn main() entry point"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0016",
+              "message": "no fn main() entry point",
+              "file": "main.yv",
+              "line": 1,
+              "column": 1,
+              "end_line": 1,
+              "end_column": 1,
+              "primary": {
+                "file": "main.yv",
+                "start": 0,
+                "end": 0,
+                "line": 1,
+                "column": 1,
+                "end_line": 1,
+                "end_column": 1
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "success_alias_before",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "--json-diagnostics",
+        "@input"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/success_alias_before/main.yv",
+          "sha256": "536e506bb90914c243a12b397b9a998f85ae2cbd9ba02dfd03a9e155ca5ca0f4",
+          "bytes": 13
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "legacy_text": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "expected": {
+        "exit": 0,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "536e506bb90914c243a12b397b9a998f85ae2cbd9ba02dfd03a9e155ca5ca0f4",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 13,
+              "sha256": "536e506bb90914c243a12b397b9a998f85ae2cbd9ba02dfd03a9e155ca5ca0f4"
+            }
+          ],
+          "error_count": 0,
+          "warning_count": 0,
+          "diagnostics": []
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "success_alias_after",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json-diagnostics"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/success_alias_after/main.yv",
+          "sha256": "536e506bb90914c243a12b397b9a998f85ae2cbd9ba02dfd03a9e155ca5ca0f4",
+          "bytes": 13
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "legacy_text": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "expected": {
+        "exit": 0,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "536e506bb90914c243a12b397b9a998f85ae2cbd9ba02dfd03a9e155ca5ca0f4",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 13,
+              "sha256": "536e506bb90914c243a12b397b9a998f85ae2cbd9ba02dfd03a9e155ca5ca0f4"
+            }
+          ],
+          "error_count": 0,
+          "warning_count": 0,
+          "diagnostics": []
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "success_json_before",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "--json",
+        "@input"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/success_json_before/main.yv",
+          "sha256": "536e506bb90914c243a12b397b9a998f85ae2cbd9ba02dfd03a9e155ca5ca0f4",
+          "bytes": 13
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "legacy_text": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "expected": {
+        "exit": 0,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "536e506bb90914c243a12b397b9a998f85ae2cbd9ba02dfd03a9e155ca5ca0f4",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 13,
+              "sha256": "536e506bb90914c243a12b397b9a998f85ae2cbd9ba02dfd03a9e155ca5ca0f4"
+            }
+          ],
+          "error_count": 0,
+          "warning_count": 0,
+          "diagnostics": []
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "success_hash_boundary_55",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/success_hash_boundary_55/main.yv",
+          "sha256": "acc5eb83573e0cbb7b486bda0670da19156f3f5922b507205710a1cc73d951c0",
+          "bytes": 55
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "legacy_text": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "expected": {
+        "exit": 0,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "acc5eb83573e0cbb7b486bda0670da19156f3f5922b507205710a1cc73d951c0",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 55,
+              "sha256": "acc5eb83573e0cbb7b486bda0670da19156f3f5922b507205710a1cc73d951c0"
+            }
+          ],
+          "error_count": 0,
+          "warning_count": 0,
+          "diagnostics": []
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "success_hash_boundary_56",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/success_hash_boundary_56/main.yv",
+          "sha256": "7bcb6e19d88d412ec9c68221b59cf1e13cfbde5d65a70dafce3166ccdd11726d",
+          "bytes": 56
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "legacy_text": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "expected": {
+        "exit": 0,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "7bcb6e19d88d412ec9c68221b59cf1e13cfbde5d65a70dafce3166ccdd11726d",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 56,
+              "sha256": "7bcb6e19d88d412ec9c68221b59cf1e13cfbde5d65a70dafce3166ccdd11726d"
+            }
+          ],
+          "error_count": 0,
+          "warning_count": 0,
+          "diagnostics": []
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "success_hash_boundary_63",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/success_hash_boundary_63/main.yv",
+          "sha256": "e16dc3f96994bf612480150dcdc2cc961e243f34006cb7158be1f20955a7251d",
+          "bytes": 63
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "legacy_text": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "expected": {
+        "exit": 0,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "e16dc3f96994bf612480150dcdc2cc961e243f34006cb7158be1f20955a7251d",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 63,
+              "sha256": "e16dc3f96994bf612480150dcdc2cc961e243f34006cb7158be1f20955a7251d"
+            }
+          ],
+          "error_count": 0,
+          "warning_count": 0,
+          "diagnostics": []
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "success_hash_boundary_64",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/success_hash_boundary_64/main.yv",
+          "sha256": "e03475ee411dafdcd15208ea81ee3e7e5eb5b9236dba0990fbac68761b11e956",
+          "bytes": 64
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "legacy_text": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "expected": {
+        "exit": 0,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "e03475ee411dafdcd15208ea81ee3e7e5eb5b9236dba0990fbac68761b11e956",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 64,
+              "sha256": "e03475ee411dafdcd15208ea81ee3e7e5eb5b9236dba0990fbac68761b11e956"
+            }
+          ],
+          "error_count": 0,
+          "warning_count": 0,
+          "diagnostics": []
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "success_hash_boundary_65",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/success_hash_boundary_65/main.yv",
+          "sha256": "38c3e3e970ed4540fc010a94ee09d0dfc6ea69ef06fc5be90c498fe8c0fb8158",
+          "bytes": 65
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "legacy_text": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "expected": {
+        "exit": 0,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "38c3e3e970ed4540fc010a94ee09d0dfc6ea69ef06fc5be90c498fe8c0fb8158",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 65,
+              "sha256": "38c3e3e970ed4540fc010a94ee09d0dfc6ea69ef06fc5be90c498fe8c0fb8158"
+            }
+          ],
+          "error_count": 0,
+          "warning_count": 0,
+          "diagnostics": []
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "success_hash_boundary_127",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/success_hash_boundary_127/main.yv",
+          "sha256": "7470bbf3f5f16fd382b77eab61657d1517dba5e97df4b3720ab7a96da1f77619",
+          "bytes": 127
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "legacy_text": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "expected": {
+        "exit": 0,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "7470bbf3f5f16fd382b77eab61657d1517dba5e97df4b3720ab7a96da1f77619",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 127,
+              "sha256": "7470bbf3f5f16fd382b77eab61657d1517dba5e97df4b3720ab7a96da1f77619"
+            }
+          ],
+          "error_count": 0,
+          "warning_count": 0,
+          "diagnostics": []
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "success_hash_boundary_128",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/success_hash_boundary_128/main.yv",
+          "sha256": "74c68f70a1c9dd41c630dc92cc225822b5acbc738764520cdaad4ac1afc91560",
+          "bytes": 128
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "legacy_text": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "expected": {
+        "exit": 0,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "74c68f70a1c9dd41c630dc92cc225822b5acbc738764520cdaad4ac1afc91560",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 128,
+              "sha256": "74c68f70a1c9dd41c630dc92cc225822b5acbc738764520cdaad4ac1afc91560"
+            }
+          ],
+          "error_count": 0,
+          "warning_count": 0,
+          "diagnostics": []
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "success_hash_boundary_129",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/success_hash_boundary_129/main.yv",
+          "sha256": "ff651b6832e544fbabe162f1c0fa575d4765f8155bd2aee5720663a0768b4327",
+          "bytes": 129
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "legacy_text": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "expected": {
+        "exit": 0,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "ff651b6832e544fbabe162f1c0fa575d4765f8155bd2aee5720663a0768b4327",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 129,
+              "sha256": "ff651b6832e544fbabe162f1c0fa575d4765f8155bd2aee5720663a0768b4327"
+            }
+          ],
+          "error_count": 0,
+          "warning_count": 0,
+          "diagnostics": []
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "success_module",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/success_module/main.yv",
+          "sha256": "4d51321e2c63578e6f5b09b38cfdee97ffeadf781c28263547cdfe7597e4434b",
+          "bytes": 52
+        },
+        {
+          "path": "utility.yv",
+          "fixture": "fixtures/success_module/utility.yv",
+          "sha256": "7ac377a69893bef739b84b874c51352c8a12400163ef2e151c1a24def0c8ca06",
+          "bytes": 37
+        }
+      ],
+      "loaded": [
+        "main.yv",
+        "utility.yv"
+      ],
+      "legacy_text": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "expected": {
+        "exit": 0,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "4d51321e2c63578e6f5b09b38cfdee97ffeadf781c28263547cdfe7597e4434b",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 52,
+              "sha256": "4d51321e2c63578e6f5b09b38cfdee97ffeadf781c28263547cdfe7597e4434b"
+            },
+            {
+              "path": "utility.yv",
+              "bytes": 37,
+              "sha256": "7ac377a69893bef739b84b874c51352c8a12400163ef2e151c1a24def0c8ca06"
+            }
+          ],
+          "error_count": 0,
+          "warning_count": 0,
+          "diagnostics": []
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "success_bfs_diamond",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/success_bfs_diamond/main.yv",
+          "sha256": "22d2c78e206f410fb1503586f38d19a4b0c51f1b5982cd8ab2ad20d1476b950d",
+          "bytes": 73
+        },
+        {
+          "path": "left.yv",
+          "fixture": "fixtures/success_bfs_diamond/left.yv",
+          "sha256": "a0c0caeabd771ea428742ae1c662c7ca4867f89e92e2e172d190b6a872a92b5d",
+          "bytes": 61
+        },
+        {
+          "path": "right.yv",
+          "fixture": "fixtures/success_bfs_diamond/right.yv",
+          "sha256": "a0c0caeabd771ea428742ae1c662c7ca4867f89e92e2e172d190b6a872a92b5d",
+          "bytes": 61
+        },
+        {
+          "path": "shared.yv",
+          "fixture": "fixtures/success_bfs_diamond/shared.yv",
+          "sha256": "c98c6779437faa5234b09678c81d3fc3cafcb1c405d41e82c0ac0c2315bbbe27",
+          "bytes": 37
+        }
+      ],
+      "loaded": [
+        "main.yv",
+        "left.yv",
+        "right.yv",
+        "shared.yv"
+      ],
+      "legacy_text": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "expected": {
+        "exit": 0,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "22d2c78e206f410fb1503586f38d19a4b0c51f1b5982cd8ab2ad20d1476b950d",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 73,
+              "sha256": "22d2c78e206f410fb1503586f38d19a4b0c51f1b5982cd8ab2ad20d1476b950d"
+            },
+            {
+              "path": "left.yv",
+              "bytes": 61,
+              "sha256": "a0c0caeabd771ea428742ae1c662c7ca4867f89e92e2e172d190b6a872a92b5d"
+            },
+            {
+              "path": "right.yv",
+              "bytes": 61,
+              "sha256": "a0c0caeabd771ea428742ae1c662c7ca4867f89e92e2e172d190b6a872a92b5d"
+            },
+            {
+              "path": "shared.yv",
+              "bytes": 37,
+              "sha256": "c98c6779437faa5234b09678c81d3fc3cafcb1c405d41e82c0ac0c2315bbbe27"
+            }
+          ],
+          "error_count": 0,
+          "warning_count": 0,
+          "diagnostics": []
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "success_cycle",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/success_cycle/main.yv",
+          "sha256": "4df3c6638618a05d2f7ca2c2f51e8e1f03b9c9db508281e59aa72cbc1fae930d",
+          "bytes": 89
+        },
+        {
+          "path": "utility.yv",
+          "fixture": "fixtures/success_cycle/utility.yv",
+          "sha256": "a308721d5ccffee31c4813179f0e77f1b572549a02ed07d58d0a4b4ae082a43b",
+          "bytes": 57
+        }
+      ],
+      "loaded": [
+        "main.yv",
+        "utility.yv"
+      ],
+      "legacy_text": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "expected": {
+        "exit": 0,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "4df3c6638618a05d2f7ca2c2f51e8e1f03b9c9db508281e59aa72cbc1fae930d",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 89,
+              "sha256": "4df3c6638618a05d2f7ca2c2f51e8e1f03b9c9db508281e59aa72cbc1fae930d"
+            },
+            {
+              "path": "utility.yv",
+              "bytes": 57,
+              "sha256": "a308721d5ccffee31c4813179f0e77f1b572549a02ed07d58d0a4b4ae082a43b"
+            }
+          ],
+          "error_count": 0,
+          "warning_count": 0,
+          "diagnostics": []
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "success_relative_path",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "source space 源/main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "source space 源/main.yv",
+          "fixture": "fixtures/success_relative_path/source space 源/main.yv",
+          "sha256": "4d51321e2c63578e6f5b09b38cfdee97ffeadf781c28263547cdfe7597e4434b",
+          "bytes": 52
+        },
+        {
+          "path": "source space 源/utility.yv",
+          "fixture": "fixtures/success_relative_path/source space 源/utility.yv",
+          "sha256": "7ac377a69893bef739b84b874c51352c8a12400163ef2e151c1a24def0c8ca06",
+          "bytes": 37
+        }
+      ],
+      "loaded": [
+        "source space 源/main.yv",
+        "source space 源/utility.yv"
+      ],
+      "legacy_text": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "expected": {
+        "exit": 0,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "source space 源/main.yv",
+          "source_sha256": "4d51321e2c63578e6f5b09b38cfdee97ffeadf781c28263547cdfe7597e4434b",
+          "sources": [
+            {
+              "path": "source space 源/main.yv",
+              "bytes": 52,
+              "sha256": "4d51321e2c63578e6f5b09b38cfdee97ffeadf781c28263547cdfe7597e4434b"
+            },
+            {
+              "path": "source space 源/utility.yv",
+              "bytes": 37,
+              "sha256": "7ac377a69893bef739b84b874c51352c8a12400163ef2e151c1a24def0c8ca06"
+            }
+          ],
+          "error_count": 0,
+          "warning_count": 0,
+          "diagnostics": []
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "lexer_ascii",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/lexer_ascii/main.yv",
+          "sha256": "0beda9167d07325feb6f6b4a352aac3e032fd406c939715481430a83352b5386",
+          "bytes": 16
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 12,
+        "end": 13,
+        "anchor": "@",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:1:13: E0020: unexpected character\n"
+      },
+      "diagnostic": {
+        "code": "E0020",
+        "message": "unexpected character"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "0beda9167d07325feb6f6b4a352aac3e032fd406c939715481430a83352b5386",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 16,
+              "sha256": "0beda9167d07325feb6f6b4a352aac3e032fd406c939715481430a83352b5386"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0020",
+              "message": "unexpected character",
+              "file": "main.yv",
+              "line": 1,
+              "column": 13,
+              "end_line": 1,
+              "end_column": 14,
+              "primary": {
+                "file": "main.yv",
+                "start": 12,
+                "end": 13,
+                "line": 1,
+                "column": 13,
+                "end_line": 1,
+                "end_column": 14
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "lexer_unicode",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/lexer_unicode/main.yv",
+          "sha256": "fd23d17a63418a10d2777c0a5003192480a64c9b190c76d2c9002ce535cbc7e8",
+          "bytes": 39
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 30,
+        "end": 33,
+        "anchor": "☃",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:1:26: E0020: unexpected character\n"
+      },
+      "diagnostic": {
+        "code": "E0020",
+        "message": "unexpected character"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "fd23d17a63418a10d2777c0a5003192480a64c9b190c76d2c9002ce535cbc7e8",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 39,
+              "sha256": "fd23d17a63418a10d2777c0a5003192480a64c9b190c76d2c9002ce535cbc7e8"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0020",
+              "message": "unexpected character",
+              "file": "main.yv",
+              "line": 1,
+              "column": 26,
+              "end_line": 1,
+              "end_column": 27,
+              "primary": {
+                "file": "main.yv",
+                "start": 30,
+                "end": 33,
+                "line": 1,
+                "column": 26,
+                "end_line": 1,
+                "end_column": 27
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "lexer_four_byte",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/lexer_four_byte/main.yv",
+          "sha256": "5c196a25bae5702a8d92642e6de8bd0ecd66054ed5848e7d3412a1eac2d7a478",
+          "bytes": 19
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 12,
+        "end": 16,
+        "anchor": "😀",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:1:13: E0020: unexpected character\n"
+      },
+      "diagnostic": {
+        "code": "E0020",
+        "message": "unexpected character"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "5c196a25bae5702a8d92642e6de8bd0ecd66054ed5848e7d3412a1eac2d7a478",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 19,
+              "sha256": "5c196a25bae5702a8d92642e6de8bd0ecd66054ed5848e7d3412a1eac2d7a478"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0020",
+              "message": "unexpected character",
+              "file": "main.yv",
+              "line": 1,
+              "column": 13,
+              "end_line": 1,
+              "end_column": 14,
+              "primary": {
+                "file": "main.yv",
+                "start": 12,
+                "end": 16,
+                "line": 1,
+                "column": 13,
+                "end_line": 1,
+                "end_column": 14
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "lexer_nul",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/lexer_nul/main.yv",
+          "sha256": "e5ac487c040427e44e368c18c75066189566d342efcfebe2a10abcbdddc359e7",
+          "bytes": 16
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 12,
+        "end": 13,
+        "anchor": "\u0000",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:1:13: E0020: unexpected character\n"
+      },
+      "diagnostic": {
+        "code": "E0020",
+        "message": "unexpected character"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "e5ac487c040427e44e368c18c75066189566d342efcfebe2a10abcbdddc359e7",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 16,
+              "sha256": "e5ac487c040427e44e368c18c75066189566d342efcfebe2a10abcbdddc359e7"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0020",
+              "message": "unexpected character",
+              "file": "main.yv",
+              "line": 1,
+              "column": 13,
+              "end_line": 1,
+              "end_column": 14,
+              "primary": {
+                "file": "main.yv",
+                "start": 12,
+                "end": 13,
+                "line": 1,
+                "column": 13,
+                "end_line": 1,
+                "end_column": 14
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "lexer_block_comment",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/lexer_block_comment/main.yv",
+          "sha256": "061638905cecb6ca0a24b0a67146d1000a779f9539b455bbb26b317cbf1d49a1",
+          "bytes": 23
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 12,
+        "end": 14,
+        "anchor": "/*",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:1:13: E0020: block comments are not part of Yavo; use // on each line\n"
+      },
+      "diagnostic": {
+        "code": "E0020",
+        "message": "block comments are not part of Yavo; use // on each line"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "061638905cecb6ca0a24b0a67146d1000a779f9539b455bbb26b317cbf1d49a1",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 23,
+              "sha256": "061638905cecb6ca0a24b0a67146d1000a779f9539b455bbb26b317cbf1d49a1"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0020",
+              "message": "block comments are not part of Yavo; use // on each line",
+              "file": "main.yv",
+              "line": 1,
+              "column": 13,
+              "end_line": 1,
+              "end_column": 15,
+              "primary": {
+                "file": "main.yv",
+                "start": 12,
+                "end": 14,
+                "line": 1,
+                "column": 13,
+                "end_line": 1,
+                "end_column": 15
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "lexer_unknown_escape",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/lexer_unknown_escape/main.yv",
+          "sha256": "5f02306662eb4c4081d8d0574c61332e959464d9a58336bcf555ec85014bde0f",
+          "bytes": 31
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 24,
+        "end": 26,
+        "anchor": "\\q",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:1:25: E0020: unknown string escape sequence\n"
+      },
+      "diagnostic": {
+        "code": "E0020",
+        "message": "unknown string escape sequence"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "5f02306662eb4c4081d8d0574c61332e959464d9a58336bcf555ec85014bde0f",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 31,
+              "sha256": "5f02306662eb4c4081d8d0574c61332e959464d9a58336bcf555ec85014bde0f"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0020",
+              "message": "unknown string escape sequence",
+              "file": "main.yv",
+              "line": 1,
+              "column": 25,
+              "end_line": 1,
+              "end_column": 27,
+              "primary": {
+                "file": "main.yv",
+                "start": 24,
+                "end": 26,
+                "line": 1,
+                "column": 25,
+                "end_line": 1,
+                "end_column": 27
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "lexer_unicode_escape_empty",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/lexer_unicode_escape_empty/main.yv",
+          "sha256": "4ef59ed5df3a01da9408e4887fcf74b2fa52b2f6920403349f3d8e19005d1723",
+          "bytes": 30
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 21,
+        "end": 25,
+        "anchor": "\\u{}",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:1:22: E0020: invalid unicode escape; expected a Unicode scalar\n"
+      },
+      "diagnostic": {
+        "code": "E0020",
+        "message": "invalid unicode escape; expected a Unicode scalar"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "4ef59ed5df3a01da9408e4887fcf74b2fa52b2f6920403349f3d8e19005d1723",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 30,
+              "sha256": "4ef59ed5df3a01da9408e4887fcf74b2fa52b2f6920403349f3d8e19005d1723"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0020",
+              "message": "invalid unicode escape; expected a Unicode scalar",
+              "file": "main.yv",
+              "line": 1,
+              "column": 22,
+              "end_line": 1,
+              "end_column": 26,
+              "primary": {
+                "file": "main.yv",
+                "start": 21,
+                "end": 25,
+                "line": 1,
+                "column": 22,
+                "end_line": 1,
+                "end_column": 26
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "lexer_unicode_escape_surrogate",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/lexer_unicode_escape_surrogate/main.yv",
+          "sha256": "1ddba85f43b62e21d81d5abeb4931a88e5201294e8cb220514769b7cc0a6c85d",
+          "bytes": 34
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 21,
+        "end": 29,
+        "anchor": "\\u{D800}",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:1:22: E0020: invalid unicode escape; expected a Unicode scalar\n"
+      },
+      "diagnostic": {
+        "code": "E0020",
+        "message": "invalid unicode escape; expected a Unicode scalar"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "1ddba85f43b62e21d81d5abeb4931a88e5201294e8cb220514769b7cc0a6c85d",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 34,
+              "sha256": "1ddba85f43b62e21d81d5abeb4931a88e5201294e8cb220514769b7cc0a6c85d"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0020",
+              "message": "invalid unicode escape; expected a Unicode scalar",
+              "file": "main.yv",
+              "line": 1,
+              "column": 22,
+              "end_line": 1,
+              "end_column": 30,
+              "primary": {
+                "file": "main.yv",
+                "start": 21,
+                "end": 29,
+                "line": 1,
+                "column": 22,
+                "end_line": 1,
+                "end_column": 30
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "lexer_unicode_escape_missing_brace",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/lexer_unicode_escape_missing_brace/main.yv",
+          "sha256": "67eb4ae139c4ed6a0ac61cb7d5da37241b715d045a30637b0e7cf0dd0dbd38ad",
+          "bytes": 32
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 21,
+        "end": 24,
+        "anchor": "\\u1",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:1:22: E0020: invalid unicode escape; expected \\u{XXXX}\n"
+      },
+      "diagnostic": {
+        "code": "E0020",
+        "message": "invalid unicode escape; expected \\u{XXXX}"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "67eb4ae139c4ed6a0ac61cb7d5da37241b715d045a30637b0e7cf0dd0dbd38ad",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 32,
+              "sha256": "67eb4ae139c4ed6a0ac61cb7d5da37241b715d045a30637b0e7cf0dd0dbd38ad"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0020",
+              "message": "invalid unicode escape; expected \\u{XXXX}",
+              "file": "main.yv",
+              "line": 1,
+              "column": 22,
+              "end_line": 1,
+              "end_column": 25,
+              "primary": {
+                "file": "main.yv",
+                "start": 21,
+                "end": 24,
+                "line": 1,
+                "column": 22,
+                "end_line": 1,
+                "end_column": 25
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "lexer_unterminated_string_eof",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/lexer_unterminated_string_eof/main.yv",
+          "sha256": "cf120ffe795f76005d36f61aac806103a4adb113b364f606f563868b2dfd5171",
+          "bytes": 31
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 20,
+        "end": 31,
+        "anchor": "\"unfinished",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:1:21: E0020: unterminated string literal\n"
+      },
+      "diagnostic": {
+        "code": "E0020",
+        "message": "unterminated string literal"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "cf120ffe795f76005d36f61aac806103a4adb113b364f606f563868b2dfd5171",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 31,
+              "sha256": "cf120ffe795f76005d36f61aac806103a4adb113b364f606f563868b2dfd5171"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0020",
+              "message": "unterminated string literal",
+              "file": "main.yv",
+              "line": 1,
+              "column": 21,
+              "end_line": 1,
+              "end_column": 32,
+              "primary": {
+                "file": "main.yv",
+                "start": 20,
+                "end": 31,
+                "line": 1,
+                "column": 21,
+                "end_line": 1,
+                "end_column": 32
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "lexer_unterminated_string_lf",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/lexer_unterminated_string_lf/main.yv",
+          "sha256": "ca08eb57ac7e6903a2fb97a8b79f1eae6aeb956fe101db037e5eedb264abac7d",
+          "bytes": 41
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 20,
+        "end": 31,
+        "anchor": "\"unfinished",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:1:21: E0020: unterminated string literal\n"
+      },
+      "diagnostic": {
+        "code": "E0020",
+        "message": "unterminated string literal"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "ca08eb57ac7e6903a2fb97a8b79f1eae6aeb956fe101db037e5eedb264abac7d",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 41,
+              "sha256": "ca08eb57ac7e6903a2fb97a8b79f1eae6aeb956fe101db037e5eedb264abac7d"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0020",
+              "message": "unterminated string literal",
+              "file": "main.yv",
+              "line": 1,
+              "column": 21,
+              "end_line": 1,
+              "end_column": 32,
+              "primary": {
+                "file": "main.yv",
+                "start": 20,
+                "end": 31,
+                "line": 1,
+                "column": 21,
+                "end_line": 1,
+                "end_column": 32
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "lexer_invalid_byte",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/lexer_invalid_byte/main.yv",
+          "sha256": "0a3e0ce8f1a93f4efd4965bfc100539a9cca2b7f8da47fbf4fc2980c0569711d",
+          "bytes": 31
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 24,
+        "end": 26,
+        "anchor": "'a",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:1:25: E0020: invalid byte literal; expected one ASCII character or a byte escape\n"
+      },
+      "diagnostic": {
+        "code": "E0020",
+        "message": "invalid byte literal; expected one ASCII character or a byte escape"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "0a3e0ce8f1a93f4efd4965bfc100539a9cca2b7f8da47fbf4fc2980c0569711d",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 31,
+              "sha256": "0a3e0ce8f1a93f4efd4965bfc100539a9cca2b7f8da47fbf4fc2980c0569711d"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0020",
+              "message": "invalid byte literal; expected one ASCII character or a byte escape",
+              "file": "main.yv",
+              "line": 1,
+              "column": 25,
+              "end_line": 1,
+              "end_column": 27,
+              "primary": {
+                "file": "main.yv",
+                "start": 24,
+                "end": 26,
+                "line": 1,
+                "column": 25,
+                "end_line": 1,
+                "end_column": 27
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "lexer_multiline_byte",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/lexer_multiline_byte/main.yv",
+          "sha256": "29164bbe874fc3fb8d20b3410d3335fd3cdf9e3fb9f1a05466eaa92fa66f4ade",
+          "bytes": 30
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 24,
+        "end": 27,
+        "anchor": "'\n'",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:1:25: E0020: invalid byte literal; expected one ASCII character or a byte escape\n"
+      },
+      "diagnostic": {
+        "code": "E0020",
+        "message": "invalid byte literal; expected one ASCII character or a byte escape"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "29164bbe874fc3fb8d20b3410d3335fd3cdf9e3fb9f1a05466eaa92fa66f4ade",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 30,
+              "sha256": "29164bbe874fc3fb8d20b3410d3335fd3cdf9e3fb9f1a05466eaa92fa66f4ade"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0020",
+              "message": "invalid byte literal; expected one ASCII character or a byte escape",
+              "file": "main.yv",
+              "line": 1,
+              "column": 25,
+              "end_line": 2,
+              "end_column": 2,
+              "primary": {
+                "file": "main.yv",
+                "start": 24,
+                "end": 27,
+                "line": 1,
+                "column": 25,
+                "end_line": 2,
+                "end_column": 2
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "lexer_crlf_multiline_byte",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/lexer_crlf_multiline_byte/main.yv",
+          "sha256": "fb06f8b276d10cec7eea7d680b08369dec3262969d8659c052740325950ce8c6",
+          "bytes": 34
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 26,
+        "end": 29,
+        "anchor": "'\n'",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:2:14: E0020: invalid byte literal; expected one ASCII character or a byte escape\n"
+      },
+      "diagnostic": {
+        "code": "E0020",
+        "message": "invalid byte literal; expected one ASCII character or a byte escape"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "fb06f8b276d10cec7eea7d680b08369dec3262969d8659c052740325950ce8c6",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 34,
+              "sha256": "fb06f8b276d10cec7eea7d680b08369dec3262969d8659c052740325950ce8c6"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0020",
+              "message": "invalid byte literal; expected one ASCII character or a byte escape",
+              "file": "main.yv",
+              "line": 2,
+              "column": 14,
+              "end_line": 3,
+              "end_column": 2,
+              "primary": {
+                "file": "main.yv",
+                "start": 26,
+                "end": 29,
+                "line": 2,
+                "column": 14,
+                "end_line": 3,
+                "end_column": 2
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "lexer_integer_too_large",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/lexer_integer_too_large/main.yv",
+          "sha256": "67ba87669606443a8f67e0cdd5ddf05c70741e834cad17b7ba8120ded15df988",
+          "bytes": 66
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 24,
+        "end": 63,
+        "anchor": "340282366920938463463374607431768211456",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:1:25: E0003: integer literal is too large for any integer type\n"
+      },
+      "diagnostic": {
+        "code": "E0003",
+        "message": "integer literal is too large for any integer type"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "67ba87669606443a8f67e0cdd5ddf05c70741e834cad17b7ba8120ded15df988",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 66,
+              "sha256": "67ba87669606443a8f67e0cdd5ddf05c70741e834cad17b7ba8120ded15df988"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0003",
+              "message": "integer literal is too large for any integer type",
+              "file": "main.yv",
+              "line": 1,
+              "column": 25,
+              "end_line": 1,
+              "end_column": 64,
+              "primary": {
+                "file": "main.yv",
+                "start": 24,
+                "end": 63,
+                "line": 1,
+                "column": 25,
+                "end_line": 1,
+                "end_column": 64
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "lexer_integer_suffix",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/lexer_integer_suffix/main.yv",
+          "sha256": "abb869c49d7fd7e9036d8714d57599475d756cde8825d586bd99fba4b3eff423",
+          "bytes": 35
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 24,
+        "end": 30,
+        "anchor": "123abc",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:1:25: E0020: invalid integer literal\n"
+      },
+      "diagnostic": {
+        "code": "E0020",
+        "message": "invalid integer literal"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "abb869c49d7fd7e9036d8714d57599475d756cde8825d586bd99fba4b3eff423",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 35,
+              "sha256": "abb869c49d7fd7e9036d8714d57599475d756cde8825d586bd99fba4b3eff423"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0020",
+              "message": "invalid integer literal",
+              "file": "main.yv",
+              "line": 1,
+              "column": 25,
+              "end_line": 1,
+              "end_column": 31,
+              "primary": {
+                "file": "main.yv",
+                "start": 24,
+                "end": 30,
+                "line": 1,
+                "column": 25,
+                "end_line": 1,
+                "end_column": 31
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "unsupported_hex",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/unsupported_hex/main.yv",
+          "sha256": "e79dc9de6bcf25224437a6e456acb5f0d1f50685c3febba3ef44c7d6b119c866",
+          "bytes": 33
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 24,
+        "end": 28,
+        "anchor": "0xAF",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:1:25: U0001: non-decimal integers are not in the bootstrap subset\n"
+      },
+      "diagnostic": {
+        "code": "U0001",
+        "message": "non-decimal integers are not in the bootstrap subset"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "e79dc9de6bcf25224437a6e456acb5f0d1f50685c3febba3ef44c7d6b119c866",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 33,
+              "sha256": "e79dc9de6bcf25224437a6e456acb5f0d1f50685c3febba3ef44c7d6b119c866"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "U0001",
+              "message": "non-decimal integers are not in the bootstrap subset",
+              "file": "main.yv",
+              "line": 1,
+              "column": 25,
+              "end_line": 1,
+              "end_column": 29,
+              "primary": {
+                "file": "main.yv",
+                "start": 24,
+                "end": 28,
+                "line": 1,
+                "column": 25,
+                "end_line": 1,
+                "end_column": 29
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "unsupported_hex_e_sign",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/unsupported_hex_e_sign/main.yv",
+          "sha256": "3248ee4f2770f3a056afb891b24a540172de80524ee3b30716f667983babbcff",
+          "bytes": 33
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 24,
+        "end": 28,
+        "anchor": "0xFE",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:1:25: U0001: non-decimal integers are not in the bootstrap subset\n"
+      },
+      "diagnostic": {
+        "code": "U0001",
+        "message": "non-decimal integers are not in the bootstrap subset"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "3248ee4f2770f3a056afb891b24a540172de80524ee3b30716f667983babbcff",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 33,
+              "sha256": "3248ee4f2770f3a056afb891b24a540172de80524ee3b30716f667983babbcff"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "U0001",
+              "message": "non-decimal integers are not in the bootstrap subset",
+              "file": "main.yv",
+              "line": 1,
+              "column": 25,
+              "end_line": 1,
+              "end_column": 29,
+              "primary": {
+                "file": "main.yv",
+                "start": 24,
+                "end": 28,
+                "line": 1,
+                "column": 25,
+                "end_line": 1,
+                "end_column": 29
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "lexer_suffix_e_sign",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/lexer_suffix_e_sign/main.yv",
+          "sha256": "85869be9111400e76ef4bfdfce79a157d5f76e7b0aaa5a66d807de3907de6b5e",
+          "bytes": 35
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 24,
+        "end": 30,
+        "anchor": "12abcE",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:1:25: E0020: invalid integer literal\n"
+      },
+      "diagnostic": {
+        "code": "E0020",
+        "message": "invalid integer literal"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "85869be9111400e76ef4bfdfce79a157d5f76e7b0aaa5a66d807de3907de6b5e",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 35,
+              "sha256": "85869be9111400e76ef4bfdfce79a157d5f76e7b0aaa5a66d807de3907de6b5e"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0020",
+              "message": "invalid integer literal",
+              "file": "main.yv",
+              "line": 1,
+              "column": 25,
+              "end_line": 1,
+              "end_column": 31,
+              "primary": {
+                "file": "main.yv",
+                "start": 24,
+                "end": 30,
+                "line": 1,
+                "column": 25,
+                "end_line": 1,
+                "end_column": 31
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "unsupported_separator",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/unsupported_separator/main.yv",
+          "sha256": "739532534ec5db2ff68ba1496d84a9e851d5747802e0642f20131853f35862cd",
+          "bytes": 34
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 24,
+        "end": 29,
+        "anchor": "1_000",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:1:25: U0001: integer separators are not in the bootstrap subset\n"
+      },
+      "diagnostic": {
+        "code": "U0001",
+        "message": "integer separators are not in the bootstrap subset"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "739532534ec5db2ff68ba1496d84a9e851d5747802e0642f20131853f35862cd",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 34,
+              "sha256": "739532534ec5db2ff68ba1496d84a9e851d5747802e0642f20131853f35862cd"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "U0001",
+              "message": "integer separators are not in the bootstrap subset",
+              "file": "main.yv",
+              "line": 1,
+              "column": 25,
+              "end_line": 1,
+              "end_column": 30,
+              "primary": {
+                "file": "main.yv",
+                "start": 24,
+                "end": 29,
+                "line": 1,
+                "column": 25,
+                "end_line": 1,
+                "end_column": 30
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "unsupported_float",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/unsupported_float/main.yv",
+          "sha256": "3b35fea56efae4dadc2db57fb403a1638a17382f1f273a6f44477481edf806e8",
+          "bytes": 33
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 24,
+        "end": 28,
+        "anchor": "1.25",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:1:25: U0001: floating-point numbers are not in the bootstrap subset\n"
+      },
+      "diagnostic": {
+        "code": "U0001",
+        "message": "floating-point numbers are not in the bootstrap subset"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "3b35fea56efae4dadc2db57fb403a1638a17382f1f273a6f44477481edf806e8",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 33,
+              "sha256": "3b35fea56efae4dadc2db57fb403a1638a17382f1f273a6f44477481edf806e8"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "U0001",
+              "message": "floating-point numbers are not in the bootstrap subset",
+              "file": "main.yv",
+              "line": 1,
+              "column": 25,
+              "end_line": 1,
+              "end_column": 29,
+              "primary": {
+                "file": "main.yv",
+                "start": 24,
+                "end": 28,
+                "line": 1,
+                "column": 25,
+                "end_line": 1,
+                "end_column": 29
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "unsupported_exponent",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/unsupported_exponent/main.yv",
+          "sha256": "d40eb51e63d87f5861f684f7370c9a6376afa2c68d1df01cc523bc7c1b941c55",
+          "bytes": 33
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 24,
+        "end": 28,
+        "anchor": "1e-2",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:1:25: U0001: floating-point numbers are not in the bootstrap subset\n"
+      },
+      "diagnostic": {
+        "code": "U0001",
+        "message": "floating-point numbers are not in the bootstrap subset"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "d40eb51e63d87f5861f684f7370c9a6376afa2c68d1df01cc523bc7c1b941c55",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 33,
+              "sha256": "d40eb51e63d87f5861f684f7370c9a6376afa2c68d1df01cc523bc7c1b941c55"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "U0001",
+              "message": "floating-point numbers are not in the bootstrap subset",
+              "file": "main.yv",
+              "line": 1,
+              "column": 25,
+              "end_line": 1,
+              "end_column": 29,
+              "primary": {
+                "file": "main.yv",
+                "start": 24,
+                "end": 28,
+                "line": 1,
+                "column": 25,
+                "end_line": 1,
+                "end_column": 29
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "parser_identifier",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/parser_identifier/main.yv",
+          "sha256": "5eb67b61b94d4da1c3e95f960a46687cdd2c0f7b5dd5f89c4805e74ed2288bca",
+          "bytes": 10
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 3,
+        "end": 4,
+        "anchor": "7",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:1:4: E0020: expected an identifier\n"
+      },
+      "diagnostic": {
+        "code": "E0020",
+        "message": "expected an identifier"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "5eb67b61b94d4da1c3e95f960a46687cdd2c0f7b5dd5f89c4805e74ed2288bca",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 10,
+              "sha256": "5eb67b61b94d4da1c3e95f960a46687cdd2c0f7b5dd5f89c4805e74ed2288bca"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0020",
+              "message": "expected an identifier",
+              "file": "main.yv",
+              "line": 1,
+              "column": 4,
+              "end_line": 1,
+              "end_column": 5,
+              "primary": {
+                "file": "main.yv",
+                "start": 3,
+                "end": 4,
+                "line": 1,
+                "column": 4,
+                "end_line": 1,
+                "end_column": 5
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "parser_closing_paren",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/parser_closing_paren/main.yv",
+          "sha256": "8b6fad5694fe8056877301ee32e29acc5408e77172047797d0c3fd986daa38f8",
+          "bytes": 12
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 9,
+        "end": 10,
+        "anchor": "{",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:1:10: E0020: expected an identifier\n"
+      },
+      "diagnostic": {
+        "code": "E0020",
+        "message": "expected an identifier"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "8b6fad5694fe8056877301ee32e29acc5408e77172047797d0c3fd986daa38f8",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 12,
+              "sha256": "8b6fad5694fe8056877301ee32e29acc5408e77172047797d0c3fd986daa38f8"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0020",
+              "message": "expected an identifier",
+              "file": "main.yv",
+              "line": 1,
+              "column": 10,
+              "end_line": 1,
+              "end_column": 11,
+              "primary": {
+                "file": "main.yv",
+                "start": 9,
+                "end": 10,
+                "line": 1,
+                "column": 10,
+                "end_line": 1,
+                "end_column": 11
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "parser_reserved_word",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/parser_reserved_word/main.yv",
+          "sha256": "1d566a45f364bb5d55f4733eaa1d682af49fe3c1523c0885285f9648d4bff729",
+          "bytes": 29
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 16,
+        "end": 22,
+        "anchor": "return",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:1:17: E0020: expected an identifier\n"
+      },
+      "diagnostic": {
+        "code": "E0020",
+        "message": "expected an identifier"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "1d566a45f364bb5d55f4733eaa1d682af49fe3c1523c0885285f9648d4bff729",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 29,
+              "sha256": "1d566a45f364bb5d55f4733eaa1d682af49fe3c1523c0885285f9648d4bff729"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0020",
+              "message": "expected an identifier",
+              "file": "main.yv",
+              "line": 1,
+              "column": 17,
+              "end_line": 1,
+              "end_column": 23,
+              "primary": {
+                "file": "main.yv",
+                "start": 16,
+                "end": 22,
+                "line": 1,
+                "column": 17,
+                "end_line": 1,
+                "end_column": 23
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "parser_string_identifier",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/parser_string_identifier/main.yv",
+          "sha256": "fb7cd6f6d11e0829560ab14a8b09fba427af94a7f9f95c28d42a215b2e52a6d4",
+          "bytes": 33
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 16,
+        "end": 26,
+        "anchor": "\"中\\n文\"",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:1:17: E0020: expected an identifier\n"
+      },
+      "diagnostic": {
+        "code": "E0020",
+        "message": "expected an identifier"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "fb7cd6f6d11e0829560ab14a8b09fba427af94a7f9f95c28d42a215b2e52a6d4",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 33,
+              "sha256": "fb7cd6f6d11e0829560ab14a8b09fba427af94a7f9f95c28d42a215b2e52a6d4"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0020",
+              "message": "expected an identifier",
+              "file": "main.yv",
+              "line": 1,
+              "column": 17,
+              "end_line": 1,
+              "end_column": 23,
+              "primary": {
+                "file": "main.yv",
+                "start": 16,
+                "end": 26,
+                "line": 1,
+                "column": 17,
+                "end_line": 1,
+                "end_column": 23
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "parser_eof",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/parser_eof/main.yv",
+          "sha256": "72879bbc234f8df8bd94097117f9ba7d265ace4300293bda24393c13c66bdeb9",
+          "bytes": 11
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 11,
+        "end": 11,
+        "anchor": "",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:1:12: E0020: unclosed block\n"
+      },
+      "diagnostic": {
+        "code": "E0020",
+        "message": "unclosed block"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "72879bbc234f8df8bd94097117f9ba7d265ace4300293bda24393c13c66bdeb9",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 11,
+              "sha256": "72879bbc234f8df8bd94097117f9ba7d265ace4300293bda24393c13c66bdeb9"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0020",
+              "message": "unclosed block",
+              "file": "main.yv",
+              "line": 1,
+              "column": 12,
+              "end_line": 1,
+              "end_column": 12,
+              "primary": {
+                "file": "main.yv",
+                "start": 11,
+                "end": 11,
+                "line": 1,
+                "column": 12,
+                "end_line": 1,
+                "end_column": 12
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "parser_synthetic_newline",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/parser_synthetic_newline/main.yv",
+          "sha256": "3244567e351f014c41e235b1d3245e9b27a5e8f9feb6a1e2e4df02f0c538801e",
+          "bytes": 25
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 25,
+        "end": 25,
+        "anchor": "",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:1:26: E0020: unclosed block\n"
+      },
+      "diagnostic": {
+        "code": "E0020",
+        "message": "unclosed block"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "3244567e351f014c41e235b1d3245e9b27a5e8f9feb6a1e2e4df02f0c538801e",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 25,
+              "sha256": "3244567e351f014c41e235b1d3245e9b27a5e8f9feb6a1e2e4df02f0c538801e"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0020",
+              "message": "unclosed block",
+              "file": "main.yv",
+              "line": 1,
+              "column": 26,
+              "end_line": 1,
+              "end_column": 26,
+              "primary": {
+                "file": "main.yv",
+                "start": 25,
+                "end": 25,
+                "line": 1,
+                "column": 26,
+                "end_line": 1,
+                "end_column": 26
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "type_annotation",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/type_annotation/main.yv",
+          "sha256": "607df287d85497f757b4578db88b83a3a50aede4332169fda59e7ce8ce015306",
+          "bytes": 36
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 12,
+        "end": 15,
+        "anchor": "let",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:1:13: E0001: expected int, found bool\n"
+      },
+      "diagnostic": {
+        "code": "E0001",
+        "message": "expected int, found bool"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "607df287d85497f757b4578db88b83a3a50aede4332169fda59e7ce8ce015306",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 36,
+              "sha256": "607df287d85497f757b4578db88b83a3a50aede4332169fda59e7ce8ce015306"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0001",
+              "message": "expected int, found bool",
+              "file": "main.yv",
+              "line": 1,
+              "column": 13,
+              "end_line": 1,
+              "end_column": 16,
+              "primary": {
+                "file": "main.yv",
+                "start": 12,
+                "end": 15,
+                "line": 1,
+                "column": 13,
+                "end_line": 1,
+                "end_column": 16
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "type_return_literal",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/type_return_literal/main.yv",
+          "sha256": "fa81fc7080e08833462627e97d6adbcba07a0a91ed31eeb81150e822d5f11dac",
+          "bytes": 51
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 21,
+        "end": 27,
+        "anchor": "return",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:1:22: E0001: expected int, found str\n"
+      },
+      "diagnostic": {
+        "code": "E0001",
+        "message": "expected int, found str"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "fa81fc7080e08833462627e97d6adbcba07a0a91ed31eeb81150e822d5f11dac",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 51,
+              "sha256": "fa81fc7080e08833462627e97d6adbcba07a0a91ed31eeb81150e822d5f11dac"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0001",
+              "message": "expected int, found str",
+              "file": "main.yv",
+              "line": 1,
+              "column": 22,
+              "end_line": 1,
+              "end_column": 28,
+              "primary": {
+                "file": "main.yv",
+                "start": 21,
+                "end": 27,
+                "line": 1,
+                "column": 22,
+                "end_line": 1,
+                "end_column": 28
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "unknown_name",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/unknown_name/main.yv",
+          "sha256": "0e5e669a9aa3d5312b88abf33b6e07fa51c2a6f34dcf7f89aec47b062940466e",
+          "bytes": 37
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 20,
+        "end": 33,
+        "anchor": "missing_value",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:1:21: E0010: unknown local 'missing_value'\n"
+      },
+      "diagnostic": {
+        "code": "E0010",
+        "message": "unknown local 'missing_value'"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "0e5e669a9aa3d5312b88abf33b6e07fa51c2a6f34dcf7f89aec47b062940466e",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 37,
+              "sha256": "0e5e669a9aa3d5312b88abf33b6e07fa51c2a6f34dcf7f89aec47b062940466e"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0010",
+              "message": "unknown local 'missing_value'",
+              "file": "main.yv",
+              "line": 1,
+              "column": 21,
+              "end_line": 1,
+              "end_column": 34,
+              "primary": {
+                "file": "main.yv",
+                "start": 20,
+                "end": 33,
+                "line": 1,
+                "column": 21,
+                "end_line": 1,
+                "end_column": 34
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "error_alias_before",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "--json-diagnostics",
+        "@input"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/error_alias_before/main.yv",
+          "sha256": "0e5e669a9aa3d5312b88abf33b6e07fa51c2a6f34dcf7f89aec47b062940466e",
+          "bytes": 37
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 20,
+        "end": 33,
+        "anchor": "missing_value",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:1:21: E0010: unknown local 'missing_value'\n"
+      },
+      "diagnostic": {
+        "code": "E0010",
+        "message": "unknown local 'missing_value'"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "0e5e669a9aa3d5312b88abf33b6e07fa51c2a6f34dcf7f89aec47b062940466e",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 37,
+              "sha256": "0e5e669a9aa3d5312b88abf33b6e07fa51c2a6f34dcf7f89aec47b062940466e"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0010",
+              "message": "unknown local 'missing_value'",
+              "file": "main.yv",
+              "line": 1,
+              "column": 21,
+              "end_line": 1,
+              "end_column": 34,
+              "primary": {
+                "file": "main.yv",
+                "start": 20,
+                "end": 33,
+                "line": 1,
+                "column": 21,
+                "end_line": 1,
+                "end_column": 34
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "error_alias_after",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json-diagnostics"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/error_alias_after/main.yv",
+          "sha256": "0e5e669a9aa3d5312b88abf33b6e07fa51c2a6f34dcf7f89aec47b062940466e",
+          "bytes": 37
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 20,
+        "end": 33,
+        "anchor": "missing_value",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:1:21: E0010: unknown local 'missing_value'\n"
+      },
+      "diagnostic": {
+        "code": "E0010",
+        "message": "unknown local 'missing_value'"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "0e5e669a9aa3d5312b88abf33b6e07fa51c2a6f34dcf7f89aec47b062940466e",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 37,
+              "sha256": "0e5e669a9aa3d5312b88abf33b6e07fa51c2a6f34dcf7f89aec47b062940466e"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0010",
+              "message": "unknown local 'missing_value'",
+              "file": "main.yv",
+              "line": 1,
+              "column": 21,
+              "end_line": 1,
+              "end_column": 34,
+              "primary": {
+                "file": "main.yv",
+                "start": 20,
+                "end": 33,
+                "line": 1,
+                "column": 21,
+                "end_line": 1,
+                "end_column": 34
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "immutable_assignment",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/immutable_assignment/main.yv",
+          "sha256": "1b627387c524319fb875a3f05bcb0870251ea4989f4f9db5dc4585bbec7834d5",
+          "bytes": 40
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 34,
+        "end": 35,
+        "anchor": "=",
+        "occurrence": 2
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:3:8: E0014: cannot assign through an immutable local or parameter\n"
+      },
+      "diagnostic": {
+        "code": "E0014",
+        "message": "cannot assign through an immutable local or parameter"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "1b627387c524319fb875a3f05bcb0870251ea4989f4f9db5dc4585bbec7834d5",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 40,
+              "sha256": "1b627387c524319fb875a3f05bcb0870251ea4989f4f9db5dc4585bbec7834d5"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0014",
+              "message": "cannot assign through an immutable local or parameter",
+              "file": "main.yv",
+              "line": 3,
+              "column": 8,
+              "end_line": 3,
+              "end_column": 9,
+              "primary": {
+                "file": "main.yv",
+                "start": 34,
+                "end": 35,
+                "line": 3,
+                "column": 8,
+                "end_line": 3,
+                "end_column": 9
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "ownership_moved",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/ownership_moved/main.yv",
+          "sha256": "559b170fc38cbb3530ac57bba77fad926bedfea7a0932ca8040093d413733417",
+          "bytes": 99
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 73,
+        "end": 78,
+        "anchor": "first",
+        "occurrence": 3
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:4:10: E0402: use of a moved value\n"
+      },
+      "diagnostic": {
+        "code": "E0402",
+        "message": "use of a moved value"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "559b170fc38cbb3530ac57bba77fad926bedfea7a0932ca8040093d413733417",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 99,
+              "sha256": "559b170fc38cbb3530ac57bba77fad926bedfea7a0932ca8040093d413733417"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0402",
+              "message": "use of a moved value",
+              "file": "main.yv",
+              "line": 4,
+              "column": 10,
+              "end_line": 4,
+              "end_column": 15,
+              "primary": {
+                "file": "main.yv",
+                "start": 73,
+                "end": 78,
+                "line": 4,
+                "column": 10,
+                "end_line": 4,
+                "end_column": 15
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "duplicate_function",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/duplicate_function/main.yv",
+          "sha256": "8baa0af52f43dd9af2c9ae2b59c34154cf11a811c08328f593c753ea67de2154",
+          "bytes": 43
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 18,
+        "end": 24,
+        "anchor": "answer",
+        "occurrence": 2
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:2:4: E0011: duplicate function\n"
+      },
+      "diagnostic": {
+        "code": "E0011",
+        "message": "duplicate function"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "8baa0af52f43dd9af2c9ae2b59c34154cf11a811c08328f593c753ea67de2154",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 43,
+              "sha256": "8baa0af52f43dd9af2c9ae2b59c34154cf11a811c08328f593c753ea67de2154"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0011",
+              "message": "duplicate function",
+              "file": "main.yv",
+              "line": 2,
+              "column": 4,
+              "end_line": 2,
+              "end_column": 10,
+              "primary": {
+                "file": "main.yv",
+                "start": 18,
+                "end": 24,
+                "line": 2,
+                "column": 4,
+                "end_line": 2,
+                "end_column": 10
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "unknown_type",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/unknown_type/main.yv",
+          "sha256": "1833e46298dd4bb2803524c60ca25e7aa711595853b21bc06420f8bfe416409e",
+          "bytes": 37
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 23,
+        "end": 30,
+        "anchor": "Missing",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:1:24: E0010: unknown type 'Missing'\n"
+      },
+      "diagnostic": {
+        "code": "E0010",
+        "message": "unknown type 'Missing'"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "1833e46298dd4bb2803524c60ca25e7aa711595853b21bc06420f8bfe416409e",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 37,
+              "sha256": "1833e46298dd4bb2803524c60ca25e7aa711595853b21bc06420f8bfe416409e"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0010",
+              "message": "unknown type 'Missing'",
+              "file": "main.yv",
+              "line": 1,
+              "column": 24,
+              "end_line": 1,
+              "end_column": 31,
+              "primary": {
+                "file": "main.yv",
+                "start": 23,
+                "end": 30,
+                "line": 1,
+                "column": 24,
+                "end_line": 1,
+                "end_column": 31
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "unsupported_owned_optional",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/unsupported_owned_optional/main.yv",
+          "sha256": "c06ba729a68c22c6dca93483d85647de8bce33712d793bdbc7b3ac3311400c59",
+          "bytes": 40
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 23,
+        "end": 24,
+        "anchor": "?",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:1:24: U0001: this Optional payload type is outside the selfhost subset\n"
+      },
+      "diagnostic": {
+        "code": "U0001",
+        "message": "this Optional payload type is outside the selfhost subset"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "c06ba729a68c22c6dca93483d85647de8bce33712d793bdbc7b3ac3311400c59",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 40,
+              "sha256": "c06ba729a68c22c6dca93483d85647de8bce33712d793bdbc7b3ac3311400c59"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "U0001",
+              "message": "this Optional payload type is outside the selfhost subset",
+              "file": "main.yv",
+              "line": 1,
+              "column": 24,
+              "end_line": 1,
+              "end_column": 25,
+              "primary": {
+                "file": "main.yv",
+                "start": 23,
+                "end": 24,
+                "line": 1,
+                "column": 24,
+                "end_line": 1,
+                "end_column": 25
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "unicode_columns_crlf",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/unicode_columns_crlf/main.yv",
+          "sha256": "d57f56c0819184240d982484d53145b85fd9fb9884810bb12c84f594b71297ab",
+          "bytes": 57
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 36,
+        "end": 49,
+        "anchor": "missing_value",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:2:18: E0010: unknown local 'missing_value'\n"
+      },
+      "diagnostic": {
+        "code": "E0010",
+        "message": "unknown local 'missing_value'"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "d57f56c0819184240d982484d53145b85fd9fb9884810bb12c84f594b71297ab",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 57,
+              "sha256": "d57f56c0819184240d982484d53145b85fd9fb9884810bb12c84f594b71297ab"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0010",
+              "message": "unknown local 'missing_value'",
+              "file": "main.yv",
+              "line": 2,
+              "column": 18,
+              "end_line": 2,
+              "end_column": 31,
+              "primary": {
+                "file": "main.yv",
+                "start": 36,
+                "end": 49,
+                "line": 2,
+                "column": 18,
+                "end_line": 2,
+                "end_column": 31
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "first_type_error",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/first_type_error/main.yv",
+          "sha256": "1ea2faed7c39e5300aa647cfb28a8ebf655209543ce5d899fda9d9be32625e24",
+          "bytes": 63
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 21,
+        "end": 34,
+        "anchor": "first_missing",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:2:10: E0010: unknown local 'first_missing'\n"
+      },
+      "diagnostic": {
+        "code": "E0010",
+        "message": "unknown local 'first_missing'"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "1ea2faed7c39e5300aa647cfb28a8ebf655209543ce5d899fda9d9be32625e24",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 63,
+              "sha256": "1ea2faed7c39e5300aa647cfb28a8ebf655209543ce5d899fda9d9be32625e24"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0010",
+              "message": "unknown local 'first_missing'",
+              "file": "main.yv",
+              "line": 2,
+              "column": 10,
+              "end_line": 2,
+              "end_column": 23,
+              "primary": {
+                "file": "main.yv",
+                "start": 21,
+                "end": 34,
+                "line": 2,
+                "column": 10,
+                "end_line": 2,
+                "end_column": 23
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "lex_before_earlier_parser",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/lex_before_earlier_parser/main.yv",
+          "sha256": "a294bc45543d9b594cc8a840c345b2a172546147c838db0ea7ee99a2492bdd71",
+          "bytes": 15
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 11,
+        "end": 12,
+        "anchor": "@",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:1:12: E0020: unexpected character\n"
+      },
+      "diagnostic": {
+        "code": "E0020",
+        "message": "unexpected character"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "a294bc45543d9b594cc8a840c345b2a172546147c838db0ea7ee99a2492bdd71",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 15,
+              "sha256": "a294bc45543d9b594cc8a840c345b2a172546147c838db0ea7ee99a2492bdd71"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0020",
+              "message": "unexpected character",
+              "file": "main.yv",
+              "line": 1,
+              "column": 12,
+              "end_line": 1,
+              "end_column": 13,
+              "primary": {
+                "file": "main.yv",
+                "start": 11,
+                "end": 12,
+                "line": 1,
+                "column": 12,
+                "end_line": 1,
+                "end_column": 13
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "deferred_before_outer_lex",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/deferred_before_outer_lex/main.yv",
+          "sha256": "d9103eb3fbbe3951727748a1886c0644bb7585f8d24f0c59a794be7b44a0f47e",
+          "bytes": 37
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 25,
+        "end": 26,
+        "anchor": "@",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:1:26: E0020: unexpected character\n"
+      },
+      "diagnostic": {
+        "code": "E0020",
+        "message": "unexpected character"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "d9103eb3fbbe3951727748a1886c0644bb7585f8d24f0c59a794be7b44a0f47e",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 37,
+              "sha256": "d9103eb3fbbe3951727748a1886c0644bb7585f8d24f0c59a794be7b44a0f47e"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0020",
+              "message": "unexpected character",
+              "file": "main.yv",
+              "line": 1,
+              "column": 26,
+              "end_line": 1,
+              "end_column": 27,
+              "primary": {
+                "file": "main.yv",
+                "start": 25,
+                "end": 26,
+                "line": 1,
+                "column": 26,
+                "end_line": 1,
+                "end_column": 27
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "interpolation_type",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/interpolation_type/main.yv",
+          "sha256": "67b1f1394a6d28e5c5a091058622a979dfd5d1f06e2530c48b6b97be7d477be2",
+          "bytes": 44
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 25,
+        "end": 38,
+        "anchor": "missing_value",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:1:26: E0010: unknown local 'missing_value'\n"
+      },
+      "diagnostic": {
+        "code": "E0010",
+        "message": "unknown local 'missing_value'"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "67b1f1394a6d28e5c5a091058622a979dfd5d1f06e2530c48b6b97be7d477be2",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 44,
+              "sha256": "67b1f1394a6d28e5c5a091058622a979dfd5d1f06e2530c48b6b97be7d477be2"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0010",
+              "message": "unknown local 'missing_value'",
+              "file": "main.yv",
+              "line": 1,
+              "column": 26,
+              "end_line": 1,
+              "end_column": 39,
+              "primary": {
+                "file": "main.yv",
+                "start": 25,
+                "end": 38,
+                "line": 1,
+                "column": 26,
+                "end_line": 1,
+                "end_column": 39
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "lexer_interpolation_lf",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/lexer_interpolation_lf/main.yv",
+          "sha256": "9474b91d57b0e7614c4f0b2588a6094478ff00ed50a11db227d95890eca29f9d",
+          "bytes": 46
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 23,
+        "end": 25,
+        "anchor": "${",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:1:24: E0020: unterminated interpolation; expected '}'\n"
+      },
+      "diagnostic": {
+        "code": "E0020",
+        "message": "unterminated interpolation; expected '}'"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "9474b91d57b0e7614c4f0b2588a6094478ff00ed50a11db227d95890eca29f9d",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 46,
+              "sha256": "9474b91d57b0e7614c4f0b2588a6094478ff00ed50a11db227d95890eca29f9d"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0020",
+              "message": "unterminated interpolation; expected '}'",
+              "file": "main.yv",
+              "line": 1,
+              "column": 24,
+              "end_line": 1,
+              "end_column": 26,
+              "primary": {
+                "file": "main.yv",
+                "start": 23,
+                "end": 25,
+                "line": 1,
+                "column": 24,
+                "end_line": 1,
+                "end_column": 26
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "lexer_interpolation_eof",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/lexer_interpolation_eof/main.yv",
+          "sha256": "168974501b4242f98aee899480739dce14233fe40ac2ed586a7e50d84da70de3",
+          "bytes": 35
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 23,
+        "end": 35,
+        "anchor": "${unfinished",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:1:24: E0020: unterminated interpolation; expected '}'\n"
+      },
+      "diagnostic": {
+        "code": "E0020",
+        "message": "unterminated interpolation; expected '}'"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "168974501b4242f98aee899480739dce14233fe40ac2ed586a7e50d84da70de3",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 35,
+              "sha256": "168974501b4242f98aee899480739dce14233fe40ac2ed586a7e50d84da70de3"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0020",
+              "message": "unterminated interpolation; expected '}'",
+              "file": "main.yv",
+              "line": 1,
+              "column": 24,
+              "end_line": 1,
+              "end_column": 36,
+              "primary": {
+                "file": "main.yv",
+                "start": 23,
+                "end": 35,
+                "line": 1,
+                "column": 24,
+                "end_line": 1,
+                "end_column": 36
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "module_missing",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/module_missing/main.yv",
+          "sha256": "7097ee380fff6f9dd1bf51b94bb75fcb7e9a5f6ae9fea865d2a9ba579bfced79",
+          "bytes": 24
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 4,
+        "end": 10,
+        "anchor": "absent",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:1:5: E0010: cannot load module 'absent'\n"
+      },
+      "diagnostic": {
+        "code": "E0010",
+        "message": "cannot load module 'absent'"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "7097ee380fff6f9dd1bf51b94bb75fcb7e9a5f6ae9fea865d2a9ba579bfced79",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 24,
+              "sha256": "7097ee380fff6f9dd1bf51b94bb75fcb7e9a5f6ae9fea865d2a9ba579bfced79"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0010",
+              "message": "cannot load module 'absent'",
+              "file": "main.yv",
+              "line": 1,
+              "column": 5,
+              "end_line": 1,
+              "end_column": 11,
+              "primary": {
+                "file": "main.yv",
+                "start": 4,
+                "end": 10,
+                "line": 1,
+                "column": 5,
+                "end_line": 1,
+                "end_column": 11
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "module_invalid_utf8",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/module_invalid_utf8/main.yv",
+          "sha256": "1ae15b888f6ff3243a4b11a1b8307beb66f1dabf8e8e4d0f6d940ed87e8b6e3f",
+          "bytes": 25
+        },
+        {
+          "path": "utility.yv",
+          "fixture": "fixtures/module_invalid_utf8/utility.yv",
+          "sha256": "e4688624e5f1ad0629505e6768e3bb36244f2f3e33e751215afa820334a76ed3",
+          "bytes": 2
+        }
+      ],
+      "loaded": [
+        "main.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 4,
+        "end": 11,
+        "anchor": "utility",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:1:5: E0010: cannot load module 'utility'\n"
+      },
+      "diagnostic": {
+        "code": "E0010",
+        "message": "cannot load module 'utility'"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "1ae15b888f6ff3243a4b11a1b8307beb66f1dabf8e8e4d0f6d940ed87e8b6e3f",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 25,
+              "sha256": "1ae15b888f6ff3243a4b11a1b8307beb66f1dabf8e8e4d0f6d940ed87e8b6e3f"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0010",
+              "message": "cannot load module 'utility'",
+              "file": "main.yv",
+              "line": 1,
+              "column": 5,
+              "end_line": 1,
+              "end_column": 12,
+              "primary": {
+                "file": "main.yv",
+                "start": 4,
+                "end": 11,
+                "line": 1,
+                "column": 5,
+                "end_line": 1,
+                "end_column": 12
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "module_lexer",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/module_lexer/main.yv",
+          "sha256": "1ae15b888f6ff3243a4b11a1b8307beb66f1dabf8e8e4d0f6d940ed87e8b6e3f",
+          "bytes": 25
+        },
+        {
+          "path": "utility.yv",
+          "fixture": "fixtures/module_lexer/utility.yv",
+          "sha256": "b54b1a0f8b2c458193bd183b9847fdefb37a19f39af5c032b02877a9ae94d2c2",
+          "bytes": 22
+        }
+      ],
+      "loaded": [
+        "main.yv",
+        "utility.yv"
+      ],
+      "location": {
+        "file": "utility.yv",
+        "start": 18,
+        "end": 19,
+        "anchor": "@",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "utility.yv:1:19: E0020: unexpected character\n"
+      },
+      "diagnostic": {
+        "code": "E0020",
+        "message": "unexpected character"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "1ae15b888f6ff3243a4b11a1b8307beb66f1dabf8e8e4d0f6d940ed87e8b6e3f",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 25,
+              "sha256": "1ae15b888f6ff3243a4b11a1b8307beb66f1dabf8e8e4d0f6d940ed87e8b6e3f"
+            },
+            {
+              "path": "utility.yv",
+              "bytes": 22,
+              "sha256": "b54b1a0f8b2c458193bd183b9847fdefb37a19f39af5c032b02877a9ae94d2c2"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0020",
+              "message": "unexpected character",
+              "file": "utility.yv",
+              "line": 1,
+              "column": 19,
+              "end_line": 1,
+              "end_column": 20,
+              "primary": {
+                "file": "utility.yv",
+                "start": 18,
+                "end": 19,
+                "line": 1,
+                "column": 19,
+                "end_line": 1,
+                "end_column": 20
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "module_parser",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/module_parser/main.yv",
+          "sha256": "1ae15b888f6ff3243a4b11a1b8307beb66f1dabf8e8e4d0f6d940ed87e8b6e3f",
+          "bytes": 25
+        },
+        {
+          "path": "utility.yv",
+          "fixture": "fixtures/module_parser/utility.yv",
+          "sha256": "57f16141eb92429d25f2d281dd94f23dab4c68fa378b50b16e19ef4358e13d7e",
+          "bytes": 14
+        }
+      ],
+      "loaded": [
+        "main.yv",
+        "utility.yv"
+      ],
+      "location": {
+        "file": "utility.yv",
+        "start": 7,
+        "end": 8,
+        "anchor": "7",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "utility.yv:1:8: E0020: expected an identifier\n"
+      },
+      "diagnostic": {
+        "code": "E0020",
+        "message": "expected an identifier"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "1ae15b888f6ff3243a4b11a1b8307beb66f1dabf8e8e4d0f6d940ed87e8b6e3f",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 25,
+              "sha256": "1ae15b888f6ff3243a4b11a1b8307beb66f1dabf8e8e4d0f6d940ed87e8b6e3f"
+            },
+            {
+              "path": "utility.yv",
+              "bytes": 14,
+              "sha256": "57f16141eb92429d25f2d281dd94f23dab4c68fa378b50b16e19ef4358e13d7e"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0020",
+              "message": "expected an identifier",
+              "file": "utility.yv",
+              "line": 1,
+              "column": 8,
+              "end_line": 1,
+              "end_column": 9,
+              "primary": {
+                "file": "utility.yv",
+                "start": 7,
+                "end": 8,
+                "line": 1,
+                "column": 8,
+                "end_line": 1,
+                "end_column": 9
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "module_type",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/module_type/main.yv",
+          "sha256": "4d51321e2c63578e6f5b09b38cfdee97ffeadf781c28263547cdfe7597e4434b",
+          "bytes": 52
+        },
+        {
+          "path": "utility.yv",
+          "fixture": "fixtures/module_type/utility.yv",
+          "sha256": "47b1cf05850b78008f2e4259f2b7bc90f2ad4c712517b14d8639f700a4578750",
+          "bytes": 42
+        }
+      ],
+      "loaded": [
+        "main.yv",
+        "utility.yv"
+      ],
+      "location": {
+        "file": "utility.yv",
+        "start": 25,
+        "end": 31,
+        "anchor": "return",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "utility.yv:1:26: E0001: expected int, found str\n"
+      },
+      "diagnostic": {
+        "code": "E0001",
+        "message": "expected int, found str"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "4d51321e2c63578e6f5b09b38cfdee97ffeadf781c28263547cdfe7597e4434b",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 52,
+              "sha256": "4d51321e2c63578e6f5b09b38cfdee97ffeadf781c28263547cdfe7597e4434b"
+            },
+            {
+              "path": "utility.yv",
+              "bytes": 42,
+              "sha256": "47b1cf05850b78008f2e4259f2b7bc90f2ad4c712517b14d8639f700a4578750"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0001",
+              "message": "expected int, found str",
+              "file": "utility.yv",
+              "line": 1,
+              "column": 26,
+              "end_line": 1,
+              "end_column": 32,
+              "primary": {
+                "file": "utility.yv",
+                "start": 25,
+                "end": 31,
+                "line": 1,
+                "column": 26,
+                "end_line": 1,
+                "end_column": 32
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "module_private",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/module_private/main.yv",
+          "sha256": "fda353578ed996fb33619f486909346ed7c971d197a9e9e0dc7f188339a961a4",
+          "bytes": 43
+        },
+        {
+          "path": "utility.yv",
+          "fixture": "fixtures/module_private/utility.yv",
+          "sha256": "8d0afcd49380942dde254abe9864a0ccdfac0551aecf4d90c770fda35f1e2e09",
+          "bytes": 15
+        }
+      ],
+      "loaded": [
+        "main.yv",
+        "utility.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 32,
+        "end": 38,
+        "anchor": "hidden",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:2:21: E0010: module 'utility' has no exported function 'hidden'\n"
+      },
+      "diagnostic": {
+        "code": "E0010",
+        "message": "module 'utility' has no exported function 'hidden'"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "fda353578ed996fb33619f486909346ed7c971d197a9e9e0dc7f188339a961a4",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 43,
+              "sha256": "fda353578ed996fb33619f486909346ed7c971d197a9e9e0dc7f188339a961a4"
+            },
+            {
+              "path": "utility.yv",
+              "bytes": 15,
+              "sha256": "8d0afcd49380942dde254abe9864a0ccdfac0551aecf4d90c770fda35f1e2e09"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0010",
+              "message": "module 'utility' has no exported function 'hidden'",
+              "file": "main.yv",
+              "line": 2,
+              "column": 21,
+              "end_line": 2,
+              "end_column": 27,
+              "primary": {
+                "file": "main.yv",
+                "start": 32,
+                "end": 38,
+                "line": 2,
+                "column": 21,
+                "end_line": 2,
+                "end_column": 27
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "bfs_prefix_stops",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/bfs_prefix_stops/main.yv",
+          "sha256": "5f5c2aa3ce490c2f1cf71c745accea0a5765fdfb9e5b70d14227501a85ce8a60",
+          "bytes": 32
+        },
+        {
+          "path": "left.yv",
+          "fixture": "fixtures/bfs_prefix_stops/left.yv",
+          "sha256": "b54b1a0f8b2c458193bd183b9847fdefb37a19f39af5c032b02877a9ae94d2c2",
+          "bytes": 22
+        },
+        {
+          "path": "right.yv",
+          "fixture": "fixtures/bfs_prefix_stops/right.yv",
+          "sha256": "f37d3f748920de90e4ab123542d2f8b998e202e2a515c13dfdec793548844e71",
+          "bytes": 19
+        }
+      ],
+      "loaded": [
+        "main.yv",
+        "left.yv"
+      ],
+      "location": {
+        "file": "left.yv",
+        "start": 18,
+        "end": 19,
+        "anchor": "@",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "left.yv:1:19: E0020: unexpected character\n"
+      },
+      "diagnostic": {
+        "code": "E0020",
+        "message": "unexpected character"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "5f5c2aa3ce490c2f1cf71c745accea0a5765fdfb9e5b70d14227501a85ce8a60",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 32,
+              "sha256": "5f5c2aa3ce490c2f1cf71c745accea0a5765fdfb9e5b70d14227501a85ce8a60"
+            },
+            {
+              "path": "left.yv",
+              "bytes": 22,
+              "sha256": "b54b1a0f8b2c458193bd183b9847fdefb37a19f39af5c032b02877a9ae94d2c2"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0020",
+              "message": "unexpected character",
+              "file": "left.yv",
+              "line": 1,
+              "column": 19,
+              "end_line": 1,
+              "end_column": 20,
+              "primary": {
+                "file": "left.yv",
+                "start": 18,
+                "end": 19,
+                "line": 1,
+                "column": 19,
+                "end_line": 1,
+                "end_column": 20
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "all_loaded_before_codegen",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/all_loaded_before_codegen/main.yv",
+          "sha256": "5f5c2aa3ce490c2f1cf71c745accea0a5765fdfb9e5b70d14227501a85ce8a60",
+          "bytes": 32
+        },
+        {
+          "path": "left.yv",
+          "fixture": "fixtures/all_loaded_before_codegen/left.yv",
+          "sha256": "47b1cf05850b78008f2e4259f2b7bc90f2ad4c712517b14d8639f700a4578750",
+          "bytes": 42
+        },
+        {
+          "path": "right.yv",
+          "fixture": "fixtures/all_loaded_before_codegen/right.yv",
+          "sha256": "f37d3f748920de90e4ab123542d2f8b998e202e2a515c13dfdec793548844e71",
+          "bytes": 19
+        }
+      ],
+      "loaded": [
+        "main.yv",
+        "left.yv",
+        "right.yv"
+      ],
+      "location": {
+        "file": "left.yv",
+        "start": 25,
+        "end": 31,
+        "anchor": "return",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "left.yv:1:26: E0001: expected int, found str\n"
+      },
+      "diagnostic": {
+        "code": "E0001",
+        "message": "expected int, found str"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "5f5c2aa3ce490c2f1cf71c745accea0a5765fdfb9e5b70d14227501a85ce8a60",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 32,
+              "sha256": "5f5c2aa3ce490c2f1cf71c745accea0a5765fdfb9e5b70d14227501a85ce8a60"
+            },
+            {
+              "path": "left.yv",
+              "bytes": 42,
+              "sha256": "47b1cf05850b78008f2e4259f2b7bc90f2ad4c712517b14d8639f700a4578750"
+            },
+            {
+              "path": "right.yv",
+              "bytes": 19,
+              "sha256": "f37d3f748920de90e4ab123542d2f8b998e202e2a515c13dfdec793548844e71"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0001",
+              "message": "expected int, found str",
+              "file": "left.yv",
+              "line": 1,
+              "column": 26,
+              "end_line": 1,
+              "end_column": 32,
+              "primary": {
+                "file": "left.yv",
+                "start": 25,
+                "end": 31,
+                "line": 1,
+                "column": 26,
+                "end_line": 1,
+                "end_column": 32
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "path_portable_unicode",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "source space 源/program😀.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "source space 源/program😀.yv",
+          "fixture": "fixtures/path_portable_unicode/source space 源/program😀.yv",
+          "sha256": "0e5e669a9aa3d5312b88abf33b6e07fa51c2a6f34dcf7f89aec47b062940466e",
+          "bytes": 37
+        }
+      ],
+      "loaded": [
+        "source space 源/program😀.yv"
+      ],
+      "location": {
+        "file": "source space 源/program😀.yv",
+        "start": 20,
+        "end": 33,
+        "anchor": "missing_value",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "source space 源/program😀.yv:1:21: E0010: unknown local 'missing_value'\n"
+      },
+      "diagnostic": {
+        "code": "E0010",
+        "message": "unknown local 'missing_value'"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "source space 源/program😀.yv",
+          "source_sha256": "0e5e669a9aa3d5312b88abf33b6e07fa51c2a6f34dcf7f89aec47b062940466e",
+          "sources": [
+            {
+              "path": "source space 源/program😀.yv",
+              "bytes": 37,
+              "sha256": "0e5e669a9aa3d5312b88abf33b6e07fa51c2a6f34dcf7f89aec47b062940466e"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0010",
+              "message": "unknown local 'missing_value'",
+              "file": "source space 源/program😀.yv",
+              "line": 1,
+              "column": 21,
+              "end_line": 1,
+              "end_column": 34,
+              "primary": {
+                "file": "source space 源/program😀.yv",
+                "start": 20,
+                "end": 33,
+                "line": 1,
+                "column": 21,
+                "end_line": 1,
+                "end_column": 34
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "path_absolute_module",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/path_absolute_module/main.yv",
+          "sha256": "1ae15b888f6ff3243a4b11a1b8307beb66f1dabf8e8e4d0f6d940ed87e8b6e3f",
+          "bytes": 25
+        },
+        {
+          "path": "utility.yv",
+          "fixture": "fixtures/path_absolute_module/utility.yv",
+          "sha256": "47b1cf05850b78008f2e4259f2b7bc90f2ad4c712517b14d8639f700a4578750",
+          "bytes": 42
+        }
+      ],
+      "loaded": [
+        "main.yv",
+        "utility.yv"
+      ],
+      "location": {
+        "file": "utility.yv",
+        "start": 25,
+        "end": 31,
+        "anchor": "return",
+        "occurrence": 1
+      },
+      "input_mode": "absolute",
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "utility.yv:1:26: E0001: expected int, found str\n"
+      },
+      "diagnostic": {
+        "code": "E0001",
+        "message": "expected int, found str"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "@ABS/main.yv",
+          "source_sha256": "1ae15b888f6ff3243a4b11a1b8307beb66f1dabf8e8e4d0f6d940ed87e8b6e3f",
+          "sources": [
+            {
+              "path": "@ABS/main.yv",
+              "bytes": 25,
+              "sha256": "1ae15b888f6ff3243a4b11a1b8307beb66f1dabf8e8e4d0f6d940ed87e8b6e3f"
+            },
+            {
+              "path": "@ABS/utility.yv",
+              "bytes": 42,
+              "sha256": "47b1cf05850b78008f2e4259f2b7bc90f2ad4c712517b14d8639f700a4578750"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0001",
+              "message": "expected int, found str",
+              "file": "@ABS/utility.yv",
+              "line": 1,
+              "column": 26,
+              "end_line": 1,
+              "end_column": 32,
+              "primary": {
+                "file": "@ABS/utility.yv",
+                "start": 25,
+                "end": 31,
+                "line": 1,
+                "column": 26,
+                "end_line": 1,
+                "end_column": 32
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "path_dot_prefix",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/path_dot_prefix/main.yv",
+          "sha256": "1ae15b888f6ff3243a4b11a1b8307beb66f1dabf8e8e4d0f6d940ed87e8b6e3f",
+          "bytes": 25
+        },
+        {
+          "path": "utility.yv",
+          "fixture": "fixtures/path_dot_prefix/utility.yv",
+          "sha256": "b54b1a0f8b2c458193bd183b9847fdefb37a19f39af5c032b02877a9ae94d2c2",
+          "bytes": 22
+        }
+      ],
+      "loaded": [
+        "main.yv",
+        "utility.yv"
+      ],
+      "location": {
+        "file": "utility.yv",
+        "start": 18,
+        "end": 19,
+        "anchor": "@",
+        "occurrence": 1
+      },
+      "input_spelling": "./main.yv",
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "utility.yv:1:19: E0020: unexpected character\n"
+      },
+      "diagnostic": {
+        "code": "E0020",
+        "message": "unexpected character"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "./main.yv",
+          "source_sha256": "1ae15b888f6ff3243a4b11a1b8307beb66f1dabf8e8e4d0f6d940ed87e8b6e3f",
+          "sources": [
+            {
+              "path": "./main.yv",
+              "bytes": 25,
+              "sha256": "1ae15b888f6ff3243a4b11a1b8307beb66f1dabf8e8e4d0f6d940ed87e8b6e3f"
+            },
+            {
+              "path": "./utility.yv",
+              "bytes": 22,
+              "sha256": "b54b1a0f8b2c458193bd183b9847fdefb37a19f39af5c032b02877a9ae94d2c2"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0020",
+              "message": "unexpected character",
+              "file": "./utility.yv",
+              "line": 1,
+              "column": 19,
+              "end_line": 1,
+              "end_column": 20,
+              "primary": {
+                "file": "./utility.yv",
+                "start": 18,
+                "end": 19,
+                "line": 1,
+                "column": 19,
+                "end_line": 1,
+                "end_column": 20
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "path_json_escapes",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin"
+      ],
+      "input": "quote\"tab\tline\nback\\slash.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "quote\"tab\tline\nback\\slash.yv",
+          "fixture": "fixtures/path_json_escapes/payload.yv",
+          "sha256": "0e5e669a9aa3d5312b88abf33b6e07fa51c2a6f34dcf7f89aec47b062940466e",
+          "bytes": 37
+        }
+      ],
+      "loaded": [
+        "quote\"tab\tline\nback\\slash.yv"
+      ],
+      "location": {
+        "file": "quote\"tab\tline\nback\\slash.yv",
+        "start": 20,
+        "end": 33,
+        "anchor": "missing_value",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "quote\"tab\tline\nback\\slash.yv:1:21: E0010: unknown local 'missing_value'\n"
+      },
+      "diagnostic": {
+        "code": "E0010",
+        "message": "unknown local 'missing_value'"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "quote\"tab\tline\nback\\slash.yv",
+          "source_sha256": "0e5e669a9aa3d5312b88abf33b6e07fa51c2a6f34dcf7f89aec47b062940466e",
+          "sources": [
+            {
+              "path": "quote\"tab\tline\nback\\slash.yv",
+              "bytes": 37,
+              "sha256": "0e5e669a9aa3d5312b88abf33b6e07fa51c2a6f34dcf7f89aec47b062940466e"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0010",
+              "message": "unknown local 'missing_value'",
+              "file": "quote\"tab\tline\nback\\slash.yv",
+              "line": 1,
+              "column": 21,
+              "end_line": 1,
+              "end_column": 34,
+              "primary": {
+                "file": "quote\"tab\tline\nback\\slash.yv",
+                "start": 20,
+                "end": 33,
+                "line": 1,
+                "column": 21,
+                "end_line": 1,
+                "end_column": 34
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "path_control_bytes",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin"
+      ],
+      "input": "control\u0001\u001f.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "control\u0001\u001f.yv",
+          "fixture": "fixtures/path_control_bytes/payload.yv",
+          "sha256": "0e5e669a9aa3d5312b88abf33b6e07fa51c2a6f34dcf7f89aec47b062940466e",
+          "bytes": 37
+        }
+      ],
+      "loaded": [
+        "control\u0001\u001f.yv"
+      ],
+      "location": {
+        "file": "control\u0001\u001f.yv",
+        "start": 20,
+        "end": 33,
+        "anchor": "missing_value",
+        "occurrence": 1
+      },
+      "legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "control\u0001\u001f.yv:1:21: E0010: unknown local 'missing_value'\n"
+      },
+      "diagnostic": {
+        "code": "E0010",
+        "message": "unknown local 'missing_value'"
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "control\u0001\u001f.yv",
+          "source_sha256": "0e5e669a9aa3d5312b88abf33b6e07fa51c2a6f34dcf7f89aec47b062940466e",
+          "sources": [
+            {
+              "path": "control\u0001\u001f.yv",
+              "bytes": 37,
+              "sha256": "0e5e669a9aa3d5312b88abf33b6e07fa51c2a6f34dcf7f89aec47b062940466e"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0010",
+              "message": "unknown local 'missing_value'",
+              "file": "control\u0001\u001f.yv",
+              "line": 1,
+              "column": 21,
+              "end_line": 1,
+              "end_column": 34,
+              "primary": {
+                "file": "control\u0001\u001f.yv",
+                "start": 20,
+                "end": 33,
+                "line": 1,
+                "column": 21,
+                "end_line": 1,
+                "end_column": 34
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "usage_missing_input",
+      "kind": "usage",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/usage_missing_input/main.yv",
+          "sha256": "536e506bb90914c243a12b397b9a998f85ae2cbd9ba02dfd03a9e155ca5ca0f4",
+          "bytes": 13
+        }
+      ],
+      "loaded": [],
+      "expected": {
+        "exit": 2,
+        "document": null,
+        "stderr": "usage"
+      }
+    },
+    {
+      "id": "usage_missing_input_alias",
+      "kind": "usage",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "--json-diagnostics"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/usage_missing_input_alias/main.yv",
+          "sha256": "536e506bb90914c243a12b397b9a998f85ae2cbd9ba02dfd03a9e155ca5ca0f4",
+          "bytes": 13
+        }
+      ],
+      "loaded": [],
+      "expected": {
+        "exit": 2,
+        "document": null,
+        "stderr": "usage"
+      }
+    },
+    {
+      "id": "usage_duplicate_flag",
+      "kind": "usage",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "--json",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/usage_duplicate_flag/main.yv",
+          "sha256": "536e506bb90914c243a12b397b9a998f85ae2cbd9ba02dfd03a9e155ca5ca0f4",
+          "bytes": 13
+        }
+      ],
+      "loaded": [],
+      "expected": {
+        "exit": 2,
+        "document": null,
+        "stderr": "usage"
+      }
+    },
+    {
+      "id": "usage_mixed_flags",
+      "kind": "usage",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "--json",
+        "@input",
+        "--json-diagnostics"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/usage_mixed_flags/main.yv",
+          "sha256": "536e506bb90914c243a12b397b9a998f85ae2cbd9ba02dfd03a9e155ca5ca0f4",
+          "bytes": 13
+        }
+      ],
+      "loaded": [],
+      "expected": {
+        "exit": 2,
+        "document": null,
+        "stderr": "usage"
+      }
+    },
+    {
+      "id": "usage_duplicate_alias",
+      "kind": "usage",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json-diagnostics",
+        "--json-diagnostics"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/usage_duplicate_alias/main.yv",
+          "sha256": "536e506bb90914c243a12b397b9a998f85ae2cbd9ba02dfd03a9e155ca5ca0f4",
+          "bytes": 13
+        }
+      ],
+      "loaded": [],
+      "expected": {
+        "exit": 2,
+        "document": null,
+        "stderr": "usage"
+      }
+    },
+    {
+      "id": "usage_two_inputs",
+      "kind": "usage",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "other.yv",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/usage_two_inputs/main.yv",
+          "sha256": "536e506bb90914c243a12b397b9a998f85ae2cbd9ba02dfd03a9e155ca5ca0f4",
+          "bytes": 13
+        }
+      ],
+      "loaded": [],
+      "expected": {
+        "exit": 2,
+        "document": null,
+        "stderr": "usage"
+      }
+    },
+    {
+      "id": "usage_unknown_option",
+      "kind": "usage",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json",
+        "--unexpected"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/usage_unknown_option/main.yv",
+          "sha256": "536e506bb90914c243a12b397b9a998f85ae2cbd9ba02dfd03a9e155ca5ca0f4",
+          "bytes": 13
+        }
+      ],
+      "loaded": [],
+      "expected": {
+        "exit": 2,
+        "document": null,
+        "stderr": "usage"
+      }
+    },
+    {
+      "id": "usage_json_value",
+      "kind": "usage",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json=1"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/usage_json_value/main.yv",
+          "sha256": "536e506bb90914c243a12b397b9a998f85ae2cbd9ba02dfd03a9e155ca5ca0f4",
+          "bytes": 13
+        }
+      ],
+      "loaded": [],
+      "expected": {
+        "exit": 2,
+        "document": null,
+        "stderr": "usage"
+      }
+    },
+    {
+      "id": "usage_flag_before_command",
+      "kind": "usage",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "--json",
+        "check",
+        "@input"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/usage_flag_before_command/main.yv",
+          "sha256": "536e506bb90914c243a12b397b9a998f85ae2cbd9ba02dfd03a9e155ca5ca0f4",
+          "bytes": 13
+        }
+      ],
+      "loaded": [],
+      "expected": {
+        "exit": 2,
+        "document": null,
+        "stderr": "usage"
+      }
+    },
+    {
+      "id": "usage_unknown_command",
+      "kind": "usage",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "unknown",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/usage_unknown_command/main.yv",
+          "sha256": "536e506bb90914c243a12b397b9a998f85ae2cbd9ba02dfd03a9e155ca5ca0f4",
+          "bytes": 13
+        }
+      ],
+      "loaded": [],
+      "expected": {
+        "exit": 2,
+        "document": null,
+        "stderr": "usage"
+      }
+    },
+    {
+      "id": "usage_emit_json",
+      "kind": "usage",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "emit-c",
+        "@input",
+        "-o",
+        "output.c",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/usage_emit_json/main.yv",
+          "sha256": "536e506bb90914c243a12b397b9a998f85ae2cbd9ba02dfd03a9e155ca5ca0f4",
+          "bytes": 13
+        }
+      ],
+      "loaded": [],
+      "expected": {
+        "exit": 2,
+        "document": null,
+        "stderr": "usage"
+      }
+    },
+    {
+      "id": "usage_build_json",
+      "kind": "usage",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "build",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/usage_build_json/main.yv",
+          "sha256": "536e506bb90914c243a12b397b9a998f85ae2cbd9ba02dfd03a9e155ca5ca0f4",
+          "bytes": 13
+        }
+      ],
+      "loaded": [],
+      "expected": {
+        "exit": 2,
+        "document": null,
+        "stderr": "usage"
+      }
+    },
+    {
+      "id": "usage_run_json",
+      "kind": "usage",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "run",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/usage_run_json/main.yv",
+          "sha256": "536e506bb90914c243a12b397b9a998f85ae2cbd9ba02dfd03a9e155ca5ca0f4",
+          "bytes": 13
+        }
+      ],
+      "loaded": [],
+      "expected": {
+        "exit": 2,
+        "document": null,
+        "stderr": "usage"
+      }
+    },
+    {
+      "id": "usage_check_output",
+      "kind": "usage",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json",
+        "-o",
+        "output.c"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/usage_check_output/main.yv",
+          "sha256": "536e506bb90914c243a12b397b9a998f85ae2cbd9ba02dfd03a9e155ca5ca0f4",
+          "bytes": 13
+        }
+      ],
+      "loaded": [],
+      "expected": {
+        "exit": 2,
+        "document": null,
+        "stderr": "usage"
+      }
+    },
+    {
+      "id": "usage_before_read_failure",
+      "kind": "usage",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "not-present.yv",
+        "--json",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/usage_before_read_failure/main.yv",
+          "sha256": "536e506bb90914c243a12b397b9a998f85ae2cbd9ba02dfd03a9e155ca5ca0f4",
+          "bytes": 13
+        }
+      ],
+      "loaded": [],
+      "expected": {
+        "exit": 2,
+        "document": null,
+        "stderr": "usage"
+      }
+    },
+    {
+      "id": "read_missing",
+      "kind": "read_error",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "not-present.yv",
+      "arguments": [
+        "check",
+        "not-present.yv",
+        "--json"
+      ],
+      "files": [],
+      "loaded": [],
+      "expected": {
+        "exit": 3,
+        "document": null,
+        "stderr": "cannot read input\n"
+      }
+    },
+    {
+      "id": "read_invalid_utf8",
+      "kind": "read_error",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "--json",
+        "@input"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/read_invalid_utf8/main.yv",
+          "sha256": "9716ef7bbf6b1c2c213fb01585923b944870ac8cad38a120f8e6f87e85704608",
+          "bytes": 14
+        }
+      ],
+      "loaded": [],
+      "expected": {
+        "exit": 3,
+        "document": null,
+        "stderr": "cannot read input\n"
+      }
+    },
+    {
+      "id": "read_directory",
+      "kind": "read_error",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "directory.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json-diagnostics"
+      ],
+      "files": [],
+      "loaded": [],
+      "setup": {
+        "directory": "directory.yv"
+      },
+      "expected": {
+        "exit": 3,
+        "document": null,
+        "stderr": "cannot read input\n"
+      }
+    },
+    {
+      "id": "snapshot_root_changed",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "@input",
+        "--json"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/snapshot_root_changed/main.yv",
+          "sha256": "0e61668c421d8c08757b1e3f67d4c4870dc15760444c629f367824dc430899e9",
+          "bytes": 49
+        },
+        {
+          "path": "barrier.yv",
+          "fixture": "fixtures/snapshot_root_changed/barrier.yv",
+          "sha256": "f03fa4025548dc1859b4d65e4fdd897698317bd38e3a9489e19c123a3b4223a5",
+          "bytes": 18
+        }
+      ],
+      "loaded": [
+        "main.yv",
+        "barrier.yv"
+      ],
+      "location": {
+        "file": "main.yv",
+        "start": 32,
+        "end": 45,
+        "anchor": "missing_value",
+        "occurrence": 1
+      },
+      "diagnostic": {
+        "code": "E0010",
+        "message": "unknown local 'missing_value'"
+      },
+      "setup": {
+        "fifo": "barrier.yv",
+        "replacements": [
+          {
+            "path": "main.yv",
+            "text": "fn main() {}\n// changed only after the old root was loaded\n"
+          }
+        ]
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "0e61668c421d8c08757b1e3f67d4c4870dc15760444c629f367824dc430899e9",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 49,
+              "sha256": "0e61668c421d8c08757b1e3f67d4c4870dc15760444c629f367824dc430899e9"
+            },
+            {
+              "path": "barrier.yv",
+              "bytes": 18,
+              "sha256": "f03fa4025548dc1859b4d65e4fdd897698317bd38e3a9489e19c123a3b4223a5"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0010",
+              "message": "unknown local 'missing_value'",
+              "file": "main.yv",
+              "line": 2,
+              "column": 21,
+              "end_line": 2,
+              "end_column": 34,
+              "primary": {
+                "file": "main.yv",
+                "start": 32,
+                "end": 45,
+                "line": 2,
+                "column": 21,
+                "end_line": 2,
+                "end_column": 34
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "id": "snapshot_module_changed",
+      "kind": "json",
+      "platforms": [
+        "linux",
+        "darwin"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "check",
+        "--json-diagnostics",
+        "@input"
+      ],
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/snapshot_module_changed/main.yv",
+          "sha256": "1d77c5aaf6016988978cd9a6b6d0fdb50445a23e3f94b4518284165e4d0acc89",
+          "bytes": 37
+        },
+        {
+          "path": "utility.yv",
+          "fixture": "fixtures/snapshot_module_changed/utility.yv",
+          "sha256": "47b1cf05850b78008f2e4259f2b7bc90f2ad4c712517b14d8639f700a4578750",
+          "bytes": 42
+        },
+        {
+          "path": "barrier.yv",
+          "fixture": "fixtures/snapshot_module_changed/barrier.yv",
+          "sha256": "f03fa4025548dc1859b4d65e4fdd897698317bd38e3a9489e19c123a3b4223a5",
+          "bytes": 18
+        }
+      ],
+      "loaded": [
+        "main.yv",
+        "utility.yv",
+        "barrier.yv"
+      ],
+      "location": {
+        "file": "utility.yv",
+        "start": 25,
+        "end": 31,
+        "anchor": "return",
+        "occurrence": 1
+      },
+      "diagnostic": {
+        "code": "E0001",
+        "message": "expected int, found str"
+      },
+      "setup": {
+        "fifo": "barrier.yv",
+        "replacements": [
+          {
+            "path": "utility.yv",
+            "text": "pub fn answer() -> int { return 42 }\n"
+          }
+        ]
+      },
+      "expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "1d77c5aaf6016988978cd9a6b6d0fdb50445a23e3f94b4518284165e4d0acc89",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 37,
+              "sha256": "1d77c5aaf6016988978cd9a6b6d0fdb50445a23e3f94b4518284165e4d0acc89"
+            },
+            {
+              "path": "utility.yv",
+              "bytes": 42,
+              "sha256": "47b1cf05850b78008f2e4259f2b7bc90f2ad4c712517b14d8639f700a4578750"
+            },
+            {
+              "path": "barrier.yv",
+              "bytes": 18,
+              "sha256": "f03fa4025548dc1859b4d65e4fdd897698317bd38e3a9489e19c123a3b4223a5"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "E0001",
+              "message": "expected int, found str",
+              "file": "utility.yv",
+              "line": 1,
+              "column": 26,
+              "end_line": 1,
+              "end_column": 32,
+              "primary": {
+                "file": "utility.yv",
+                "start": 25,
+                "end": 31,
+                "line": 1,
+                "column": 26,
+                "end_line": 1,
+                "end_column": 32
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    }
+  ],
+  "contract_sha256": "f0fbc2d3c2149ce51f10a620c63c2a48253063f4cff33f31794fee3c4e529bdb",
+  "case_count": 98,
+  "applicable": {
+    "linux": 98,
+    "darwin": 98,
+    "win32": 94
+  }
+}

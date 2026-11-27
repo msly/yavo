@@ -1,0 +1,184 @@
+{
+  "schema": "yavo-diagnostics50-legacy-cli-cases/1",
+  "case_count": 8,
+  "contract_sha256": "2978cdbee491ff215309a2abd90c5cfee71c4e3279d23c599e7fefd60428208d",
+  "source": {
+    "path": "main.yv",
+    "bytes": 13,
+    "sha256": "536e506bb90914c243a12b397b9a998f85ae2cbd9ba02dfd03a9e155ca5ca0f4"
+  },
+  "cases": [
+    {
+      "id": "check_double_dash_filename",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "--source.yv",
+      "arguments": [
+        "check",
+        "--source.yv"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "id": "check_single_dash_filename",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "-legacy.yv",
+      "arguments": [
+        "check",
+        "-legacy.yv"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "id": "emit_output_named_json",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "emit-c",
+        "main.yv",
+        "-o",
+        "--json"
+      ],
+      "output": "--json",
+      "expected": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": "",
+        "output": "frozen_c"
+      }
+    },
+    {
+      "id": "emit_extra_json_before",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "emit-c",
+        "--json",
+        "main.yv",
+        "-o",
+        "out.c"
+      ],
+      "output": "out.c",
+      "expected": {
+        "exit": 2,
+        "stdout": "",
+        "stderr": "usage",
+        "output": "absent"
+      }
+    },
+    {
+      "id": "emit_extra_json_after",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "emit-c",
+        "main.yv",
+        "-o",
+        "out.c",
+        "--json"
+      ],
+      "output": "out.c",
+      "expected": {
+        "exit": 2,
+        "stdout": "",
+        "stderr": "usage",
+        "output": "absent"
+      }
+    },
+    {
+      "id": "emit_output_named_json_diagnostics",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "emit-c",
+        "main.yv",
+        "-o",
+        "--json-diagnostics"
+      ],
+      "output": "--json-diagnostics",
+      "expected": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": "",
+        "output": "frozen_c"
+      }
+    },
+    {
+      "id": "emit_extra_json_diagnostics_before",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "emit-c",
+        "--json-diagnostics",
+        "main.yv",
+        "-o",
+        "out.c"
+      ],
+      "output": "out.c",
+      "expected": {
+        "exit": 2,
+        "stdout": "",
+        "stderr": "usage",
+        "output": "absent"
+      }
+    },
+    {
+      "id": "emit_extra_json_diagnostics_after",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "input": "main.yv",
+      "arguments": [
+        "emit-c",
+        "main.yv",
+        "-o",
+        "out.c",
+        "--json-diagnostics"
+      ],
+      "output": "out.c",
+      "expected": {
+        "exit": 2,
+        "stdout": "",
+        "stderr": "usage",
+        "output": "absent"
+      }
+    }
+  ]
+}

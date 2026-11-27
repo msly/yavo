@@ -1,0 +1,104 @@
+// SHA-256 over the exact UTF-8 bytes of a borrowed string, including embedded
+// NUL. All 32-bit words live in nonnegative int values and are masked after
+// addition; the signed 64-bit arithmetic therefore cannot overflow.
+fn rotateRight(value: int, distance: int) -> int {
+    return ((value >> distance) | (value << (32 - distance))) & 4294967295
+}
+
+// Read the padded message without copying the source. Encode its bit length
+// one byte at a time so even the length calculation needs no len * 8 product.
+fn messageByte(text: str, block: int, within: int, blocks: int) -> int {
+    if block == blocks - 1 && within >= 56 {
+        if within == 63 { return (text.len() & 31) << 3 }
+        return (text.len() >> ((63 - within) * 8 - 3)) & 255
+    }
+    let position = block * 64 + within
+    if position < text.len() { return int(text[position]) }
+    if position == text.len() { return 128 }
+    return 0
+}
+
+pub fn sha256(text: str) -> String {
+    var state: Vec[int] = [
+        1779033703, 3144134277, 1013904242, 2773480762,
+        1359893119, 2600822924, 528734635, 1541459225
+    ]
+    let constants: Vec[int] = [
+        1116352408, 1899447441, 3049323471, 3921009573,
+        961987163, 1508970993, 2453635748, 2870763221,
+        3624381080, 310598401, 607225278, 1426881987,
+        1925078388, 2162078206, 2614888103, 3248222580,
+        3835390401, 4022224774, 264347078, 604807628,
+        770255983, 1249150122, 1555081692, 1996064986,
+        2554220882, 2821834349, 2952996808, 3210313671,
+        3336571891, 3584528711, 113926993, 338241895,
+        666307205, 773529912, 1294757372, 1396182291,
+        1695183700, 1986661051, 2177026350, 2456956037,
+        2730485921, 2820302411, 3259730800, 3345764771,
+        3516065817, 3600352804, 4094571909, 275423344,
+        430227734, 506948616, 659060556, 883997877,
+        958139571, 1322822218, 1537002063, 1747873779,
+        1955562222, 2024104815, 2227730452, 2361852424,
+        2428436474, 2756734187, 3204031479, 3329325298
+    ]
+    var words: Vec[int] = []
+    for _slot in 0..64 { words.push(0) }
+    var blocks = text.len() / 64 + 1
+    if text.len() % 64 >= 56 { blocks += 1 }
+    for block in 0..blocks {
+        for word in 0..16 {
+            var value = 0
+            for part in 0..4 {
+                value = (value << 8) | messageByte(text, block, word * 4 + part, blocks)
+            }
+            words[word] = value
+        }
+        for word in 16..64 {
+            let before = words[word - 15]
+            let recent = words[word - 2]
+            let low = rotateRight(before, 7) ^ rotateRight(before, 18) ^ (before >> 3)
+            let high = rotateRight(recent, 17) ^ rotateRight(recent, 19) ^ (recent >> 10)
+            words[word] = (words[word - 16] + low + words[word - 7] + high) & 4294967295
+        }
+        var a = state[0]
+        var b = state[1]
+        var c = state[2]
+        var d = state[3]
+        var e = state[4]
+        var f = state[5]
+        var g = state[6]
+        var h = state[7]
+        for round in 0..64 {
+            let sum1 = rotateRight(e, 6) ^ rotateRight(e, 11) ^ rotateRight(e, 25)
+            let choice = (e & f) ^ ((e ^ 4294967295) & g)
+            let first = (h + sum1 + choice + constants[round] + words[round]) & 4294967295
+            let sum0 = rotateRight(a, 2) ^ rotateRight(a, 13) ^ rotateRight(a, 22)
+            let majority = (a & b) ^ (a & c) ^ (b & c)
+            let second = (sum0 + majority) & 4294967295
+            h = g
+            g = f
+            f = e
+            e = (d + first) & 4294967295
+            d = c
+            c = b
+            b = a
+            a = (first + second) & 4294967295
+        }
+        state[0] = (state[0] + a) & 4294967295
+        state[1] = (state[1] + b) & 4294967295
+        state[2] = (state[2] + c) & 4294967295
+        state[3] = (state[3] + d) & 4294967295
+        state[4] = (state[4] + e) & 4294967295
+        state[5] = (state[5] + f) & 4294967295
+        state[6] = (state[6] + g) & 4294967295
+        state[7] = (state[7] + h) & 4294967295
+    }
+    var output = String{}
+    for word in 0..8 {
+        for digit in 0..8 {
+            let index = (state[word] >> ((7 - digit) * 4)) & 15
+            output.push("0123456789abcdef"[index..index + 1])
+        }
+    }
+    return output
+}

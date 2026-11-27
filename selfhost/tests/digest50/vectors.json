@@ -1,0 +1,467 @@
+{
+  "schema": "yavo-digest50-vectors/1",
+  "baseline": "db3b4716fe9bea730e544f09b19325c37508a721",
+  "oracle": "Python hashlib.sha256 over UTF-8 input recipe bytes; fixed before executing candidate module",
+  "cases": [
+    {
+      "id": "empty",
+      "recipe": {
+        "unit": "",
+        "repeat": 1,
+        "suffix": ""
+      },
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "abc",
+      "recipe": {
+        "unit": "abc",
+        "repeat": 1,
+        "suffix": ""
+      },
+      "bytes": 3,
+      "sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+    },
+    {
+      "id": "nist-56",
+      "recipe": {
+        "unit": "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
+        "repeat": 1,
+        "suffix": ""
+      },
+      "bytes": 56,
+      "sha256": "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1"
+    },
+    {
+      "id": "nist-112",
+      "recipe": {
+        "unit": "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu",
+        "repeat": 1,
+        "suffix": ""
+      },
+      "bytes": 112,
+      "sha256": "cf5b16a778af8380036ce59e7b0492370b249b11e8f07a51afac45037afee9d1"
+    },
+    {
+      "id": "quick-fox",
+      "recipe": {
+        "unit": "The quick brown fox jumps over the lazy dog",
+        "repeat": 1,
+        "suffix": ""
+      },
+      "bytes": 43,
+      "sha256": "d7a8fbb307d7809469ca9abcb0082e4f8d5651e46d3cdb762d02d0bf37c9e592"
+    },
+    {
+      "id": "quick-fox-dot",
+      "recipe": {
+        "unit": "The quick brown fox jumps over the lazy dog.",
+        "repeat": 1,
+        "suffix": ""
+      },
+      "bytes": 44,
+      "sha256": "ef537f25c895bfa782526529a9b63d97aa631564d5d789c2b765448c8635fb6c"
+    },
+    {
+      "id": "ascii-0",
+      "recipe": {
+        "unit": "a",
+        "repeat": 0,
+        "suffix": ""
+      },
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "ascii-1",
+      "recipe": {
+        "unit": "a",
+        "repeat": 1,
+        "suffix": ""
+      },
+      "bytes": 1,
+      "sha256": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb"
+    },
+    {
+      "id": "ascii-2",
+      "recipe": {
+        "unit": "a",
+        "repeat": 2,
+        "suffix": ""
+      },
+      "bytes": 2,
+      "sha256": "961b6dd3ede3cb8ecbaacbd68de040cd78eb2ed5889130cceb4c49268ea4d506"
+    },
+    {
+      "id": "ascii-3",
+      "recipe": {
+        "unit": "a",
+        "repeat": 3,
+        "suffix": ""
+      },
+      "bytes": 3,
+      "sha256": "9834876dcfb05cb167a5c24953eba58c4ac89b1adf57f28f2f9d09af107ee8f0"
+    },
+    {
+      "id": "ascii-7",
+      "recipe": {
+        "unit": "a",
+        "repeat": 7,
+        "suffix": ""
+      },
+      "bytes": 7,
+      "sha256": "e46240714b5db3a23eee60479a623efba4d633d27fe4f03c904b9e219a7fbe60"
+    },
+    {
+      "id": "ascii-15",
+      "recipe": {
+        "unit": "a",
+        "repeat": 15,
+        "suffix": ""
+      },
+      "bytes": 15,
+      "sha256": "ef2df0b539c6c23de0f4cbe42648c301ae0e22e887340a4599fb4ef4e2678e48"
+    },
+    {
+      "id": "ascii-31",
+      "recipe": {
+        "unit": "a",
+        "repeat": 31,
+        "suffix": ""
+      },
+      "bytes": 31,
+      "sha256": "61c60b487d1a921e0bcc9bf853dda0fb159b30bf57b2e2d2c753b00be15b5a09"
+    },
+    {
+      "id": "ascii-54",
+      "recipe": {
+        "unit": "a",
+        "repeat": 54,
+        "suffix": ""
+      },
+      "bytes": 54,
+      "sha256": "a3f01b6939256127582ac8ae9fb47a382a244680806a3f613a118851c1ca1d47"
+    },
+    {
+      "id": "ascii-55",
+      "recipe": {
+        "unit": "a",
+        "repeat": 55,
+        "suffix": ""
+      },
+      "bytes": 55,
+      "sha256": "9f4390f8d30c2dd92ec9f095b65e2b9ae9b0a925a5258e241c9f1e910f734318"
+    },
+    {
+      "id": "ascii-56",
+      "recipe": {
+        "unit": "a",
+        "repeat": 56,
+        "suffix": ""
+      },
+      "bytes": 56,
+      "sha256": "b35439a4ac6f0948b6d6f9e3c6af0f5f590ce20f1bde7090ef7970686ec6738a"
+    },
+    {
+      "id": "ascii-57",
+      "recipe": {
+        "unit": "a",
+        "repeat": 57,
+        "suffix": ""
+      },
+      "bytes": 57,
+      "sha256": "f13b2d724659eb3bf47f2dd6af1accc87b81f09f59f2b75e5c0bed6589dfe8c6"
+    },
+    {
+      "id": "ascii-62",
+      "recipe": {
+        "unit": "a",
+        "repeat": 62,
+        "suffix": ""
+      },
+      "bytes": 62,
+      "sha256": "f506898cc7c2e092f9eb9fadae7ba50383f5b46a2a4fe5597dbb553a78981268"
+    },
+    {
+      "id": "ascii-63",
+      "recipe": {
+        "unit": "a",
+        "repeat": 63,
+        "suffix": ""
+      },
+      "bytes": 63,
+      "sha256": "7d3e74a05d7db15bce4ad9ec0658ea98e3f06eeecf16b4c6fff2da457ddc2f34"
+    },
+    {
+      "id": "ascii-64",
+      "recipe": {
+        "unit": "a",
+        "repeat": 64,
+        "suffix": ""
+      },
+      "bytes": 64,
+      "sha256": "ffe054fe7ae0cb6dc65c3af9b61d5209f439851db43d0ba5997337df154668eb"
+    },
+    {
+      "id": "ascii-65",
+      "recipe": {
+        "unit": "a",
+        "repeat": 65,
+        "suffix": ""
+      },
+      "bytes": 65,
+      "sha256": "635361c48bb9eab14198e76ea8ab7f1a41685d6ad62aa9146d301d4f17eb0ae0"
+    },
+    {
+      "id": "ascii-66",
+      "recipe": {
+        "unit": "a",
+        "repeat": 66,
+        "suffix": ""
+      },
+      "bytes": 66,
+      "sha256": "ac137fce49837c7c2945f6160d3c0e679e6f40070850420a22bc10e0692cbdc7"
+    },
+    {
+      "id": "ascii-95",
+      "recipe": {
+        "unit": "a",
+        "repeat": 95,
+        "suffix": ""
+      },
+      "bytes": 95,
+      "sha256": "e1c84483d1d8887780218845bcbf6cee4b28373a2bbd1695e7d3e2d24af63097"
+    },
+    {
+      "id": "ascii-111",
+      "recipe": {
+        "unit": "a",
+        "repeat": 111,
+        "suffix": ""
+      },
+      "bytes": 111,
+      "sha256": "6374f73208854473827f6f6a3f43b1f53eaa3b82c21c1a6d69a2110b2a79baad"
+    },
+    {
+      "id": "ascii-112",
+      "recipe": {
+        "unit": "a",
+        "repeat": 112,
+        "suffix": ""
+      },
+      "bytes": 112,
+      "sha256": "f54353008a2553262ecdc4a34749563ba0950e8b0fc8652780b0a614b99683c1"
+    },
+    {
+      "id": "ascii-113",
+      "recipe": {
+        "unit": "a",
+        "repeat": 113,
+        "suffix": ""
+      },
+      "bytes": 113,
+      "sha256": "ba02731ae695aae5cd49b49d84330b63995733eb22102aca755f0179b1e0e20f"
+    },
+    {
+      "id": "ascii-127",
+      "recipe": {
+        "unit": "a",
+        "repeat": 127,
+        "suffix": ""
+      },
+      "bytes": 127,
+      "sha256": "c57e9278af78fa3cab38667bef4ce29d783787a2f731d4e12200270f0c32320a"
+    },
+    {
+      "id": "ascii-128",
+      "recipe": {
+        "unit": "a",
+        "repeat": 128,
+        "suffix": ""
+      },
+      "bytes": 128,
+      "sha256": "6836cf13bac400e9105071cd6af47084dfacad4e5e302c94bfed24e013afb73e"
+    },
+    {
+      "id": "ascii-129",
+      "recipe": {
+        "unit": "a",
+        "repeat": 129,
+        "suffix": ""
+      },
+      "bytes": 129,
+      "sha256": "c12cb024a2e5551cca0e08fce8f1c5e314555cc3fef6329ee994a3db752166ae"
+    },
+    {
+      "id": "ascii-255",
+      "recipe": {
+        "unit": "a",
+        "repeat": 255,
+        "suffix": ""
+      },
+      "bytes": 255,
+      "sha256": "b0f3323e7a3cad8ae6778340cc2a17ae0cb31c818df3767cda7c3dd423725e90"
+    },
+    {
+      "id": "ascii-256",
+      "recipe": {
+        "unit": "a",
+        "repeat": 256,
+        "suffix": ""
+      },
+      "bytes": 256,
+      "sha256": "02d7160d77e18c6447be80c2e355c7ed4388545271702c50253b0914c65ce5fe"
+    },
+    {
+      "id": "ascii-257",
+      "recipe": {
+        "unit": "a",
+        "repeat": 257,
+        "suffix": ""
+      },
+      "bytes": 257,
+      "sha256": "e8d95cc2b4bc198c54b40bd214df958afb65f5e73d2c2eafe0593cf5c635c1f0"
+    },
+    {
+      "id": "ascii-511",
+      "recipe": {
+        "unit": "a",
+        "repeat": 511,
+        "suffix": ""
+      },
+      "bytes": 511,
+      "sha256": "058fc5084b6355a06099bfef3de8e360344046dc5a47026de47470b9aabb5bfd"
+    },
+    {
+      "id": "ascii-512",
+      "recipe": {
+        "unit": "a",
+        "repeat": 512,
+        "suffix": ""
+      },
+      "bytes": 512,
+      "sha256": "471be6558b665e4f6dd49f1184814d1491b0315d466beea768c153cc5500c836"
+    },
+    {
+      "id": "ascii-513",
+      "recipe": {
+        "unit": "a",
+        "repeat": 513,
+        "suffix": ""
+      },
+      "bytes": 513,
+      "sha256": "02425c0f5b0dabf3d2b9115f3f7723a02ad8bcfb1534a0d231614fd42b8188f6"
+    },
+    {
+      "id": "ascii-1024",
+      "recipe": {
+        "unit": "a",
+        "repeat": 1024,
+        "suffix": ""
+      },
+      "bytes": 1024,
+      "sha256": "2edc986847e209b4016e141a6dc8716d3207350f416969382d431539bf292e4a"
+    },
+    {
+      "id": "ascii-4096",
+      "recipe": {
+        "unit": "a",
+        "repeat": 4096,
+        "suffix": ""
+      },
+      "bytes": 4096,
+      "sha256": "c93eee2d0db02f10acc7460d9576e122dcf8cd53c4bf8dfcae1b3e74ebcfff5a"
+    },
+    {
+      "id": "unicode-nul",
+      "recipe": {
+        "unit": "A\u0000é中😀\r\n尾\u0000",
+        "repeat": 1,
+        "suffix": ""
+      },
+      "bytes": 17,
+      "sha256": "9666283816912b1d14f3fb5be3ee4dbf6bb54216c5fe596bebfb96f607fa1849"
+    },
+    {
+      "id": "unicode-55",
+      "recipe": {
+        "unit": "é",
+        "repeat": 27,
+        "suffix": "a"
+      },
+      "bytes": 55,
+      "sha256": "3c9f6b7589808c2738ddef21ae17c0aeaf0c23e81346dd1b3710437826b4b28e"
+    },
+    {
+      "id": "unicode-56",
+      "recipe": {
+        "unit": "é",
+        "repeat": 28,
+        "suffix": ""
+      },
+      "bytes": 56,
+      "sha256": "a2e7c1f809d17958e21b7cd370a1d7d030e07f3af72588be133d4f73fadee71d"
+    },
+    {
+      "id": "unicode-63",
+      "recipe": {
+        "unit": "汉",
+        "repeat": 21,
+        "suffix": ""
+      },
+      "bytes": 63,
+      "sha256": "31cffd3d16957f0a0c149324a493761c4ec753485800505f374a61e040397f16"
+    },
+    {
+      "id": "unicode-64",
+      "recipe": {
+        "unit": "🙂",
+        "repeat": 16,
+        "suffix": ""
+      },
+      "bytes": 64,
+      "sha256": "c207a823e92cd0f4cbe408ff666d467eea094915059e20a92124f17369981ce8"
+    },
+    {
+      "id": "ascii-controls",
+      "recipe": {
+        "unit": "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n\u000b\f\r\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
+        "repeat": 1,
+        "suffix": ""
+      },
+      "bytes": 128,
+      "sha256": "471fb943aa23c511f6f72f8d1652d9c880cfa392ad80503120547703e56a2be5"
+    },
+    {
+      "id": "unicode-scalars",
+      "recipe": {
+        "unit": "߿ࠀ￿𐀀􏿿",
+        "repeat": 1,
+        "suffix": ""
+      },
+      "bytes": 19,
+      "sha256": "ebb743f6088e6033eedda08cd0c0e3827169bcd8d01124b943d43ee33685966b"
+    },
+    {
+      "id": "multiblock-unicode",
+      "recipe": {
+        "unit": "首行\r\n第二行\u0000🙂\t",
+        "repeat": 179,
+        "suffix": ""
+      },
+      "bytes": 4117,
+      "sha256": "246cc60eb5f852262576114adc8540bf0749de93363ddb51bb427231cf57d49d"
+    },
+    {
+      "id": "million-a",
+      "recipe": {
+        "unit": "a",
+        "repeat": 1000000,
+        "suffix": ""
+      },
+      "bytes": 1000000,
+      "sha256": "cdc76e5c9914fb9281a1c7e284d73e67f1809a48a497200e046d39ccc7112cd0"
+    }
+  ]
+}

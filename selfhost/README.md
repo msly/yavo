@@ -21,7 +21,9 @@ system interfaces cover environment values, host identity, temporary directories
 file removal/identity and synchronous argv-based processes. Read-only
 `[]String` parameters carry process arguments and the complete source-path
 inventory. The driver has no Yavo build cache and does not yet migrate cross
-targets, structured diagnostics or toolchain installation. This closes one
+targets or toolchain installation. Batch 50 adds independent first-error JSON
+checking with source snapshots, exact byte/scalar ranges and a pure Yavo SHA256
+module. Richer diagnostics and JSON build/run remain separate work. This closes one
 SH-3 entrypoint gap; it does not make selfhost the daily default.
 Batch 48 is driven by the independently authored five-module
 [yavo-dep-index](../examples/dep-index/SPEC.md): `main`, `model`, `parser`,
@@ -93,15 +95,17 @@ cargo build --manifest-path compiler/Cargo.toml --locked --release
 python3 selfhost/embed_runtime.py --check
 python3 selfhost/bootstrap.py
 python3 tools/ci/selfhost_driver.py --bootstrap-output compiler/target/ci/selfhost
+python3 tools/ci/selfhost_digest.py --bootstrap-output compiler/target/ci/selfhost
+python3 tools/ci/selfhost_diagnostics.py --bootstrap-output compiler/target/ci/selfhost
 ```
 
-The compiler has nine Yavo modules: entry `main.yv`, plus `support.yv`,
+The compiler has ten Yavo modules: entry `main.yv`, plus `digest.yv`, `support.yv`,
 `lexer.yv`, `model.yv`, `parser.yv`, `types.yv`, `codegen.yv`, `driver.yv` and
 `runtime_source.yv`. It loads these through `use` and calls across files as
 `module.f(...)`. `bootstrap.py` copies the complete `COMPILER_PARTS` unchanged
 into the run directory and gives each compiler only the entry file; concatenating
 the files is not the module build procedure. The separate lexer unit entry is
-`lexer_test.yv`, which uses `support` and `lexer`.
+`lexer_test.yv`, which loads `support`, `lexer` and their `digest` dependency.
 To build the compiler by hand:
 `yavo build selfhost/main.yv --release -o yavo-selfhost`.
 
@@ -150,7 +154,42 @@ modules to produce a compiler that emits the fixed-point C and executes the
 independent multi-module fixture with ordinary `run`. This gate does not replace
 the broader bootstrap, application or specification checks.
 
-## Current validation: batch 49 (2026-11-27)
+## Current validation: batch 50 (2026-11-27)
+
+The [independent diagnostic contract](tests/diagnostics50/CONTRACT.md), 98 cases
+and strict Python oracle were frozen before the new JSON frontend was executed.
+The original text frontend supplies only the recorded code/message/start;
+byte spans, scalar coordinates and hashlib identities are independent expectations.
+Eight additional legacy CLI cases were separately frozen before correcting
+the candidate's leading-dash input/literal output-name regression. The first
+bootstrap attempt stopped after 294 cases and is excluded from formal acceptance.
+
+| Formal local gate | Passed |
+| --- | --- |
+| Complete bootstrap | 1,063/1,063 cases, 20/20 checks, zero skips |
+| Actual stage1/stage2 JSON / text / supplemental CLI | 196 / 160 / 16; 372 commands |
+| Independent oracle controls | 10 deliberately invalid documents rejected |
+| Source-mutation rendezvous | Root and loaded-module FIFO snapshots; JSON and text for both producers |
+| SHA256 | 46 frozen vectors × stage0/stage1/stage2 × Debug/Release = 276 |
+| Ordinary native driver | 114/114 cases, 9/9 checks; self-rebuild and independent multi-module run |
+| Existing source corpus | 119/394, 56/224 unique entry bytes; zero regressions/violations/timeouts |
+
+Stage2/stage3 C is byte-identical at **1,684,975 bytes** and their Linux binaries
+at **682,864 bytes**. The local ordinary rebuild also matches those bytes.
+The existing 1,063-case manifest, 622 corpus sources and Rust/runtime/lock sources
+are unchanged. No entry in the existing subset manifest was added or promoted; 31 new lexer range
+unit scenarios, SHA256 vectors and diagnostic contract scenarios are separate units.
+Local complete Rust results remain the source-identical batch49 runs; CI results
+are recorded against this batch's implementation commit. Compile P50 and token/currency costs remain unmeasured.
+
+Formal local gates pass. Exact-commit three-platform CI and the independent Linux ASan+UBSan diagnostic gate are pending; configuration is not counted as acceptance. Windows excludes two POSIX-only path cases and two FIFO cases: its
+dual-producer JSON/text/supplemental counts are 188/152/16 (356 commands).
+Linux/macOS use 196/160/16 (372 commands). The Linux instrumented compiler gate
+requires 98/80/8, 10 oracle controls and all four FIFO rendezvous, in addition
+to the existing compiler/program/self-compile/stress gates.
+See the [validation index](../compiler/validation/batch50-json-diagnostics-2026-11-27.json) for source and artifact identities.
+
+## Historical validation: batch 49 (2026-11-27)
 
 The implementation adds the native driver, public system calls and read-only
 String slices. The primary driver contract and independent expectations were
@@ -520,10 +559,38 @@ The command forms are:
 
 | Command | Supported form |
 | --- | --- |
-| Check | `check <input.yv>` |
+| Check | `check <input.yv> [--json \| --json-diagnostics]` (flag may precede input) |
 | Emit C | `emit-c <input.yv> -o <output.c>` |
 | Native build | `build <input.yv> [-o <output>] [--release]` |
 | Native run | `run <input.yv> [--release] [-- <program arguments>...]` |
+
+### Structured check diagnostics
+
+Check accepts one input and one optional `--json` or `--json-diagnostics` flag,
+before or after the input. Successful JSON mode writes one compact UTF-8 object
+plus LF to stdout, empty stderr and exit 0; a frontend rejection writes one
+diagnostic and exits 1. Usage errors exit 2. Root read/UTF-8 errors exit 3 with
+empty stdout and the existing text stderr, since no valid source snapshot exists.
+The original three-argument text form keeps leading-dash filenames; the two new
+JSON spellings alone are reserved as missing-input requests. Emit-C's positional
+input/output paths remain literal, including an output named `--json`.
+
+The schema is `yavo-diagnostics/p0`, with `frontend: selfhost` and
+`diagnostic_mode: first-error`. Each primary range is a UTF-8 byte half-open
+interval with one-based Unicode scalar line/column coordinates. LF starts a
+new line; CR and TAB each advance one column. Parser/type/ownership diagnostics
+cover the original primary token, not an inferred whole-expression span;
+lexical failures use the separately frozen consumed/lookahead boundary. EOF
+and synthetic newline ranges may be empty. The original error precedence,
+code and message are preserved; warnings are zero and notes/fixes are empty.
+
+`source_sha256` identifies the root's original bytes. `sources` lists each
+successful UTF-8 read in the existing BFS load order, including a lexically
+invalid file already read, and excluding a missing or invalid-UTF-8 file.
+The list is the loaded prefix at the first failure; there is no project digest.
+Rendering uses the captured source even if disk contents subsequently change.
+Full JSON field and lexical boundary rules are in the
+[frozen contract](tests/diagnostics50/CONTRACT.md).
 
 Build/run options may precede or follow the input. Duplicate options, additional
 inputs and unknown options are usage errors. Arguments following run's `--`
@@ -1100,22 +1167,23 @@ The frontend remains a subset of the Rust implementation.
 
 | File | Responsibility |
 | --- | --- |
-| `support.yv` | Decimal formatting/parsing, small string joins, owned `Diagnostic` and `path:line:column: CODE: message` reporting |
-| `lexer.yv` | UTF-8-aware tokens, escapes, source spans, newline termination; returns `Vec[Token] ! Diagnostic` |
+| `digest.yv` | Pure Yavo SHA256 over the original UTF-8 bytes; independently frozen vectors |
+| `support.yv` | Owned diagnostics, source identities, byte/scalar coordinates and text/JSON rendering |
+| `lexer.yv` | UTF-8-aware tokens, escapes, source spans, newline termination; returns `Vec[Token] ! Diagnostic`; precise lexical ends and JSON-only source snapshots on file EOF |
 | `model.yv` | Copy AST nodes; child lists are ranges in shared Program pools |
 | `parser.yv` | Aggregate/function/statement/expression grammar, imports, slices, borrows, catch, unsupported boundaries |
 | `types.yv` | Resolved nominal/vector/Heap/Optional/flat tuple types within the stated shape limits, bounded tuple signatures, Result pool, field/default checks, cycles/layout order and transitive ownership |
 | `codegen.yv` | Places, borrowed/consuming values, Optional/Result wrapping, lazy coalesce, Result propagation, inout/take/pop/sort, move-state joins, cleanup, loop replay and ordered C |
 | `driver.yv` | Native build/run options, pinned backend resolution, source-identity protection, explicit argv, stream/exit forwarding and temporary-file cleanup |
 | `runtime_source.yv` | Generated runtime-header bytes and pinned backend version for standalone native compilation |
-| `main.yv` | `compile` returns owned generated C and the complete source inventory in `Compilation ! Diagnostic`; check/emit-c dispatch and ordinary command lifetime |
+| `main.yv` | Source loading and identities, JSON/text check dispatch, emit-c and ordinary command lifetime |
 | `embed_runtime.py` | Deterministic generation and read-only freshness check of runtime_source.yv from the production header and toolchain lock |
 | `lexer_test.yv` | Lexer boundary assertions, including owned error propagation and cleanup on normal test returns |
 | `tests/` and `bootstrap.py` | Independent behavior/rejection oracles, fixed point and reproducible execution |
 
 Inside the compiler, parsing, checking and lowering still call `fail`, which
-prints the first diagnostic and exits with status 1. Lexing returns an owned
-`Diagnostic` containing code, message and byte/line/column location; `compile`
+renders the first diagnostic in the selected text/JSON mode and exits 1. Lexing
+returns an owned `Diagnostic` with code, message and byte start/end; `compile`
 uses `try`, and the command entry catches and reports it. All frontend work
 precedes creation of backend temporary files. Ordinary driver success and
 handled errors return through `command`, dropping owned source/options/C
@@ -1142,8 +1210,8 @@ flat String-tuple Optional shape. Closing that gap includes construction,
 owned returns, borrowed access and cleanup across branches and early exits. A single archived CSV
 compatibility gate does not itself satisfy the formal project's conditions.
 
-Remaining SH-3 work includes structured diagnostics and stable diagnostic
-data, broader language and standard-error Result support, cross targets,
+Remaining SH-3 work starts with standard-library error values and `catch e`,
+then broader language semantics, richer diagnostic data and cross targets,
 cache/PCH behavior, toolchain installation and the other fix/verify/tool
 entrypoints. Coverage of the existing regressions, frozen specification,
 resources and native platforms is required before the daily default switches

@@ -1,4 +1,5 @@
 use std/os
+use digest
 
 // Shared text helpers and the fatal diagnostic path of the bootstrap compiler.
 // Locations are UTF-8 byte offsets with one-based lines and Unicode scalar columns.
@@ -11,6 +12,23 @@ pub struct Diagnostic {
     offset: int
     line: int
     column: int
+    endOffset: int = 0
+}
+
+// Identities describe the bytes read for this compilation, never a later read.
+pub struct SourceIdentity {
+    path: String
+    bytes: int
+    sha256: String
+}
+
+struct Position {
+    line: int
+    column: int
+}
+
+pub fn identify(path: str, source: str) -> SourceIdentity {
+    return SourceIdentity{path: path.toString(), bytes: source.len(), sha256: digest.sha256(source)}
 }
 
 pub fn decimal(n: int) -> String {
@@ -85,5 +103,126 @@ pub fn join5(a: str, b: str, c: str, d: str, e: str) -> String {
 // Prints `path:line:column: code: message` and stops; no output file is open yet.
 pub fn report(path: str, line: int, column: int, code: str, message: str) {
     eprintln("${path}:${line}:${column}: ${code}: ${message}")
+    os.exit(1)
+}
+
+fn scalarBytes(c: byte) -> int {
+    if c < 128 { return 1 }
+    if c < 224 { return 2 }
+    if c < 240 { return 3 }
+    return 4
+}
+
+// Use the captured UTF-8 source. CR and TAB each advance one column.
+// Invalid internal ranges fail visibly instead of producing a plausible span.
+fn positionAt(source: str, offset: int) -> Position {
+    assert(offset >= 0 && offset <= source.len())
+    var position = 0
+    var line = 1
+    var column = 1
+    while position < offset {
+        if source[position] == '\n' {
+            position += 1
+            line += 1
+            column = 1
+        } else {
+            position += scalarBytes(source[position])
+            column += 1
+        }
+    }
+    assert(position == offset)
+    return Position{line: line, column: column}
+}
+
+fn jsonString(value: str) -> String {
+    var out = "\"".toString()
+    var i = 0
+    while i < value.len() {
+        let c = value[i]
+        if c == '"' { out.push("\\\"")
+        } else if c == '\\' { out.push("\\\\")
+        } else if c < 32 {
+            let high = int(c) / 16
+            let low = int(c) % 16
+            out.push("\\u00")
+            out.push("0123456789abcdef"[high..high + 1])
+            out.push("0123456789abcdef"[low..low + 1])
+        } else {
+            let width = scalarBytes(c)
+            out.push(value[i..i + width])
+            i += width
+            continue
+        }
+        i += 1
+    }
+    out.push("\"")
+    return out
+}
+
+fn jsonHeader(sources: Vec[SourceIdentity], errors: int) -> String {
+    assert(sources.len() > 0)
+    var out = "{\"schema\":\"yavo-diagnostics/p0\",\"frontend\":\"selfhost\",\"diagnostic_mode\":\"first-error\",\"file\":".toString()
+    out.push(jsonString(sources[0].path))
+    out.push(",\"source_sha256\":")
+    out.push(jsonString(sources[0].sha256))
+    out.push(",\"sources\":[")
+    var i = 0
+    while i < sources.len() {
+        if i > 0 { out.push(",") }
+        out.push("{\"path\":")
+        out.push(jsonString(sources[i].path))
+        out.push(",\"bytes\":")
+        out.push(decimal(sources[i].bytes))
+        out.push(",\"sha256\":")
+        out.push(jsonString(sources[i].sha256))
+        out.push("}")
+        i += 1
+    }
+    out.push("],\"error_count\":")
+    out.push(decimal(errors))
+    out.push(",\"warning_count\":0,\"diagnostics\":[")
+    return out
+}
+
+fn jsonLocation(out: inout String, path: str, first: Position, last: Position) {
+    out.push("\"file\":")
+    out.push(jsonString(path))
+    out.push(",\"line\":")
+    out.push(decimal(first.line))
+    out.push(",\"column\":")
+    out.push(decimal(first.column))
+    out.push(",\"end_line\":")
+    out.push(decimal(last.line))
+    out.push(",\"end_column\":")
+    out.push(decimal(last.column))
+}
+
+pub fn successJson(sources: Vec[SourceIdentity]) {
+    var out = jsonHeader(sources, 0)
+    out.push("]}")
+    println(out)
+}
+
+// The single structured fatal-output boundary receives immutable captured data.
+pub fn reportJson(sources: Vec[SourceIdentity], source: str, path: str,
+                  start: int, end: int, code: str, message: str) {
+    assert(start <= end)
+    let first = positionAt(source, start)
+    let last = positionAt(source, end)
+    var out = jsonHeader(sources, 1)
+    out.push("{\"severity\":\"ERROR\",\"code\":")
+    out.push(jsonString(code))
+    out.push(",\"message\":")
+    out.push(jsonString(message))
+    out.push(",")
+    jsonLocation(&out, path, first, last)
+    out.push(",\"primary\":{")
+    jsonLocation(&out, path, first, last)
+    out.push(",\"start\":")
+    out.push(decimal(start))
+    out.push(",\"end\":")
+    out.push(decimal(end))
+    out.push("},\"notes\":[],\"fixes\":[]}]}")
+    println(out)
     os.exit(1)
 }

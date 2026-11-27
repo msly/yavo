@@ -10,7 +10,7 @@ use driver
 // before the output file is created; any diagnostic stops the process first.
 
 fn usage() {
-    eprintln("usage: yavo-selfhost check <input.yv>")
+    eprintln("usage: yavo-selfhost check <input.yv> [--json | --json-diagnostics]")
     eprintln("       yavo-selfhost emit-c <input.yv> -o <output.c>")
     driver.usage()
 }
@@ -18,6 +18,20 @@ fn usage() {
 struct Compilation {
     generated: String
     sources: Vec[String]
+    identities: Vec[SourceIdentity]
+}
+
+fn jsonFlag(value: str) -> bool {
+    return value == "--json" || value == "--json-diagnostics"
+}
+
+fn rootDiagnostic(jsonMode: bool, path: str, source: str, problem: Diagnostic) {
+    if jsonMode {
+        let identities = [support.identify(path, source)]
+        support.reportJson(identities, source, path, problem.offset, problem.endOffset,
+                           problem.code, problem.message)
+    }
+    support.report(path, problem.line, problem.column, problem.code, problem.message)
 }
 
 // `a/b/c` for an import; module files are named relative to the entry directory.
@@ -35,9 +49,9 @@ fn moduleKey(ts: Vec[Token], item: ModuleImport) -> String {
 
 // Loads the entry file and every module it reaches, breadth first. File index
 // k is the k-th distinct module path; a cycle or self-import reuses its index.
-fn compile(source: str, path: str) -> Compilation ! Diagnostic {
+fn compile(source: str, path: str, jsonMode: bool) -> Compilation ! Diagnostic {
     var tokens: Vec[Token] = []
-    let _ = try lexer.lexInto(source, path, &tokens)
+    let _ = try lexer.lexIntoMode(source, path, &tokens, jsonMode)
     var cut = -1
     var i = 0
     while i < path.len() {
@@ -60,7 +74,13 @@ fn compile(source: str, path: str) -> Compilation ! Diagnostic {
                 lexer.fail(tokens, sites[file], "E0010", support.join3("cannot load module '", keys[file], "'"))
                 os.exit(1)
             }
-            let _ = lexer.lexInto(text, paths[file], &tokens) catch problem {
+            let _ = lexer.lexIntoMode(text, paths[file], &tokens, jsonMode) catch problem {
+                if jsonMode {
+                    var identities = lexer.sourceIdentities(tokens)
+                    identities.push(support.identify(paths[file], text))
+                    support.reportJson(identities, text, paths[file], problem.offset,
+                                       problem.endOffset, problem.code, problem.message)
+                }
                 support.report(paths[file], problem.line, problem.column, problem.code, problem.message)
                 os.exit(1)
             }
@@ -87,7 +107,8 @@ fn compile(source: str, path: str) -> Compilation ! Diagnostic {
         file += 1
     }
     let program = parser.finishParse(&state)
-    return ok(Compilation{generated: codegen.generate(program, tokens, path), sources: paths})
+    return ok(Compilation{generated: codegen.generate(program, tokens, path), sources: paths,
+                          identities: lexer.sourceIdentities(tokens)})
 }
 
 fn command(args: []str) -> int {
@@ -105,7 +126,7 @@ fn command(args: []str) -> int {
             eprintln("cannot read input")
             return 3
         }
-        let compiled = compile(source, options.input) catch diagnostic {
+        let compiled = compile(source, options.input, false) catch diagnostic {
             support.report(options.input, diagnostic.line, diagnostic.column,
                            diagnostic.code, diagnostic.message)
             return 1
@@ -122,9 +143,22 @@ fn command(args: []str) -> int {
         usage()
         return 2
     }
-    if checkMode && args.len() != 3 {
-        usage()
-        return 2
+    var input = 2
+    var jsonMode = false
+    if checkMode {
+        if args.len() == 4 && (jsonFlag(args[2]) || jsonFlag(args[3])) {
+            jsonMode = true
+            if jsonFlag(args[2]) { input = 3 }
+        } else if args.len() != 3 {
+            usage()
+            return 2
+        }
+        // The original three-argument text form treats its argument as a path.
+        // Only the two new mode spellings are reserved; JSON forms parse flags.
+        if jsonFlag(args[input]) || (jsonMode && args[input].startsWith("-")) {
+            usage()
+            return 2
+        }
     }
     if emitMode && (args.len() != 5 || args[3] != "-o") {
         usage()
@@ -134,12 +168,12 @@ fn command(args: []str) -> int {
         eprintln("refusing to overwrite the source file")
         return 2
     }
-    let source = fs.readText(args[2]) catch _ {
+    let source = fs.readText(args[input]) catch _ {
         eprintln("cannot read input")
         return 3
     }
-    let compiled = compile(source, args[2]) catch diagnostic {
-        support.report(args[2], diagnostic.line, diagnostic.column, diagnostic.code, diagnostic.message)
+    let compiled = compile(source, args[input], jsonMode) catch diagnostic {
+        rootDiagnostic(jsonMode, args[input], source, diagnostic)
         return 1
     }
     if emitMode {
@@ -148,6 +182,7 @@ fn command(args: []str) -> int {
             return 3
         }
     }
+    if checkMode && jsonMode { support.successJson(compiled.identities) }
     return 0
 }
 

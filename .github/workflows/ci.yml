@@ -104,6 +104,16 @@ jobs:
           YAVO_HOME: ${{ runner.temp }}/yavo-home
           YAVO_CACHE_DIR: ${{ runner.temp }}/yavo-cache
         run: ${{ matrix.python }} tools/ci/selfhost_driver.py --bootstrap-output compiler/target/ci/selfhost
+      - name: Validate selfhost source hashing
+        env:
+          YAVO_HOME: ${{ runner.temp }}/yavo-home
+          YAVO_CACHE_DIR: ${{ runner.temp }}/yavo-cache
+        run: ${{ matrix.python }} tools/ci/selfhost_digest.py --bootstrap-output compiler/target/ci/selfhost
+      - name: Validate selfhost structured diagnostics
+        env:
+          YAVO_HOME: ${{ runner.temp }}/yavo-home
+          YAVO_CACHE_DIR: ${{ runner.temp }}/yavo-cache
+        run: ${{ matrix.python }} tools/ci/selfhost_diagnostics.py --bootstrap-output compiler/target/ci/selfhost
       - name: Validate the test-summary CLI application
         env:
           YAVO_HOME: ${{ runner.temp }}/yavo-home
@@ -137,9 +147,18 @@ jobs:
       - name: Package ordinary driver evidence
         if: always()
         run: ${{ matrix.python }} tools/ci/package_test_summary.py --input compiler/target/ci/selfhost-driver --output compiler/target/ci/selfhost-driver.tar.gz --prefix selfhost-driver
+      - name: Package selfhost source hashing evidence
+        if: always()
+        run: ${{ matrix.python }} tools/ci/package_test_summary.py --input compiler/target/ci/selfhost-digest --output compiler/target/ci/selfhost-digest.tar.gz --prefix selfhost-digest
+      - name: Package selfhost structured diagnostic evidence
+        if: always()
+        run: ${{ matrix.python }} tools/ci/package_test_summary.py --input compiler/target/ci/selfhost-diagnostics --output compiler/target/ci/selfhost-diagnostics.tar.gz --prefix selfhost-diagnostics
       - name: Package system interface sanitizer evidence
         if: always() && runner.os == 'Linux'
         run: python3 tools/ci/package_test_summary.py --input compiler/target/ci/system-sanitize --output compiler/target/ci/system-sanitize.tar.gz --prefix system-sanitize
+      - name: Package selfhost sanitizer evidence
+        if: always() && runner.os == 'Linux'
+        run: python3 tools/ci/package_test_summary.py --input compiler/target/ci/selfhost-sanitizers --output compiler/target/ci/selfhost-sanitizers.tar.gz --prefix selfhost-sanitizers
       - name: Preserve logs and per-platform receipts
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -151,7 +170,10 @@ jobs:
             !compiler/target/ci/csv-check/**
             !compiler/target/ci/dep-index/**
             !compiler/target/ci/selfhost-driver/**
+            !compiler/target/ci/selfhost-digest/**
+            !compiler/target/ci/selfhost-diagnostics/**
             !compiler/target/ci/system-sanitize/**
+            !compiler/target/ci/selfhost-sanitizers/**
           if-no-files-found: error
           retention-days: 14
 

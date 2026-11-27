@@ -10,8 +10,10 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import json
 import os
 from pathlib import Path
+import sys
 
 
 def clean_environment(sanitizer):
@@ -117,6 +119,156 @@ def stress_inputs():
     ]
 
 
+def validate_json_diagnostics(bootstrap, compiler, stages, directory, command, bound, sanitizer_environment, detail):
+    """Reuse the frozen oracle with an instrumented candidate bound to stage2 C."""
+    detail.update(status="running", mode="instrumented_candidate", formal_frontend_acceptance=False,
+                  source_stage2_c={"path": str(stages["stage2_c"]),
+                                   "sha256": bootstrap.digest(stages["stage2_c"])},
+                  instrumented_compiler={"path": str(compiler), "sha256": bootstrap.digest(compiler)},
+                  sanitizer_environment=dict(sanitizer_environment))
+
+    def bind(path, expected=None):
+        path = Path(path).resolve()
+        actual = bootstrap.digest(path)
+        if ((expected is not None and actual != expected)
+                or (str(path) in bound and bound[str(path)] != actual)):
+            raise ValueError("JSON sanitizer input identity changed: " + str(path))
+        bound[str(path)] = actual
+        return {"path": str(path), "bytes": path.stat().st_size, "sha256": actual}
+
+    try:
+        if sys.platform != "linux":
+            raise ValueError("instrumented JSON diagnostics require Linux")
+        fixtures = bootstrap.SELFHOST / "tests/diagnostics50"
+        freeze = json.loads((fixtures / "freeze.json").read_bytes())
+        if freeze.get("schema") != "yavo-diagnostics50-frozen-oracle/1" or freeze.get("case_count") != 98:
+            raise ValueError("unexpected frozen JSON diagnostic inventory")
+        detail["freeze"] = bind(fixtures / "freeze.json")
+        for name, expected in freeze["sha256"].items():
+            path = (fixtures / name).resolve()
+            if not path.is_relative_to(fixtures.resolve()):
+                raise ValueError("frozen JSON fixture escapes its root")
+            bind(path, expected)
+        cases = json.loads((fixtures / "cases.json").read_bytes())["cases"]
+        expected_ids = {case["id"] for case in cases if "linux" in case["platforms"]}
+        expected_text_ids = {case["id"] for case in cases if "linux" in case["platforms"] and case["kind"] == "json"}
+        if len(cases) != 98 or len(expected_ids) != 98 or len(expected_text_ids) != 80:
+            raise ValueError("frozen Linux JSON/text inventory changed")
+        supplement = fixtures / "supplemental"
+        supplemental_freeze = json.loads((supplement / "freeze.json").read_bytes())
+        if (supplemental_freeze.get("schema") != "yavo-diagnostics50-legacy-cli-freeze/1"
+                or supplemental_freeze.get("case_count") != 8
+                or supplemental_freeze.get("applicable", {}).get("linux") != 8):
+            raise ValueError("unexpected frozen legacy CLI supplement inventory")
+        detail["supplemental_freeze"] = bind(supplement / "freeze.json")
+        for name, expected in supplemental_freeze["sha256"].items():
+            path = (supplement / name).resolve()
+            if not path.is_relative_to(supplement.resolve()):
+                raise ValueError("frozen legacy CLI supplement escapes its root")
+            bind(path, expected)
+        supplemental_cases = json.loads((supplement / "cases.json").read_bytes())["cases"]
+        expected_supplemental_ids = {case["id"] for case in supplemental_cases if "linux" in case["platforms"]}
+        if len(supplemental_cases) != 8 or len(expected_supplemental_ids) != 8:
+            raise ValueError("frozen Linux legacy CLI supplement inventory changed")
+        harness = bootstrap.ROOT / "tools/ci/selfhost_diagnostics.py"
+        for path in (harness, bootstrap.ROOT / "tools/ci/csv_support.py",
+                     bootstrap.ROOT / "tools/ci/selfhost_driver.py", Path(sys.executable)):
+            bind(path)
+        output = directory / "json-diagnostics"
+        checked = command("json-diagnostics", [sys.executable, harness, "--candidate", compiler,
+                                               "--output", output], timeout=600)
+        detail["command"] = checked["record"]
+        receipt_path = output / "receipt.json"
+        if not receipt_path.is_file():
+            raise ValueError("instrumented JSON harness did not produce its receipt")
+        candidate = json.loads(receipt_path.read_bytes())
+        detail["receipt"] = bind(receipt_path)
+        detail["candidate_status"] = candidate.get("status")
+        detail["counts"] = {name: candidate.get(name) for name in
+                            ("case_count", "passed", "failed", "text_case_count", "text_passed", "text_failed")}
+        detail["supplemental_counts"] = {name: candidate.get(name) for name in
+                                         ("supplemental_applicable_per_driver", "supplemental_case_count",
+                                          "supplemental_passed", "supplemental_failed")}
+        if (not bootstrap.succeeded(checked) or checked["stderr"] != b""
+                or candidate.get("schema") != "yavo-selfhost-diagnostics-acceptance/1"
+                or candidate.get("status") != "preliminary_passed" or candidate.get("formal") is not False
+                or candidate.get("platform") != "linux" or candidate.get("driver_count") != 1
+                or candidate.get("applicable_cases_per_driver") != 98
+                or candidate.get("case_count") != candidate.get("passed") or candidate.get("passed") != 98
+                or candidate.get("text_case_count") != candidate.get("text_passed") or candidate.get("text_passed") != 80
+                or candidate.get("failed") != 0 or candidate.get("text_failed") != 0
+                or candidate.get("supplemental_applicable_per_driver") != 8
+                or candidate.get("supplemental_case_count") != 8 or candidate.get("supplemental_passed") != 8
+                or candidate.get("supplemental_failed") != 0
+                or candidate.get("freeze") != detail["freeze"]
+                or candidate.get("supplemental_freeze") != detail["supplemental_freeze"]
+                or candidate.get("excluded") != [] or candidate.get("special_files_removed_after_error") != []):
+            raise ValueError("instrumented JSON candidate did not pass the complete frozen Linux gate")
+        checks = candidate["checks"]
+        check_names = {row["id"] for row in checks}
+        required_checks = {"frozen_oracle", "oracle_controls", "complete_case_inventory",
+                           "frozen_platform_inventory", "inputs_unchanged_during_run", "json_and_text_contracts",
+                           "frozen_legacy_cli_supplement", "legacy_cli_supplement"}
+        if (len(check_names) != len(checks) or not required_checks.issubset(check_names)
+                or not all(row.get("passed") is True for row in checks)):
+            raise ValueError("instrumented JSON candidate omitted or failed a required check")
+        controls = next(row for row in checks if row["id"] == "oracle_controls")
+        if (controls.get("positive") is not True or len(controls.get("negative_controls", [])) != 10
+                or not all(row.get("rejected") is True for row in controls["negative_controls"])):
+            raise ValueError("instrumented JSON oracle capability controls failed")
+        drivers = candidate["drivers"]
+        if (len(drivers) != 1 or drivers[0].get("id") != "candidate"
+                or drivers[0]["sha256"] != detail["instrumented_compiler"]["sha256"]):
+            raise ValueError("JSON cases did not use the instrumented compiler")
+        detail["executed_compiler"] = bind(drivers[0]["path"], drivers[0]["sha256"])
+        snapshots = []
+        expected_commands = {}
+        for name, expected, mode in (("cases", expected_ids, "json"),
+                                     ("text_cases", expected_text_ids, "text"),
+                                     ("supplemental_cases", expected_supplemental_ids, "legacy_cli")):
+            rows = candidate[name]
+            if len(rows) != len(expected) or {row["id"] for row in rows} != expected:
+                raise ValueError("instrumented JSON/text/supplemental case identities differ")
+            for row in rows:
+                record = row["command"]
+                if (row.get("passed") is not True or row["driver"] != "candidate" or row["mode"] != mode
+                        or record["argv"][0] != drivers[0]["path"] or record.get("timed_out")
+                        or record.get("launch_error")
+                        or any(key in record["environment"] and record["environment"][key] != value
+                               for key, value in sanitizer_environment.items())):
+                    raise ValueError("instrumented JSON/text/supplemental execution identity or environment differs")
+                command_id = ("candidate-legacy-" + row["id"] if mode == "legacy_cli"
+                              else "candidate-" + row["id"] + "-" + mode)
+                expected_commands[command_id] = {"id": command_id, **record}
+                for stream in ("stdout", "stderr"):
+                    bind(record[stream]["path"], record[stream]["sha256"])
+                if row.get("snapshot", {}).get("applicable"):
+                    if not row["snapshot"]["reader_connected"] or row["snapshot"]["errors"]:
+                        raise ValueError("instrumented source snapshot barrier did not complete")
+                    snapshots.append({"id": row["id"], "mode": row["mode"], **row["snapshot"]})
+        if (len(candidate["commands"]) != 186 or len(expected_commands) != 186
+                or {row["id"]: row for row in candidate["commands"]} != expected_commands):
+            raise ValueError("instrumented JSON/text/supplemental command inventory is incomplete")
+        fifo_ids = {case["id"] for case in cases if "fifo" in case.get("setup", {})}
+        if ({(row["id"], row["mode"]) for row in snapshots}
+                != {(name, mode) for name in fifo_ids for mode in ("json", "text")}):
+            raise ValueError("instrumented JSON snapshot inventory is incomplete")
+        for path, expected in candidate["input_identities"].items():
+            bind(path, expected)
+        required_inputs = {str(harness.resolve()), str(compiler.resolve()), str((fixtures / "freeze.json").resolve()),
+                           str((supplement / "freeze.json").resolve()),
+                           *[str((bootstrap.SELFHOST / part).resolve()) for part in bootstrap.COMPILER_PARTS],
+                           *[str((fixtures / name).resolve()) for name in freeze["sha256"]],
+                           *[str((supplement / name).resolve()) for name in supplemental_freeze["sha256"]]}
+        if not required_inputs.issubset(candidate["input_identities"]):
+            raise ValueError("instrumented JSON receipt lacks source or fixture bindings")
+        detail.update(status="passed", checks=checks, snapshot_barriers=snapshots,
+                      bound_inputs=len(candidate["input_identities"]), total_commands=len(candidate["commands"]))
+    except Exception as error:
+        detail.update(status="failed", error=str(error))
+        raise
+
+
 def validate(bootstrap, receipt, cc, runtime, sanitizer, directory, bound):
     directory.mkdir(parents=True, exist_ok=False)
     manifest = bootstrap.validate_cases()
@@ -129,6 +281,7 @@ def validate(bootstrap, receipt, cc, runtime, sanitizer, directory, bound):
               "emission_total": sum(case["kind"] in ("run", "panic") for case in manifest),
               "stress_total": len(stress), "case_passed": 0, "emission_passed": 0,
               "stress_passed": 0, "self_compilation_passed": False,
+              "json_diagnostics_passed": False, "json_diagnostics": {"status": "not_run"},
               "limits": ["Linux ASan/UBSan only; no TSan.",
                          "LeakSanitizer disabled; successful compiler exits use YV_ALLOC_CHECK.",
                          "Invalid-source paths terminate at their first diagnostic; heap leak checks do not run after os.exit.",
@@ -294,12 +447,16 @@ def validate(bootstrap, receipt, cc, runtime, sanitizer, directory, bound):
                                      "expected_diagnostic": diagnostic, "check": checked["record"],
                                      "emit": emitted["record"], "passed": bool(ok)})
             report["stress_passed"] += int(bool(ok))
+        validate_json_diagnostics(bootstrap, compiler, stages, directory, command, bound,
+                                  sanitizer["sanitizer_environment"], report["json_diagnostics"])
+        report["json_diagnostics_passed"] = report["json_diagnostics"]["status"] == "passed"
         changed = [path for path, wanted in bound.items()
                    if not Path(path).is_file() or bootstrap.digest(Path(path)) != wanted]
         report["changed_inputs_and_outputs"] = changed
         report["status"] = ("passed" if report["case_passed"] == report["case_total"]
                             and report["emission_passed"] == report["emission_total"]
-                            and report["stress_passed"] == report["stress_total"] and not changed else "failed")
+                            and report["stress_passed"] == report["stress_total"]
+                            and report["json_diagnostics_passed"] and not changed else "failed")
     except Exception as error:
         report["status"] = "failed"
         report["error"] = str(error)
@@ -310,5 +467,6 @@ def validate(bootstrap, receipt, cc, runtime, sanitizer, directory, bound):
     print("Stage2 compiler sanitizers: " + report["status"] + "; checks "
           + str(report["case_passed"]) + "/" + str(report["case_total"])
           + "; emissions " + str(report["emission_passed"]) + "/" + str(report["emission_total"])
-          + "; stress " + str(report["stress_passed"]) + "/" + str(report["stress_total"]), flush=True)
+          + "; stress " + str(report["stress_passed"]) + "/" + str(report["stress_total"])
+          + "; JSON diagnostics " + report["json_diagnostics"]["status"], flush=True)
     return report

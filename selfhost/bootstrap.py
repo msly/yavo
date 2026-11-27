@@ -37,9 +37,9 @@ LOCATION = re.compile(rb":[1-9][0-9]*:[1-9][0-9]*:")
 # The compiler is a module program whose entry is main.yv; these are the files it
 # loads through `use`. The lexer unit's entry is lexer_test.yv. Both are copied
 # byte for byte into one run directory and built from their entry files.
-COMPILER_PARTS = ["support.yv", "lexer.yv", "model.yv", "parser.yv", "types.yv", "codegen.yv",
+COMPILER_PARTS = ["digest.yv", "support.yv", "lexer.yv", "model.yv", "parser.yv", "types.yv", "codegen.yv",
                   "driver.yv", "runtime_source.yv", "main.yv"]
-LEXER_UNIT_PARTS = ["support.yv", "lexer.yv", "lexer_test.yv"]
+LEXER_UNIT_PARTS = ["digest.yv", "support.yv", "lexer.yv", "lexer_test.yv"]
 COMPILER_ENTRY = "main.yv"
 LEXER_UNIT_ENTRY = "lexer_test.yv"
 CC_FLAGS = {"debug": ["-std=c17", "-fno-strict-aliasing", "-DYV_ALLOC_CHECK", "-O0", "-g"],
