@@ -1,0 +1,269 @@
+{
+  "schema": "yavo-diagnostics52-promotions/1",
+  "batch": 52,
+  "base_manifest": "selfhost/tests/diagnostics50/cases.json",
+  "base_manifest_sha256": "248609abc98feb03d81e114b7d2a82d5094b0b3f6b04e383ab28021b384e8edc",
+  "base_freeze_sha256": "ee3930a89003dd6c361df89b7b3803225d025925ec0d51282ad2e6110350fa9f",
+  "source_bytes_unchanged": true,
+  "expectation_basis": "Batch 52 implements integer radix/separator lexing; the three unchanged fixtures are valid integer expressions and now have successful check JSON/text contracts. Derived from the language contract and source bytes, not candidate output.",
+  "promotions": [
+    {
+      "id": "unsupported_hex",
+      "before_case_sha256": "745593d39cc12caac6241952e24ded64681307e854085dbf5f1668efae19f255",
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/unsupported_hex/main.yv",
+          "sha256": "e79dc9de6bcf25224437a6e456acb5f0d1f50685c3febba3ef44c7d6b119c866",
+          "bytes": 33
+        }
+      ],
+      "before_expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "e79dc9de6bcf25224437a6e456acb5f0d1f50685c3febba3ef44c7d6b119c866",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 33,
+              "sha256": "e79dc9de6bcf25224437a6e456acb5f0d1f50685c3febba3ef44c7d6b119c866"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "U0001",
+              "message": "non-decimal integers are not in the bootstrap subset",
+              "file": "main.yv",
+              "line": 1,
+              "column": 25,
+              "end_line": 1,
+              "end_column": 29,
+              "primary": {
+                "file": "main.yv",
+                "start": 24,
+                "end": 28,
+                "line": 1,
+                "column": 25,
+                "end_line": 1,
+                "end_column": 29
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      },
+      "before_legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:1:25: U0001: non-decimal integers are not in the bootstrap subset\n"
+      },
+      "after_expected": {
+        "exit": 0,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "e79dc9de6bcf25224437a6e456acb5f0d1f50685c3febba3ef44c7d6b119c866",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 33,
+              "sha256": "e79dc9de6bcf25224437a6e456acb5f0d1f50685c3febba3ef44c7d6b119c866"
+            }
+          ],
+          "error_count": 0,
+          "warning_count": 0,
+          "diagnostics": []
+        },
+        "stderr": ""
+      },
+      "after_legacy_text": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "id": "unsupported_hex_e_sign",
+      "before_case_sha256": "b2f64a40c471bd5567a5528834c4080c5e9510ef3fc4831d3d6db82342836ef2",
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/unsupported_hex_e_sign/main.yv",
+          "sha256": "3248ee4f2770f3a056afb891b24a540172de80524ee3b30716f667983babbcff",
+          "bytes": 33
+        }
+      ],
+      "before_expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "3248ee4f2770f3a056afb891b24a540172de80524ee3b30716f667983babbcff",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 33,
+              "sha256": "3248ee4f2770f3a056afb891b24a540172de80524ee3b30716f667983babbcff"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "U0001",
+              "message": "non-decimal integers are not in the bootstrap subset",
+              "file": "main.yv",
+              "line": 1,
+              "column": 25,
+              "end_line": 1,
+              "end_column": 29,
+              "primary": {
+                "file": "main.yv",
+                "start": 24,
+                "end": 28,
+                "line": 1,
+                "column": 25,
+                "end_line": 1,
+                "end_column": 29
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      },
+      "before_legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:1:25: U0001: non-decimal integers are not in the bootstrap subset\n"
+      },
+      "after_expected": {
+        "exit": 0,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "3248ee4f2770f3a056afb891b24a540172de80524ee3b30716f667983babbcff",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 33,
+              "sha256": "3248ee4f2770f3a056afb891b24a540172de80524ee3b30716f667983babbcff"
+            }
+          ],
+          "error_count": 0,
+          "warning_count": 0,
+          "diagnostics": []
+        },
+        "stderr": ""
+      },
+      "after_legacy_text": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "id": "unsupported_separator",
+      "before_case_sha256": "48f7d1c5c64dae3296a85818029dfb78a47cc650a53c68f2d4400faf1a83f127",
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/unsupported_separator/main.yv",
+          "sha256": "739532534ec5db2ff68ba1496d84a9e851d5747802e0642f20131853f35862cd",
+          "bytes": 34
+        }
+      ],
+      "before_expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "739532534ec5db2ff68ba1496d84a9e851d5747802e0642f20131853f35862cd",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 34,
+              "sha256": "739532534ec5db2ff68ba1496d84a9e851d5747802e0642f20131853f35862cd"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "U0001",
+              "message": "integer separators are not in the bootstrap subset",
+              "file": "main.yv",
+              "line": 1,
+              "column": 25,
+              "end_line": 1,
+              "end_column": 30,
+              "primary": {
+                "file": "main.yv",
+                "start": 24,
+                "end": 29,
+                "line": 1,
+                "column": 25,
+                "end_line": 1,
+                "end_column": 30
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      },
+      "before_legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:1:25: U0001: integer separators are not in the bootstrap subset\n"
+      },
+      "after_expected": {
+        "exit": 0,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "739532534ec5db2ff68ba1496d84a9e851d5747802e0642f20131853f35862cd",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 34,
+              "sha256": "739532534ec5db2ff68ba1496d84a9e851d5747802e0642f20131853f35862cd"
+            }
+          ],
+          "error_count": 0,
+          "warning_count": 0,
+          "diagnostics": []
+        },
+        "stderr": ""
+      },
+      "after_legacy_text": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    }
+  ]
+}

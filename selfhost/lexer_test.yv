@@ -31,6 +31,8 @@ fn bad(source: str, code: str, offset: int, line: int, column: int) {
 // invalid candidates that never become normal tokens.
 fn badRange(source: str, code: str, start: int, end: int, line: int, column: int) {
     let _tokens = lexer.lex(source, "range.yv") catch diagnostic {
+        if diagnostic.code != code { eprintln(source)
+            eprintln(diagnostic.code) }
         assert(diagnostic.code == code)
         assert(diagnostic.offset == start && diagnostic.endOffset == end)
         assert(diagnostic.line == line && diagnostic.column == column)
@@ -46,12 +48,6 @@ fn lexerRangeChecks() {
     badRange("🙂", "E0020", 0, 4, 1, 1)
     badRange("\r\n  🙂", "E0020", 4, 8, 2, 3)
     badRange("/* comment */", "E0020", 0, 2, 1, 1)
-    badRange("0xff+2", "U0001", 0, 4, 1, 1)
-    badRange("0xFE+2", "U0001", 0, 4, 1, 1)
-    badRange("0xFE-2", "U0001", 0, 4, 1, 1)
-    badRange("0b10", "U0001", 0, 4, 1, 1)
-    badRange("0o10", "U0001", 0, 4, 1, 1)
-    badRange("1_000", "U0001", 0, 5, 1, 1)
     badRange("1e-2+3", "U0001", 0, 4, 1, 1)
     badRange("1.2e+3", "U0001", 0, 6, 1, 1)
     badRange("1_0e+2", "U0001", 0, 6, 1, 1)
@@ -76,6 +72,45 @@ fn lexerRangeChecks() {
     assert(range[0].text == "1" && range[0].end == 1)
     assert(range[1].text == ".." && range[1].start == 1 && range[1].end == 3)
     assert(range[2].text == "3" && range[2].start == 3)
+}
+
+fn lexerIntegerRadixChecks() {
+    let forms = good("0xE2 0x82 0xFe 0b1010 0o17 1_000 0x_f_f_ 0b_1_0_ 0o_7_7_")
+    let values = ["226", "130", "254", "10", "15", "1000", "255", "2", "63"]
+    for i in 0..values.len() {
+        assert(forms[i].kind == .Number && forms[i].text == values[i])
+    }
+    let sign = good("0xFE+2 0xFE-2")
+    assert(sign[0].text == "254" && sign[0].start == 0 && sign[0].end == 4)
+    assert(sign[1].text == "+" && sign[2].text == "2")
+    assert(sign[3].text == "254" && sign[4].text == "-" && sign[5].text == "2")
+    let projection = good("t.0x1.0_0")
+    assert(projection[2].text == "1" && projection[2].start == 2 && projection[2].end == 5)
+    assert(projection[3].text == "." && projection[4].text == "00")
+    badRange("0x+1", "E0020", 0, 2, 1, 1)
+    badRange("0x_", "E0020", 0, 3, 1, 1)
+    badRange("0xG.2", "E0020", 0, 3, 1, 1)
+    badRange("0b2", "E0020", 0, 3, 1, 1)
+    badRange("0o8", "E0020", 0, 3, 1, 1)
+    badRange("0XFF", "E0020", 0, 4, 1, 1)
+    badRange("0x1u8+1", "E0020", 0, 5, 1, 1)
+    let maximum = good("0xffffffffffffffffffffffffffffffff")
+    assert(maximum[0].text == "340282366920938463463374607431768211455")
+    badRange("0x100000000000000000000000000000000", "E0003", 0, 35, 1, 1)
+    let octal = good("0o3777777777777777777777777777777777777777777")
+    assert(octal[0].text == maximum[0].text)
+    bad("0o4000000000000000000000000000000000000000000", "E0003", 0, 1, 1)
+    var binary = "0b".toString()
+    for _bit in 0..128 { binary.push("1") }
+    let bits = good(binary)
+    assert(bits[0].text == maximum[0].text)
+    binary.push("0")
+    bad(binary, "E0003", 0, 1, 1)
+    var padded = "0x".toString()
+    for _zero in 0..512 { padded.push("0") }
+    padded.push("E2")
+    let zeroes = good(padded)
+    assert(zeroes[0].text == "226")
 }
 
 fn lexerSnapshotChecks() {
@@ -372,10 +407,6 @@ fn main() {
     bad("1.5", "U0001", 0, 1, 1)
     bad("1e3", "U0001", 0, 1, 1)
     bad("1e-3", "U0001", 0, 1, 1)
-    bad("0xff", "U0001", 0, 1, 1)
-    bad("0b10", "U0001", 0, 1, 1)
-    bad("0o10", "U0001", 0, 1, 1)
-    bad("1_000", "U0001", 0, 1, 1)
     var interpolation = "\"".toString()
     interpolation.push("$")
     interpolation.push("{x}\"")
@@ -384,6 +415,7 @@ fn main() {
     assert(interpolationTokens[1].kind == .InterpolationStart && interpolationTokens[2].text == "x")
     lexerInterpolationChecks()
     lexerRangeChecks()
+    lexerIntegerRadixChecks()
     lexerSnapshotChecks()
 
     let forwarded = throughTemporary("\"owned success 汉🙂\"", "success 路径.yv") catch _ {

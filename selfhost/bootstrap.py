@@ -244,6 +244,9 @@ def main():
     parser.add_argument("--stage0", type=Path, default=COMPILER / ("target/release/yavo" + EXE))
     parser.add_argument("--zig", type=Path)
     parser.add_argument("--output", type=Path, default=COMPILER / "target/ci/selfhost")
+    parser.add_argument("--tier", choices=("core", "full"), default="core",
+                        help="core fixed point and selected/changed cases; full adds every case and application")
+    parser.add_argument("--baseline", help="core case-selection Git baseline; defaults to validation-policy.json")
     args = parser.parse_args()
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=True)
@@ -257,6 +260,7 @@ def main():
               "achieved": "not_yet_validated", "self_hosted": False,
               "scope": "bootstrap-subset compiler written in Yavo; stage1 -> stage2 -> stage3 fixed point",
               "host": {"platform": platform.platform(), "machine": platform.machine()},
+              "validation_tier": args.tier,
               "work": str(work), "checks": [], "cases": []}
 
     def checkpoint():
@@ -282,6 +286,9 @@ def main():
     checkpoint()
     try:
         cases = validate_cases()
+        if args.tier == "core":
+            from core_cases import select
+            cases, report["case_selection"] = select(cases, args.baseline)
         zig, version = locked_zig(args.zig)
         report["inputs"] = {
             "stage0": {"path": str(stage0), "sha256": digest(stage0)},
@@ -291,6 +298,8 @@ def main():
             "toolchain_lock_sha256": digest(COMPILER / "toolchain.lock"),
             "harness_sha256": digest(Path(__file__)),
             "manifest_sha256": digest(SELFHOST / "tests/cases.json"),
+            "validation_policy_sha256": digest(ROOT / "tools/ci/validation-policy.json"),
+            "core_selector_sha256": digest(SELFHOST / "core_cases.py"),
             "yavo_sources": {str(path.relative_to(ROOT)): digest(path)
                              for path in sorted(SELFHOST.glob("*.yv"))},
             "fixtures": {case["file"]: digest(SELFHOST / "tests" / case["file"]) for case in cases},
@@ -600,61 +609,62 @@ def main():
             check("symlink_output_guard", guard["record"]["exit_code"] == 3
                   and not guard["record"]["timed_out"] and guard_source.read_bytes() == original
                   and symlink.is_symlink() and symlink.read_bytes() == original, command=guard["record"])
-        # SH-3: the Yavo-written compiler builds the unmodified test-summary
-        # application, which then matches its frozen scenarios and stage0's build.
-        app_record = application_module().check(binary, stage0, zig, work / "test-summary", environment,
-                                                frontend_env, CC_FLAGS, EXE)
-        report["test_summary_application"] = app_record
-        check("test_summary_application", app_record["passed"], applicable=app_record.get("applicable"),
-              error=app_record.get("error"))
+        if args.tier == "full":
+            # SH-3: the Yavo-written compiler builds the unmodified test-summary
+            # application, which then matches its frozen scenarios and stage0's build.
+            app_record = application_module().check(binary, stage0, zig, work / "test-summary", environment,
+                                                    frontend_env, CC_FLAGS, EXE)
+            report["test_summary_application"] = app_record
+            check("test_summary_application", app_record["passed"], applicable=app_record.get("applicable"),
+                  error=app_record.get("error"))
 
-        # The original two-module T04 converter must also match fixed rational
-        # arithmetic scenarios and stage0 in both optimization modes.
-        conversion_record = application_module("conversion_application").check(
-            stage2 if stage2 is not None else binary, stage0, zig, work / "unit-conversion",
-            environment, frontend_env, CC_FLAGS, EXE)
-        report["unit_conversion_application"] = conversion_record
-        check("unit_conversion_application", conversion_record["passed"],
-              applicable=conversion_record.get("applicable"), error=conversion_record.get("error"))
+            # The original two-module T04 converter must also match fixed rational
+            # arithmetic scenarios and stage0 in both optimization modes.
+            conversion_record = application_module("conversion_application").check(
+                stage2 if stage2 is not None else binary, stage0, zig, work / "unit-conversion",
+                environment, frontend_env, CC_FLAGS, EXE)
+            report["unit_conversion_application"] = conversion_record
+            check("unit_conversion_application", conversion_record["passed"],
+                  applicable=conversion_record.get("applicable"), error=conversion_record.get("error"))
 
-        diff_record = application_module("diff_application").check(
-            stage2 if stage2 is not None else binary, stage0, zig, work / "text-diff",
-            environment, frontend_env, CC_FLAGS, EXE)
-        report["text_diff_application"] = diff_record
-        check("text_diff_application", diff_record["passed"],
-              applicable=diff_record.get("applicable"), error=diff_record.get("error"))
+            diff_record = application_module("diff_application").check(
+                stage2 if stage2 is not None else binary, stage0, zig, work / "text-diff",
+                environment, frontend_env, CC_FLAGS, EXE)
+            report["text_diff_application"] = diff_record
+            check("text_diff_application", diff_record["passed"],
+                  applicable=diff_record.get("applicable"), error=diff_record.get("error"))
 
-        median_record = application_module("median_application").check(
-            stage2 if stage2 is not None else binary, stage0, zig, work / "sliding-median",
-            environment, frontend_env, CC_FLAGS, EXE)
-        report["sliding_median_application"] = median_record
-        check("sliding_median_application", median_record["passed"],
-              applicable=median_record.get("applicable"), error=median_record.get("error"))
+            median_record = application_module("median_application").check(
+                stage2 if stage2 is not None else binary, stage0, zig, work / "sliding-median",
+                environment, frontend_env, CC_FLAGS, EXE)
+            report["sliding_median_application"] = median_record
+            check("sliding_median_application", median_record["passed"],
+                  applicable=median_record.get("applicable"), error=median_record.get("error"))
 
-        ledger_record = application_module("ledger_application").check(
-            stage2 if stage2 is not None else binary, stage0, zig, work / "atomic-ledger",
-            environment, frontend_env, CC_FLAGS, EXE)
-        report["atomic_ledger_application"] = ledger_record
-        check("atomic_ledger_application", ledger_record["passed"],
-              applicable=ledger_record.get("applicable"), error=ledger_record.get("error"))
+            ledger_record = application_module("ledger_application").check(
+                stage2 if stage2 is not None else binary, stage0, zig, work / "atomic-ledger",
+                environment, frontend_env, CC_FLAGS, EXE)
+            report["atomic_ledger_application"] = ledger_record
+            check("atomic_ledger_application", ledger_record["passed"],
+                  applicable=ledger_record.get("applicable"), error=ledger_record.get("error"))
 
-        # A second independent SH-4 project validates structured CSV input.
-        # Use the final self-hosted compiler, with fixed cases shared with its
-        # separate native delivery gate.
-        csv_record = application_module("csv_application").check(
-            stage2 if stage2 is not None else binary, stage0, zig, work / "csv-check",
-            environment, frontend_env, CC_FLAGS, EXE)
-        report["csv_check_application"] = csv_record
-        check("csv_check_application", csv_record["passed"],
-              applicable=csv_record.get("applicable"), error=csv_record.get("error"))
+            # A second independent SH-4 project validates structured CSV input.
+            # Use the final self-hosted compiler, with fixed cases shared with its
+            # separate native delivery gate.
+            csv_record = application_module("csv_application").check(
+                stage2 if stage2 is not None else binary, stage0, zig, work / "csv-check",
+                environment, frontend_env, CC_FLAGS, EXE)
+            report["csv_check_application"] = csv_record
+            check("csv_check_application", csv_record["passed"],
+                  applicable=csv_record.get("applicable"), error=csv_record.get("error"))
 
-        # The third independent SH-4 project resolves a graph across real files.
-        dep_record = application_module("dep_application").check(
-            stage2 if stage2 is not None else binary, stage0, zig, work / "dep-index",
-            environment, frontend_env, CC_FLAGS, EXE)
-        report["dep_index_application"] = dep_record
-        check("dep_index_application", dep_record["passed"],
-              applicable=dep_record.get("applicable"), error=dep_record.get("error"))
+            # The third independent SH-4 project resolves a graph across real files.
+            dep_record = application_module("dep_application").check(
+                stage2 if stage2 is not None else binary, stage0, zig, work / "dep-index",
+                environment, frontend_env, CC_FLAGS, EXE)
+            report["dep_index_application"] = dep_record
+            check("dep_index_application", dep_record["passed"],
+                  applicable=dep_record.get("applicable"), error=dep_record.get("error"))
 
         # A receipt must not attribute binaries to a source tree edited during the run.
         bound_paths = {
@@ -665,6 +675,8 @@ def main():
             str(COMPILER / "toolchain.lock"): report["inputs"]["toolchain_lock_sha256"],
             str(Path(__file__).resolve()): report["inputs"]["harness_sha256"],
             str(SELFHOST / "tests/cases.json"): report["inputs"]["manifest_sha256"],
+            str(ROOT / "tools/ci/validation-policy.json"): report["inputs"]["validation_policy_sha256"],
+            str(SELFHOST / "core_cases.py"): report["inputs"]["core_selector_sha256"],
             **{str(Path(record["directory"]) / part["file"]): part["sha256"]
                for record in (report["inputs"]["compiler_bundle"], report["inputs"]["lexer_unit_bundle"])
                for part in record["parts"]},

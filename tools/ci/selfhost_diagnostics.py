@@ -22,6 +22,8 @@ import selfhost_driver as producers
 ROOT = Path(__file__).resolve().parents[2]
 FIXTURES = ROOT / "selfhost/tests/diagnostics50"
 SUPPLEMENT = FIXTURES / "supplemental"
+PROMOTIONS = ROOT / "selfhost/tests/diagnostics52/promotions.json"
+PROMOTED_IDS = {"unsupported_hex", "unsupported_hex_e_sign", "unsupported_separator"}
 EXE = ".exe" if os.name == "nt" else ""
 EXPECTED = {"linux": 98, "darwin": 98, "win32": 94}
 EXPECTED_TEXT = {"linux": 80, "darwin": 80, "win32": 76}
@@ -67,6 +69,51 @@ def load_frozen(bound):
         for item in case["files"]:
             oracle.payload(case, item["path"])
     return manifest, oracle
+
+
+def apply_promotions(manifest, oracle, bound):
+    """Apply explicit later semantics only after validating the original freeze."""
+    record = json.loads(PROMOTIONS.read_bytes())
+    rows = record.get("promotions", [])
+    if (record.get("schema") != "yavo-diagnostics52-promotions/1"
+            or record.get("batch") != 52 or record.get("source_bytes_unchanged") is not True
+            or record.get("base_manifest") != "selfhost/tests/diagnostics50/cases.json"
+            or record.get("base_manifest_sha256") != digest(FIXTURES / "cases.json")
+            or record.get("base_freeze_sha256") != digest(FIXTURES / "freeze.json")
+            or len(rows) != len(PROMOTED_IDS) or {row["id"] for row in rows} != PROMOTED_IDS):
+        raise ValueError("diagnostic promotion inventory or frozen baseline changed")
+    effective = copy.deepcopy(manifest)
+    by_id = {case["id"]: case for case in effective["cases"]}
+    for row in rows:
+        case = by_id[row["id"]]
+        canonical = json.dumps(case, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()
+        if (execution.sha(canonical) != row["before_case_sha256"]
+                or not oracle.strict_equal(case["files"], row["files"])
+                or not oracle.strict_equal(case["expected"], row["before_expected"])
+                or not oracle.strict_equal(case["legacy_text"], row["before_legacy_text"])
+                or case["kind"] != "json" or case["diagnostic"]["code"] != "U0001"):
+            raise ValueError("diagnostic promotion precondition differs: " + row["id"])
+        # Keep identity, arguments, platforms, source files and loaded graph.
+        # Only the original unsupported outcome becomes an authored success.
+        case.pop("diagnostic")
+        case.pop("location")
+        case["legacy_text"] = {"exit": 0, "stdout": "", "stderr": ""}
+        expected = oracle.evaluate(case)
+        if (expected["exit"] != 0
+                or not oracle.strict_equal(expected, row["after_expected"])
+                or not oracle.strict_equal(oracle.legacy(case), row["after_legacy_text"])):
+            raise ValueError("diagnostic promotion success expectation differs: " + row["id"])
+        case["expected"] = expected
+    identity = bind(bound, PROMOTIONS)
+    return effective, {"record": identity, "ids": sorted(PROMOTED_IDS),
+                       "base_manifest_sha256": record["base_manifest_sha256"],
+                       "source_bytes_unchanged": True}
+
+
+def load_effective(bound):
+    manifest, oracle = load_frozen(bound)
+    manifest, promotions = apply_promotions(manifest, oracle, bound)
+    return manifest, oracle, promotions
 
 
 def oracle_controls(oracle, cases):
@@ -287,11 +334,13 @@ def main():
     for name in ["YAVO_CACHE_TRACE", "YAVO_DRIVER_PROBE_MODE"]:
         environment.pop(name, None)
     try:
-        manifest, oracle = load_frozen(bound)
+        manifest, oracle, promotions = load_effective(bound)
         cases = manifest["cases"]
+        report["promotions"] = promotions
         report["frozen_cases"] = len(cases)
         report["freeze"] = bind(bound, FIXTURES / "freeze.json")
         check("frozen_oracle", True, applicable=EXPECTED[sys.platform], source_expectations=len(cases))
+        check("explicit_diagnostic_promotions", True, ids=promotions["ids"], source_bytes_unchanged=True)
         controls = oracle_controls(oracle, cases)
         check("oracle_controls", True, positive=True, negative_controls=controls)
         supplement, legacy_oracle = load_supplement(bound)

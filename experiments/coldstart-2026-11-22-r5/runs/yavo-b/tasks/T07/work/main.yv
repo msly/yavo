@@ -1,0 +1,63 @@
+use std/io
+
+fn show(cache: Map[String, (int, int, int)]) {
+    if cache.len() == 0 {
+        println("keys: none")
+        return
+    }
+    var ordered: Vec[(String, int)] = []
+    for key, entry in cache { ordered.push((key.clone(), entry.2)) }
+    ordered.sortBy((a, b) => a.1 > b.1)
+    var keys: Vec[String] = []
+    for item in ordered { keys.push(item.0.clone()) }
+    println("keys: ${keys.join(" ")}")
+}
+
+fn main() {
+    let text = io.readAll() catch _ { return }
+    let lines = text.lines()
+    let capacity = lines[0].trim().parseInt() ?? 0
+    var cache: Map[String, (int, int, int)] = [:]
+    for index in 1..lines.len() {
+        let fields = lines[index].fields()
+        if fields.len() == 0 { continue }
+        let time = fields[0].parseInt() ?? 0
+        var expired: Vec[String] = []
+        for key, entry in cache {
+            if entry.1 <= time { expired.push(key.clone()) }
+        }
+        for key in expired { let _ = cache.remove(key) }
+        if fields[1] == "put" {
+            let key = fields[2]
+            let value = fields[3].parseInt() ?? 0
+            let ttl = fields[4].parseInt() ?? 0
+            if ttl == 0 || capacity == 0 {
+                let _ = cache.remove(key)
+            } else {
+                cache.set(key.toString(), (value, time + ttl, index))
+                if cache.len() > capacity {
+                    var oldest = 1000000
+                    var victim = String{}
+                    for candidate, entry in cache {
+                        if entry.2 < oldest {
+                            oldest = entry.2
+                            victim = candidate.clone()
+                        }
+                    }
+                    let _ = cache.remove(victim)
+                }
+            }
+        } else if fields[1] == "get" {
+            let key = fields[2]
+            if let entry = cache.getCopy(key) {
+                println("${key}: ${entry.0}")
+                cache.set(key.toString(), (entry.0, entry.1, index))
+            } else {
+                println("${key}: missing")
+            }
+        } else if fields[1] == "keys" {
+            show(cache)
+        }
+    }
+    show(cache)
+}

@@ -1,0 +1,70 @@
+fn scale(unit: str) -> ?int {
+    if unit == "mm" { return 1 }
+    if unit == "cm" { return 10 }
+    if unit == "m" { return 1000 }
+    if unit == "km" { return 1000000 }
+    return none
+}
+
+fn number(text: str) -> ?(int, int) {
+    if text.len() == 0 || text.len() > 64 { return none }
+    var pos = 0
+    var negative = false
+    if text[0] == '-' {
+        negative = true
+        pos = 1
+    }
+    let first = pos
+    var whole = 0
+    while pos < text.len() && text[pos] >= '0' && text[pos] <= '9' {
+        whole = whole * 10 + int(text[pos]) - int('0')
+        if whole > 1000000 { return none }
+        pos += 1
+    }
+    if pos == first { return none }
+    var denominator = 1
+    var fraction = 0
+    if pos < text.len() {
+        if text[pos] != '.' { return none }
+        pos += 1
+        let beginning = pos
+        while pos < text.len() && text[pos] >= '0' && text[pos] <= '9' {
+            if pos - beginning >= 3 { return none }
+            fraction = fraction * 10 + int(text[pos]) - int('0')
+            denominator *= 10
+            pos += 1
+        }
+        if pos == beginning { return none }
+    }
+    if pos != text.len() { return none }
+    if whole == 1000000 && fraction != 0 { return none }
+    var numerator = whole * denominator + fraction
+    if negative { numerator = -numerator }
+    return (numerator, denominator)
+}
+
+fn gcd(a: int, b: int) -> int {
+    var x = abs(a)
+    var y = b
+    while y != 0 {
+        let rest = x % y
+        x = y
+        y = rest
+    }
+    return x
+}
+
+pub fn convert(line: str) -> String {
+    let fields = line.fields()
+    if fields.len() != 3 { return "invalid".toString() }
+    let amount = number(fields[0]) ?? return "invalid".toString()
+    let from = scale(fields[1]) ?? return "invalid".toString()
+    let dest = scale(fields[2]) ?? return "invalid".toString()
+    let numerator = amount.0 * from
+    let denominator = amount.1 * dest
+    let divisor = gcd(numerator, denominator)
+    let n = numerator / divisor
+    let d = denominator / divisor
+    if d == 1 { return format("${n} ${fields[2]}") }
+    return format("${n}/${d} ${fields[2]}")
+}

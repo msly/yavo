@@ -5656,27 +5656,24 @@
     },
     {
       "id": "tuple43_projection_hex",
-      "kind": "unsupported",
+      "kind": "run",
       "file": "unsupported/tuple43_projection_hex.yv",
       "batch": "copy-tuples-unit-conversion",
-      "diagnostic": "U0001",
-      "reason": "Hex numeric projections remain at the lexer U0001 boundary."
+      "stdout": "2\n"
     },
     {
       "id": "tuple43_projection_binary",
-      "kind": "unsupported",
+      "kind": "run",
       "file": "unsupported/tuple43_projection_binary.yv",
       "batch": "copy-tuples-unit-conversion",
-      "diagnostic": "U0001",
-      "reason": "Binary numeric projections remain at the lexer U0001 boundary."
+      "stdout": "2\n"
     },
     {
       "id": "tuple43_projection_underscores",
-      "kind": "unsupported",
+      "kind": "run",
       "file": "unsupported/tuple43_projection_underscores.yv",
       "batch": "copy-tuples-unit-conversion",
-      "diagnostic": "U0001",
-      "reason": "Numeric projections with separators remain at the lexer U0001 boundary."
+      "stdout": "2\n"
     },
     {
       "id": "tuple43_pair_closure_boundary",
@@ -7397,7 +7394,7 @@
     {
       "id": "errors51_utf8_consumed_failure",
       "kind": "run",
-      "file": "errors51/programs/utf8_consumed_failure_decimal.yv",
+      "file": "errors51/programs/utf8_consumed_failure.yv",
       "batch": "standard-error-values",
       "stdout": "1\n"
     },
@@ -7792,6 +7789,97 @@
       "file": "errors51/programs/unsupported_utf8_tuple.yv",
       "diagnostic": "U0001",
       "batch": "standard-error-values"
+    },
+    {
+      "id": "integers52_radices",
+      "kind": "run",
+      "file": "integers52/radices.yv",
+      "batch": "integer-radices",
+      "stdout": "226\n130\n256\n252\n10\n63\n1000\n9223372036854775807\n-9223372036854775808\n255\n"
+    },
+    {
+      "id": "integers52_empty_hex",
+      "kind": "reject",
+      "file": "integers52/empty_hex.yv",
+      "batch": "integer-radices",
+      "diagnostic": "E0020"
+    },
+    {
+      "id": "integers52_empty_digits",
+      "kind": "reject",
+      "file": "integers52/empty_digits.yv",
+      "batch": "integer-radices",
+      "diagnostic": "E0020"
+    },
+    {
+      "id": "integers52_invalid_hex",
+      "kind": "reject",
+      "file": "integers52/invalid_hex.yv",
+      "batch": "integer-radices",
+      "diagnostic": "E0020"
+    },
+    {
+      "id": "integers52_invalid_binary",
+      "kind": "reject",
+      "file": "integers52/invalid_binary.yv",
+      "batch": "integer-radices",
+      "diagnostic": "E0020"
+    },
+    {
+      "id": "integers52_invalid_octal",
+      "kind": "reject",
+      "file": "integers52/invalid_octal.yv",
+      "batch": "integer-radices",
+      "diagnostic": "E0020"
+    },
+    {
+      "id": "integers52_invalid_prefix",
+      "kind": "reject",
+      "file": "integers52/invalid_prefix.yv",
+      "batch": "integer-radices",
+      "diagnostic": "E0020"
+    },
+    {
+      "id": "integers52_hex_suffix",
+      "kind": "reject",
+      "file": "integers52/hex_suffix.yv",
+      "batch": "integer-radices",
+      "diagnostic": "E0020"
+    },
+    {
+      "id": "integers52_hex_int_overflow",
+      "kind": "reject",
+      "file": "integers52/hex_int_overflow.yv",
+      "batch": "integer-radices",
+      "diagnostic": "E0003"
+    },
+    {
+      "id": "integers52_hex_negative_overflow",
+      "kind": "reject",
+      "file": "integers52/hex_negative_overflow.yv",
+      "batch": "integer-radices",
+      "diagnostic": "E0003"
+    },
+    {
+      "id": "integers52_hex_byte_overflow",
+      "kind": "reject",
+      "file": "integers52/hex_byte_overflow.yv",
+      "batch": "integer-radices",
+      "diagnostic": "E0003"
+    },
+    {
+      "id": "integers52_hex_u128_overflow",
+      "kind": "reject",
+      "file": "integers52/hex_u128_overflow.yv",
+      "batch": "integer-radices",
+      "diagnostic": "E0003"
+    },
+    {
+      "id": "integers52_octal_u128_overflow",
+      "kind": "reject",
+      "file": "integers52/octal_u128_overflow.yv",
+      "batch": "integer-radices",
+      "diagnostic": "E0003"
     }
   ],
   "promotions": [

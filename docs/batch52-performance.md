@@ -1,0 +1,51 @@
+# 第 52 批小程序性能基线（2026-11-28）
+
+**编辑后 Release 编译的 PCH P50 为 205.947–221.043 ms，四例均未达到 ≤200 ms；四个静态 strip 程序为 20,000–21,312 字节，均低于 250 KB。运行时间 Yavo/C 比的几何均值为 1.046，最差为 1.140。** 这是 Linux 四算法先导基线，正式性能验收保持未完成。
+
+测量使用当前日常 Rust stage0 编译器；selfhost stage2 的自编译耗时与体积由独立 `selfhost_metrics.py` 记录。两类编译器、工作负载和体积不能混为同一个指标。
+
+## 运行时间与输出体积
+
+原始记录：[batch52-runtime.json](../benchmarks/small-c-v1/results/batch52-runtime.json)。保持既有四算法、输入规模、每语言两次预热及七次测量，C/Yavo 顺序交替，实测程序固定在 CPU 3。每次输出都与独立 Rust oracle 核对；四例全部匹配。Yavo 保留安全检查，C 热循环按既有协议不加边界和溢出检查。
+
+| 算法 | Yavo P50 ms | C P50 ms | Yavo/C | Yavo strip 字节 | C strip 字节 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| integer_recurrence | 70.451 | 73.690 | 0.956 | 20,000 | 21,576 |
+| vec_transform | 154.132 | 135.197 | 1.140 | 21,008 | 24,200 |
+| mutref_scatter | 105.988 | 103.958 | 1.020 | 21,120 | 24,120 |
+| deque_ring | 127.012 | 117.911 | 1.077 | 21,312 | 24,424 |
+
+双方使用锁定 Zig、`x86_64-linux-musl`、`-O2 -s` 和相同静态 musl 分配器；ELF 架构、无动态解释器及无完整符号表均由原脚本检查。运行时间包含启动、参数解析、输出与退出。四个比值的几何均值为 **1.045978**；未扩展为全语言或跨平台的“近 C”结论。
+
+## 编译延迟：重复构建与编辑后构建
+
+原始记录：[batch52-pch.json](../benchmarks/small-c-v1/results/batch52-pch.json)。原 `run.pl` 的同源重复构建仍为五次；PCH 原脚本每例两个分支各先预热一次，然后进行七组同源码配对，交替执行顺序。每组通过增加注释行制造真正的后端缓存 miss，PCH 分支必须复用运行时预编译头，两分支输出二进制逐组相同。
+
+| 算法 | 首次观察构建 ms | 同源重复构建 P50 ms | 编辑后直接编译 P50 ms | 编辑后 PCH P50 ms | PCH 加速 | ≤200 ms |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
+| integer_recurrence | 256.041 | 3.305 | 280.956 | 205.947 | 1.364× | 未达到 |
+| vec_transform | 221.805 | 4.625 | 276.909 | 211.424 | 1.310× | 未达到 |
+| mutref_scatter | 221.220 | 3.716 | 297.215 | 221.043 | 1.345× | 未达到 |
+| deque_ring | 217.051 | 4.281 | 295.719 | 220.644 | 1.340× | 未达到 |
+
+“首次观察”保留既有 Zig 缓存，不是 cold build；“同源重复”保持同一源码和输出路径、允许缓存复用，不代表编辑后交付延迟。PCH 对照使用既有脚本的 Linux 原生默认目标；运行时/体积表使用显式 musl 目标。正式 ≤200 ms 目标不能用 3–5 ms 的同源重复构建代替。
+
+## 身份、环境与剩余验收
+
+两项测量在本机最终核心自举退出 0 后顺序执行，退出码均为 0；未重跑挑选更快的样本。编译器 SHA-256 为 `6b89b770c00d0b817a223fb7187c7e5fd518d6b2ab0ce46f86d35f7015cea59f`。测量时 Git HEAD 为 `61b17c4` 加第 52 批分析器工作树改动；完整源文件与可执行文件身份保存在 runtime JSON，不能只按旧 HEAD 归属结果。两份结果的编译器哈希一致。
+
+主机为 Linux x86-64 / AMD EPYC，共享主机 CPU 频率和调度未受控；原运行时报告保存亲和性及负载，结果用于建立当前基线，未作跨批次性能改善或回归判定。
+
+| 原目标 | 本次状态 | 剩余证据 |
+| --- | --- | --- |
+| 小程序编译 ≤200 ms | 编辑后 PCH 四例 P50 均失败 | cold/warm × Debug/Release 的明确口径与完整任务集；macOS/Windows |
+| strip 后 ≤250 KB | 本次四个 Linux musl 程序满足数值阈值 | 更广程序与平台；不能扩展到自举编译器自身大小 |
+| 接近 C 的运行性能 | 四例几何比 1.046、最差 1.140 | 正式冻结题包；字符串、Map、分配、并发、FFI、Arena及其他平台 |
+
+复现命令保持原脚本和样本数：
+
+```sh
+source ../../.rust-build-tools/env.sh
+perl benchmarks/small-c-v1/run.pl --report benchmarks/small-c-v1/results/batch52-runtime.json
+../../.test-venv/bin/python3 benchmarks/small-c-v1/pch_probe.py --samples 7 --output benchmarks/small-c-v1/results/batch52-pch.json
+```

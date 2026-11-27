@@ -1,0 +1,52 @@
+use std/io
+
+fn encode(segment: str) -> Vec[(int, int)] {
+    var runs: Vec[(int, int)] = []
+    for i in 0..segment.len() {
+        let value = int(segment[i])
+        let last = runs.len() - 1
+        if last >= 0 && runs[last].0 == value {
+            let count = runs[last].1 + 1
+            runs[last] = (value, count)
+        } else {
+            runs.push((value, 1))
+        }
+    }
+    return runs
+}
+
+fn merge(runs: inout Vec[(int, int)], part: Vec[(int, int)]) {
+    for run in part {
+        let last = runs.len() - 1
+        if last >= 0 && runs[last].0 == run.0 {
+            let count = runs[last].1 + run.1
+            runs[last] = (run.0, count)
+        } else {
+            runs.push(run)
+        }
+    }
+}
+
+fn main() {
+    let text = io.readAll() catch _ { return }
+    let length = text.len() - 1
+    var firstSize = length / 3
+    var secondSize = length / 3
+    if length % 3 > 0 { firstSize += 1 }
+    if length % 3 > 1 { secondSize += 1 }
+    let secondEnd = firstSize + secondSize
+    var runs: Vec[(int, int)] = []
+    scope {
+        let first = spawn encode(text[0..firstSize])
+        let second = spawn encode(text[firstSize..secondEnd])
+        let third = spawn encode(text[secondEnd..length])
+        let a = first.join()
+        let b = second.join()
+        let c = third.join()
+        merge(&runs, a)
+        merge(&runs, b)
+        merge(&runs, c)
+    }
+    for run in runs { println("${run.0} ${run.1}") }
+    println("runs: ${runs.len()} chars: ${length}")
+}

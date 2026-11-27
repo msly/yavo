@@ -1,6 +1,20 @@
 # GitHub CI
 
-## Batch 51 standard-error acceptance
+## Current routing: Core / Full (batch 52)
+
+Every batch runs the three native fixed points, selected/changed semantic cases,
+original-corpus classification, the blocker-analysis contract and self-compilation
+measurements. Every fifth batch, a milestone, a release tag, or manual full adds
+the retained full suites, product matrices, sanitizers and archive gates.
+validation_plan.py cannot downgrade required full validation. The policy is
+[validation-policy.json](validation-policy.json); details and commands are in
+[validation-tiers.md](../../docs/validation-tiers.md).
+
+The batch 51 section below records that historical run. Since batch 52 the
+original hexadecimal fixture must be accepted; the decimal amendment remains
+historical evidence rather than a permanent manifest restriction.
+
+## Batch 51 standard-error acceptance (historical evidence; Full gate retained)
 
 `tools/ci/selfhost_errors.py` requires the complete current bootstrap and uses
 its actual stage0, stage1 and final stage2. The three frontends emit independent

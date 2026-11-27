@@ -11,6 +11,7 @@ mod lexer;
 mod parser;
 mod process;
 mod project;
+mod subset;
 mod toolchain;
 mod types;
 mod verify;
@@ -35,6 +36,7 @@ USAGE:
     yavo build <file.yv> [-o <output>] [--release] [--target <target>] [--emit-c <file.c>] [--json-diagnostics]
     yavo run   <file.yv> [--release] [--target <target>] [--json-diagnostics]
     yavo allocations <function> --file <file.yv> [--json]
+    yavo subset-features <file.yv> [--profile batch51|batch52]  (read-only planning JSON)
     yavo verify <file.yv> [--target <target>] [--sanitize] [--reproducible] [--json]
                 [--output-dir <dir>] [--timeout-ms <ms>] [--build-timeout-ms <ms>]
                 [--stdin <file>] [--expect-stdout <file>] [--expect-stderr <file>] [--no-run]
@@ -438,6 +440,13 @@ fn main() {
             }
         }
         "allocations" => exit(run_allocations(rest)),
+        "subset-features" => {
+            if !(rest.len() == 1 || rest.len() == 3 && rest[1] == "--profile"
+                && matches!(rest[2].as_str(), "batch51" | "batch52")) || rest[0].starts_with('-') {
+                usage_error("subset-features accepts an input file and optional --profile batch51|batch52");
+            }
+            exit(subset::run(Path::new(&rest[0]), rest.get(2).is_some_and(|x| x == "batch51")));
+        }
         "verify" => {
             let options = verify::Options::parse(rest).unwrap_or_else(|e| usage_error(&e));
             match verify::run(options) {

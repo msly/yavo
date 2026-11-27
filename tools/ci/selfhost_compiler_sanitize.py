@@ -15,6 +15,8 @@ import os
 from pathlib import Path
 import sys
 
+import selfhost_diagnostics as diagnostic_acceptance
+
 
 def clean_environment(sanitizer):
     environment = dict(os.environ)
@@ -149,7 +151,9 @@ def validate_json_diagnostics(bootstrap, compiler, stages, directory, command, b
             if not path.is_relative_to(fixtures.resolve()):
                 raise ValueError("frozen JSON fixture escapes its root")
             bind(path, expected)
-        cases = json.loads((fixtures / "cases.json").read_bytes())["cases"]
+        effective, _oracle, promotions = diagnostic_acceptance.load_effective(bound)
+        cases = effective["cases"]
+        detail["promotions"] = promotions
         expected_ids = {case["id"] for case in cases if "linux" in case["platforms"]}
         expected_text_ids = {case["id"] for case in cases if "linux" in case["platforms"] and case["kind"] == "json"}
         if len(cases) != 98 or len(expected_ids) != 98 or len(expected_text_ids) != 80:
@@ -201,6 +205,7 @@ def validate_json_diagnostics(bootstrap, compiler, stages, directory, command, b
                 or candidate.get("supplemental_case_count") != 8 or candidate.get("supplemental_passed") != 8
                 or candidate.get("supplemental_failed") != 0
                 or candidate.get("freeze") != detail["freeze"]
+                or candidate.get("promotions") != detail["promotions"]
                 or candidate.get("supplemental_freeze") != detail["supplemental_freeze"]
                 or candidate.get("excluded") != [] or candidate.get("special_files_removed_after_error") != []):
             raise ValueError("instrumented JSON candidate did not pass the complete frozen Linux gate")
@@ -208,7 +213,7 @@ def validate_json_diagnostics(bootstrap, compiler, stages, directory, command, b
         check_names = {row["id"] for row in checks}
         required_checks = {"frozen_oracle", "oracle_controls", "complete_case_inventory",
                            "frozen_platform_inventory", "inputs_unchanged_during_run", "json_and_text_contracts",
-                           "frozen_legacy_cli_supplement", "legacy_cli_supplement"}
+                           "frozen_legacy_cli_supplement", "legacy_cli_supplement", "explicit_diagnostic_promotions"}
         if (len(check_names) != len(checks) or not required_checks.issubset(check_names)
                 or not all(row.get("passed") is True for row in checks)):
             raise ValueError("instrumented JSON candidate omitted or failed a required check")
@@ -256,6 +261,7 @@ def validate_json_diagnostics(bootstrap, compiler, stages, directory, command, b
         for path, expected in candidate["input_identities"].items():
             bind(path, expected)
         required_inputs = {str(harness.resolve()), str(compiler.resolve()), str((fixtures / "freeze.json").resolve()),
+                           str(diagnostic_acceptance.PROMOTIONS.resolve()),
                            str((supplement / "freeze.json").resolve()),
                            *[str((bootstrap.SELFHOST / part).resolve()) for part in bootstrap.COMPILER_PARTS],
                            *[str((fixtures / name).resolve()) for name in freeze["sha256"]],

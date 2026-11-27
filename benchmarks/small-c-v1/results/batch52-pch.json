@@ -1,0 +1,114 @@
+{
+  "schema": "yavo-runtime-pch-latency/1",
+  "measured_at_utc": "2026-11-27T17:55:58.780007+00:00",
+  "host": "Linux-6.1.0-50-cloud-amd64-x86_64-with-glibc2.36",
+  "sample_count_per_arm_per_case": 7,
+  "mode": "release, edited sources, independent backend caches, alternating execution order",
+  "script_sha256": "c314028c8c17752095cf8182efc10605b17138bb0da1c757f7d737e5c81dafc4",
+  "compiler_sha256": "6b89b770c00d0b817a223fb7187c7e5fd518d6b2ab0ce46f86d35f7015cea59f",
+  "runtime_header_sha256": "4b490ca18f810211b35acca525e9ec1b1284e1488dd38d9ce6e391c78ac79b0a",
+  "benchmark_input_sha256": {
+    "integer_recurrence": "a28b5a0809f78ca35efa42c0ca7bc8bd1d611661625208b91809f071014d0e77",
+    "vec_transform": "3f9312b939aec5a69f324b4caa871b3e31d2f6006ca75ac5d6a4f31254fe58a3",
+    "mutref_scatter": "919c079186f9f2250452018c6d0021bf96de59c1d8e55f17df39a964c438b8ea",
+    "deque_ring": "fe67ff3f3064c1f224b85c5ecf83bb7764fd879576433eecb2d77b24bcf4ccab"
+  },
+  "results": {
+    "integer_recurrence": {
+      "pch_ms": [
+        216.922,
+        186.431,
+        205.418,
+        193.671,
+        209.883,
+        205.947,
+        225.237
+      ],
+      "direct_ms": [
+        280.712,
+        289.844,
+        279.241,
+        268.752,
+        280.956,
+        287.417,
+        309.604
+      ],
+      "pch_p50_ms": 205.947,
+      "direct_p50_ms": 280.956,
+      "speedup_direct_over_pch": 1.3642,
+      "binary_sha256_equal_on_all_samples": true
+    },
+    "vec_transform": {
+      "pch_ms": [
+        237.658,
+        211.424,
+        237.976,
+        204.13,
+        204.562,
+        205.674,
+        229.391
+      ],
+      "direct_ms": [
+        338.476,
+        296.537,
+        272.138,
+        283.443,
+        268.164,
+        273.509,
+        276.909
+      ],
+      "pch_p50_ms": 211.424,
+      "direct_p50_ms": 276.909,
+      "speedup_direct_over_pch": 1.3097,
+      "binary_sha256_equal_on_all_samples": true
+    },
+    "mutref_scatter": {
+      "pch_ms": [
+        216.664,
+        217.318,
+        210.161,
+        222.39,
+        251.062,
+        221.99,
+        221.043
+      ],
+      "direct_ms": [
+        301.238,
+        281.914,
+        277.546,
+        323.32,
+        285.741,
+        300.089,
+        297.215
+      ],
+      "pch_p50_ms": 221.043,
+      "direct_p50_ms": 297.215,
+      "speedup_direct_over_pch": 1.3446,
+      "binary_sha256_equal_on_all_samples": true
+    },
+    "deque_ring": {
+      "pch_ms": [
+        220.12,
+        220.644,
+        222.911,
+        209.603,
+        237.975,
+        205.063,
+        228.779
+      ],
+      "direct_ms": [
+        291.083,
+        299.688,
+        295.719,
+        285.038,
+        299.972,
+        286.038,
+        334.722
+      ],
+      "pch_p50_ms": 220.644,
+      "direct_p50_ms": 295.719,
+      "speedup_direct_over_pch": 1.3403,
+      "binary_sha256_equal_on_all_samples": true
+    }
+  }
+}

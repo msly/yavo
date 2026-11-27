@@ -1,0 +1,200 @@
+{
+  "schema": "yavo-batch52-validation-index/1",
+  "batch": 52,
+  "user_facing_date": "2026-11-28",
+  "recorded_at_utc": "2026-11-27T17:58:00.542863+00:00",
+  "baseline_commit": "61b17c4",
+  "implementation_commit": null,
+  "scope": "Layered acceptance, integer radix lexer, full module AST/HIR planning inventory with explicit unmodeled restrictions, performance baseline and cost audit.",
+  "milestones": {
+    "SH-2": "fixed point retained",
+    "SH-3": "not default compiler",
+    "SH-4": "3/3"
+  },
+  "validation_policy": {
+    "schema": "yavo-validation-policy/1",
+    "batch": 52,
+    "baseline_commit": "61b17c4",
+    "full_every_batches": 5,
+    "milestone": false,
+    "reason": "Batch 52: core bootstrap, changed cases, original-corpus sweep; full gates at batch 55 or an explicit milestone."
+  },
+  "local_core": {
+    "receipt": {
+      "path": "compiler/target/ci/selfhost-batch52-final2/receipt.json",
+      "bytes": 1485831,
+      "sha256": "a433f5e16fc1e67c2abe2c45407e1de43d790a478528e3be36986a021fabf56b"
+    },
+    "status": "passed",
+    "cases_passed": 104,
+    "cases_total": 104,
+    "checks_passed": 13,
+    "checks_failed": 0,
+    "skips": 0,
+    "stage2_c": {
+      "bytes": 1780336,
+      "sha256": "92af61c8544abe05f6599ce76de4da228b4ac58a7fb95cdd281d231cccd7d677"
+    },
+    "stage2_binary_bytes": 733152,
+    "stage2_stage3_c_equal": true,
+    "stage2_stage3_binary_equal": true,
+    "stage0": {
+      "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch52/stage0-core",
+      "sha256": "85c72206a67c40627ed693283e900a2079f0720f788c6d7430a5608f0bb61880"
+    }
+  },
+  "coverage": {
+    "receipt": {
+      "path": "compiler/target/ci/selfhost-batch52-final2/subset-sweep.json",
+      "bytes": 1580966,
+      "sha256": "689f14cf2f9565bb18a3ebc954fd1816c747e9bc83624e680a9b88a5ccd7b02e"
+    },
+    "passed": true,
+    "summary": {
+      "sources": 622,
+      "stage0_accepted": {
+        "paths": 394,
+        "unique_entry_bytes": 224,
+        "unique_module_graphs": 224
+      },
+      "selfhost_accepted": {
+        "paths": 125,
+        "unique_entry_bytes": 62,
+        "unique_module_graphs": 62
+      },
+      "stage0_rejected": 228,
+      "blocked": {
+        "paths": 269,
+        "unique_entry_bytes": 162,
+        "unique_module_graphs": 162
+      },
+      "analysis_complete": 394,
+      "unresolved_semantics": 269,
+      "accepted_profile_false_positive_paths": 0
+    },
+    "delta_accepted_paths": 0,
+    "violations": [],
+    "timeouts": [],
+    "abnormal_exits": []
+  },
+  "blocker_planning": {
+    "index": "compiler/validation/batch52-subset-blockers-2026-11-28.json",
+    "complete_ast_module_traversal": true,
+    "exhaustive_all_U0001_collection": false,
+    "remaining": "unmodeled structural, flow-sensitive and capacity restrictions remain explicit unknowns",
+    "copy_vec_modeled_candidates": {
+      "paths": 6,
+      "unique_graphs": 2
+    },
+    "confirmed_full_unlock": 0,
+    "focused_rust_tests": "11/11",
+    "calibration": {
+      "path": "compiler/target/ci/selfhost-batch52-final2/profile-calibration.json",
+      "bytes": 174243,
+      "sha256": "3f3444b18dcea79ae324fe80a764d8e10fec74dd1073d59e530fb2a5b786813e"
+    }
+  },
+  "integer_lexer": {
+    "index": "compiler/validation/batch52-integer-radices-2026-11-28.json",
+    "original_utf8_hex_fixture_restored": true
+  },
+  "retained_diagnostics": {
+    "index": "compiler/validation/batch52-diagnostic-promotions-2026-11-28.json",
+    "frozen_case_count": 98,
+    "promoted_original_sources": 3,
+    "unchanged_case_objects": 95
+  },
+  "self_compilation_metrics": {
+    "receipt": {
+      "path": "compiler/target/ci/selfhost-batch52-final2/metrics.json",
+      "bytes": 15211,
+      "sha256": "e02b10f7e0fc05117b1581b527d91c2a67fc9234028fb075f011bde971806e59"
+    },
+    "frontend": {
+      "samples": 5,
+      "p50_seconds": 0.08785274811089039,
+      "p95_seconds": 0.097482580691576,
+      "peak_rss_bytes": 31199232,
+      "rss_observations": 5
+    },
+    "backend_seconds_single_observation": 12.359970524907112,
+    "backend_peak_rss_bytes": 204967936,
+    "scope": "stage2 emit-c of the compiler itself; separate native backend observation",
+    "cache": "Yavo frontend cache disabled; existing OS and Zig caches; not cold builds",
+    "memory_scope": "OS wait4 RSS of the waited child, not sum of process-tree peaks; null where unavailable"
+  },
+  "small_program_performance": {
+    "runtime_report": "benchmarks/small-c-v1/results/batch52-runtime.json",
+    "pch_report": "benchmarks/small-c-v1/results/batch52-pch.json",
+    "runtime_summary": {
+      "formal_v1_gate_claimed": false,
+      "geometric_mean_ratio": 1.04597777914904,
+      "worst_case": "vec_transform",
+      "worst_ratio": 1.14005691268555
+    },
+    "edited_release_pch_p50_ms": {
+      "integer_recurrence": 205.947,
+      "vec_transform": 211.424,
+      "mutref_scatter": 221.043,
+      "deque_ring": 220.644
+    },
+    "compile_200ms_target_met_cases": 0,
+    "cases": 4,
+    "formal_full_gate_claimed": false,
+    "unmeasured": [
+      "cold builds",
+      "debug timing",
+      "Windows native timing",
+      "macOS native timing"
+    ]
+  },
+  "size_analysis": "compiler/validation/batch52-codegen-size-2026-11-28.json",
+  "delivery_cost": {
+    "historical_audit": "experiments/cost-pilot-2026-11-28/evidence/historical-audit.json",
+    "new_pilot_status": "experiments/cost-pilot-2026-11-28/evidence/status.json",
+    "new_participant_sessions": 0,
+    "new_tokens": null,
+    "blocked_reason": "Codex CLI in-process app-server initialization fails with Read-only file system (os error 30); no usable metered runner.",
+    "relative_cost_advantage_proven": false
+  },
+  "platform_gaps": {
+    "macos_windows_rust_full_suite": false,
+    "omitted_native_suites": [
+      "build_cache",
+      "conformance",
+      "harness",
+      "p0_regressions",
+      "targets",
+      "verify"
+    ],
+    "windows_standard_error_exclusions": [
+      "env_invalid_utf8",
+      "stdin_read_error"
+    ],
+    "plan": "docs/sh3-roadmap.md; portable suite and Windows counterpart review at batch55"
+  },
+  "failures_and_corrections": [
+    "Lexer 12abcE+3 initially misclassified as float; invalid integer detection corrected and tested.",
+    "Core selector used native separators and expanded all sibling fixtures; switched to POSIX paths and module-only sibling expansion.",
+    "Planning model false positives/omissions corrected using independent review and 354 original fixtures; incomplete modeling remains explicit.",
+    "Three historical diagnostic U0001 expectations promoted through explicit overlay; frozen source/freeze bytes retained.",
+    "An intermediate local core command was interrupted by connector lifetime at 73 cases; retained as incomplete. Final immutable-stage0 background run passes 104/104."
+  ],
+  "unrun_full_tier_this_batch": [
+    "six-product application matrix",
+    "full Rust regressions",
+    "sanitizers",
+    "specialized SHA256 matrix",
+    "ZIP member audits"
+  ],
+  "ci": {
+    "status": "pending",
+    "tier": "core",
+    "expected_native_platforms": [
+      "Linux x86_64",
+      "Windows x86_64",
+      "macOS arm64"
+    ]
+  },
+  "next": "Common enum/pattern representation and single match lowering for user enums plus standard errors; plan Optional/Result and full tuples as capability bundles, not isolated first-blocker patches."
+}

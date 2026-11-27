@@ -3,10 +3,12 @@ name: Yavo CI
 on:
   push:
     branches: [main]
+    tags: ["v*"]
     paths:
       - '**'
       - '!**/*.md'
       - '!compiler/validation/*.json'
+      - '!benchmarks/**/results/*.json'
       # Frozen experiment inputs must run their preparation gate, even as Markdown.
       - 'docs/agent-api-index.md'
       - 'docs/agent-start.md'
@@ -17,11 +19,18 @@ on:
       - '**'
       - '!**/*.md'
       - '!compiler/validation/*.json'
+      - '!benchmarks/**/results/*.json'
       - 'docs/agent-api-index.md'
       - 'docs/agent-start.md'
       - 'experiments/docs-ab-2026-11-22-r6/**'
       - 'tools/agent_eval/README.md'
   workflow_dispatch:
+    inputs:
+      tier:
+        description: Validation tier (cadence and milestones cannot be downgraded)
+        type: choice
+        default: auto
+        options: [auto, core, full]
 
 permissions:
   contents: read
@@ -36,11 +45,28 @@ env:
   RUST_BACKTRACE: 1
 
 jobs:
+  plan:
+    name: Validation tier
+    runs-on: ubuntu-24.04
+    outputs:
+      tier: ${{ steps.plan.outputs.tier }}
+      baseline: ${{ steps.plan.outputs.baseline }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Check tier and changed-case selection controls
+        run: python3 tools/ci/validation_plan_test.py
+      - name: Check preserved diagnostic fixture promotions
+        run: python3 selfhost/tests/diagnostics52/test_promotions.py
+      - id: plan
+        env:
+          REQUESTED_TIER: ${{ inputs.tier || 'auto' }}
+        run: python3 tools/ci/validation_plan.py --requested "$REQUESTED_TIER"
+
   native:
+    needs: plan
     name: Native ${{ matrix.platform }}
     runs-on: ${{ matrix.runner }}
-    # Windows runners vary widely; batch50 took 67 minutes with all gates.
-    # Allow the larger semantic suite and independent standard-error I/O gate.
+    # Full milestone runs retain the larger timeout; core omits duplicate product gates.
     timeout-minutes: 90
     strategy:
       fail-fast: false
@@ -69,6 +95,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          fetch-depth: 0
       # Windows runners have downloaded the Zig archive at about 60 KB/s; reuse the
       # installed toolchain, keyed by the lock file that pins its URL and hash.
       - name: Restore the locked Zig toolchain
@@ -82,12 +109,15 @@ jobs:
           YAVO_CACHE_DIR: ${{ runner.temp }}/yavo-cache
         run: ${{ matrix.python }} tools/ci/run.py setup
       - name: Run Debug and Release sequentially
+        if: needs.plan.outputs.tier == 'full'
         env:
           YAVO_HOME: ${{ runner.temp }}/yavo-home
           YAVO_CACHE_DIR: ${{ runner.temp }}/yavo-cache
         run: ${{ matrix.python }} tools/ci/run.py native --suite ${{ matrix.suite }}
+      - name: Check the complete blocker-analysis contract
+        run: cargo test --manifest-path compiler/Cargo.toml --locked --offline --release --test subset_features
       - name: Compile starter-guide examples and ownership diagnostics
-        if: matrix.suite == 'full'
+        if: needs.plan.outputs.tier == 'full' && matrix.suite == 'full'
         env:
           YAVO_HOME: ${{ runner.temp }}/yavo-home
           YAVO_CACHE_DIR: ${{ runner.temp }}/yavo-cache
@@ -96,76 +126,88 @@ jobs:
         env:
           YAVO_HOME: ${{ runner.temp }}/yavo-home
           YAVO_CACHE_DIR: ${{ runner.temp }}/yavo-cache
-        run: ${{ matrix.python }} selfhost/bootstrap.py
+        run: ${{ matrix.python }} selfhost/bootstrap.py --tier ${{ needs.plan.outputs.tier }} --baseline ${{ needs.plan.outputs.baseline }}
+      - name: Sweep the original corpus with the final selfhost compiler
+        run: ${{ matrix.python }} tools/ci/subset_core.py --bootstrap-output compiler/target/ci/selfhost
+      - name: Record self-compilation timing, memory and generated sizes
+        run: ${{ matrix.python }} tools/ci/selfhost_metrics.py --bootstrap-output compiler/target/ci/selfhost
       - name: Check isolated application runner configurations
+        if: needs.plan.outputs.tier == 'full'
         run: ${{ matrix.python }} tools/ci/dep_support_test.py
       - name: Validate ordinary selfhost build and run
+        if: needs.plan.outputs.tier == 'full'
         env:
           YAVO_HOME: ${{ runner.temp }}/yavo-home
           YAVO_CACHE_DIR: ${{ runner.temp }}/yavo-cache
         run: ${{ matrix.python }} tools/ci/selfhost_driver.py --bootstrap-output compiler/target/ci/selfhost
       - name: Validate selfhost source hashing
+        if: needs.plan.outputs.tier == 'full'
         env:
           YAVO_HOME: ${{ runner.temp }}/yavo-home
           YAVO_CACHE_DIR: ${{ runner.temp }}/yavo-cache
         run: ${{ matrix.python }} tools/ci/selfhost_digest.py --bootstrap-output compiler/target/ci/selfhost
       - name: Validate selfhost structured diagnostics
+        if: needs.plan.outputs.tier == 'full'
         env:
           YAVO_HOME: ${{ runner.temp }}/yavo-home
           YAVO_CACHE_DIR: ${{ runner.temp }}/yavo-cache
         run: ${{ matrix.python }} tools/ci/selfhost_diagnostics.py --bootstrap-output compiler/target/ci/selfhost
       - name: Validate selfhost standard error values
+        if: needs.plan.outputs.tier == 'full'
         env:
           YAVO_HOME: ${{ runner.temp }}/yavo-home
           YAVO_CACHE_DIR: ${{ runner.temp }}/yavo-cache
         run: ${{ matrix.python }} tools/ci/selfhost_errors.py --bootstrap-output compiler/target/ci/selfhost --sanitizers ${{ runner.os == 'Linux' && 'required' || 'off' }}
       - name: Validate the test-summary CLI application
+        if: needs.plan.outputs.tier == 'full'
         env:
           YAVO_HOME: ${{ runner.temp }}/yavo-home
           YAVO_CACHE_DIR: ${{ runner.temp }}/yavo-cache
         run: ${{ matrix.python }} tools/ci/test_summary.py
       - name: Validate the csv-check CLI application
+        if: needs.plan.outputs.tier == 'full'
         env:
           YAVO_HOME: ${{ runner.temp }}/yavo-home
           YAVO_CACHE_DIR: ${{ runner.temp }}/yavo-cache
         run: ${{ matrix.python }} tools/ci/csv_check.py --bootstrap-output compiler/target/ci/selfhost --sanitizers ${{ runner.os == 'Linux' && 'required' || 'off' }}
       - name: Validate the dep-index CLI application
+        if: needs.plan.outputs.tier == 'full'
         env:
           YAVO_HOME: ${{ runner.temp }}/yavo-home
           YAVO_CACHE_DIR: ${{ runner.temp }}/yavo-cache
         run: ${{ matrix.python }} tools/ci/dep_check.py --bootstrap-output compiler/target/ci/selfhost --sanitizers ${{ runner.os == 'Linux' && 'required' || 'off' }}
       - name: Check Yavo-frontend C with independent ASan and UBSan
-        if: runner.os == 'Linux'
+        if: needs.plan.outputs.tier == 'full' && (runner.os == 'Linux')
         run: python3 tools/ci/selfhost_sanitize.py
       - name: Check system interfaces with required ASan and UBSan
-        if: runner.os == 'Linux'
+        if: needs.plan.outputs.tier == 'full' && (runner.os == 'Linux')
         run: python3 tools/ci/system_sanitize.py --bootstrap-output compiler/target/ci/selfhost
       - name: Package application evidence with adversarial filenames
-        if: always()
+        if: needs.plan.outputs.tier == 'full' && (always())
         run: ${{ matrix.python }} tools/ci/package_test_summary.py
       - name: Package CSV application evidence
-        if: always()
+        if: needs.plan.outputs.tier == 'full' && (always())
         run: ${{ matrix.python }} tools/ci/package_test_summary.py --input compiler/target/ci/csv-check --output compiler/target/ci/csv-check.tar.gz --prefix csv-check
       - name: Package dependency-index application evidence
-        if: always()
+        if: needs.plan.outputs.tier == 'full' && (always())
         run: ${{ matrix.python }} tools/ci/package_test_summary.py --input compiler/target/ci/dep-index --output compiler/target/ci/dep-index.tar.gz --prefix dep-index
       - name: Package ordinary driver evidence
-        if: always()
+        if: needs.plan.outputs.tier == 'full' && (always())
         run: ${{ matrix.python }} tools/ci/package_test_summary.py --input compiler/target/ci/selfhost-driver --output compiler/target/ci/selfhost-driver.tar.gz --prefix selfhost-driver
       - name: Package selfhost source hashing evidence
-        if: always()
+        if: needs.plan.outputs.tier == 'full' && (always())
         run: ${{ matrix.python }} tools/ci/package_test_summary.py --input compiler/target/ci/selfhost-digest --output compiler/target/ci/selfhost-digest.tar.gz --prefix selfhost-digest
       - name: Package selfhost structured diagnostic evidence
-        if: always()
+        if: needs.plan.outputs.tier == 'full' && (always())
         run: ${{ matrix.python }} tools/ci/package_test_summary.py --input compiler/target/ci/selfhost-diagnostics --output compiler/target/ci/selfhost-diagnostics.tar.gz --prefix selfhost-diagnostics
       - name: Package selfhost standard error evidence
-        if: always()
+        if: needs.plan.outputs.tier == 'full' && (always())
         run: ${{ matrix.python }} tools/ci/package_test_summary.py --input compiler/target/ci/selfhost-errors --output compiler/target/ci/selfhost-errors.tar.gz --prefix selfhost-errors
       - name: Package system interface sanitizer evidence
-        if: always() && runner.os == 'Linux'
+        if: needs.plan.outputs.tier == 'full' && (always() && runner.os == 'Linux')
         run: python3 tools/ci/package_test_summary.py --input compiler/target/ci/system-sanitize --output compiler/target/ci/system-sanitize.tar.gz --prefix system-sanitize
       - name: Package selfhost sanitizer evidence
-        if: always() && runner.os == 'Linux'
+        if: needs.plan.outputs.tier == 'full' && (always() && runner.os == 'Linux')
         run: python3 tools/ci/package_test_summary.py --input compiler/target/ci/selfhost-sanitizers --output compiler/target/ci/selfhost-sanitizers.tar.gz --prefix selfhost-sanitizers
       - name: Preserve logs and per-platform receipts
         if: always()
@@ -186,7 +228,10 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+
   agent-eval-preparation:
+    needs: plan
+    if: needs.plan.outputs.tier == 'full'
     name: Agent evaluation preparation
     runs-on: ubuntu-24.04
     timeout-minutes: 10
@@ -208,6 +253,8 @@ jobs:
           retention-days: 14
 
   sanitizers:
+    needs: plan
+    if: needs.plan.outputs.tier == 'full'
     name: Independent Linux ASan and UBSan
     runs-on: ubuntu-24.04
     timeout-minutes: 30
@@ -229,6 +276,8 @@ jobs:
           retention-days: 14
 
   experiment-evidence:
+    needs: plan
+    if: needs.plan.outputs.tier == 'full'
     name: Round-five experiment evidence
     runs-on: ubuntu-24.04
     timeout-minutes: 10

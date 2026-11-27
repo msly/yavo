@@ -1,0 +1,74 @@
+use std/io
+
+struct Region {
+    area: int
+    perimeter: int
+    r0: int
+    c0: int
+    r1: int
+    c1: int
+}
+
+fn main() {
+    let input = io.readAll() catch _ { return }
+    let lines = input.lines()
+    let size = lines[0].fields()
+    let h = size[0].parseInt() ?? 0
+    let w = size[1].parseInt() ?? 0
+    var seen: Vec[bool] = []
+    for _i in 0..h * w {
+        seen.push(false)
+    }
+    let directions: Vec[(int, int)] = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+    var regions: Vec[Region] = []
+    var largest = 0
+    var largestArea = 0
+    for index in 0..h * w {
+        let r = index / w
+        let c = index % w
+        if seen[index] || lines[r + 1][c] != '#' {
+            continue
+        }
+        var region = Region{area: 0, perimeter: 0, r0: r, c0: c, r1: r, c1: c}
+        var stack: Vec[int] = [index]
+        seen[index] = true
+        while let cell = stack.pop() {
+            let row = cell / w
+            let col = cell % w
+            region.area += 1
+            region.r0 = min(region.r0, row)
+            region.c0 = min(region.c0, col)
+            region.r1 = max(region.r1, row)
+            region.c1 = max(region.c1, col)
+            for direction in directions {
+                let nr = row + direction.0
+                let nc = col + direction.1
+                if nr < 0 || nr >= h || nc < 0 || nc >= w {
+                    region.perimeter += 1
+                } else if lines[nr + 1][nc] != '#' {
+                    region.perimeter += 1
+                } else {
+                    let neighbor = nr * w + nc
+                    if !seen[neighbor] {
+                        seen[neighbor] = true
+                        stack.push(neighbor)
+                    }
+                }
+            }
+        }
+        if region.area > largestArea {
+            largestArea = region.area
+            largest = regions.len() + 1
+        }
+        regions.push(region)
+    }
+    println("components: ${regions.len()}")
+    for i, region in regions {
+        println("${i + 1}: area=${region.area} perimeter=${region.perimeter} box=${region.r0},${region.c0}:${region.r1},${region.c1}")
+    }
+    if largest == 0 {
+        println("largest: none")
+    } else {
+        println("largest: ${largest}")
+    }
+}

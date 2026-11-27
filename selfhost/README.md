@@ -8,6 +8,15 @@ compiles them again to stage3 C. Stage2/stage3 C and binaries are byte-identical
 Rust remains a separate behavioral reference; no stage delegates an input back
 to Rust. Current validation is recorded below.
 
+**Batch 52:** integer radix prefixes and separators are handled in the lexer;
+the original UTF-8 hexadecimal fixture is restored. bootstrap.py now defaults
+to --tier core (fixed point plus stable and changed cases); --tier full
+retains every semantic/application gate. Full CI runs every fifth batch and on
+milestones/releases. See [validation tiers](../docs/validation-tiers.md).
+subset-features/subset_sweep.py inspect complete module ASTs and typed IR,
+retain unresolved restrictions, and rank feature-set candidates without claiming
+future acceptance. [SH-3 exit checklist](../docs/sh3-roadmap.md).
+
 **Status: SH-2 fixed point reached for the bootstrap subset (2026-11-23).**
 The compiler sources were rewritten into a *bootstrap dialect*: a strict
 subset of the stage0 language that the compiler itself implements (see

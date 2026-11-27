@@ -1,0 +1,241 @@
+{
+  "schema": "yavo-agent-cost-evidence-audit-v1",
+  "audit_date": "2026-11-28",
+  "rounds": [
+    {
+      "round": "R3",
+      "independent_tasks": 12,
+      "evidence_grade": "historical_reports_and_participant_logs",
+      "reported_first_correct_excluding_repair_task": {
+        "yavo": 3,
+        "rust": 11,
+        "denominator": 11
+      },
+      "reported_token_totals": {
+        "yavo": 165176,
+        "rust": 124860
+      },
+      "reported_token_ratio_yavo_over_rust": 1.3228896363927598,
+      "raw_provider_usage_available": false,
+      "reported_model": "Claude Sonnet (exact id not archived)",
+      "reported_frozen_runtime_cases_passed": {
+        "yavo": 18,
+        "rust": 18,
+        "denominator": 18
+      },
+      "task_builds_from_participant_log": {
+        "yavo": {
+          "T01": 3,
+          "T02": 2,
+          "T03": 3,
+          "T04": 2,
+          "T05": 2,
+          "T06": 1,
+          "T07": 1,
+          "T08": 2,
+          "T09": 2,
+          "T10": 1,
+          "T11": 2,
+          "T12": 2
+        },
+        "rust": {
+          "T01": 1,
+          "T02": 1,
+          "T03": 1,
+          "T04": 2,
+          "T05": 1,
+          "T06": 1,
+          "T07": 1,
+          "T08": 2,
+          "T09": 1,
+          "T10": 1,
+          "T11": 1,
+          "T12": 1
+        }
+      },
+      "sources": {
+        "experiments/coldstart-2026-11-21/yavo/LOG.md": "1e731c9c5a13019052bcda299441e70f9b11d2eadc1a9f868a21e0ea512a52c6",
+        "experiments/coldstart-2026-11-21/rust/LOG.md": "d478b6563d6e43681c7016b1b5765dc94202c1fe1997bb2f6511bca6019d3426",
+        "experiments/coldstart-2026-11-21/README.md": "6f6240394057b5d63648d67291b38ce8362a7e4d9250ff29955441d0e3565931"
+      },
+      "total_logged_builds": {
+        "yavo": 23,
+        "rust": 14
+      },
+      "extra_logged_builds_after_first": {
+        "yavo": 11,
+        "rust": 2
+      },
+      "limits": [
+        "Token totals are reported claims, not provider usage reconstructed in this audit.",
+        "Extra builds include environment/output and runtime correction; not all are compiler code repairs."
+      ]
+    },
+    {
+      "round": "R4",
+      "independent_tasks": 12,
+      "evidence_grade": "historical_reports_and_participant_logs",
+      "reported_first_correct_excluding_repair_task": {
+        "yavo": 8,
+        "rust": 11,
+        "denominator": 11
+      },
+      "reported_token_totals": {
+        "yavo": 162464,
+        "rust": 127801
+      },
+      "reported_token_ratio_yavo_over_rust": 1.2712263597311446,
+      "raw_provider_usage_available": false,
+      "reported_model": "Claude Sonnet (exact id not archived)",
+      "reported_frozen_runtime_cases_passed": {
+        "yavo": 18,
+        "rust": 18,
+        "denominator": 18
+      },
+      "task_builds_from_participant_log": {
+        "yavo": {
+          "T01": 1,
+          "T02": 1,
+          "T03": 2,
+          "T04": 2,
+          "T05": 2,
+          "T06": 1,
+          "T07": 1,
+          "T08": 2,
+          "T09": 1,
+          "T10": 1,
+          "T11": 1,
+          "T12": 1
+        },
+        "rust": {
+          "T01": 1,
+          "T02": 1,
+          "T03": 1,
+          "T04": 1,
+          "T05": 1,
+          "T06": 1,
+          "T07": 1,
+          "T08": 1,
+          "T09": 1,
+          "T10": 1,
+          "T11": 1,
+          "T12": 1
+        }
+      },
+      "sources": {
+        "experiments/coldstart-2026-11-21-r4/yavo/LOG.md": "7703cd6b9841a4a9af2250b00e17739c3ce304147fa4e6265e3f5ab9fc23311f",
+        "experiments/coldstart-2026-11-21-r4/rust/LOG.md": "cdeb1eec26b7ac4650587668fc328d123283e2ccdffba7e8949a45bc03c9edb1",
+        "experiments/coldstart-2026-11-21-r4/README.md": "cea6a2e7015a9ef523843db478980111c7328283de6fa2d09dbc7cb464caa61d"
+      },
+      "total_logged_builds": {
+        "yavo": 16,
+        "rust": 12
+      },
+      "extra_logged_builds_after_first": {
+        "yavo": 4,
+        "rust": 0
+      },
+      "limits": [
+        "Token totals are reported claims, not provider usage reconstructed in this audit.",
+        "Extra builds include environment/output and runtime correction; not all are compiler code repairs.",
+        "Same tasks as R3; post-submission T10 leading-zero boundary failed for Yavo and passed for Rust."
+      ]
+    },
+    {
+      "round": "R5",
+      "independent_tasks": 12,
+      "replicates_per_language": 2,
+      "evidence_grade": "instrumented_operation_logs_and_independent_hidden_replay",
+      "languages": {
+        "yavo": {
+          "successful_tasks": 24,
+          "task_count": 24,
+          "recorded_lab_operations": 138,
+          "wall_seconds": 671.287630847655,
+          "operation_body_seconds": 12.119782526977366,
+          "outside_operation_bodies_seconds": 659.1678483206776,
+          "compiler_process_seconds": 5.345069740898907,
+          "compiler_invocations": 24,
+          "compiler_failures": 0,
+          "participant_test_process_seconds": 1.1294718645513058,
+          "participant_test_processes": 54,
+          "documentation_bytes_returned": 139812,
+          "source_bytes_written": 47282,
+          "final_source_bytes": 47282,
+          "final_source_lines": 1615,
+          "categories": {
+            "compile": 24,
+            "read_documentation": 32,
+            "submit": 26,
+            "test_custom": 6,
+            "test_public": 24,
+            "write_code": 26
+          },
+          "independent_batches": 2,
+          "operations_per_successful_task": 5.75,
+          "seconds_per_successful_task": 27.970317951985624
+        },
+        "rust": {
+          "successful_tasks": 24,
+          "task_count": 24,
+          "recorded_lab_operations": 132,
+          "wall_seconds": 557.037306061945,
+          "operation_body_seconds": 10.805535112507645,
+          "outside_operation_bodies_seconds": 546.2317709494373,
+          "compiler_process_seconds": 3.890952049754557,
+          "compiler_invocations": 24,
+          "compiler_failures": 0,
+          "participant_test_process_seconds": 1.1276503354310987,
+          "participant_test_processes": 54,
+          "documentation_bytes_returned": 74034,
+          "source_bytes_written": 38143,
+          "final_source_bytes": 38143,
+          "final_source_lines": 757,
+          "categories": {
+            "compile": 24,
+            "read_documentation": 26,
+            "submit": 26,
+            "test_custom": 6,
+            "test_public": 24,
+            "write_code": 26
+          },
+          "independent_batches": 2,
+          "operations_per_successful_task": 5.5,
+          "seconds_per_successful_task": 23.20988775258104
+        }
+      },
+      "ratios": {
+        "recorded_lab_operations": 1.0454545454545454,
+        "wall_seconds": 1.20510354251391,
+        "compiler_process_seconds": 1.3737177103573088,
+        "final_source_bytes": 1.2395983535642188,
+        "operations_per_successful_task": 1.0454545454545454,
+        "seconds_per_successful_task": 1.20510354251391
+      },
+      "raw_provider_usage_available": false,
+      "tokens": null,
+      "reported_model": null,
+      "source": "experiments/coldstart-2026-11-22-r5/results.json",
+      "limits": [
+        "24 successful deliveries per language are 12 tasks x 2 sessions, not 24 independent tasks.",
+        "Operation counts and elapsed time are not token counts."
+      ]
+    },
+    {
+      "round": "R6",
+      "evidence_grade": "prepared_only",
+      "participant_sessions": 0,
+      "tokens": null,
+      "source": "experiments/docs-ab-2026-11-22-r6/README.md"
+    }
+  ],
+  "conclusion": {
+    "never_compared_to_rust": false,
+    "claimed_lower_cost_than_rust_demonstrated": false,
+    "missing": [
+      "current-version paired real usage",
+      "exact reported model provenance",
+      "price/cached-token billing if claiming money"
+    ]
+  }
+}

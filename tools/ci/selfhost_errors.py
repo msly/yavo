@@ -92,13 +92,20 @@ def load_frozen(bound):
     require({"kind": old_cases[0]["kind"], "stdout": old_cases[0]["stdout"],
              "stderr": old_cases[0].get("stderr", ""), "exit": 0} == amendment["expected_unchanged"],
             "amendment changed a semantic expectation")
-    old_cases[0]["file"] = replacement["new_file"]
+    # The amendment is immutable historical evidence. Reconstruct its original
+    # effective bytes instead of pinning the evolving current corpus to batch 51.
+    historical = snapshot.read_bytes().replace(
+        ('"file": "' + replacement["old_file"] + '"').encode(),
+        ('"file": "' + replacement["new_file"] + '"').encode())
+    require({"bytes": len(historical), "sha256": execution.sha(historical)} == amendment["manifest"]["effective"],
+            "historical effective amended manifest identity changed")
     current_manifest = ROOT / "selfhost/tests/cases.json"
-    require(json.loads(current_manifest.read_bytes()) == effective and len(effective["cases"]) == 1136,
-            "current manifest differs by more than the single amended source path")
+    current = json.loads(current_manifest.read_bytes())
+    current_cases = {case["id"]: case for case in current["cases"]}
+    require(len(current_cases) == len(current["cases"]), "duplicate current semantic case ID")
+    require(current_cases.get(replacement["id"]) == old_cases[0],
+            "original hexadecimal source or its semantic expectation was not restored")
     current_identity = bind(bound, current_manifest)
-    require({key: current_identity[key] for key in ("bytes", "sha256")} == amendment["manifest"]["effective"],
-            "effective amended manifest identity changed")
     reference = json.loads((FIXTURES / "amendment-reference.json").read_bytes())
     require(reference["passed"] is True and reference["executions"] == 4
             and reference["stdout_hex"] == "310a" and reference["stderr_hex"] == "" and reference["exit"] == 0
@@ -111,7 +118,9 @@ def load_frozen(bound):
                     and row["run"]["stdout"]["sha256"] == execution.sha(b"1\n")
                     and row["run"]["stderr"]["sha256"] == execution.sha(b""), "literal-reference output differs")
     records["semantic_amendment"] = {"record": bind(bound, amendment_path), "id": replacement["id"],
-                                     "original_manifest": bind(bound, snapshot), "effective_manifest": current_identity,
+                                     "original_manifest": bind(bound, snapshot),
+                                     "historical_effective_manifest": amendment["manifest"]["effective"],
+                                     "current_manifest": current_identity, "original_source_restored": True,
                                      "old_source": bind(bound, old_source), "new_source": bind(bound, new_source),
                                      "expectations_unchanged": True, "stage0_equivalence_executions": 4}
     semantic = json.loads((FIXTURES / "cases.json").read_bytes())
@@ -120,6 +129,16 @@ def load_frozen(bound):
     require(semantic["case_count"] == len(semantic["cases"]) == 73,
             "semantic probe count changed")
     require(len(promotions["cases"]) == 10, "original-source promotion count changed")
+    # Later batches may add probes and promote previously unsupported syntax.
+    # Keep this gate's frozen executable/error expectations and source paths.
+    for case in semantic["cases"] + [item["after"] for item in promotions["cases"]]:
+        active = current_cases.get(case["id"])
+        require(active is not None and active["file"] == case["file"],
+                "frozen error probe removed or source path changed: " + case["id"])
+        if case["kind"] in ("run", "panic", "reject"):
+            keys = ("kind", "stdout", "stderr", "diagnostic", "panic", "exit", "environment", "isolated_cwd")
+            require(all(active.get(key) == case.get(key) for key in keys),
+                    "frozen error expectation changed: " + case["id"])
     require(manifest["schema"] == "yavo-standard-errors51-io-cases/1"
             and manifest["case_count"] == len(manifest["cases"]) == 48,
             "I/O case inventory changed")
@@ -148,20 +167,17 @@ def load_frozen(bound):
     return applicable, oracle, records
 
 
-def amendment_boundary_checks(compilers, work, environment):
+def original_literal_checks(compilers, work, environment):
     source = FIXTURES / "programs/utf8_consumed_failure.yv"
     rows = []
     for role, binary in compilers:
         command, out, err = execution.execute([binary, "check", source],
-                                              work / "commands" / (role + "-original-hex-boundary"),
+                                              work / "commands" / (role + "-original-hex-supported"),
                                               ROOT, environment, {"PATH": ""}, 30)
-        accepted = role == "stage0"
-        passed = producers.completed(command, 0 if accepted else 1) and (
-            accepted or (out == b"" and re.findall(rb"\b[EU][0-9]{4}\b", err) == [b"U0001"]))
+        passed = producers.completed(command) and out == b"" and err == b""
         rows.append({"producer": role, "source": execution.identity(source), "command": command,
-                     "expected_exit": 0 if accepted else 1, "expected_diagnostic": None if accepted else "U0001",
-                     "passed": passed})
-    require(all(row["passed"] for row in rows), "the original non-decimal lexical boundary changed")
+                     "expected_exit": 0, "expected_diagnostic": None, "passed": passed})
+    require(all(row["passed"] for row in rows), "the restored hexadecimal source was not accepted")
     return rows
 
 
@@ -385,8 +401,8 @@ def main():
                     bind(bound, ROOT / "selfhost" / name)
         report["checks"].append({"id": "producer_identity", "passed": True})
         report["compilers"] = [{"role": role, **bind(bound, binary)} for role, binary in compilers]
-        report["amendment_boundary_checks"] = amendment_boundary_checks(compilers, work, environment)
-        report["checks"].append({"id": "amended_literal_preserves_original_boundary", "passed": True})
+        report["original_literal_checks"] = original_literal_checks(compilers, work, environment)
+        report["checks"].append({"id": "original_hexadecimal_source_supported", "passed": True})
         report["zig"] = bind(bound, zig)
         command, out, _err = execution.execute([zig, "version"], work / "commands/zig-version", ROOT, environment, {}, 15)
         lock = dict(tuple(part.strip() for part in line.split("=", 1)) for line in (ROOT / "compiler/toolchain.lock").read_text().splitlines()

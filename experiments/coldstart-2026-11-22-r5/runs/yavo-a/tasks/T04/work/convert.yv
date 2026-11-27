@@ -1,0 +1,95 @@
+fn amount(s: str) -> ?(int, int) {
+    if s.len() == 0 || s.len() > 64 {
+        return none
+    }
+    var pos = 0
+    var negative = false
+    if s[0] == '-' {
+        negative = true
+        pos = 1
+    }
+    let start = pos
+    var numerator = 0
+    while pos < s.len() && s[pos] >= '0' && s[pos] <= '9' {
+        numerator = numerator * 10 + int(s[pos] - '0')
+        if numerator > 1000000 {
+            return none
+        }
+        pos += 1
+    }
+    if pos == start {
+        return none
+    }
+    var denominator = 1
+    if pos < s.len() {
+        if s[pos] != '.' {
+            return none
+        }
+        pos += 1
+        let fractionStart = pos
+        while pos < s.len() {
+            if s[pos] < '0' || s[pos] > '9' || pos - fractionStart >= 3 {
+                return none
+            }
+            numerator = numerator * 10 + int(s[pos] - '0')
+            denominator *= 10
+            pos += 1
+        }
+        if pos == fractionStart {
+            return none
+        }
+    }
+    if numerator > 1000000 * denominator {
+        return none
+    }
+    if negative {
+        numerator = -numerator
+    }
+    return (numerator, denominator)
+}
+
+fn unit(s: str) -> ?int {
+    if s == "mm" {
+        return 1
+    }
+    if s == "cm" {
+        return 10
+    }
+    if s == "m" {
+        return 1000
+    }
+    if s == "km" {
+        return 1000000
+    }
+    return none
+}
+
+fn gcd(a: int, b: int) -> int {
+    var x = abs(a)
+    var y = b
+    while y != 0 {
+        let next = x % y
+        x = y
+        y = next
+    }
+    return x
+}
+
+pub fn record(line: str) -> String {
+    let fields = line.fields()
+    if fields.len() != 3 {
+        return "invalid".toString()
+    }
+    let value = amount(fields[0]) ?? return "invalid".toString()
+    let source = unit(fields[1]) ?? return "invalid".toString()
+    let target = unit(fields[2]) ?? return "invalid".toString()
+    let numerator = value.0 * source
+    let denominator = value.1 * target
+    let divisor = gcd(numerator, denominator)
+    let n = numerator / divisor
+    let d = denominator / divisor
+    if d == 1 {
+        return format("${n} ${fields[2]}")
+    }
+    return format("${n}/${d} ${fields[2]}")
+}

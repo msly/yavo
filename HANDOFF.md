@@ -1,16 +1,16 @@
-# Yavo 交接文档（2026-11-27，第五十一批：标准错误值、完整 Result 与真实 I/O）
+# Yavo 交接文档（2026-11-28，第五十二批：验收分层、跨模块阻塞分析与数值词法）
 
-给下一个会话：先读第1、2、10、31节及 docs/self-hosting.md、selfhost/README.md。第二十七至第三十批在 `history/handoff-batches-2026-11-23-to-24.md`，第十二至第二十六批在 `history/handoff-batches-2026-11-21-to-23.md`，第六至第十一批在 `history/handoff-batches-2026-11-19-to-21.md`。
+给下一个会话：先读第1、2、32节及 docs/sh3-roadmap.md、docs/validation-tiers.md。第二十七至第三十批在 `history/handoff-batches-2026-11-23-to-24.md`，第十二至第二十六批在 `history/handoff-batches-2026-11-21-to-23.md`，第六至第十一批在 `history/handoff-batches-2026-11-19-to-21.md`。
 
 ## 1. 一句话状态
 
-**第五十一批交付四种名义标准 Error、prelude Utf8Error、已有十个 fallible 调用的完整 Result，以及命名 catch 和标准 Error 的真实载荷 match。** 错误可保存、传参/返回、显示、匹配及 try 传播；相同载荷布局的 fs/io/os/process Error 仍互不转换。一般用户载荷枚举、普通 match、错误容器、qualified payload 构造及未声明API继续保持边界。
+**第五十二批修复十六进制等整数字面量并恢复原稿；将日常验收改为核心门，完整门每5批/里程碑运行；新增跨模块 AST/HIR 阻塞集合与可计量12题复测入口。** 当前SH-2固定点、SH-4正式应用3/3；SH-3仍未默认接替Rust。
 
-本机完整自举 **1,136/1,136、20/20、0 skip**；标准错误 **48场景 × 3实际前端 × 2模式 = 288/288**，另6项oracle控制、4项清理控制和3项原词法边界检查通过。stage2/stage3 C **1,774,302字节**、Linux二进制 **729,968字节**，两代分别逐字节相同；JSON/text/supplement **196/160/16**、SHA256 **276**、普通driver **114/114、9/9**通过。实现提交 `76915bc` 的 [run 46028799189](https://github.com/msly/yavo/actions/runs/46028799189) **6/6 成功**；三平台标准错误六产物门分别通过 Linux/macOS 288、Windows 276 次，Linux 原 stage0 与实际最终 stage2 C 的独立 ASan+UBSan 通过96次。三份原生 ZIP 的 GitHub 大小/哈希、原始回执、源输入和产物身份已复核。 首次 [run 46018585973](https://github.com/msly/yavo/actions/runs/46018585973) 为5/6：Windows新错误门因原生反斜杠与冻结POSIX路径比较不等，在发射C和执行场景前退出。该处已改用 `.as_posix()`，路径正负控8/8、本机错误门288/288复验通过；首次失败和原始归档保留。
+本机与三平台结果、覆盖/体积/资源趋势见[本批验证索引](compiler/validation/batch52-direction-2026-11-28.json)。全阻塞规划区分已识别结构能力和未建模语义，未实现的特性组合只能给候选入口，不能冒充已解锁覆盖。后续优先完成通用enum/match、Optional/Result、完整元组、泛型/接口工作包，标准Error迁入同一match实现；Copy元组Vec不再按22个首错路径单独排期。[SH-3剩余项、验收标准与批次估计](docs/sh3-roadmap.md)。
 
-新增73项、10项旧例原源码提升，清单共1136：run319、panic34、reject600、unsupported141、shared_unsupported42。73个新增语义用例中，一项最初使用 `['a', 0xE2, 0x82]`，触及既有非十进制词法 U0001 边界。按显式唯一 amendment 新增等值 `['a', 226, 130]` 源文件，并只替换该 manifest 项的 file；原稿、原 freeze、原 manifest 快照和首次候选失败全部保留。旧 stage0 对原/新源 Debug/Release 的4次执行均输出 `1\n`，预期未改；正式 stage0 接受原稿，stage1/2仍报 U0001。 原622份语料字节与stage0分类不变，覆盖 **119→125/394**、入口字节去重 **56→62/224**，零退步/越界/超时；6个新接受原入口另经12场景、48次Debug/Release差分运行。未修改Rust、生产runtime或工具链锁。本批未重跑本机 Rust 全量；当前 CI 实际日志为Linux完整 Debug/Release各151/0/1，macOS原生选定 Debug/Release各90/0/1，Windows原生选定 Debug/Release各87/0/1。
+第41批 **953,599/443,536 B** 与第51批 **1,774,302/729,968 B** 原记录已核实；新增runtime嵌入及八进制字符串表示是主要C增长项，归因与可优化空间见[体积分析](docs/batch52-codegen-size.md)。第41批旧覆盖88在第42批已按原源码重建校正为91，历史数与可复现数分开保存。
 
-**SH-2保持固定点，SH-4正式CLI保持3/3，SH-3仍未默认接替Rust。** 下一批优先 Copy 元组 Vec：当前首阻塞共25路径/11份入口字节，其中Copy为22/8，另3/3是包含String的拥有型元组。先冻结空/非空构造、push/pop、字段及参数/返回、索引读写/遍历与边界诊断，再用原文暴露后续限制。Map值首阻塞27/14混合Counter、元组、String、Vec和Set，不统一归入Copy。首阻塞计数不等于预期覆盖增量。 交叉目标、缓存/PCH、安装、其他工具入口、更广语义及丰富诊断仍待迁移；正式性能P50与相对Rust的交付成本另验。[完整验证索引](compiler/validation/batch51-standard-errors-2026-11-27.json)。
+“相对Rust交付成本优势”尚未成立。R3/R4已有对照，旧报告token分别高32.3%/27.1%，缺原始usage；R5两语言各24/24且失败编译0，token缺失。本批12题新受试会话仍0：CLI初始化报只读文件系统错误，未取得usage；[原始失败、历史重算和可执行入口](experiments/cost-pilot-2026-11-28/README.md)。
 
 ## 2. 仓库与环境
 
@@ -127,7 +127,7 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - `tests/p0/errors_*.yv` 开头是 `// expect-error: CODE 行:列`。头部每多一行，正文行号整体加一；做法是先写无头文件，用 `yavo check` 取位置，再按头部行数加偏移生成头部。
   现在用 `tools/expect_header.sh compiler/tests/p0/errors_x.yv` 自动完成（去掉旧头部、重跑 `yavo check`、按头部行数加偏移写回）；它记录的是编译器当前的输出，生成后要逐条核对。
 - 解析阶段的 `U0001`（parser 报的）会让整个文件不再进入检查器，所以它们只能和别的解析期 `U0001` 放在一起（`errors_unsupported.yv`），不能和检查器的错误混在一个测试文件里。
-- 一个特性做完：补 `run_*` 和 `errors_*` 两类测试；跑全部测试（debug、release）；跑堆块检查；交叉编译抽查；刷新一致性基线；更新 `compiler/README.md` 对应小节和根 `README.md` 的数字；提交并按已授权的远端/CI 流程验证。
+- 一个特性做完：补实际运行/拒绝回归；每批跑本机与三平台核心固定点、核心/变更用例及原语料扫描。完整Rust、六产物、sanitizer、专项SHA256/ZIP审计每5批或里程碑运行，见 docs/validation-tiers.md；更新验证索引、SH-3剩余项和一屏内交接摘要，沿用已授权远端/CI流程。
 - 已解锁的旧写法可能让旧测试失效（例如某行不再报 `U0001`），改测试时保持行列不变，换成仍然成立的用例。
 - `tools/expect_header.sh` 默认用 **debug** 版 `yavo`；只构建了 release 时要写 `YAVO=$PWD/target/release/yavo bash ../tools/expect_header.sh ...`，否则会拿旧二进制的输出生成头部。
 - 历史批次曾在 `yavo-tests/ERRORS.md` 登记前端通用错误（如 `E0019`）；当前该测试包已冻结，新工作优先复用既有码，不回写历史快照或冻结输入来适配实现。
@@ -462,3 +462,11 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - **原始语料与Rust**：622源字节和stage0分类不变，119→125/394、56→62/224，0退步/越界/超时。6个原入口经12场景、48次stage0/最终stage2 D/R运行通过。清单1136=319run+34panic+600reject+141unsupported+42shared_unsupported；原1063源码不变。本批未重跑本机 Rust 全量；当前 CI 实际日志为Linux完整 Debug/Release各151/0/1，macOS原生选定 Debug/Release各90/0/1，Windows原生选定 Debug/Release各87/0/1。
 - **CI与归档**：实现提交 `76915bc` 的 [run 46028799189](https://github.com/msly/yavo/actions/runs/46028799189) **6/6 成功**；三平台标准错误六产物门分别通过 Linux/macOS 288、Windows 276 次，Linux 原 stage0 与实际最终 stage2 C 的独立 ASan+UBSan 通过96次。三份原生 ZIP 的 GitHub 大小/哈希、原始回执、源输入和产物身份已复核。 首次 [run 46018585973](https://github.com/msly/yavo/actions/runs/46018585973) 为5/6：Windows新错误门因原生反斜杠与冻结POSIX路径比较不等，在发射C和执行场景前退出。该处已改用 `.as_posix()`，路径正负控8/8、本机错误门288/288复验通过；首次失败和原始归档保留。 正式审计复核实际编译器/原始C/二进制身份、101冻结输入、原始命令与字节流、前后文件树、环境与sanitizer控制；ZIP身份和TAR安全索引独立核验。[验证索引](compiler/validation/batch51-standard-errors-2026-11-27.json)。
 - **下一批与目标**：下一批优先 Copy 元组 Vec：当前首阻塞共25路径/11份入口字节，其中Copy为22/8，另3/3是包含String的拥有型元组。先冻结空/非空构造、push/pop、字段及参数/返回、索引读写/遍历与边界诊断，再用原文暴露后续限制。Map值首阻塞27/14混合Counter、元组、String、Vec和Set，不统一归入Copy。首阻塞计数不等于预期覆盖增量。 SH-4仍3/3，本测试driver不另计正式应用；SH-3默认接替、正式性能与成本仍未完成。
+
+## 32. 第五十二批：验收分层与方向调整（2026-11-28）
+
+- **验收**：validation-policy.json 当前batch52、baseline61b17c4、N=5。Core保留三平台stage1→2→3固定点、稳定核心和新增/变更用例、原622源分类与资源记录；Full在55/60…、tag、manual full或milestone触发，不能降级。原重型入口保留，详细结果见本批索引。
+- **选题**：subset-features从stage0完整模块图、AST和typed HIR收集已建模结构阻塞；subset_sweep继续到后续函数/模块并按完整特性组合列候选。流敏感所有权及未建模结构显式unknown；当前check仍严格拒绝不支持代码。标准Error-only match必须归并通用实现，不长期保留两套。
+- **词法**：0x/0b/0o/分隔符归一为现有十进制token；u128词法容量和int/byte上下文范围分开。原utf8_consumed_failure.yv恢复，旧freeze/amendment保留历史身份。首次12abcE+3误判浮点已修正并补回归。
+- **平台已知缺口（单列）**：第51批macOS/Windows Rust仅native选定集，未覆盖build_cache、conformance、harness、p0_regressions、targets、verify；第55批逐套件补齐可移植部分。Windows标准错误门缺env_invalid_utf8与stdin_read_error：前者原始字节环境在Win32不适用，补Unicode/转换错误对应例；后者补可控句柄/管道读错例。WindowsRSS目前null，待原生计量；详见SH-3清单。
+- **报告**：每批只写交付、覆盖变化、失败/修正、下一批，数字、命令和原始证据放验证索引。历史第51批首页另存 history/handoff-batch51-summary.md，第31节原始记录未改。
