@@ -51,9 +51,9 @@ SH-1 的结果只标为“子集编译器”。SH-2 可以标为“子集自举�
 
 普通 `build <input> [-o output] [--release]` 和 `run <input> [--release] [-- args...]` 已由Yavo编写的驱动直接调用已安装的锁定Zig，内嵌生产runtime，覆盖原生平台和无缓存路径。新增七个公开系统函数及只读[]String；完整前端成功后才创建临时目录，逐项保护入口/导入文件身份并清理正常失败路径。交叉目标、缓存/PCH、安装、结构化诊断和其他工具入口仍待迁移。
 
-最终本机完整自举 **1063/1063、20/20、0 skip**，七应用门全部通过；独立stage1+最终stage2普通driver **114/114、9/9**。实际stage2普通build自身，产物C和二进制都与固定点一致，并继续普通run独立多模块程序。两代C **1,614,200字节**，Linux二进制 **678,304字节**。Rust Debug/Release各151/0/1，冻结124/3/2；生产runtime本批有变更，新增六个系统集成测试、六目标对象编译及独立GCC ASan+UBSan预验。
+最终本机完整自举 **1063/1063、20/20、0 skip**，七应用门全部通过；独立stage1+最终stage2普通driver **114/114、9/9**。本机实际stage2普通build自身，产物C和二进制都与固定点一致，并继续普通run独立多模块程序。两代C **1,616,267字节**，Linux二进制 **680,160字节**。Rust Debug/Release各151/0/1，冻结124/3/2；生产runtime本批有变更，新增六个系统集成测试、六目标对象编译及独立GCC ASan+UBSan预验。
 
-本机验收已完成；本批三平台CI等待实现提交后的实际运行，配置不计通过。 [验证索引](../compiler/validation/batch49-build-run-2026-11-27.json)保留准确来源。独立合同55主例先冻结，另2补充；每driver POSIX57、Windows54，双driver114/108。Linux系统sanitizer要求实际stage0/stage2的14个程序加1个直接Cprobe，能力正负控另计。
+修正后的提交 `e03cfc0` 的 [run 45975880319](https://github.com/msly/yavo/actions/runs/45975880319) **6/6成功**；三平台原生普通驱动及Linux系统ASan+UBSan门通过。 [验证索引](../compiler/validation/batch49-build-run-2026-11-27.json)保留准确来源。独立合同55主例先冻结，另2补充；每driver POSIX57、Windows54，双driver114/108。Linux系统sanitizer要求实际stage0/stage2的14个程序加1个直接Cprobe，能力正负控另计。
 
 原622份语料字节与stage0分类不变，仍119/394、去重56/224；旧613份仍117/392。新增36例及1个原字节[]String提升推进系统调用和驱动验收，不转换为整体完成百分比。SH-4维持3/3；SH-3默认接替仍需要现有语义覆盖与结构化诊断。下一批先冻结check --json的首错输出、完整源范围及编译快照身份；build/run的JSON与程序stdout共存规则另行决定。
 
@@ -309,7 +309,8 @@ str 与 String 接收者支持 `startsWith`/`endsWith`/`contains`（bool）、`f
 | 已完成 | Map遍历、String排序与原子账本CLI | 第四十六批925/925、17/17、0 skip；第五应用32场景/128执行；覆盖106→112/392、0越界；三平台CI 6/6 |
 | 已完成 | Set[String]及第二个正式独立应用csv-check | 第47批最终959/959、18/18，三平台CI 6/6；139固定案例，POSIX六产物828次/native414次、Windows822/411、Linux双份C sanitizer276次；SH-4更新为2/3 |
 | 已完成 | 第三个独立多文件依赖/索引CLI | 第48批1027/1027、19/19；113案例，POSIX六产物672次/native336次；三平台CI 6/6，Windows642/321，Linux双份C sanitizer224次；正式应用3/3 |
-| 接替阶段 | SH-3接替 | 完成普通check/build/run、稳定及结构化诊断，保持既有回归/冻结规格/资源/三平台门，再默认使用selfhost；cache/fix/verify按依赖迁移 |
+| 已完成 | 系统接口与原生普通build/run | 第49批本机1063/1063、20/20；普通driver本机114/114、9/9，本机普通build自身的C和二进制保持固定点；三平台CI 6/6，Linux/macOS driver114、Windows108；SH-3尚未默认接替 |
+| 接替阶段 | SH-3接替 | 在已交付原生普通build/run上补结构化诊断及更广语义，迁移剩余工具入口，保持既有回归/冻结规格/资源/三平台门，再默认使用selfhost |
 
 固定点现在是回归门：任何修改 `selfhost/` 的提交都必须保持 stage2.c = stage3.c 与 stage1/stage2 全用例一致。
 
@@ -350,8 +351,8 @@ str 与 String 接收者支持 `startsWith`/`endsWith`/`contains`（bool）、`f
 ## 工作优先级
 
 1. SH-1、SH-2 已完成；保持三平台固定点及已建立的 Linux stage2 编译器自身 ASan/UBSan 回归门。
-2. 为SH-3普通build/run补公开进程、环境读取、文件状态与临时目录清理接口；采用无shell的argv合同，复用锁定后端参数与退出状态，先做无缓存闭环。
-3. 逐步完成 SH-3 日常编译与诊断接替，并独立完成 SH-4 声明范围内的实用验收。
+2. SH-3原生普通build/run与七个公开系统函数已交付。下一批先冻结并实现 `check --json` 的成功/首错合同、完整源范围与加载时快照身份，保持当前文本诊断及U0001边界。
+3. 扩大真实语料的语义覆盖，再迁移交叉目标、缓存/PCH、安装与其他工具入口，满足SH-3默认接替条件；维持SH-4三个正式CLI已完成的三平台独立验收。
 4. 既有 agent 成本实验和文档对照实验保留为后续产品证据；有授权的可计量环境后继续，不再作为自举开发的前置步骤。已有结果与未执行状态保持原样。
 
 原规划的无 GC、接近 C 的性能、跨平台和 agent 交付目标不变。自举改变实现优先级，并增加一个大型真实程序作为持续验证对象。

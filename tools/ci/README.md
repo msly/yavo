@@ -30,10 +30,13 @@ caches are removed first. The [frozen driver contract and cases](../../selfhost/
 describe the independent-preflight and supplemental-regression provenance.
 
 `Yavo CI` runs on pushes to `main`, pull requests, and manual dispatches. Changes
-limited to Markdown or archived validation JSON do not rerun it; compiler,
-runtime, fixtures, scripts, locks and workflow changes still trigger every job.
-It uses
-Rust 1.99.1 and the existing SHA-256-locked Zig 0.17.1 archives. The checkout and
+limited to ordinary Markdown or archived validation JSON normally do not rerun
+it. Frozen experiment inputs are exceptions: changes to `docs/agent-api-index.md`,
+`docs/agent-start.md`, `experiments/docs-ab-2026-11-22-r6/**` or
+`tools/agent_eval/README.md` trigger CI even when the changed files are Markdown,
+so their preparation gate checks the frozen bytes. Compiler, runtime, fixtures,
+scripts, locks and workflow changes also trigger every job. CI uses Rust 1.99.1
+and the existing SHA-256-locked Zig 0.17.1 archives. The checkout and
 artifact actions are pinned to reviewed full commits; workflow permissions are
 read-only. Debug and Release are sequential within each job because the existing
 test runners share temporary paths.

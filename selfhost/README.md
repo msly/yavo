@@ -170,13 +170,13 @@ The final local bootstrap passes **1,063/1,063 cases, 20/20 checks, zero skips**
 including all seven existing compatibility applications. The matrix adds 36
 fixtures and one unchanged-source promotion: 279 run, 34 panic, 571 reject,
 141 unsupported and 38 shared-unsupported cases. Stage2/stage3 C is identical at
-**1,614,200 bytes**; their Linux binaries are identical at **678,304 bytes**.
+**1,616,267 bytes**; their Linux binaries are identical at **680,160 bytes**.
 
 The independent ordinary-driver gate passes **114/114 and 9/9 checks** locally.
-Actual final stage2 rebuilds the compiler with ordinary build; the resulting
+On the local Linux run, actual final stage2 rebuilds the compiler with ordinary build; the resulting
 binary and emitted C match the bootstrap fixed point, and the result runs an
 independent multi-module program through ordinary run. All 133 commands have
-wait4 RSS observations; the maximum is 366,190,592 bytes for a waited child,
+wait4 RSS observations; the maximum is 373,264,384 bytes for a waited child,
 not simultaneous process-tree memory. Compile P50 and token/currency cost are unmeasured.
 
 Rust Debug/Release each pass **151/0/1**, with frozen conformance **124/3/2**.
@@ -185,8 +185,17 @@ tests, six target object builds and an independent GCC 14.2 ASan+UBSan probe pas
 Existing corpus coverage remains **119/394**, or **56/224** distinct entry bytes,
 with unchanged sources and zero regressions, subset violations or timeouts.
 
-Local acceptance is complete; exact-commit three-platform CI remains pending. Configured jobs are not passing results. The [validation index](../compiler/validation/batch49-build-run-2026-11-27.json) separates final acceptance from the stopped preliminary namespace-audit run.
+Corrected head `e03cfc0` passes **6/6 jobs** in [run 45975880319](https://github.com/msly/yavo/actions/runs/45975880319); all three native ordinary-driver gates and Linux system ASan+UBSan pass. The [validation index](../compiler/validation/batch49-build-run-2026-11-27.json) separates final acceptance from the stopped preliminary namespace-audit run.
 SH-3 default replacement, formal performance and relative delivery-cost acceptance remain open.
+
+The macOS ordinary rebuilt executable and bootstrap stage2 have different raw
+file hashes. All 1,262 differing bytes are in the code-signature region; the
+preceding 632,752 bytes, code, data, load commands and UUID are identical.
+The output names `yavo-selfhost` and `rebuilt-selfhost` change the CodeDirectory
+identifier and its dependent lengths and offsets; all 39 code-page hashes were
+independently recomputed and match. The generated C fixed point and execution
+checks pass. The [byte comparison record](../compiler/validation/batch49-macos-binary-comparison-2026-11-27.json)
+preserves both original file hashes and the complete comparison.
 
 ## Historical validation: batch 48 (2026-11-27)
 

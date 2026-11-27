@@ -7,13 +7,28 @@ scoped OS threads. Native CI runs complete Linux x86-64 suites and selected
 Windows x86-64/macOS arm64 suites. Complete phase acceptance still requires the
 remaining tools, features and full target-platform acceptance coverage.
 
-### Self-hosting work (updated 2026-11-26)
+### Self-hosting work (updated 2026-11-27)
 
 This Rust implementation is now **stage0** for the
 [Yavo-written compiler](../selfhost/README.md). The declared bootstrap subset
 compiles itself to a stage2/stage3 fixed point, originally confirmed on Linux,
-Windows and macOS. Batch 29 adds user-function Result/try and migrates the actual
-lexer error path. Rust remains the daily compiler while SH-3 coverage expands.
+Windows and macOS. Rust remains the daily compiler; SH-3 default replacement
+still requires broader language coverage and structured diagnostics.
+
+Batch 49 adds seven public system functions: `os.env`, `os.host`, `fs.tempDir`,
+`fs.removeFile`, `fs.removeDir`, `fs.sameFile` and `process.run`. Their stage0
+lowering and production runtime support the Yavo-written compiler's native
+ordinary `build`/`run`, with an embedded runtime header, the installed locked
+backend, source-file identity protection and temporary-file cleanup. This
+selfhost driver has no Yavo build cache; cross-target compilation and toolchain
+installation remain outside its current scope. The API contract is in
+[the standard-library specification](../docs/stdlib_contract.md).
+
+Current complete local Debug and Release suites each pass **151 tests, 0 failed,
+1 ignored** (20 groups), including six new system integration tests. Frozen
+conformance remains **124 pass / 3 unsupported / 2 superseded**. Local acceptance
+and exact-commit CI status are recorded separately in the
+[batch 49 validation index](validation/batch49-build-run-2026-11-27.json).
 
 Batch 44 fixes MinMax operand snapshots: the old backend kept a local/field
 expression until after evaluating the second argument, so an inout mutation there
@@ -25,9 +40,9 @@ Batch 43 fixes a stage0 diagnostic defect found while adding Copy tuples to the
 selfhost: direct tuple printing reached an internal codegen panic. The checker
 now reports E0001 for tuple output, including direct print calls, format and
 interpolation paths. `tests/p0/errors_tuple_print.yv` covers eight diagnostics.
-Complete local Debug and Release suites each pass 145 tests, with zero failures
-and one existing ignored test; frozen conformance remains 124 pass / 3 unsupported /
-2 superseded.
+The recorded batch 43 local Debug and Release suites each passed 145 tests, with
+zero failures and one existing ignored test; frozen conformance was 124 pass /
+3 unsupported / 2 superseded.
 
 Two concrete issues found while building it are addressed here:
 `fs.writeNewText` exclusively creates a new file, preserving existing paths and
@@ -36,12 +51,13 @@ resolved to the actual builtin `panic`/`os.exit`. A user function with the same
 name can no longer hide a missing return. The focused `fs_create_new` and
 `selfhost_blockers` regressions are part of all three native CI selections.
 
-Batch 29 additionally fixes `contains_break`: return-path analysis now visits
+Batch 29 added user-function Result/try to selfhost and migrated its lexer error
+path. It also fixed `contains_break`: return-path analysis now visits
 expressions, including catch handlers nested in initializers, arguments, return
 values and loop headers. A break in a nested loop body or a closure still belongs
 to that inner construct. The new P0 fixture requires 18 reachable missing-return
-paths to report `E0013` and preserves six legal boundaries. Complete local
-Debug/Release suites each pass 145 tests, with one historical ignored test;
+paths to report `E0013` and preserves six legal boundaries. The recorded batch 29
+local Debug/Release suites each passed 145 tests, with one historical ignored test;
 [source-bound evidence](validation/catch-break-return-2026-11-24.json) preserves
 the old accepted inputs and generated C without executing invalid programs.
 
@@ -67,10 +83,10 @@ edited-source Release P50 of **252.5–283.8 ms** (direct) versus **179.8–213.
 200 ms target per run, but the outlier changed between runs. Details and script:
 [`benchmarks/small-c-v1/`](../benchmarks/small-c-v1/README.md).
 
-## Current validation (2026-11-22)
+## Historical validation (2026-11-22)
 
-The latest language-feature baseline is `b3c27a6`. After the PCH-cache changes,
-complete Debug and Release suites each pass **133 tests, 0 failed, 1 ignored**
+The language-feature baseline at that point was `b3c27a6`. After the PCH-cache changes,
+complete Debug and Release suites each passed **133 tests, 0 failed, 1 ignored**
 (17 groups); the earlier language-feature baseline was 129/0/1. The ignored test
 is the legacy exploratory P0 `conformance_report`; the current conformance suite
 runs independently. Cargo functions and embedded specification fixtures are

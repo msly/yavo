@@ -4,9 +4,9 @@
 
 ## 1. 一句话状态
 
-**第四十九批让Yavo编写的编译器直接承担原生 `build/run`：七个公开系统函数、内嵌运行时、锁定Zig后端、正常失败路径清理。** 本机完整自举 **1,063/1,063、20/20、0 skip**；最终stage1与stage2独立普通驱动 **114/114、9/9**。实际stage2通过普通build重建自身，新二进制与bootstrap固定点逐字节相同，并继续普通run独立多模块程序。本机验收已完成；本批三平台CI等待实现提交后的实际运行，配置不计通过。
+**第四十九批让Yavo编写的编译器直接承担原生 `build/run`：七个公开系统函数、内嵌运行时、锁定Zig后端、正常失败路径清理。** 本机完整自举 **1,063/1,063、20/20、0 skip**；最终stage1与stage2独立普通驱动 **114/114、9/9**。本机实际stage2通过普通build重建自身，新二进制与bootstrap固定点逐字节相同，并继续普通run独立多模块程序。修正后的提交 `e03cfc0` 的 [run 45975880319](https://github.com/msly/yavo/actions/runs/45975880319) **6/6成功**；三平台原生普通驱动及Linux系统ASan+UBSan门通过。
 
-清单增加36例（7run、22reject、7unsupported），另1个旧 `[]String` 例原字节提升；合计279run、34panic、571reject、141unsupported、38shared_unsupported。最终stage2/stage3 C **1,614,200字节**、Linux二进制 **678,304字节**，均逐字节一致。Rust/生产runtime本批有变更；完整Debug/Release各 **151/0/1**，冻结规格 **124/3/2**，六个新增系统集成测试及六目标runtime对象编译通过。
+清单增加36例（7run、22reject、7unsupported），另1个旧 `[]String` 例原字节提升；合计279run、34panic、571reject、141unsupported、38shared_unsupported。本机最终stage2/stage3 C **1,616,267字节**、Linux二进制 **680,160字节**，均逐字节一致。Rust/生产runtime本批有变更；完整Debug/Release各 **151/0/1**，冻结规格 **124/3/2**，六个新增系统集成测试及六目标runtime对象编译通过。
 
 原有622份语料字节与stage0分类不变：全仓仍 **119/394**、入口字节去重 **56/224**；原613份仍 **117/392**、去重 **54/222**。退步/越界/超时0。本批推进的是调用和交付路径，不能用API数换算语义覆盖增长。
 
@@ -196,13 +196,13 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 
 ## 10. 下一个会话的第一步
 
-1. 核对Git与最新CI，先读第29节、[自举路线](docs/self-hosting.md)、[selfhost说明](selfhost/README.md)和[本批验证索引](compiler/validation/batch49-build-run-2026-11-27.json)。本机最终1063/1063、20/20、普通driver114/114；本机验收已完成；本批三平台CI等待实现提交后的实际运行，配置不计通过。
+1. 核对Git与最新CI，先读第29节、[自举路线](docs/self-hosting.md)、[selfhost说明](selfhost/README.md)和[本批验证索引](compiler/validation/batch49-build-run-2026-11-27.json)。本机最终1063/1063、20/20、普通driver114/114；修正后的提交 `e03cfc0` 的 [run 45975880319](https://github.com/msly/yavo/actions/runs/45975880319) **6/6成功**；三平台原生普通驱动及Linux系统ASan+UBSan门通过。
 2. **下一批先做 `check --json` 的独立合同。** 明确成功空诊断数组、首错模式、退出状态、原始文件及完整范围；覆盖lexer/parser/type/ownership/U0001和导入错误，Unicode、CRLF、跨行token与特殊路径。先保留首错策略，不把多错误恢复、warning/fix全量迁移混为一批。
 3. `support.Diagnostic` 目前缺结束范围与源身份；`lexer.fail`、parser/types/codegen的错误主要经 `support.report` 直接打印并退出。应统一诊断记录/渲染边界，加载时保留源快照或哈希，不在报错后重读文件。SHA256可用既有int位运算实现并独立测试。stage0 `yavo-diagnostics/p0` 的真实字段与stdlib合同尚有差异，应明确兼容范围；`build/run --json` 与程序stdout共存的规则另定。
 4. **默认接替仍受语义覆盖约束。** 原有394个stage0接受入口中仍有275个未被selfhost接受（按入口字节去重仍168个）。一般拥有Optional、更广Map/Heap、tuple Vec、捕获闭包、泛型、方法、浮点及线程等保持缺口。继续使用原始应用和冻结语料，不为编译器改写旧源，不静默回退Rust。
 5. 普通native build/run现已具备shell-free argv、文件身份保护和临时清理；`--target`、cache/PCH、toolchain install、fix/verify按依赖后续迁移。R5仍缺完整token/金额，R6真实请求/会话/交付仍为0；成本实验不由应用数或命令入口完成替代。
 
-正式门槛仍按 `docs/plan.md`：配对通过率差的单侧95%下界至少−5个百分点，单位成功交付成本较Rust低至少20%并独立复现；冻结运行基准几何均值不超过C的1.5倍。工程指标包括小程序编译P50≤200ms、Linux小程序strip产物≤250KB、原生平台和可复现构建。本批普通编译器重建11.886秒是一次观测，P50与token/金额为null；678,304字节是编译器产物，不是小应用体积验收。
+正式门槛仍按 `docs/plan.md`：配对通过率差的单侧95%下界至少−5个百分点，单位成功交付成本较Rust低至少20%并独立复现；冻结运行基准几何均值不超过C的1.5倍。工程指标包括小程序编译P50≤200ms、Linux小程序strip产物≤250KB、原生平台和可复现构建。本批普通编译器重建12.932秒是一次观测，P50与token/金额为null；680,160字节是编译器产物，不是小应用体积验收。
 
 ## 历史批次（已移出）
 
@@ -432,8 +432,9 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - **普通驱动**：原生build/input/-o/--release及run/--argv；内嵌生产header和锁版本，bootstrap检查生成物新鲜度。完整前端成功后才创建唯一目录，源码图身份保护覆盖hardlink/symlink，已知临时文件删除后验证空目录；清理失败报告位置并返回4，不递归删除未知文件。
 - **独立合同**：55主案例在读取/执行新driver前冻结；另两项相对-temp/@temp独立补充，原55不变。POSIX每driver57，Windows54；正式stage1+最终stage2对应114/108。实际stage2普通build自身、产物emit-c固定点以及产物普通run独立多模块程序单列检查。
 - **修正与回归**：36新增+1旧原字节提升，1063=279/34/571/141/38。审查修复std/user模块别名冲突漏拒E0011、索引String隐式返回str误接受、POSIX pipe/fcntl/fork并发描述符继承窗口及fd0/1/2重用、NULL空路径内存函数UB、临时根选项/响应文件解释。最初bootstrap在268例处停止，排除最终验收。
-- **最终本机**：完整bootstrap1063/1063、20/20、0skip；七应用门和输入身份全部通过。stage2/3 C1,614,200字节、SHA256 `9919319c50ebd915682d186792ef2d049e354b06978ac0827246310c426e4893`；二进制678,304字节、SHA256 `5a57fdd4f210f59b45cd91d2c9e147d7b6a907977cfe1ace39760a82b9880ed9`，两代一致。
-- **普通driver与资源**：114/114、9/9；普通重建二进制也与上述stage2一致。133/133命令有wait4 RSS，最大366,190,592字节，口径为单个等待子进程而非进程树并发总和。普通重建编译器11.886秒是单次观测；P50、token、金额未测。
+- **最终本机**：完整bootstrap1063/1063、20/20、0skip；七应用门和输入身份全部通过。stage2/3 C1,616,267字节、SHA256 `9219295c09b89fb96cd47db73b59eee142e053936466abb1817713b6f68148ce`；二进制680,160字节、SHA256 `163025a368ebe8f038eafe01b8a9e0a012327c595a68b07af7b0eefa6068aee0`，两代一致。
+- **本机普通driver与资源**：114/114、9/9；普通重建二进制也与上述stage2一致。133/133命令有wait4 RSS，最大373,264,384字节，口径为单个等待子进程而非进程树并发总和。普通重建编译器12.932秒是单次观测；P50、token、金额未测。
 - **系统运行时**：6新增Rust集成测试在生成的Debug/Release程序中验证，包含8路temp创建、成功/127/失败区分、Unicode argv、stdio、并发快慢子进程。六目标真实C对象编译通过。独立GCC14.2的ASan+UBSan正负控与直接probe通过；probe102次API调用=67正常退出+1信号+33启动失败+1非法参数。CI门另要求7个固定程序×2实际前端+1Cprobe，共15插桩入口，controls另计。
 - **Rust/覆盖/目标**：完整Debug/Release各151/0/1、冻结124/3/2；622源字节和stage0分类不变，119/394、56/224，退步/越界/超时0。扫描器首轮误用git文件清单漏掉30份ignored历史副本，已恢复原有全文件口径；不计为语言退步。SH-4维持3/3；本批关闭native普通入口，SH-3整体仍未完成。
-- **CI**：本机验收已完成；本批三平台CI等待实现提交后的实际运行，配置不计通过。 完整来源见[验证索引](compiler/validation/batch49-build-run-2026-11-27.json)。
+- **CI**：修正后的提交 `e03cfc0` 的 [run 45975880319](https://github.com/msly/yavo/actions/runs/45975880319) **6/6成功**；三平台原生普通驱动及Linux系统ASan+UBSan门通过。 首次run 45971497025的准备门因API索引触碰R6冻结输入而失败；提交修正后旧原生作业被并发策略取消。修正原字节恢复该输入，并让41个冻结Markdown输入的变更触发CI；完整准备门重新通过。后续run 45972361245的Windows测试helper输出CRLF、macOS覆盖输出保留0644两处失败已按原合同修正；修正提交e03cfc0只改driver和测试helper，runtime及冻结用例未改。 完整来源见[验证索引](compiler/validation/batch49-build-run-2026-11-27.json)。
+- **macOS普通重建二进制**：完整文件哈希不同；全部1,262个不同字节位于代码签名区，前632,752字节、全部机器码/数据/装载命令/UUID相同，39个代码页哈希独立重算一致。输出名 `yavo-selfhost` / `rebuilt-selfhost` 进入CodeDirectory标识，导致签名字段长度和偏移变化。生成C固定点与运行验收通过；保留原始完整文件差异，详见[字节比较记录](compiler/validation/batch49-macos-binary-comparison-2026-11-27.json)。

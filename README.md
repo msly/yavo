@@ -65,15 +65,15 @@ structured diagnostics remain outside this driver batch.
 
 Final local bootstrap passes **1,063/1,063 cases, 20/20 checks, zero skips**;
 all seven compatibility applications pass. The independent ordinary-driver gate
-passes **114/114 scenarios and 9/9 checks**. Actual stage2 uses ordinary `build`
-to rebuild itself; its 678,304-byte result and emitted C match the bootstrap fixed
+passes **114/114 scenarios and 9/9 checks**. On the local Linux run, actual stage2 uses ordinary `build`
+to rebuild itself; its 680,160-byte result and emitted C match the bootstrap fixed
 point, and it can `run` the independent multi-module fixture. Stage2/stage3 C is
-byte-identical at 1,614,200 bytes. The 36 new regressions and one unchanged-source
+byte-identical at 1,616,267 bytes. The 36 new regressions and one unchanged-source
 promotion retain strict subset boundaries. Existing corpus coverage remains
 **119/394**, or **56/224** distinct entry-source bytes, with zero regressions,
 subset violations or timeouts.
 
-Local acceptance is complete; exact-commit three-platform CI remains pending. Configured jobs are not passing results. See the [validation index](compiler/validation/batch49-build-run-2026-11-27.json) and [driver contract](selfhost/tests/driver49/CONTRACT.md).
+Corrected head `e03cfc0` passes **6/6 jobs** in [run 45975880319](https://github.com/msly/yavo/actions/runs/45975880319); all three native ordinary-driver gates and Linux system ASan+UBSan pass. See the [validation index](compiler/validation/batch49-build-run-2026-11-27.json) and [driver contract](selfhost/tests/driver49/CONTRACT.md).
 
 ### Selfhost owned graph structures and independent dependency index (batch 48, historical)
 
