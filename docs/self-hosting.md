@@ -54,13 +54,15 @@ SH-1 的结果只标为“子集编译器”。SH-2 可以标为“子集自举�
 | 正式本机门 | 结果 |
 | --- | --- |
 | 完整自举 | **1063/1063、20/20、0 skip**；七应用门通过 |
-| 最终 stage1/stage2 诊断 | **196 JSON + 160 text + 16 补充 CLI = 372**；10 个 oracle 负控通过 |
+| 最终 stage1/stage2 诊断 | **196 JSON/CLI + 160 text + 16 补充 CLI = 372**；10 个 oracle 负控通过 |
 | SHA256 独立向量 | **46 × 3 前端 × 2 模式 = 276/276** |
 | 普通驱动 | **114/114、9/9**，普通重建自身与独立多模块 run 通过 |
 | 固定点 | C **1,684,975 字节**、Linux 二进制 **682,864 字节**，stage2/3 分别相同 |
 | 既有语料 | **119/394、去重56/224**，622份原字节与stage0分类不变；零退步/越界/超时 |
 
-本机正式门已通过；本提交的三平台 CI 与 Linux 独立 ASan+UBSan 诊断门待执行，尚不计为通过。 Windows 的两个 POSIX 文件名和两个 FIFO 案例明确不适用，双前端计数为 188+152+16；Linux/macOS 为 196+160+16。原 1063 清单和 Rust/runtime/lock 未变，新增诊断及 SHA 测试不并入语义覆盖。来源见[独立合同](../selfhost/tests/diagnostics50/CONTRACT.md)与[验证索引](../compiler/validation/batch50-json-diagnostics-2026-11-27.json)。
+实现提交 `6e1d22f` 的 [run 45991816609](https://github.com/msly/yavo/actions/runs/45991816609) **6/6 成功**；三平台 SHA256、JSON 诊断和普通驱动门全部通过，Linux 实际 stage2 C 的 ASan+UBSan 诊断门通过。三份原生 ZIP 已下载并核对 GitHub 哈希，原始回执、源码和产物身份均已复核。Windows 的两个 POSIX 文件名和两个 FIFO 案例明确不适用，双前端计数为 188+152+16；Linux/macOS 为 196+160+16。原 1063 清单和 Rust/runtime/lock 未变，新增诊断及 SHA 测试不并入语义覆盖。来源见[独立合同](../selfhost/tests/diagnostics50/CONTRACT.md)与[验证索引](../compiler/validation/batch50-json-diagnostics-2026-11-27.json)。
+
+macOS 普通 build 自身与 bootstrap stage2 的原始二进制有 1,264 字节差异，均在代码签名区；代码、数据、加载命令和独立重算的代码页哈希相同。签名中的输出文件名及对应布局字段不同；[原始字节报告](../compiler/validation/batch50-macos-binary-comparison-2026-11-27.json)保留两份完整文件的不同 SHA256。
 
 SH-3 主要约束转向标准库错误值与更广语义；275 个现有 stage0 接受入口仍不支持，按入口字节去重为168个。下一批优先标准错误 `catch e` 的绑定、显示、匹配/传播和清理，继续用未改原文暴露后续阻塞。多错误恢复、warning/note/fix、JSON build/run、交叉目标、cache/PCH、安装和其他工具入口仍待各自验收；性能和成本目标保持独立。
 

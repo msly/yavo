@@ -78,9 +78,11 @@ CI packages its complete `selfhost-sanitizers` directory as
 `selfhost-sanitizers.tar.gz` and excludes the raw directory from artifact upload;
 this preserves the JSON cases' control-character filenames inside the TAR.
 Its compiler receipt retains the nested `json-diagnostics` evidence alongside
-the existing compiler sanitizer artifacts. These are new required CI checks;
-their platform run is pending. Ordinary candidate success does not establish a
-sanitizer pass. Existing LSan exclusions for fatal `os.exit` paths remain.
+the existing compiler sanitizer artifacts. The batch50 exact-commit Linux CI
+run passed this instrumented gate; the [validation index](../../compiler/validation/batch50-json-diagnostics-2026-11-27.json)
+binds its downloaded original receipt and all three native platform results.
+Ordinary candidate success alone does not establish a sanitizer pass. Existing
+LSan exclusions for fatal `os.exit` paths remain.
 
 ## Batch 49 ordinary selfhost build/run acceptance
 

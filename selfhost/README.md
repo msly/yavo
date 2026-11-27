@@ -182,7 +182,7 @@ unit scenarios, SHA256 vectors and diagnostic contract scenarios are separate un
 Local complete Rust results remain the source-identical batch49 runs; CI results
 are recorded against this batch's implementation commit. Compile P50 and token/currency costs remain unmeasured.
 
-Formal local gates pass. Exact-commit three-platform CI and the independent Linux ASan+UBSan diagnostic gate are pending; configuration is not counted as acceptance. Windows excludes two POSIX-only path cases and two FIFO cases: its
+Implementation `6e1d22f` passes **6/6 jobs** in [run 45991816609](https://github.com/msly/yavo/actions/runs/45991816609). All three native SHA256, JSON-diagnostic and ordinary-driver gates pass; Linux passes the JSON gate using the actual stage2 C compiled with ASan+UBSan. All three native ZIP archives were downloaded, matched to GitHub hashes, and their source/receipt/artifact identities independently checked. Windows excludes two POSIX-only path cases and two FIFO cases: its
 dual-producer JSON/text/supplemental counts are 188/152/16 (356 commands).
 Linux/macOS use 196/160/16 (372 commands). The Linux instrumented compiler gate
 requires 98/80/8, 10 oracle controls and all four FIFO rendezvous, in addition

@@ -65,7 +65,7 @@ a controlled on-disk edit. Text output and positional legacy filenames remain co
 
 Full local bootstrap passes **1,063/1,063, 20/20, zero skips**; stage2/stage3 C
 (1,684,975 bytes) and Linux binaries (682,864 bytes) match exactly.
-Actual stage1/stage2 pass **196 JSON + 160 text + 16 supplemental CLI** executions;
+Actual stage1/stage2 pass **196 JSON/CLI + 160 text + 16 supplemental CLI** executions;
 the independent SHA256 gate passes **276 vector executions** across three
 frontends and two modes. The unchanged ordinary-driver gate passes **114/114,
 9/9**, including an ordinary compiler rebuild and independent multi-file run.
@@ -73,7 +73,7 @@ The original 1,063-case manifest, Rust and production runtime are unchanged.
 Corpus acceptance remains **119/394**, or **56/224** distinct entry-source bytes,
 with zero regressions, subset violations or timeouts.
 
-Formal local gates pass. Exact-commit three-platform CI and the independent Linux ASan+UBSan diagnostic gate are pending; configuration is not counted as acceptance. See the [validation index](compiler/validation/batch50-json-diagnostics-2026-11-27.json) and
+Implementation `6e1d22f` passes **6/6 jobs** in [run 45991816609](https://github.com/msly/yavo/actions/runs/45991816609). All three native SHA256, JSON-diagnostic and ordinary-driver gates pass; Linux passes the JSON gate using the actual stage2 C compiled with ASan+UBSan. All three native ZIP archives were downloaded, matched to GitHub hashes, and their source/receipt/artifact identities independently checked. See the [validation index](compiler/validation/batch50-json-diagnostics-2026-11-27.json) and
 [frozen diagnostic contract](selfhost/tests/diagnostics50/CONTRACT.md).
 
 ### Native selfhost build/run and public system APIs (batch 49, historical)

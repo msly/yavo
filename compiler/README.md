@@ -22,11 +22,11 @@ precise UTF-8 ranges, captured source identities and a pure Yavo SHA256 module.
 This batch changes no Rust compiler, production runtime or toolchain-lock bytes;
 all 163 tracked sources in that baseline and the existing 1,063 selfhost fixtures
 remain identical. The formal selfhost gates pass 1,063/1,063 and 20/20;
-actual stage1/stage2 diagnostics pass 196 JSON + 160 text + 16 supplemental CLI,
+actual stage1/stage2 diagnostics pass 196 JSON/CLI + 160 text + 16 supplemental CLI,
 and frozen SHA256 vectors pass 276 executions. Ordinary build/run still passes
 114 scenarios and 9 checks. Coverage remains 119/394, or 56/224 unique entry bytes.
 
-Formal local gates pass. Exact-commit three-platform CI and the independent Linux ASan+UBSan diagnostic gate are pending; configuration is not counted as acceptance. Exact sources and the distinction between new CI results and the prior
+Implementation `6e1d22f` passes **6/6 jobs** in [run 45991816609](https://github.com/msly/yavo/actions/runs/45991816609). All three native SHA256, JSON-diagnostic and ordinary-driver gates pass; Linux passes the JSON gate using the actual stage2 C compiled with ASan+UBSan. All three native ZIP archives were downloaded, matched to GitHub hashes, and their source/receipt/artifact identities independently checked. Exact sources and the distinction between new CI results and the prior
 same-source local Rust suites are in the [batch 50 index](validation/batch50-json-diagnostics-2026-11-27.json).
 
 ### Batch 49: native system interfaces

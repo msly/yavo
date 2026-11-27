@@ -6,7 +6,7 @@
 
 **第五十批交付纯 Yavo 的 `check --json` / `--json-diagnostics`、精确主 token 范围和不可变源码 SHA256 身份。** 成功返回空诊断数组；拒绝保留现有首错、错误码和消息。源范围为 UTF-8 字节半开区间，行列按 Unicode scalar；每个 JSON 文档列出实际读取成功的 BFS 源文件前缀。报错不重读磁盘。普通文本诊断及旧有连字符文件名继续兼容。
 
-完整本机自举 **1,063/1,063、20/20、0 skip**；最终 stage1/stage2 的 JSON **196/196**、文本 **160/160**、补充旧命令 **16/16**，合计 **372 条命令**；SHA256 **46 向量 × 3 前端 × 2 模式 = 276/276**；普通驱动 **114/114、9/9**。stage2/stage3 C **1,684,975 字节**、Linux 二进制 **682,864 字节**，两代分别逐字节相同，普通 build 重建也一致。本机正式门已通过；本提交的三平台 CI 与 Linux 独立 ASan+UBSan 诊断门待执行，尚不计为通过。
+完整本机自举 **1,063/1,063、20/20、0 skip**；最终 stage1/stage2 的 JSON/CLI **196/196**、文本 **160/160**、补充旧命令 **16/16**，合计 **372 条命令**；SHA256 **46 向量 × 3 前端 × 2 模式 = 276/276**；普通驱动 **114/114、9/9**。stage2/stage3 C **1,684,975 字节**、Linux 二进制 **682,864 字节**，两代分别逐字节相同，普通 build 重建也一致。实现提交 `6e1d22f` 的 [run 45991816609](https://github.com/msly/yavo/actions/runs/45991816609) **6/6 成功**；三平台 SHA256、JSON 诊断和普通驱动门全部通过，Linux 实际 stage2 C 的 ASan+UBSan 诊断门通过。三份原生 ZIP 已下载并核对 GitHub 哈希，原始回执、源码和产物身份均已复核。
 
 本批未修改 Rust、生产 runtime、锁定工具链或原 1,063 项清单。原 622 份语料字节与 stage0 分类不变：**119/394**，入口字节去重 **56/224**；旧 613 份 **117/392**、去重 **54/222**，退步/越界/超时均为 0。SHA256 向量和诊断案例独立计数，不并入语义清单。
 
@@ -196,7 +196,7 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 
 ## 10. 下一个会话的第一步
 
-1. 核对 Git 与最新 CI，先读第 30 节、[自举路线](docs/self-hosting.md)、[selfhost 说明](selfhost/README.md)和[验证索引](compiler/validation/batch50-json-diagnostics-2026-11-27.json)。本机 1063/1063、20/20；JSON/text/supplement 为 196/160/16，SHA256 276，普通 driver 114/9。本机正式门已通过；本提交的三平台 CI 与 Linux 独立 ASan+UBSan 诊断门待执行，尚不计为通过。
+1. 核对 Git 与最新 CI，先读第 30 节、[自举路线](docs/self-hosting.md)、[selfhost 说明](selfhost/README.md)和[验证索引](compiler/validation/batch50-json-diagnostics-2026-11-27.json)。本机 1063/1063、20/20；JSON/text/supplement 为 196/160/16，SHA256 276，普通 driver 114/9。实现提交 `6e1d22f` 的 [run 45991816609](https://github.com/msly/yavo/actions/runs/45991816609) **6/6 成功**；三平台 SHA256、JSON 诊断和普通驱动门全部通过，Linux 实际 stage2 C 的 ASan+UBSan 诊断门通过。三份原生 ZIP 已下载并核对 GitHub 哈希，原始回执、源码和产物身份均已复核。
 2. **下一批先冻结标准库错误值与 `catch e` 的合同。** 使用原始语料的错误绑定、实际插值显示、匹配/传播与析构需求；不要只开放未使用的 catch 名字。当前第一阻塞计数为 11 路径/9 份入口字节，另有命名标准 Error 1/1；这些输入可能继续遇到其他阻塞，不能承诺等量覆盖增长。
 3. 保持本批 `yavo-diagnostics/p0` 的明确范围：`frontend=selfhost`、`diagnostic_mode=first-error`，notes/fixes 为空；主 token 原始范围与词法消耗范围，EOF 可为零宽。`sources` 是成功读入前缀，不生成 `project_sha256`。快照保存在文件 EOF 上，根词法失败直接使用同次 readText；不得在渲染时重读文件。
 4. **默认接替仍受语义覆盖约束。** 394 个 stage0 接受入口仍有 275 个未被 selfhost 接受，按入口字节去重为 168 个。后续可按 Copy tuple Vec（当前第一阻塞 22/8）、Copy Map 值（10/4）、Map[String,String]（5/4）分批推进。std/sync 的 29/17 涉及完整线程与 Guard 语义，不能仅放行模块名。继续保留旧源码与 U0001 边界。
@@ -443,8 +443,9 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 
 - **实现**：新增内部 `digest.yv`，纯 int 位运算 SHA256，编译器成为十个 Yavo 模块；`support` 统一 JSON 渲染，`lexer` 在 JSON 模式的文件 EOF 持有原始源码与摘要，既有 parser/types/codegen 的 fail 调用保留原位置和首错优先级。普通文本模式不保存这些快照。`check` 支持两种 JSON 拼写和前后位置；成功 exit0、首错 exit1；参数错 exit2，根读取/UTF-8 失败 exit3 且 stdout 为空。
 - **冻结合同**：主合同、98 个固定案例与独立 oracle 在首次执行新 JSON 前冻结；旧 batch49 stage2 仅提供 80 个文本起点/消息观察。位置/范围按源字节独立定义，哈希来自 hashlib。两份 POSIX 特殊文件名的仓库存储名在执行前改为 Windows 可 checkout 名，逻辑路径、源字节和预期不变，amendment 保留旧身份。另 8 个 legacy CLI 案例在发现回归后、修复前单独冻结，旧 stage2 8/8 通过。
-- **兼容修正**：初候选通过 98 JSON+80 text 后，审查发现普通 `check -legacy.yv` 和 `emit-c ... -o --json` 被误解释为选项；首次完整自举在 294 项处停止并排除验收。恢复原位置语法后，修正候选 98+80+8 及 8 项检查全过，再从新目录完整自举。原主合同及预期未放宽。
-- **正式本机**：1063/1063、20/20、0 skip，七应用门和输入身份通过。C 1,684,975 字节，SHA256 `3e453870eb13aae13d310333cf3995f3a4f35e106e15f670febd95ff92f4f546`；Linux 二进制 682,864 字节，SHA256 `7553ed87ca0082ade3834a388eeeac956459d45553e8cf56568c400d7ad39f67`；stage2/3 逐字节一致。最终 stage1/stage2 JSON 196、文本 160、补充 16，372/372 命令；10 个 oracle 负控全部拒绝，FIFO 对根/已加载模块的修改证明使用此前快照。46 SHA256 向量经 stage0/stage1/stage2 Debug/Release 共 276 次通过，包括块边界、Unicode、NUL 与一百万个 a。
+- **兼容修正**：初候选通过 98 JSON/CLI+80 text 后，审查发现普通 `check -legacy.yv` 和 `emit-c ... -o --json` 被误解释为选项；首次完整自举在 294 项处停止并排除验收。恢复原位置语法后，修正候选 98+80+8 及 8 项检查全过，再从新目录完整自举。原主合同及预期未放宽。
+- **正式本机**：1063/1063、20/20、0 skip，七应用门和输入身份通过。C 1,684,975 字节，SHA256 `3e453870eb13aae13d310333cf3995f3a4f35e106e15f670febd95ff92f4f546`；Linux 二进制 682,864 字节，SHA256 `7553ed87ca0082ade3834a388eeeac956459d45553e8cf56568c400d7ad39f67`；stage2/3 逐字节一致。最终 stage1/stage2 JSON/CLI 196、文本 160、补充 16，372/372 命令；10 个 oracle 负控全部拒绝，FIFO 对根/已加载模块的修改证明使用此前快照。46 SHA256 向量经 stage0/stage1/stage2 Debug/Release 共 276 次通过，包括块边界、Unicode、NUL 与一百万个 a。
 - **普通驱动与范围**：最终双 producer 114/114、9/9，本机实际 stage2 普通 build 自身的 C/二进制等于固定点，再普通 run 独立多模块程序。原 1063 清单和 Rust/runtime/lock 的 163 个来源文件字节不变；本机 Rust 完整结果引用同源 batch49 的 151/0/1，不冒充本批新运行。原 622 语料仍 119/394、去重 56/224，零退步/越界/超时；原 613 仍 117/392。
-- **CI**：本机正式门已通过；本提交的三平台 CI 与 Linux 独立 ASan+UBSan 诊断门待执行，尚不计为通过。 Linux 编译器插桩门要求实际 stage2 C 构建后执行 98 JSON+80 text+8 supplement，10 负控与 4 次 FIFO 屏障；保留已有 program/compiler/self-compile/stress 门。Linux/macOS 双 producer 为 196+160+16，Windows 为 188+152+16，四个 POSIX 专属案例明确排除。详见[验证索引](compiler/validation/batch50-json-diagnostics-2026-11-27.json)。
+- **CI**：实现提交 `6e1d22f` 的 [run 45991816609](https://github.com/msly/yavo/actions/runs/45991816609) **6/6 成功**；三平台 SHA256、JSON 诊断和普通驱动门全部通过，Linux 实际 stage2 C 的 ASan+UBSan 诊断门通过。三份原生 ZIP 已下载并核对 GitHub 哈希，原始回执、源码和产物身份均已复核。Linux 编译器插桩门通过 98 JSON/CLI+80 text+8 supplement、10 负控与 4 次 FIFO 屏障；已有 program/compiler/self-compile/stress 门全部通过。Linux/macOS 双 producer 为 196+160+16，Windows 为 188+152+16，四个 POSIX 专属案例明确排除。当前 CI Rust Debug/Release 各为 Linux 完整 151/0/1、macOS 原生选定集 90/0/1、Windows 原生选定集 87/0/1。详见[验证索引](compiler/validation/batch50-json-diagnostics-2026-11-27.json)。
+- **macOS 普通重建差异**：原始 stage2 与普通 build 自身的二进制各 634,224 字节，1,264 个差异字节全部位于 1,376 字节的代码签名区；Mach-O 头、加载命令、代码/数据节和重算的代码页哈希一致。签名标识分别含输出名 `yavo-selfhost`、`rebuilt-selfhost`，连带改变标识长度、哈希表偏移和签名 blob 长度。两份原始文件保留不同哈希，详见[独立原始字节比较](compiler/validation/batch50-macos-binary-comparison-2026-11-27.json)。
 - **下一批**：标准库错误值与 catch e 优先；独立定义命名错误、错误显示/匹配/传播和拥有资源清理，再以未改原文暴露后续阻塞。SH-3 默认接替、正式性能和成本仍未完成。

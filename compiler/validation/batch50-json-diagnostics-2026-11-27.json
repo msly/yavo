@@ -1,7 +1,7 @@
 {
   "schema": "yavo-batch50-validation-index/1",
   "batch": 50,
-  "recorded_at_utc": "2026-11-27T11:35:50.842217+00:00",
+  "recorded_at_utc": "2026-11-27T12:48:31.920952+00:00",
   "baseline_commit": "db3b4716fe9bea730e544f09b19325c37508a721",
   "scope": "Native selfhost check JSON first-error diagnostics with complete primary-token spans and load-time source hashes; daily default replacement remains incomplete.",
   "source_identity": {
@@ -1378,8 +1378,8 @@
     }
   },
   "milestones": {
-    "SH-2": "maintained for declared subset with complete native fixed point",
-    "SH-3": "ordinary build/run retained; check JSON added; not the daily default compiler",
+    "SH-2": "Declared subset fixed point maintained on Linux x86-64, Windows x86-64 and macOS arm64.",
+    "SH-3": "Native ordinary build/run and check JSON accepted on three platforms; not the daily default compiler.",
     "SH-4_formal_cli": "3/3 maintained",
     "formal_performance": "not independently accepted",
     "relative_delivery_cost": "unproven; complete token/currency measurements absent"
@@ -1401,19 +1401,3670 @@
     "sha256": "bcf5071b6336cd606492091de9bf75f33c32d4143608d568393b52e862338f5f"
   },
   "ci": {
-    "status": "pending",
-    "implementation_commit": null,
-    "run_url": null,
-    "jobs_passed": null,
+    "status": "passed",
+    "observed_at_utc": "2026-11-27T12:48:30.625978+00:00",
+    "implementation_commit": "6e1d22f8b5085e4dab1d6c57f4eb77d4fd324a99",
+    "run_id": 45991816609,
+    "url": "https://github.com/msly/yavo/actions/runs/45991816609",
+    "run_url": "https://github.com/msly/yavo/actions/runs/45991816609",
+    "attempt": 1,
+    "event": "push",
+    "branch": "main",
+    "conclusion": "success",
+    "jobs_passed": 6,
     "jobs_total": 6,
-    "scope": "Exact implementation commit; Linux x86-64, Windows x86-64, macOS arm64 native gates and three independent jobs. Configured steps are not observed results.",
+    "scope": "Exact implementation main push; six successful jobs and all required steps; three original native ZIP sizes/SHA256 match GitHub metadata and are revalidated against current source bytes, actual stage producers, frozen inventories and raw outputs.",
+    "required_steps": [
+      {
+        "job": "Native Linux x86_64",
+        "job_id": 140481241169,
+        "steps": [
+          {
+            "name": "Preserve frozen input bytes on checkout",
+            "conclusion": "success"
+          },
+          {
+            "name": "Restore the locked Zig toolchain",
+            "conclusion": "success"
+          },
+          {
+            "name": "Build compiler and install the locked Zig toolchain",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run Debug and Release sequentially",
+            "conclusion": "success"
+          },
+          {
+            "name": "Build and validate the Yavo-written subset frontend",
+            "conclusion": "success"
+          },
+          {
+            "name": "Check isolated application runner configurations",
+            "conclusion": "success"
+          },
+          {
+            "name": "Validate ordinary selfhost build and run",
+            "conclusion": "success"
+          },
+          {
+            "name": "Validate selfhost source hashing",
+            "conclusion": "success"
+          },
+          {
+            "name": "Validate selfhost structured diagnostics",
+            "conclusion": "success"
+          },
+          {
+            "name": "Validate the test-summary CLI application",
+            "conclusion": "success"
+          },
+          {
+            "name": "Validate the csv-check CLI application",
+            "conclusion": "success"
+          },
+          {
+            "name": "Validate the dep-index CLI application",
+            "conclusion": "success"
+          },
+          {
+            "name": "Package application evidence with adversarial filenames",
+            "conclusion": "success"
+          },
+          {
+            "name": "Package CSV application evidence",
+            "conclusion": "success"
+          },
+          {
+            "name": "Package dependency-index application evidence",
+            "conclusion": "success"
+          },
+          {
+            "name": "Package ordinary driver evidence",
+            "conclusion": "success"
+          },
+          {
+            "name": "Package selfhost source hashing evidence",
+            "conclusion": "success"
+          },
+          {
+            "name": "Package selfhost structured diagnostic evidence",
+            "conclusion": "success"
+          },
+          {
+            "name": "Preserve logs and per-platform receipts",
+            "conclusion": "success"
+          },
+          {
+            "name": "Compile starter-guide examples and ownership diagnostics",
+            "conclusion": "success"
+          },
+          {
+            "name": "Check Yavo-frontend C with independent ASan and UBSan",
+            "conclusion": "success"
+          },
+          {
+            "name": "Check system interfaces with required ASan and UBSan",
+            "conclusion": "success"
+          },
+          {
+            "name": "Package system interface sanitizer evidence",
+            "conclusion": "success"
+          },
+          {
+            "name": "Package selfhost sanitizer evidence",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "job": "Native macOS arm64",
+        "job_id": 140481241600,
+        "steps": [
+          {
+            "name": "Preserve frozen input bytes on checkout",
+            "conclusion": "success"
+          },
+          {
+            "name": "Restore the locked Zig toolchain",
+            "conclusion": "success"
+          },
+          {
+            "name": "Build compiler and install the locked Zig toolchain",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run Debug and Release sequentially",
+            "conclusion": "success"
+          },
+          {
+            "name": "Build and validate the Yavo-written subset frontend",
+            "conclusion": "success"
+          },
+          {
+            "name": "Check isolated application runner configurations",
+            "conclusion": "success"
+          },
+          {
+            "name": "Validate ordinary selfhost build and run",
+            "conclusion": "success"
+          },
+          {
+            "name": "Validate selfhost source hashing",
+            "conclusion": "success"
+          },
+          {
+            "name": "Validate selfhost structured diagnostics",
+            "conclusion": "success"
+          },
+          {
+            "name": "Validate the test-summary CLI application",
+            "conclusion": "success"
+          },
+          {
+            "name": "Validate the csv-check CLI application",
+            "conclusion": "success"
+          },
+          {
+            "name": "Validate the dep-index CLI application",
+            "conclusion": "success"
+          },
+          {
+            "name": "Package application evidence with adversarial filenames",
+            "conclusion": "success"
+          },
+          {
+            "name": "Package CSV application evidence",
+            "conclusion": "success"
+          },
+          {
+            "name": "Package dependency-index application evidence",
+            "conclusion": "success"
+          },
+          {
+            "name": "Package ordinary driver evidence",
+            "conclusion": "success"
+          },
+          {
+            "name": "Package selfhost source hashing evidence",
+            "conclusion": "success"
+          },
+          {
+            "name": "Package selfhost structured diagnostic evidence",
+            "conclusion": "success"
+          },
+          {
+            "name": "Preserve logs and per-platform receipts",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "job": "Independent Linux ASan and UBSan",
+        "job_id": 140481241665,
+        "steps": [
+          {
+            "name": "Build the exporter compiler",
+            "conclusion": "success"
+          },
+          {
+            "name": "Export current sources and validate generated C",
+            "conclusion": "success"
+          },
+          {
+            "name": "Preserve sanitizer probes, programs, and receipts",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "job": "Native Windows x86_64",
+        "job_id": 140481241694,
+        "steps": [
+          {
+            "name": "Preserve frozen input bytes on checkout",
+            "conclusion": "success"
+          },
+          {
+            "name": "Restore the locked Zig toolchain",
+            "conclusion": "success"
+          },
+          {
+            "name": "Build compiler and install the locked Zig toolchain",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run Debug and Release sequentially",
+            "conclusion": "success"
+          },
+          {
+            "name": "Build and validate the Yavo-written subset frontend",
+            "conclusion": "success"
+          },
+          {
+            "name": "Check isolated application runner configurations",
+            "conclusion": "success"
+          },
+          {
+            "name": "Validate ordinary selfhost build and run",
+            "conclusion": "success"
+          },
+          {
+            "name": "Validate selfhost source hashing",
+            "conclusion": "success"
+          },
+          {
+            "name": "Validate selfhost structured diagnostics",
+            "conclusion": "success"
+          },
+          {
+            "name": "Validate the test-summary CLI application",
+            "conclusion": "success"
+          },
+          {
+            "name": "Validate the csv-check CLI application",
+            "conclusion": "success"
+          },
+          {
+            "name": "Validate the dep-index CLI application",
+            "conclusion": "success"
+          },
+          {
+            "name": "Package application evidence with adversarial filenames",
+            "conclusion": "success"
+          },
+          {
+            "name": "Package CSV application evidence",
+            "conclusion": "success"
+          },
+          {
+            "name": "Package dependency-index application evidence",
+            "conclusion": "success"
+          },
+          {
+            "name": "Package ordinary driver evidence",
+            "conclusion": "success"
+          },
+          {
+            "name": "Package selfhost source hashing evidence",
+            "conclusion": "success"
+          },
+          {
+            "name": "Package selfhost structured diagnostic evidence",
+            "conclusion": "success"
+          },
+          {
+            "name": "Preserve logs and per-platform receipts",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "job": "Round-five experiment evidence",
+        "job_id": 140481241727,
+        "steps": [
+          {
+            "name": "Preserve frozen experiment bytes on checkout",
+            "conclusion": "success"
+          },
+          {
+            "name": "Validate the evidence gate",
+            "conclusion": "success"
+          },
+          {
+            "name": "Verify frozen inputs, archived runs and experiment totals",
+            "conclusion": "success"
+          },
+          {
+            "name": "Preserve experiment integrity receipt and verification logs",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "job": "Agent evaluation preparation",
+        "job_id": 140481241781,
+        "steps": [
+          {
+            "name": "Preserve prepared experiment bytes on checkout",
+            "conclusion": "success"
+          },
+          {
+            "name": "Verify offline contracts, new packet and unqualified launch refusal",
+            "conclusion": "success"
+          },
+          {
+            "name": "Preserve preparation checks without claiming participant results",
+            "conclusion": "success"
+          }
+        ]
+      }
+    ],
+    "jobs": [
+      {
+        "id": 140481241169,
+        "name": "Native Linux x86_64",
+        "head_sha": "6e1d22f8b5085e4dab1d6c57f4eb77d4fd324a99",
+        "run_id": 45991816609,
+        "run_attempt": 1,
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/msly/yavo/actions/runs/45991816609/job/140481241169",
+        "started_at": "2026-11-27T11:36:09Z",
+        "completed_at": "2026-11-27T11:55:12Z"
+      },
+      {
+        "id": 140481241600,
+        "name": "Native macOS arm64",
+        "head_sha": "6e1d22f8b5085e4dab1d6c57f4eb77d4fd324a99",
+        "run_id": 45991816609,
+        "run_attempt": 1,
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/msly/yavo/actions/runs/45991816609/job/140481241600",
+        "started_at": "2026-11-27T11:36:10Z",
+        "completed_at": "2026-11-27T11:54:18Z"
+      },
+      {
+        "id": 140481241665,
+        "name": "Independent Linux ASan and UBSan",
+        "head_sha": "6e1d22f8b5085e4dab1d6c57f4eb77d4fd324a99",
+        "run_id": 45991816609,
+        "run_attempt": 1,
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/msly/yavo/actions/runs/45991816609/job/140481241665",
+        "started_at": "2026-11-27T11:36:09Z",
+        "completed_at": "2026-11-27T11:37:02Z"
+      },
+      {
+        "id": 140481241694,
+        "name": "Native Windows x86_64",
+        "head_sha": "6e1d22f8b5085e4dab1d6c57f4eb77d4fd324a99",
+        "run_id": 45991816609,
+        "run_attempt": 1,
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/msly/yavo/actions/runs/45991816609/job/140481241694",
+        "started_at": "2026-11-27T11:36:09Z",
+        "completed_at": "2026-11-27T12:42:51Z"
+      },
+      {
+        "id": 140481241727,
+        "name": "Round-five experiment evidence",
+        "head_sha": "6e1d22f8b5085e4dab1d6c57f4eb77d4fd324a99",
+        "run_id": 45991816609,
+        "run_attempt": 1,
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/msly/yavo/actions/runs/45991816609/job/140481241727",
+        "started_at": "2026-11-27T11:36:09Z",
+        "completed_at": "2026-11-27T11:36:25Z"
+      },
+      {
+        "id": 140481241781,
+        "name": "Agent evaluation preparation",
+        "head_sha": "6e1d22f8b5085e4dab1d6c57f4eb77d4fd324a99",
+        "run_id": 45991816609,
+        "run_attempt": 1,
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/msly/yavo/actions/runs/45991816609/job/140481241781",
+        "started_at": "2026-11-27T11:36:09Z",
+        "completed_at": "2026-11-27T11:36:25Z"
+      }
+    ],
+    "artifacts": [
+      {
+        "id": 15197489385,
+        "name": "native-windows-2025-6e1d22f8b5085e4dab1d6c57f4eb77d4fd324a99",
+        "size_in_bytes": 711940570,
+        "digest": "sha256:ff603ec6433037fd3af0d80400780eb4a1e69cdfefe28304ea090664604ab730",
+        "expired": false,
+        "created_at": "2026-11-27T12:42:46Z",
+        "expires_at": "2026-12-11T12:41:16Z",
+        "workflow_run": {
+          "id": 45991816609,
+          "repository_id": 1467240913,
+          "head_repository_id": 1467240913,
+          "head_branch": "main",
+          "head_sha": "6e1d22f8b5085e4dab1d6c57f4eb77d4fd324a99"
+        }
+      },
+      {
+        "id": 15195212264,
+        "name": "native-ubuntu-24.04-6e1d22f8b5085e4dab1d6c57f4eb77d4fd324a99",
+        "size_in_bytes": 863434858,
+        "digest": "sha256:b6869878e13fe0d5e8462012f9075f216e5cad53099fa12c0cd763010e8e1fa3",
+        "expired": false,
+        "created_at": "2026-11-27T11:55:10Z",
+        "expires_at": "2026-12-11T11:53:58Z",
+        "workflow_run": {
+          "id": 45991816609,
+          "repository_id": 1467240913,
+          "head_repository_id": 1467240913,
+          "head_branch": "main",
+          "head_sha": "6e1d22f8b5085e4dab1d6c57f4eb77d4fd324a99"
+        }
+      },
+      {
+        "id": 15194181257,
+        "name": "sanitizers-linux-6e1d22f8b5085e4dab1d6c57f4eb77d4fd324a99",
+        "size_in_bytes": 4504277,
+        "digest": "sha256:aa127137748bf23c9f9a3bb29eadcf20a18f2bbc9e18da870bb28c5630300c19",
+        "expired": false,
+        "created_at": "2026-11-27T11:37:00Z",
+        "expires_at": "2026-12-11T11:36:58Z",
+        "workflow_run": {
+          "id": 45991816609,
+          "repository_id": 1467240913,
+          "head_repository_id": 1467240913,
+          "head_branch": "main",
+          "head_sha": "6e1d22f8b5085e4dab1d6c57f4eb77d4fd324a99"
+        }
+      },
+      {
+        "id": 15194029898,
+        "name": "native-macos-15-6e1d22f8b5085e4dab1d6c57f4eb77d4fd324a99",
+        "size_in_bytes": 224740590,
+        "digest": "sha256:4ae6c744dd78ba414724dc062f9ed2c46f4bbcc9adaf604582177816942ba7e3",
+        "expired": false,
+        "created_at": "2026-11-27T11:54:10Z",
+        "expires_at": "2026-12-11T11:53:31Z",
+        "workflow_run": {
+          "id": 45991816609,
+          "repository_id": 1467240913,
+          "head_repository_id": 1467240913,
+          "head_branch": "main",
+          "head_sha": "6e1d22f8b5085e4dab1d6c57f4eb77d4fd324a99"
+        }
+      },
+      {
+        "id": 15193902248,
+        "name": "agent-eval-preparation-6e1d22f8b5085e4dab1d6c57f4eb77d4fd324a99",
+        "size_in_bytes": 12888,
+        "digest": "sha256:a1c535646887a4278abc64a2e29ae693d7f4c51cea14c13018ffe673ec3b3d43",
+        "expired": false,
+        "created_at": "2026-11-27T11:36:23Z",
+        "expires_at": "2026-12-11T11:36:22Z",
+        "workflow_run": {
+          "id": 45991816609,
+          "repository_id": 1467240913,
+          "head_repository_id": 1467240913,
+          "head_branch": "main",
+          "head_sha": "6e1d22f8b5085e4dab1d6c57f4eb77d4fd324a99"
+        }
+      },
+      {
+        "id": 15193379900,
+        "name": "experiment-evidence-6e1d22f8b5085e4dab1d6c57f4eb77d4fd324a99",
+        "size_in_bytes": 11937,
+        "digest": "sha256:57aa04db02f97a750c41187c7c4907c5e4d2ed0f200482f663c5ef705e1b50b8",
+        "expired": false,
+        "created_at": "2026-11-27T11:36:22Z",
+        "expires_at": "2026-12-11T11:36:21Z",
+        "workflow_run": {
+          "id": 45991816609,
+          "repository_id": 1467240913,
+          "head_repository_id": 1467240913,
+          "head_branch": "main",
+          "head_sha": "6e1d22f8b5085e4dab1d6c57f4eb77d4fd324a99"
+        }
+      }
+    ],
+    "api_evidence": [
+      {
+        "path": "compiler/target/batch50/ci-run.json",
+        "bytes": 12265,
+        "sha256": "951e3df0c37a9852c0d6e54e5f15a37dd6bc46787b23c8a3936726e3babc3104"
+      },
+      {
+        "path": "compiler/target/batch50/ci-jobs.json",
+        "bytes": 36252,
+        "sha256": "1312898906c4dd337cb93c118a453a6e52ee69a9806d591c4e742cbfcdab8368"
+      },
+      {
+        "path": "compiler/target/batch50/ci-artifacts.json",
+        "bytes": 5268,
+        "sha256": "b7e202c097bfbba974911af7e8a0171fb3e50d189c2863dc6d44b92cfd0c7127"
+      }
+    ],
+    "source_identity_verification": {
+      "implementation": "6e1d22f8b5085e4dab1d6c57f4eb77d4fd324a99",
+      "checkout": "6e1d22f8b5085e4dab1d6c57f4eb77d4fd324a99",
+      "implementation_is_ancestor": true,
+      "committed_documentation_changes": [],
+      "working_documentation_changes": [],
+      "index_identity_records_verified": 32,
+      "git_source_blobs_verified": 31,
+      "acceptance_input_fingerprint": "ca25647e5914fad40928a54261b9575300b224bde0cd3dfc3a8a910565e62754"
+    },
+    "native_archive_verification": {
+      "linux": {
+        "archive": {
+          "path": "compiler/target/batch50/ci-final-linux/artifact.zip",
+          "bytes": 863434858,
+          "sha256": "b6869878e13fe0d5e8462012f9075f216e5cad53099fa12c0cd763010e8e1fa3"
+        },
+        "download_receipt": {
+          "path": "compiler/target/batch50/ci-final-linux/download-receipt.json",
+          "bytes": 5677,
+          "sha256": "a6d09dafffc29d7221d9992ea5f27a9ea450055bd635508275751081672bd2f5"
+        },
+        "verified_member_count": 4893,
+        "revalidated": true
+      },
+      "macos": {
+        "archive": {
+          "path": "compiler/target/batch50/ci-final-macos/artifact.zip",
+          "bytes": 224740590,
+          "sha256": "4ae6c744dd78ba414724dc062f9ed2c46f4bbcc9adaf604582177816942ba7e3"
+        },
+        "download_receipt": {
+          "path": "compiler/target/batch50/ci-final-macos/download-receipt.json",
+          "bytes": 4710,
+          "sha256": "6702ecc5b691f8b6220ca8763248cd08dd65ca8db4a65be8c33845d810734de1"
+        },
+        "verified_member_count": 2019,
+        "revalidated": true
+      },
+      "windows": {
+        "archive": {
+          "path": "compiler/target/batch50/ci-final-windows/artifact.zip",
+          "bytes": 711940570,
+          "sha256": "ff603ec6433037fd3af0d80400780eb4a1e69cdfefe28304ea090664604ab730"
+        },
+        "download_receipt": {
+          "path": "compiler/target/batch50/ci-final-windows/download-receipt.json",
+          "bytes": 4718,
+          "sha256": "56ef46031a8b2a83ce975d55bc057416db6efde9db1df415fb7496bc1d5de1c2"
+        },
+        "verified_member_count": 1927,
+        "revalidated": true
+      }
+    },
+    "native_receipts": {
+      "compiler_module_inventory": [
+        "codegen.yv",
+        "digest.yv",
+        "driver.yv",
+        "lexer.yv",
+        "main.yv",
+        "model.yv",
+        "parser.yv",
+        "runtime_source.yv",
+        "support.yv",
+        "types.yv"
+      ],
+      "current_sources": {
+        ".github/workflows/ci.yml": {
+          "bytes": 10956,
+          "path": ".github/workflows/ci.yml",
+          "sha256": "d071086f0d53daac37a97bf1a1ecb00750698707ea5b997dddc4079141331f4d"
+        },
+        "compiler/runtime/yavo_rt.h": {
+          "bytes": 89063,
+          "path": "compiler/runtime/yavo_rt.h",
+          "sha256": "4b490ca18f810211b35acca525e9ec1b1284e1488dd38d9ce6e391c78ac79b0a"
+        },
+        "compiler/toolchain.lock": {
+          "bytes": 1096,
+          "path": "compiler/toolchain.lock",
+          "sha256": "a9bbe83e644b0e1cee19c8dba8b5157eaed3e9ddc71b96d8aab2b2d2bb15f53c"
+        },
+        "selfhost/bootstrap.py": {
+          "bytes": 40004,
+          "path": "selfhost/bootstrap.py",
+          "sha256": "5e76aea5640ffd2b5dcbadb0ec804b9d84fe493118b7749caefaf797a44872f5"
+        },
+        "selfhost/codegen.yv": {
+          "bytes": 184080,
+          "path": "selfhost/codegen.yv",
+          "sha256": "96c0b25194171dd500a09362d89332d6aa93ae59d40bb126287d80a317e880e2"
+        },
+        "selfhost/digest.yv": {
+          "bytes": 4291,
+          "path": "selfhost/digest.yv",
+          "sha256": "e7c6a6a496bbdcdee401f897032ee9447f1b7f9982e23c1bf9f7e124f4cb68d7"
+        },
+        "selfhost/driver.yv": {
+          "bytes": 10693,
+          "path": "selfhost/driver.yv",
+          "sha256": "01f543793f2bce65c2bf04aca0e463a894d1d9336feb0d96b55c335bec647464"
+        },
+        "selfhost/lexer.yv": {
+          "bytes": 26335,
+          "path": "selfhost/lexer.yv",
+          "sha256": "7b8c9e8ecf08e21a28327ba0d946a6f346b192d07db69305b29ca3f6ebc0fa9b"
+        },
+        "selfhost/main.yv": {
+          "bytes": 6758,
+          "path": "selfhost/main.yv",
+          "sha256": "fcf554007b4dda50dcc0d7ef3e4c57b234878ca0352161a5055fa6001a203be5"
+        },
+        "selfhost/model.yv": {
+          "bytes": 5258,
+          "path": "selfhost/model.yv",
+          "sha256": "a585f852e20067dcdfd42ba9bb4c1f8ed1ccca056ae4737758d2f3467e702eaf"
+        },
+        "selfhost/parser.yv": {
+          "bytes": 46743,
+          "path": "selfhost/parser.yv",
+          "sha256": "dffd2089ddf51feca9d1088f7040436b6ff3b20cda786e4edb0f2b51ebc1a301"
+        },
+        "selfhost/runtime_source.yv": {
+          "bytes": 93029,
+          "path": "selfhost/runtime_source.yv",
+          "sha256": "21a5f8f7d558d7c6570b2525d4525ede1d75d64e58371b8c8589315d2a18e754"
+        },
+        "selfhost/support.yv": {
+          "bytes": 6399,
+          "path": "selfhost/support.yv",
+          "sha256": "12a4b08856d7b8f1203e95f2d92639a6de7c3be56d35ad964cb0f526868197ce"
+        },
+        "selfhost/tests/cases.json": {
+          "bytes": 226454,
+          "path": "selfhost/tests/cases.json",
+          "sha256": "6955d814bdf4b3db6a927de40f879e6a005f75a136429069d4ab6541f18d0d23"
+        },
+        "selfhost/types.yv": {
+          "bytes": 27036,
+          "path": "selfhost/types.yv",
+          "sha256": "ca9ae26aeccae15d8d19ad978af4d143f80c7805524c1336c15f7d5799baa689"
+        },
+        "tools/ci/selfhost_compiler_sanitize.py": {
+          "bytes": 31104,
+          "path": "tools/ci/selfhost_compiler_sanitize.py",
+          "sha256": "4ef5cbc5d2619fd84abb79c24184c838f28b14ff44b1f826fdbd240169fe01ab"
+        },
+        "tools/ci/selfhost_diagnostics.py": {
+          "bytes": 25399,
+          "path": "tools/ci/selfhost_diagnostics.py",
+          "sha256": "6aaeb6e81dc2b9e72d00d3c5b15b82f14ed575a37e321dc511d29adb8f7ec6e9"
+        },
+        "tools/ci/selfhost_digest.py": {
+          "bytes": 11993,
+          "path": "tools/ci/selfhost_digest.py",
+          "sha256": "eadca01017fe0416c864468338e0b8cba0f9cbc3e429547cd2680f370b08d268"
+        },
+        "tools/ci/selfhost_driver.py": {
+          "bytes": 30891,
+          "path": "tools/ci/selfhost_driver.py",
+          "sha256": "17de866ea0953a0cb84d19ad73bd528086513bae4250bf44728e31d384af827e"
+        }
+      },
+      "distinct_platform_artifacts_verified": true,
+      "head": "6e1d22f8b5085e4dab1d6c57f4eb77d4fd324a99",
+      "network_requests": 0,
+      "observed_run_id": 45991816609,
+      "platforms": {
+        "linux": {
+          "applications": {
+            "csv-check": {
+              "applicable_scenarios": 138,
+              "cleanup_executions": 138,
+              "failed": 0,
+              "native_executions": 414,
+              "normal_executions": 276,
+              "passed": 414,
+              "required_checks_passed": 10,
+              "sanitizers": {
+                "capability_controls": 3,
+                "executions": 276,
+                "stage2_sha256": "f638468d188c546312ae0ee8be0dd275c42e59398c8db3383bae56cf1cbdfc3c",
+                "status": "passed"
+              }
+            },
+            "dep-index": {
+              "applicable_scenarios": 112,
+              "cleanup_executions": 112,
+              "failed": 0,
+              "native_executions": 336,
+              "normal_executions": 224,
+              "passed": 336,
+              "required_checks_passed": 10,
+              "sanitizers": {
+                "capability_controls": 3,
+                "executions": 224,
+                "stage2_sha256": "f638468d188c546312ae0ee8be0dd275c42e59398c8db3383bae56cf1cbdfc3c",
+                "status": "passed"
+              }
+            },
+            "test-summary": {
+              "applicable_scenarios": 71,
+              "cleanup_executions": 71,
+              "failed": 0,
+              "native_executions": 213,
+              "normal_executions": 142,
+              "passed": 213,
+              "required_checks_passed": 4
+            }
+          },
+          "artifact": {
+            "archive_safety": {
+              "csv-check.tar.gz": {
+                "internal_hardlinks": 0,
+                "members": 4356,
+                "tree_extracted": false
+              },
+              "dep-index.tar.gz": {
+                "internal_hardlinks": 0,
+                "members": 3581,
+                "tree_extracted": false
+              },
+              "selfhost-diagnostics.tar.gz": {
+                "internal_hardlinks": 0,
+                "members": 4021,
+                "tree_extracted": false
+              },
+              "selfhost-digest.tar.gz": {
+                "internal_hardlinks": 0,
+                "members": 54,
+                "tree_extracted": false
+              },
+              "selfhost-driver.tar.gz": {
+                "internal_hardlinks": 4,
+                "members": 2073,
+                "tree_extracted": false
+              },
+              "selfhost-sanitizers.tar.gz": {
+                "internal_hardlinks": 0,
+                "members": 10483,
+                "tree_extracted": false
+              },
+              "system-sanitize.tar.gz": {
+                "internal_hardlinks": 0,
+                "members": 268,
+                "tree_extracted": false
+              },
+              "test-summary.tar.gz": {
+                "internal_hardlinks": 0,
+                "members": 1777,
+                "tree_extracted": false
+              },
+              "zip": {
+                "members": 33724,
+                "tree_extracted": false
+              }
+            },
+            "download_receipt_sha256": "a6d09dafffc29d7221d9992ea5f27a9ea450055bd635508275751081672bd2f5",
+            "github_digest_verified": true,
+            "head_sha": "6e1d22f8b5085e4dab1d6c57f4eb77d4fd324a99",
+            "id": 15195212264,
+            "name": "native-ubuntu-24.04-6e1d22f8b5085e4dab1d6c57f4eb77d4fd324a99",
+            "run_id": 45991816609,
+            "zip_bytes": 863434858,
+            "zip_sha256": "b6869878e13fe0d5e8462012f9075f216e5cad53099fa12c0cd763010e8e1fa3"
+          },
+          "bootstrap": {
+            "applications": {
+              "atomic_ledger_application": {
+                "applicable": 32,
+                "executions": 128
+              },
+              "csv_check_application": {
+                "applicable": 138,
+                "cleanup_executions": 276,
+                "executions": 828,
+                "ordinary_executions": 552
+              },
+              "dep_index_application": {
+                "applicable": 112,
+                "cleanup_executions": 224,
+                "executions": 672,
+                "ordinary_executions": 448
+              },
+              "sliding_median_application": {
+                "applicable": 28,
+                "executions": 112
+              },
+              "test_summary_application": {
+                "applicable": 71
+              },
+              "text_diff_application": {
+                "applicable": 35,
+                "executions": 140
+              },
+              "unit_conversion_application": {
+                "applicable": 20
+              }
+            },
+            "artifacts": {
+              "stage2": {
+                "binary": {
+                  "bytes": 687432,
+                  "member": "selfhost/run-wnyajc5v/stages/stage2/yavo-selfhost",
+                  "sha256": "f638468d188c546312ae0ee8be0dd275c42e59398c8db3383bae56cf1cbdfc3c"
+                },
+                "generated_c": {
+                  "bytes": 1683875,
+                  "member": "selfhost/run-wnyajc5v/stages/stage2/yavo-selfhost.c",
+                  "sha256": "a463c46eff325d2d1d4681dc905e22391b41c80c2c232ed4a2c5cfc3fa5e2e80"
+                }
+              },
+              "stage3": {
+                "binary": {
+                  "bytes": 687432,
+                  "member": "selfhost/run-wnyajc5v/stages/stage3/yavo-selfhost",
+                  "sha256": "f638468d188c546312ae0ee8be0dd275c42e59398c8db3383bae56cf1cbdfc3c"
+                },
+                "generated_c": {
+                  "bytes": 1683875,
+                  "member": "selfhost/run-wnyajc5v/stages/stage3/yavo-selfhost.c",
+                  "sha256": "a463c46eff325d2d1d4681dc905e22391b41c80c2c232ed4a2c5cfc3fa5e2e80"
+                }
+              }
+            },
+            "binary_hashes_identical": true,
+            "c_byte_identical": true,
+            "cases": 1063,
+            "checks": 20,
+            "checks_passed": 20,
+            "failed": 0,
+            "kind_counts": {
+              "panic": 34,
+              "reject": 571,
+              "run": 279,
+              "shared_unsupported": 38,
+              "unsupported": 141
+            },
+            "passed": 1063,
+            "skipped": 0,
+            "skipped_checks": [],
+            "source_modules": 10,
+            "stage0_sha256": "9d7093b676db39a1f10553314c2b437a7f8d1ce1bbdb79be0b1b12999c557c0e"
+          },
+          "ordinary_driver": {
+            "applicable_per_driver": 57,
+            "checks_passed": 9,
+            "failed": 0,
+            "passed": 114,
+            "primary_cases": 55,
+            "rebuilt_artifacts": {
+              "rebuilt-fixed-point.c": {
+                "bytes": 1683875,
+                "member": "selfhost-driver.tar.gz:selfhost-driver/attempt-39rbvm3q/ordinary self build 自举/rebuilt-fixed-point.c",
+                "sha256": "a463c46eff325d2d1d4681dc905e22391b41c80c2c232ed4a2c5cfc3fa5e2e80"
+              },
+              "rebuilt-selfhost": {
+                "bytes": 687432,
+                "member": "selfhost-driver.tar.gz:selfhost-driver/attempt-39rbvm3q/ordinary self build 自举/rebuilt-selfhost",
+                "sha256": "f638468d188c546312ae0ee8be0dd275c42e59398c8db3383bae56cf1cbdfc3c"
+              }
+            },
+            "rebuilt_binary_equals_bootstrap_stage2": true,
+            "resources": {
+              "commands": 133,
+              "commands_with_rss": 133,
+              "max_observed_child_rss_bytes": 387956736,
+              "scope": "wait4 waited-child RSS on POSIX; not simultaneous process-tree RSS; no P50 or token/cost claim"
+            },
+            "scenarios": 114,
+            "supplemental_cases": 2
+          },
+          "platform": "linux",
+          "rust": {
+            "host": {
+              "machine": "x86_64",
+              "platform": "Linux-7.0.0-1014-aws-x86_64-with-glibc2.39"
+            },
+            "scope": "full",
+            "scope_description": "All Cargo tests and frozen conformance on Linux x86_64",
+            "suites": {
+              "debug": {
+                "frozen_conformance": {
+                  "pass": 124,
+                  "superseded": 2,
+                  "unsupported": 3
+                },
+                "groups": 20,
+                "log_sha256": "9e3057b09213a3689fd5300bcded235502a0a63f2303edad222f065bccf6553b",
+                "selection": [],
+                "totals": {
+                  "failed": 0,
+                  "filtered_out": 0,
+                  "ignored": 1,
+                  "measured": 0,
+                  "passed": 151
+                }
+              },
+              "release": {
+                "frozen_conformance": {
+                  "pass": 124,
+                  "superseded": 2,
+                  "unsupported": 3
+                },
+                "groups": 20,
+                "log_sha256": "df082a3564f8660ae4c4b5d59396d5c4e8e10b0ac7eaebae4d0ef8780e3d0a3d",
+                "selection": [],
+                "totals": {
+                  "failed": 0,
+                  "filtered_out": 0,
+                  "ignored": 1,
+                  "measured": 0,
+                  "passed": 151
+                }
+              }
+            }
+          },
+          "selfhost_sanitizers": {
+            "c_compiler": {
+              "bytes": 1023032,
+              "path": "/usr/bin/x86_64-linux-gnu-gcc-13",
+              "runtime_libraries": {
+                "libasan.so": {
+                  "bytes": 10924208,
+                  "path": "/usr/lib/x86_64-linux-gnu/libasan.so.8.0.0",
+                  "sha256": "8d5845bdf056b5db4cfb9fff40ad5eeea8f6da05a8ca6f5935a7d1c138ed2558"
+                },
+                "libc.so.6": {
+                  "bytes": 2129424,
+                  "path": "/usr/lib/x86_64-linux-gnu/libc.so.6",
+                  "sha256": "755a371e86cc9f564ab54f66140747700fb0a103f698f659f2060f707897e09a"
+                },
+                "libgcc_s.so.1": {
+                  "bytes": 183024,
+                  "path": "/usr/lib/x86_64-linux-gnu/libgcc_s.so.1",
+                  "sha256": "d93224d2b0dab4247598be683adca02f5cf00586f99c187579cd7e92058fb7cb"
+                },
+                "libubsan.so": {
+                  "bytes": 3423712,
+                  "path": "/usr/lib/x86_64-linux-gnu/libubsan.so.1.0.0",
+                  "sha256": "f4a999fcf8392a200e9d93fb066ddb9e89daab8cd94a62137f4506472240a2e8"
+                }
+              },
+              "sha256": "1b99826121ae6682a634e5efe09bd3e3df58ce58e0b28f849114ab5b89139c26",
+              "version": "x86_64-linux-gnu-gcc-13 (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+              "version_receipt": {
+                "argv": [
+                  "/usr/bin/x86_64-linux-gnu-gcc-13",
+                  "--version"
+                ],
+                "cwd": "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost-sanitizers/run-2dudukf8/sanitizer",
+                "elapsed_seconds": 0.0014775010000676048,
+                "exit_code": 0,
+                "stderr": {
+                  "bytes": 0,
+                  "path": "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost-sanitizers/run-2dudukf8/sanitizer/compiler-version.stderr",
+                  "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                },
+                "stdout": {
+                  "bytes": 266,
+                  "path": "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost-sanitizers/run-2dudukf8/sanitizer/compiler-version.stdout",
+                  "sha256": "ae487f55927d605284a32711e4ecf6bc3be2bcd5a9de414ace0936264b741f85"
+                },
+                "timed_out": false,
+                "timeout_seconds": 10
+              }
+            },
+            "capability_controls": {
+              "address": {
+                "exit_code": 1,
+                "passed": true
+              },
+              "clean": {
+                "exit_code": 0,
+                "passed": true
+              },
+              "undefined": {
+                "exit_code": 1,
+                "passed": true
+              }
+            },
+            "compiler": {
+              "artifact": {
+                "bytes": 5103896,
+                "path": "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost-sanitizers/run-2dudukf8/stage2-compiler/build/yavo-stage2-sanitized",
+                "sha256": "617c488bb4f440a39e9f1cf32e33e13a145f98ad8c73a8b7390cfcbc2e9ad856"
+              },
+              "cases": 1063,
+              "emissions": 313,
+              "emissions_passed": 313,
+              "json_diagnostics": {
+                "checks_passed": 8,
+                "commands": 186,
+                "formal": false,
+                "freeze": {
+                  "bytes": 14135,
+                  "path": "/home/runner/work/yavo/yavo/selfhost/tests/diagnostics50/freeze.json",
+                  "sha256": "ee3930a89003dd6c361df89b7b3803225d025925ec0d51282ad2e6110350fa9f"
+                },
+                "json_cli": {
+                  "failed": 0,
+                  "passed": 98,
+                  "total": 98
+                },
+                "oracle_negative_controls": [
+                  {
+                    "id": "wrong_end",
+                    "rejected": true
+                  },
+                  {
+                    "id": "wrong_root_hash",
+                    "rejected": true
+                  },
+                  {
+                    "id": "wrong_module_hash",
+                    "rejected": true
+                  },
+                  {
+                    "id": "wrong_source_order",
+                    "rejected": true
+                  },
+                  {
+                    "id": "wrong_count_type",
+                    "rejected": true
+                  },
+                  {
+                    "id": "extra_field",
+                    "rejected": true
+                  },
+                  {
+                    "id": "extra_diagnostic",
+                    "rejected": true
+                  },
+                  {
+                    "id": "duplicate_key",
+                    "rejected": true
+                  },
+                  {
+                    "id": "extra_stdout",
+                    "rejected": true
+                  },
+                  {
+                    "id": "invalid_utf8",
+                    "rejected": true
+                  }
+                ],
+                "oracle_positive_control": true,
+                "producer_sha256": {
+                  "candidate": "617c488bb4f440a39e9f1cf32e33e13a145f98ad8c73a8b7390cfcbc2e9ad856"
+                },
+                "resources": {
+                  "commands": 186,
+                  "commands_with_rss": 186,
+                  "max_observed_child_rss_bytes": 38797312,
+                  "scope": "wait4 waited-child RSS on POSIX; unavailable on Windows; no simultaneous tree or P50 claim"
+                },
+                "snapshot_barriers": [
+                  {
+                    "applicable": true,
+                    "driver": "candidate",
+                    "errors": [],
+                    "id": "snapshot_root_changed",
+                    "mode": "json",
+                    "mutations": [
+                      {
+                        "bytes_after": 59,
+                        "bytes_before": 49,
+                        "fifo_reader_connected_before_mutation": true,
+                        "path": "main.yv",
+                        "sha256_after": "f71cc76c9d514d85f054686eff1f1835e3edc51b79b1e6771a95e810e27b20af",
+                        "sha256_before": "0e61668c421d8c08757b1e3f67d4c4870dc15760444c629f367824dc430899e9"
+                      }
+                    ],
+                    "reader_connected": true
+                  },
+                  {
+                    "applicable": true,
+                    "driver": "candidate",
+                    "errors": [],
+                    "id": "snapshot_module_changed",
+                    "mode": "json",
+                    "mutations": [
+                      {
+                        "bytes_after": 37,
+                        "bytes_before": 42,
+                        "fifo_reader_connected_before_mutation": true,
+                        "path": "utility.yv",
+                        "sha256_after": "7ac377a69893bef739b84b874c51352c8a12400163ef2e151c1a24def0c8ca06",
+                        "sha256_before": "47b1cf05850b78008f2e4259f2b7bc90f2ad4c712517b14d8639f700a4578750"
+                      }
+                    ],
+                    "reader_connected": true
+                  },
+                  {
+                    "applicable": true,
+                    "driver": "candidate",
+                    "errors": [],
+                    "id": "snapshot_root_changed",
+                    "mode": "text",
+                    "mutations": [
+                      {
+                        "bytes_after": 59,
+                        "bytes_before": 49,
+                        "fifo_reader_connected_before_mutation": true,
+                        "path": "main.yv",
+                        "sha256_after": "f71cc76c9d514d85f054686eff1f1835e3edc51b79b1e6771a95e810e27b20af",
+                        "sha256_before": "0e61668c421d8c08757b1e3f67d4c4870dc15760444c629f367824dc430899e9"
+                      }
+                    ],
+                    "reader_connected": true
+                  },
+                  {
+                    "applicable": true,
+                    "driver": "candidate",
+                    "errors": [],
+                    "id": "snapshot_module_changed",
+                    "mode": "text",
+                    "mutations": [
+                      {
+                        "bytes_after": 37,
+                        "bytes_before": 42,
+                        "fifo_reader_connected_before_mutation": true,
+                        "path": "utility.yv",
+                        "sha256_after": "7ac377a69893bef739b84b874c51352c8a12400163ef2e151c1a24def0c8ca06",
+                        "sha256_before": "47b1cf05850b78008f2e4259f2b7bc90f2ad4c712517b14d8639f700a4578750"
+                      }
+                    ],
+                    "reader_connected": true
+                  }
+                ],
+                "source_modules": {
+                  "codegen.yv": "96c0b25194171dd500a09362d89332d6aa93ae59d40bb126287d80a317e880e2",
+                  "digest.yv": "e7c6a6a496bbdcdee401f897032ee9447f1b7f9982e23c1bf9f7e124f4cb68d7",
+                  "driver.yv": "01f543793f2bce65c2bf04aca0e463a894d1d9336feb0d96b55c335bec647464",
+                  "lexer.yv": "7b8c9e8ecf08e21a28327ba0d946a6f346b192d07db69305b29ca3f6ebc0fa9b",
+                  "main.yv": "fcf554007b4dda50dcc0d7ef3e4c57b234878ca0352161a5055fa6001a203be5",
+                  "model.yv": "a585f852e20067dcdfd42ba9bb4c1f8ed1ccca056ae4737758d2f3467e702eaf",
+                  "parser.yv": "dffd2089ddf51feca9d1088f7040436b6ff3b20cda786e4edb0f2b51ebc1a301",
+                  "runtime_source.yv": "21a5f8f7d558d7c6570b2525d4525ede1d75d64e58371b8c8589315d2a18e754",
+                  "support.yv": "12a4b08856d7b8f1203e95f2d92639a6de7c3be56d35ad964cb0f526868197ce",
+                  "types.yv": "ca9ae26aeccae15d8d19ad978af4d143f80c7805524c1336c15f7d5799baa689"
+                },
+                "status": "preliminary_passed",
+                "supplemental": {
+                  "failed": 0,
+                  "passed": 8,
+                  "total": 8
+                },
+                "supplemental_freeze": {
+                  "bytes": 1087,
+                  "path": "/home/runner/work/yavo/yavo/selfhost/tests/diagnostics50/supplemental/freeze.json",
+                  "sha256": "e58c8c5b129a12d5aec9defd4f21988f88f7346182ed7870af603b4eb744334d"
+                },
+                "text": {
+                  "failed": 0,
+                  "passed": 80,
+                  "total": 80
+                }
+              },
+              "passed": 1063,
+              "self_compilation_passed": true,
+              "stage2_c_sha256": "a463c46eff325d2d1d4681dc905e22391b41c80c2c232ed4a2c5cfc3fa5e2e80",
+              "stress": 8,
+              "stress_passed": 8
+            },
+            "flags": [
+              "-std=c17",
+              "-D_POSIX_C_SOURCE=200809L",
+              "-DYV_ALLOC_CHECK=1",
+              "-g",
+              "-O1",
+              "-fno-omit-frame-pointer",
+              "-fno-strict-aliasing",
+              "-fno-pie",
+              "-no-pie",
+              "-fsanitize=address",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-pthread"
+            ],
+            "limits": [
+              "Linux only; no TSan.",
+              "LeakSanitizer is disabled by the reusable runner; normal exits use YV_ALLOC_CHECK."
+            ],
+            "programs": {
+              "failed": 0,
+              "not_run": 0,
+              "passed": 314,
+              "total": 314
+            },
+            "sanitizer_environment": {
+              "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1:abort_on_error=0",
+              "LC_ALL": "C",
+              "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+            },
+            "source_modules": {
+              "codegen.yv": "96c0b25194171dd500a09362d89332d6aa93ae59d40bb126287d80a317e880e2",
+              "digest.yv": "e7c6a6a496bbdcdee401f897032ee9447f1b7f9982e23c1bf9f7e124f4cb68d7",
+              "driver.yv": "01f543793f2bce65c2bf04aca0e463a894d1d9336feb0d96b55c335bec647464",
+              "lexer.yv": "7b8c9e8ecf08e21a28327ba0d946a6f346b192d07db69305b29ca3f6ebc0fa9b",
+              "main.yv": "fcf554007b4dda50dcc0d7ef3e4c57b234878ca0352161a5055fa6001a203be5",
+              "model.yv": "a585f852e20067dcdfd42ba9bb4c1f8ed1ccca056ae4737758d2f3467e702eaf",
+              "parser.yv": "dffd2089ddf51feca9d1088f7040436b6ff3b20cda786e4edb0f2b51ebc1a301",
+              "runtime_source.yv": "21a5f8f7d558d7c6570b2525d4525ede1d75d64e58371b8c8589315d2a18e754",
+              "support.yv": "12a4b08856d7b8f1203e95f2d92639a6de7c3be56d35ad964cb0f526868197ce",
+              "types.yv": "ca9ae26aeccae15d8d19ad978af4d143f80c7805524c1336c15f7d5799baa689"
+            },
+            "status": "passed"
+          },
+          "source_hashing": {
+            "alloc_check": true,
+            "cases": 46,
+            "checks_passed": 4,
+            "executions": 276,
+            "expected_stdout_sha256": "56727e272514bba7a1ab83492744be5a650d4c9b5a3c5e555e70ecd1a4011ff2",
+            "failed": 0,
+            "passed": 276,
+            "producer_sha256": {
+              "stage0": "9d7093b676db39a1f10553314c2b437a7f8d1ce1bbdb79be0b1b12999c557c0e",
+              "stage1": "2c78473fea158d5dcc135a5049495d4768111999c0b1405b015b008ef9b0125a",
+              "stage2": "f638468d188c546312ae0ee8be0dd275c42e59398c8db3383bae56cf1cbdfc3c"
+            },
+            "products": 6,
+            "source_modules": {
+              "codegen.yv": "96c0b25194171dd500a09362d89332d6aa93ae59d40bb126287d80a317e880e2",
+              "digest.yv": "e7c6a6a496bbdcdee401f897032ee9447f1b7f9982e23c1bf9f7e124f4cb68d7",
+              "driver.yv": "01f543793f2bce65c2bf04aca0e463a894d1d9336feb0d96b55c335bec647464",
+              "lexer.yv": "7b8c9e8ecf08e21a28327ba0d946a6f346b192d07db69305b29ca3f6ebc0fa9b",
+              "main.yv": "fcf554007b4dda50dcc0d7ef3e4c57b234878ca0352161a5055fa6001a203be5",
+              "model.yv": "a585f852e20067dcdfd42ba9bb4c1f8ed1ccca056ae4737758d2f3467e702eaf",
+              "parser.yv": "dffd2089ddf51feca9d1088f7040436b6ff3b20cda786e4edb0f2b51ebc1a301",
+              "runtime_source.yv": "21a5f8f7d558d7c6570b2525d4525ede1d75d64e58371b8c8589315d2a18e754",
+              "support.yv": "12a4b08856d7b8f1203e95f2d92639a6de7c3be56d35ad964cb0f526868197ce",
+              "types.yv": "ca9ae26aeccae15d8d19ad978af4d143f80c7805524c1336c15f7d5799baa689"
+            },
+            "status": "passed",
+            "underlying_receipt": {
+              "bytes": 27155,
+              "path": "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost-digest/attempt-jl4bdzvf/vectors/receipt.json",
+              "sha256": "d36d487dc48ce1820a16c38dc02149d10e485ee8e0c1ee48595a225545c89f37"
+            }
+          },
+          "status": "passed",
+          "structured_diagnostics": {
+            "checks_passed": 9,
+            "commands": 372,
+            "formal": true,
+            "freeze": {
+              "bytes": 14135,
+              "path": "/home/runner/work/yavo/yavo/selfhost/tests/diagnostics50/freeze.json",
+              "sha256": "ee3930a89003dd6c361df89b7b3803225d025925ec0d51282ad2e6110350fa9f"
+            },
+            "json_cli": {
+              "failed": 0,
+              "passed": 196,
+              "total": 196
+            },
+            "oracle_negative_controls": [
+              {
+                "id": "wrong_end",
+                "rejected": true
+              },
+              {
+                "id": "wrong_root_hash",
+                "rejected": true
+              },
+              {
+                "id": "wrong_module_hash",
+                "rejected": true
+              },
+              {
+                "id": "wrong_source_order",
+                "rejected": true
+              },
+              {
+                "id": "wrong_count_type",
+                "rejected": true
+              },
+              {
+                "id": "extra_field",
+                "rejected": true
+              },
+              {
+                "id": "extra_diagnostic",
+                "rejected": true
+              },
+              {
+                "id": "duplicate_key",
+                "rejected": true
+              },
+              {
+                "id": "extra_stdout",
+                "rejected": true
+              },
+              {
+                "id": "invalid_utf8",
+                "rejected": true
+              }
+            ],
+            "oracle_positive_control": true,
+            "producer_sha256": {
+              "stage1": "2c78473fea158d5dcc135a5049495d4768111999c0b1405b015b008ef9b0125a",
+              "stage2": "f638468d188c546312ae0ee8be0dd275c42e59398c8db3383bae56cf1cbdfc3c"
+            },
+            "resources": {
+              "commands": 372,
+              "commands_with_rss": 372,
+              "max_observed_child_rss_bytes": 237780992,
+              "scope": "wait4 waited-child RSS on POSIX; unavailable on Windows; no simultaneous tree or P50 claim"
+            },
+            "snapshot_barriers": [
+              {
+                "applicable": true,
+                "driver": "stage1",
+                "errors": [],
+                "id": "snapshot_root_changed",
+                "mode": "json",
+                "mutations": [
+                  {
+                    "bytes_after": 59,
+                    "bytes_before": 49,
+                    "fifo_reader_connected_before_mutation": true,
+                    "path": "main.yv",
+                    "sha256_after": "f71cc76c9d514d85f054686eff1f1835e3edc51b79b1e6771a95e810e27b20af",
+                    "sha256_before": "0e61668c421d8c08757b1e3f67d4c4870dc15760444c629f367824dc430899e9"
+                  }
+                ],
+                "reader_connected": true
+              },
+              {
+                "applicable": true,
+                "driver": "stage1",
+                "errors": [],
+                "id": "snapshot_module_changed",
+                "mode": "json",
+                "mutations": [
+                  {
+                    "bytes_after": 37,
+                    "bytes_before": 42,
+                    "fifo_reader_connected_before_mutation": true,
+                    "path": "utility.yv",
+                    "sha256_after": "7ac377a69893bef739b84b874c51352c8a12400163ef2e151c1a24def0c8ca06",
+                    "sha256_before": "47b1cf05850b78008f2e4259f2b7bc90f2ad4c712517b14d8639f700a4578750"
+                  }
+                ],
+                "reader_connected": true
+              },
+              {
+                "applicable": true,
+                "driver": "stage2",
+                "errors": [],
+                "id": "snapshot_root_changed",
+                "mode": "json",
+                "mutations": [
+                  {
+                    "bytes_after": 59,
+                    "bytes_before": 49,
+                    "fifo_reader_connected_before_mutation": true,
+                    "path": "main.yv",
+                    "sha256_after": "f71cc76c9d514d85f054686eff1f1835e3edc51b79b1e6771a95e810e27b20af",
+                    "sha256_before": "0e61668c421d8c08757b1e3f67d4c4870dc15760444c629f367824dc430899e9"
+                  }
+                ],
+                "reader_connected": true
+              },
+              {
+                "applicable": true,
+                "driver": "stage2",
+                "errors": [],
+                "id": "snapshot_module_changed",
+                "mode": "json",
+                "mutations": [
+                  {
+                    "bytes_after": 37,
+                    "bytes_before": 42,
+                    "fifo_reader_connected_before_mutation": true,
+                    "path": "utility.yv",
+                    "sha256_after": "7ac377a69893bef739b84b874c51352c8a12400163ef2e151c1a24def0c8ca06",
+                    "sha256_before": "47b1cf05850b78008f2e4259f2b7bc90f2ad4c712517b14d8639f700a4578750"
+                  }
+                ],
+                "reader_connected": true
+              },
+              {
+                "applicable": true,
+                "driver": "stage1",
+                "errors": [],
+                "id": "snapshot_root_changed",
+                "mode": "text",
+                "mutations": [
+                  {
+                    "bytes_after": 59,
+                    "bytes_before": 49,
+                    "fifo_reader_connected_before_mutation": true,
+                    "path": "main.yv",
+                    "sha256_after": "f71cc76c9d514d85f054686eff1f1835e3edc51b79b1e6771a95e810e27b20af",
+                    "sha256_before": "0e61668c421d8c08757b1e3f67d4c4870dc15760444c629f367824dc430899e9"
+                  }
+                ],
+                "reader_connected": true
+              },
+              {
+                "applicable": true,
+                "driver": "stage1",
+                "errors": [],
+                "id": "snapshot_module_changed",
+                "mode": "text",
+                "mutations": [
+                  {
+                    "bytes_after": 37,
+                    "bytes_before": 42,
+                    "fifo_reader_connected_before_mutation": true,
+                    "path": "utility.yv",
+                    "sha256_after": "7ac377a69893bef739b84b874c51352c8a12400163ef2e151c1a24def0c8ca06",
+                    "sha256_before": "47b1cf05850b78008f2e4259f2b7bc90f2ad4c712517b14d8639f700a4578750"
+                  }
+                ],
+                "reader_connected": true
+              },
+              {
+                "applicable": true,
+                "driver": "stage2",
+                "errors": [],
+                "id": "snapshot_root_changed",
+                "mode": "text",
+                "mutations": [
+                  {
+                    "bytes_after": 59,
+                    "bytes_before": 49,
+                    "fifo_reader_connected_before_mutation": true,
+                    "path": "main.yv",
+                    "sha256_after": "f71cc76c9d514d85f054686eff1f1835e3edc51b79b1e6771a95e810e27b20af",
+                    "sha256_before": "0e61668c421d8c08757b1e3f67d4c4870dc15760444c629f367824dc430899e9"
+                  }
+                ],
+                "reader_connected": true
+              },
+              {
+                "applicable": true,
+                "driver": "stage2",
+                "errors": [],
+                "id": "snapshot_module_changed",
+                "mode": "text",
+                "mutations": [
+                  {
+                    "bytes_after": 37,
+                    "bytes_before": 42,
+                    "fifo_reader_connected_before_mutation": true,
+                    "path": "utility.yv",
+                    "sha256_after": "7ac377a69893bef739b84b874c51352c8a12400163ef2e151c1a24def0c8ca06",
+                    "sha256_before": "47b1cf05850b78008f2e4259f2b7bc90f2ad4c712517b14d8639f700a4578750"
+                  }
+                ],
+                "reader_connected": true
+              }
+            ],
+            "source_modules": {
+              "codegen.yv": "96c0b25194171dd500a09362d89332d6aa93ae59d40bb126287d80a317e880e2",
+              "digest.yv": "e7c6a6a496bbdcdee401f897032ee9447f1b7f9982e23c1bf9f7e124f4cb68d7",
+              "driver.yv": "01f543793f2bce65c2bf04aca0e463a894d1d9336feb0d96b55c335bec647464",
+              "lexer.yv": "7b8c9e8ecf08e21a28327ba0d946a6f346b192d07db69305b29ca3f6ebc0fa9b",
+              "main.yv": "fcf554007b4dda50dcc0d7ef3e4c57b234878ca0352161a5055fa6001a203be5",
+              "model.yv": "a585f852e20067dcdfd42ba9bb4c1f8ed1ccca056ae4737758d2f3467e702eaf",
+              "parser.yv": "dffd2089ddf51feca9d1088f7040436b6ff3b20cda786e4edb0f2b51ebc1a301",
+              "runtime_source.yv": "21a5f8f7d558d7c6570b2525d4525ede1d75d64e58371b8c8589315d2a18e754",
+              "support.yv": "12a4b08856d7b8f1203e95f2d92639a6de7c3be56d35ad964cb0f526868197ce",
+              "types.yv": "ca9ae26aeccae15d8d19ad978af4d143f80c7805524c1336c15f7d5799baa689"
+            },
+            "status": "passed",
+            "supplemental": {
+              "failed": 0,
+              "passed": 16,
+              "total": 16
+            },
+            "supplemental_freeze": {
+              "bytes": 1087,
+              "path": "/home/runner/work/yavo/yavo/selfhost/tests/diagnostics50/supplemental/freeze.json",
+              "sha256": "e58c8c5b129a12d5aec9defd4f21988f88f7346182ed7870af603b4eb744334d"
+            },
+            "text": {
+              "failed": 0,
+              "passed": 160,
+              "total": 160
+            }
+          },
+          "system_sanitizer": {
+            "capability_controls": 3,
+            "compiler": {
+              "bytes": 1023032,
+              "libraries": {
+                "libasan.so": {
+                  "bytes": 10924208,
+                  "path": "/usr/lib/x86_64-linux-gnu/libasan.so.8.0.0",
+                  "sha256": "8d5845bdf056b5db4cfb9fff40ad5eeea8f6da05a8ca6f5935a7d1c138ed2558"
+                },
+                "libc.so.6": {
+                  "bytes": 2129424,
+                  "path": "/usr/lib/x86_64-linux-gnu/libc.so.6",
+                  "sha256": "755a371e86cc9f564ab54f66140747700fb0a103f698f659f2060f707897e09a"
+                },
+                "libgcc_s.so.1": {
+                  "bytes": 183024,
+                  "path": "/usr/lib/x86_64-linux-gnu/libgcc_s.so.1",
+                  "sha256": "d93224d2b0dab4247598be683adca02f5cf00586f99c187579cd7e92058fb7cb"
+                },
+                "libubsan.so": {
+                  "bytes": 3423712,
+                  "path": "/usr/lib/x86_64-linux-gnu/libubsan.so.1.0.0",
+                  "sha256": "f4a999fcf8392a200e9d93fb066ddb9e89daab8cd94a62137f4506472240a2e8"
+                }
+              },
+              "path": "/usr/bin/x86_64-linux-gnu-gcc-13",
+              "sha256": "1b99826121ae6682a634e5efe09bd3e3df58ce58e0b28f849114ab5b89139c26",
+              "version": "x86_64-linux-gnu-gcc-13 (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+              "version_command": {
+                "argv": [
+                  "/usr/bin/x86_64-linux-gnu-gcc-13",
+                  "--version"
+                ],
+                "cwd": "/home/runner/work/yavo/yavo/compiler/target/ci/system-sanitize/attempt-lio3bcf3",
+                "elapsed_seconds": 0.0012739969999984169,
+                "environment": {
+                  "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1:abort_on_error=0",
+                  "LC_ALL": "C",
+                  "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+                  "YAVO_NO_CACHE": "1"
+                },
+                "exit_code": 0,
+                "launch_error": null,
+                "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+                "peak_process_memory_bytes": 20963328,
+                "stderr": {
+                  "bytes": 0,
+                  "path": "/home/runner/work/yavo/yavo/compiler/target/ci/system-sanitize/attempt-lio3bcf3/commands/gcc-version/stderr.bin",
+                  "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                },
+                "stdin": {
+                  "kind": "devnull"
+                },
+                "stdout": {
+                  "bytes": 266,
+                  "path": "/home/runner/work/yavo/yavo/compiler/target/ci/system-sanitize/attempt-lio3bcf3/commands/gcc-version/stdout.bin",
+                  "sha256": "ae487f55927d605284a32711e4ecf6bc3be2bcd5a9de414ace0936264b741f85"
+                },
+                "timed_out": false
+              }
+            },
+            "direct_probe_entries": 1,
+            "frontend_entries": 14,
+            "instrumented_entries": 15,
+            "limits": [
+              "ASan+UBSan only; no TSan or Windows/macOS sanitizer claim.",
+              "LeakSanitizer disabled; generated programs and direct probe also use YV_ALLOC_CHECK.",
+              "Native malloc buffers are covered for invalid access, not by YV_ALLOC_CHECK leak counting."
+            ],
+            "runtime_process_calls": {
+              "invalid_arguments": 1,
+              "launch_failure": 33,
+              "normal_exit": 67,
+              "note": "Includes 32 each of exit 37/127 and launch failure; stdout/stderr routing, argv and closed stdout.",
+              "signal_exit": 1
+            },
+            "stage2_sha256": "f638468d188c546312ae0ee8be0dd275c42e59398c8db3383bae56cf1cbdfc3c",
+            "status": "passed"
+          },
+          "verified_member_count": 4893,
+          "verified_receipts": {
+            "csv-check.tar.gz:csv-check/receipt.json": {
+              "bytes": 2049965,
+              "file": "/data1/workspace/github/workspace/yavo/compiler/target/batch50/ci-final-linux/csv-check-receipt.json",
+              "member": "csv-check.tar.gz:csv-check/receipt.json",
+              "sha256": "67f7be66de09c9cffcf2e66a05f3975376066031b522752383d9949bcd66e5c0"
+            },
+            "dep-index.tar.gz:dep-index/receipt.json": {
+              "bytes": 1894854,
+              "file": "/data1/workspace/github/workspace/yavo/compiler/target/batch50/ci-final-linux/dep-index-receipt.json",
+              "member": "dep-index.tar.gz:dep-index/receipt.json",
+              "sha256": "afc2a997f2f3f0a77439fcabf7540b1da38f37a7c70fced6799793602f89c99b"
+            },
+            "results.json": {
+              "bytes": 8061,
+              "file": "/data1/workspace/github/workspace/yavo/compiler/target/batch50/ci-final-linux/results.json",
+              "member": "results.json",
+              "sha256": "d210dbd3849f960207dacabba99d054584acec1fa1923de015507f935d7a678a"
+            },
+            "selfhost-diagnostics.tar.gz:selfhost-diagnostics/receipt.json": {
+              "bytes": 2608111,
+              "file": "/data1/workspace/github/workspace/yavo/compiler/target/batch50/ci-final-linux/selfhost-diagnostics-receipt.json",
+              "member": "selfhost-diagnostics.tar.gz:selfhost-diagnostics/receipt.json",
+              "sha256": "eb99bbfe15dfb3997a7d85c32157113e5abef9eefb9d6674642e12ab1d174a27"
+            },
+            "selfhost-digest.tar.gz:selfhost-digest/attempt-jl4bdzvf/vectors/receipt.json": {
+              "bytes": 27155,
+              "member": "selfhost-digest.tar.gz:selfhost-digest/attempt-jl4bdzvf/vectors/receipt.json",
+              "sha256": "d36d487dc48ce1820a16c38dc02149d10e485ee8e0c1ee48595a225545c89f37"
+            },
+            "selfhost-digest.tar.gz:selfhost-digest/receipt.json": {
+              "bytes": 27499,
+              "file": "/data1/workspace/github/workspace/yavo/compiler/target/batch50/ci-final-linux/selfhost-digest-receipt.json",
+              "member": "selfhost-digest.tar.gz:selfhost-digest/receipt.json",
+              "sha256": "d80bc830f2234c606060ec134d57a85315b6ad46111d6452b85d03efab9d9323"
+            },
+            "selfhost-driver.tar.gz:selfhost-driver/receipt.json": {
+              "bytes": 1085085,
+              "file": "/data1/workspace/github/workspace/yavo/compiler/target/batch50/ci-final-linux/selfhost-driver-receipt.json",
+              "member": "selfhost-driver.tar.gz:selfhost-driver/receipt.json",
+              "sha256": "a5d7152b167c46db4d45236b5a656fdf5dbb8f2e39cc5b0cf4c938232c180102"
+            },
+            "selfhost-sanitizers.tar.gz:selfhost-sanitizers/receipt.json": {
+              "bytes": 3808661,
+              "file": "/data1/workspace/github/workspace/yavo/compiler/target/batch50/ci-final-linux/selfhost-sanitizers-receipt.json",
+              "member": "selfhost-sanitizers.tar.gz:selfhost-sanitizers/receipt.json",
+              "sha256": "72d45211e75706aca57c50a498171220b3d40d5444d33795ec3002baa66cd8e7"
+            },
+            "selfhost-sanitizers.tar.gz:selfhost-sanitizers/run-2dudukf8/stage2-compiler/json-diagnostics/receipt.json": {
+              "bytes": 1476928,
+              "member": "selfhost-sanitizers.tar.gz:selfhost-sanitizers/run-2dudukf8/stage2-compiler/json-diagnostics/receipt.json",
+              "sha256": "904a15a3e49f2ab36155c11d9aca2b638ef94564d4ed8e0a6278db68eb577d0b"
+            },
+            "selfhost-sanitizers.tar.gz:selfhost-sanitizers/run-2dudukf8/stage2-compiler/receipt.json": {
+              "bytes": 1802785,
+              "member": "selfhost-sanitizers.tar.gz:selfhost-sanitizers/run-2dudukf8/stage2-compiler/receipt.json",
+              "sha256": "805e906feeca94100c379d19a717dcb5fed3b8d3607182f376965cc6bda8e5f5"
+            },
+            "selfhost/receipt.json": {
+              "bytes": 15799234,
+              "file": "/data1/workspace/github/workspace/yavo/compiler/target/batch50/ci-final-linux/bootstrap-receipt.json",
+              "member": "selfhost/receipt.json",
+              "sha256": "c76798924d40d1397ce8bab738391205899a40fb36249a0eb337efd360b693df"
+            },
+            "system-sanitize.tar.gz:system-sanitize/receipt.json": {
+              "bytes": 118975,
+              "file": "/data1/workspace/github/workspace/yavo/compiler/target/batch50/ci-final-linux/system-sanitize-receipt.json",
+              "member": "system-sanitize.tar.gz:system-sanitize/receipt.json",
+              "sha256": "2436d89f27d675691dcf681efe3ed4569df23f03d69bce658184bd793fe113f1"
+            },
+            "test-summary.tar.gz:test-summary/receipt.json": {
+              "bytes": 685816,
+              "file": "/data1/workspace/github/workspace/yavo/compiler/target/batch50/ci-final-linux/test-summary-receipt.json",
+              "member": "test-summary.tar.gz:test-summary/receipt.json",
+              "sha256": "a624e447ea2bcd712cc0bb80f612ff80f8be65b76bb23b9905d79326baeab11b"
+            }
+          }
+        },
+        "macos": {
+          "applications": {
+            "csv-check": {
+              "applicable_scenarios": 138,
+              "cleanup_executions": 138,
+              "failed": 0,
+              "native_executions": 414,
+              "normal_executions": 276,
+              "passed": 414,
+              "required_checks_passed": 9,
+              "sanitizers": {
+                "executions": 0,
+                "mode": "off",
+                "status": "not_applicable"
+              }
+            },
+            "dep-index": {
+              "applicable_scenarios": 112,
+              "cleanup_executions": 112,
+              "failed": 0,
+              "native_executions": 336,
+              "normal_executions": 224,
+              "passed": 336,
+              "required_checks_passed": 9,
+              "sanitizers": {
+                "executions": 0,
+                "mode": "off",
+                "status": "not_applicable"
+              }
+            },
+            "test-summary": {
+              "applicable_scenarios": 71,
+              "cleanup_executions": 71,
+              "failed": 0,
+              "native_executions": 213,
+              "normal_executions": 142,
+              "passed": 213,
+              "required_checks_passed": 4
+            }
+          },
+          "artifact": {
+            "archive_safety": {
+              "csv-check.tar.gz": {
+                "internal_hardlinks": 0,
+                "members": 2638,
+                "tree_extracted": false
+              },
+              "dep-index.tar.gz": {
+                "internal_hardlinks": 0,
+                "members": 2175,
+                "tree_extracted": false
+              },
+              "selfhost-diagnostics.tar.gz": {
+                "internal_hardlinks": 0,
+                "members": 4021,
+                "tree_extracted": false
+              },
+              "selfhost-digest.tar.gz": {
+                "internal_hardlinks": 0,
+                "members": 54,
+                "tree_extracted": false
+              },
+              "selfhost-driver.tar.gz": {
+                "internal_hardlinks": 4,
+                "members": 2073,
+                "tree_extracted": false
+              },
+              "test-summary.tar.gz": {
+                "internal_hardlinks": 0,
+                "members": 1777,
+                "tree_extracted": false
+              },
+              "zip": {
+                "members": 33616,
+                "tree_extracted": false
+              }
+            },
+            "download_receipt_sha256": "6702ecc5b691f8b6220ca8763248cd08dd65ca8db4a65be8c33845d810734de1",
+            "github_digest_verified": true,
+            "head_sha": "6e1d22f8b5085e4dab1d6c57f4eb77d4fd324a99",
+            "id": 15194029898,
+            "name": "native-macos-15-6e1d22f8b5085e4dab1d6c57f4eb77d4fd324a99",
+            "run_id": 45991816609,
+            "zip_bytes": 224740590,
+            "zip_sha256": "4ae6c744dd78ba414724dc062f9ed2c46f4bbcc9adaf604582177816942ba7e3"
+          },
+          "bootstrap": {
+            "applications": {
+              "atomic_ledger_application": {
+                "applicable": 32,
+                "executions": 128
+              },
+              "csv_check_application": {
+                "applicable": 138,
+                "cleanup_executions": 276,
+                "executions": 828,
+                "ordinary_executions": 552
+              },
+              "dep_index_application": {
+                "applicable": 112,
+                "cleanup_executions": 224,
+                "executions": 672,
+                "ordinary_executions": 448
+              },
+              "sliding_median_application": {
+                "applicable": 28,
+                "executions": 112
+              },
+              "test_summary_application": {
+                "applicable": 71
+              },
+              "text_diff_application": {
+                "applicable": 35,
+                "executions": 140
+              },
+              "unit_conversion_application": {
+                "applicable": 20
+              }
+            },
+            "artifacts": {
+              "stage2": {
+                "binary": {
+                  "bytes": 634224,
+                  "member": "selfhost/run-uzfj6vkb/stages/stage2/yavo-selfhost",
+                  "sha256": "b86c39cd2042f25def0889cb9f8d920236a277f9c685b5a6aba76152ef477d17"
+                },
+                "generated_c": {
+                  "bytes": 1683919,
+                  "member": "selfhost/run-uzfj6vkb/stages/stage2/yavo-selfhost.c",
+                  "sha256": "7af458bc5d710794261e4b374cc6b9bd8ddf9a558e2781990b3cb22526ae3926"
+                }
+              },
+              "stage3": {
+                "binary": {
+                  "bytes": 634224,
+                  "member": "selfhost/run-uzfj6vkb/stages/stage3/yavo-selfhost",
+                  "sha256": "b86c39cd2042f25def0889cb9f8d920236a277f9c685b5a6aba76152ef477d17"
+                },
+                "generated_c": {
+                  "bytes": 1683919,
+                  "member": "selfhost/run-uzfj6vkb/stages/stage3/yavo-selfhost.c",
+                  "sha256": "7af458bc5d710794261e4b374cc6b9bd8ddf9a558e2781990b3cb22526ae3926"
+                }
+              }
+            },
+            "binary_hashes_identical": true,
+            "c_byte_identical": true,
+            "cases": 1063,
+            "checks": 20,
+            "checks_passed": 20,
+            "failed": 0,
+            "kind_counts": {
+              "panic": 34,
+              "reject": 571,
+              "run": 279,
+              "shared_unsupported": 38,
+              "unsupported": 141
+            },
+            "passed": 1063,
+            "skipped": 0,
+            "skipped_checks": [],
+            "source_modules": 10,
+            "stage0_sha256": "03c74be4219bfd92141b08f678e2d944c3d7773549486c932f147cea910847b8"
+          },
+          "ordinary_driver": {
+            "applicable_per_driver": 57,
+            "checks_passed": 9,
+            "failed": 0,
+            "passed": 114,
+            "primary_cases": 55,
+            "rebuilt_artifacts": {
+              "rebuilt-fixed-point.c": {
+                "bytes": 1683919,
+                "member": "selfhost-driver.tar.gz:selfhost-driver/attempt-d1ud_2nw/ordinary self build 自举/rebuilt-fixed-point.c",
+                "sha256": "7af458bc5d710794261e4b374cc6b9bd8ddf9a558e2781990b3cb22526ae3926"
+              },
+              "rebuilt-selfhost": {
+                "bytes": 634224,
+                "member": "selfhost-driver.tar.gz:selfhost-driver/attempt-d1ud_2nw/ordinary self build 自举/rebuilt-selfhost",
+                "sha256": "8b7702f1c6862b06311127347628eda740bfee4a8635a8f91dfbb79c025ef144"
+              }
+            },
+            "rebuilt_binary_equals_bootstrap_stage2": false,
+            "resources": {
+              "commands": 133,
+              "commands_with_rss": 133,
+              "max_observed_child_rss_bytes": 313638912,
+              "scope": "wait4 waited-child RSS on POSIX; not simultaneous process-tree RSS; no P50 or token/cost claim"
+            },
+            "scenarios": 114,
+            "supplemental_cases": 2
+          },
+          "platform": "macos",
+          "rust": {
+            "host": {
+              "machine": "arm64",
+              "platform": "macOS-15.8.2-arm64-arm-64bit-Mach-O"
+            },
+            "scope": "selected-native",
+            "scope_description": "Native compiler unit tests plus p0, alloc_check, arena, modules, index_assignment, mutref_returns, collections, fix, runtime_io_concurrency, stdlib_io, fs_create_new, selfhost_blockers, system; excludes platform-limited frozen conformance",
+            "suites": {
+              "debug": {
+                "groups": 14,
+                "log_sha256": "6cfe5c8aadd5fca3932dadafe6db71d3990a96306b60ae9393c0b1b2ae728e2b",
+                "selection": [
+                  "--bin",
+                  "yavo",
+                  "--test",
+                  "p0",
+                  "--test",
+                  "alloc_check",
+                  "--test",
+                  "arena",
+                  "--test",
+                  "modules",
+                  "--test",
+                  "index_assignment",
+                  "--test",
+                  "mutref_returns",
+                  "--test",
+                  "collections",
+                  "--test",
+                  "fix",
+                  "--test",
+                  "runtime_io_concurrency",
+                  "--test",
+                  "stdlib_io",
+                  "--test",
+                  "fs_create_new",
+                  "--test",
+                  "selfhost_blockers",
+                  "--test",
+                  "system"
+                ],
+                "totals": {
+                  "failed": 0,
+                  "filtered_out": 0,
+                  "ignored": 1,
+                  "measured": 0,
+                  "passed": 90
+                }
+              },
+              "release": {
+                "groups": 14,
+                "log_sha256": "742565fc2a25da29772b35c09e565e1abf721e8347b0fa5b1825063897430db4",
+                "selection": [
+                  "--bin",
+                  "yavo",
+                  "--test",
+                  "p0",
+                  "--test",
+                  "alloc_check",
+                  "--test",
+                  "arena",
+                  "--test",
+                  "modules",
+                  "--test",
+                  "index_assignment",
+                  "--test",
+                  "mutref_returns",
+                  "--test",
+                  "collections",
+                  "--test",
+                  "fix",
+                  "--test",
+                  "runtime_io_concurrency",
+                  "--test",
+                  "stdlib_io",
+                  "--test",
+                  "fs_create_new",
+                  "--test",
+                  "selfhost_blockers",
+                  "--test",
+                  "system"
+                ],
+                "totals": {
+                  "failed": 0,
+                  "filtered_out": 0,
+                  "ignored": 1,
+                  "measured": 0,
+                  "passed": 90
+                }
+              }
+            }
+          },
+          "source_hashing": {
+            "alloc_check": true,
+            "cases": 46,
+            "checks_passed": 4,
+            "executions": 276,
+            "expected_stdout_sha256": "56727e272514bba7a1ab83492744be5a650d4c9b5a3c5e555e70ecd1a4011ff2",
+            "failed": 0,
+            "passed": 276,
+            "producer_sha256": {
+              "stage0": "03c74be4219bfd92141b08f678e2d944c3d7773549486c932f147cea910847b8",
+              "stage1": "d333dda3c9ec40536acc03c4ef955edb159d1ba04d09413830d7a977ba1be81f",
+              "stage2": "b86c39cd2042f25def0889cb9f8d920236a277f9c685b5a6aba76152ef477d17"
+            },
+            "products": 6,
+            "source_modules": {
+              "codegen.yv": "96c0b25194171dd500a09362d89332d6aa93ae59d40bb126287d80a317e880e2",
+              "digest.yv": "e7c6a6a496bbdcdee401f897032ee9447f1b7f9982e23c1bf9f7e124f4cb68d7",
+              "driver.yv": "01f543793f2bce65c2bf04aca0e463a894d1d9336feb0d96b55c335bec647464",
+              "lexer.yv": "7b8c9e8ecf08e21a28327ba0d946a6f346b192d07db69305b29ca3f6ebc0fa9b",
+              "main.yv": "fcf554007b4dda50dcc0d7ef3e4c57b234878ca0352161a5055fa6001a203be5",
+              "model.yv": "a585f852e20067dcdfd42ba9bb4c1f8ed1ccca056ae4737758d2f3467e702eaf",
+              "parser.yv": "dffd2089ddf51feca9d1088f7040436b6ff3b20cda786e4edb0f2b51ebc1a301",
+              "runtime_source.yv": "21a5f8f7d558d7c6570b2525d4525ede1d75d64e58371b8c8589315d2a18e754",
+              "support.yv": "12a4b08856d7b8f1203e95f2d92639a6de7c3be56d35ad964cb0f526868197ce",
+              "types.yv": "ca9ae26aeccae15d8d19ad978af4d143f80c7805524c1336c15f7d5799baa689"
+            },
+            "status": "passed",
+            "underlying_receipt": {
+              "bytes": 27263,
+              "path": "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost-digest/attempt-uv7_snpr/vectors/receipt.json",
+              "sha256": "d5beb8b9e5bcf04141b090f96989f1afd4328b390f39beed48e0c1e2b64e6675"
+            }
+          },
+          "status": "passed",
+          "structured_diagnostics": {
+            "checks_passed": 9,
+            "commands": 372,
+            "formal": true,
+            "freeze": {
+              "bytes": 14135,
+              "path": "/Users/runner/work/yavo/yavo/selfhost/tests/diagnostics50/freeze.json",
+              "sha256": "ee3930a89003dd6c361df89b7b3803225d025925ec0d51282ad2e6110350fa9f"
+            },
+            "json_cli": {
+              "failed": 0,
+              "passed": 196,
+              "total": 196
+            },
+            "oracle_negative_controls": [
+              {
+                "id": "wrong_end",
+                "rejected": true
+              },
+              {
+                "id": "wrong_root_hash",
+                "rejected": true
+              },
+              {
+                "id": "wrong_module_hash",
+                "rejected": true
+              },
+              {
+                "id": "wrong_source_order",
+                "rejected": true
+              },
+              {
+                "id": "wrong_count_type",
+                "rejected": true
+              },
+              {
+                "id": "extra_field",
+                "rejected": true
+              },
+              {
+                "id": "extra_diagnostic",
+                "rejected": true
+              },
+              {
+                "id": "duplicate_key",
+                "rejected": true
+              },
+              {
+                "id": "extra_stdout",
+                "rejected": true
+              },
+              {
+                "id": "invalid_utf8",
+                "rejected": true
+              }
+            ],
+            "oracle_positive_control": true,
+            "producer_sha256": {
+              "stage1": "d333dda3c9ec40536acc03c4ef955edb159d1ba04d09413830d7a977ba1be81f",
+              "stage2": "b86c39cd2042f25def0889cb9f8d920236a277f9c685b5a6aba76152ef477d17"
+            },
+            "resources": {
+              "commands": 372,
+              "commands_with_rss": 372,
+              "max_observed_child_rss_bytes": 1884160,
+              "scope": "wait4 waited-child RSS on POSIX; unavailable on Windows; no simultaneous tree or P50 claim"
+            },
+            "snapshot_barriers": [
+              {
+                "applicable": true,
+                "driver": "stage1",
+                "errors": [],
+                "id": "snapshot_root_changed",
+                "mode": "json",
+                "mutations": [
+                  {
+                    "bytes_after": 59,
+                    "bytes_before": 49,
+                    "fifo_reader_connected_before_mutation": true,
+                    "path": "main.yv",
+                    "sha256_after": "f71cc76c9d514d85f054686eff1f1835e3edc51b79b1e6771a95e810e27b20af",
+                    "sha256_before": "0e61668c421d8c08757b1e3f67d4c4870dc15760444c629f367824dc430899e9"
+                  }
+                ],
+                "reader_connected": true
+              },
+              {
+                "applicable": true,
+                "driver": "stage1",
+                "errors": [],
+                "id": "snapshot_module_changed",
+                "mode": "json",
+                "mutations": [
+                  {
+                    "bytes_after": 37,
+                    "bytes_before": 42,
+                    "fifo_reader_connected_before_mutation": true,
+                    "path": "utility.yv",
+                    "sha256_after": "7ac377a69893bef739b84b874c51352c8a12400163ef2e151c1a24def0c8ca06",
+                    "sha256_before": "47b1cf05850b78008f2e4259f2b7bc90f2ad4c712517b14d8639f700a4578750"
+                  }
+                ],
+                "reader_connected": true
+              },
+              {
+                "applicable": true,
+                "driver": "stage2",
+                "errors": [],
+                "id": "snapshot_root_changed",
+                "mode": "json",
+                "mutations": [
+                  {
+                    "bytes_after": 59,
+                    "bytes_before": 49,
+                    "fifo_reader_connected_before_mutation": true,
+                    "path": "main.yv",
+                    "sha256_after": "f71cc76c9d514d85f054686eff1f1835e3edc51b79b1e6771a95e810e27b20af",
+                    "sha256_before": "0e61668c421d8c08757b1e3f67d4c4870dc15760444c629f367824dc430899e9"
+                  }
+                ],
+                "reader_connected": true
+              },
+              {
+                "applicable": true,
+                "driver": "stage2",
+                "errors": [],
+                "id": "snapshot_module_changed",
+                "mode": "json",
+                "mutations": [
+                  {
+                    "bytes_after": 37,
+                    "bytes_before": 42,
+                    "fifo_reader_connected_before_mutation": true,
+                    "path": "utility.yv",
+                    "sha256_after": "7ac377a69893bef739b84b874c51352c8a12400163ef2e151c1a24def0c8ca06",
+                    "sha256_before": "47b1cf05850b78008f2e4259f2b7bc90f2ad4c712517b14d8639f700a4578750"
+                  }
+                ],
+                "reader_connected": true
+              },
+              {
+                "applicable": true,
+                "driver": "stage1",
+                "errors": [],
+                "id": "snapshot_root_changed",
+                "mode": "text",
+                "mutations": [
+                  {
+                    "bytes_after": 59,
+                    "bytes_before": 49,
+                    "fifo_reader_connected_before_mutation": true,
+                    "path": "main.yv",
+                    "sha256_after": "f71cc76c9d514d85f054686eff1f1835e3edc51b79b1e6771a95e810e27b20af",
+                    "sha256_before": "0e61668c421d8c08757b1e3f67d4c4870dc15760444c629f367824dc430899e9"
+                  }
+                ],
+                "reader_connected": true
+              },
+              {
+                "applicable": true,
+                "driver": "stage1",
+                "errors": [],
+                "id": "snapshot_module_changed",
+                "mode": "text",
+                "mutations": [
+                  {
+                    "bytes_after": 37,
+                    "bytes_before": 42,
+                    "fifo_reader_connected_before_mutation": true,
+                    "path": "utility.yv",
+                    "sha256_after": "7ac377a69893bef739b84b874c51352c8a12400163ef2e151c1a24def0c8ca06",
+                    "sha256_before": "47b1cf05850b78008f2e4259f2b7bc90f2ad4c712517b14d8639f700a4578750"
+                  }
+                ],
+                "reader_connected": true
+              },
+              {
+                "applicable": true,
+                "driver": "stage2",
+                "errors": [],
+                "id": "snapshot_root_changed",
+                "mode": "text",
+                "mutations": [
+                  {
+                    "bytes_after": 59,
+                    "bytes_before": 49,
+                    "fifo_reader_connected_before_mutation": true,
+                    "path": "main.yv",
+                    "sha256_after": "f71cc76c9d514d85f054686eff1f1835e3edc51b79b1e6771a95e810e27b20af",
+                    "sha256_before": "0e61668c421d8c08757b1e3f67d4c4870dc15760444c629f367824dc430899e9"
+                  }
+                ],
+                "reader_connected": true
+              },
+              {
+                "applicable": true,
+                "driver": "stage2",
+                "errors": [],
+                "id": "snapshot_module_changed",
+                "mode": "text",
+                "mutations": [
+                  {
+                    "bytes_after": 37,
+                    "bytes_before": 42,
+                    "fifo_reader_connected_before_mutation": true,
+                    "path": "utility.yv",
+                    "sha256_after": "7ac377a69893bef739b84b874c51352c8a12400163ef2e151c1a24def0c8ca06",
+                    "sha256_before": "47b1cf05850b78008f2e4259f2b7bc90f2ad4c712517b14d8639f700a4578750"
+                  }
+                ],
+                "reader_connected": true
+              }
+            ],
+            "source_modules": {
+              "codegen.yv": "96c0b25194171dd500a09362d89332d6aa93ae59d40bb126287d80a317e880e2",
+              "digest.yv": "e7c6a6a496bbdcdee401f897032ee9447f1b7f9982e23c1bf9f7e124f4cb68d7",
+              "driver.yv": "01f543793f2bce65c2bf04aca0e463a894d1d9336feb0d96b55c335bec647464",
+              "lexer.yv": "7b8c9e8ecf08e21a28327ba0d946a6f346b192d07db69305b29ca3f6ebc0fa9b",
+              "main.yv": "fcf554007b4dda50dcc0d7ef3e4c57b234878ca0352161a5055fa6001a203be5",
+              "model.yv": "a585f852e20067dcdfd42ba9bb4c1f8ed1ccca056ae4737758d2f3467e702eaf",
+              "parser.yv": "dffd2089ddf51feca9d1088f7040436b6ff3b20cda786e4edb0f2b51ebc1a301",
+              "runtime_source.yv": "21a5f8f7d558d7c6570b2525d4525ede1d75d64e58371b8c8589315d2a18e754",
+              "support.yv": "12a4b08856d7b8f1203e95f2d92639a6de7c3be56d35ad964cb0f526868197ce",
+              "types.yv": "ca9ae26aeccae15d8d19ad978af4d143f80c7805524c1336c15f7d5799baa689"
+            },
+            "status": "passed",
+            "supplemental": {
+              "failed": 0,
+              "passed": 16,
+              "total": 16
+            },
+            "supplemental_freeze": {
+              "bytes": 1087,
+              "path": "/Users/runner/work/yavo/yavo/selfhost/tests/diagnostics50/supplemental/freeze.json",
+              "sha256": "e58c8c5b129a12d5aec9defd4f21988f88f7346182ed7870af603b4eb744334d"
+            },
+            "text": {
+              "failed": 0,
+              "passed": 160,
+              "total": 160
+            }
+          },
+          "verified_member_count": 2019,
+          "verified_receipts": {
+            "csv-check.tar.gz:csv-check/receipt.json": {
+              "bytes": 1348265,
+              "file": "/data1/workspace/github/workspace/yavo/compiler/target/batch50/ci-final-macos/csv-check-receipt.json",
+              "member": "csv-check.tar.gz:csv-check/receipt.json",
+              "sha256": "c3810ac5007d502299bc11077570537e0c794e8d8f58847bc08a026a64e174d5"
+            },
+            "dep-index.tar.gz:dep-index/receipt.json": {
+              "bytes": 1234473,
+              "file": "/data1/workspace/github/workspace/yavo/compiler/target/batch50/ci-final-macos/dep-index-receipt.json",
+              "member": "dep-index.tar.gz:dep-index/receipt.json",
+              "sha256": "c6e1c2a74ea68a5e490b489022f711b95a8b402d9ec8029a069c9f664ed5cf99"
+            },
+            "results.json": {
+              "bytes": 9872,
+              "file": "/data1/workspace/github/workspace/yavo/compiler/target/batch50/ci-final-macos/results.json",
+              "member": "results.json",
+              "sha256": "ffbd3749ba4404a8c80897ed79f7c8d6091436d424b86030c767795c075289d1"
+            },
+            "selfhost-diagnostics.tar.gz:selfhost-diagnostics/receipt.json": {
+              "bytes": 2600148,
+              "file": "/data1/workspace/github/workspace/yavo/compiler/target/batch50/ci-final-macos/selfhost-diagnostics-receipt.json",
+              "member": "selfhost-diagnostics.tar.gz:selfhost-diagnostics/receipt.json",
+              "sha256": "36c38b591dd455320df4b1a75b804158f05891d0e8523c239f89d7f76640efbb"
+            },
+            "selfhost-digest.tar.gz:selfhost-digest/attempt-uv7_snpr/vectors/receipt.json": {
+              "bytes": 27263,
+              "member": "selfhost-digest.tar.gz:selfhost-digest/attempt-uv7_snpr/vectors/receipt.json",
+              "sha256": "d5beb8b9e5bcf04141b090f96989f1afd4328b390f39beed48e0c1e2b64e6675"
+            },
+            "selfhost-digest.tar.gz:selfhost-digest/receipt.json": {
+              "bytes": 27711,
+              "file": "/data1/workspace/github/workspace/yavo/compiler/target/batch50/ci-final-macos/selfhost-digest-receipt.json",
+              "member": "selfhost-digest.tar.gz:selfhost-digest/receipt.json",
+              "sha256": "0f352e9521aa7840726aff1c169ca16ffb10e8407708c2b61d42ba303eac79c8"
+            },
+            "selfhost-driver.tar.gz:selfhost-driver/receipt.json": {
+              "bytes": 1084350,
+              "file": "/data1/workspace/github/workspace/yavo/compiler/target/batch50/ci-final-macos/selfhost-driver-receipt.json",
+              "member": "selfhost-driver.tar.gz:selfhost-driver/receipt.json",
+              "sha256": "aeee064a29bae6bfd82dd722cd92f6c52cc9fd14c5bb98f58182821913ab330e"
+            },
+            "selfhost/receipt.json": {
+              "bytes": 16834579,
+              "file": "/data1/workspace/github/workspace/yavo/compiler/target/batch50/ci-final-macos/bootstrap-receipt.json",
+              "member": "selfhost/receipt.json",
+              "sha256": "988e5a50ca18d6e4f0a950e738cabedfc405dfb8a7929cd7cce2f57dbeb98982"
+            },
+            "test-summary.tar.gz:test-summary/receipt.json": {
+              "bytes": 688204,
+              "file": "/data1/workspace/github/workspace/yavo/compiler/target/batch50/ci-final-macos/test-summary-receipt.json",
+              "member": "test-summary.tar.gz:test-summary/receipt.json",
+              "sha256": "f9daf9645fa8a10ec63923b6268633dafd6670449bf480efaa71ea58652b8dda"
+            }
+          }
+        },
+        "windows": {
+          "applications": {
+            "csv-check": {
+              "applicable_scenarios": 137,
+              "cleanup_executions": 137,
+              "failed": 0,
+              "native_executions": 411,
+              "normal_executions": 274,
+              "passed": 411,
+              "required_checks_passed": 9,
+              "sanitizers": {
+                "executions": 0,
+                "mode": "off",
+                "status": "not_applicable"
+              }
+            },
+            "dep-index": {
+              "applicable_scenarios": 107,
+              "cleanup_executions": 107,
+              "failed": 0,
+              "native_executions": 321,
+              "normal_executions": 214,
+              "passed": 321,
+              "required_checks_passed": 9,
+              "sanitizers": {
+                "executions": 0,
+                "mode": "off",
+                "status": "not_applicable"
+              }
+            },
+            "test-summary": {
+              "applicable_scenarios": 71,
+              "cleanup_executions": 71,
+              "failed": 0,
+              "native_executions": 213,
+              "normal_executions": 142,
+              "passed": 213,
+              "required_checks_passed": 4
+            }
+          },
+          "artifact": {
+            "archive_safety": {
+              "csv-check.tar.gz": {
+                "internal_hardlinks": 0,
+                "members": 2621,
+                "tree_extracted": false
+              },
+              "dep-index.tar.gz": {
+                "internal_hardlinks": 0,
+                "members": 2086,
+                "tree_extracted": false
+              },
+              "selfhost-diagnostics.tar.gz": {
+                "internal_hardlinks": 0,
+                "members": 3841,
+                "tree_extracted": false
+              },
+              "selfhost-digest.tar.gz": {
+                "internal_hardlinks": 0,
+                "members": 57,
+                "tree_extracted": false
+              },
+              "selfhost-driver.tar.gz": {
+                "internal_hardlinks": 4,
+                "members": 1964,
+                "tree_extracted": false
+              },
+              "test-summary.tar.gz": {
+                "internal_hardlinks": 0,
+                "members": 1781,
+                "tree_extracted": false
+              },
+              "zip": {
+                "members": 34120,
+                "tree_extracted": false
+              }
+            },
+            "download_receipt_sha256": "56ef46031a8b2a83ce975d55bc057416db6efde9db1df415fb7496bc1d5de1c2",
+            "github_digest_verified": true,
+            "head_sha": "6e1d22f8b5085e4dab1d6c57f4eb77d4fd324a99",
+            "id": 15197489385,
+            "name": "native-windows-2025-6e1d22f8b5085e4dab1d6c57f4eb77d4fd324a99",
+            "run_id": 45991816609,
+            "zip_bytes": 711940570,
+            "zip_sha256": "ff603ec6433037fd3af0d80400780eb4a1e69cdfefe28304ea090664604ab730"
+          },
+          "bootstrap": {
+            "applications": {
+              "atomic_ledger_application": {
+                "applicable": 32,
+                "executions": 128
+              },
+              "csv_check_application": {
+                "applicable": 137,
+                "cleanup_executions": 274,
+                "executions": 822,
+                "ordinary_executions": 548
+              },
+              "dep_index_application": {
+                "applicable": 107,
+                "cleanup_executions": 214,
+                "executions": 642,
+                "ordinary_executions": 428
+              },
+              "sliding_median_application": {
+                "applicable": 28,
+                "executions": 112
+              },
+              "test_summary_application": {
+                "applicable": 71
+              },
+              "text_diff_application": {
+                "applicable": 35,
+                "executions": 140
+              },
+              "unit_conversion_application": {
+                "applicable": 20
+              }
+            },
+            "artifacts": {
+              "stage2": {
+                "binary": {
+                  "bytes": 769536,
+                  "member": "selfhost/run-tvubxd59/stages/stage2/yavo-selfhost.exe",
+                  "sha256": "3ebefa4aebb578d37557271e6257634d33ba6d1675d605bb1c7f8889a8e9fef0"
+                },
+                "generated_c": {
+                  "bytes": 1683303,
+                  "member": "selfhost/run-tvubxd59/stages/stage2/yavo-selfhost.c",
+                  "sha256": "5e8e52709a18ad77257c5d7d03096c78c5078d30f92b2fff213d02484a4c813d"
+                }
+              },
+              "stage3": {
+                "binary": {
+                  "bytes": 769536,
+                  "member": "selfhost/run-tvubxd59/stages/stage3/yavo-selfhost.exe",
+                  "sha256": "3ebefa4aebb578d37557271e6257634d33ba6d1675d605bb1c7f8889a8e9fef0"
+                },
+                "generated_c": {
+                  "bytes": 1683303,
+                  "member": "selfhost/run-tvubxd59/stages/stage3/yavo-selfhost.c",
+                  "sha256": "5e8e52709a18ad77257c5d7d03096c78c5078d30f92b2fff213d02484a4c813d"
+                }
+              }
+            },
+            "binary_hashes_identical": true,
+            "c_byte_identical": true,
+            "cases": 1063,
+            "checks": 20,
+            "checks_passed": 20,
+            "failed": 0,
+            "kind_counts": {
+              "panic": 34,
+              "reject": 571,
+              "run": 279,
+              "shared_unsupported": 38,
+              "unsupported": 141
+            },
+            "passed": 1063,
+            "skipped": 0,
+            "skipped_checks": [],
+            "source_modules": 10,
+            "stage0_sha256": "ac17e65b5a38f252165136c1f3ee52b215adef8c9a85e03c7d349383a1416704"
+          },
+          "ordinary_driver": {
+            "applicable_per_driver": 54,
+            "checks_passed": 9,
+            "failed": 0,
+            "passed": 108,
+            "primary_cases": 55,
+            "rebuilt_artifacts": {
+              "rebuilt-fixed-point.c": {
+                "bytes": 1683303,
+                "member": "selfhost-driver.tar.gz:selfhost-driver/attempt-e9yie2v7/ordinary self build 自举/rebuilt-fixed-point.c",
+                "sha256": "5e8e52709a18ad77257c5d7d03096c78c5078d30f92b2fff213d02484a4c813d"
+              },
+              "rebuilt-selfhost.exe": {
+                "bytes": 769536,
+                "member": "selfhost-driver.tar.gz:selfhost-driver/attempt-e9yie2v7/ordinary self build 自举/rebuilt-selfhost.exe",
+                "sha256": "3ebefa4aebb578d37557271e6257634d33ba6d1675d605bb1c7f8889a8e9fef0"
+              }
+            },
+            "rebuilt_binary_equals_bootstrap_stage2": true,
+            "resources": {
+              "commands": 127,
+              "commands_with_rss": 0,
+              "max_observed_child_rss_bytes": null,
+              "scope": "wait4 waited-child RSS on POSIX; not simultaneous process-tree RSS; no P50 or token/cost claim"
+            },
+            "scenarios": 108,
+            "supplemental_cases": 2
+          },
+          "platform": "windows",
+          "rust": {
+            "host": {
+              "machine": "AMD64",
+              "platform": "Windows-2025Server-10.0.26100-SP0"
+            },
+            "scope": "selected-native",
+            "scope_description": "Native compiler unit tests plus p0, alloc_check, arena, modules, index_assignment, mutref_returns, collections, fix, runtime_io_concurrency, stdlib_io, fs_create_new, selfhost_blockers, system; excludes platform-limited frozen conformance",
+            "suites": {
+              "debug": {
+                "groups": 14,
+                "log_sha256": "41dbcc76e6d3b540a9c2eec68fd2515a4fa9bf675c76e711ae00f05f86ac4707",
+                "selection": [
+                  "--bin",
+                  "yavo",
+                  "--test",
+                  "p0",
+                  "--test",
+                  "alloc_check",
+                  "--test",
+                  "arena",
+                  "--test",
+                  "modules",
+                  "--test",
+                  "index_assignment",
+                  "--test",
+                  "mutref_returns",
+                  "--test",
+                  "collections",
+                  "--test",
+                  "fix",
+                  "--test",
+                  "runtime_io_concurrency",
+                  "--test",
+                  "stdlib_io",
+                  "--test",
+                  "fs_create_new",
+                  "--test",
+                  "selfhost_blockers",
+                  "--test",
+                  "system"
+                ],
+                "totals": {
+                  "failed": 0,
+                  "filtered_out": 0,
+                  "ignored": 1,
+                  "measured": 0,
+                  "passed": 87
+                }
+              },
+              "release": {
+                "groups": 14,
+                "log_sha256": "d93e1814939d73a00af9aff183813e0fe6cd6e638ede4fe9b8dd896d56c64b7e",
+                "selection": [
+                  "--bin",
+                  "yavo",
+                  "--test",
+                  "p0",
+                  "--test",
+                  "alloc_check",
+                  "--test",
+                  "arena",
+                  "--test",
+                  "modules",
+                  "--test",
+                  "index_assignment",
+                  "--test",
+                  "mutref_returns",
+                  "--test",
+                  "collections",
+                  "--test",
+                  "fix",
+                  "--test",
+                  "runtime_io_concurrency",
+                  "--test",
+                  "stdlib_io",
+                  "--test",
+                  "fs_create_new",
+                  "--test",
+                  "selfhost_blockers",
+                  "--test",
+                  "system"
+                ],
+                "totals": {
+                  "failed": 0,
+                  "filtered_out": 0,
+                  "ignored": 1,
+                  "measured": 0,
+                  "passed": 87
+                }
+              }
+            }
+          },
+          "source_hashing": {
+            "alloc_check": true,
+            "cases": 46,
+            "checks_passed": 4,
+            "executions": 276,
+            "expected_stdout_sha256": "56727e272514bba7a1ab83492744be5a650d4c9b5a3c5e555e70ecd1a4011ff2",
+            "failed": 0,
+            "passed": 276,
+            "producer_sha256": {
+              "stage0": "ac17e65b5a38f252165136c1f3ee52b215adef8c9a85e03c7d349383a1416704",
+              "stage1": "afbae6a5511617d3ad6c6b79f0f04a37d8e9cda12186f602a9d0d8de9050cd8f",
+              "stage2": "3ebefa4aebb578d37557271e6257634d33ba6d1675d605bb1c7f8889a8e9fef0"
+            },
+            "products": 6,
+            "source_modules": {
+              "codegen.yv": "96c0b25194171dd500a09362d89332d6aa93ae59d40bb126287d80a317e880e2",
+              "digest.yv": "e7c6a6a496bbdcdee401f897032ee9447f1b7f9982e23c1bf9f7e124f4cb68d7",
+              "driver.yv": "01f543793f2bce65c2bf04aca0e463a894d1d9336feb0d96b55c335bec647464",
+              "lexer.yv": "7b8c9e8ecf08e21a28327ba0d946a6f346b192d07db69305b29ca3f6ebc0fa9b",
+              "main.yv": "fcf554007b4dda50dcc0d7ef3e4c57b234878ca0352161a5055fa6001a203be5",
+              "model.yv": "a585f852e20067dcdfd42ba9bb4c1f8ed1ccca056ae4737758d2f3467e702eaf",
+              "parser.yv": "dffd2089ddf51feca9d1088f7040436b6ff3b20cda786e4edb0f2b51ebc1a301",
+              "runtime_source.yv": "21a5f8f7d558d7c6570b2525d4525ede1d75d64e58371b8c8589315d2a18e754",
+              "support.yv": "12a4b08856d7b8f1203e95f2d92639a6de7c3be56d35ad964cb0f526868197ce",
+              "types.yv": "ca9ae26aeccae15d8d19ad978af4d143f80c7805524c1336c15f7d5799baa689"
+            },
+            "status": "passed",
+            "underlying_receipt": {
+              "bytes": 27472,
+              "path": "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost-digest\\attempt-s0wqmgjz\\vectors\\receipt.json",
+              "sha256": "a6258556052e39b71e174b91a8b41a77d7ad937a634526a13f578fa2d323a86e"
+            }
+          },
+          "status": "passed",
+          "structured_diagnostics": {
+            "checks_passed": 9,
+            "commands": 356,
+            "formal": true,
+            "freeze": {
+              "bytes": 14135,
+              "path": "D:\\a\\yavo\\yavo\\selfhost\\tests\\diagnostics50\\freeze.json",
+              "sha256": "ee3930a89003dd6c361df89b7b3803225d025925ec0d51282ad2e6110350fa9f"
+            },
+            "json_cli": {
+              "failed": 0,
+              "passed": 188,
+              "total": 188
+            },
+            "oracle_negative_controls": [
+              {
+                "id": "wrong_end",
+                "rejected": true
+              },
+              {
+                "id": "wrong_root_hash",
+                "rejected": true
+              },
+              {
+                "id": "wrong_module_hash",
+                "rejected": true
+              },
+              {
+                "id": "wrong_source_order",
+                "rejected": true
+              },
+              {
+                "id": "wrong_count_type",
+                "rejected": true
+              },
+              {
+                "id": "extra_field",
+                "rejected": true
+              },
+              {
+                "id": "extra_diagnostic",
+                "rejected": true
+              },
+              {
+                "id": "duplicate_key",
+                "rejected": true
+              },
+              {
+                "id": "extra_stdout",
+                "rejected": true
+              },
+              {
+                "id": "invalid_utf8",
+                "rejected": true
+              }
+            ],
+            "oracle_positive_control": true,
+            "producer_sha256": {
+              "stage1": "afbae6a5511617d3ad6c6b79f0f04a37d8e9cda12186f602a9d0d8de9050cd8f",
+              "stage2": "3ebefa4aebb578d37557271e6257634d33ba6d1675d605bb1c7f8889a8e9fef0"
+            },
+            "resources": {
+              "commands": 356,
+              "commands_with_rss": 0,
+              "max_observed_child_rss_bytes": null,
+              "scope": "wait4 waited-child RSS on POSIX; unavailable on Windows; no simultaneous tree or P50 claim"
+            },
+            "snapshot_barriers": [],
+            "source_modules": {
+              "codegen.yv": "96c0b25194171dd500a09362d89332d6aa93ae59d40bb126287d80a317e880e2",
+              "digest.yv": "e7c6a6a496bbdcdee401f897032ee9447f1b7f9982e23c1bf9f7e124f4cb68d7",
+              "driver.yv": "01f543793f2bce65c2bf04aca0e463a894d1d9336feb0d96b55c335bec647464",
+              "lexer.yv": "7b8c9e8ecf08e21a28327ba0d946a6f346b192d07db69305b29ca3f6ebc0fa9b",
+              "main.yv": "fcf554007b4dda50dcc0d7ef3e4c57b234878ca0352161a5055fa6001a203be5",
+              "model.yv": "a585f852e20067dcdfd42ba9bb4c1f8ed1ccca056ae4737758d2f3467e702eaf",
+              "parser.yv": "dffd2089ddf51feca9d1088f7040436b6ff3b20cda786e4edb0f2b51ebc1a301",
+              "runtime_source.yv": "21a5f8f7d558d7c6570b2525d4525ede1d75d64e58371b8c8589315d2a18e754",
+              "support.yv": "12a4b08856d7b8f1203e95f2d92639a6de7c3be56d35ad964cb0f526868197ce",
+              "types.yv": "ca9ae26aeccae15d8d19ad978af4d143f80c7805524c1336c15f7d5799baa689"
+            },
+            "status": "passed",
+            "supplemental": {
+              "failed": 0,
+              "passed": 16,
+              "total": 16
+            },
+            "supplemental_freeze": {
+              "bytes": 1087,
+              "path": "D:\\a\\yavo\\yavo\\selfhost\\tests\\diagnostics50\\supplemental\\freeze.json",
+              "sha256": "e58c8c5b129a12d5aec9defd4f21988f88f7346182ed7870af603b4eb744334d"
+            },
+            "text": {
+              "failed": 0,
+              "passed": 152,
+              "total": 152
+            }
+          },
+          "verified_member_count": 1927,
+          "verified_receipts": {
+            "csv-check.tar.gz:csv-check/receipt.json": {
+              "bytes": 1339474,
+              "file": "/data1/workspace/github/workspace/yavo/compiler/target/batch50/ci-final-windows/csv-check-receipt.json",
+              "member": "csv-check.tar.gz:csv-check/receipt.json",
+              "sha256": "4ce74d86baa7000435c77d7ff21cb473c53f00df5227be8254d754a18af53b11"
+            },
+            "dep-index.tar.gz:dep-index/receipt.json": {
+              "bytes": 1188620,
+              "file": "/data1/workspace/github/workspace/yavo/compiler/target/batch50/ci-final-windows/dep-index-receipt.json",
+              "member": "dep-index.tar.gz:dep-index/receipt.json",
+              "sha256": "006eaa1dfa3a70489c4ce54d086f26fc43c6557266ee9862dc7e1272c27ebb82"
+            },
+            "results.json": {
+              "bytes": 10014,
+              "file": "/data1/workspace/github/workspace/yavo/compiler/target/batch50/ci-final-windows/results.json",
+              "member": "results.json",
+              "sha256": "05bf4c78c6357d1fd457299e3c31671074c0e23b51552c5f1819a567b674e43e"
+            },
+            "selfhost-diagnostics.tar.gz:selfhost-diagnostics/receipt.json": {
+              "bytes": 2498755,
+              "file": "/data1/workspace/github/workspace/yavo/compiler/target/batch50/ci-final-windows/selfhost-diagnostics-receipt.json",
+              "member": "selfhost-diagnostics.tar.gz:selfhost-diagnostics/receipt.json",
+              "sha256": "9cf16a43fa7cf4686f7d018840a45da24328353fa043edda0db688a94e0dfaaa"
+            },
+            "selfhost-digest.tar.gz:selfhost-digest/attempt-s0wqmgjz/vectors/receipt.json": {
+              "bytes": 27472,
+              "member": "selfhost-digest.tar.gz:selfhost-digest/attempt-s0wqmgjz/vectors/receipt.json",
+              "sha256": "a6258556052e39b71e174b91a8b41a77d7ad937a634526a13f578fa2d323a86e"
+            },
+            "selfhost-digest.tar.gz:selfhost-digest/receipt.json": {
+              "bytes": 27608,
+              "file": "/data1/workspace/github/workspace/yavo/compiler/target/batch50/ci-final-windows/selfhost-digest-receipt.json",
+              "member": "selfhost-digest.tar.gz:selfhost-digest/receipt.json",
+              "sha256": "f60d95a7f2252a5a1178ce036e7e72208c34912e1bc8a0a510c220c08a75a4b9"
+            },
+            "selfhost-driver.tar.gz:selfhost-driver/receipt.json": {
+              "bytes": 1026053,
+              "file": "/data1/workspace/github/workspace/yavo/compiler/target/batch50/ci-final-windows/selfhost-driver-receipt.json",
+              "member": "selfhost-driver.tar.gz:selfhost-driver/receipt.json",
+              "sha256": "f63f9266a532032c599455d6c5e1e8d6710deb3f5d6ab0d30219c7fc6aa03815"
+            },
+            "selfhost/receipt.json": {
+              "bytes": 25285811,
+              "file": "/data1/workspace/github/workspace/yavo/compiler/target/batch50/ci-final-windows/bootstrap-receipt.json",
+              "member": "selfhost/receipt.json",
+              "sha256": "954bac5caa098dd9aaccd385818e7cb5bf0042b05143f9686e4885a9e96b2dfe"
+            },
+            "test-summary.tar.gz:test-summary/receipt.json": {
+              "bytes": 680924,
+              "file": "/data1/workspace/github/workspace/yavo/compiler/target/batch50/ci-final-windows/test-summary-receipt.json",
+              "member": "test-summary.tar.gz:test-summary/receipt.json",
+              "sha256": "a1e47433571635e7540b83c0f3d5dc5fbfa6d8ce11cdaad294d28a9ab6fb2d00"
+            }
+          }
+        }
+      },
+      "run_id": 45991816609,
+      "schema": "yavo-batch50-ci-actual-receipts/1",
+      "scope": "Downloaded GitHub ZIP digest/size, nested receipts and artifact bytes; current source identities; native full versus selected scopes",
+      "shared_run_verified": true,
+      "source_head_verified": "6e1d22f8b5085e4dab1d6c57f4eb77d4fd324a99",
+      "status": "passed"
+    },
+    "native_receipt_summary": {
+      "path": "compiler/target/batch50/ci-receipts-summary.json",
+      "bytes": 84393,
+      "sha256": "1237d88fd43c6ba502220bc856827a3413bb4a6f9522d5247452a555963146f7"
+    },
+    "structured_diagnostic_executions": {
+      "linux": {
+        "json_cli": {
+          "failed": 0,
+          "passed": 196,
+          "total": 196
+        },
+        "text": {
+          "failed": 0,
+          "passed": 160,
+          "total": 160
+        },
+        "supplemental": {
+          "failed": 0,
+          "passed": 16,
+          "total": 16
+        },
+        "commands": 372
+      },
+      "macos": {
+        "json_cli": {
+          "failed": 0,
+          "passed": 196,
+          "total": 196
+        },
+        "text": {
+          "failed": 0,
+          "passed": 160,
+          "total": 160
+        },
+        "supplemental": {
+          "failed": 0,
+          "passed": 16,
+          "total": 16
+        },
+        "commands": 372
+      },
+      "windows": {
+        "json_cli": {
+          "failed": 0,
+          "passed": 188,
+          "total": 188
+        },
+        "text": {
+          "failed": 0,
+          "passed": 152,
+          "total": 152
+        },
+        "supplemental": {
+          "failed": 0,
+          "passed": 16,
+          "total": 16
+        },
+        "commands": 356
+      }
+    },
+    "source_hashing": {
+      "linux": {
+        "alloc_check": true,
+        "cases": 46,
+        "checks_passed": 4,
+        "executions": 276,
+        "expected_stdout_sha256": "56727e272514bba7a1ab83492744be5a650d4c9b5a3c5e555e70ecd1a4011ff2",
+        "failed": 0,
+        "passed": 276,
+        "producer_sha256": {
+          "stage0": "9d7093b676db39a1f10553314c2b437a7f8d1ce1bbdb79be0b1b12999c557c0e",
+          "stage1": "2c78473fea158d5dcc135a5049495d4768111999c0b1405b015b008ef9b0125a",
+          "stage2": "f638468d188c546312ae0ee8be0dd275c42e59398c8db3383bae56cf1cbdfc3c"
+        },
+        "products": 6,
+        "source_modules": {
+          "codegen.yv": "96c0b25194171dd500a09362d89332d6aa93ae59d40bb126287d80a317e880e2",
+          "digest.yv": "e7c6a6a496bbdcdee401f897032ee9447f1b7f9982e23c1bf9f7e124f4cb68d7",
+          "driver.yv": "01f543793f2bce65c2bf04aca0e463a894d1d9336feb0d96b55c335bec647464",
+          "lexer.yv": "7b8c9e8ecf08e21a28327ba0d946a6f346b192d07db69305b29ca3f6ebc0fa9b",
+          "main.yv": "fcf554007b4dda50dcc0d7ef3e4c57b234878ca0352161a5055fa6001a203be5",
+          "model.yv": "a585f852e20067dcdfd42ba9bb4c1f8ed1ccca056ae4737758d2f3467e702eaf",
+          "parser.yv": "dffd2089ddf51feca9d1088f7040436b6ff3b20cda786e4edb0f2b51ebc1a301",
+          "runtime_source.yv": "21a5f8f7d558d7c6570b2525d4525ede1d75d64e58371b8c8589315d2a18e754",
+          "support.yv": "12a4b08856d7b8f1203e95f2d92639a6de7c3be56d35ad964cb0f526868197ce",
+          "types.yv": "ca9ae26aeccae15d8d19ad978af4d143f80c7805524c1336c15f7d5799baa689"
+        },
+        "status": "passed",
+        "underlying_receipt": {
+          "bytes": 27155,
+          "path": "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost-digest/attempt-jl4bdzvf/vectors/receipt.json",
+          "sha256": "d36d487dc48ce1820a16c38dc02149d10e485ee8e0c1ee48595a225545c89f37"
+        }
+      },
+      "macos": {
+        "alloc_check": true,
+        "cases": 46,
+        "checks_passed": 4,
+        "executions": 276,
+        "expected_stdout_sha256": "56727e272514bba7a1ab83492744be5a650d4c9b5a3c5e555e70ecd1a4011ff2",
+        "failed": 0,
+        "passed": 276,
+        "producer_sha256": {
+          "stage0": "03c74be4219bfd92141b08f678e2d944c3d7773549486c932f147cea910847b8",
+          "stage1": "d333dda3c9ec40536acc03c4ef955edb159d1ba04d09413830d7a977ba1be81f",
+          "stage2": "b86c39cd2042f25def0889cb9f8d920236a277f9c685b5a6aba76152ef477d17"
+        },
+        "products": 6,
+        "source_modules": {
+          "codegen.yv": "96c0b25194171dd500a09362d89332d6aa93ae59d40bb126287d80a317e880e2",
+          "digest.yv": "e7c6a6a496bbdcdee401f897032ee9447f1b7f9982e23c1bf9f7e124f4cb68d7",
+          "driver.yv": "01f543793f2bce65c2bf04aca0e463a894d1d9336feb0d96b55c335bec647464",
+          "lexer.yv": "7b8c9e8ecf08e21a28327ba0d946a6f346b192d07db69305b29ca3f6ebc0fa9b",
+          "main.yv": "fcf554007b4dda50dcc0d7ef3e4c57b234878ca0352161a5055fa6001a203be5",
+          "model.yv": "a585f852e20067dcdfd42ba9bb4c1f8ed1ccca056ae4737758d2f3467e702eaf",
+          "parser.yv": "dffd2089ddf51feca9d1088f7040436b6ff3b20cda786e4edb0f2b51ebc1a301",
+          "runtime_source.yv": "21a5f8f7d558d7c6570b2525d4525ede1d75d64e58371b8c8589315d2a18e754",
+          "support.yv": "12a4b08856d7b8f1203e95f2d92639a6de7c3be56d35ad964cb0f526868197ce",
+          "types.yv": "ca9ae26aeccae15d8d19ad978af4d143f80c7805524c1336c15f7d5799baa689"
+        },
+        "status": "passed",
+        "underlying_receipt": {
+          "bytes": 27263,
+          "path": "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost-digest/attempt-uv7_snpr/vectors/receipt.json",
+          "sha256": "d5beb8b9e5bcf04141b090f96989f1afd4328b390f39beed48e0c1e2b64e6675"
+        }
+      },
+      "windows": {
+        "alloc_check": true,
+        "cases": 46,
+        "checks_passed": 4,
+        "executions": 276,
+        "expected_stdout_sha256": "56727e272514bba7a1ab83492744be5a650d4c9b5a3c5e555e70ecd1a4011ff2",
+        "failed": 0,
+        "passed": 276,
+        "producer_sha256": {
+          "stage0": "ac17e65b5a38f252165136c1f3ee52b215adef8c9a85e03c7d349383a1416704",
+          "stage1": "afbae6a5511617d3ad6c6b79f0f04a37d8e9cda12186f602a9d0d8de9050cd8f",
+          "stage2": "3ebefa4aebb578d37557271e6257634d33ba6d1675d605bb1c7f8889a8e9fef0"
+        },
+        "products": 6,
+        "source_modules": {
+          "codegen.yv": "96c0b25194171dd500a09362d89332d6aa93ae59d40bb126287d80a317e880e2",
+          "digest.yv": "e7c6a6a496bbdcdee401f897032ee9447f1b7f9982e23c1bf9f7e124f4cb68d7",
+          "driver.yv": "01f543793f2bce65c2bf04aca0e463a894d1d9336feb0d96b55c335bec647464",
+          "lexer.yv": "7b8c9e8ecf08e21a28327ba0d946a6f346b192d07db69305b29ca3f6ebc0fa9b",
+          "main.yv": "fcf554007b4dda50dcc0d7ef3e4c57b234878ca0352161a5055fa6001a203be5",
+          "model.yv": "a585f852e20067dcdfd42ba9bb4c1f8ed1ccca056ae4737758d2f3467e702eaf",
+          "parser.yv": "dffd2089ddf51feca9d1088f7040436b6ff3b20cda786e4edb0f2b51ebc1a301",
+          "runtime_source.yv": "21a5f8f7d558d7c6570b2525d4525ede1d75d64e58371b8c8589315d2a18e754",
+          "support.yv": "12a4b08856d7b8f1203e95f2d92639a6de7c3be56d35ad964cb0f526868197ce",
+          "types.yv": "ca9ae26aeccae15d8d19ad978af4d143f80c7805524c1336c15f7d5799baa689"
+        },
+        "status": "passed",
+        "underlying_receipt": {
+          "bytes": 27472,
+          "path": "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost-digest\\attempt-s0wqmgjz\\vectors\\receipt.json",
+          "sha256": "a6258556052e39b71e174b91a8b41a77d7ad937a634526a13f578fa2d323a86e"
+        }
+      }
+    },
+    "ordinary_driver_executions": {
+      "linux": 114,
+      "macos": 114,
+      "windows": 108
+    },
+    "formal_cli_applications": {
+      "linux": {
+        "csv-check": {
+          "applicable_scenarios": 138,
+          "cleanup_executions": 138,
+          "failed": 0,
+          "native_executions": 414,
+          "normal_executions": 276,
+          "passed": 414,
+          "required_checks_passed": 10,
+          "sanitizers": {
+            "capability_controls": 3,
+            "executions": 276,
+            "stage2_sha256": "f638468d188c546312ae0ee8be0dd275c42e59398c8db3383bae56cf1cbdfc3c",
+            "status": "passed"
+          }
+        },
+        "dep-index": {
+          "applicable_scenarios": 112,
+          "cleanup_executions": 112,
+          "failed": 0,
+          "native_executions": 336,
+          "normal_executions": 224,
+          "passed": 336,
+          "required_checks_passed": 10,
+          "sanitizers": {
+            "capability_controls": 3,
+            "executions": 224,
+            "stage2_sha256": "f638468d188c546312ae0ee8be0dd275c42e59398c8db3383bae56cf1cbdfc3c",
+            "status": "passed"
+          }
+        },
+        "test-summary": {
+          "applicable_scenarios": 71,
+          "cleanup_executions": 71,
+          "failed": 0,
+          "native_executions": 213,
+          "normal_executions": 142,
+          "passed": 213,
+          "required_checks_passed": 4
+        }
+      },
+      "macos": {
+        "csv-check": {
+          "applicable_scenarios": 138,
+          "cleanup_executions": 138,
+          "failed": 0,
+          "native_executions": 414,
+          "normal_executions": 276,
+          "passed": 414,
+          "required_checks_passed": 9,
+          "sanitizers": {
+            "executions": 0,
+            "mode": "off",
+            "status": "not_applicable"
+          }
+        },
+        "dep-index": {
+          "applicable_scenarios": 112,
+          "cleanup_executions": 112,
+          "failed": 0,
+          "native_executions": 336,
+          "normal_executions": 224,
+          "passed": 336,
+          "required_checks_passed": 9,
+          "sanitizers": {
+            "executions": 0,
+            "mode": "off",
+            "status": "not_applicable"
+          }
+        },
+        "test-summary": {
+          "applicable_scenarios": 71,
+          "cleanup_executions": 71,
+          "failed": 0,
+          "native_executions": 213,
+          "normal_executions": 142,
+          "passed": 213,
+          "required_checks_passed": 4
+        }
+      },
+      "windows": {
+        "csv-check": {
+          "applicable_scenarios": 137,
+          "cleanup_executions": 137,
+          "failed": 0,
+          "native_executions": 411,
+          "normal_executions": 274,
+          "passed": 411,
+          "required_checks_passed": 9,
+          "sanitizers": {
+            "executions": 0,
+            "mode": "off",
+            "status": "not_applicable"
+          }
+        },
+        "dep-index": {
+          "applicable_scenarios": 107,
+          "cleanup_executions": 107,
+          "failed": 0,
+          "native_executions": 321,
+          "normal_executions": 214,
+          "passed": 321,
+          "required_checks_passed": 9,
+          "sanitizers": {
+            "executions": 0,
+            "mode": "off",
+            "status": "not_applicable"
+          }
+        },
+        "test-summary": {
+          "applicable_scenarios": 71,
+          "cleanup_executions": 71,
+          "failed": 0,
+          "native_executions": 213,
+          "normal_executions": 142,
+          "passed": 213,
+          "required_checks_passed": 4
+        }
+      }
+    },
     "compiler_asan_ubsan_diagnostics": {
-      "status": "pending",
+      "status": "passed",
+      "platform": "linux",
       "local_this_batch": null,
-      "scope": "Existing Linux independent compiler sanitizer plus 98 JSON/CLI, 80 text, and 8 legacy CLI commands through the instrumented actual-stage2-C product."
+      "compiler": {
+        "artifact": {
+          "bytes": 5103896,
+          "path": "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost-sanitizers/run-2dudukf8/stage2-compiler/build/yavo-stage2-sanitized",
+          "sha256": "617c488bb4f440a39e9f1cf32e33e13a145f98ad8c73a8b7390cfcbc2e9ad856"
+        },
+        "cases": 1063,
+        "emissions": 313,
+        "emissions_passed": 313,
+        "json_diagnostics": {
+          "checks_passed": 8,
+          "commands": 186,
+          "formal": false,
+          "freeze": {
+            "bytes": 14135,
+            "path": "/home/runner/work/yavo/yavo/selfhost/tests/diagnostics50/freeze.json",
+            "sha256": "ee3930a89003dd6c361df89b7b3803225d025925ec0d51282ad2e6110350fa9f"
+          },
+          "json_cli": {
+            "failed": 0,
+            "passed": 98,
+            "total": 98
+          },
+          "oracle_negative_controls": [
+            {
+              "id": "wrong_end",
+              "rejected": true
+            },
+            {
+              "id": "wrong_root_hash",
+              "rejected": true
+            },
+            {
+              "id": "wrong_module_hash",
+              "rejected": true
+            },
+            {
+              "id": "wrong_source_order",
+              "rejected": true
+            },
+            {
+              "id": "wrong_count_type",
+              "rejected": true
+            },
+            {
+              "id": "extra_field",
+              "rejected": true
+            },
+            {
+              "id": "extra_diagnostic",
+              "rejected": true
+            },
+            {
+              "id": "duplicate_key",
+              "rejected": true
+            },
+            {
+              "id": "extra_stdout",
+              "rejected": true
+            },
+            {
+              "id": "invalid_utf8",
+              "rejected": true
+            }
+          ],
+          "oracle_positive_control": true,
+          "producer_sha256": {
+            "candidate": "617c488bb4f440a39e9f1cf32e33e13a145f98ad8c73a8b7390cfcbc2e9ad856"
+          },
+          "resources": {
+            "commands": 186,
+            "commands_with_rss": 186,
+            "max_observed_child_rss_bytes": 38797312,
+            "scope": "wait4 waited-child RSS on POSIX; unavailable on Windows; no simultaneous tree or P50 claim"
+          },
+          "snapshot_barriers": [
+            {
+              "applicable": true,
+              "driver": "candidate",
+              "errors": [],
+              "id": "snapshot_root_changed",
+              "mode": "json",
+              "mutations": [
+                {
+                  "bytes_after": 59,
+                  "bytes_before": 49,
+                  "fifo_reader_connected_before_mutation": true,
+                  "path": "main.yv",
+                  "sha256_after": "f71cc76c9d514d85f054686eff1f1835e3edc51b79b1e6771a95e810e27b20af",
+                  "sha256_before": "0e61668c421d8c08757b1e3f67d4c4870dc15760444c629f367824dc430899e9"
+                }
+              ],
+              "reader_connected": true
+            },
+            {
+              "applicable": true,
+              "driver": "candidate",
+              "errors": [],
+              "id": "snapshot_module_changed",
+              "mode": "json",
+              "mutations": [
+                {
+                  "bytes_after": 37,
+                  "bytes_before": 42,
+                  "fifo_reader_connected_before_mutation": true,
+                  "path": "utility.yv",
+                  "sha256_after": "7ac377a69893bef739b84b874c51352c8a12400163ef2e151c1a24def0c8ca06",
+                  "sha256_before": "47b1cf05850b78008f2e4259f2b7bc90f2ad4c712517b14d8639f700a4578750"
+                }
+              ],
+              "reader_connected": true
+            },
+            {
+              "applicable": true,
+              "driver": "candidate",
+              "errors": [],
+              "id": "snapshot_root_changed",
+              "mode": "text",
+              "mutations": [
+                {
+                  "bytes_after": 59,
+                  "bytes_before": 49,
+                  "fifo_reader_connected_before_mutation": true,
+                  "path": "main.yv",
+                  "sha256_after": "f71cc76c9d514d85f054686eff1f1835e3edc51b79b1e6771a95e810e27b20af",
+                  "sha256_before": "0e61668c421d8c08757b1e3f67d4c4870dc15760444c629f367824dc430899e9"
+                }
+              ],
+              "reader_connected": true
+            },
+            {
+              "applicable": true,
+              "driver": "candidate",
+              "errors": [],
+              "id": "snapshot_module_changed",
+              "mode": "text",
+              "mutations": [
+                {
+                  "bytes_after": 37,
+                  "bytes_before": 42,
+                  "fifo_reader_connected_before_mutation": true,
+                  "path": "utility.yv",
+                  "sha256_after": "7ac377a69893bef739b84b874c51352c8a12400163ef2e151c1a24def0c8ca06",
+                  "sha256_before": "47b1cf05850b78008f2e4259f2b7bc90f2ad4c712517b14d8639f700a4578750"
+                }
+              ],
+              "reader_connected": true
+            }
+          ],
+          "source_modules": {
+            "codegen.yv": "96c0b25194171dd500a09362d89332d6aa93ae59d40bb126287d80a317e880e2",
+            "digest.yv": "e7c6a6a496bbdcdee401f897032ee9447f1b7f9982e23c1bf9f7e124f4cb68d7",
+            "driver.yv": "01f543793f2bce65c2bf04aca0e463a894d1d9336feb0d96b55c335bec647464",
+            "lexer.yv": "7b8c9e8ecf08e21a28327ba0d946a6f346b192d07db69305b29ca3f6ebc0fa9b",
+            "main.yv": "fcf554007b4dda50dcc0d7ef3e4c57b234878ca0352161a5055fa6001a203be5",
+            "model.yv": "a585f852e20067dcdfd42ba9bb4c1f8ed1ccca056ae4737758d2f3467e702eaf",
+            "parser.yv": "dffd2089ddf51feca9d1088f7040436b6ff3b20cda786e4edb0f2b51ebc1a301",
+            "runtime_source.yv": "21a5f8f7d558d7c6570b2525d4525ede1d75d64e58371b8c8589315d2a18e754",
+            "support.yv": "12a4b08856d7b8f1203e95f2d92639a6de7c3be56d35ad964cb0f526868197ce",
+            "types.yv": "ca9ae26aeccae15d8d19ad978af4d143f80c7805524c1336c15f7d5799baa689"
+          },
+          "status": "preliminary_passed",
+          "supplemental": {
+            "failed": 0,
+            "passed": 8,
+            "total": 8
+          },
+          "supplemental_freeze": {
+            "bytes": 1087,
+            "path": "/home/runner/work/yavo/yavo/selfhost/tests/diagnostics50/supplemental/freeze.json",
+            "sha256": "e58c8c5b129a12d5aec9defd4f21988f88f7346182ed7870af603b4eb744334d"
+          },
+          "text": {
+            "failed": 0,
+            "passed": 80,
+            "total": 80
+          }
+        },
+        "passed": 1063,
+        "self_compilation_passed": true,
+        "stage2_c_sha256": "a463c46eff325d2d1d4681dc905e22391b41c80c2c232ed4a2c5cfc3fa5e2e80",
+        "stress": 8,
+        "stress_passed": 8
+      },
+      "capability_controls": {
+        "address": {
+          "exit_code": 1,
+          "passed": true
+        },
+        "clean": {
+          "exit_code": 0,
+          "passed": true
+        },
+        "undefined": {
+          "exit_code": 1,
+          "passed": true
+        }
+      },
+      "scope": "Instrumented compiler built from actual final stage2 C; its 98 JSON/CLI, 80 text and 8 supplemental commands are a distinct sanitizer gate, not an additional formal frontend producer."
+    },
+    "selfhost_program_sanitizers": {
+      "failed": 0,
+      "not_run": 0,
+      "passed": 314,
+      "total": 314
+    },
+    "system_sanitizers": {
+      "capability_controls": 3,
+      "compiler": {
+        "bytes": 1023032,
+        "libraries": {
+          "libasan.so": {
+            "bytes": 10924208,
+            "path": "/usr/lib/x86_64-linux-gnu/libasan.so.8.0.0",
+            "sha256": "8d5845bdf056b5db4cfb9fff40ad5eeea8f6da05a8ca6f5935a7d1c138ed2558"
+          },
+          "libc.so.6": {
+            "bytes": 2129424,
+            "path": "/usr/lib/x86_64-linux-gnu/libc.so.6",
+            "sha256": "755a371e86cc9f564ab54f66140747700fb0a103f698f659f2060f707897e09a"
+          },
+          "libgcc_s.so.1": {
+            "bytes": 183024,
+            "path": "/usr/lib/x86_64-linux-gnu/libgcc_s.so.1",
+            "sha256": "d93224d2b0dab4247598be683adca02f5cf00586f99c187579cd7e92058fb7cb"
+          },
+          "libubsan.so": {
+            "bytes": 3423712,
+            "path": "/usr/lib/x86_64-linux-gnu/libubsan.so.1.0.0",
+            "sha256": "f4a999fcf8392a200e9d93fb066ddb9e89daab8cd94a62137f4506472240a2e8"
+          }
+        },
+        "path": "/usr/bin/x86_64-linux-gnu-gcc-13",
+        "sha256": "1b99826121ae6682a634e5efe09bd3e3df58ce58e0b28f849114ab5b89139c26",
+        "version": "x86_64-linux-gnu-gcc-13 (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+        "version_command": {
+          "argv": [
+            "/usr/bin/x86_64-linux-gnu-gcc-13",
+            "--version"
+          ],
+          "cwd": "/home/runner/work/yavo/yavo/compiler/target/ci/system-sanitize/attempt-lio3bcf3",
+          "elapsed_seconds": 0.0012739969999984169,
+          "environment": {
+            "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1:abort_on_error=0",
+            "LC_ALL": "C",
+            "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+            "YAVO_NO_CACHE": "1"
+          },
+          "exit_code": 0,
+          "launch_error": null,
+          "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+          "peak_process_memory_bytes": 20963328,
+          "stderr": {
+            "bytes": 0,
+            "path": "/home/runner/work/yavo/yavo/compiler/target/ci/system-sanitize/attempt-lio3bcf3/commands/gcc-version/stderr.bin",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stdin": {
+            "kind": "devnull"
+          },
+          "stdout": {
+            "bytes": 266,
+            "path": "/home/runner/work/yavo/yavo/compiler/target/ci/system-sanitize/attempt-lio3bcf3/commands/gcc-version/stdout.bin",
+            "sha256": "ae487f55927d605284a32711e4ecf6bc3be2bcd5a9de414ace0936264b741f85"
+          },
+          "timed_out": false
+        }
+      },
+      "direct_probe_entries": 1,
+      "frontend_entries": 14,
+      "instrumented_entries": 15,
+      "limits": [
+        "ASan+UBSan only; no TSan or Windows/macOS sanitizer claim.",
+        "LeakSanitizer disabled; generated programs and direct probe also use YV_ALLOC_CHECK.",
+        "Native malloc buffers are covered for invalid access, not by YV_ALLOC_CHECK leak counting."
+      ],
+      "runtime_process_calls": {
+        "invalid_arguments": 1,
+        "launch_failure": 33,
+        "normal_exit": 67,
+        "note": "Includes 32 each of exit 37/127 and launch failure; stdout/stderr routing, argv and closed stdout.",
+        "signal_exit": 1
+      },
+      "stage2_sha256": "f638468d188c546312ae0ee8be0dd275c42e59398c8db3383bae56cf1cbdfc3c",
+      "status": "passed"
     },
     "rust_full_regressions": {
-      "status": "pending"
-    }
+      "status": "passed",
+      "evidence_scope": "Actual downloaded current CI logs and declared test selection per platform; prior local results are separate.",
+      "platforms": {
+        "linux": {
+          "host": {
+            "machine": "x86_64",
+            "platform": "Linux-7.0.0-1014-aws-x86_64-with-glibc2.39"
+          },
+          "scope": "full",
+          "scope_description": "All Cargo tests and frozen conformance on Linux x86_64",
+          "suites": {
+            "debug": {
+              "frozen_conformance": {
+                "pass": 124,
+                "superseded": 2,
+                "unsupported": 3
+              },
+              "groups": 20,
+              "log_sha256": "9e3057b09213a3689fd5300bcded235502a0a63f2303edad222f065bccf6553b",
+              "selection": [],
+              "totals": {
+                "failed": 0,
+                "filtered_out": 0,
+                "ignored": 1,
+                "measured": 0,
+                "passed": 151
+              }
+            },
+            "release": {
+              "frozen_conformance": {
+                "pass": 124,
+                "superseded": 2,
+                "unsupported": 3
+              },
+              "groups": 20,
+              "log_sha256": "df082a3564f8660ae4c4b5d59396d5c4e8e10b0ac7eaebae4d0ef8780e3d0a3d",
+              "selection": [],
+              "totals": {
+                "failed": 0,
+                "filtered_out": 0,
+                "ignored": 1,
+                "measured": 0,
+                "passed": 151
+              }
+            }
+          }
+        },
+        "macos": {
+          "host": {
+            "machine": "arm64",
+            "platform": "macOS-15.8.2-arm64-arm-64bit-Mach-O"
+          },
+          "scope": "selected-native",
+          "scope_description": "Native compiler unit tests plus p0, alloc_check, arena, modules, index_assignment, mutref_returns, collections, fix, runtime_io_concurrency, stdlib_io, fs_create_new, selfhost_blockers, system; excludes platform-limited frozen conformance",
+          "suites": {
+            "debug": {
+              "groups": 14,
+              "log_sha256": "6cfe5c8aadd5fca3932dadafe6db71d3990a96306b60ae9393c0b1b2ae728e2b",
+              "selection": [
+                "--bin",
+                "yavo",
+                "--test",
+                "p0",
+                "--test",
+                "alloc_check",
+                "--test",
+                "arena",
+                "--test",
+                "modules",
+                "--test",
+                "index_assignment",
+                "--test",
+                "mutref_returns",
+                "--test",
+                "collections",
+                "--test",
+                "fix",
+                "--test",
+                "runtime_io_concurrency",
+                "--test",
+                "stdlib_io",
+                "--test",
+                "fs_create_new",
+                "--test",
+                "selfhost_blockers",
+                "--test",
+                "system"
+              ],
+              "totals": {
+                "failed": 0,
+                "filtered_out": 0,
+                "ignored": 1,
+                "measured": 0,
+                "passed": 90
+              }
+            },
+            "release": {
+              "groups": 14,
+              "log_sha256": "742565fc2a25da29772b35c09e565e1abf721e8347b0fa5b1825063897430db4",
+              "selection": [
+                "--bin",
+                "yavo",
+                "--test",
+                "p0",
+                "--test",
+                "alloc_check",
+                "--test",
+                "arena",
+                "--test",
+                "modules",
+                "--test",
+                "index_assignment",
+                "--test",
+                "mutref_returns",
+                "--test",
+                "collections",
+                "--test",
+                "fix",
+                "--test",
+                "runtime_io_concurrency",
+                "--test",
+                "stdlib_io",
+                "--test",
+                "fs_create_new",
+                "--test",
+                "selfhost_blockers",
+                "--test",
+                "system"
+              ],
+              "totals": {
+                "failed": 0,
+                "filtered_out": 0,
+                "ignored": 1,
+                "measured": 0,
+                "passed": 90
+              }
+            }
+          }
+        },
+        "windows": {
+          "host": {
+            "machine": "AMD64",
+            "platform": "Windows-2025Server-10.0.26100-SP0"
+          },
+          "scope": "selected-native",
+          "scope_description": "Native compiler unit tests plus p0, alloc_check, arena, modules, index_assignment, mutref_returns, collections, fix, runtime_io_concurrency, stdlib_io, fs_create_new, selfhost_blockers, system; excludes platform-limited frozen conformance",
+          "suites": {
+            "debug": {
+              "groups": 14,
+              "log_sha256": "41dbcc76e6d3b540a9c2eec68fd2515a4fa9bf675c76e711ae00f05f86ac4707",
+              "selection": [
+                "--bin",
+                "yavo",
+                "--test",
+                "p0",
+                "--test",
+                "alloc_check",
+                "--test",
+                "arena",
+                "--test",
+                "modules",
+                "--test",
+                "index_assignment",
+                "--test",
+                "mutref_returns",
+                "--test",
+                "collections",
+                "--test",
+                "fix",
+                "--test",
+                "runtime_io_concurrency",
+                "--test",
+                "stdlib_io",
+                "--test",
+                "fs_create_new",
+                "--test",
+                "selfhost_blockers",
+                "--test",
+                "system"
+              ],
+              "totals": {
+                "failed": 0,
+                "filtered_out": 0,
+                "ignored": 1,
+                "measured": 0,
+                "passed": 87
+              }
+            },
+            "release": {
+              "groups": 14,
+              "log_sha256": "d93e1814939d73a00af9aff183813e0fe6cd6e638ede4fe9b8dd896d56c64b7e",
+              "selection": [
+                "--bin",
+                "yavo",
+                "--test",
+                "p0",
+                "--test",
+                "alloc_check",
+                "--test",
+                "arena",
+                "--test",
+                "modules",
+                "--test",
+                "index_assignment",
+                "--test",
+                "mutref_returns",
+                "--test",
+                "collections",
+                "--test",
+                "fix",
+                "--test",
+                "runtime_io_concurrency",
+                "--test",
+                "stdlib_io",
+                "--test",
+                "fs_create_new",
+                "--test",
+                "selfhost_blockers",
+                "--test",
+                "system"
+              ],
+              "totals": {
+                "failed": 0,
+                "filtered_out": 0,
+                "ignored": 1,
+                "measured": 0,
+                "passed": 87
+              }
+            }
+          }
+        }
+      }
+    },
+    "macos_ordinary_binary_comparison": {
+      "whole_file_bit_identical": false,
+      "bootstrap_stage2": {
+        "bytes": 634224,
+        "member": "selfhost/run-uzfj6vkb/stages/stage2/yavo-selfhost",
+        "sha256": "b86c39cd2042f25def0889cb9f8d920236a277f9c685b5a6aba76152ef477d17"
+      },
+      "ordinary_rebuilt": {
+        "bytes": 634224,
+        "member": "selfhost-driver.tar.gz:selfhost-driver/attempt-d1ud_2nw/ordinary self build 自举/rebuilt-selfhost",
+        "sha256": "8b7702f1c6862b06311127347628eda740bfee4a8635a8f91dfbb79c025ef144"
+      },
+      "scope": "Unmodified original bytes read from the verified GitHub native archive.",
+      "report": {
+        "path": "compiler/validation/batch50-macos-binary-comparison-2026-11-27.json",
+        "bytes": 67606,
+        "sha256": "f3e13a8dd4e57ab3c527fc258555d42760d82e1de87cacf7b43a5d274e09895e"
+      },
+      "all_differences_within_code_signature": true,
+      "all_page_hashes_recomputed_and_valid": true,
+      "different_bytes": 1264,
+      "code_signature_region": {
+        "layout_identical": true,
+        "ordinary": {
+          "bytes": 1376,
+          "file_offset": 632848,
+          "sha256": "dcab4cec7d9774c4e146e2f9129a71b573b474068379effa40601df78b35110d"
+        },
+        "stage2": {
+          "bytes": 1376,
+          "file_offset": 632848,
+          "sha256": "2dad2b25cee78a2d9ed17b8dfc67a7e66a8713c9bf58639f37efc6db9899f608"
+        }
+      },
+      "signature_field_changes": {
+        "bytes": {
+          "ordinary": 1353,
+          "stage2": 1350
+        },
+        "hash_offset": {
+          "ordinary": 105,
+          "stage2": 102
+        },
+        "identifier": {
+          "ordinary": "rebuilt-selfhost",
+          "stage2": "yavo-selfhost"
+        },
+        "identifier_bytes_including_nul": {
+          "ordinary": 17,
+          "stage2": 14
+        }
+      },
+      "conclusion": "All observed original-byte differences lie within each executable's declared Mach-O code-signature storage. See the independently parsed image, UUID, load-command, section and CodeDirectory comparisons. The complete original executables remain distinct; no normalized executable was produced. The only CodeDirectory field changes are its output-basename identifier, identifier length, hash-table offset and blob length; the code-page hashes are unchanged."
+    },
+    "workflow": {
+      "path": ".github/workflows/ci.yml",
+      "bytes": 10956,
+      "sha256": "d071086f0d53daac37a97bf1a1ecb00750698707ea5b997dddc4079141331f4d"
+    },
+    "validators": [
+      {
+        "path": "compiler/target/batch50/finalize_ci.py",
+        "bytes": 32580,
+        "sha256": "e75d8d6eb4d56ae80c1d4fb60ed11feff166ff84a8989e99abad1eb7a7f176e0"
+      },
+      {
+        "path": "compiler/target/batch50/summarize_ci_receipts.py",
+        "bytes": 80120,
+        "sha256": "edcd4b385ed84fefcc4fc83b8c90aadfcb52848ecdbb8ad05a2de2fbcaddbb11"
+      },
+      {
+        "path": "compiler/target/batch50/download_ci_artifact.py",
+        "bytes": 11006,
+        "sha256": "2467cca8bdfa125c11e6107c0355845dbbf0caafed76ccf3868bb6743927885e"
+      },
+      {
+        "path": "compiler/target/batch50/compare_macos_binaries.py",
+        "bytes": 25397,
+        "sha256": "07e9bdbd0cacc7b07d4d0bb4f8f3f11057238d32ab8a45ed1ead90e60c187def"
+      }
+    ]
   }
 }
