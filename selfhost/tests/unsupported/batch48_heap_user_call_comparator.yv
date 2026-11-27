@@ -1,0 +1,7 @@
+use std/collections
+fn before(a: (String, int), b: (String, int)) -> bool { return a.0 < b.0 }
+fn main() {
+    var heap = Heap[(String, int)].by((a, b) => before(a, b))
+    heap.push(("x".toString(), 1))
+    println(heap.len())
+}

@@ -1545,10 +1545,10 @@
     },
     {
       "id": "unsupported_vec_nested_element",
-      "kind": "unsupported",
+      "kind": "run",
       "batch": "vec-copy",
       "file": "unsupported/unsupported_vec_nested_element.yv",
-      "diagnostic": "U0001"
+      "stdout": "1\n"
     },
     {
       "id": "owned_vec_struct_declaration",
@@ -5605,11 +5605,11 @@
     },
     {
       "id": "tuple43_pair_owned",
-      "kind": "unsupported",
+      "kind": "run",
       "file": "unsupported/tuple43_pair_owned.yv",
       "batch": "copy-tuples-unit-conversion",
-      "diagnostic": "U0001",
-      "reason": "Owned tuple payloads remain outside the Copy tuple subset."
+      "reason": "The original flat tuple containing String and int is now supported; the original source path and bytes are unchanged.",
+      "stdout": "x\n"
     },
     {
       "id": "tuple43_pair_borrowed",
@@ -6540,6 +6540,501 @@
       "batch": "string-set-csv-cli",
       "diagnostic": "U0001",
       "reason": "Mutating a temporary Set receiver is unsupported by both compilers."
+    },
+    {
+      "id": "batch48_heap_lexical_order",
+      "kind": "run",
+      "file": "run/batch48_heap_lexical_order.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "stdout": "A:1\na:2\nz:9\n0\n"
+    },
+    {
+      "id": "batch48_heap_duplicate_keys",
+      "kind": "run",
+      "file": "run/batch48_heap_duplicate_keys.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "stdout": "before:8\nsame:1\nsame:2\nsame:3\n"
+    },
+    {
+      "id": "batch48_heap_empty_refill",
+      "kind": "run",
+      "file": "run/batch48_heap_empty_refill.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "stdout": "true\n1\nfirst\ntrue\n7\n0\n"
+    },
+    {
+      "id": "batch48_heap_pure_comparator",
+      "kind": "run",
+      "file": "run/batch48_heap_pure_comparator.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "stdout": "three\ntwo\none\n"
+    },
+    {
+      "id": "batch48_heap_continue_cleanup",
+      "kind": "run",
+      "file": "run/batch48_heap_continue_cleanup.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "stdout": "keep:2\n0\n"
+    },
+    {
+      "id": "batch48_heap_break_cleanup",
+      "kind": "run",
+      "file": "run/batch48_heap_break_cleanup.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "stdout": "first\n1\n"
+    },
+    {
+      "id": "batch48_heap_return_cleanup",
+      "kind": "run",
+      "file": "run/batch48_heap_return_cleanup.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "stdout": "14\n"
+    },
+    {
+      "id": "batch48_heap_inout_optional_return",
+      "kind": "run",
+      "file": "run/batch48_heap_inout_optional_return.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "stdout": "x:5\ntrue\n"
+    },
+    {
+      "id": "batch48_tuple_recursive_return",
+      "kind": "run",
+      "file": "run/batch48_tuple_recursive_return.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "stdout": "root!!!:3\n"
+    },
+    {
+      "id": "batch48_tuple_mixed_copy_fields",
+      "kind": "run",
+      "file": "run/batch48_tuple_mixed_copy_fields.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "stdout": "owned\n77\ntrue\ntrue\n"
+    },
+    {
+      "id": "batch48_tuple_move_reassign",
+      "kind": "run",
+      "file": "run/batch48_tuple_move_reassign.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "stdout": "value1:1\nvalue2:2\n"
+    },
+    {
+      "id": "batch48_tuple_multiple_strings",
+      "kind": "run",
+      "file": "run/batch48_tuple_multiple_strings.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "stdout": "left/right:9\n"
+    },
+    {
+      "id": "batch48_tuple_sink_return",
+      "kind": "run",
+      "file": "run/batch48_tuple_sink_return.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "stdout": "moved:6\n"
+    },
+    {
+      "id": "batch48_nested_clone_independence",
+      "kind": "run",
+      "file": "run/batch48_nested_clone_independence.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "stdout": "1:3:1\n9:2:8\n"
+    },
+    {
+      "id": "batch48_nested_return_and_mutate",
+      "kind": "run",
+      "file": "run/batch48_nested_return_and_mutate.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "stdout": "5:7:2\n"
+    },
+    {
+      "id": "batch48_nested_loop_read",
+      "kind": "run",
+      "file": "run/batch48_nested_loop_read.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "stdout": "2\n0\n3\n15\n"
+    },
+    {
+      "id": "batch48_nested_index_push_loop",
+      "kind": "run",
+      "file": "run/batch48_nested_index_push_loop.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "stdout": "10:2:12\n"
+    },
+    {
+      "id": "batch48_nested_move_return",
+      "kind": "run",
+      "file": "run/batch48_nested_move_return.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "stdout": "4:3:10\n"
+    },
+    {
+      "id": "batch48_owned_slice_fields",
+      "kind": "run",
+      "file": "run/batch48_owned_slice_fields.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "stdout": "first\n8\nfirst\n"
+    },
+    {
+      "id": "batch48_owned_slice_persistent_alias",
+      "kind": "run",
+      "file": "run/batch48_owned_slice_persistent_alias.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "stdout": "shared\nshared\n8\nshared\n"
+    },
+    {
+      "id": "batch48_owned_slice_forward_iteration",
+      "kind": "run",
+      "file": "run/batch48_owned_slice_forward_iteration.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "stdout": "a\nb\n7\n"
+    },
+    {
+      "id": "batch48_owned_slice_empty_temporary",
+      "kind": "run",
+      "file": "run/batch48_owned_slice_empty_temporary.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "stdout": "0\n9\n"
+    },
+    {
+      "id": "batch48_nested_outer_bounds",
+      "kind": "panic",
+      "file": "panic/batch48_nested_outer_bounds.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "stdout": "",
+      "panic": "P-INDEX"
+    },
+    {
+      "id": "batch48_nested_inner_bounds",
+      "kind": "panic",
+      "file": "panic/batch48_nested_inner_bounds.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "stdout": "",
+      "panic": "P-INDEX"
+    },
+    {
+      "id": "batch48_tuple_use_after_move",
+      "kind": "reject",
+      "file": "reject/batch48_tuple_use_after_move.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "diagnostic": "E0402"
+    },
+    {
+      "id": "batch48_tuple_sink_twice",
+      "kind": "reject",
+      "file": "reject/batch48_tuple_sink_twice.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "diagnostic": "E0402"
+    },
+    {
+      "id": "batch48_tuple_readonly_parameter_move",
+      "kind": "reject",
+      "file": "reject/batch48_tuple_readonly_parameter_move.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "diagnostic": "E0401"
+    },
+    {
+      "id": "batch48_heap_use_after_move",
+      "kind": "reject",
+      "file": "reject/batch48_heap_use_after_move.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "diagnostic": "E0402"
+    },
+    {
+      "id": "batch48_heap_push_wrong_type",
+      "kind": "reject",
+      "file": "reject/batch48_heap_push_wrong_type.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "batch48_heap_immutable_push",
+      "kind": "reject",
+      "file": "reject/batch48_heap_immutable_push.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "diagnostic": "E0014"
+    },
+    {
+      "id": "batch48_heap_readonly_pop",
+      "kind": "reject",
+      "file": "reject/batch48_heap_readonly_pop.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "diagnostic": "E0014"
+    },
+    {
+      "id": "batch48_heap_comparator_arity",
+      "kind": "reject",
+      "file": "reject/batch48_heap_comparator_arity.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "diagnostic": "E0012"
+    },
+    {
+      "id": "batch48_heap_comparator_result_type",
+      "kind": "reject",
+      "file": "reject/batch48_heap_comparator_result_type.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "batch48_nested_push_argument_mutation",
+      "kind": "reject",
+      "file": "reject/batch48_nested_push_argument_mutation.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "diagnostic": "E0403"
+    },
+    {
+      "id": "batch48_nested_push_argument_move",
+      "kind": "reject",
+      "file": "reject/batch48_nested_push_argument_move.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "diagnostic": "E0403"
+    },
+    {
+      "id": "batch48_nested_push_index_mutation",
+      "kind": "reject",
+      "file": "reject/batch48_nested_push_index_mutation.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "diagnostic": "E0403"
+    },
+    {
+      "id": "batch48_owned_slice_alias_write",
+      "kind": "reject",
+      "file": "reject/batch48_owned_slice_alias_write.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "diagnostic": "E0101"
+    },
+    {
+      "id": "batch48_owned_slice_alias_move",
+      "kind": "reject",
+      "file": "reject/batch48_owned_slice_alias_move.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "diagnostic": "E0404"
+    },
+    {
+      "id": "batch48_owned_slice_then_mutation",
+      "kind": "reject",
+      "file": "reject/batch48_owned_slice_then_mutation.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "diagnostic": "E0102"
+    },
+    {
+      "id": "batch48_nested_string_vectors",
+      "kind": "unsupported",
+      "file": "unsupported/batch48_nested_string_vectors.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "diagnostic": "U0001",
+      "reason": "Only Vec[Vec[int]] is supported among nested vectors."
+    },
+    {
+      "id": "batch48_nested_three_levels",
+      "kind": "unsupported",
+      "file": "unsupported/batch48_nested_three_levels.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "diagnostic": "U0001",
+      "reason": "Three nested Vec levels remain outside the subset."
+    },
+    {
+      "id": "batch48_heap_int_element",
+      "kind": "unsupported",
+      "file": "unsupported/batch48_heap_int_element.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "diagnostic": "U0001",
+      "reason": "Only Heap[(String, int)] is supported."
+    },
+    {
+      "id": "batch48_heap_string_element",
+      "kind": "unsupported",
+      "file": "unsupported/batch48_heap_string_element.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "diagnostic": "U0001",
+      "reason": "Only Heap[(String, int)] is supported."
+    },
+    {
+      "id": "batch48_heap_copy_tuple_element",
+      "kind": "unsupported",
+      "file": "unsupported/batch48_heap_copy_tuple_element.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "diagnostic": "U0001",
+      "reason": "Copy tuple Heap elements remain outside this batch."
+    },
+    {
+      "id": "batch48_heap_captured_comparator",
+      "kind": "unsupported",
+      "file": "unsupported/batch48_heap_captured_comparator.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "diagnostic": "U0001",
+      "reason": "Saved comparator closures may not capture even Copy locals in this subset."
+    },
+    {
+      "id": "batch48_heap_block_comparator",
+      "kind": "unsupported",
+      "file": "unsupported/batch48_heap_block_comparator.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "diagnostic": "U0001",
+      "reason": "Heap comparators must have a single expression body."
+    },
+    {
+      "id": "batch48_heap_user_call_comparator",
+      "kind": "unsupported",
+      "file": "unsupported/batch48_heap_user_call_comparator.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "diagnostic": "U0001",
+      "reason": "Heap comparator expressions exclude user calls."
+    },
+    {
+      "id": "batch48_heap_clone_boundary",
+      "kind": "reject",
+      "file": "reject/batch48_heap_clone_boundary.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "diagnostic": "E0001",
+      "reason": "Stage0 rejects automatic Heap cloning with E0001."
+    },
+    {
+      "id": "batch48_heap_peek_boundary",
+      "kind": "reject",
+      "file": "reject/batch48_heap_peek_boundary.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "diagnostic": "U0001",
+      "reason": "Stage0 rejects Heap.peek with U0001."
+    },
+    {
+      "id": "batch48_optional_owned_string",
+      "kind": "unsupported",
+      "file": "unsupported/batch48_optional_owned_string.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "diagnostic": "U0001",
+      "reason": "Ordinary owned String Optionals remain unsupported; the String tuple exception serves Heap.pop."
+    },
+    {
+      "id": "batch48_optional_owned_vector",
+      "kind": "unsupported",
+      "file": "unsupported/batch48_optional_owned_vector.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "diagnostic": "U0001",
+      "reason": "Ordinary owned vector Optionals remain unsupported."
+    },
+    {
+      "id": "batch48_general_closure_boundary",
+      "kind": "reject",
+      "file": "reject/batch48_general_closure_boundary.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "diagnostic": "U0001",
+      "reason": "Stage0 rejects stored general closures with U0001."
+    },
+    {
+      "id": "batch48_heap_equal_items",
+      "kind": "run",
+      "file": "run/batch48_heap_equal_items.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "stdout": "17\n17\n0\n"
+    },
+    {
+      "id": "batch48_nested_index_evaluated_once",
+      "kind": "run",
+      "file": "run/batch48_nested_index_evaluated_once.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "stdout": "1\n7\n"
+    },
+    {
+      "id": "batch48_heap_owned_capture",
+      "kind": "unsupported",
+      "file": "unsupported/batch48_heap_owned_capture.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "diagnostic": "U0001",
+      "reason": "Heap comparators may not capture owned String environments in this subset."
+    },
+    {
+      "id": "batch48_sink_cleanup",
+      "kind": "run",
+      "file": "run/batch48_sink_cleanup.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "stdout": "one:2:first:1\ntail\ntwo:1:second:1\nearly\n14\n6\nstop\n8\n"
+    },
+    {
+      "id": "batch48_sink_borrow_order",
+      "kind": "reject",
+      "file": "reject/batch48_sink_borrow_order.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "diagnostic": "E0102"
+    },
+    {
+      "id": "batch48_sink_after_move",
+      "kind": "reject",
+      "file": "reject/batch48_sink_after_move.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "diagnostic": "E0402"
+    },
+    {
+      "id": "batch48_sink_return_borrow",
+      "kind": "reject",
+      "file": "reject/batch48_sink_return_borrow.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "diagnostic": "E0304"
+    },
+    {
+      "id": "batch48_heap_equality",
+      "kind": "reject",
+      "file": "reject/batch48_heap_equality.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "diagnostic": "E0501"
+    },
+    {
+      "id": "batch48_heap_ordering",
+      "kind": "reject",
+      "file": "reject/batch48_heap_ordering.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "diagnostic": "E0501"
+    },
+    {
+      "id": "batch48_optional_borrow_move",
+      "kind": "unsupported",
+      "file": "unsupported/batch48_optional_borrow_move.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "diagnostic": "U0001",
+      "reason": "An inferred alias of the borrowed owned Optional payload remains outside the subset; stage0 accepts and prints kept."
+    },
+    {
+      "id": "batch48_optional_payload_typed_move",
+      "kind": "reject",
+      "file": "reject/batch48_optional_payload_typed_move.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "diagnostic": "E0404"
+    },
+    {
+      "id": "batch48_optional_payload_discard",
+      "kind": "run",
+      "file": "run/batch48_optional_payload_discard.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "stdout": ""
+    },
+    {
+      "id": "batch48_optional_payload_view_return",
+      "kind": "run",
+      "file": "run/batch48_optional_payload_view_return.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "stdout": "kept\n"
+    },
+    {
+      "id": "batch48_optional_payload_view_escape",
+      "kind": "reject",
+      "file": "reject/batch48_optional_payload_view_escape.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "diagnostic": "E0303"
+    },
+    {
+      "id": "batch48_standard_io_error",
+      "kind": "unsupported",
+      "file": "unsupported/batch48_standard_io_error.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "diagnostic": "U0001",
+      "reason": "The imported standard io.Error type remains outside the selfhost subset; stage0 accepts this source."
+    },
+    {
+      "id": "batch48_standard_fs_error",
+      "kind": "unsupported",
+      "file": "unsupported/batch48_standard_fs_error.yv",
+      "batch": "nested-vec-owned-tuple-heap-dep-cli",
+      "diagnostic": "U0001",
+      "reason": "The imported standard fs.Error type remains outside the selfhost subset; stage0 accepts this source."
     }
   ],
   "promotions": [
@@ -6894,6 +7389,28 @@
       "kind": "run",
       "source_sha256": "704c1d0e1a9511f308b29c8e5f97a466bce03a4a6d360fa31579c6e34f51f21c",
       "reason": "Read-only Map iteration and owned String vector sorting are now supported; the original source bytes are unchanged."
+    },
+    {
+      "previous_id": "unsupported_vec_nested_element",
+      "previous_file": "unsupported/unsupported_vec_nested_element.yv",
+      "previous_kind": "unsupported",
+      "baseline_commit": "5e527961eba9fbf4547251b42a8b1f21daff5b05",
+      "id": "unsupported_vec_nested_element",
+      "file": "unsupported/unsupported_vec_nested_element.yv",
+      "kind": "run",
+      "source_sha256": "44966259cb6bb82eb69d98565ff902a372dac1fc8169000686ccf01345f233db",
+      "reason": "The original two-level Vec[int] literal and indexed read are now supported; the original source path and bytes are unchanged."
+    },
+    {
+      "previous_id": "tuple43_pair_owned",
+      "previous_file": "unsupported/tuple43_pair_owned.yv",
+      "previous_kind": "unsupported",
+      "baseline_commit": "5e527961eba9fbf4547251b42a8b1f21daff5b05",
+      "id": "tuple43_pair_owned",
+      "file": "unsupported/tuple43_pair_owned.yv",
+      "kind": "run",
+      "source_sha256": "a957ed1b8b17a7b6579ae17d52006b30bde9e4d6c6fb5d0adbaea7d3d3564c5a",
+      "reason": "The original flat tuple containing String and int is now supported; the original source path and bytes are unchanged."
     }
   ]
 }

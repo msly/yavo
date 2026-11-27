@@ -1,0 +1,6 @@
+fn forward(value: sink (String, int)) -> (String, int) { return value }
+fn main() {
+    let original = ("moved".toString(), 6)
+    let result = forward(original)
+    println("${result.0}:${result.1}")
+}

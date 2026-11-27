@@ -1,0 +1,13 @@
+fn create() -> Vec[Vec[int]] {
+    var rows: Vec[Vec[int]] = []
+    rows.push([2, 3])
+    rows.push([])
+    rows[1].push(7)
+    return rows
+}
+fn extend(rows: inout Vec[Vec[int]]) { rows[0].push(5) }
+fn main() {
+    var rows = create()
+    extend(&rows)
+    println("${rows[0][2]}:${rows[1][0]}:${rows.len()}")
+}

@@ -6,6 +6,9 @@ from pathlib import Path
 import shutil
 
 ROOT = Path(__file__).resolve().parents[1]
+APP_SLUG = "csv-check"
+APP_LABEL = "CSV"
+MIN_MODULES = 4
 
 
 def _module(name, path):
@@ -37,23 +40,23 @@ def check(selfhost, stage0, zig, directory, environment, frontend_environment, c
         record.update(oracle=review, compilers={"selfhost": support.identity(selfhost),
                                               "stage0": support.identity(stage0)},
                       toolchain=support.identity(zig))
-        if len(list(support.APP.glob("*.yv"))) < 4:
-            raise ValueError("CSV application must retain at least four source modules")
+        if len(list(support.APP.glob("*.yv"))) < MIN_MODULES:
+            raise ValueError(APP_LABEL + " application must retain at least " + str(MIN_MODULES) + " source modules")
         generated = directory / "selfhost.c"
         emitted, _, err = support.execute([selfhost, "emit-c", support.APP / "main.yv", "-o", generated],
                                           directory / "selfhost-emit", ROOT, frontend_environment,
                                           {"PATH": "", "YAVO_ALLOC_CHECK": "1"}, 60)
         record["emit"] = emitted
         if emitted["exit_code"] != 0 or emitted["timed_out"] or not generated.is_file():
-            raise ValueError("selfhost could not emit CSV application: " + err.decode("utf-8", "replace"))
+            raise ValueError("selfhost could not emit " + APP_LABEL + " application: " + err.decode("utf-8", "replace"))
         record["generated_c"] = support.identity(generated)
         bound[str(generated)] = support.digest(generated)
         binaries, stage0_generated = {}, {}
         for mode in ("debug", "release"):
             build_dir = directory / "builds" / mode
             build_dir.mkdir(parents=True)
-            candidate = build_dir / ("selfhost-csv-check" + exe)
-            reference = build_dir / ("stage0-csv-check" + exe)
+            candidate = build_dir / ("selfhost-" + APP_SLUG + exe)
+            reference = build_dir / ("stage0-" + APP_SLUG + exe)
             reference_c = build_dir / "stage0.c"
             built, _, _ = support.execute([zig, "cc", *cc_flags[mode], "-I", ROOT / "compiler/runtime",
                                            generated, "-o", candidate], build_dir / "selfhost-command",
@@ -65,10 +68,10 @@ def check(selfhost, stage0, zig, directory, environment, frontend_environment, c
                                             {"YAVO_ALLOC_CHECK": "1", "YAVO_NO_CACHE": "1"}, 600)
             record["builds"][mode] = {"selfhost": built, "stage0": rebuilt}
             if any(command["exit_code"] != 0 or command["timed_out"] for command in (built, rebuilt)):
-                raise ValueError("CSV application build failed in " + mode)
+                raise ValueError(APP_LABEL + " application build failed in " + mode)
             for label, binary in (("selfhost", candidate), ("stage0", reference)):
                 if not binary.is_file():
-                    raise ValueError("CSV build did not produce its executable")
+                    raise ValueError(APP_LABEL + " build did not produce its executable")
                 binaries[label + "-" + mode] = binary
                 bound[str(binary)] = support.digest(binary)
             bound[str(reference_c)] = support.digest(reference_c)

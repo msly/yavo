@@ -1,0 +1,54 @@
+use std/collections
+use model
+
+pub fn order(modules: []Module) -> Vec[int] ! Failure {
+    var indices: Map[String, int] = [:]
+    for i, module in modules {
+        if indices.has(module.name) {
+            return err(model.sourceFailure(module.path, module.moduleLine, "EDEP_DUPLICATE", "module name was already declared"))
+        }
+        indices.set(module.name.clone(), i)
+    }
+
+    var dependents: Vec[Vec[int]] = []
+    var remaining: Vec[int] = []
+    for module in modules {
+        dependents.push([])
+        remaining.push(module.dependencies.len())
+    }
+    for i, module in modules {
+        for dependency in module.dependencies {
+            let target = indices.getCopy(dependency.name) ?? return err(model.sourceFailure(module.path, dependency.line, "EDEP_MISSING", "dependency has no explicit declaration"))
+            dependents[target].push(i)
+        }
+    }
+
+    var ready = Heap[(String, int)].by((a, b) => a.0 < b.0)
+    for i, module in modules {
+        if remaining[i] == 0 { ready.push((module.name.clone(), i)) }
+    }
+    var result: Vec[int] = []
+    while let entry = ready.pop() {
+        let current = entry.1
+        result.push(current)
+        remaining[current] = -1
+        for dependent in dependents[current] {
+            remaining[dependent] -= 1
+            if remaining[dependent] == 0 {
+                ready.push((modules[dependent].name.clone(), dependent))
+            }
+        }
+    }
+
+    if result.len() != modules.len() {
+        var smallest = 0
+        for i, module in modules {
+            if remaining[i] >= 0 && (remaining[smallest] < 0 || module.name < modules[smallest].name) {
+                smallest = i
+            }
+        }
+        let module = modules[smallest]
+        return err(model.sourceFailure(module.path, module.moduleLine, "EDEP_CYCLE", "no dependency-first order exists for the remaining modules"))
+    }
+    return result
+}

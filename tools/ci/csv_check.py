@@ -20,6 +20,12 @@ ROOT, APP = support.ROOT, support.APP
 MODULES = ("main.yv", "parser.yv", "validator.yv", "report.yv")
 EXE = ".exe" if os.name == "nt" else ""
 BASENAME = "yavo-csv-check" + EXE
+APP_SLUG = "csv-check"
+APP_LABEL = "CSV"
+SCHEMA = "yavo-csv-check-acceptance/1"
+SCOPE = "second independent SH-4 application acceptance; not complete SH-4"
+DEFAULT_OUTPUT = ROOT / "compiler/target/ci/csv-check"
+EDIT_PREFIX = b"// CSV acceptance: comment-only edit measurement.\n"
 completed, bind = sanitizer.completed, sanitizer.bind
 
 
@@ -134,7 +140,7 @@ def build_timings(compiler, directory, mode, contents, environment, bound, timeo
     for phase in ("cold", "unchanged", "edited"):
         if phase == "edited":
             (directory / "src/main.yv").write_bytes(
-                b"// CSV acceptance: comment-only edit measurement.\n" + contents["main.yv"])
+                EDIT_PREFIX + contents["main.yv"])
         source_before = {name: support.digest(directory / "src" / name) for name in MODULES}
         record, _out, err = support.execute(
             build_argv(compiler, mode), directory / phase / "command",
@@ -291,7 +297,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--compiler", type=Path,
                         default=ROOT / "compiler/target/release" / ("yavo" + EXE))
-    parser.add_argument("--output", type=Path, default=ROOT / "compiler/target/ci/csv-check")
+    parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--oracle-only", action="store_true")
     parser.add_argument("--sanitizers", choices=("auto", "required", "off"), default="auto")
     parser.add_argument("--bootstrap-output", type=Path)
@@ -301,8 +307,8 @@ def main():
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=True)
     work = Path(tempfile.mkdtemp(prefix="attempt-", dir=output))
-    report = {"schema": "yavo-csv-check-acceptance/1", "status": "running",
-              "scope": "second independent SH-4 application acceptance; not complete SH-4",
+    report = {"schema": SCHEMA, "status": "running",
+              "scope": SCOPE,
               "work": str(work), "host": {"platform": platform.platform(),
                                         "machine": platform.machine(),
                                         "python": sys.version, "cpu_count": os.cpu_count()},
@@ -335,14 +341,14 @@ def main():
         gate_inputs = support.input_identities(include_app=True)
         for name, wanted in gate_inputs.items():
             if support.digest(Path(name)) != wanted:
-                raise ValueError("CSV gate input changed before binding")
+                raise ValueError(APP_LABEL + " gate input changed before binding")
             bind(bound, name)
         report["not_applicable"] = [{"id": case["id"], "platforms": case["platforms"],
                                     "status": "not_applicable", "passed": None}
                                    for case in cases if os.name not in case.get("platforms", [os.name])]
         cases = [case for case in cases if os.name in case.get("platforms", [os.name])]
         if not cases:
-            raise ValueError("no CSV application cases apply to this host")
+            raise ValueError("no " + APP_LABEL + " application cases apply to this host")
         report["applicable_scenarios"] = len(cases)
         if args.oracle_only:
             changed = changed_inputs(bound)
@@ -390,7 +396,7 @@ def main():
                                                   "command": record}
         artifacts = {}
         for label, mode in (("debug", "debug"), ("release-a", "release"), ("release-b", "release")):
-            print("csv-check: building " + label, flush=True)
+            print(APP_SLUG + ": building " + label, flush=True)
             row, binary, generated, overrides = native_build(
                 compiler, work / (label + " space-目录"), mode, contents,
                 environment, bound, args.build_timeout, label)
@@ -429,7 +435,7 @@ def main():
                     row["passed"] = all(row["checks"].values())
                 bind_case_files(bound, row)
                 report["runs"].append(row)
-            print("csv-check: " + label + " "
+            print(APP_SLUG + ": " + label + " "
                   + str(sum(row["passed"] for row in report["runs"] if row["build"] == label))
                   + "/" + str(len(cases)), flush=True)
             flush()
@@ -446,7 +452,7 @@ def main():
               required_scenarios_per_artifact=len(cases))
         check("normal_and_cleanup_outputs", all(row["passed"] for row in report["runs"]))
         for mode in ("debug", "release"):
-            print("csv-check: measuring " + mode + " cache conditions", flush=True)
+            print(APP_SLUG + ": measuring " + mode + " cache conditions", flush=True)
             report["timings"].append(build_timings(
                 compiler, work / ("timing-" + mode + " space-目录"), mode, contents,
                 environment, bound, args.build_timeout))

@@ -1,0 +1,745 @@
+{
+  "schema": "yavo-batch48-validation-index/1",
+  "recorded_at_utc": "2026-11-27T06:54:42.378448+00:00",
+  "batch": 48,
+  "scope": "unchanged independent five-module dependency index; subset selfhost expansion; not SH-3 replacement",
+  "baseline_commit": "5e527961eba9fbf4547251b42a8b1f21daff5b05",
+  "local_source_context": {
+    "base_head": "5e527961eba9fbf4547251b42a8b1f21daff5b05",
+    "stage0": {
+      "path": "compiler/target/batch48/stage0",
+      "bytes": 2846504,
+      "sha256": "3db1eb23f6abf2478081f2e805e0491fac00d71800ef699f796a76710cf2fddd"
+    },
+    "rust_and_production_runtime_unchanged": true,
+    "selfhost_sources": {
+      "selfhost/codegen.yv": "92635f3b2626e1579ccfa7c9adaea9750e68f6c5df184e9e1ed74e68e904e6ea",
+      "selfhost/lexer.yv": "704f57d5c3c925bf3b296b87840209e7970e66e5021bf2d5461c7bd6f2b735b7",
+      "selfhost/lexer_test.yv": "ee2f072e5f7b0cde0e7bf17cf4667b17b28873f56577357b3327df7c7bdb6556",
+      "selfhost/main.yv": "de148ff9dd1c79957d38048c412ed4ff21734319111255ab38194437d40d35a8",
+      "selfhost/model.yv": "ab582a0c59374aed63ecd8923f22073ce5090dbf02439e852ea03410015cd2c9",
+      "selfhost/parser.yv": "7f8d7d83b66963ff0f55ce676443a1e5285ad3454a9eda72dc05aa6e1b7a18f8",
+      "selfhost/support.yv": "ee73a0c05671b3c607372ab43d2f5376042145d1a77a82d005b51f14b46ca6e9",
+      "selfhost/types.yv": "0273cd488c9a780062c6ad6dbe3f65266e7d89eb8c9a038ef386438a93c944c0"
+    },
+    "toolchain": {
+      "expected_version": "0.17.1",
+      "path": "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+      "sha256": "58959f01285c05a74276f09327b551d42ed6006bf325a78dc661a024e314987b"
+    },
+    "runtime_sha256": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc"
+  },
+  "application": {
+    "modules": 5,
+    "source_lines": 309,
+    "project_sha256": "a48f8f8dc9879fa5101efb67d72232a91f61c23a575edaa983fa4f6992d84f64",
+    "source_files": {
+      "graph.yv": {
+        "path": "examples/dep-index/graph.yv",
+        "bytes": 1912,
+        "sha256": "97201407b1e5a51e794719de1345ec27c9bf303dea4e2b5eb9bf9e559bc11c25"
+      },
+      "main.yv": {
+        "path": "examples/dep-index/main.yv",
+        "bytes": 1374,
+        "sha256": "b7b0be2648b326d20fe8d1fe9285649992df59a5cf155e9418d2812b706e683f"
+      },
+      "model.yv": {
+        "path": "examples/dep-index/model.yv",
+        "bytes": 1067,
+        "sha256": "487760f52140c8d60ecbfc98fcf941f00ecbf53d43766a88ae0371fc34488330"
+      },
+      "parser.yv": {
+        "path": "examples/dep-index/parser.yv",
+        "bytes": 3986,
+        "sha256": "1517dc1190107d3a603fbaafb487b071eeae922110354d1911649915854526fe"
+      },
+      "report.yv": {
+        "path": "examples/dep-index/report.yv",
+        "bytes": 1355,
+        "sha256": "a77af0ced5d7cfd7cf0b5cd4ac09f668bbf3e2edb6ed63c0e2d106cd7fcfbaa2"
+      }
+    },
+    "development_record": {
+      "path": "examples/dep-index/evidence/DEVELOPMENT.md",
+      "bytes": 5706,
+      "sha256": "837d68587d82ae7d7c4022cbe592d9f803f423bd71c7e5d0880991df52d22c00"
+    },
+    "frozen_inputs": {
+      "spec": {
+        "path": "examples/dep-index/SPEC.md",
+        "bytes": 7384,
+        "sha256": "ada6bd0818b047632cd1f33f308f55e6b454adcec43f785ad1b36cf8dc192a26"
+      },
+      "cases": {
+        "path": "examples/dep-index/tests/cases.json",
+        "bytes": 65178,
+        "sha256": "69770d86d706dd7846cf2085f25637175c67ac658498b0ffc34d09222d971c23"
+      },
+      "oracle": {
+        "path": "examples/dep-index/tests/oracle.py",
+        "bytes": 5004,
+        "sha256": "e46cdf2c128c77d3534cc561ee705807df8c37b2e461c1a53d29f9d60ec3101a"
+      },
+      "oracle_freeze": {
+        "path": "examples/dep-index/tests/oracle-freeze.json",
+        "bytes": 1561,
+        "sha256": "04a10ef1f60e2a7ceb0bd296add6c43a168575298445af78bd482908fbd4d99d"
+      }
+    },
+    "frozen_cases": 113,
+    "applicable_cases": {
+      "posix": 112,
+      "windows": 107
+    },
+    "source_unchanged_after_stage0_development": true
+  },
+  "regressions": {
+    "total": 1027,
+    "case_counts": {
+      "run": 271,
+      "panic": 34,
+      "reject": 549,
+      "unsupported": 135,
+      "shared_unsupported": 38
+    },
+    "new_cases": 68,
+    "new_case_counts": {
+      "run": 27,
+      "panic": 2,
+      "reject": 25,
+      "unsupported": 14
+    },
+    "promotions": [
+      "unsupported_vec_nested_element",
+      "tuple43_pair_owned"
+    ],
+    "manifest": {
+      "path": "selfhost/tests/cases.json",
+      "bytes": 220300,
+      "sha256": "ef3e1165ff97c0ac029dde2738397edda8fe17ec9431f094add877272321d953"
+    },
+    "registration": {
+      "path": "compiler/target/batch48/regression-registration-freeze.json",
+      "bytes": 8469,
+      "sha256": "dde142ebb1d3fefe7d6a64f8925807bf8813cdaa2ef407ec924d2e2834bae142"
+    },
+    "check_only_review": {
+      "receipt": {
+        "path": "compiler/target/batch48/classification-candidate5/results.json",
+        "bytes": 506349,
+        "sha256": "0fd8a06dbb9512595989de06c57ab745ac7af609d89473801346c371223b1806"
+      },
+      "passed": 1027,
+      "failed": 0,
+      "compiler_sha256": "2f19357f1a336a585e5e8d03a5cc5aaf6151c383d8f612be4adcbef10f99bf7e"
+    }
+  },
+  "local_bootstrap": {
+    "receipt": {
+      "path": "compiler/target/ci/selfhost-batch48-complete/receipt.json",
+      "bytes": 15623774,
+      "sha256": "5d94cb02e4d92d708cf45bedd2541e931cb48a8f3780f6981f80359be34bbcaa"
+    },
+    "status": "passed",
+    "self_hosted": true,
+    "total": 1027,
+    "passed": 1027,
+    "failed": 0,
+    "checks_passed": 19,
+    "checks_failed": 0,
+    "checks_skipped": 0,
+    "case_counts": {
+      "panic": 34,
+      "reject": 549,
+      "run": 271,
+      "shared_unsupported": 38,
+      "unsupported": 135
+    },
+    "executable_inputs": 305,
+    "checks": [
+      {
+        "id": "locked_zig",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "id": "build_yavo_frontend",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "id": "self_compilation_fixed_point",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "id": "stage3_binary_reproduces_stage2",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "id": "lexer_units",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "id": "lexer_units_selfhost",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "id": "input_output_guard",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "id": "existing_output_guard",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "id": "dot_alias_output_guard",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "id": "hardlink_output_guard",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "id": "symlink_output_guard",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "id": "test_summary_application",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "id": "unit_conversion_application",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "id": "text_diff_application",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "id": "sliding_median_application",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "id": "atomic_ledger_application",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "id": "csv_check_application",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "id": "dep_index_application",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "id": "inputs_unchanged_during_run",
+        "passed": true,
+        "status": "passed"
+      }
+    ],
+    "stages": {
+      "stage2_c": {
+        "bytes": 1171654,
+        "sha256": "4bab3b7a9711045e910a99300b6710435132e1b769164670b2cc72707617163f"
+      },
+      "stage3_c": {
+        "bytes": 1171654,
+        "sha256": "4bab3b7a9711045e910a99300b6710435132e1b769164670b2cc72707617163f"
+      },
+      "stage2_sha256": "1d39ff5a88157ce680676510c215720e9d4f19be7acf800d1f1480b57244987c",
+      "stage3_sha256": "1d39ff5a88157ce680676510c215720e9d4f19be7acf800d1f1480b57244987c"
+    },
+    "stage2_binary": {
+      "path": "compiler/target/ci/selfhost-batch48-complete/run-ikinrspy/stages/stage2/yavo-selfhost",
+      "bytes": 545632,
+      "sha256": "1d39ff5a88157ce680676510c215720e9d4f19be7acf800d1f1480b57244987c"
+    },
+    "stage3_binary": {
+      "path": "compiler/target/ci/selfhost-batch48-complete/run-ikinrspy/stages/stage3/yavo-selfhost",
+      "bytes": 545632,
+      "sha256": "1d39ff5a88157ce680676510c215720e9d4f19be7acf800d1f1480b57244987c"
+    },
+    "dep_index": {
+      "passed": true,
+      "applicable": 112,
+      "executions": 672,
+      "ordinary_executions": 448,
+      "cleanup_executions": 224,
+      "inputs_unchanged": true,
+      "compilers": {
+        "selfhost": {
+          "bytes": 545632,
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch48-complete/run-ikinrspy/stages/stage2/yavo-selfhost",
+          "sha256": "1d39ff5a88157ce680676510c215720e9d4f19be7acf800d1f1480b57244987c"
+        },
+        "stage0": {
+          "bytes": 2846504,
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch48/stage0",
+          "sha256": "3db1eb23f6abf2478081f2e805e0491fac00d71800ef699f796a76710cf2fddd"
+        }
+      },
+      "artifacts": {
+        "selfhost-cleanup-release": {
+          "bytes": 42592,
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch48-complete/run-ikinrspy/dep-index/cleanup/selfhost/cleanup-checked/yavo-test-summary",
+          "sha256": "13ee24841312ba9af26270b979e1aea88731481c472f8dea7f727b694fd061ff"
+        },
+        "selfhost-debug": {
+          "bytes": 4231224,
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch48-complete/run-ikinrspy/dep-index/builds/debug/selfhost-dep-index",
+          "sha256": "77b522e969311e22af507067fa2652ccbfa8244cbf0ed7778bff3ae2f00dc2ed"
+        },
+        "selfhost-release": {
+          "bytes": 42480,
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch48-complete/run-ikinrspy/dep-index/builds/release/selfhost-dep-index",
+          "sha256": "d38682216b944254271776539b64347186e7a39e1375348d41fd70ee54130c9b"
+        },
+        "stage0-cleanup-release": {
+          "bytes": 39760,
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch48-complete/run-ikinrspy/dep-index/cleanup/stage0/cleanup-checked/yavo-test-summary",
+          "sha256": "b447241aed3751287a20b5a9c2cbcc1f832e7f85fea9600b6edb4e66656d5f4d"
+        },
+        "stage0-debug": {
+          "bytes": 4208464,
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch48-complete/run-ikinrspy/dep-index/builds/debug/stage0-dep-index",
+          "sha256": "d06e12ced19e6461a0e484ebcb9abe91833c7b109eca9020d38d34b23ef76e66"
+        },
+        "stage0-release": {
+          "bytes": 39600,
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch48-complete/run-ikinrspy/dep-index/builds/release/stage0-dep-index",
+          "sha256": "abbb84d16d80b7cf2b8fda69c4010745bda459a7551ee55ac5a2aecdc45fbe43"
+        }
+      }
+    },
+    "compatibility_application_gates": 7
+  },
+  "native_dep_index": {
+    "receipt": {
+      "path": "compiler/target/ci/dep-index-batch48-native/receipt.json",
+      "bytes": 1352090,
+      "sha256": "79b8e636972baa5702a656a456d4f948d8b4117f87d1f2a1d7cf9d7fa78914cd"
+    },
+    "status": "passed",
+    "passed": 336,
+    "failed": 0,
+    "application_executions": 336,
+    "normal_application_executions": 224,
+    "cleanup_application_executions": 112,
+    "sanitizer_application_executions": 0,
+    "build_attempts": 3,
+    "timing_build_attempts": 6,
+    "memory_summary": {
+      "all_commands": {
+        "recorded_commands": 353,
+        "measured_commands": 353,
+        "unavailable_commands": 0,
+        "maximum_reported_rss_bytes": 425816064,
+        "measurement_descriptions": [
+          "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum"
+        ]
+      },
+      "builds": {
+        "recorded_commands": 3,
+        "measured_commands": 3,
+        "unavailable_commands": 0,
+        "maximum_reported_rss_bytes": 425816064,
+        "measurement_descriptions": [
+          "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum"
+        ]
+      },
+      "runs": {
+        "recorded_commands": 336,
+        "measured_commands": 336,
+        "unavailable_commands": 0,
+        "maximum_reported_rss_bytes": 27545600,
+        "measurement_descriptions": [
+          "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum"
+        ]
+      },
+      "cleanup_validation": {
+        "recorded_commands": 5,
+        "measured_commands": 5,
+        "unavailable_commands": 0,
+        "maximum_reported_rss_bytes": 99540992,
+        "measurement_descriptions": [
+          "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum"
+        ]
+      },
+      "timings": {
+        "recorded_commands": 6,
+        "measured_commands": 6,
+        "unavailable_commands": 0,
+        "maximum_reported_rss_bytes": 412254208,
+        "measurement_descriptions": [
+          "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum"
+        ]
+      },
+      "sanitizers": {
+        "recorded_commands": 0,
+        "measured_commands": 0,
+        "unavailable_commands": 0,
+        "maximum_reported_rss_bytes": null,
+        "measurement_descriptions": []
+      }
+    },
+    "peak_process_memory_bytes": 425816064,
+    "memory_measurement": "maximum of per-command wait4 ru_maxrss observations; Linux KiB converted to bytes, macOS bytes; OS-reported RSS for each waited child, not simultaneous process-tree RSS or the sum of command peaks; Windows measurements unavailable",
+    "model_usage": null,
+    "monetary_cost": null,
+    "builds": [
+      {
+        "id": "debug",
+        "mode": "debug",
+        "passed": true,
+        "binary": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/dep-index-batch48-native/attempt-r_enh2m8/debug space-目录/yavo-dep-index",
+          "bytes": 4209040,
+          "sha256": "7cef9540f558d7e4c4d2f58e71400d475f837c83005dcf6ade87ba26e82e3743"
+        },
+        "generated_c": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/dep-index-batch48-native/attempt-r_enh2m8/debug space-目录/program.c",
+          "bytes": 62982,
+          "sha256": "67dcce47b79d4a255d95381ef324c6b7f6c27273ee3c480caea35a7550fbaef8"
+        }
+      },
+      {
+        "id": "release-a",
+        "mode": "release",
+        "passed": true,
+        "binary": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/dep-index-batch48-native/attempt-r_enh2m8/release-a space-目录/yavo-dep-index",
+          "bytes": 39328,
+          "sha256": "fb0d4f5a330cf6865b6b141faa98e05482ba3f765cf9b8ab941d87109d4746fc"
+        },
+        "generated_c": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/dep-index-batch48-native/attempt-r_enh2m8/release-a space-目录/program.c",
+          "bytes": 62982,
+          "sha256": "67dcce47b79d4a255d95381ef324c6b7f6c27273ee3c480caea35a7550fbaef8"
+        }
+      },
+      {
+        "id": "release-b",
+        "mode": "release",
+        "passed": true,
+        "binary": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/dep-index-batch48-native/attempt-r_enh2m8/release-b space-目录/yavo-dep-index",
+          "bytes": 39328,
+          "sha256": "fb0d4f5a330cf6865b6b141faa98e05482ba3f765cf9b8ab941d87109d4746fc"
+        },
+        "generated_c": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/dep-index-batch48-native/attempt-r_enh2m8/release-b space-目录/program.c",
+          "bytes": 62982,
+          "sha256": "67dcce47b79d4a255d95381ef324c6b7f6c27273ee3c480caea35a7550fbaef8"
+        }
+      }
+    ],
+    "checks": [
+      {
+        "id": "independent_release_generated_c",
+        "passed": true,
+        "required": true,
+        "left_sha256": "67dcce47b79d4a255d95381ef324c6b7f6c27273ee3c480caea35a7550fbaef8",
+        "right_sha256": "67dcce47b79d4a255d95381ef324c6b7f6c27273ee3c480caea35a7550fbaef8"
+      },
+      {
+        "id": "independent_release_binary",
+        "passed": true,
+        "required": true,
+        "left_sha256": "fb0d4f5a330cf6865b6b141faa98e05482ba3f765cf9b8ab941d87109d4746fc",
+        "right_sha256": "fb0d4f5a330cf6865b6b141faa98e05482ba3f765cf9b8ab941d87109d4746fc"
+      },
+      {
+        "id": "complete_native_inventory",
+        "passed": true,
+        "required": true,
+        "observed_scenarios_per_artifact": {
+          "debug": 112,
+          "release-a": 112,
+          "cleanup-checked": 112
+        },
+        "required_scenarios_per_artifact": 112
+      },
+      {
+        "id": "normal_and_cleanup_outputs",
+        "passed": true,
+        "required": true
+      },
+      {
+        "id": "timing_inventory",
+        "passed": true,
+        "required": true
+      },
+      {
+        "id": "independent_sanitizers",
+        "required": false,
+        "passed": null,
+        "status": "unavailable"
+      },
+      {
+        "id": "source_inventory_unchanged",
+        "passed": true,
+        "required": true
+      },
+      {
+        "id": "gate_input_inventory_unchanged",
+        "passed": true,
+        "required": true
+      },
+      {
+        "id": "inputs_and_artifacts_unchanged",
+        "passed": true,
+        "required": true,
+        "changed": []
+      },
+      {
+        "id": "retained_inputs_and_artifacts_unchanged",
+        "passed": true,
+        "required": true,
+        "changed": []
+      }
+    ],
+    "timings": [
+      {
+        "mode": "debug",
+        "measurements": [
+          {
+            "phase": "cold",
+            "elapsed_seconds": 20.316263169050217,
+            "sample_count": 1,
+            "p50_ms": null,
+            "p95_ms": null,
+            "cache_classification": "miss"
+          },
+          {
+            "phase": "unchanged",
+            "elapsed_seconds": 0.017941849306225777,
+            "sample_count": 1,
+            "p50_ms": null,
+            "p95_ms": null,
+            "cache_classification": "hit"
+          },
+          {
+            "phase": "edited",
+            "elapsed_seconds": 0.28241013549268246,
+            "sample_count": 1,
+            "p50_ms": null,
+            "p95_ms": null,
+            "cache_classification": "miss"
+          }
+        ]
+      },
+      {
+        "mode": "release",
+        "measurements": [
+          {
+            "phase": "cold",
+            "elapsed_seconds": 5.109619773924351,
+            "sample_count": 1,
+            "p50_ms": null,
+            "p95_ms": null,
+            "cache_classification": "miss"
+          },
+          {
+            "phase": "unchanged",
+            "elapsed_seconds": 0.008643189445137978,
+            "sample_count": 1,
+            "p50_ms": null,
+            "p95_ms": null,
+            "cache_classification": "hit"
+          },
+          {
+            "phase": "edited",
+            "elapsed_seconds": 1.0229128561913967,
+            "sample_count": 1,
+            "p50_ms": null,
+            "p95_ms": null,
+            "cache_classification": "miss"
+          }
+        ]
+      }
+    ],
+    "local_sanitizers": {
+      "status": "unavailable",
+      "passed": null,
+      "mode": "auto",
+      "controls": [],
+      "builds": [],
+      "runs": [],
+      "application_executions": 0,
+      "scope": "Linux GCC ASan/UBSan on stage0 and actual final-stage2 generated C",
+      "limits": [
+        "LeakSanitizer is disabled; separate exit-cleanup gates check tracked leaks.",
+        "No TSan or non-Linux sanitizer claim."
+      ],
+      "reason": "system GCC is unavailable"
+    },
+    "scope": "local native stage0 delivery; required dual-producer sanitizer acceptance is a separate Linux CI gate"
+  },
+  "coverage": {
+    "receipt": {
+      "path": "compiler/target/batch48/final-stage2-coverage.json",
+      "bytes": 350793,
+      "sha256": "162fd5c0f40b13b960a91a25ad9f12cb714cbb9e5831856cb1bfb51ef710ba60"
+    },
+    "compiler_sha256": "1d39ff5a88157ce680676510c215720e9d4f19be7acf800d1f1480b57244987c",
+    "stage0_sha256": "3db1eb23f6abf2478081f2e805e0491fac00d71800ef699f796a76710cf2fddd",
+    "summary": {
+      "original": {
+        "sources": 613,
+        "stage0_accepted": 392,
+        "selfhost_accepted": 117,
+        "stage0_unique_entry_bytes": 222,
+        "selfhost_unique_entry_bytes": 54
+      },
+      "batch47": {
+        "sources": 617,
+        "stage0_accepted": 393,
+        "selfhost_accepted": 118,
+        "stage0_unique_entry_bytes": 223,
+        "selfhost_unique_entry_bytes": 55
+      },
+      "all": {
+        "sources": 622,
+        "stage0_accepted": 394,
+        "selfhost_accepted": 119,
+        "stage0_unique_entry_bytes": 224,
+        "selfhost_unique_entry_bytes": 56
+      }
+    },
+    "lost": [],
+    "gained_previous": [
+      "history/v0.4/yavo-tests/check/T-V2p.yv",
+      "history/v0.5/yavo-tests/check/T-G15.yv",
+      "history/v0.5/yavo-tests/check/T-V2p.yv",
+      "yavo-tests/check/T-G15.yv",
+      "yavo-tests/check/T-V2p.yv"
+    ],
+    "accepted_additions": [
+      "examples/dep-index/main.yv"
+    ],
+    "violations": [],
+    "timeouts": [],
+    "abnormal_exits": [],
+    "previous_source_changes": [],
+    "stage0_classification_changes": [],
+    "source_changes_during_run": [],
+    "compiler_identities_unchanged": true,
+    "passed": true,
+    "counting_scope": "non-selfhost non-target repository paths including historical snapshots; entry-byte deduplication is not task or dependency-graph deduplication",
+    "first_blockers": [
+      {
+        "reason": "this standard module is outside the selfhost subset",
+        "paths": 29
+      },
+      {
+        "reason": "Map values other than int, bool and byte are outside the selfhost subset",
+        "paths": 27
+      },
+      {
+        "reason": "tuple vector elements are outside the selfhost subset",
+        "paths": 25
+      },
+      {
+        "reason": "generic types and interfaces are outside the selfhost subset",
+        "paths": 18
+      },
+      {
+        "reason": "floating-point numbers are not in the bootstrap subset",
+        "paths": 16
+      },
+      {
+        "reason": "standard-library error bindings are outside this subset; use catch _",
+        "paths": 11
+      },
+      {
+        "reason": "type suffix is outside the selfhost subset",
+        "paths": 10
+      },
+      {
+        "reason": "expression is outside the selfhost SH-1 subset",
+        "paths": 9
+      },
+      {
+        "reason": "this Optional payload type is outside the selfhost subset",
+        "paths": 9
+      },
+      {
+        "reason": "numeric conversions are outside the selfhost subset",
+        "paths": 8
+      }
+    ]
+  },
+  "rust": {
+    "debug": {
+      "exit": 0,
+      "groups": 19,
+      "totals": [
+        145,
+        0,
+        1
+      ],
+      "conformance": {
+        "pass": 124,
+        "superseded": 2,
+        "unsupported": 3
+      },
+      "stdout": {
+        "path": "compiler/target/batch48/rust-debug.stdout",
+        "bytes": 12332,
+        "sha256": "3b5d5db34d583b160571b5aeb076e371255a71988e7cdfd2df219a92bda394ad"
+      }
+    },
+    "release": {
+      "exit": 0,
+      "groups": 19,
+      "totals": [
+        145,
+        0,
+        1
+      ],
+      "conformance": {
+        "pass": 124,
+        "superseded": 2,
+        "unsupported": 3
+      },
+      "stdout": {
+        "path": "compiler/target/batch48/rust-release.stdout",
+        "bytes": 12330,
+        "sha256": "6ee62a1bbfeeda149d102cf4f872a79f9c87b6b665f6778ad6a578f1b6ab34ce"
+      }
+    }
+  },
+  "ci": {
+    "status": "pending",
+    "required_successful_jobs": 6
+  },
+  "resolved_review_findings": [
+    "Heap aggregate comparisons reject with E0501 instead of accepting invalid generated C.",
+    "String-to-str conversion is restricted to valid return/call contexts; three frozen E0001 fixtures remain rejected.",
+    "Read-only owned-slice foreach aliases preserve immutable origin; local owning Vec aliases remain U0001.",
+    "Optional payload views preserve their original owner; unsupported inferred aliases report U0001 and owned annotations E0404.",
+    "Named standard io.Error/fs.Error report U0001; missing imports and ordinary user modules retain name lookup."
+  ],
+  "remaining": {
+    "sh3": "ordinary build/run, public process/environment/filesystem capabilities, locked backend driver, structured diagnostics and broader language/tool coverage",
+    "formal_performance": "independent frozen benchmarks and compile P50 are not established by these single app observations",
+    "relative_delivery_cost": "complete token/currency accounting and independent >=20% cost improvement remain unestablished"
+  }
+}

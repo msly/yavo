@@ -1,0 +1,8 @@
+use std/collections
+fn next(heap: inout Heap[(String, int)]) -> ?(String, int) { return heap.pop() }
+fn main() {
+    var heap = Heap[(String, int)].by((a, b) => a.0 < b.0)
+    heap.push(("x".toString(), 5))
+    if let item = next(&heap) { println("${item.0}:${item.1}") }
+    println(next(&heap).isNone())
+}

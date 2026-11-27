@@ -1,0 +1,18 @@
+struct Item { label: String, number: int }
+fn total(items: []Item) -> int {
+    var sum = 0
+    for item in items {
+        let alias = item
+        println(alias.label)
+        sum += alias.number
+    }
+    return sum
+}
+fn forward(items: []Item) -> int {
+    let view = items
+    return total(view)
+}
+fn main() {
+    let items = [Item{label: "a".toString(), number: 2}, Item{label: "b".toString(), number: 5}]
+    println(forward(items))
+}

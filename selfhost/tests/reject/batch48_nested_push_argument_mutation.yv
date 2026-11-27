@@ -1,0 +1,6 @@
+fn modify(rows: inout Vec[Vec[int]]) -> int { rows.push([9])
+ return 4 }
+fn main() {
+    var rows = [[1]]
+    rows[0].push(modify(&rows))
+}

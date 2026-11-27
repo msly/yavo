@@ -1,0 +1,53 @@
+use std/os
+use model
+use parser
+use graph
+use report
+
+fn run(args: []str) -> int {
+    if args.len() == 2 && args[1] == "--help" {
+        report.usage()
+        return 0
+    }
+
+    var operands: Vec[str] = []
+    var afterSeparator = false
+    for i in 1..args.len() {
+        let argument = args[i]
+        if !afterSeparator && argument == "--" {
+            afterSeparator = true
+        } else {
+            if !afterSeparator && argument.startsWith("-") {
+                report.failure(model.usageFailure("unknown option or combined --help"))
+                return 2
+            }
+            operands.push(argument)
+        }
+    }
+    if operands.len() == 0 {
+        report.failure(model.usageFailure("at least one file operand is required"))
+        return 2
+    }
+
+    var modules: Vec[Module] = []
+    for path in operands {
+        let module = parser.read(path) catch problem {
+            report.failure(problem)
+            return problem.status
+        }
+        modules.push(module)
+    }
+    let order = graph.order(modules) catch problem {
+        report.failure(problem)
+        return problem.status
+    }
+    let output = report.render(modules, order)
+    print(output)
+    return 0
+}
+
+fn main() {
+    // run returns normally, dropping all owned application state and errors.
+    let status = run(os.args())
+    if status != 0 { os.exit(status) }
+}

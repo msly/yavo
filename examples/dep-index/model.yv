@@ -1,0 +1,50 @@
+// Owned application data shared by the parser, graph, and reporter.
+pub struct Dependency {
+    name: String
+    line: int
+}
+
+pub struct Module {
+    name: String
+    path: String
+    moduleLine: int
+    dependencies: Vec[Dependency]
+}
+
+pub struct Failure {
+    status: int
+    path: String
+    line: int
+    code: String
+    explanation: String
+}
+
+pub fn sourceFailure(path: str, line: int, code: str, explanation: str) -> Failure {
+    return Failure{
+        status: 1,
+        path: path.toString(),
+        line: line,
+        code: code.toString(),
+        explanation: explanation.toString()
+    }
+}
+
+pub fn readFailure(path: str) -> Failure {
+    return Failure{
+        status: 3,
+        path: path.toString(),
+        line: 0,
+        code: "EIO_READ".toString(),
+        explanation: "cannot read file as UTF-8".toString()
+    }
+}
+
+pub fn usageFailure(explanation: str) -> Failure {
+    return Failure{
+        status: 2,
+        path: String{},
+        line: 0,
+        code: "ECLI_USAGE".toString(),
+        explanation: explanation.toString()
+    }
+}

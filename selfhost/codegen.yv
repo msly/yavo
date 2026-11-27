@@ -19,6 +19,8 @@ struct Local {
     sources: int = 0
     // A read-only view of an owned element or key a for loop iterates.
     element: bool = false
+    // An inferred &T alias of an owned element in a read-only slice parameter.
+    indexedAlias: bool = false
     // Map keys remain immutable even when the collection itself is writable.
     mapKey: bool = false
     // A str or Vec[str] binding that points into the owned value of local
@@ -116,6 +118,7 @@ struct Generator {
     accessLocks: Vec[int] = []
     iterationLocks: Vec[int] = []
     reservations: Vec[int] = []
+    indexedReservations: Vec[int] = []
     inoutLocks: Vec[int] = []
     loopStates: Vec[LoopState] = []
     exits: Vec[bool] = []
@@ -133,6 +136,8 @@ struct Generator {
     mapAt: int = 0
     // Flat Copy tuple layouts, discovered by annotations and inferred values.
     tuples: Vec[Type] = []
+    heaps: Vec[Type] = []
+    comparators: String = ""
 }
 
 fn require(reg: Registry, ts: Vec[Token], token: int, actual: Type, expected: Type) {
@@ -191,7 +196,7 @@ fn temporaryName(id: int) -> String {
 
 fn useTuple(g: inout Generator, ty: Type) {
     var item = ty
-    if item.kind == .Optional { item = types.element(item) }
+    if item.kind == .Optional || item.kind == .Heap { item = types.element(item) }
     if item.kind != .Tuple { return }
     for known in g.tuples {
         if types.same(known, item) { return }
@@ -199,8 +204,17 @@ fn useTuple(g: inout Generator, ty: Type) {
     g.tuples.push(item)
 }
 
+fn useHeap(g: inout Generator, ty: Type) {
+    useTuple(&g, ty)
+    for known in g.heaps {
+        if types.same(known, ty) { return }
+    }
+    g.heaps.push(ty)
+}
+
 fn typedValue(g: inout Generator, reg: Registry, ty: Type, expression: str) -> Value {
     useTuple(&g, ty)
+    if ty.kind == .Heap { useHeap(&g, ty) }
     let n = g.counter
     g.counter += 1
     let name = temporaryName(n)
@@ -231,6 +245,7 @@ fn scalar(g: inout Generator, ty: BasicType, expression: str) -> Value {
 
 fn vectorHelper(ty: Type) -> String {
     if ty.elementKind == .String { return "string".toString() }
+    if ty.elementKind == .Vec { return "vec_int".toString() }
     return support.join2("type_", support.decimal(ty.elementDecl))
 }
 
@@ -266,6 +281,9 @@ fn dropName(reg: Registry, ty: Type) -> String {
     if ty.kind == .String { return "yv_string_drop".toString() }
     if ty.kind == .Map || ty.kind == .Set { return support.join2("sh_map_drop_", mapHelper(ty)) }
     if ty.kind == .Result { return support.join2("sh_result_drop_", support.decimal(ty.decl)) }
+    if ty.kind == .Tuple { return support.join2("sh_tuple_drop_", support.decimal(ty.decl)) }
+    if ty.kind == .Optional { return support.join2("sh_optional_tuple_drop_", support.decimal(ty.elementDecl)) }
+    if ty.kind == .Heap { return support.join2("sh_heap_drop_", support.decimal(ty.elementDecl)) }
     if ty.kind == .Vec {
         if types.owned(reg, types.element(ty)) {
             return support.join2("sh_vec_drop_", vectorHelper(ty))
@@ -304,6 +322,12 @@ fn cloneExpression(reg: Registry, ty: Type, source: str, lineText: str, columnTe
         out.push("(&(")
         out.push(source)
         out.push("), ")
+    } else if ty.kind == .Tuple {
+        out.push("sh_tuple_clone_")
+        out.push(support.decimal(ty.decl))
+        out.push("(&(")
+        out.push(source)
+        out.push("), ")
     } else if types.owned(reg, ty) {
         out.push("sh_clone_")
         out.push(support.decimal(ty.decl))
@@ -322,6 +346,8 @@ fn cloneExpression(reg: Registry, ty: Type, source: str, lineText: str, columnTe
 
 fn dropValue(g: inout Generator, reg: Registry, ty: Type, name: str) {
     if ty.kind == .Map || ty.kind == .Set { useMap(&g, ty) }
+    if ty.kind == .Heap { useHeap(&g, ty) }
+    useTuple(&g, ty)
     if types.owned(reg, ty) {
         put(&g, dropName(reg, ty))
         put(&g, "(&(")
@@ -467,6 +493,9 @@ fn readable(g: Generator, ts: Vec[Token], root: int, token: int) {
     }
     if root >= 0 && contains(g.inoutLocks, root) {
         lexer.fail(ts, token, "E0102", "an earlier call argument has exclusive access to this value")
+    }
+    if root >= 0 && contains(g.indexedReservations, root) {
+        lexer.fail(ts, token, "E0403", "an indexed modifying receiver has exclusive access to this value")
     }
 }
 
@@ -975,6 +1004,9 @@ fn userCall(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Ex
     var viewed = false
     var viewRoot = -1
     var args = String{}
+    // Preserve transferred arguments while later arguments are evaluated.
+    // The callee becomes their owner when the emitted call executes.
+    var consumed: Vec[Value] = []
     var i = 0
     while i < e.argCount {
         let argId = p.lists[e.argStart + i]
@@ -993,6 +1025,9 @@ fn userCall(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Ex
             let operand = p.expressions[unparenthesized(p, p.expressions[argId].left)]
             if operand.kind == .Name {
                 let source = localIndex(g, ts, operand.token)
+                if source >= 0 && g.locals[source].indexedAlias && types.owned(reg, expected) {
+                    lexer.fail(ts, argToken, "E0404", "an indexed element alias cannot supply an owned inout value")
+                }
                 if source >= 0 && g.locals[source].mapKey {
                     // Stage0 checks the borrowed key's value conversion before
                     // its mutability when supplying an inout argument.
@@ -1012,8 +1047,28 @@ fn userCall(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Ex
             if p.expressions[argId].kind == .Ref {
                 lexer.fail(ts, argToken, "U0001", "borrow arguments for read-only parameters are outside this subset")
             }
+            if param.consuming && types.owned(reg, expected) {
+                let operand = p.expressions[unparenthesized(p, argId)]
+                if operand.kind == .Name {
+                    let root = localIndex(g, ts, operand.token)
+                    if root >= 0 && contains(g.indexedReservations, root) {
+                        lexer.fail(ts, e.token, "E0403", "this call moves an indexed modifying receiver")
+                    }
+                }
+            }
             let arg = emitExpected(&g, p, ts, reg, argId, expected)
             // Built-in view parameters accept String -> str and Vec[T] -> []T.
+            if param.consuming && types.owned(reg, expected) {
+                require(reg, ts, argToken, arg.ty, expected)
+                let taken = takeValue(&g, reg, ts, argToken, arg)
+                args.push(taken.name)
+                consumed.push(taken)
+                if types.carriesBorrow(expected) && arg.transient && ownerOf(arg) >= 0 {
+                    g.locks.push(ownerOf(arg))
+                }
+                i += 1
+                continue
+            }
             let sliceView = expected.kind == .Slice && arg.ty.kind == .Vec &&
                 types.same(types.element(arg.ty), types.element(expected))
             if expected.kind == .Str && arg.ty.kind == .String {
@@ -1043,7 +1098,7 @@ fn userCall(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Ex
             } else if named {
                 sources = sources | arg.sources
             }
-            if arg.root >= 0 { g.locks.push(arg.root) }
+            if arg.root >= 0 && (!param.consuming || types.carriesBorrow(expected)) { g.locks.push(arg.root) }
         }
         i += 1
     }
@@ -1052,9 +1107,11 @@ fn userCall(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Ex
     while g.inoutLocks.len() > inoutMark { let _ = g.inoutLocks.pop() }
     if result.kind == .Unit {
         emit(&g, support.join2(expression, ";"))
+        for value in consumed { zeroValue(&g, reg, value) }
         return Value{ty: result, name: "".toString()}
     }
     var value = typedValue(&g, reg, result, expression)
+    for argument in consumed { zeroValue(&g, reg, argument) }
     value.sources = sources
     if viewed {
         value.transient = true
@@ -1102,6 +1159,9 @@ fn allowedSources(p: Program, ts: Vec[Token], reg: Registry, index: int) -> int 
             if found < 0 {
                 lexer.fail(ts, token, "E0010", format("of ${ts[token].text}: there is no parameter with this name"))
             }
+            if p.params[f.paramStart + found].consuming {
+                lexer.fail(ts, token, "E0304", "a returned borrow cannot name a sink parameter that is dropped here")
+            }
             if found >= 62 {
                 lexer.fail(ts, token, "U0001", "returned borrows of a parameter after the 62nd are outside this subset")
             }
@@ -1118,9 +1178,23 @@ fn allowedSources(p: Program, ts: Vec[Token], reg: Registry, index: int) -> int 
 // O2: a returned str may point only into parameters listed after `of`, or
 // into static data. Parameters are the first locals of a function.
 fn returnedSources(g: Generator, p: Program, ts: Vec[Token], id: int, returned: Value) {
-    let token = p.expressions[id].token
+    var token = p.expressions[id].token
+    var base = id
+    while p.expressions[base].kind == .Field { base = p.expressions[base].left }
+    if p.expressions[base].kind == .Name {
+        let local = localIndex(g, ts, p.expressions[base].token)
+        if local >= 0 && g.locals[local].matchBinding > 0 { token = p.expressions[base].token }
+    }
     if returned.transient {
         let root = ownerOf(returned)
+        if root >= 0 && root < 62 && g.locals[root].ty.kind == .Slice &&
+            g.locals[root].sources == sourceBit(root) {
+            let sources = returned.sources | sourceBit(root)
+            if (sources | g.allowed) != g.allowed {
+                lexer.fail(ts, token, "E0303", "the returned view points into a slice parameter that of does not list")
+            }
+            return
+        }
         if root >= 0 && g.locals[root].element {
             lexer.fail(ts, token, "U0001", "returning a view of an iterated element is outside this subset")
         }
@@ -1249,9 +1323,93 @@ fn sortValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: E
     return Value{ty: types.primitive(.Unit), name: "".toString()}
 }
 
+// Heap comparators are capture-free, pure expression callbacks. Keeping their
+// input values borrowed prevents a comparison from moving owned tuple fields.
+fn comparatorExpression(g: Generator, p: Program, ts: Vec[Token], id: int,
+    first: int, second: int, depth: int) {
+    if depth >= 256 { lexer.fail(ts, p.expressions[id].token, "U0001", "comparator nesting limit exceeded") }
+    let e = p.expressions[id]
+    if e.kind == .Name {
+        if ts[e.token].text != ts[first].text && ts[e.token].text != ts[second].text &&
+            localIndex(g, ts, e.token) >= 0 {
+            lexer.fail(ts, e.token, "U0001", "capturing a value in a Heap comparator is outside this subset")
+        }
+        return
+    }
+    if e.kind == .Number || e.kind == .Byte || e.kind == .Boolean || e.kind == .Text { return }
+    if e.kind == .Paren || e.kind == .Unary || e.kind == .Field {
+        comparatorExpression(g, p, ts, e.left, first, second, depth + 1)
+        return
+    }
+    if e.kind == .Binary {
+        comparatorExpression(g, p, ts, e.left, first, second, depth + 1)
+        comparatorExpression(g, p, ts, e.right, first, second, depth + 1)
+        return
+    }
+    lexer.fail(ts, e.token, "U0001", "Heap comparators require a pure expression without calls in this subset")
+}
+
+fn heapConstructor(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression) -> Value {
+    if ts[e.token].text != "by" { lexer.fail(ts, e.token, "U0001", "Heap construction requires by in this subset") }
+    if e.argCount != 1 { lexer.fail(ts, e.token, "E0012", "Heap.by requires one comparator") }
+    let receiver = p.expressions[e.left]
+    let ty = types.resolve(reg, ts, receiver.annotation)
+    let elem = types.element(ty)
+    let callback = p.expressions[unparenthesized(p, p.lists[e.argStart])]
+    if callback.kind != .Closure {
+        lexer.fail(ts, e.token, "U0001", "Heap.by requires a capture-free closure in this subset")
+    }
+    if callback.nameCount != 2 {
+        lexer.fail(ts, callback.token, "E0012", "a Heap comparator needs two parameters")
+    }
+    let first = p.lists[callback.nameStart]
+    let second = p.lists[callback.nameStart + 1]
+    comparatorExpression(g, p, ts, callback.left, first, second, 0)
+    let index = g.counter
+    g.counter += 1
+    let callbackName = format("sh_heap_compare_${index}")
+    var nested = Generator{result: types.primitive(.Bool), file: g.file}
+    declare(&nested, ts, first, elem, false, true, false)
+    declare(&nested, ts, second, elem, false, true, false)
+    emit(&nested, format("static int ${callbackName}(void *context, const void *left, const void *right) {"))
+    emit(&nested, "(void)context;")
+    emit(&nested, format("${types.cType(elem)} v_${first} = *(const ${types.cType(elem)} *)left;"))
+    emit(&nested, format("${types.cType(elem)} v_${second} = *(const ${types.cType(elem)} *)right;"))
+    let comparison = emitExpected(&nested, p, ts, reg, callback.left, types.primitive(.Bool))
+    basic(reg, ts, callback.token, comparison.ty, .Bool)
+    discardTemps(&nested, reg, 0)
+    emit(&nested, format("return ${comparison.name} ? -1 : 1;"))
+    emit(&nested, "}")
+    g.comparators.push(take(&nested.out))
+    useHeap(&g, ty)
+    return typedValue(&g, reg, ty, format("(yv_heap){ .cmp = ${callbackName} }"))
+}
+
+fn heapPush(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry,
+    e: Expression, target: Place) -> Value {
+    readable(g, ts, target.root, e.token)
+    if !target.mutable { lexer.fail(ts, e.token, "E0014", "cannot modify a read-only Heap") }
+    if e.argCount != 1 { lexer.fail(ts, e.token, "E0012", "Heap.push requires one value") }
+    writable(g, ts, target.root, e.token)
+    useHeap(&g, target.ty)
+    let mark = g.reservations.len()
+    g.reservations.push(target.root)
+    let elem = types.element(target.ty)
+    let argument = p.lists[e.argStart]
+    let value = emitExpected(&g, p, ts, reg, argument, elem)
+    require(reg, ts, p.expressions[argument].token, value.ty, elem)
+    let taken = takeValue(&g, reg, ts, p.expressions[argument].token, value)
+    while g.reservations.len() > mark { let _ = g.reservations.pop() }
+    emit(&g, format("*(${types.cType(elem)} *)yv_vec_push_slot(&((${target.name}).elems), sizeof(${types.cType(elem)}), ${lineColumn(ts, e.token)}) = ${taken.name};"))
+    zeroValue(&g, reg, taken)
+    emit(&g, format("yv_heap_sift_up(&(${target.name}), sizeof(${types.cType(elem)}));"))
+    return Value{ty: types.primitive(.Unit), name: String{}}
+}
+
 fn methodValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression) -> Value {
     let name = ts[e.token].text.clone()
     let receiver = p.expressions[e.left]
+    if receiver.kind == .HeapType { return heapConstructor(&g, p, ts, reg, e) }
     let userModule = moduleOf(g, reg, ts, receiver)
     if userModule >= 0 {
         let index = functionIn(p, ts, userModule, e.token)
@@ -1277,11 +1435,16 @@ fn methodValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
         readable(g, ts, target.root, e.token)
         if !target.mutable { lexer.fail(ts, e.token, "E0014", "cannot modify a read-only value") }
         if e.argCount != 0 { lexer.fail(ts, e.token, "E0012", "pop takes no arguments") }
-        if target.ty.kind != .Vec { lexer.fail(ts, e.token, "U0001", "pop requires a Vec in this subset") }
+        if target.ty.kind != .Vec && target.ty.kind != .Heap { lexer.fail(ts, e.token, "U0001", "pop requires a Vec or Heap in this subset") }
         writable(g, ts, target.root, e.token)
         let elem = types.element(target.ty)
         let ty = types.optional(reg, ts, e.token, elem)
         let result = typedValue(&g, reg, ty, support.join3("(", types.cType(ty), "){0}"))
+        if target.ty.kind == .Heap {
+            useHeap(&g, target.ty)
+            emit(&g, format("${result.name}.has = yv_heap_pop(&(${target.name}), sizeof(${types.cType(elem)}), &${result.name}.val);"))
+            return result
+        }
         emit(&g, support.join3("if ((", target.name, ").len > 0) {"))
         emit(&g, support.join3("(", target.name, ").len--;"))
         put(&g, support.join5(result.name, ".val = ((", types.cType(elem), " *)(", target.name))
@@ -1293,6 +1456,7 @@ fn methodValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
     if name == "set" || name == "remove" || name == "add" { return mapUpdate(&g, p, ts, reg, e) }
     if name == "push" || name == "reserve" {
         let target = placeOf(&g, p, ts, reg, e.left, 0)
+        if target.ty.kind == .Heap && name == "push" { return heapPush(&g, p, ts, reg, e, target) }
         readable(g, ts, target.root, e.token)
         if target.ty.kind == .Slice && !target.mutable {
             lexer.fail(ts, e.token, "E0014", "cannot modify a read-only value")
@@ -1305,6 +1469,7 @@ fn methodValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
         writable(g, ts, target.root, e.token)
         let argId = p.lists[e.argStart]
         if name == "reserve" {
+            if target.indexed { lexer.fail(ts, e.token, "U0001", "reserving an indexed vector is outside this subset") }
             // Stage0 accepts receiver consumption here but then reallocates a moved-from
             // descriptor. Keep that unresolved behavior outside this supported subset.
             let mark = g.accessLocks.len()
@@ -1320,7 +1485,9 @@ fn methodValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
             emit(&g, ");")
         } else {
             let reservations = g.reservations.len()
+            let indexedReservations = g.indexedReservations.len()
             g.reservations.push(target.root)
+            if target.indexed { g.indexedReservations.push(target.root) }
             if target.ty.kind == .String {
                 let arg = emitExpr(&g, p, ts, reg, argId)
                 if !stringLike(arg.ty) { lexer.fail(ts, e.token, "E0001", "String.push requires str or String") }
@@ -1353,10 +1520,19 @@ fn methodValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
                 emit(&g, support.join3(") = ", taken.name, ";"))
                 zeroValue(&g, reg, taken)
             }
+            while g.indexedReservations.len() > indexedReservations { let _ = g.indexedReservations.pop() }
         }
         return Value{ty: types.primitive(.Unit), name: "".toString()}
     }
     let base = emitExpr(&g, p, ts, reg, e.left)
+    if base.ty.kind == .Heap {
+        if name == "len" {
+            if e.argCount != 0 { lexer.fail(ts, e.token, "E0012", "Heap.len takes no arguments") }
+            return scalar(&g, .Int, support.join3("(", base.name, ").elems.len"))
+        }
+        if name == "clone" { lexer.fail(ts, e.token, "E0001", "Heap has no clone operation") }
+        lexer.fail(ts, e.token, "U0001", "this Heap method is outside the selfhost subset")
+    }
     if stringLike(base.ty) {
         if name == "startsWith" || name == "endsWith" || name == "contains" || name == "find" ||
             name == "split" || name == "parseInt" || name == "trim" || name == "lines" || name == "fields" {
@@ -1570,9 +1746,12 @@ fn textQuery(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: E
     return result
 }
 
-fn wrapOptional(g: inout Generator, reg: Registry, ty: Type, value: Value) -> Value {
-    return typedValue(&g, reg, ty,
-        support.join5("(", types.cType(ty), "){ .has = true, .val = ", value.name, " }"))
+fn wrapOptional(g: inout Generator, reg: Registry, ts: Vec[Token], token: int, ty: Type, value: Value) -> Value {
+    let taken = takeValue(&g, reg, ts, token, value)
+    let result = typedValue(&g, reg, ty,
+        support.join5("(", types.cType(ty), "){ .has = true, .val = ", taken.name, " }"))
+    zeroValue(&g, reg, taken)
+    return result
 }
 
 fn liftHint(reg: Registry, expected: Hint) -> Hint {
@@ -1615,7 +1794,7 @@ fn someConstructor(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry
     let arg = copyValue(shaped.value)
     if arg.ty.kind == .Unit { lexer.fail(ts, e.token, "E0001", "some requires a value") }
     let ty = types.optional(reg, ts, e.token, arg.ty)
-    return wrapOptional(&g, reg, ty, arg)
+    return wrapOptional(&g, reg, ts, e.token, ty, arg)
 }
 
 fn coalesceValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, id: int, e: Expression, expected: Hint) -> Value {
@@ -1647,8 +1826,10 @@ fn coalesceValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, 
         requireHint(reg, ts, e.token, rhs, inner)
         lexer.fail(ts, e.token, "U0001", "nested or owned Optional values are outside this subset")
     }
-    let lhs = copyValue(shaped.value)
+    let lhs = takeValue(&g, reg, ts, e.token, shaped.value)
+    let present = scalar(&g, .Bool, support.join3("(", lhs.name, ").has"))
     let output = typedValue(&g, reg, inner.ty, support.join3("(", lhs.name, ").val"))
+    zeroValue(&g, reg, lhs)
     if jumping {
         // The fallback leaves the statement; the following code sees the state
         // from before it (stage0 restores moves and loans after a jump).
@@ -1656,7 +1837,7 @@ fn coalesceValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, 
         let movedBefore = movedState(g)
         let sourcesBefore = sourceState(g)
         let jumpTemps = g.temps.len()
-        emit(&g, support.join3("if (!(", lhs.name, ").has) {"))
+        emit(&g, support.join3("if (!", present.name, ") {"))
         if ts[jump.token].text == "return" {
             let _left = returnStatement(&g, p, ts, reg, jump.token, jump.left)
         } else {
@@ -1672,12 +1853,14 @@ fn coalesceValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, 
     }
     let before = movedState(g)
     let temps = g.temps.len()
-    emit(&g, support.join3("if (!(", lhs.name, ").has) {"))
+    emit(&g, support.join3("if (!", present.name, ") {"))
     if allowed && p.expressions[e.right].kind == .Coalesce { g.jumpExpr = e.right }
     let rhs = emitHint(&g, p, ts, reg, e.right, inner)
     g.jumpExpr = -1
     requireHint(reg, ts, e.token, rhs, inner)
-    emit(&g, support.join4(output.name, " = ", rhs.value.name, ";"))
+    let fallback = takeValue(&g, reg, ts, e.token, rhs.value)
+    emit(&g, support.join4(output.name, " = ", fallback.name, ";"))
+    zeroValue(&g, reg, fallback)
     discardTemps(&g, reg, temps)
     let after = movedState(g)
     let joined = joinStates(before, after)
@@ -1968,7 +2151,7 @@ fn binaryValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
             lexer.fail(ts, e.token, "E0001", "operator is not defined for this type")
         }
         if lhs.ty.kind == .Vec || lhs.ty.kind == .Args || lhs.ty.kind == .Slice || lhs.ty.kind == .Result ||
-            lhs.ty.kind == .Map || lhs.ty.kind == .Set || lhs.ty.kind == .Tuple ||
+            lhs.ty.kind == .Map || lhs.ty.kind == .Set || lhs.ty.kind == .Heap || lhs.ty.kind == .Tuple ||
             (lhs.ty.kind == .Named && (reg.entries[lhs.ty.decl].kind == .Struct || !equality)) {
             lexer.fail(ts, e.token, "E0501", "this aggregate does not implement the required comparison")
         }
@@ -2027,7 +2210,7 @@ fn emitContext(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, id
 fn emitExpected(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, id: int, expected: Type) -> Value {
     let result = emitContext(&g, p, ts, reg, id, expected)
     if expected.kind == .Optional && types.same(result.ty, types.element(expected)) {
-        return wrapOptional(&g, reg, expected, result)
+        return wrapOptional(&g, reg, ts, p.expressions[id].token, expected, result)
     }
     if expected.kind == .Result && !types.same(result.ty, expected) {
         let ok = types.resultOk(reg, expected)
@@ -2171,7 +2354,13 @@ fn fieldValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: 
             lexer.fail(ts, e.token, "E0010", "unknown tuple element")
         }
         let ty = types.tupleElement(reg, base.ty, index)
-        return typedValue(&g, reg, ty, support.join4("(", base.name, ").f_", support.decimal(index)))
+        let name = support.join4("(", base.name, ").f_", support.decimal(index))
+        if types.owned(reg, ty) {
+            return Value{ty: ty, name: name, root: ownerOf(base), field: true,
+                indexedBorrow: base.indexedBorrow, sources: base.sources,
+                transient: base.transient, owner: base.owner}
+        }
+        return typedValue(&g, reg, ty, name)
     }
     if base.ty.kind != .Named || reg.entries[base.ty.decl].kind != .Struct {
         lexer.fail(ts, e.token, "U0001", "member access on this type is outside the selfhost subset")
@@ -2181,7 +2370,9 @@ fn fieldValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: 
     let ty = types.fieldOf(reg, base.ty.decl, index).ty
     let name = support.join4("(", base.name, ").f_", support.decimal(index))
     if types.owned(reg, ty) {
-        return Value{ty: ty, name: name, root: base.root, field: true, indexedBorrow: base.indexedBorrow}
+        return Value{ty: ty, name: name, root: ownerOf(base), field: true,
+            indexedBorrow: base.indexedBorrow, sources: base.sources,
+            transient: base.transient, owner: base.owner}
     }
     return typedValue(&g, reg, ty, name)
 }
@@ -2192,6 +2383,7 @@ fn tupleValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: 
     }
     var items: Vec[Type] = []
     var fields = String{}
+    var held: Vec[Value] = []
     var i = 0
     while i < e.argCount {
         let arg = p.lists[e.argStart + i]
@@ -2202,15 +2394,21 @@ fn tupleValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: 
             lexer.fail(ts, p.expressions[arg].token, "E0001", "a tuple element must have a value")
         }
         if hint.kind != .Unknown { require(reg, ts, p.expressions[arg].token, item.ty, hint) }
+        let taken = takeValue(&g, reg, ts, p.expressions[arg].token, item)
+        let saved = typedValue(&g, reg, item.ty, taken.name)
+        zeroValue(&g, reg, taken)
+        held.push(copyValue(saved))
         items.push(item.ty)
         if i > 0 { fields.push(", ") }
-        fields.push(format(".f_${i} = ${item.name}"))
+        fields.push(format(".f_${i} = ${saved.name}"))
         i += 1
     }
-    // Each element is already materialized in source order, before any later
-    // element's effects. Only flat Copy values reach the C compound literal.
+    // Each element is held by a separate temporary before later effects. Error
+    // exits clean the partial prefix; a completed tuple takes every held owner.
     let ty = types.tuple(reg, ts, e.token, items)
-    return typedValue(&g, reg, ty, support.join5("(", types.cType(ty), "){", fields, "}"))
+    let result = typedValue(&g, reg, ty, support.join5("(", types.cType(ty), "){", fields, "}"))
+    for item in held { zeroValue(&g, reg, item) }
+    return result
 }
 
 fn vectorValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression, expected: Type) -> Value {
@@ -2306,8 +2504,15 @@ fn indexValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: 
     if base.ty.kind != .Vec && base.ty.kind != .Args && base.ty.kind != .Slice && !stringLike(base.ty) {
         lexer.fail(ts, e.token, "E0001", "this value cannot be indexed")
     }
+    // Slice descriptors are Copy values. Recover their named root so an owned
+    // element still carries the slice parameter's lifetime and access locks.
+    var borrowRoot = base.root
+    if borrowRoot < 0 && base.ty.kind == .Slice {
+        let token = placeRoot(p, e.left)
+        if token >= 0 { borrowRoot = localIndex(g, ts, token) }
+    }
     let mark = g.accessLocks.len()
-    if base.root >= 0 { g.accessLocks.push(base.root) }
+    if borrowRoot >= 0 { g.accessLocks.push(borrowRoot) }
     let index = emitExpected(&g, p, ts, reg, e.right, types.primitive(.Int))
     requireInteger(ts, e.token, index.ty)
     while g.accessLocks.len() > mark { let _ = g.accessLocks.pop() }
@@ -2332,7 +2537,9 @@ fn indexValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: 
         put(&g, support.join5("const ", et, " *borrow_", support.decimal(n), " = (const "))
         put(&g, support.join5(et, " *)yv_vec_at(&(", base.name, "), (int64_t)sizeof(", et))
         emit(&g, support.join3(")", at, ";"))
-        return Value{ty: elem, name: support.join3("(*borrow_", support.decimal(n), ")"), root: base.root, indexedBorrow: true}
+        return Value{ty: elem, name: support.join3("(*borrow_", support.decimal(n), ")"),
+            root: borrowRoot, indexedBorrow: true, sources: base.sources,
+            transient: base.transient, owner: base.owner}
     }
     // Copy reads immediately detach from the source container.
     // A str element keeps the sources of the text it points into.
@@ -2378,6 +2585,9 @@ fn sliceValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: 
 
 fn expressionValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, id: int, expected: Type) -> Value {
     let e = p.expressions[id]
+    if e.kind == .Closure || e.kind == .HeapType {
+        lexer.fail(ts, e.token, "U0001", "only a capture-free Heap.by comparator is supported here")
+    }
     if e.kind == .Tuple { return tupleValue(&g, p, ts, reg, e, expected) }
     if e.kind == .Jump {
         lexer.fail(ts, e.token, "U0001", "?? return, ?? break and ?? continue are only supported as a whole let initializer or assigned value")
@@ -2521,6 +2731,12 @@ fn placeType(g: Generator, p: Program, ts: Vec[Token], reg: Registry, id: int, d
         if local.mapKey {
             lexer.fail(ts, e.token, "E0103", "a Map key cannot be modified")
         }
+        if local.indexedAlias && depth > 0 {
+            lexer.fail(ts, e.token, "E0101", "cannot modify through a read-only indexed element alias")
+        }
+        if local.indexedAlias && local.mutable {
+            lexer.fail(ts, e.token, "U0001", "rebinding an indexed element reference is outside this subset")
+        }
         if local.matchBinding == 1 {
             lexer.fail(ts, e.token, "E0101", "cannot modify an if-let binding of a read-only value")
         }
@@ -2544,7 +2760,8 @@ fn placeType(g: Generator, p: Program, ts: Vec[Token], reg: Registry, id: int, d
             lexer.fail(ts, e.token, "E0101", "a slice is read-only; its elements cannot be modified")
         }
         if base.ty.kind != .Vec { lexer.fail(ts, e.token, "E0001", "indexed assignment requires a vector") }
-        if types.owned(reg, types.element(base.ty)) {
+        let innerIntVector = base.ty.elementKind == .Vec && types.element(base.ty).elementKind == .Int
+        if types.owned(reg, types.element(base.ty)) && !innerIntVector {
             lexer.fail(ts, e.token, "U0001", "indexed places for owned vector elements are outside this subset")
         }
         return Place{ty: types.element(base.ty), name: String{},
@@ -2670,8 +2887,8 @@ fn recordExit(g: inout Generator, breaking: bool) {
     }
 }
 
-// Recheck only the body, as stage0 does, with the moved and source state of a
-// repeated iteration. Generated C and transient analysis state belong to this probe.
+// Recheck the body with a repeated iteration's moved/source state. While-let
+// also recreates its header binding; generated C and analysis state stay local.
 fn replayBody(parent: Generator, p: Program, ts: Vec[Token], reg: Registry, s: Statement,
     next: Vec[bool], nextSources: Vec[int]) -> Replay {
     var probe = Generator{
@@ -2683,21 +2900,28 @@ fn replayBody(parent: Generator, p: Program, ts: Vec[Token], reg: Registry, s: S
         accessLocks: parent.accessLocks.clone(),
         iterationLocks: parent.iterationLocks.clone(),
         reservations: parent.reservations.clone(),
+        indexedReservations: parent.indexedReservations.clone(),
         inoutLocks: parent.inoutLocks.clone(),
         loopStates: parent.loopStates.clone(),
         exits: parent.exits.clone(),
         sourceExits: parent.sourceExits.clone(),
         result: parent.result,
         allowed: parent.allowed,
-        loops: parent.loops + 1,
+        loops: parent.loops,
         file: parent.file
     }
     restoreState(&probe, next)
     restoreSources(&probe, nextSources)
     let count = probe.locals.len()
     let tempCount = probe.temps.len()
+    // A while-let payload is a fresh local at every iteration. Re-evaluate its
+    // header under the joined outer state rather than replaying an old binding.
+    if s.kind == .WhileLet { whileLetHeader(&probe, p, ts, reg, s) }
     pushLoop(&probe, count, tempCount)
+    probe.loops += 1
     let _flow = emitBlock(&probe, p, ts, reg, s.bodyStart, s.bodyCount)
+    cleanLocals(&probe, reg, count)
+    while probe.locals.len() > count { let _ = probe.locals.pop() }
     let frame = popLoop(&probe)
     let following = iterationSources(nextSources, sourceState(probe), frame.continueSources)
     return Replay{breaks: frame.breaks.clone(), breakSources: frame.breakSources.clone(),
@@ -2705,14 +2929,20 @@ fn replayBody(parent: Generator, p: Program, ts: Vec[Token], reg: Registry, s: S
 }
 
 fn emitLoopBody(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, s: Statement) -> Flow {
-    let before = movedState(g)
-    let sourcesBefore = sourceState(g)
     let count = g.locals.len()
     let tempCount = g.temps.len()
+    if s.kind == .WhileLet { whileLetHeader(&g, p, ts, reg, s) }
+    var before = movedState(g)
+    var sourcesBefore = sourceState(g)
+    while before.len() > count { let _ = before.pop() }
+    while sourcesBefore.len() > count { let _ = sourcesBefore.pop() }
+    // Exits must clean the per-iteration binding as well as body locals.
     pushLoop(&g, count, tempCount)
     g.loops += 1
     let _inner = emitBlock(&g, p, ts, reg, s.bodyStart, s.bodyCount)
     g.loops -= 1
+    cleanLocals(&g, reg, count)
+    while g.locals.len() > count { let _ = g.locals.pop() }
     let frame = popLoop(&g)
     let ended = movedState(g)
     let end = joinStates(ended, frame.continues)
@@ -2750,6 +2980,30 @@ fn emitLoopBody(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, s
     // recordExit also sees break inside expression handlers. A syntactically
     // nested catch must not make an escapable loop look non-terminating.
     return Flow{falls: s.kind != .Loop || frame.hasBreak}
+}
+
+fn whileLetHeader(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, s: Statement) {
+    let tempCount = g.temps.len()
+    let previousCondition = g.loopCondition
+    g.loopCondition = true
+    let scrutinee = emitExpr(&g, p, ts, reg, s.expr)
+    g.loopCondition = previousCondition
+    if scrutinee.ty.kind != .Optional {
+        lexer.fail(ts, p.expressions[s.expr].token, "E0001", "while let requires an Optional value")
+    }
+    if types.owned(reg, scrutinee.ty) && !scrutinee.temporary {
+        lexer.fail(ts, s.token, "U0001", "while let over an existing owned Optional is outside this subset")
+    }
+    emit(&g, support.join3("if (!(", scrutinee.name, ").has) {"))
+    // The failed match leaves no binding. Its temporaries still need cleanup
+    // before leaving the generated C loop.
+    cleanTemps(&g, reg, tempCount)
+    emit(&g, "break;")
+    emit(&g, "}")
+    bindOptionalPayload(&g, p, ts, reg, s, scrutinee)
+    // A moved payload now belongs to the per-iteration local, and the Optional
+    // is zero. Discarding `_` instead drops the still-owned payload here.
+    discardTemps(&g, reg, tempCount)
 }
 
 fn loopStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, s: Statement) -> Flow {
@@ -2845,12 +3099,18 @@ fn forLoopStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registr
             // Owned String and struct elements are bound as read-only views of the
             // element (A2): never dropped or moved, and the vector stays locked.
             let owned = types.owned(reg, elem)
-            if (owned && elem.kind != .String && elem.kind != .Named) ||
+            let nestedIntVector = elem.kind == .Vec && elem.elementKind == .Int
+            if (owned && elem.kind != .String && elem.kind != .Named && !nestedIntVector) ||
                 (elem.kind != .Int && elem.kind != .Byte && elem.kind != .Bool && elem.kind != .Str &&
-                elem.kind != .Named && elem.kind != .String) {
+                elem.kind != .Named && elem.kind != .String && !nestedIntVector) {
                 lexer.fail(ts, s.token, "U0001", "iteration over this vector element type is outside the selfhost subset")
             }
-            g.iterationLocks.push(value.root)
+            var iterationRoot = value.root
+            if iterationRoot < 0 && value.ty.kind == .Slice {
+                let token = placeRoot(p, s.expr)
+                if token >= 0 { iterationRoot = localIndex(g, ts, token) }
+            }
+            g.iterationLocks.push(iterationRoot)
             var itemName = s.name
             if s.target >= 0 {
                 declare(&g, ts, s.name, types.primitive(.Int), false, false, false)
@@ -2860,6 +3120,18 @@ fn forLoopStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registr
             g.locals[g.locals.len() - 1].sources = value.sources
             g.locals[g.locals.len() - 1].element = owned
             if value.transient { g.locals[g.locals.len() - 1].viewOf = ownerOf(value) }
+            if owned && value.ty.kind == .Slice && iterationRoot >= 0 {
+                g.locals[g.locals.len() - 1].viewOf = iterationRoot
+                // An immutable slice parameter outlives each iteration. Its
+                // element may share the same read-only aliases as an index;
+                // elements of locally owned vectors keep their U0001 boundary.
+                let source = g.locals[iterationRoot]
+                if elem.kind == .Named && iterationRoot < 62 &&
+                    source.ty.kind == .Slice && !source.mutable && !source.byRef &&
+                    source.sources == sourceBit(iterationRoot) {
+                    g.locals[g.locals.len() - 1].indexedAlias = true
+                }
+            }
             let index = support.join2("iter_", support.decimal(g.counter))
             g.counter += 1
             put(&g, support.join5("for (int64_t ", index, " = 0; ", index, " < ("))
@@ -2889,10 +3161,8 @@ fn exitsProcess(g: Generator, p: Program, ts: Vec[Token], id: int) -> bool {
         standardModule(g, p, ts, p.expressions[e.left]) == 1
 }
 
-fn ifLetBody(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry,
-    s: Statement, scrutinee: Value) -> Flow {
-    let count = g.locals.len()
-    emit(&g, "{")
+fn bindOptionalPayload(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry,
+    s: Statement, scrutinee: Value) {
     if ts[s.name].text != "_" {
         var root = -1
         let rootToken = placeRoot(p, s.expr)
@@ -2900,13 +3170,27 @@ fn ifLetBody(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry,
         var binding = 2
         if root >= 0 && !g.locals[root].mutable { binding = 1 }
         let ty = types.element(scrutinee.ty)
-        declare(&g, ts, s.name, ty, false, false, false)
-        g.locals[count].matchRoot = root
-        g.locals[count].matchBinding = binding
+        let owned = types.owned(reg, ty)
+        let borrowed = owned && !scrutinee.temporary
+        declare(&g, ts, s.name, ty, false, borrowed, false)
+        let local = g.locals.len() - 1
+        g.locals[local].matchRoot = root
+        g.locals[local].matchBinding = binding
+        g.locals[local].sources = scrutinee.sources
+        if borrowed { g.locals[local].viewOf = ownerOf(scrutinee) }
         emit(&g, support.join5(types.cType(ty), " v_", support.decimal(s.name), " = (", scrutinee.name))
         emit(&g, ").val;")
+        if owned && scrutinee.temporary { zeroValue(&g, reg, scrutinee) }
     }
+}
+
+fn ifLetBody(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry,
+    s: Statement, scrutinee: Value) -> Flow {
+    let count = g.locals.len()
+    emit(&g, "{")
+    bindOptionalPayload(&g, p, ts, reg, s, scrutinee)
     let flow = emitBlock(&g, p, ts, reg, s.bodyStart, s.bodyCount)
+    cleanLocals(&g, reg, count)
     while g.locals.len() > count { let _ = g.locals.pop() }
     emit(&g, "}")
     return flow
@@ -2916,6 +3200,7 @@ fn emitStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, 
     let s = p.statements[id]
     if s.kind == .Bind {
         var ty = types.resolve(reg, ts, s.annotation)
+        let inferAlias = ty.kind == .Unknown
         g.jumpExpr = s.expr
         let initial = emitExpected(&g, p, ts, reg, s.expr, ty)
         g.jumpExpr = -1
@@ -2929,6 +3214,24 @@ fn emitStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, 
         }
         if ty.kind == .Unknown && initial.indexedBorrow && !initial.field {
             if ts[s.name].text == "_" { return Flow{} }
+            // The parameter descriptor outlives this function and cannot be
+            // rebound. Its owned element is read through a non-owning alias;
+            // local vectors and temporary receivers retain explicit U0001.
+            if initial.ty.kind == .Named && initial.root >= 0 && initial.root < 62 {
+                let source = g.locals[initial.root]
+                if source.ty.kind == .Slice && !source.mutable && !source.byRef &&
+                    source.sources == sourceBit(initial.root) {
+                    declare(&g, ts, s.name, initial.ty, s.mutable, true, false)
+                    let alias = g.locals.len() - 1
+                    g.locals[alias].element = true
+                    g.locals[alias].indexedAlias = true
+                    g.locals[alias].sources = initial.sources
+                    g.locals[alias].viewOf = initial.root
+                    emit(&g, support.join5("const ", types.cType(initial.ty), " v_", support.decimal(s.name), " = "))
+                    emit(&g, support.join2(initial.name, ";"))
+                    return Flow{}
+                }
+            }
             lexer.fail(ts, s.token, "U0001", "persistent indexed-element borrows are outside this subset")
         }
         var viewOwner = -1
@@ -2943,9 +3246,37 @@ fn emitStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, 
         }
         if ty.kind == .Unknown { ty = initial.ty }
         require(reg, ts, s.token, initial.ty, ty)
+        if initial.local >= 0 && types.owned(reg, initial.ty) {
+            let source = g.locals[initial.local]
+            if source.borrowed && source.matchBinding > 0 {
+                // Inference keeps an existing Optional payload as a reference;
+                // it does not move the owner's tuple into another local.
+                if inferAlias {
+                    if ts[s.name].text == "_" { return Flow{} }
+                    lexer.fail(ts, s.token, "U0001", "aliasing an existing Optional payload is outside this subset")
+                }
+                lexer.fail(ts, s.token, "E0404", "an Optional payload is borrowed; clone it to obtain an owned value")
+            }
+        }
         if initial.local >= 0 && g.locals[initial.local].element && !mapKey && ts[s.name].text != "_" {
-            // stage0 binds a second read-only alias of the element.
-            lexer.fail(ts, s.token, "U0001", "aliasing an iterated element is outside this subset")
+            let source = g.locals[initial.local]
+            if source.indexedAlias {
+                if inferAlias {
+                    declare(&g, ts, s.name, ty, s.mutable, true, false)
+                    let alias = g.locals.len() - 1
+                    g.locals[alias].element = true
+                    g.locals[alias].indexedAlias = true
+                    g.locals[alias].sources = source.sources
+                    g.locals[alias].viewOf = source.viewOf
+                    emit(&g, support.join5("const ", types.cType(ty), " v_", support.decimal(s.name), " = "))
+                    emit(&g, support.join2(initial.name, ";"))
+                    return Flow{}
+                }
+                // An explicit owned type annotation still reaches takeValue,
+                // which rejects taking ownership out of the borrowed alias.
+            } else {
+                lexer.fail(ts, s.token, "U0001", "aliasing an iterated element is outside this subset")
+            }
         }
         let taken = takeValue(&g, reg, ts, s.token, initial)
         if ts[s.name].text != "_" {
@@ -3034,7 +3365,8 @@ fn emitStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, 
             condition = emitExpected(&g, p, ts, reg, s.expr, types.primitive(.Bool))
             basic(reg, ts, s.token, condition.ty, .Bool)
         }
-        discardTemps(&g, reg, tempCount)
+        // An owned Optional must survive both its has test and the match body.
+        if s.kind != .IfLet { discardTemps(&g, reg, tempCount) }
         let before = movedState(g)
         let sourcesBefore = sourceState(g)
         var yes = Flow{}
@@ -3067,9 +3399,10 @@ fn emitStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, 
             restoreState(&g, merged)
             restoreSources(&g, joinSources(yesSources, noSources))
         }
+        if s.kind == .IfLet { discardTemps(&g, reg, tempCount) }
         return Flow{falls: yes.falls || no.falls, breaks: yes.breaks || no.breaks}
     }
-    if s.kind == .While || s.kind == .Loop { return loopStatement(&g, p, ts, reg, s) }
+    if s.kind == .While || s.kind == .WhileLet || s.kind == .Loop { return loopStatement(&g, p, ts, reg, s) }
     if s.kind == .ForRange || s.kind == .ForEach { return forLoopStatement(&g, p, ts, reg, s) }
     return loopExit(&g, ts, reg, s.token, s.kind == .Break)
 }
@@ -3095,7 +3428,22 @@ fn returnStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry
             lexer.fail(ts, token, "E0001", "a unit-returning function cannot return a value")
         }
         let resultType = g.result
-        let returned = emitExpected(&g, p, ts, reg, expr, resultType)
+        var returned = emitExpected(&g, p, ts, reg, expr, resultType)
+        // Stage0 permits a String view in a returned str and in call arguments,
+        // but an explicit `let view: str = ownedString` remains a type error.
+        if resultType.kind == .Str && returned.ty.kind == .String {
+            var converted = scalar(&g, .Str, view(returned))
+            converted.transient = true
+            converted.root = ownerOf(returned)
+            converted.sources = returned.sources
+            let root = converted.root
+            if root >= 0 && root < 62 && g.locals[root].ty.kind == .Slice &&
+                g.locals[root].sources == sourceBit(root) {
+                converted.transient = false
+                converted.sources = returned.sources | sourceBit(root)
+            }
+            returned = converted
+        }
         if resultType.kind == .Slice && returned.ty.kind == .Vec {
             lexer.fail(ts, token, "U0001", "returning a vector as a slice view is outside this subset")
         }
@@ -3196,6 +3544,46 @@ fn tupleLayout(g: inout Generator, reg: Registry, ty: Type) {
     }
     emit(&g, support.join3("} ", name, ";"))
     optionalLayout(&g, ty)
+    if types.owned(reg, ty) {
+        emit(&g, format("static void sh_tuple_drop_${ty.decl}(${name} *p) {"))
+        var field = types.tupleCount(reg, ty)
+        while field > 0 {
+            field -= 1
+            dropValue(&g, reg, types.tupleElement(reg, ty, field), format("p->f_${field}"))
+        }
+        emit(&g, format("*p = (${name}){0};"))
+        emit(&g, "}")
+        emit(&g, format("static ${name} sh_tuple_clone_${ty.decl}(const ${name} *p, uint32_t line, uint32_t col) {"))
+        emit(&g, format("${name} out = *p;"))
+        for index in 0..types.tupleCount(reg, ty) {
+            let item = types.tupleElement(reg, ty, index)
+            if types.owned(reg, item) {
+                let cloned = cloneExpression(reg, item, format("p->f_${index}"), "line", "col")
+                emit(&g, format("out.f_${index} = ${cloned};"))
+            }
+        }
+        emit(&g, "return out;")
+        emit(&g, "}")
+        let optional = Type{kind: .Optional, elementKind: .Tuple, elementDecl: ty.decl}
+        emit(&g, format("static void sh_optional_tuple_drop_${ty.decl}(${types.cType(optional)} *p) {"))
+        emit(&g, format("if (p->has) sh_tuple_drop_${ty.decl}(&p->val);"))
+        emit(&g, format("*p = (${types.cType(optional)}){0};"))
+        emit(&g, "}")
+    }
+}
+
+fn heapLifecycle(g: inout Generator, reg: Registry, ty: Type) {
+    let elem = types.element(ty)
+    let name = types.cType(elem)
+    emit(&g, format("static void sh_heap_drop_${ty.elementDecl}(yv_heap *p) {"))
+    emit(&g, format("${name} *items = (${name} *)p->elems.ptr;"))
+    emit(&g, "for (int64_t i = 0; i < p->elems.len; ++i) {")
+    dropValue(&g, reg, elem, "items[i]")
+    emit(&g, "}")
+    emit(&g, "yv_vec_free(&p->elems);")
+    emit(&g, "if (p->drop_ctx) p->drop_ctx(p->ctx);")
+    emit(&g, "*p = (yv_heap){0};")
+    emit(&g, "}")
 }
 
 fn optionalLayouts(g: inout Generator, reg: Registry) {
@@ -3277,6 +3665,8 @@ fn declarations(g: inout Generator, reg: Registry) {
     // dependency cycles such as Node -> Vec[Node] without recursive discovery.
     emit(&g, "static void sh_vec_drop_string(yv_vec *p);")
     emit(&g, "static yv_vec sh_vec_clone_string(const yv_vec *p, uint32_t line, uint32_t col);")
+    emit(&g, "static void sh_vec_drop_vec_int(yv_vec *p);")
+    emit(&g, "static yv_vec sh_vec_clone_vec_int(const yv_vec *p, uint32_t line, uint32_t col);")
     k = 0
     while k < reg.order.len() {
         let index = reg.order[k]
@@ -3297,6 +3687,7 @@ fn declarations(g: inout Generator, reg: Registry) {
     emit(&g, "return out;")
     emit(&g, "}")
     vectorLifecycle(&g, reg, types.primitive(.String))
+    vectorLifecycle(&g, reg, Type{kind: .Vec, elementKind: .Int})
     k = 0
     while k < reg.order.len() {
         let index = reg.order[k]
@@ -3380,13 +3771,16 @@ pub fn generate(p: Program, ts: Vec[Token], filename: str) -> String {
         g.result = types.resolve(reg, ts, f.result)
         let resultType = g.result
         useTuple(&g, resultType)
+        if resultType.kind == .Heap { useHeap(&g, resultType) }
         g.allowed = allowedSources(p, ts, reg, i)
         var k = 0
         while k < f.paramCount {
             let param = p.params[f.paramStart + k]
             let ty = types.resolve(reg, ts, param.ty)
             useTuple(&g, ty)
-            declare(&g, ts, param.name, ty, param.byRef, param.byRef || types.owned(reg, ty), param.byRef)
+            if ty.kind == .Heap { useHeap(&g, ty) }
+            declare(&g, ts, param.name, ty, param.byRef,
+                param.byRef || (types.owned(reg, ty) && !param.consuming), param.byRef)
             if param.byRef && ty.kind == .Slice {
                 lexer.fail(ts, param.name, "U0001", "inout slice parameters are outside this subset")
             }
@@ -3401,6 +3795,9 @@ pub fn generate(p: Program, ts: Vec[Token], filename: str) -> String {
         emit(&g, signature(p, ts, reg, i))
         emit(&g, "{")
         let flow = emitBlock(&g, p, ts, reg, f.bodyStart, f.bodyCount)
+        // Explicit returns clean every local; normal fallthrough must also
+        // release the sink parameters that live outside the body's scope.
+        if flow.falls { cleanLocals(&g, reg, 0) }
         if g.result.kind != .Unit && flow.falls {
             if g.result.kind == .Result && types.resultOk(reg, g.result).kind == .Unit {
                 let returnedC = types.cType(g.result)
@@ -3454,6 +3851,14 @@ pub fn generate(p: Program, ts: Vec[Token], filename: str) -> String {
         tupleLayout(&g, reg, instance)
         i += 1
     }
+    i = 0
+    while i < g.heaps.len() {
+        let instance = g.heaps[i]
+        heapLifecycle(&g, reg, instance)
+        i += 1
+    }
+    let comparatorText = take(&g.comparators)
+    g.out.push(comparatorText)
     i = 0
     while i < g.maps.len() {
         let instance = g.maps[i]

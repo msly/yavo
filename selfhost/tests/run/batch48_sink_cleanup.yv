@@ -1,0 +1,33 @@
+use std/collections
+fn release(text: sink String, values: sink Vec[int], pair: sink (String, int), heap: sink Heap[(String, int)], early: bool) {
+    println("${text}:${values.len()}:${pair.0}:${heap.len()}")
+    if early { println("early")
+return }
+    println("tail")
+}
+fn copied(value: sink int) -> int { return value + 1 }
+fn copyThenMutate(copy: sink int, value: inout int) { value += copy }
+fn fail() -> bool ! String { return err("stop".toString()) }
+fn abortAfterArguments() -> int {
+    var heap = Heap[(String, int)].by((a, b) => a.0 < b.0)
+    heap.push(("staged-heap".toString(), 9))
+    release("staged-text".toString(), [9], ("staged-tuple".toString(), 1), heap, fail() catch problem {
+        println(problem)
+        return 8
+    })
+    return 0
+}
+fn main() {
+    var first = Heap[(String, int)].by((a, b) => a.0 < b.0)
+    first.push(("first-heap".toString(), 1))
+    release("one".toString(), [1, 2], ("first".toString(), 3), first, false)
+    var second = Heap[(String, int)].by((a, b) => a.0 < b.0)
+    second.push(("second-heap".toString(), 2))
+    release("two".toString(), [3], ("second".toString(), 4), second, true)
+    let value = 6
+    println(copied(value) + copied(value))
+    var changed = 3
+    copyThenMutate(changed, &changed)
+    println(changed)
+    println(abortAfterArguments())
+}

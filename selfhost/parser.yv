@@ -24,6 +24,7 @@ struct State {
     importsFs: bool = false
     importsIo: bool = false
     importsOs: bool = false
+    importsCollections: bool = false
 }
 
 fn at(s: State, ts: Vec[Token], text: str) -> bool {
@@ -135,8 +136,8 @@ fn vectorType(s: inout State, ts: Vec[Token], name: int) -> TypeRef {
     if count != 1 {
         lexer.fail(ts, name, "E0001", "Vec takes exactly one type argument")
     }
-    if elem.kind == .Vec {
-        lexer.fail(ts, token, "U0001", "nested Vec elements are outside the selfhost subset")
+    if elem.kind == .Vec && elem.elementKind != .Int {
+        lexer.fail(ts, token, "U0001", "nested vectors other than Vec[Vec[int]] are outside the selfhost subset")
     }
     if elem.kind == .Result {
         lexer.fail(ts, token, "U0001", "Result vector elements are outside the selfhost subset")
@@ -148,6 +149,27 @@ fn vectorType(s: inout State, ts: Vec[Token], name: int) -> TypeRef {
         lexer.fail(ts, token, "U0001", "tuple vector elements are outside the selfhost subset")
     }
     return TypeRef{kind: .Vec, name: name, elementKind: elem.kind, elementName: token}
+}
+
+fn heapType(s: inout State, ts: Vec[Token], name: int) -> TypeRef {
+    expect(&s, ts, "[")
+    let token = s.pos
+    let elem = typeName(&s, ts)
+    var count = 1
+    while eat(&s, ts, ",") {
+        let _extra = typeName(&s, ts)
+        count += 1
+    }
+    expect(&s, ts, "]")
+    if count != 1 { lexer.fail(ts, name, "E0001", "Heap takes exactly one type argument") }
+    if elem.kind != .Tuple || elem.tupleCount != 2 {
+        lexer.fail(ts, token, "U0001", "only Heap[(String, int)] is in the selfhost subset")
+    }
+    if s.tupleAtoms[elem.tupleStart].kind != .String || s.tupleAtoms[elem.tupleStart + 1].kind != .Int {
+        lexer.fail(ts, token, "U0001", "only Heap[(String, int)] is in the selfhost subset")
+    }
+    return TypeRef{kind: .Heap, name: name, elementKind: .Tuple, elementName: token,
+        tupleStart: elem.tupleStart, tupleCount: elem.tupleCount}
 }
 
 fn setType(s: inout State, ts: Vec[Token], name: int) -> TypeRef {
@@ -200,6 +222,10 @@ fn typeAtom(s: inout State, ts: Vec[Token]) -> TypeRef {
         let name = s.pos
         s.pos += 1
         result = setType(&s, ts, name)
+    } else if at(s, ts, "Heap") && ts[s.pos + 1].text == "[" {
+        let name = s.pos
+        s.pos += 1
+        result = heapType(&s, ts, name)
     } else if at(s, ts, "Vec") {
         let name = s.pos
         s.pos += 1
@@ -232,6 +258,12 @@ fn typeAtom(s: inout State, ts: Vec[Token]) -> TypeRef {
         // `module.Type`: the reference keeps the module token; resolve() sees
         // the "." after it and looks the type up in that module.
         if at(s, ts, ".") && ts[s.pos + 1].kind == .Word && !reservedWord(ts[s.pos + 1].text) {
+            if ts[s.pos + 1].text == "Error" &&
+                ((ts[name].text == "io" && s.importsIo) || (ts[name].text == "fs" && s.importsFs)) {
+                // Standard I/O errors are currently available only through
+                // the discarded catch handler, not as named payload types.
+                lexer.fail(ts, name, "U0001", "named standard I/O error types are outside the selfhost subset")
+            }
             s.pos += 2
         }
         result = TypeRef{elementKind: .Unknown, kind: .Named, name: name}
@@ -265,7 +297,8 @@ fn typeName(s: inout State, ts: Vec[Token]) -> TypeRef {
 
 fn pushExpr(s: inout State, kind: ExprKind, token: int, left: int, right: int) -> int {
     let id = s.expressions.len()
-    s.expressions.push(Expression{kind: kind, token: token, elementKind: .Unknown, left: left, right: right})
+    s.expressions.push(Expression{kind: kind, token: token, elementKind: .Unknown,
+        annotation: TypeRef{kind: .Unknown, elementKind: .Unknown}, left: left, right: right})
     return id
 }
 
@@ -273,6 +306,7 @@ fn pushList(s: inout State, kind: ExprKind, token: int, left: int, args: Vec[int
     let start = store(&s, args)
     let id = s.expressions.len()
     s.expressions.push(Expression{kind: kind, token: token, elementKind: .Unknown, left: left,
+        annotation: TypeRef{kind: .Unknown, elementKind: .Unknown},
         argStart: start, argCount: args.len()})
     return id
 }
@@ -423,6 +457,28 @@ fn closureAhead(s: State, ts: Vec[Token]) -> bool {
     return false
 }
 
+fn closure(s: inout State, ts: Vec[Token]) -> int {
+    let token = expect(&s, ts, "(")
+    var names: Vec[int] = []
+    while !at(s, ts, ")") {
+        names.push(identifier(&s, ts))
+        if at(s, ts, ":") {
+            syntax(s, ts, "U0001", "typed closure parameters are outside the selfhost subset")
+        }
+        if !eat(&s, ts, ",") { break }
+    }
+    expect(&s, ts, ")")
+    expect(&s, ts, "=>")
+    if at(s, ts, "{") {
+        syntax(s, ts, "U0001", "block closures are outside the selfhost subset")
+    }
+    let body = parseExpression(&s, ts)
+    let id = pushExpr(&s, .Closure, token, body, -1)
+    s.expressions[id].nameStart = store(&s, names)
+    s.expressions[id].nameCount = names.len()
+    return id
+}
+
 fn primary(s: inout State, ts: Vec[Token]) -> int {
     let p = s.pos
     if ts[p].kind == .StringStart { return interpolatedString(&s, ts) }
@@ -444,7 +500,7 @@ fn primary(s: inout State, ts: Vec[Token]) -> int {
     }
     if eat(&s, ts, "none") { return pushExpr(&s, .None, p, -1, -1) }
     if at(s, ts, "(") && closureAhead(s, ts) {
-        syntax(s, ts, "U0001", "closures are outside the selfhost subset")
+        return closure(&s, ts)
     }
     if eat(&s, ts, "(") {
         if eat(&s, ts, ")") {
@@ -544,6 +600,27 @@ fn typeArgumentsAhead(s: State, ts: Vec[Token]) -> bool {
     return false
 }
 
+// Heap[T].by uses a type receiver, but a local named Heap can still be indexed.
+fn heapTypeAhead(s: State, ts: Vec[Token]) -> bool {
+    if typeArgumentsAhead(s, ts) { return true }
+    var depth = 0
+    var i = s.pos
+    while i < ts.len() {
+        if ts[i].kind == .Symbol && ts[i].text == "[" { depth += 1
+        } else if ts[i].kind == .Symbol && ts[i].text == "]" {
+            depth -= 1
+            if depth == 0 {
+                return i + 2 < ts.len() && ts[i + 1].kind == .Symbol && ts[i + 1].text == "." &&
+                    ts[i + 2].kind == .Word && ts[i + 2].text == "by"
+            }
+        } else if ts[i].kind == .Eof || ts[i].kind == .Newline {
+            return false
+        }
+        i += 1
+    }
+    return false
+}
+
 fn postfix(s: inout State, ts: Vec[Token]) -> int {
     var current = primary(&s, ts)
     loop {
@@ -573,7 +650,11 @@ fn postfix(s: inout State, ts: Vec[Token]) -> int {
             }
         } else if at(s, ts, "[") {
             let target = s.expressions[current].token
-            if s.expressions[current].kind == .Name && typeArgumentsAhead(s, ts) {
+            if s.expressions[current].kind == .Name && ts[target].text == "Heap" && heapTypeAhead(s, ts) {
+                let ty = heapType(&s, ts, target)
+                current = pushExpr(&s, .HeapType, target, -1, -1)
+                s.expressions[current].annotation = ty
+            } else if s.expressions[current].kind == .Name && typeArgumentsAhead(s, ts) {
                 if ts[target].text != "Vec" && ts[target].text != "Set" {
                     syntax(s, ts, "U0001", "generic expressions are outside the selfhost subset")
                 }
@@ -837,12 +918,24 @@ fn parseStatement(s: inout State, ts: Vec[Token]) -> int {
     }
     if at(s, ts, "if") { return ifStatement(&s, ts) }
     if eat(&s, ts, "while") {
-        if at(s, ts, "let") {
-            syntax(s, ts, "U0001", "while let is outside the selfhost SH-1 subset")
+        var binding = -1
+        if eat(&s, ts, "let") {
+            if at(s, ts, "(") {
+                syntax(s, ts, "U0001", "tuple destructuring is outside the selfhost subset")
+            }
+            binding = identifier(&s, ts)
+            if at(s, ts, "(") {
+                syntax(s, ts, "U0001", "patterns after while let are outside the selfhost subset")
+            }
+            expect(&s, ts, "=")
         }
         let condition = parseExpression(&s, ts)
         let body = parseBlock(&s, ts)
         let id = pushStmt(&s, .While, p, condition)
+        if binding >= 0 {
+            s.statements[id].kind = .WhileLet
+            s.statements[id].name = binding
+        }
         setBody(&s, id, body)
         return id
     }
@@ -886,8 +979,10 @@ fn parseFunction(s: inout State, ts: Vec[Token]) -> Function {
         let param = identifier(&s, ts)
         expect(&s, ts, ":")
         let mode = eat(&s, ts, "inout")
+        var consuming = false
+        if !mode { consuming = eat(&s, ts, "sink") }
         let ty = typeName(&s, ts)
-        params.push(Parameter{name: param, ty: ty, byRef: mode})
+        params.push(Parameter{name: param, ty: ty, byRef: mode, consuming: consuming})
         if !eat(&s, ts, ",") { break }
     }
     expect(&s, ts, ")")
@@ -1001,6 +1096,7 @@ fn importItem(s: inout State, ts: Vec[Token]) {
         if ts[names[i]].text == "fs" { s.importsFs = true
         } else if ts[names[i]].text == "io" { s.importsIo = true
         } else if ts[names[i]].text == "os" { s.importsOs = true
+        } else if ts[names[i]].text == "collections" { s.importsCollections = true
         } else {
             lexer.fail(ts, names[i], "U0001", "this standard module is outside the selfhost subset")
         }
@@ -1056,6 +1152,7 @@ pub fn parseFile(s: inout State, ts: Vec[Token]) {
     s.importsFs = false
     s.importsIo = false
     s.importsOs = false
+    s.importsCollections = false
     loop {
         newlines(&s, ts)
         if ts[s.pos].kind == .Eof { break }
@@ -1087,6 +1184,7 @@ pub fn parseFile(s: inout State, ts: Vec[Token]) {
     s.files[s.file].importsFs = s.importsFs
     s.files[s.file].importsIo = s.importsIo
     s.files[s.file].importsOs = s.importsOs
+    s.files[s.file].importsCollections = s.importsCollections
     s.files[s.file].importCount = s.imports.len() - s.files[s.file].importStart
     // A module name may not also name a top-level declaration of this file.
     var j = s.files[s.file].importStart

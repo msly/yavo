@@ -1,16 +1,16 @@
-# Yavo 交接文档（2026-11-27，第四十七批：Set[String] 与第二个正式 CLI 交付）
+# Yavo 交接文档（2026-11-27，第四十八批：拥有型图结构与第三个独立 CLI）
 
-给下一个会话：先读第 1、2、10、26、27 节及 docs/self-hosting.md、selfhost/README.md 再开工。第二十七至第三十批在 `history/handoff-batches-2026-11-23-to-24.md`，第十二至第二十六批在 `history/handoff-batches-2026-11-21-to-23.md`，第六至第十一批在 `history/handoff-batches-2026-11-19-to-21.md`。
+给下一个会话：先读第1、2、10、28节及 docs/self-hosting.md、selfhost/README.md。第二十七至第三十批在 `history/handoff-batches-2026-11-23-to-24.md`，第十二至第二十六批在 `history/handoff-batches-2026-11-21-to-23.md`，第六至第十一批在 `history/handoff-batches-2026-11-19-to-21.md`。
 
 ## 1. 一句话状态
 
-**第四十七批实现 Set[String]，交付四模块、271行的严格 CSV 校验 CLI；最终本机自举959/959、18/18和三平台CI 6/6均已通过。** `examples/csv-check` 先按冻结合同用 stage0 完整实现，再保持应用原文补 selfhost 的唯一实际阻塞 Set。支持拥有键的构造、add/has/remove/len/clone、字段及 Result 载荷，Set 与 Map 保持不同语言类型。
+**第四十八批交付五模块、309行的独立依赖索引CLI，并补齐其拥有型图结构依赖；最终本机自举1,027/1,027、19/19、0 skip。** `examples/dep-index` 的合同、113项独立预期与oracle先冻结，stage0自然实现后五份应用源码保持原字节。三平台CI及Linux独立sanitizer待推送后验收。
 
-原613个源文件及392个stage0接受成员未变，最终stage2覆盖仍为 **112/392**，入口字节去重 **52/222**；加入CSV四模块后为617文件、393个stage0接受输入，最终stage2 **113/393**，去重 **53/223**，退步/越界/超时0。新增接受项是本批完整CSV入口。
+原613文件、392个stage0接受成员不变，最终stage2 **112→117/392**，入口字节去重 **52→54/222**；包含CSV的上批617文件为 **113→118/393**。加入dep-index五模块后622文件、**119/394**，去重 **56/224**；退步/越界/超时0。五条历史增长来自两种sink程序，新增完整dep-index入口另计。
 
-当前语料 **959 cases**（新增34、无提升：242run、32panic、524reject、123unsupported、38shared_unsupported），最终完整本机自举 **959/959、18/18、0 skip**。本批无Rust/runtime改动，Rust Debug/Release各 **145/0/1**，冻结 **124/3/2**。CSV独立冻结139场景，POSIX适用138；最终bootstrap双方六产物 **828/828**，新RSS runner的native三种执行产物 **414/414**。RSS与异常清缓存补丁已纳入最终完整自举且输入身份检查通过；实现提交 `0373fb8` 的 [run 45937402633](https://github.com/msly/yavo/actions/runs/45937402633) 六项成功，三平台原生CSV与Linux双份C sanitizer均通过。
+清单 **1,027项**（68新增、2旧例原字节提升：271run、34panic、549reject、135unsupported、38shared_unsupported）。七项应用门及输入身份通过；最终stage2/stage3 C **1,171,654字节**，Linux二进制 **545,632字节**，分别逐字节一致。dep-index的POSIX六产物 **672/672**、独立native **336/336**。Rust/runtime未改；Debug/Release各145/0/1，冻结124/3/2。
 
-**SH-2 引导子集固定点已闭合；SH-3 尚未接替，Rust stage0 仍承担日常编译；SH-4 正式交付完成 2/3。** test-summary与csv-check均已通过三平台独立验收，CSV的Linux双份C sanitizer亦通过。selfhost仍只有check/emit-c；普通build/run、结构化诊断及其他工具入口尚待移植。下一步是第三个独立多文件依赖/索引CLI，按其实际依赖扩充子集；每批门槛保持 `docs/decisions.md` 第九节。
+**SH-4正式独立应用仍为2/3**；第三个dep-index已完成本机验收，待三平台CI后计入。 **SH-2保持固定点；SH-3尚未接替，Rust stage0仍是日常主编译器。** 下一批优先公开进程/环境/临时文件接口和锁定后端驱动，形成普通build/run无缓存闭环，再迁移结构化诊断及其他工具入口。性能P50及相对Rust交付成本优势仍需独立验收。
 
 ## 2. 仓库与环境
 
@@ -196,13 +196,13 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 
 ## 10. 下一个会话的第一步
 
-1. 检查 Git 状态、最新实现提交与 CI；先读第27节、[自举路线](docs/self-hosting.md)、[selfhost说明](selfhost/README.md)。第47批最终959/959、18/18、0 skip，新RSS runner的native414/414与最终stage2覆盖复扫均已通过；实现 `0373fb8` 的 [run 45937402633](https://github.com/msly/yavo/actions/runs/45937402633) 已6/6成功，完整证据见第27节及验证索引。
-2. **下一批目标为第三个独立多文件依赖/索引CLI。** 先冻结真实文件格式、跨文件引用/依赖关系、模块划分、成功输出及缺失/冲突/循环等失败语义，再独立实现oracle和应用。先用stage0自然实现，再按保持原文的selfhost结果补具体阻塞；文件与进程API、拥有Optional或更广Map值仅在实际依赖出现时纳入。
-3. **SH-3 正常入口单列验收**：当前selfhost只有check/emit-c。先补稳定源位置/错误码/结构化诊断与普通build/run、锁定工具链驱动，再按依赖迁移cache/fix/verify；默认切换还须满足既有回归、冻结规格、资源与三平台条件。保持U0001显式，不静默转交Rust前端。
-4. 拥有Optional的现成回归目标仍为原始 `experiments/coldstart-2026-11-22-r5/runs/yavo-b/tasks/T02/final/main.yv`，SHA256 `8e03caaec0bf7d2b8ccef92b9ab485035fc91cd88d8e8c159f224df178c470f7`；第46批stage2首拒3:24的 `?Vec[String]`。需覆盖拥有载荷的构造、移动/返回、if-let借用、分支及提前退出析构。其他首拒涉及标准模块、元组Vec、闭包、更广Map值、泛型/接口及浮点，首拒计数不能预测完整程序收益；Set遍历/take及拥有Optional仍显式U0001。
-5. R5仍缺token/金额，R6真实请求、会话和交付均为0；有已授权且完成资格验证的计量环境才恢复。成本实验不阻塞当前工程，但不能用语言特性或兼容门数量代替成本验收。
+1. 检查Git状态与最新CI，先读第28节、[自举路线](docs/self-hosting.md)和[selfhost说明](selfhost/README.md)。第48批最终1,027/1,027、19/19、0 skip；最终stage2覆盖119/394，完整身份见[验证索引](compiler/validation/batch48-dep-index-2026-11-27.json)。三平台CI及Linux独立sanitizer待推送后验收。
+2. **下一批转向SH-3普通build/run的系统接口。** stage0尚无公开进程启动、环境读取、文件状态及目录创建/删除API；`compiler/src/process.rs`属于Rust验证器内部设施。先冻结无shell argv、标准流继承/捕获、启动失败、退出/信号状态、唯一临时目录和失败清理的合同，再补所需接口。
+3. **锁定后端驱动单列验收。** 复用 `compiler/src/toolchain.rs` 的工具链定位、C17/优化参数和诊断转发。先做已安装工具链下的无缓存build/run，覆盖空格/Unicode路径、缺后端、C编译失败和程序非零退出；安装下载、缓存/PCH、fix/verify按依赖后移。默认接替仍须满足既有语义、冻结规格、结构化诊断、资源与三平台门，不能静默转交Rust前端。
+4. 一般拥有Optional仍是语言缺口：现仅支持允许的平坦String元组Optional，`?Vec[String]`、`?String`、更广Heap/Map、元组Vec、捕获闭包、泛型和浮点尚未覆盖。既有原始T02可继续作为真实目标，保持历史源码；首拒桶不直接预测完整项目收益。
+5. R5仍缺token/金额，R6真实请求、会话和交付均为0；获得已授权并验证的计量环境后恢复。成本实验不阻塞当前工程，也不能由三个应用完成替代。
 
-正式门槛仍按 `docs/plan.md`：配对通过率差的单侧95%下界至少−5个百分点，单位成功交付成本较Rust低至少20%并独立复现；冻结运行基准几何均值不超过C的1.5倍。工程指标包括小程序编译P50≤200ms、Linux小程序strip产物≤250KB、Windows原生测试及可复现构建。历史四微基准、PCH测量和本批CSV单次构建观察均不替代正式性能门；最终目录stage2编译器490,192字节与CSV Release应用30,456字节分别记录。
+正式门槛仍按 `docs/plan.md`：配对通过率差的单侧95%下界至少−5个百分点，单位成功交付成本较Rust低至少20%并独立复现；冻结运行基准几何均值不超过C的1.5倍。工程指标包括小程序编译P50≤200ms、Linux小程序strip产物≤250KB、Windows原生测试及可复现构建。本批依赖索引器单次构建观测不替代性能门；最终stage2编译器545,632字节与stage0 Release应用39,328字节分别记录。
 
 ## 历史批次（已移出）
 
@@ -412,3 +412,15 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - **Rust与首轮自举**：无Rust/runtime改动；Debug/Release各145/0/1，冻结124/3/2。首轮完整自举959/959、18/18、0 skip，回执 `compiler/target/ci/selfhost-batch47/run-wc7teq0m/receipt.json`。stage2/3 C1,057,613字节，SHA256 `694a454c2e1ba59f4b19fd2bd1e4a641472433e74e53f461baf8b576b4416ded`；Linux二进制490,144字节，SHA256 `7dfc1373b1e0ab8ae510c61565abdc93e813748d8869905124a89e255675bcbe`，两代逐字节一致。
 - **最终自举**：新runner的 `compiler/target/ci/selfhost-batch47-final/receipt.json` 已通过959/959、18/18、0 skip，六项应用门及输入身份检查全部通过，stage2/3 C与二进制逐字节一致。较长输出目录进入源诊断路径，故本轮C为1,057,805字节、SHA256 `6b88386c7a52c839e6c937345250a7125e187d61686cdab9f0c766dcd5ab8107`，二进制490,192字节、SHA256 `9d3e68bce7b96e59ddd25281a1787d2b006b3aeae8e99c66955b66344d5a5cbb`；首轮身份仅保留为该次运行历史。
 - **验收修复与CI**：首轮之后发现可观测RSS恒为null及失败时冷缓存未清理两个验收器缺口，已修复并重跑native。RSS脚本冻结后的完整959例、18项门及最终stage2覆盖复扫均已通过；[验证索引](compiler/validation/batch47-csv-set-2026-11-27.json)保存回执、输入与产物身份。实现提交 `0373fb8a36579a4db8d2fbaedfc853e3bb242492` 的 [run 45937402633](https://github.com/msly/yavo/actions/runs/45937402633) **6/6成功**，首次运行。已核对main/push/exact head、三平台bootstrap/CSV/归档/上传及Linux双份C sanitizer和selfhost sanitizer步骤；CI归档内容未另行下载，平台结论依据执行脚本的必需门与API成功状态。SH-4正式交付更新为2/3；SH-3仍check/emit-c。下一批为第三个独立多文件依赖/索引CLI。
+
+
+## 28. 第四十八批：拥有型图结构与独立依赖索引 CLI（2026-11-27）
+
+- **基线与应用**：基线 `5e527961eba9fbf4547251b42a8b1f21daff5b05`；五模块309行，源项目SHA256 `a48f8f8dc9879fa5101efb67d72232a91f61c23a575edaa983fa4f6992d84f64`。SPEC先冻结，应用作者未读selfhost或独立预期；两次check、两次build，仅修else同行语法。应用原文未为selfhost改写；见[开发记录](examples/dep-index/evidence/DEVELOPMENT.md)。
+- **合同与独立预期**：显式UTF-8声明文件，重复模块/缺失引用/循环按固定阶段报错；ASCII最小就绪节点的依赖优先顺序，成功后原子TSV。113手工预期与独立oracle在执行应用前一致；POSIX112、Windows107适用。不是Yavo源码解析器，无目录发现、增量持久化或构建命令执行。
+- **selfhost扩展**：Vec[Vec[int]]及深clone/索引写入，String平坦tuple与Optional，Heap[(String,int)]及无捕获纯表达式比较器，临时Optional while-let，[]拥有struct的只读索引/foreach别名链，已支持类型的sink参数。正常/提前返回、循环退出及实参求值中断清理；一般拥有Optional、其他Heap/嵌套Vec形状、捕获闭包、局部Vec持久别名、命名io/fs.Error等保持U0001。
+- **回归与审查**：新增68（27run、2panic、25reject、14unsupported），原字节提升2，合计1027=271/34/549/135/38。修正Heap比较错误接受、过宽String→str转换导致的三条旧E0001误接受、Optional来源与别名边界、readonly-slice foreach别名及标准Error晚边界。两轮中止的初验不记最终通过；最终清单分类1027/1027及最终全量均已复验。
+- **最终本机**：完整自举 **1027/1027、19/19、0 skip**，七项应用门、真实lexer及输入身份通过。C **1,171,654字节**、SHA256 `4bab3b7a9711045e910a99300b6710435132e1b769164670b2cc72707617163f`；Linux二进制 **545,632字节**、SHA256 `1d39ff5a88157ce680676510c215720e9d4f19be7acf800d1f1480b57244987c`，stage2/3逐字节一致。最终回执 `compiler/target/ci/selfhost-batch48-complete/receipt.json`。
+- **应用与资源**：最终stage2/0六产物672/672，独立native336/336。stage0独立Release C62,982字节，二进制39,328字节，两副本字节相同；Release冷/不变/编辑5.109620/0.008643/1.022913秒，均单次miss/hit/miss。353/353命令有wait4 RSS，最大425,816,064字节；本机无GCC，sanitizer为unavailable/null。CI要求Linux对两个实际producer的C执行ASan+UBSan，正负控必须先通过。
+- **覆盖与Rust**：原613文件和392个stage0接受成员字节不变，112→117/392，去重52→54/222；上批617文件113→118/393；全622文件119/394、去重56/224。历史新增五路径为两种sink源，dep-index新增一个完整入口；退步/越界/超时0。无Rust/runtime变更，完整Debug/Release各145/0/1，冻结124/3/2。
+- **CI与目标**：三平台CI及Linux独立sanitizer待推送后验收。 **SH-4正式独立应用仍为2/3**；第三个dep-index已完成本机验收，待三平台CI后计入。 SH-3仍check/emit-c；公开系统接口、锁定后端普通build/run、结构化诊断和更广语义仍是主工程。性能与成本目标另验收。完整来源见[验证索引](compiler/validation/batch48-dep-index-2026-11-27.json)。

@@ -1,0 +1,3565 @@
+{
+  "schema": "yavo-dep-index-cases/1",
+  "spec_sha256": "ada6bd0818b047632cd1f33f308f55e6b454adcec43f785ad1b36cf8dc192a26",
+  "scope": "Hand-authored contract outcomes: module order, unique direct counts, operand spelling, diagnostics, physical lines and exits. No expected value came from application execution or the oracle.",
+  "path_scope": "UTF-8 path spellings; POSIX-only TAB/LF/CR/backslash fixtures and Windows backslash separators are marked by os.name. Invalid UTF-8 argv bytes have no frozen contract in SPEC v1 and are outside this manifest.",
+  "cases": [
+    {
+      "id": "single_no_terminator",
+      "group": "valid_format",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module A"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "A",
+            "a.dep",
+            0
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "single_lf",
+      "group": "valid_format",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module A\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "A",
+            "a.dep",
+            0
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "single_crlf",
+      "group": "valid_format",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module A\r\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "A",
+            "a.dep",
+            0
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "mixed_line_endings",
+      "group": "valid_format",
+      "args": [
+        "a.dep",
+        "b.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "# lead\r\nmodule A\nuse B\r\n# tail"
+        },
+        {
+          "path": "b.dep",
+          "text": "module B\r\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "B",
+            "b.dep",
+            0
+          ],
+          [
+            "A",
+            "a.dep",
+            1
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "ascii_whitespace",
+      "group": "valid_format",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": " \t module \t A \t \n\t# tail\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "A",
+            "a.dep",
+            0
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "tab_separator",
+      "group": "valid_format",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module\tA\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "A",
+            "a.dep",
+            0
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "blank_comment_prefix",
+      "group": "valid_format",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "\n \t\n # note\n\tmodule A\n\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "A",
+            "a.dep",
+            0
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "unicode_comments",
+      "group": "valid_format",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "# 中文 café 🙂\nmodule A\n# Ω é\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "A",
+            "a.dep",
+            0
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "unicode_not_physical_newlines_in_comment",
+      "group": "valid_format",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "# x module Bogususe Missing ﻿\nmodule A\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "A",
+            "a.dep",
+            0
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      },
+      "note": "Only LF separates physical lines; non-ASCII Unicode is legal inside comments."
+    },
+    {
+      "id": "identifier_segments",
+      "group": "valid_format",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module _a0.Z9._\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "_a0.Z9._",
+            "a.dep",
+            0
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "bom_inside_later_comment",
+      "group": "valid_format",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module A\n# ﻿ allowed Unicode\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "A",
+            "a.dep",
+            0
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "independent_ascii_order",
+      "group": "dag_order",
+      "args": [
+        "z.dep",
+        "a.dep",
+        "u.dep",
+        "zz.dep",
+        "aa.dep",
+        "d.dep",
+        "p.dep",
+        "q.dep"
+      ],
+      "files": [
+        {
+          "path": "z.dep",
+          "text": "module z\n"
+        },
+        {
+          "path": "a.dep",
+          "text": "module a\n"
+        },
+        {
+          "path": "u.dep",
+          "text": "module _\n"
+        },
+        {
+          "path": "zz.dep",
+          "text": "module Z\n"
+        },
+        {
+          "path": "aa.dep",
+          "text": "module A\n"
+        },
+        {
+          "path": "d.dep",
+          "text": "module a0\n"
+        },
+        {
+          "path": "p.dep",
+          "text": "module a.A\n"
+        },
+        {
+          "path": "q.dep",
+          "text": "module a._\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "A",
+            "aa.dep",
+            0
+          ],
+          [
+            "Z",
+            "zz.dep",
+            0
+          ],
+          [
+            "_",
+            "u.dep",
+            0
+          ],
+          [
+            "a",
+            "a.dep",
+            0
+          ],
+          [
+            "a.A",
+            "p.dep",
+            0
+          ],
+          [
+            "a._",
+            "q.dep",
+            0
+          ],
+          [
+            "a0",
+            "d.dep",
+            0
+          ],
+          [
+            "z",
+            "z.dep",
+            0
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "reverse_operand_chain",
+      "group": "dag_order",
+      "args": [
+        "a.dep",
+        "b.dep",
+        "c.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module A\nuse B\n"
+        },
+        {
+          "path": "b.dep",
+          "text": "module B\nuse C\n"
+        },
+        {
+          "path": "c.dep",
+          "text": "module C\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "C",
+            "c.dep",
+            0
+          ],
+          [
+            "B",
+            "b.dep",
+            1
+          ],
+          [
+            "A",
+            "a.dep",
+            1
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "diamond",
+      "group": "dag_order",
+      "args": [
+        "d.dep",
+        "c.dep",
+        "b.dep",
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "d.dep",
+          "text": "module D\nuse B\nuse C\n"
+        },
+        {
+          "path": "c.dep",
+          "text": "module C\nuse A\n"
+        },
+        {
+          "path": "b.dep",
+          "text": "module B\nuse A\n"
+        },
+        {
+          "path": "a.dep",
+          "text": "module A\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "A",
+            "a.dep",
+            0
+          ],
+          [
+            "B",
+            "b.dep",
+            1
+          ],
+          [
+            "C",
+            "c.dep",
+            1
+          ],
+          [
+            "D",
+            "d.dep",
+            2
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "new_ready_preempts_old_ready",
+      "group": "dag_order",
+      "args": [
+        "c.dep",
+        "a.dep",
+        "b.dep"
+      ],
+      "files": [
+        {
+          "path": "c.dep",
+          "text": "module C\n"
+        },
+        {
+          "path": "a.dep",
+          "text": "module A\nuse B\n"
+        },
+        {
+          "path": "b.dep",
+          "text": "module B\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "B",
+            "b.dep",
+            0
+          ],
+          [
+            "A",
+            "a.dep",
+            1
+          ],
+          [
+            "C",
+            "c.dep",
+            0
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "use_order_not_build_order",
+      "group": "dag_order",
+      "args": [
+        "a.dep",
+        "z.dep",
+        "b.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module A\nuse Z\nuse B\n"
+        },
+        {
+          "path": "z.dep",
+          "text": "module Z\n"
+        },
+        {
+          "path": "b.dep",
+          "text": "module B\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "B",
+            "b.dep",
+            0
+          ],
+          [
+            "Z",
+            "z.dep",
+            0
+          ],
+          [
+            "A",
+            "a.dep",
+            2
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "adjacent_repeated_use",
+      "group": "dag_order",
+      "args": [
+        "a.dep",
+        "b.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module A\nuse B\nuse B\n"
+        },
+        {
+          "path": "b.dep",
+          "text": "module B\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "B",
+            "b.dep",
+            0
+          ],
+          [
+            "A",
+            "a.dep",
+            1
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "separated_repeated_use",
+      "group": "dag_order",
+      "args": [
+        "a.dep",
+        "b.dep",
+        "c.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module A\nuse B\n# gap\nuse C\nuse B\nuse C\n"
+        },
+        {
+          "path": "b.dep",
+          "text": "module B\n"
+        },
+        {
+          "path": "c.dep",
+          "text": "module C\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "B",
+            "b.dep",
+            0
+          ],
+          [
+            "C",
+            "c.dep",
+            0
+          ],
+          [
+            "A",
+            "a.dep",
+            2
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "direct_not_transitive_count",
+      "group": "dag_order",
+      "args": [
+        "a.dep",
+        "b.dep",
+        "c.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module A\nuse B\nuse C\n"
+        },
+        {
+          "path": "b.dep",
+          "text": "module B\nuse C\n"
+        },
+        {
+          "path": "c.dep",
+          "text": "module C\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "C",
+            "c.dep",
+            0
+          ],
+          [
+            "B",
+            "b.dep",
+            1
+          ],
+          [
+            "A",
+            "a.dep",
+            2
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "case_sensitive_modules",
+      "group": "dag_order",
+      "args": [
+        "lower.dep",
+        "upper.dep"
+      ],
+      "files": [
+        {
+          "path": "lower.dep",
+          "text": "module core.io\nuse core.IO\n"
+        },
+        {
+          "path": "upper.dep",
+          "text": "module core.IO\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "core.IO",
+            "upper.dep",
+            0
+          ],
+          [
+            "core.io",
+            "lower.dep",
+            1
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "prefix_name_order",
+      "group": "dag_order",
+      "args": [
+        "four.dep",
+        "three.dep",
+        "two.dep",
+        "one.dep"
+      ],
+      "files": [
+        {
+          "path": "four.dep",
+          "text": "module foobar\n"
+        },
+        {
+          "path": "three.dep",
+          "text": "module foo0\n"
+        },
+        {
+          "path": "two.dep",
+          "text": "module foo.bar\n"
+        },
+        {
+          "path": "one.dep",
+          "text": "module foo\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "foo",
+            "one.dep",
+            0
+          ],
+          [
+            "foo.bar",
+            "two.dep",
+            0
+          ],
+          [
+            "foo0",
+            "three.dep",
+            0
+          ],
+          [
+            "foobar",
+            "four.dep",
+            0
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "disconnected_global_ready_order",
+      "group": "dag_order",
+      "args": [
+        "a.dep",
+        "b.dep",
+        "c.dep",
+        "d.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module A\nuse D\n"
+        },
+        {
+          "path": "b.dep",
+          "text": "module B\nuse C\n"
+        },
+        {
+          "path": "c.dep",
+          "text": "module C\n"
+        },
+        {
+          "path": "d.dep",
+          "text": "module D\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "C",
+            "c.dep",
+            0
+          ],
+          [
+            "B",
+            "b.dep",
+            1
+          ],
+          [
+            "D",
+            "d.dep",
+            0
+          ],
+          [
+            "A",
+            "a.dep",
+            1
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "empty_file",
+      "group": "syntax",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": ""
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_MODULE",
+            "path": "a.dep",
+            "line": 1,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "only_comments",
+      "group": "syntax",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "# comment\n\t# 中文\r\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_MODULE",
+            "path": "a.dep",
+            "line": 1,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "only_ascii_whitespace",
+      "group": "syntax",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": " \t\r\n\t\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_MODULE",
+            "path": "a.dep",
+            "line": 1,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "use_before_module",
+      "group": "syntax",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "# comment\nuse A\nmodule A\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_FORMAT",
+            "path": "a.dep",
+            "line": 2,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "second_module_same_name",
+      "group": "syntax",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module A\nmodule A\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_FORMAT",
+            "path": "a.dep",
+            "line": 2,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "second_module_different_name",
+      "group": "syntax",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module A\n# gap\nmodule B\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_FORMAT",
+            "path": "a.dep",
+            "line": 3,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "unknown_word",
+      "group": "syntax",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "import A\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_FORMAT",
+            "path": "a.dep",
+            "line": 1,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "uppercase_directive",
+      "group": "syntax",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "Module A\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_FORMAT",
+            "path": "a.dep",
+            "line": 1,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "missing_separator",
+      "group": "syntax",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "moduleA\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_FORMAT",
+            "path": "a.dep",
+            "line": 1,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "missing_module_name",
+      "group": "syntax",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module \t\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_FORMAT",
+            "path": "a.dep",
+            "line": 1,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "missing_use_name",
+      "group": "syntax",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module A\nuse\t\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_FORMAT",
+            "path": "a.dep",
+            "line": 2,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "module_inline_comment",
+      "group": "syntax",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module A # comment\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_FORMAT",
+            "path": "a.dep",
+            "line": 1,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "use_inline_comment",
+      "group": "syntax",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module A\nuse B # comment\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_FORMAT",
+            "path": "a.dep",
+            "line": 2,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "extra_token",
+      "group": "syntax",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module A B\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_FORMAT",
+            "path": "a.dep",
+            "line": 1,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "name_digit_start",
+      "group": "syntax",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module 1A\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_FORMAT",
+            "path": "a.dep",
+            "line": 1,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "name_leading_dot",
+      "group": "syntax",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module .A\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_FORMAT",
+            "path": "a.dep",
+            "line": 1,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "name_trailing_dot",
+      "group": "syntax",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module A.\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_FORMAT",
+            "path": "a.dep",
+            "line": 1,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "name_empty_segment",
+      "group": "syntax",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module A..B\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_FORMAT",
+            "path": "a.dep",
+            "line": 1,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "name_segment_digit_start",
+      "group": "syntax",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module A.1B\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_FORMAT",
+            "path": "a.dep",
+            "line": 1,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "name_hyphen",
+      "group": "syntax",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module A-B\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_FORMAT",
+            "path": "a.dep",
+            "line": 1,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "name_slash",
+      "group": "syntax",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module A/B\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_FORMAT",
+            "path": "a.dep",
+            "line": 1,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "name_unicode_letter",
+      "group": "syntax",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module 模块\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_FORMAT",
+            "path": "a.dep",
+            "line": 1,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "name_unicode_digit",
+      "group": "syntax",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module A١\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_FORMAT",
+            "path": "a.dep",
+            "line": 1,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "nbsp_not_trimmed",
+      "group": "syntax",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": " module A\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_FORMAT",
+            "path": "a.dep",
+            "line": 1,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "nbsp_not_separator",
+      "group": "syntax",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module A\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_FORMAT",
+            "path": "a.dep",
+            "line": 1,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "use_name_invalid",
+      "group": "syntax",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module A\nuse B..C\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_FORMAT",
+            "path": "a.dep",
+            "line": 2,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "unknown_after_comment_crlf_line",
+      "group": "syntax",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "# x\r\n\r\nmodule A\r\nbad\r\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_FORMAT",
+            "path": "a.dep",
+            "line": 4,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "initial_bom",
+      "group": "encoding",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "base64": "77u/bW9kdWxlIEEK"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_FORMAT",
+            "path": "a.dep",
+            "line": 1,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "bare_cr_middle",
+      "group": "encoding",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module A\ruse B\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_FORMAT",
+            "path": "a.dep",
+            "line": 1,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "bare_cr_at_eof",
+      "group": "encoding",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module A\n# tail\r"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_FORMAT",
+            "path": "a.dep",
+            "line": 2,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "double_cr_before_lf",
+      "group": "encoding",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module A\r\r\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_FORMAT",
+            "path": "a.dep",
+            "line": 1,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "nul_in_comment",
+      "group": "encoding",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "base64": "bW9kdWxlIEEKIyAACg=="
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_FORMAT",
+            "path": "a.dep",
+            "line": 2,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "vertical_tab_in_comment",
+      "group": "encoding",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "base64": "IyALCm1vZHVsZSBBCg=="
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_FORMAT",
+            "path": "a.dep",
+            "line": 1,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "formfeed_in_directive",
+      "group": "encoding",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "base64": "bW9kdWxlDEEK"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_FORMAT",
+            "path": "a.dep",
+            "line": 1,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "escape_in_comment",
+      "group": "encoding",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "base64": "bW9kdWxlIEEKIyAbCg=="
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_FORMAT",
+            "path": "a.dep",
+            "line": 2,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "del_in_comment",
+      "group": "encoding",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "base64": "bW9kdWxlIEEKIyB/Cg=="
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_FORMAT",
+            "path": "a.dep",
+            "line": 2,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "utf8_invalid_lead",
+      "group": "encoding",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "base64": "/21vZHVsZSBBCg=="
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 3,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EIO_READ",
+            "path": "a.dep"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "utf8_overlong",
+      "group": "encoding",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "base64": "bW9kdWxlIEEKIyDArwo="
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 3,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EIO_READ",
+            "path": "a.dep"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "utf8_surrogate",
+      "group": "encoding",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "base64": "bW9kdWxlIEEKIyDtoIAK"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 3,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EIO_READ",
+            "path": "a.dep"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "utf8_truncated",
+      "group": "encoding",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "base64": "bW9kdWxlIEEKIyDigg=="
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 3,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EIO_READ",
+            "path": "a.dep"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "utf8_above_unicode_max",
+      "group": "encoding",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "base64": "bW9kdWxlIEEKIyD0kICACg=="
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 3,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EIO_READ",
+            "path": "a.dep"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "utf8_error_over_earlier_syntax",
+      "group": "encoding",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "base64": "YnJva2VuIGZpcnN0IGxpbmUKbW9kdWxlIEEKIyD/Cg=="
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 3,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EIO_READ",
+            "path": "a.dep"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "duplicate_later_declaration_line",
+      "group": "graph_error",
+      "args": [
+        "a.dep",
+        "b.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module A\n"
+        },
+        {
+          "path": "b.dep",
+          "text": "# lead\n\nmodule A\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_DUPLICATE",
+            "path": "b.dep",
+            "line": 3,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "repeated_operand",
+      "group": "graph_error",
+      "args": [
+        "a.dep",
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "# lead\nmodule A\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_DUPLICATE",
+            "path": "a.dep",
+            "line": 2,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "missing_operand_order",
+      "group": "graph_error",
+      "args": [
+        "z.dep",
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "z.dep",
+          "text": "module Z\nuse ZMissing\n"
+        },
+        {
+          "path": "a.dep",
+          "text": "module A\nuse AMissing\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_MISSING",
+            "path": "z.dep",
+            "line": 2,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "missing_first_use_order",
+      "group": "graph_error",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module A\nuse ZMissing\nuse AMissing\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_MISSING",
+            "path": "a.dep",
+            "line": 2,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "missing_repeated_use_first_line",
+      "group": "graph_error",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "# lead\r\nmodule A\r\n# gap\nuse Missing\r\nuse Missing\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_MISSING",
+            "path": "a.dep",
+            "line": 4,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "self_cycle",
+      "group": "graph_error",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "# lead\nmodule A\nuse A\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_CYCLE",
+            "path": "a.dep",
+            "line": 2,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "pair_cycle",
+      "group": "graph_error",
+      "args": [
+        "a.dep",
+        "b.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module A\nuse B\n"
+        },
+        {
+          "path": "b.dep",
+          "text": "module B\nuse A\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_CYCLE",
+            "path": "a.dep",
+            "line": 1,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "cycle_smallest_name_not_operand_order",
+      "group": "graph_error",
+      "args": [
+        "z.dep",
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "z.dep",
+          "text": "module Z\nuse A\n"
+        },
+        {
+          "path": "a.dep",
+          "text": "# lead\nmodule A\nuse Z\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_CYCLE",
+            "path": "a.dep",
+            "line": 2,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "cycle_downstream_smallest_selected",
+      "group": "graph_error",
+      "args": [
+        "z.dep",
+        "y.dep",
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "z.dep",
+          "text": "module Z\nuse Y\n"
+        },
+        {
+          "path": "y.dep",
+          "text": "module Y\nuse Z\n"
+        },
+        {
+          "path": "a.dep",
+          "text": "\nmodule A\nuse Y\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_CYCLE",
+            "path": "a.dep",
+            "line": 2,
+            "column": 1
+          }
+        ],
+        "help": false
+      },
+      "note": "A is downstream of Y/Z and is selected even though A is outside the cycle."
+    },
+    {
+      "id": "cycle_after_ready_emissions_no_stdout",
+      "group": "graph_error",
+      "args": [
+        "free.dep",
+        "z.dep"
+      ],
+      "files": [
+        {
+          "path": "free.dep",
+          "text": "module A\n"
+        },
+        {
+          "path": "z.dep",
+          "text": "module Z\nuse Z\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_CYCLE",
+            "path": "z.dep",
+            "line": 1,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "unlisted_file_does_not_resolve",
+      "group": "graph_error",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module A\nuse B\n"
+        },
+        {
+          "path": "b.dep",
+          "text": "module B\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_MISSING",
+            "path": "a.dep",
+            "line": 2,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "module_identity_not_path",
+      "group": "graph_error",
+      "args": [
+        "foo.bar",
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "foo.bar",
+          "text": "module Different\n"
+        },
+        {
+          "path": "a.dep",
+          "text": "module A\nuse foo.bar\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_MISSING",
+            "path": "a.dep",
+            "line": 2,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "duplicate_before_missing",
+      "group": "precedence",
+      "args": [
+        "a.dep",
+        "b.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module A\nuse Missing\n"
+        },
+        {
+          "path": "b.dep",
+          "text": "module A\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_DUPLICATE",
+            "path": "b.dep",
+            "line": 1,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "duplicate_before_cycle",
+      "group": "precedence",
+      "args": [
+        "a.dep",
+        "b.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module A\nuse A\n"
+        },
+        {
+          "path": "b.dep",
+          "text": "module A\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_DUPLICATE",
+            "path": "b.dep",
+            "line": 1,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "later_syntax_before_duplicate",
+      "group": "precedence",
+      "args": [
+        "a.dep",
+        "b.dep",
+        "c.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module A\n"
+        },
+        {
+          "path": "b.dep",
+          "text": "module A\n"
+        },
+        {
+          "path": "c.dep",
+          "text": "\nbroken\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_FORMAT",
+            "path": "c.dep",
+            "line": 2,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "later_read_before_duplicate",
+      "group": "precedence",
+      "args": [
+        "a.dep",
+        "b.dep",
+        "gone.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module A\n"
+        },
+        {
+          "path": "b.dep",
+          "text": "module A\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 3,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EIO_READ",
+            "path": "gone.dep"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "earlier_syntax_before_later_read",
+      "group": "precedence",
+      "args": [
+        "a.dep",
+        "gone.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "broken\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_FORMAT",
+            "path": "a.dep",
+            "line": 1,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "earlier_read_before_later_syntax",
+      "group": "precedence",
+      "args": [
+        "gone.dep",
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "broken\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 3,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EIO_READ",
+            "path": "gone.dep"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "missing_before_cycle",
+      "group": "precedence",
+      "args": [
+        "a.dep",
+        "z.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module A\nuse A\n"
+        },
+        {
+          "path": "z.dep",
+          "text": "module Z\nuse Missing\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_MISSING",
+            "path": "z.dep",
+            "line": 2,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "later_read_before_missing",
+      "group": "precedence",
+      "args": [
+        "a.dep",
+        "gone.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module A\nuse Missing\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 3,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EIO_READ",
+            "path": "gone.dep"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "later_syntax_before_missing",
+      "group": "precedence",
+      "args": [
+        "a.dep",
+        "b.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module A\nuse Missing\n"
+        },
+        {
+          "path": "b.dep",
+          "text": "module B\nunknown\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_FORMAT",
+            "path": "b.dep",
+            "line": 2,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "earlier_missing_module_before_later_syntax",
+      "group": "precedence",
+      "args": [
+        "a.dep",
+        "b.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "# empty\n"
+        },
+        {
+          "path": "b.dep",
+          "text": "broken\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_MODULE",
+            "path": "a.dep",
+            "line": 1,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "earlier_syntax_before_later_control",
+      "group": "precedence",
+      "args": [
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "base64": "YmFkCm1vZHVsZSBBCiMgAAo="
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_FORMAT",
+            "path": "a.dep",
+            "line": 1,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "no_operands",
+      "group": "cli",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "ECLI_USAGE"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "separator_without_operand",
+      "group": "cli",
+      "args": [
+        "--"
+      ],
+      "files": [],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "ECLI_USAGE"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "help_alone",
+      "group": "cli",
+      "args": [
+        "--help"
+      ],
+      "files": [],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 0,
+        "rows": null,
+        "diagnostics": [],
+        "help": true
+      }
+    },
+    {
+      "id": "help_with_operand",
+      "group": "cli",
+      "args": [
+        "--help",
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module A\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "ECLI_USAGE"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "unknown_before_operand",
+      "group": "cli",
+      "args": [
+        "--bad",
+        "a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module A\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "ECLI_USAGE"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "unknown_after_unreadable_operand",
+      "group": "cli",
+      "args": [
+        "gone.dep",
+        "--bad"
+      ],
+      "files": [],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "ECLI_USAGE"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "bare_dash_is_option",
+      "group": "cli",
+      "args": [
+        "-"
+      ],
+      "files": [],
+      "stdin": {
+        "text": "module Stdin\n"
+      },
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "ECLI_USAGE"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "separator_filename",
+      "group": "cli",
+      "args": [
+        "--",
+        "--"
+      ],
+      "files": [
+        {
+          "path": "--",
+          "text": "module DashDash\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "DashDash",
+            "--",
+            0
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "help_filename",
+      "group": "cli",
+      "args": [
+        "--",
+        "--help"
+      ],
+      "files": [
+        {
+          "path": "--help",
+          "text": "module Help\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "Help",
+            "--help",
+            0
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "dash_filename_ignores_stdin",
+      "group": "cli",
+      "args": [
+        "--",
+        "-"
+      ],
+      "files": [
+        {
+          "path": "-",
+          "text": "module Disk\n"
+        }
+      ],
+      "stdin": {
+        "text": "broken stdin\n"
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "Disk",
+            "-",
+            0
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "empty_operand",
+      "group": "filesystem",
+      "args": [
+        ""
+      ],
+      "files": [],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 3,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EIO_READ",
+            "path": ""
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "missing_file",
+      "group": "filesystem",
+      "args": [
+        "gone.dep"
+      ],
+      "files": [],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 3,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EIO_READ",
+            "path": "gone.dep"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "directory_operand",
+      "group": "filesystem",
+      "args": [
+        "directory.dep"
+      ],
+      "files": [
+        {
+          "path": "directory.dep",
+          "directory": true
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 3,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EIO_READ",
+            "path": "directory.dep"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "first_of_multiple_missing",
+      "group": "filesystem",
+      "args": [
+        "first.dep",
+        "second.dep"
+      ],
+      "files": [],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 3,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EIO_READ",
+            "path": "first.dep"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "dot_relative_spelling",
+      "group": "filesystem",
+      "args": [
+        "./a.dep"
+      ],
+      "files": [
+        {
+          "path": "./a.dep",
+          "text": "module A\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "A",
+            "./a.dep",
+            0
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "nested_space_unicode_path",
+      "group": "filesystem",
+      "args": [
+        "目录 with space/叶.dep"
+      ],
+      "files": [
+        {
+          "path": "目录 with space/叶.dep",
+          "text": "module A\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "A",
+            "目录 with space/叶.dep",
+            0
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "absolute_operand_spelling",
+      "group": "filesystem",
+      "args": [
+        "@abs:absolute dir/源.dep"
+      ],
+      "files": [
+        {
+          "path": "@abs:absolute dir/源.dep",
+          "text": "module A\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "A",
+            "@abs:absolute dir/源.dep",
+            0
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "posix_tab_filename",
+      "group": "filesystem",
+      "args": [
+        "tab\tname.dep"
+      ],
+      "files": [
+        {
+          "path": "tab\tname.dep",
+          "text": "module A\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "A",
+            "tab\tname.dep",
+            0
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      },
+      "platforms": [
+        "posix"
+      ]
+    },
+    {
+      "id": "posix_lf_filename",
+      "group": "filesystem",
+      "args": [
+        "line\nname.dep"
+      ],
+      "files": [
+        {
+          "path": "line\nname.dep",
+          "text": "module A\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "A",
+            "line\nname.dep",
+            0
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      },
+      "platforms": [
+        "posix"
+      ]
+    },
+    {
+      "id": "posix_cr_filename",
+      "group": "filesystem",
+      "args": [
+        "carriage\rname.dep"
+      ],
+      "files": [
+        {
+          "path": "carriage\rname.dep",
+          "text": "module A\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "A",
+            "carriage\rname.dep",
+            0
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      },
+      "platforms": [
+        "posix"
+      ]
+    },
+    {
+      "id": "posix_backslash_filename",
+      "group": "filesystem",
+      "args": [
+        "back\\slash.dep"
+      ],
+      "files": [
+        {
+          "path": "back\\slash.dep",
+          "text": "module A\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "A",
+            "back\\slash.dep",
+            0
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      },
+      "platforms": [
+        "posix"
+      ]
+    },
+    {
+      "id": "posix_escaped_read_diagnostic",
+      "group": "filesystem",
+      "args": [
+        "x\\\t\n\r.dep"
+      ],
+      "files": [],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 3,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EIO_READ",
+            "path": "x\\\t\n\r.dep"
+          }
+        ],
+        "help": false
+      },
+      "platforms": [
+        "posix"
+      ]
+    },
+    {
+      "id": "posix_escaped_source_diagnostic",
+      "group": "filesystem",
+      "args": [
+        "x\\\t\n\r.dep"
+      ],
+      "files": [
+        {
+          "path": "x\\\t\n\r.dep",
+          "text": "\nwrong\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_FORMAT",
+            "path": "x\\\t\n\r.dep",
+            "line": 2,
+            "column": 1
+          }
+        ],
+        "help": false
+      },
+      "platforms": [
+        "posix"
+      ]
+    },
+    {
+      "id": "windows_backslash_separator",
+      "group": "filesystem",
+      "args": [
+        "folder\\leaf.dep"
+      ],
+      "files": [
+        {
+          "path": "folder\\leaf.dep",
+          "text": "module A\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "A",
+            "folder\\leaf.dep",
+            0
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      },
+      "platforms": [
+        "nt"
+      ]
+    },
+    {
+      "id": "alias_spelling_duplicate",
+      "group": "filesystem",
+      "args": [
+        "a.dep",
+        "./a.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module A\n"
+        },
+        {
+          "path": "./a.dep",
+          "text": "module A\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EDEP_DUPLICATE",
+            "path": "./a.dep",
+            "line": 1,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "read_error_suppresses_valid_prefix",
+      "group": "filesystem",
+      "args": [
+        "a.dep",
+        "gone.dep"
+      ],
+      "files": [
+        {
+          "path": "a.dep",
+          "text": "module A\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 3,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "EIO_READ",
+            "path": "gone.dep"
+          }
+        ],
+        "help": false
+      }
+    }
+  ]
+}

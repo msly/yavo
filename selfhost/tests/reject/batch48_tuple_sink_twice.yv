@@ -1,0 +1,6 @@
+fn consume(value: sink (String, int)) { println(value.0) }
+fn main() {
+    let value = ("owned".toString(), 1)
+    consume(value)
+    consume(value)
+}

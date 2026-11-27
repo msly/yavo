@@ -1,0 +1,6 @@
+struct Item { label: String, number: int }
+fn inspect(items: []Item, owner: inout Vec[Item]) -> int { return items.len() }
+fn main() {
+    var items = [Item{label: "x".toString(), number: 1}]
+    println(inspect(items, &items))
+}

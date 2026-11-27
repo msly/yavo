@@ -9,6 +9,9 @@ import sys
 
 import csv_support as support
 
+APP_LABEL = "CSV"
+BASENAME = "yavo-csv-check"
+
 FLAGS = [
     "-std=c17", "-D_POSIX_C_SOURCE=200809L", "-DYV_ALLOC_CHECK=1", "-g", "-O1",
     "-fno-omit-frame-pointer", "-fno-strict-aliasing", "-fno-pie", "-no-pie",
@@ -103,7 +106,7 @@ def stage2_from_bootstrap(output, bound, stage0):
     identities = _path_hashes(inputs)
     for name, wanted in support.input_identities(include_app=True).items():
         if identities.get(name) != wanted:
-            raise ValueError("bootstrap did not bind current CSV gate input: " + name)
+            raise ValueError("bootstrap did not bind current " + APP_LABEL + " gate input: " + name)
         bind(bound, name)
     work = Path(receipt["work"]).resolve()
     if not work.is_relative_to(receipt_path.parent):
@@ -201,7 +204,7 @@ def validate(mode, stage0_c, stage0, bootstrap_output, cases, directory,
             {**overrides, "PATH": ""}, 60)
         report["stage2_emit"] = emitted
         if not completed(emitted) or not generated.is_file():
-            raise ValueError("actual final stage2 could not emit CSV application: "
+            raise ValueError("actual final stage2 could not emit " + APP_LABEL + " application: "
                              + err.decode("utf-8", "replace")[:1000])
         bind(bound, generated)
         report["runtime"] = bind(bound, support.ROOT / "compiler/runtime/yavo_rt.h")
@@ -214,7 +217,7 @@ def validate(mode, stage0_c, stage0, bootstrap_output, cases, directory,
             source_id = bind(bound, source)
             if source_id["sha256"] != bind(bound, original)["sha256"]:
                 raise ValueError("sanitizer C snapshot differs from producer output")
-            binary = local / "yavo-csv-check"
+            binary = local / BASENAME
             built, _out, _err = command(producer + "-build",
                 [cc, *FLAGS, "-I", support.ROOT / "compiler/runtime", source, "-lm", "-o", binary])
             build = {"producer": producer, "command": built, "source": source_id,

@@ -1,0 +1,8 @@
+use std/collections
+fn main() {
+    var heap = Heap[(String, int)].by((a, b) => !(a.1 <= b.1) && (-a.1 + 1 < -b.1 + 1))
+    heap.push(("two".toString(), 2))
+    heap.push(("one".toString(), 1))
+    heap.push(("three".toString(), 3))
+    while let item = heap.pop() { println(item.0) }
+}

@@ -1,0 +1,13 @@
+use std/collections
+fn main() {
+    var heap = Heap[(String, int)].by((a, b) => a.1 < b.1)
+    heap.push(("skip".toString(), 1))
+    heap.push(("keep".toString(), 2))
+    heap.push(("skip".toString(), 3))
+    while let item = heap.pop() {
+        let guard = ("guard".toString(), item.1)
+        if item.1 != 2 { continue }
+        println("${item.0}:${guard.1}")
+    }
+    println(heap.len())
+}

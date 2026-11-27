@@ -1,0 +1,9 @@
+use std/collections
+fn main() {
+    var heap = Heap[(String, int)].by((a, b) => {
+        let low = a.1 < b.1
+        return low
+    })
+    heap.push(("x".toString(), 1))
+    println(heap.len())
+}

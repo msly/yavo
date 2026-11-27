@@ -1,0 +1,8 @@
+fn make(n: int) -> (String, int) { return (format("value${n}"), n) }
+fn main() {
+    var value = make(1)
+    let moved = value
+    value = make(2)
+    println("${moved.0}:${moved.1}")
+    println("${value.0}:${value.1}")
+}

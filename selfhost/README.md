@@ -2,18 +2,29 @@
 
 This directory implements the [self-hosting roadmap](../docs/self-hosting.md).
 It contains a compiler written in Yavo: source is tokenized, parsed into an
-AST, checked, and lowered to C17. **It compiles its own source.** stage0
-(the Rust compiler) builds stage1 from these files; stage1 compiles the same
-files to stage2 C; stage2 compiles them again to stage3 C, and the stage2 and
-stage3 C files are byte-identical. Rust is used to build stage1 and as a
-separate behavioral reference; no stage delegates an input back to Rust.
+AST, checked, and lowered to C17. It compiles its own source: stage0 (the Rust
+compiler) builds stage1; stage1 compiles the same files to stage2 C; stage2
+compiles them again to stage3 C. Stage2/stage3 C and binaries are byte-identical.
+Rust remains a separate behavioral reference; no stage delegates an input back
+to Rust. Current validation is recorded below.
 
 **Status: SH-2 fixed point reached for the bootstrap subset (2026-11-23).**
 The compiler sources were rewritten into a *bootstrap dialect*: a strict
 subset of the stage0 language that the compiler itself implements (see
 [decision 20–24](../docs/decisions.md)). It is not yet the default compiler:
-stage0 accepts far more of the language (owned optionals, mutable/reference iteration,
-float formatting, methods, generics, broader Map/Set APIs, closures, threads...).
+stage0 accepts far more of the language (general owned Optionals,
+mutable/reference iteration, float formatting, methods, generics, broader
+Map/Set APIs, general closures and threads).
+Batch 48 is driven by the independently authored five-module
+[yavo-dep-index](../examples/dep-index/SPEC.md): `main`, `model`, `parser`,
+`graph` and `report` were implemented with stage0 and frozen before extending
+selfhost. Its unchanged natural data structures require `Vec[Vec[int]]`,
+flat String tuples and their Optional form, `Heap[(String, int)]` with a pure
+capture-free expression comparator, temporary Optional `while let`, and
+read-only access to owned structs through slice parameters. The implementation
+also supports sink transfer of existing supported types and read-only alias
+chains from those slice parameters. `dep_application.py` adds the application
+compatibility gate; `tools/ci/dep_check.py` checks independent native delivery.
 Batch 47 adds owned `Set[String]` values, driven by the independently authored
 four-module [csv-check](../examples/csv-check/README.md) application. Its
 source passes stage0 before selfhost support is added. `csv_application.py`
@@ -108,7 +119,32 @@ and writes `receipt.json` with `achieved: "self-hosted-fixed-point"` and
 `self_hosted: true` only when everything passes. Native CI runs this gate on
 Linux, Windows and macOS; a configured job is not itself a passing result.
 
-## Current validation: batch 47 (2026-11-27)
+## Current validation: batch 48 (2026-11-27)
+
+The unchanged five-module dependency index passes the final selfhost gate:
+**672/672 executions** across stage0/final-stage2 Debug, Release and exit-cleanup
+artifacts. Independent local native delivery passes **336/336** and produces
+byte-identical C and 39,328-byte executables in two separate Release builds.
+
+The matrix has **1,027 cases**: 271 run, 34 panic, 549 reject, 135 unsupported
+and 38 shared_unsupported. Batch 48 adds 68 fixtures and promotes two existing
+sources without changing their bytes. Full bootstrap passes **1,027/1,027,
+19/19 checks, zero skips**, including seven compatibility application gates.
+Stage2/stage3 C is byte-identical at **1,171,654 bytes**; their Linux binaries
+are identical at **545,632 bytes**. Rust Debug/Release each retain 145/0/1,
+with frozen conformance 124/3/2 and no Rust or production-runtime changes.
+
+The original 613 source files remain unchanged: coverage rises 112 to 117/392,
+or 52 to 54/222 by entry-source bytes. Including CSV and dep-index gives
+**119/394 accepted paths**, or **56/224 distinct entry sources**, with zero
+regressions, strict-subset violations or timeouts. The five historical gains
+are two sink programs with archived copies; the dependency index adds one entry.
+
+Three-platform CI and the required independent Linux sanitizer gate are pending. **Two of three formal SH-4 applications are complete; dep-index awaits platform CI.** Seven compatibility gates use a separate counting scope.
+SH-3, formal performance thresholds and relative delivery-cost acceptance remain
+open. See the [validation index](../compiler/validation/batch48-dep-index-2026-11-27.json).
+
+## Historical validation: batch 47 (2026-11-27)
 
 Owned String sets compile the independently authored four-module CSV checker
 without changing its stage0-accepted source. The matrix has **959 cases and
@@ -418,26 +454,28 @@ JSON diagnostics, suggestions and recovery remain future work.
 
 | Area | Implemented |
 | --- | --- |
-| Files | Source modules via leading `use a`, `use a/b`, `use a/{b, c}`; per-file imports and top-level `pub`, cyclic imports, qualified functions and original source locations; standard fs/io/os imports; required entry `fn main()` |
-| Types | `int` (signed 64-bit), `byte` (unsigned 8-bit), `bool`, borrowed `str`, owned `String`, `Vec[T]` with existing scalar/struct/String element forms, unit return; nominal structs, payload-free enums, flat Copy tuples, supported `T ! E` results and Copy `?T` |
+| Files | Source modules via leading `use a`, `use a/b`, `use a/{b, c}`; per-file imports and top-level `pub`, cyclic imports, qualified functions and original source locations; standard fs/io/os imports and the supported std/collections Heap API; required entry `fn main()` |
+| Types | `int` (signed 64-bit), `byte` (unsigned 8-bit), `bool`, borrowed `str`, owned `String`, supported scalar/struct/String vectors and `Vec[Vec[int]]`, unit return; nominal structs, payload-free enums, flat tuples including String, supported `T ! E` results, Copy `?T` and Optional flat String tuples |
 | String | Empty construction, str.toString, len, clone, push, output, String/str comparison, UTF-8/NUL; byte indexing; startsWith/endsWith/contains/find/split/parseInt/trim/lines/fields |
-| Vec | Typed empty construction, empty/nonempty literals including Vec[byte], len, consuming push, reserve, recursive clone/drop; stable in-place int/String sort on writable local/field/inout places; zero-argument pop for Copy elements on mutable local/field/inout places; checked reads and index/field/compound assignments for Copy elements; expression-local read-only indexing and field projection for owned elements |
+| Vec | Typed empty construction, empty/nonempty literals including Vec[byte] and Vec[Vec[int]], len, consuming push, reserve, recursive clone/drop; stable in-place int/String sort; pop for Copy elements; checked Copy reads/writes and nested-int-vector places; expression-local owned-element access and the restricted slice-parameter aliases described below |
 | Map | Map[String, V] for int/bool/byte values; contextual [:], consuming set, has/getCopy/remove, len/clone, locals/parameters/returns/fields and read-only two-binding traversal |
 | Set | Set[String], empty []/[:]/Set[String]{}, consuming add, has/remove, len/clone; locals, parameters, returns, fields and Result payloads; iteration remains U0001 |
+| Heap | `Heap[(String, int)].by((a, b) => expression)` after `use std/collections`; pure capture-free comparator, consuming push, owning pop, len, whole-value moves and recursive cleanup; locals, ordinary/sink/inout parameters and returns |
 | Aggregates | Forward/nested fields, construction, reads and mutable fields; Copy values or owned String/Vec/Map/Set/nested struct fields; constant defaults and empty aggregates; by-value cycles rejected |
-| Tuples | Flat int/byte/bool/non-owning struct/payload-free enum elements; construction, numeric `.0`/`.1` projection, locals, arguments, returns, whole-value assignment/inout and Optional payloads; bounded structural signatures |
+| Tuples | Flat int/byte/bool/String/non-owning struct/payload-free enum elements; left-to-right construction and ownership transfer, numeric projection, locals, arguments, returns, whole-value assignment/inout and Optional payloads; bounded structural signatures |
 | Enums | Qualified and context-inferred cases, nominal type checks, equality/inequality, case-name output |
 | Literals | Decimal integers including negative `INT64_MIN`, contextual byte-range integers, single-quoted ASCII byte literals and seven escapes, booleans, unit, non-interpolated UTF-8 strings with supported escapes and NUL; vector literals with contextual or first-element type inference |
-| Functions | Typed parameters, scalar/String/Vec/struct/Copy-tuple/unit returns, forward calls and recursion; owned ordinary parameters borrow read-only; `inout` parameters with `&variable` or `&variable.field` arguments (later arguments may not use that root, E0102); borrowed str/Vec[str]/slice returns carry their required `of` sources |
+| Functions | Typed parameters and supported return types, forward calls and recursion; ordinary owned parameters borrow read-only; sink parameters take ownership of supported owning types while Copy inputs remain copies; inout with `&variable`/`&variable.field`; borrowed str/Vec[str]/slice returns require `of` sources and cannot name sink parameters |
 | Results | User-function `T ! E`, contextual `ok(value)`/`err(error)` and implicit success wrapping, `try`, terminating `catch name { ... }`/`catch _ { ... }`; owned String/Vec/Map/Set/struct payloads and cleanup on propagation |
-| Optionals | `?T` for int/byte/bool/non-owning struct/payload-free enum/flat Copy tuple; `some`, contextual `none`, implicit wrapping, isSome/isNone, lazy `??` and terminating `??` fallbacks; `if let` with else/else-if-let and `_` |
+| Optionals | `?T` for int/byte/bool/non-owning struct/payload-free enum/flat tuple including String; some/none/wrapping, tag queries, lazy coalesce and terminating fallbacks; if-let borrows an existing owned payload or moves a temporary payload; while-let supports temporary owning Optional values |
+| Read-only slices | Supported scalar/str/named element slices, including owned structs; indexed and foreach elements of direct read-only slice parameters may form inferred read-only aliases and alias chains; let/var binding does not grant mutation or ownership |
 | Text slices | `s[start..end]` on str/String with int bounds and P-INDEX/P-STR-BOUNDARY checks; views of owned values may be bound locally while their owner stays unchanged; escaping the owner scope remains rejected |
 | Standard calls | `take(&place)` for String/Vec places; `os.args()` (len, indexing to static str), `os.exit(code)`; `io.readAll`, `fs.readText`, `fs.writeNewText` and `String.fromUtf8` only with a `catch _ { ... }` handler that cannot fall through (E0601) |
 | Locals | `let`/`var`, inferred or explicit types, assignment and arithmetic compound assignment; active locals cannot be shadowed |
-| Control flow | if/else-if/else and Copy Optional if-let; while/loop; int/byte half-open range for; one/two-binding read-only Vec/slice/args traversal and two-binding Map traversal, including named fields and whole temporary collections; break/continue/return and return-path checks |
+| Control flow | if/else-if/else, if-let and supported while-let; while/loop; int/byte half-open range for; one/two-binding read-only Vec/slice/args traversal and two-binding Map traversal; fresh per-iteration owning payloads, break/continue/return cleanup and return-path checks |
 | Expressions | Parentheses, int unary minus, boolean not, checked int/byte arithmetic, wrapping arithmetic, bit operations/shifts, contextual integer arithmetic, equality/order, short-circuit boolean operators |
 | Builtins | Single-argument `print`/`println`/`eprintln` as direct statements including decimal byte output, `assert(bool)`, explicit `int(...)`/`byte(...)` conversions, checked `abs(int)`, identity `abs(byte)` and matching int/byte `min`/`max`; user functions take precedence over assert/abs/min/max preludes |
-| Ownership | Consuming bindings/assignment/construction/returns; moved-value checking, read-only parameters, expression-local element borrows, root-based argument/receiver protection |
+| Ownership | Consuming bindings/assignment/construction/returns and sink calls; moved-value checking, read-only parameters/aliases, argument staging, indexed-receiver exclusive access and root-based receiver protection |
 | Runtime behavior | Checked arithmetic/panic/output, ordered evaluation, moved-source zeroing and cleanup on scope/statement/control-flow exits |
 
 Value-returning functions require an explicit return. Direct calls, method
@@ -468,7 +506,8 @@ analysis, even when their body always returns.
 read-only slice types, including locals, ordinary/inout parameters, fields and
 temporary vectors. `os.args()` is a static []str and supports both forms.
 The index is a read-only int; `_` can discard either binding. Copy elements
-are copied and owned String/struct elements are read-only views. The iterable
+are copied; owned String/struct elements and the inner Vec[int] of a
+Vec[Vec[int]] are read-only views. The iterable
 is not consumed; its root remains borrowed throughout nested loops and calls.
 An otherwise permitted mutation, move, `take` or inout access to that root
 fails with E0102. Reads and nested read-only traversal remain allowed, and
@@ -540,28 +579,59 @@ The C representation reuses `Map[String, bool]` helpers with a hidden true value
 while type checking keeps Set and Map distinct. Writable receivers retain the
 existing reservation rules during argument evaluation. A read-only query whose
 argument modifies or moves its own receiver remains U0001. Set iteration,
-`take`, other key types, direct `Vec[Set[String]]` and owned Optional payloads
+`take`, other key types, direct `Vec[Set[String]]` and Set-valued Optional payloads
 remain outside this subset. These are explicit U0001 boundaries.
 
-### Copy tuples
+### Flat tuples
 
-Tuple elements may be int, byte, bool, non-owning structs or payload-free enums.
-Element expressions are evaluated and copied left to right, so a later inout
-argument cannot change an earlier element's snapshot. Structural type identity
+Tuple elements may be int, byte, bool, String, non-owning structs or payload-free
+enums. Element expressions are evaluated left to right: Copy elements are
+snapshotted and String elements transfer ownership. A later inout argument
+cannot change an earlier element's snapshot. Structural type identity
 uses a collision-free radix encoding bounded by signed int capacity; exceeding
-that capacity is U0001. Capacity depends on the program's named-type count: a
-program with no named types can encode 31 int elements, while 32 is unsupported.
+that capacity is U0001. Capacity depends on the program's named-type count and
+the current atom encoding, which includes String.
 Layouts are emitted after complete named layouts and before function declarations,
 including tuple signatures used only by otherwise-unused functions.
 
 Tuples support local bindings, whole-value assignment, parameters, return values
 and inout. Numeric projection accepts decimal ordinals (including `.01`) and
 reports E0010 for unknown/out-of-range members. A singleton `(value,)` is inferred;
-an explicit singleton tuple type remains E0020, matching stage0. Nested, owned,
-borrowed or Optional elements, tuple fields/containers, tuple Results, references
-and destructuring are not implemented. Unit element expressions are E0001. Tuple element writes are
+an explicit singleton tuple type remains E0020, matching stage0. String projection
+borrows the field; whole tuples can move, but a field does not implicitly move
+out of its owner. Drop releases owned String elements. Nested tuples, owned
+struct elements, borrowed/container/Optional elements, tuple fields, Vec[tuple],
+tuple Results, general references and destructuring remain outside the subset.
+The supported Heap is the one tuple-container exception described below.
+Unit element expressions are E0001. Tuple element writes are
 rejected (E0014 through an immutable root, otherwise E0001); comparison is E0501
 for matching tuple types and E0001 for different types; direct output is E0001.
+
+### Nested integer vectors and Heap
+
+`Vec[Vec[int]]` is the only admitted nested vector shape. It supports contextual
+and inferred literals, whole-value moves, recursive clone/drop, checked nested
+integer reads/writes, inner-vector replacement and modifying methods on writable
+inner places. An indexed modifying receiver takes exclusive access before its
+arguments are evaluated; reading or consuming the protected outer vector in
+those arguments is E0403. Read-only traversal of the inner vectors is supported.
+Other nested element types, a third vector level, persistent aliases of local
+owned vector elements and taking an indexed owned value remain U0001.
+
+`use std/collections` enables `Heap[(String, int)]`. Construction requires
+`.by((a, b) => expression)` with two untyped parameters and a boolean result.
+The expression may use its parameters, tuple projections, literals and supported
+unary/binary operators. Captures, calls, block bodies, typed parameters and
+general standalone closures remain U0001. Comparator inputs are read-only;
+constructing the Heap does not transfer their String fields.
+
+`push` consumes one tuple; `pop` transfers one tuple into an owning Optional;
+`len` borrows the Heap. Remaining entries are recursively released on scope
+exit, normal function fallthrough and early exits. Heap locals, parameters,
+returns and whole-value moves are supported. Other Heap element shapes, fields,
+Result combinations, default construction without `.by` and additional Heap
+APIs remain unsupported. `Heap.clone()` is E0001 and matching-Heap comparison
+is E0501; these are invalid operations, not newly supported APIs.
 
 ### Integer builtins
 
@@ -603,18 +673,22 @@ arity is E0012 and unordered bool/Named elements are E0501. Byte and str
 vector sorting and sortBy remain U0001. `let _ = values.sort()`
 is allowed; a normal binding or return cannot use its no-value result.
 
-### Copy Optional and pop
+### Optionals, pop and matching
 
 Optional payloads are limited to int, byte, bool, non-owning structs,
-payload-free enums and supported Copy tuples. `some(value)` infers its actual payload type; `none` needs
+payload-free enums and supported flat tuples, including tuples with String
+elements. `some(value)` infers its actual payload type; `none` needs
 an Optional context. Bindings, assignments, arguments and returns can wrap a
-matching Copy payload implicitly. Both tag methods take zero arguments.
+matching supported payload implicitly. Owning tuple payloads transfer and drop
+their String fields; both tag methods take zero arguments.
 
 `Vec.pop()` evaluates a writable place once, checks its existing move/borrow/
 reservation permissions, then returns `none` for an empty vector or removes
 and copies the last element into `some`. Capacity is retained. The returned
-Optional has no borrow back to the vector. Temporary receivers and owned
-indexed places retain the previous U0001 boundary.
+Optional has no borrow back to the vector. Vec pop remains limited to Copy
+elements, including a writable inner Vec[int] place of Vec[Vec[int]];
+Heap pop supplies the new owning tuple Optional. Temporary receivers and
+other owned indexed places retain their existing U0001 boundaries.
 
 `lhs ?? rhs` is right associative, binds more tightly than comparisons and
 less tightly than bitwise OR, and evaluates the RHS only when the LHS is none.
@@ -628,19 +702,34 @@ context, while implicit wrapping of `(1, 2)` yields an int pair and is E0001.
 The same raw-context rule applies to Result success values: `return ok(1)`
 can provide byte context, but `return 1` in a `byte ! E` function is E0001.
 
-`if let name = optional { ... }` evaluates the condition once, copies its
-supported payload only in the then arm, and accepts else/else-if-let. A named
+`if let name = optional { ... }` evaluates the condition once and accepts
+else/else-if-let. Copy payloads are copied; an owning payload of a temporary
+Optional moves into the then arm and its source Optional is cleared. An
+existing owning Optional lends a read-only payload instead. A named
 binding of an existing Optional keeps a scoped loan: modifying that source
 inside the then arm is U0001 even after the binding's last use, because this
-subset has no liveness analysis. Copying or returning the payload is allowed;
-`_` has no source loan. Read-only binding writes are E0101; writes to a Copy
+subset has no liveness analysis. Copy payloads may be copied or returned;
+views of a borrowed String field retain the Optional owner's required `of`
+source. A further inferred named alias of that owning payload is U0001;
+`let _ = payload` reads without transfer, and an explicit owned annotation
+cannot take its ownership (E0404). `_` has no source loan. Read-only binding
+writes are E0101; writes to a Copy
 binding from a mutable source or temporary are U0001, matching stage0.
 Branch move/source joins and loop replays preserve these rules.
 
+`while let` supports Copy Optionals and temporary owning tuple Optionals such
+as `heap.pop()`. Each iteration creates a fresh payload binding. The failed
+match releases header temporaries; normal completion, continue, break and return
+release the current payload. Moving that payload clears its old owner, and
+replay creates a new binding rather than carrying the prior iteration's moved
+state. Matching an existing owning Optional with while-let remains U0001.
+
 Jumping `?? return/break/continue` is accepted for a whole binding initializer
-or assignment RHS. Owned/String/Vec/borrowed-str/unit payloads, nested Optional,
-Optional fields/container elements, Optional/Result combinations, owned-element
-pop, destructuring patterns and match remain U0001. Optional comparison and
+or assignment RHS. Coalescing an owning tuple Optional consumes the owned
+container and transfers either its payload or the lazily evaluated fallback.
+String itself, Vec/Map/Set/Heap/owned-struct/borrowed-str/unit payloads, nested
+Optional, Optional fields/container elements, Optional/Result combinations,
+owned-element Vec pop, destructuring patterns and match remain U0001. Optional comparison and
 direct printing are also U0001, matching stage0.
 
 ### Results and error propagation
@@ -702,6 +791,27 @@ replacement of that owner. Temporary String receivers live through the
 access. Text indexing is read-only. Text slices may be bound locally; views
 into an owned value keep that owner unchanged while the binding is in scope.
 
+### Sink parameters
+
+`name: sink T` uses the existing supported type shapes, including String,
+vectors (also Vec[Vec[int]]), structs, flat String tuples, supported Optional
+and Result values, Maps, Sets and Heap[(String, int)]. It adds an ownership
+mode, not new payload or container forms. Owning arguments move; Copy arguments
+remain copies and may be reused. A sink parameter is still a read-only binding.
+
+Calls evaluate arguments left to right. A consumed local is marked moved
+immediately, while its owning staging temporary survives until the call runs;
+the caller clears that temporary after transfer. If a later argument returns
+or propagates an error before the call, ordinary temporary cleanup releases
+the staged owners. Callees release sink parameters on normal fallthrough and
+early returns, or transfer a returned owner and clear the parameter.
+
+An earlier borrowed argument blocks a later conflicting sink move (E0102);
+an earlier sink move blocks a later read (E0402). An indexed modifying receiver
+also blocks a conflicting consuming call (E0403). A returned-borrow clause
+cannot name a sink parameter (E0304). Existing restrictions on references,
+inout arguments, type shapes and borrow lifetimes continue to apply.
+
 ### Ownership boundaries
 
 Ordinary string literals are `str`. Binding, assigning, returning or explicitly
@@ -710,7 +820,7 @@ String field's constant default has a special literal conversion. String
 arguments may borrow a str view for a call. Local view bindings keep the owner
 unchanged in their scope; borrowed returns must carry permitted `of` sources.
 
-Owned locals move into bindings, assignments, constructors and returns.
+Owned locals move into bindings, assignments, constructors, returns and sink calls.
 Ordinary parameters, output, comparison, len and clone borrow. Moving out of
 a field or a read-only parameter is E0401; moved-value reuse is E0402.
 Modification through a read-only place is E0014; a conflicting push receiver
@@ -723,8 +833,9 @@ break/continue and scope exit; moved sources are zeroed before later cleanup.
 Loop move checks reproduce stage0's conservative second body pass, including
 moves before a syntactic break/return. Reinitialization restores availability.
 
-Vectors accept `int`, `byte`, `bool`, payload-free enums, `String` and named structs,
-including structs with String or supported Vec fields. Nominal enum/struct
+Vectors accept `int`, `byte`, `bool`, payload-free enums, `String`, named structs
+and the single nested form Vec[Vec[int]], including structs with String or
+supported Vec fields. Nominal enum/struct
 identity is preserved in the element type. A vector owns its buffer even
 when its elements are Copy; a struct containing a vector is therefore owned.
 Whole vectors move into bindings, assignments, fields and returns, while
@@ -753,15 +864,23 @@ the borrow is needed; a temporary owning receiver remains alive through the
 statement. Copy field reads, len and completed clone results detach from the
 root, allowing later mutation such as `v.push(v[0].clone())`.
 
-Persistent bindings of a non-Copy indexed borrow, such as
-`let element = v[i]`, remain U0001.
-Using that borrowed result as an owned annotation, return, push argument or
-typed vector element is E0404; moving an owned field out of it is E0401.
-An arbitrary user struct still has no built-in clone method (E0010).
-Owned-element replacement, indexed-field mutation and mutation methods
-through an owned element remain outside the subset. General explicit references,
-sink parameters, taking from owned indexed elements and borrowed returns
-remain separate boundaries.
+For a direct immutable read-only `[]OwnedStruct` parameter, `items[i]` may
+initialize an inferred read-only alias; its foreach element can supply the
+same alias. `let` and `var` aliases and further inferred alias chains retain
+the slice parameter as their owner. Reads, ordinary borrowed calls and permitted
+borrowed returns preserve that source. `var` does not grant mutable access:
+field writes are E0101, supplying an owned inout argument is E0404, and whole
+reference rebinding is U0001. An explicit owned annotation cannot take the
+aliased element's ownership (E0404).
+
+Persistent aliases of local owning Vec elements, temporary collection elements,
+Map keys and other iterated owned elements remain U0001. Using a borrowed slot
+as an owned return, push argument or typed vector element is E0404; moving an
+owned field out of it is E0401. An arbitrary user struct still has no built-in
+clone method (E0010). Owned-element replacement and mutation remain unsupported
+except for writable inner Vec[int] places of Vec[Vec[int]]. Taking from an
+owned indexed element, explicit general references and broader borrowed-element
+returns remain separate boundaries.
 
 Out-of-range index operations raise P-INDEX. `reserve` requests a minimum
 total capacity without changing length; negative or overflowing capacities
@@ -794,18 +913,21 @@ an indexed borrow is used in a comparison, a nested index is evaluated, or
 a text index expression consumes its receiver. Stage0 accepts those inputs;
 the fixtures do not execute these programs or add new known_gap records.
 
-Unsupported input includes persistent bindings of borrowed collection elements and
-mutation through non-Copy indexes, direct nested Vec elements, unit or tuple
-vector elements, owned-element pop, vector slices, other collections, imports after other items,
-enum payloads, sink parameters and general references, owned/nested Optionals,
-Optional fields/container/Result combinations, Result fields,
-`Vec[Result]`, nested Results, arrow catch,
-user-defined methods, generics, interpolation outside direct output/format
-arguments, format specifiers, float/nondecimal literals,
-integer separators, mutable/reference iteration, owned or nested
-tuples and tuple fields/containers/Results, destructuring, closures and concurrency. String temporary
-receivers cannot be modified. This list describes the new frontend's input,
-not the broader Rust frontend.
+The principal remaining U0001 boundaries are:
+
+| Area | Remaining boundary |
+| --- | --- |
+| Nested collections | Nested Vec shapes other than Vec[Vec[int]], including a third level; Vec[tuple], Vec[Result], unit elements, vector slices and general owned-element Vec pop |
+| Aliases and places | Persistent local-Vec/temporary/Map-key/other-owned-foreach aliases; rebinding the supported read-only alias; owned indexed modification outside inner Vec[int] places; indexed inout/take and general explicit references |
+| Tuples | Nested or borrowed/container/Optional elements, owned struct elements, tuple fields and Result combinations; destructuring and general tuple containers other than the admitted Heap |
+| Owning Optionals | Payloads other than supported flat String tuples; nested Optional, fields, container elements and Result combinations; named aliases of an existing owning payload; while-let over an existing owning Optional |
+| Heap and callbacks | Other element shapes, fields, Result combinations and unimplemented APIs; captures, calls or block/typed-parameter comparator bodies; ordinary standalone or escaping closures |
+| Broader language | Other collection APIs, enum payloads, imports after other items, Result fields/nesting, named imported io.Error/fs.Error types, arrow catch, user methods, generics, mutable/reference iteration and concurrency |
+| Text and numerics | Interpolation outside direct output/format arguments, format specifiers, float/nondecimal literals and integer separators |
+
+Other invalid operations retain their stage0 error categories rather than
+being classified as unsupported. String temporary receivers cannot be modified.
+The frontend remains a subset of the Rust implementation.
 
 ## Implementation
 
@@ -815,7 +937,7 @@ not the broader Rust frontend.
 | `lexer.yv` | UTF-8-aware tokens, escapes, source spans, newline termination; returns `Vec[Token] ! Diagnostic` |
 | `model.yv` | Copy AST nodes; child lists are ranges in shared Program pools |
 | `parser.yv` | Aggregate/function/statement/expression grammar, imports, slices, borrows, catch, unsupported boundaries |
-| `types.yv` | Resolved nominal/vector/Copy Optional/flat tuple types, bounded tuple signatures, Result pool, field/default checks, cycles/layout order, transitive ownership |
+| `types.yv` | Resolved nominal/vector/Heap/Optional/flat tuple types within the stated shape limits, bounded tuple signatures, Result pool, field/default checks, cycles/layout order and transitive ownership |
 | `codegen.yv` | Places, borrowed/consuming values, Optional/Result wrapping, lazy coalesce, Result propagation, inout/take/pop/sort, move-state joins, cleanup, loop replay and ordered C |
 | `main.yv` | `compile` returns `String ! Diagnostic`; CLI reports errors, reads input and creates output exclusively |
 | `lexer_test.yv` | Lexer boundary assertions, including owned error propagation and cleanup on normal test returns |
@@ -836,25 +958,23 @@ executable fixtures from earlier increments.
 
 ## Next steps
 
-Self-hosting remains a regression gate: batch47 has 959 fixtures, 18 checks
-and six application gates. The next delivery is the third formal SH-4 project:
-an independent multi-file dependency/index CLI with
-a frozen format and oracle, failure cases, resource checks, reproducible builds
-and native Linux/Windows/macOS acceptance. Implement with stage0 first,
-preserve its source, then address the selfhost features it actually requires.
+Finish the current batch's complete bootstrap and native Linux/Windows/macOS
+acceptance for the frozen dependency index. The local application gates above
+do not replace those remaining checks; the formal SH-4 count must follow the
+completed native evidence.
 
 The unchanged r5/yavo-b/T02 strict CSV program is an existing regression target
-for owned Optionals. Current stage2 rejects its `?Vec[String]` at 3:24; closing
-that gap includes construction, owned returns, if-let temporary lifetimes,
-borrows and cleanup across branches and early exits. A single archived CSV
+for general owned Optionals. Its `?Vec[String]` remains outside the supported
+flat String-tuple Optional shape. Closing that gap includes construction,
+owned returns, borrowed access and cleanup across branches and early exits. A single archived CSV
 compatibility gate does not itself satisfy the formal project's conditions.
 
 SH-3 also needs an explicit normal-entrypoint milestone. The current compiler
 only exposes check/emit-c; stable diagnostics and ordinary build/run with the
 locked backend come before wider cache/fix/verify migration. Coverage of the
 existing regressions, frozen specification, resources and native platforms is
-required before the daily default switches from Rust. Formal SH-4 is two
-of three applications; cost and performance need separate current evidence.
+required before the daily default switches from Rust. Cost and performance
+need separate current evidence.
 
 ## Historical snapshots
 

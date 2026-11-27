@@ -1,0 +1,7 @@
+use std/collections
+fn main() {
+    let ceiling = "zzz".toString()
+    var heap = Heap[(String, int)].by((a, b) => a.0 < ceiling && a.1 < b.1)
+    heap.push(("x".toString(), 1))
+    println(heap.len())
+}

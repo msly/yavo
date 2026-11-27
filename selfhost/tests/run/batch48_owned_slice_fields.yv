@@ -1,0 +1,10 @@
+struct Item { label: String, number: int }
+fn inspect(items: []Item) -> int {
+    println(items[0].label)
+    return items[0].number + items.len()
+}
+fn main() {
+    let items = [Item{label: "first".toString(), number: 7}]
+    println(inspect(items))
+    println(items[0].label)
+}

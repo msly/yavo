@@ -1,0 +1,4 @@
+fn inspect(opt: ?(String, int)) -> str of opt { if let pair = opt { return pair.0 }
+return "none" }
+fn main() { let value: ?(String, int) = some(("kept".toString(), 7))
+println(inspect(value)) }

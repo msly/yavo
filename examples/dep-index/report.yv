@@ -1,0 +1,44 @@
+use model
+
+pub fn usage() {
+    println("Usage: yavo-dep-index [--] FILE...")
+}
+
+pub fn escapePath(path: str) -> String {
+    var output = String{}
+    var start = 0
+    for i in 0..path.len() {
+        let c = path[i]
+        if c == '\\' || c == '\t' || c == '\n' || c == '\r' {
+            output.push(path[start..i])
+            if c == '\\' { output.push("\\\\") } else if c == '\t' { output.push("\\t") } else if c == '\n' { output.push("\\n") } else { output.push("\\r") }
+            start = i + 1
+        }
+    }
+    output.push(path[start..path.len()])
+    return output
+}
+
+pub fn failure(problem: Failure) {
+    if problem.status == 2 {
+        eprintln("${problem.code}: ${problem.explanation}")
+        eprintln("Usage: yavo-dep-index [--] FILE...")
+        return
+    }
+    let path = escapePath(problem.path)
+    if problem.line > 0 {
+        eprintln("${path}:${problem.line}:1: ${problem.code}: ${problem.explanation}")
+    } else {
+        eprintln("${path}: ${problem.code}: ${problem.explanation}")
+    }
+}
+
+pub fn render(modules: []Module, order: []int) -> String {
+    var output = "module\tfile\tdependencies\n".toString()
+    for i in order {
+        let module = modules[i]
+        let path = escapePath(module.path)
+        output.push(format("${module.name}\t${path}\t${module.dependencies.len()}\n"))
+    }
+    return output
+}

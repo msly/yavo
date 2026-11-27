@@ -271,6 +271,7 @@ def main():
             "sliding_median_application": application_module("median_application").inputs(),
             "atomic_ledger_application": application_module("ledger_application").inputs(),
             "csv_check_application": application_module("csv_application").inputs(),
+            "dep_index_application": application_module("dep_application").inputs(),
         }
         version_result = command("zig-version", [zig, "version"])
         check("locked_zig", succeeded(version_result) and
@@ -598,6 +599,14 @@ def main():
         check("csv_check_application", csv_record["passed"],
               applicable=csv_record.get("applicable"), error=csv_record.get("error"))
 
+        # The third independent SH-4 project resolves a graph across real files.
+        dep_record = application_module("dep_application").check(
+            stage2 if stage2 is not None else binary, stage0, zig, work / "dep-index",
+            environment, frontend_env, CC_FLAGS, EXE)
+        report["dep_index_application"] = dep_record
+        check("dep_index_application", dep_record["passed"],
+              applicable=dep_record.get("applicable"), error=dep_record.get("error"))
+
         # A receipt must not attribute binaries to a source tree edited during the run.
         bound_paths = {
             str(stage0): report["inputs"]["stage0"]["sha256"],
@@ -621,6 +630,7 @@ def main():
             **report["inputs"]["sliding_median_application"],
             **report["inputs"]["atomic_ledger_application"],
             **report["inputs"]["csv_check_application"],
+            **report["inputs"]["dep_index_application"],
         }
         changed = [name for name, expected in bound_paths.items()
                    if not Path(name).is_file() or digest(Path(name)) != expected]

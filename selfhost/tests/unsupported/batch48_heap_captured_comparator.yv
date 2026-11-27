@@ -1,0 +1,7 @@
+use std/collections
+fn main() {
+    let direction = -1
+    var heap = Heap[(String, int)].by((a, b) => a.1 * direction < b.1 * direction)
+    heap.push(("x".toString(), 1))
+    println(heap.len())
+}

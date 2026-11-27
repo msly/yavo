@@ -1,0 +1,9 @@
+use std/collections
+fn main() {
+    var heap = Heap[(String, int)].by((a, b) => a.0 < b.0 || (a.0 == b.0 && a.1 < b.1))
+    heap.push(("same".toString(), 3))
+    heap.push(("before".toString(), 8))
+    heap.push(("same".toString(), 1))
+    heap.push(("same".toString(), 2))
+    while let item = heap.pop() { println("${item.0}:${item.1}") }
+}

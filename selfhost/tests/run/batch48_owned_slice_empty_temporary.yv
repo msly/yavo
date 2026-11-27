@@ -1,0 +1,11 @@
+struct Item { label: String, number: int }
+fn count(items: []Item) -> int {
+    if items.len() == 0 { return 0 }
+    let first = items[0]
+    return first.number
+}
+fn main() {
+    let empty: Vec[Item] = []
+    println(count(empty))
+    println(count([Item{label: "temporary".toString(), number: 9}]))
+}

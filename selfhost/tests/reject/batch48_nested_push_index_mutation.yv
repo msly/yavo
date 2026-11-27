@@ -1,0 +1,6 @@
+fn index(rows: inout Vec[Vec[int]]) -> int { rows.push([9])
+ return 0 }
+fn main() {
+    var rows = [[1]]
+    rows[index(&rows)].push(4)
+}

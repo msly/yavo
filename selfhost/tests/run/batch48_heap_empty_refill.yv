@@ -1,0 +1,12 @@
+use std/collections
+fn main() {
+    var heap = Heap[(String, int)].by((a, b) => a.1 < b.1)
+    println(heap.pop().isNone())
+    heap.push(("first".toString(), 4))
+    println(heap.len())
+    if let item = heap.pop() { println(item.0) }
+    println(heap.pop().isNone())
+    heap.push(("again".toString(), 7))
+    while let item = heap.pop() { println(item.1) }
+    println(heap.len())
+}

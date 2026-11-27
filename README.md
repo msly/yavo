@@ -10,17 +10,16 @@ passed all six jobs at `4739ffc`, including Linux x86-64, Windows x86-64 and
 macOS arm64. The [native confirmation index](compiler/validation/selfhost-fixed-point-native-2026-11-23.json)
 preserves those results separately from the original local fixed-point receipt.
 
-**Current goal: practical CLI delivery and gradual replacement of the Rust
-frontend.** Rust stage0 remains the daily compiler and supports substantially
-more of the language. The [roadmap](docs/self-hosting.md) keeps SH-3 compiler
-replacement and SH-4 non-compiler application acceptance separate from the
-completed SH-2 fixed point. The first application,
-[yavo-test-summary](examples/test-summary/README.md), a verifier for existing
-experiment logs, has passed independent acceptance on all three native platforms.
-The second application, [csv-check](examples/csv-check/README.md), also passes
-independent acceptance on all three platforms. **Two of the three SH-4
-applications are complete**; both stage0 and selfhost build them, with the
-selfhost artifacts checked by bootstrap.
+**Current goal: daily compiler replacement after practical CLI acceptance.**
+Rust stage0 remains the daily compiler and supports substantially more of the
+language. The [roadmap](docs/self-hosting.md) separates SH-3 replacement from
+SH-4 application acceptance and the completed SH-2 fixed point.
+[test-summary](examples/test-summary/README.md), [csv-check](examples/csv-check/README.md)
+and [dep-index](examples/dep-index/README.md) cover log statistics, structured
+text validation and dependencies across files. **Two of three formal SH-4 applications are complete; dep-index awaits platform CI.**
+The next engineering step is public process/environment/filesystem support for
+a locked-toolchain `build/run` path; performance and delivery-cost targets retain
+their separate acceptance requirements.
 
 The specification starts from **v0.5**, with dated revisions in [docs/decisions.md](docs/decisions.md). Historical revisions remain unchanged under `history/v0.x/` and Git tags `v0.1` through `v0.5`.
 
@@ -44,7 +43,7 @@ Recent changes implement index assignment, two-phase variable/field receivers, S
 
 | Check | Recorded local result | Scope |
 | --- | --- | --- |
-| Release suite | **145 passed, 0 failed, 1 ignored** | Batch 47: complete suite rerun; no Rust changes and frozen cases unchanged |
+| Release suite | **145 passed, 0 failed, 1 ignored** | Batch 48: complete suite rerun; no Rust changes and frozen cases unchanged |
 | Debug suite | **145 passed, 0 failed, 1 ignored** | Same source, all 19 groups, independent completed local log |
 | Frozen specification | **124 pass, 0 wrong, 3 unsupported, 0 not_run, 2 superseded** | 129 frozen cases; a different counting unit from Cargo test functions |
 | Cross-compilation | Six target formats/architectures build | Linux (static musl), Windows and macOS on x86-64/aarch64; native CI now covers Linux x86-64 plus the Windows x86-64/macOS arm64 selections below |
@@ -54,7 +53,33 @@ The ignored Cargo test is the old exploratory P0 conformance report; the current
 
 Source modules support top-level exports, per-file imports, cyclic imports and original-file diagnostics. Package dependencies and a program lockfile remain open. Multi-file `fix` returns `U0001` without writing; symlink module aliases are unsupported.
 
-### Selfhost String sets and independent CSV validation CLI (batch 47, 2026-11-27)
+### Selfhost owned graph structures and independent dependency index (batch 48, 2026-11-27)
+
+The five-module, 309-line [dep-index](examples/dep-index/README.md) validates
+explicit UTF-8 module declaration files and emits a deterministic dependency-first
+TSV index. Duplicate modules, missing references and cycles follow frozen error
+precedence; failures leave stdout empty. Its 113 manual cases and independent
+oracle were frozen separately from the natural stage0 implementation. The
+application's source remains unchanged while selfhost gains `Vec[Vec[int]]`,
+flat String tuples and their Optional form, `Heap[(String,int)]` with pure
+capture-free comparators, temporary Optional `while let`, read-only owned-record
+slice aliases and sink parameters for supported types.
+
+Full local bootstrap passes **1,027/1,027 cases, 19/19 checks, zero skips**,
+with 68 new fixtures and two unchanged-source promotions. Stage2/stage3 C
+(1,171,654 bytes) and Linux binaries (545,632 bytes) match exactly. The seventh
+compatibility gate passes **672/672** dependency-index executions; independent
+native delivery passes **336/336**, including deterministic separate Release
+builds. Original-corpus coverage rises **112 to 117/392**; including both new
+applications gives **119/394**, or **56/224** distinct entry-source bytes, with
+zero regressions, subset violations or timeouts. Rust and runtime are unchanged.
+
+Three-platform CI and the required independent Linux sanitizer gate are pending. **Two of three formal SH-4 applications are complete; dep-index awaits platform CI.** General owned Optionals, broader containers/closures,
+ordinary selfhost build/run and structured diagnostics remain open. See
+[HANDOFF section 28](HANDOFF.md) and the
+[validation index](compiler/validation/batch48-dep-index-2026-11-27.json).
+
+### Selfhost String sets and independent CSV validation CLI (batch 47, historical)
 
 Owned `Set[String]` supports empty construction, `add`, `remove`, `has`, `len`
 and deep `clone`, including fields, read-only/inout parameters, returns and

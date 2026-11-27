@@ -1,0 +1,14 @@
+use std/collections
+fn main() {
+    var heap = Heap[(String, int)].by((a, b) => a.0 < b.0)
+    for _index in 0..17 { heap.push(("equal".toString(), 1)) }
+    var count = 0
+    var total = 0
+    while let item = heap.pop() {
+        count += 1
+        total += item.1
+    }
+    println(count)
+    println(total)
+    println(heap.len())
+}
