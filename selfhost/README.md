@@ -192,7 +192,7 @@ filesystem bytes, runtime-error payloads and preserved input identities. It
 materializes fresh inputs for every product and case. Linux/macOS apply all 48
 cases; Windows excludes directory stdin and invalid native UTF-8 environment
 bytes, giving 46 cases / 276 executions. The local error sanitizer mode is off.
-Formal local gates pass. Exact-commit three-platform CI and the independent Linux ASan+UBSan error gate remain pending. The local error sanitizer gate is off and supplies no sanitizer pass.
+Formal local gates pass. Exact-commit three-platform CI and the independent Linux ASan+UBSan error gate remain pending. The local error sanitizer gate is off and supplies no sanitizer pass. The first [run 46018585973](https://github.com/msly/yavo/actions/runs/46018585973) passed 5/6 jobs: the Windows error gate stopped before emitting C or executing scenarios because a native backslash path was compared with the frozen POSIX path. That comparison now uses `.as_posix()`; eight path controls and the 288-execution local error gate pass. The original failure and archives remain preserved.
 
 Original 622 corpus bytes and stage0 classifications remain unchanged; acceptance
 increases from 119/394 to 125/394, or 56/224 to 62/224 distinct entry bytes, with
@@ -690,7 +690,8 @@ Diagnostics currently report the first error as
 `path:line:column: CODE: message`; columns count Unicode scalars and stored spans
 use UTF-8 byte offsets. `E0020` is syntax, `U0001` is an unimplemented construct
 or explicit implementation limit, and other `E` codes indicate semantic errors.
-JSON diagnostics, suggestions and recovery remain future work.
+First-error check JSON is supported as described above. Suggestions, richer
+diagnostic data and multi-error recovery remain future work.
 
 ## Accepted input subset
 

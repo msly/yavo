@@ -80,7 +80,7 @@ There are 73 new semantic cases and ten unchanged-source promotions, totaling
 No Rust, production runtime or toolchain-lock source changed; the local full Rust
 results remain the previously recorded source-identical batch49 runs.
 
-Formal local gates pass. Exact-commit three-platform CI and the independent Linux ASan+UBSan error gate remain pending. The local error sanitizer gate is off and supplies no sanitizer pass.
+Formal local gates pass. Exact-commit three-platform CI and the independent Linux ASan+UBSan error gate remain pending. The local error sanitizer gate is off and supplies no sanitizer pass. The first [run 46018585973](https://github.com/msly/yavo/actions/runs/46018585973) passed 5/6 jobs: the Windows error gate stopped before emitting C or executing scenarios because a native backslash path was compared with the frozen POSIX path. That comparison now uses `.as_posix()`; eight path controls and the 288-execution local error gate pass. The original failure and archives remain preserved.
 The [validation index](compiler/validation/batch51-standard-errors-2026-11-27.json), [frozen contract](selfhost/tests/errors51/CONTRACT.md)
 and [explicit fixture amendment](selfhost/tests/errors51/semantic-amendment.json)
 keep source identity, local and CI scope separate. The test driver adds no fourth

@@ -37,7 +37,7 @@ The original 622-source corpus remains byte-identical, with acceptance increasin
 to **125/394**, or **62/224** distinct entry bytes. Six newly accepted original
 programs also pass 48 differential executions across 12 scenarios.
 
-Formal local gates pass. Exact-commit three-platform CI and the independent Linux ASan+UBSan error gate remain pending. The local error sanitizer gate is off and supplies no sanitizer pass.
+Formal local gates pass. Exact-commit three-platform CI and the independent Linux ASan+UBSan error gate remain pending. The local error sanitizer gate is off and supplies no sanitizer pass. The first [run 46018585973](https://github.com/msly/yavo/actions/runs/46018585973) passed 5/6 jobs: the Windows error gate stopped before emitting C or executing scenarios because a native backslash path was compared with the frozen POSIX path. That comparison now uses `.as_posix()`; eight path controls and the 288-execution local error gate pass. The original failure and archives remain preserved.
 No new local full Rust run is claimed: source-identical batch49 Debug/Release
 151/0/1 results remain historical evidence. Current platform results and full
 versus selected-native Rust scope are recorded in the

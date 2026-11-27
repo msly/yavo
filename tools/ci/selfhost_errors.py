@@ -55,7 +55,7 @@ def load_frozen(bound):
             and replacement["literal_replacements"] == [{"old": "0xE2", "new": "226"}, {"old": "0x82", "new": "130"}],
             "semantic amendment is not the one frozen literal-syntax correction")
     snapshot = FIXTURES / "manifest-before-amendment.json"
-    require(amendment["manifest"]["original_snapshot"] == str(snapshot.relative_to(ROOT)),
+    require(amendment["manifest"]["original_snapshot"] == snapshot.relative_to(ROOT).as_posix(),
             "semantic manifest snapshot path differs")
     for relative, expected in amendment["inputs"].items():
         path = (ROOT / relative).resolve()

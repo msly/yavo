@@ -75,7 +75,7 @@ sanitizer controls.
 
 Local bootstrap passes **1136/1136 and 20/20**, the formal native error gate
 **288/288 with nine checks**, and the six newly accepted original programs pass
-**48/48** runtime checks. The local error sanitizer mode is off. Formal local gates pass. Exact-commit three-platform CI and the independent Linux ASan+UBSan error gate remain pending. The local error sanitizer gate is off and supplies no sanitizer pass.
+**48/48** runtime checks. The local error sanitizer mode is off. Formal local gates pass. Exact-commit three-platform CI and the independent Linux ASan+UBSan error gate remain pending. The local error sanitizer gate is off and supplies no sanitizer pass. The first [run 46018585973](https://github.com/msly/yavo/actions/runs/46018585973) passed 5/6 jobs: the Windows error gate stopped before emitting C or executing scenarios because a native backslash path was compared with the frozen POSIX path. That comparison now uses `.as_posix()`; eight path controls and the 288-execution local error gate pass. The original failure and archives remain preserved.
 The [batch51 index](../../compiler/validation/batch51-standard-errors-2026-11-27.json) binds current evidence and the explicit
 fixture correction. The offline auditor checks actual six-product provenance,
 raw command/stream identities, before/after trees, oracle and cleanup controls,
