@@ -25,3 +25,15 @@ python3 selfhost/bootstrap.py --tier full
 `selfhost_metrics.py` 对同一固定源码运行一次预热、五次真正 stage2 `emit-c`，逐次记录 wall time 和 OS wait4 RSS，输出 P50/P95、峰值、C 大小与 compiler 大小；另测一次后端构建。前端、后端分别报告，不用前端时间冒充完整构建时间。Windows 无 wait4 时 RSS 留 null 并写原因。已有 OS/Zig 缓存不清空，明确标记非冷构建；编译器固定点使用的分配计数设置保持不变。
 
 小程序 P50≤200 ms、Linux strip 后≤250 KB、运行时相对 C 几何平均≤1.5 继续由 `docs/plan.md` 定义。自编译指标与小程序门槛分列；PCH、冷/热缓存、Debug/Release 必须分别建表。
+
+## 第52批执行耗时
+
+同一仓库前后两次实际原生作业耗时如下，包含工具链准备、缓存与网络；用于观察验收负担，不是编译器性能对照。
+
+| 平台 | 第51批 Full | 第52批 Core |
+| --- | ---: | ---: |
+| Linux x86_64 | 20分41秒 | 3分1秒 |
+| Windows x86_64 | 81分30秒 | 8分36秒 |
+| macOS arm64 | 20分31秒 | 3分48秒 |
+
+原始job/step时间及精确提交见[第52批索引](../compiler/validation/batch52-direction-2026-11-28.json)。本批没有下载或逐成员审计ZIP；完整门在约定周期执行。

@@ -2,9 +2,9 @@
   "schema": "yavo-batch52-validation-index/1",
   "batch": 52,
   "user_facing_date": "2026-11-28",
-  "recorded_at_utc": "2026-11-27T17:58:00.542863+00:00",
+  "recorded_at_utc": "2026-11-27T18:09:38.065786+00:00",
   "baseline_commit": "61b17c4",
-  "implementation_commit": null,
+  "implementation_commit": "9f350b2a5a3e221c9ce64de6b17bca998abd6bc4",
   "scope": "Layered acceptance, integer radix lexer, full module AST/HIR planning inventory with explicit unmodeled restrictions, performance baseline and cost audit.",
   "milestones": {
     "SH-2": "fixed point retained",
@@ -155,7 +155,9 @@
     "new_participant_sessions": 0,
     "new_tokens": null,
     "blocked_reason": "Codex CLI in-process app-server initialization fails with Read-only file system (os error 30); no usable metered runner.",
-    "relative_cost_advantage_proven": false
+    "relative_cost_advantage_proven": false,
+    "normal_config_probe": "compiler/validation/batch52-cli-config-probe-2026-11-28.json",
+    "normal_config_probe_resolved_blocker": false
   },
   "platform_gaps": {
     "macos_windows_rust_full_suite": false,
@@ -188,13 +190,172 @@
     "ZIP member audits"
   ],
   "ci": {
-    "status": "pending",
+    "status": "completed",
+    "conclusion": "success",
     "tier": "core",
-    "expected_native_platforms": [
-      "Linux x86_64",
-      "Windows x86_64",
-      "macOS arm64"
-    ]
+    "run_id": 46046011337,
+    "url": "https://github.com/msly/yavo/actions/runs/46046011337",
+    "source_commit": "9f350b2a5a3e221c9ce64de6b17bca998abd6bc4",
+    "jobs": [
+      {
+        "name": "Validation tier",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/msly/yavo/actions/runs/46046011337/job/140665361627",
+        "started_at": "2026-11-27T17:59:21Z",
+        "completed_at": "2026-11-27T17:59:26Z",
+        "elapsed_seconds": 5.0,
+        "core_steps": []
+      },
+      {
+        "name": "Native Linux x86_64",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/msly/yavo/actions/runs/46046011337/job/140665413439",
+        "started_at": "2026-11-27T17:59:29Z",
+        "completed_at": "2026-11-27T18:02:30Z",
+        "elapsed_seconds": 181.0,
+        "core_steps": [
+          {
+            "name": "Check the complete blocker-analysis contract",
+            "conclusion": "success",
+            "elapsed_seconds": 1.0
+          },
+          {
+            "name": "Build and validate the Yavo-written subset frontend",
+            "conclusion": "success",
+            "elapsed_seconds": 91.0
+          },
+          {
+            "name": "Sweep the original corpus with the final selfhost compiler",
+            "conclusion": "success",
+            "elapsed_seconds": 3.0
+          },
+          {
+            "name": "Record self-compilation timing, memory and generated sizes",
+            "conclusion": "success",
+            "elapsed_seconds": 10.0
+          }
+        ]
+      },
+      {
+        "name": "Native Windows x86_64",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/msly/yavo/actions/runs/46046011337/job/140665413468",
+        "started_at": "2026-11-27T17:59:28Z",
+        "completed_at": "2026-11-27T18:08:04Z",
+        "elapsed_seconds": 516.0,
+        "core_steps": [
+          {
+            "name": "Check the complete blocker-analysis contract",
+            "conclusion": "success",
+            "elapsed_seconds": 1.0
+          },
+          {
+            "name": "Build and validate the Yavo-written subset frontend",
+            "conclusion": "success",
+            "elapsed_seconds": 215.0
+          },
+          {
+            "name": "Sweep the original corpus with the final selfhost compiler",
+            "conclusion": "success",
+            "elapsed_seconds": 20.0
+          },
+          {
+            "name": "Record self-compilation timing, memory and generated sizes",
+            "conclusion": "success",
+            "elapsed_seconds": 12.0
+          }
+        ]
+      },
+      {
+        "name": "Native macOS arm64",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/msly/yavo/actions/runs/46046011337/job/140665413477",
+        "started_at": "2026-11-27T17:59:31Z",
+        "completed_at": "2026-11-27T18:03:19Z",
+        "elapsed_seconds": 228.0,
+        "core_steps": [
+          {
+            "name": "Check the complete blocker-analysis contract",
+            "conclusion": "success",
+            "elapsed_seconds": 3.0
+          },
+          {
+            "name": "Build and validate the Yavo-written subset frontend",
+            "conclusion": "success",
+            "elapsed_seconds": 119.0
+          },
+          {
+            "name": "Sweep the original corpus with the final selfhost compiler",
+            "conclusion": "success",
+            "elapsed_seconds": 11.0
+          },
+          {
+            "name": "Record self-compilation timing, memory and generated sizes",
+            "conclusion": "success",
+            "elapsed_seconds": 8.0
+          }
+        ]
+      },
+      {
+        "name": "Agent evaluation preparation",
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/msly/yavo/actions/runs/46046011337/job/140665415318",
+        "started_at": "2026-11-27T17:59:27Z",
+        "completed_at": "2026-11-27T17:59:27Z",
+        "elapsed_seconds": 0.0,
+        "core_steps": []
+      },
+      {
+        "name": "Round-five experiment evidence",
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/msly/yavo/actions/runs/46046011337/job/140665415888",
+        "started_at": "2026-11-27T17:59:27Z",
+        "completed_at": "2026-11-27T17:59:27Z",
+        "elapsed_seconds": 0.0,
+        "core_steps": []
+      },
+      {
+        "name": "Independent Linux ASan and UBSan",
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/msly/yavo/actions/runs/46046011337/job/140665416299",
+        "started_at": "2026-11-27T17:59:27Z",
+        "completed_at": "2026-11-27T17:59:27Z",
+        "elapsed_seconds": 0.0,
+        "core_steps": []
+      }
+    ],
+    "required_jobs_passed": 4,
+    "full_only_jobs_skipped": 3,
+    "artifacts_downloaded_or_zip_audited_this_batch": false
   },
-  "next": "Common enum/pattern representation and single match lowering for user enums plus standard errors; plan Optional/Result and full tuples as capability bundles, not isolated first-blocker patches."
+  "next": "Common enum/pattern representation and single match lowering for user enums plus standard errors; plan Optional/Result and full tuples as capability bundles, not isolated first-blocker patches.",
+  "validation_duration_comparison": {
+    "scope": "Observed job durations, different Core/Full workloads; includes setup/cache/network and is not a compiler speed comparison.",
+    "previous_full_run": 46028799189,
+    "current_core_run": 46046011337,
+    "platforms": [
+      {
+        "name": "Native Linux x86_64",
+        "previous_full_seconds": 1241.0,
+        "current_core_seconds": 181.0
+      },
+      {
+        "name": "Native Windows x86_64",
+        "previous_full_seconds": 4890.0,
+        "current_core_seconds": 516.0
+      },
+      {
+        "name": "Native macOS arm64",
+        "previous_full_seconds": 1231.0,
+        "current_core_seconds": 228.0
+      }
+    ]
+  }
 }

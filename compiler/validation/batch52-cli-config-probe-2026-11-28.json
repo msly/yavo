@@ -1,0 +1,69 @@
+{
+  "schema": "yavo-cli-initialization-probe/1",
+  "date_asia_shanghai": "2026-11-28",
+  "implementation_commit": "9f350b2",
+  "cli_version": "codex-cli 0.172.0-alpha.2",
+  "status": "blocked_before_participants",
+  "scope": "Bounded initialization diagnosis; no participant experiment and no runner-protocol change",
+  "official_configuration_reference": "https://learn.chatgpt.com/docs/config-file/config-reference",
+  "documented_overrides": {
+    "sqlite_home": "/workspace/scratch/227f6ad98356/cost-pilot-2026-11-28/evidence/cli-init-diagnosis/scratch-state",
+    "log_dir": "/workspace/scratch/227f6ad98356/cost-pilot-2026-11-28/evidence/cli-init-diagnosis/scratch-logs"
+  },
+  "configured_probe": {
+    "subcommand": "codex exec",
+    "ephemeral": true,
+    "sandbox": "read-only",
+    "json_events": true,
+    "skip_git_repo_check": true,
+    "prompt": "Return exactly READY. Do not call tools or inspect files.",
+    "exit_code": 1,
+    "elapsed_seconds": 5.449755115994776,
+    "event_types": [],
+    "usage": null,
+    "ready": false,
+    "error": "Error: failed to initialize in-process app-server client: Read-only file system (os error 30)",
+    "state_directory_created_files": [
+      "queue_1.sqlite",
+      "state_5.sqlite",
+      "state_5.sqlite-wal",
+      "memories_1.sqlite",
+      "state_5.sqlite-shm",
+      "goals_1.sqlite"
+    ],
+    "log_directory_created_files": [
+      "logs_2.sqlite"
+    ]
+  },
+  "file_operation_trace": {
+    "status": "unavailable",
+    "reason": "strace PTRACE_TRACEME and PTRACE_SETOPTIONS returned Operation not permitted",
+    "failed_path": null,
+    "permission_escalation_attempted": false
+  },
+  "new_scratch_log_query": {
+    "access": "read-only",
+    "scope": "Only this probe's new logs_2.sqlite; exact EROFS/Read-only file system/os error 30 text matches",
+    "matching_error_records": 0,
+    "database_archived": false
+  },
+  "conclusion": {
+    "normal_directory_overrides_took_effect": true,
+    "normal_directory_overrides_restored_initialization": false,
+    "remaining_failing_file_path_confirmed": false,
+    "new_participant_sessions": 0,
+    "new_model_responses": 0,
+    "usage": null,
+    "diagnosis_stopped": true
+  },
+  "constraints_preserved": {
+    "HOME_unchanged": true,
+    "CODEX_HOME_unchanged": true,
+    "credentials_not_moved_or_copied": true,
+    "access_controls_unchanged": true,
+    "no_bypass_or_trust_flags": true,
+    "no_policy_ignores": true,
+    "twelve_task_protocol_unchanged": true,
+    "no_database_or_unrelated_trace_archived": true
+  }
+}

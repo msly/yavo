@@ -21,6 +21,8 @@ R3/R4 的额外构建为 11/2、4/0，包含环境错误、输出文件冲突和
 
 实际入口探针见 [cli-probe/probe.json](evidence/cli-probe/probe.json) 及 [stderr.txt](evidence/cli-probe/stderr.txt)。失败发生在受试运行之前；当前无法生成真实新 token 对照结果。需要能正常执行现有登录会话的 Codex CLI 主机，或已授权且能返回 usage 的模型执行接口。这是执行环境缺口，不依赖 SH-3。
 
+追加的有限诊断使用[官方配置项](https://learn.chatgpt.com/docs/config-file/config-reference) `sqlite_home` 与 `log_dir` 指向本任务临时目录：状态库和日志库实际创建成功，初始化仍在 5.45 秒后报 EROFS，事件和 usage 仍为空。此次新建日志中没有对应的 EROFS 错误记录；系统禁止 ptrace，未取得具体失败文件操作，不能把剩余失败唯一归因于默认 `state_5.sqlite` 路径。诊断至此停止，十二题协议不变；仅保留[脱敏配置探针回执](../../compiler/validation/batch52-cli-config-probe-2026-11-28.json)，未归档数据库、凭据或无关日志。
+
 ## 轻量复测口径
 
 `pilot.py` 沿用 R5 已验证的十二份规格及隐藏用例，标记为同题复测。使用当前 Yavo stage0 对照 Rust，回答语言交付成本；selfhost 的兼容覆盖另行计量。每题/每语言单独上下文；同一请求模型和推理强度，按题交替 Yavo→Rust、Rust→Yavo，最多四轮；修复轮携带此前完整源码与公开失败，所有重复输入计入实际 token。
