@@ -3,13 +3,24 @@ name: Yavo CI
 on:
   push:
     branches: [main]
-    paths-ignore:
-      - '**/*.md'
-      - 'compiler/validation/*.json'
+    paths:
+      - '**'
+      - '!**/*.md'
+      - '!compiler/validation/*.json'
+      # Frozen experiment inputs must run their preparation gate, even as Markdown.
+      - 'docs/agent-api-index.md'
+      - 'docs/agent-start.md'
+      - 'experiments/docs-ab-2026-11-22-r6/**'
+      - 'tools/agent_eval/README.md'
   pull_request:
-    paths-ignore:
-      - '**/*.md'
-      - 'compiler/validation/*.json'
+    paths:
+      - '**'
+      - '!**/*.md'
+      - '!compiler/validation/*.json'
+      - 'docs/agent-api-index.md'
+      - 'docs/agent-start.md'
+      - 'experiments/docs-ab-2026-11-22-r6/**'
+      - 'tools/agent_eval/README.md'
   workflow_dispatch:
 
 permissions:
