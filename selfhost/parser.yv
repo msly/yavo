@@ -150,6 +150,23 @@ fn vectorType(s: inout State, ts: Vec[Token], name: int) -> TypeRef {
     return TypeRef{kind: .Vec, name: name, elementKind: elem.kind, elementName: token}
 }
 
+fn setType(s: inout State, ts: Vec[Token], name: int) -> TypeRef {
+    expect(&s, ts, "[")
+    let token = s.pos
+    let elem = typeName(&s, ts)
+    var count = 1
+    while eat(&s, ts, ",") {
+        let _extra = typeName(&s, ts)
+        count += 1
+    }
+    expect(&s, ts, "]")
+    if count != 1 { lexer.fail(ts, name, "E0001", "Set takes exactly one type argument") }
+    if elem.kind != .String {
+        lexer.fail(ts, token, "U0001", "Set elements other than String are outside the selfhost subset")
+    }
+    return TypeRef{kind: .Set, name: name, elementKind: .String, elementName: token}
+}
+
 fn typeAtom(s: inout State, ts: Vec[Token]) -> TypeRef {
     enter(&s, ts)
     var result = TypeRef{elementKind: .Unknown, kind: .Unknown}
@@ -179,6 +196,10 @@ fn typeAtom(s: inout State, ts: Vec[Token]) -> TypeRef {
         result = TypeRef{kind: .Slice, name: open, elementKind: inner.kind, elementName: token}
     } else if at(s, ts, "Map") && ts[s.pos + 1].text == "[" {
         result = mapType(&s, ts)
+    } else if at(s, ts, "Set") && ts[s.pos + 1].text == "[" {
+        let name = s.pos
+        s.pos += 1
+        result = setType(&s, ts, name)
     } else if at(s, ts, "Vec") {
         let name = s.pos
         s.pos += 1
@@ -553,18 +574,21 @@ fn postfix(s: inout State, ts: Vec[Token]) -> int {
         } else if at(s, ts, "[") {
             let target = s.expressions[current].token
             if s.expressions[current].kind == .Name && typeArgumentsAhead(s, ts) {
-                if ts[target].text != "Vec" {
+                if ts[target].text != "Vec" && ts[target].text != "Set" {
                     syntax(s, ts, "U0001", "generic expressions are outside the selfhost subset")
                 }
-                let ty = vectorType(&s, ts, target)
+                var ty = TypeRef{kind: .Unknown, elementKind: .Unknown}
+                if ts[target].text == "Set" { ty = setType(&s, ts, target) } else {
+                    ty = vectorType(&s, ts, target)
+                }
                 if !at(s, ts, "{") {
                     syntax(s, ts, "U0001", "generic calls are outside the selfhost subset")
                 }
                 let constructed = construction(&s, ts, target)
                 if s.expressions[constructed].argCount > 0 {
-                    lexer.fail(ts, target, "E0001", "Vec construction takes no fields; use push")
+                    lexer.fail(ts, target, "E0001", "collection construction takes no fields")
                 }
-                s.expressions[constructed].kind = .Vector
+                if ty.kind != .Set { s.expressions[constructed].kind = .Vector }
                 s.expressions[constructed].elementKind = ty.elementKind
                 s.expressions[constructed].elementName = ty.elementName
                 current = constructed

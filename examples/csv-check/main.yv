@@ -1,0 +1,61 @@
+use std/{fs, io, os}
+use validator
+use report
+
+fn execute() -> int {
+    let args = os.args()
+    if args.len() == 2 && args[1] == "--help" {
+        report.help()
+        return 0
+    }
+    var paths: Vec[String] = []
+    var optionsEnded = false
+    var stdinSeen = false
+    for i in 1..args.len() {
+        let arg = args[i]
+        if !optionsEnded && arg == "--" {
+            optionsEnded = true
+        } else if arg == "-" {
+            if stdinSeen {
+                report.usageError()
+                return 2
+            }
+            stdinSeen = true
+            paths.push(arg.toString())
+        } else if !optionsEnded && arg.startsWith("-") {
+            report.usageError()
+            return 2
+        } else {
+            paths.push(arg.toString())
+        }
+    }
+    if paths.len() == 0 { paths.push("-".toString()) }
+
+    var rows: Vec[FileRow] = []
+    for path in paths {
+        var text = String{}
+        if path == "-" {
+            text = io.readAll() catch _ {
+                report.readError(path)
+                return 3
+            }
+        } else {
+            text = fs.readText(path) catch _ {
+                report.readError(path)
+                return 3
+            }
+        }
+        let summary = validator.validate(text) catch problem {
+            report.csvError(path, problem)
+            return 1
+        }
+        rows.push(FileRow{path: path.clone(), summary: summary})
+    }
+    report.table(rows)
+    return 0
+}
+
+fn main() {
+    let exitCode = execute()
+    if exitCode != 0 { os.exit(exitCode) }
+}

@@ -1,0 +1,3293 @@
+{
+  "schema": "yavo-csv-check-cases/1",
+  "spec_sha256": "4a87a12f941122c8dea2244c87ba0124ad72311f20fe1369ba8814237da61a89",
+  "scope": "Manual counts/positions/CLI expectations from contract v1; byte lengths are mechanical metadata.",
+  "cases": [
+    {
+      "id": "header_only",
+      "group": "valid_csv",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "a"
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "-",
+            1,
+            0,
+            1
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "header_lf",
+      "group": "valid_csv",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "a\n"
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "-",
+            1,
+            0,
+            2
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "header_crlf",
+      "group": "valid_csv",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "a\r\n"
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "-",
+            1,
+            0,
+            3
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "ordinary_table",
+      "group": "valid_csv",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "a,b\nx,y\n"
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "-",
+            2,
+            1,
+            8
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "no_final_newline",
+      "group": "valid_csv",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "a,b\nx,y"
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "-",
+            2,
+            1,
+            7
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "final_empty_field",
+      "group": "valid_csv",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "a,b,c\nx,y,"
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "-",
+            3,
+            1,
+            10
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "empty_data_fields",
+      "group": "valid_csv",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "a,b\n,\n,\n"
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "-",
+            2,
+            2,
+            8
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "one_blank_data_record",
+      "group": "valid_csv",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\n\n"
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "-",
+            1,
+            1,
+            3
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "two_blank_data_records",
+      "group": "valid_csv",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\n\n\n"
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "-",
+            1,
+            2,
+            4
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "quoted_comma",
+      "group": "valid_csv",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "a,b\n\"x,y\",z\n"
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "-",
+            2,
+            1,
+            12
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "doubled_quote",
+      "group": "valid_csv",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\n\"a\"\"b\"\n"
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "-",
+            1,
+            1,
+            9
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "literal_quote_field",
+      "group": "valid_csv",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\n\"\"\"\""
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "-",
+            1,
+            1,
+            6
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "quoted_empty_data",
+      "group": "valid_csv",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\n\"\"\n"
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "-",
+            1,
+            1,
+            5
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "multiline_lf",
+      "group": "valid_csv",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "a,b\n\"x\ny\",z\n"
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "-",
+            2,
+            1,
+            12
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "multiline_crlf",
+      "group": "valid_csv",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "a,b\r\n\"x\r\ny\",z\r\n"
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "-",
+            2,
+            1,
+            15
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "preserved_header_newlines",
+      "group": "valid_csv",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "\"a\nb\",\"a\r\nb\"\n"
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "-",
+            2,
+            0,
+            13
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "mixed_line_endings",
+      "group": "valid_csv",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\r\nx\ny\r\nz"
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "-",
+            1,
+            3,
+            9
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "spaces_tabs_are_data",
+      "group": "valid_csv",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": " \t,\t \n x ,\t\n"
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "-",
+            2,
+            1,
+            12
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "escaped_quote_header",
+      "group": "valid_csv",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "\"a\"\"b\",c\nx,y\n"
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "-",
+            2,
+            1,
+            13
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "case_normalization_distinct",
+      "group": "valid_csv",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "Name,name,é,é\n"
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "-",
+            4,
+            0,
+            17
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "unicode_whitespace_headers",
+      "group": "valid_csv",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": " , ,﻿\n"
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "-",
+            3,
+            0,
+            11
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "bom_in_data",
+      "group": "valid_csv",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\n﻿\n"
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "-",
+            1,
+            1,
+            6
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "bom_inside_quoted_header",
+      "group": "valid_csv",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "\"﻿\"\n"
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "-",
+            1,
+            0,
+            6
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "quoted_delimiters_header",
+      "group": "valid_csv",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "\"a,b\",\"c\"\"d\"\n\"\",\"\"\n"
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "-",
+            2,
+            1,
+            19
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "opaque_large_numbers",
+      "group": "valid_csv",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "a,b,c\n9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999,-9223372036854775809,+000000000000000000000000\n"
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "-",
+            3,
+            1,
+            310
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "explicit_stdin",
+      "group": "cli",
+      "args": [
+        "-"
+      ],
+      "files": [],
+      "stdin": {
+        "text": "h\nx\n"
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "-",
+            1,
+            1,
+            4
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "separator_only_stdin",
+      "group": "cli",
+      "args": [
+        "--"
+      ],
+      "files": [],
+      "stdin": {
+        "text": "h\nx\n"
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "-",
+            1,
+            1,
+            4
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "stdin_after_separator",
+      "group": "cli",
+      "args": [
+        "--",
+        "-"
+      ],
+      "files": [],
+      "stdin": {
+        "text": "h\nx\n"
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "-",
+            1,
+            1,
+            4
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "help",
+      "group": "cli",
+      "args": [
+        "--help"
+      ],
+      "files": [],
+      "stdin": {
+        "base64": "/w=="
+      },
+      "expected": {
+        "exit": 0,
+        "rows": null,
+        "diagnostics": [],
+        "help": true
+      }
+    },
+    {
+      "id": "unknown_option",
+      "group": "cli",
+      "args": [
+        "--bad"
+      ],
+      "files": [
+        {
+          "path": "ok.csv",
+          "text": "a,a\n"
+        }
+      ],
+      "stdin": {
+        "base64": "/w=="
+      },
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "ECLI_USAGE"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "short_option",
+      "group": "cli",
+      "args": [
+        "-x"
+      ],
+      "files": [
+        {
+          "path": "ok.csv",
+          "text": "a,a\n"
+        }
+      ],
+      "stdin": {
+        "base64": "/w=="
+      },
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "ECLI_USAGE"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "help_with_file",
+      "group": "cli",
+      "args": [
+        "--help",
+        "missing.csv"
+      ],
+      "files": [
+        {
+          "path": "ok.csv",
+          "text": "a,a\n"
+        }
+      ],
+      "stdin": {
+        "base64": "/w=="
+      },
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "ECLI_USAGE"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "file_with_help",
+      "group": "cli",
+      "args": [
+        "missing.csv",
+        "--help"
+      ],
+      "files": [
+        {
+          "path": "ok.csv",
+          "text": "a,a\n"
+        }
+      ],
+      "stdin": {
+        "base64": "/w=="
+      },
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "ECLI_USAGE"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "help_with_separator",
+      "group": "cli",
+      "args": [
+        "--help",
+        "--"
+      ],
+      "files": [
+        {
+          "path": "ok.csv",
+          "text": "a,a\n"
+        }
+      ],
+      "stdin": {
+        "base64": "/w=="
+      },
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "ECLI_USAGE"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "duplicate_stdin",
+      "group": "cli",
+      "args": [
+        "-",
+        "-"
+      ],
+      "files": [
+        {
+          "path": "ok.csv",
+          "text": "a,a\n"
+        }
+      ],
+      "stdin": {
+        "base64": "/w=="
+      },
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "ECLI_USAGE"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "duplicate_stdin_after_separator",
+      "group": "cli",
+      "args": [
+        "-",
+        "--",
+        "-"
+      ],
+      "files": [
+        {
+          "path": "ok.csv",
+          "text": "a,a\n"
+        }
+      ],
+      "stdin": {
+        "base64": "/w=="
+      },
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "ECLI_USAGE"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "usage_before_missing_read",
+      "group": "cli",
+      "args": [
+        "missing.csv",
+        "--bad"
+      ],
+      "files": [
+        {
+          "path": "ok.csv",
+          "text": "a,a\n"
+        }
+      ],
+      "stdin": {
+        "base64": "/w=="
+      },
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "ECLI_USAGE"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "usage_before_csv",
+      "group": "cli",
+      "args": [
+        "ok.csv",
+        "-x"
+      ],
+      "files": [
+        {
+          "path": "ok.csv",
+          "text": "a,a\n"
+        }
+      ],
+      "stdin": {
+        "base64": "/w=="
+      },
+      "expected": {
+        "exit": 2,
+        "rows": null,
+        "diagnostics": [
+          {
+            "code": "ECLI_USAGE"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "empty_input",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_EMPTY",
+            "line": 1,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "blank_header",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "\n"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_HEADER",
+            "line": 1,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "blank_crlf_header",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "\r\n"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_HEADER",
+            "line": 1,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "quoted_empty_header",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "\"\""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_HEADER",
+            "line": 1,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "empty_first_header",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": ",b\nx,y"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_HEADER",
+            "line": 1,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "empty_last_header",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "a,\nx,y"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_HEADER",
+            "line": 1,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "duplicate_header",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "a,a\nx,y"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_HEADER",
+            "line": 1,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "decoded_duplicate_header",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "\"a\",a\nx,y"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_HEADER",
+            "line": 1,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "escaped_duplicate_header",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "\"a\"\"b\",\"a\"\"b\"\nx,y"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_HEADER",
+            "line": 1,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "multiline_duplicate_header",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "\"a\nb\",\"a\nb\"\nx,y"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_HEADER",
+            "line": 1,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "too_few_fields",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "a,b\nx\n"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_WIDTH",
+            "line": 2,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "too_many_fields",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "a\nx,y\n"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_WIDTH",
+            "line": 2,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "blank_width",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "a,b\n\n"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_WIDTH",
+            "line": 2,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "multiline_data_width",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "a,b\n\"x\ny\"\n"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_WIDTH",
+            "line": 2,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "multiline_header_width",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "\"a\nb\",c\nx\n"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_WIDTH",
+            "line": 3,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "quote_in_unquoted",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\nab\"c"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 2,
+            "column": 3
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "quote_after_space",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\n \"x\""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 2,
+            "column": 2
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "text_after_quote",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\n\"x\"y"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 2,
+            "column": 4
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "space_after_quote",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\n\"x\" "
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 2,
+            "column": 4
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "tab_after_quote",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\n\"x\"\t"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 2,
+            "column": 4
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "unterminated_quote",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\n\"x"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 2,
+            "column": 3
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "unterminated_escaped_quote",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\n\"x\"\""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 2,
+            "column": 5
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "unterminated_after_lf",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\n\"x\n"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 3,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "unterminated_after_crlf",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\n\"x\r\n"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 3,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "bare_cr_header",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\r"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 1,
+            "column": 2
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "bare_cr_data",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\nx\ry"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 2,
+            "column": 2
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "bare_cr_quoted",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\n\"x\ry\""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 2,
+            "column": 3
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "bare_cr_after_quote",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\n\"x\"\r"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 2,
+            "column": 4
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "initial_bom",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "﻿h\n"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 1,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "utf8_byte_column",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\né\"x"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 2,
+            "column": 3
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "utf8_after_closing_quote",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\n\"é\"x"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 2,
+            "column": 5
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "utf8_unclosed_eof",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\n\"😀"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 2,
+            "column": 6
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "lexical_before_empty_header",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": ",\"a\"z\n"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 1,
+            "column": 5
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "lexical_before_duplicate_header",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "a,a\"z\n"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 1,
+            "column": 4
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "lexical_before_width",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "a,b\n\"x\"z"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 2,
+            "column": 4
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "header_before_later_lexical",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "a,a\n\"unterminated"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_HEADER",
+            "line": 1,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "width_before_later_lexical",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "a,b\nx\n\"unterminated"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_WIDTH",
+            "line": 2,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "unquoted_control_00",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\nx\u0000y"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 2,
+            "column": 2
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "unquoted_control_01",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\nx\u0001y"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 2,
+            "column": 2
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "unquoted_control_02",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\nx\u0002y"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 2,
+            "column": 2
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "unquoted_control_03",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\nx\u0003y"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 2,
+            "column": 2
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "unquoted_control_04",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\nx\u0004y"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 2,
+            "column": 2
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "unquoted_control_05",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\nx\u0005y"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 2,
+            "column": 2
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "unquoted_control_06",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\nx\u0006y"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 2,
+            "column": 2
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "unquoted_control_07",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\nx\u0007y"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 2,
+            "column": 2
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "unquoted_control_08",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\nx\by"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 2,
+            "column": 2
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "unquoted_control_0b",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\nx\u000by"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 2,
+            "column": 2
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "unquoted_control_0c",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\nx\fy"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 2,
+            "column": 2
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "unquoted_control_0e",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\nx\u000ey"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 2,
+            "column": 2
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "unquoted_control_0f",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\nx\u000fy"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 2,
+            "column": 2
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "unquoted_control_10",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\nx\u0010y"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 2,
+            "column": 2
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "unquoted_control_11",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\nx\u0011y"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 2,
+            "column": 2
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "unquoted_control_12",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\nx\u0012y"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 2,
+            "column": 2
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "unquoted_control_13",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\nx\u0013y"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 2,
+            "column": 2
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "unquoted_control_14",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\nx\u0014y"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 2,
+            "column": 2
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "unquoted_control_15",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\nx\u0015y"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 2,
+            "column": 2
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "unquoted_control_16",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\nx\u0016y"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 2,
+            "column": 2
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "unquoted_control_17",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\nx\u0017y"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 2,
+            "column": 2
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "unquoted_control_18",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\nx\u0018y"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 2,
+            "column": 2
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "unquoted_control_19",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\nx\u0019y"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 2,
+            "column": 2
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "unquoted_control_1a",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\nx\u001ay"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 2,
+            "column": 2
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "unquoted_control_1b",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\nx\u001by"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 2,
+            "column": 2
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "unquoted_control_1c",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\nx\u001cy"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 2,
+            "column": 2
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "unquoted_control_1d",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\nx\u001dy"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 2,
+            "column": 2
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "unquoted_control_1e",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\nx\u001ey"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 2,
+            "column": 2
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "unquoted_control_1f",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\nx\u001fy"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 2,
+            "column": 2
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "unquoted_control_7f",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\nxy"
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 2,
+            "column": 2
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "quoted_control_00",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\n\"x\u0000y\""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 2,
+            "column": 3
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "quoted_control_0b",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\n\"x\u000by\""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 2,
+            "column": 3
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "quoted_control_7f",
+      "group": "csv_errors",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": "h\n\"xy\""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "ECSV_FORMAT",
+            "line": 2,
+            "column": 3
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "utf8_lead_ff",
+      "group": "utf8",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "base64": "/w=="
+      },
+      "expected": {
+        "exit": 3,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "EIO_READ"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "utf8_continuation",
+      "group": "utf8",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "base64": "aAqA"
+      },
+      "expected": {
+        "exit": 3,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "EIO_READ"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "utf8_overlong",
+      "group": "utf8",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "base64": "aArArw=="
+      },
+      "expected": {
+        "exit": 3,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "EIO_READ"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "utf8_surrogate",
+      "group": "utf8",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "base64": "aArtoIA="
+      },
+      "expected": {
+        "exit": 3,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "EIO_READ"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "utf8_too_large",
+      "group": "utf8",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "base64": "aAr0kICA"
+      },
+      "expected": {
+        "exit": 3,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "EIO_READ"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "utf8_truncated",
+      "group": "utf8",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "base64": "aArigg=="
+      },
+      "expected": {
+        "exit": 3,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "EIO_READ"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "utf8_before_header",
+      "group": "utf8",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "base64": "LGJhZAr/"
+      },
+      "expected": {
+        "exit": 3,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "EIO_READ"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "utf8_before_format",
+      "group": "utf8",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "base64": "aApiYWQicXVvdGUK/w=="
+      },
+      "expected": {
+        "exit": 3,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "EIO_READ"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "file_input",
+      "group": "file",
+      "args": [
+        "table.csv"
+      ],
+      "files": [
+        {
+          "path": "table.csv",
+          "text": "a,b\nx,y\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "table.csv",
+            2,
+            1,
+            8
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "invalid_utf8_file",
+      "group": "io",
+      "args": [
+        "bad.csv"
+      ],
+      "files": [
+        {
+          "path": "bad.csv",
+          "base64": "aAr/"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 3,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "bad.csv",
+            "code": "EIO_READ"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "missing_file",
+      "group": "io",
+      "args": [
+        "missing.csv"
+      ],
+      "files": [],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 3,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "missing.csv",
+            "code": "EIO_READ"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "directory_read",
+      "group": "io",
+      "args": [
+        "directory"
+      ],
+      "files": [
+        {
+          "path": "directory",
+          "directory": true
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 3,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "directory",
+            "code": "EIO_READ"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "empty_path",
+      "group": "io",
+      "args": [
+        ""
+      ],
+      "files": [],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 3,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "",
+            "code": "EIO_READ"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "stdin_read_error",
+      "group": "io",
+      "args": [],
+      "files": [],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 3,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "EIO_READ"
+          }
+        ],
+        "help": false
+      },
+      "platforms": [
+        "posix"
+      ],
+      "stdin_error": true
+    },
+    {
+      "id": "unicode_space_path",
+      "group": "paths",
+      "args": [
+        "資料 space/表.csv"
+      ],
+      "files": [
+        {
+          "path": "資料 space/表.csv",
+          "text": "h\nx\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "資料 space/表.csv",
+            1,
+            1,
+            4
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "dot_path",
+      "group": "paths",
+      "args": [
+        "./table.csv"
+      ],
+      "files": [
+        {
+          "path": "./table.csv",
+          "text": "h\nx\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "./table.csv",
+            1,
+            1,
+            4
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "leading_dash_file",
+      "group": "paths",
+      "args": [
+        "--",
+        "-table.csv"
+      ],
+      "files": [
+        {
+          "path": "-table.csv",
+          "text": "h\nx\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "-table.csv",
+            1,
+            1,
+            4
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "literal_dash_file",
+      "group": "paths",
+      "args": [
+        "./-"
+      ],
+      "files": [
+        {
+          "path": "./-",
+          "text": "h\nx\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "./-",
+            1,
+            1,
+            4
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "help_filename",
+      "group": "paths",
+      "args": [
+        "--",
+        "--help"
+      ],
+      "files": [
+        {
+          "path": "--help",
+          "text": "h\nx\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "--help",
+            1,
+            1,
+            4
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "absolute_path",
+      "group": "paths",
+      "args": [
+        "@abs:資料 space/表.csv"
+      ],
+      "files": [
+        {
+          "path": "@abs:資料 space/表.csv",
+          "text": "h\nx\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "@abs:資料 space/表.csv",
+            1,
+            1,
+            4
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "control_filename",
+      "group": "paths",
+      "args": [
+        "tab\tline\nreturn\r.csv"
+      ],
+      "files": [
+        {
+          "path": "tab\tline\nreturn\r.csv",
+          "text": "h\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "tab\tline\nreturn\r.csv",
+            1,
+            0,
+            2
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      },
+      "platforms": [
+        "posix"
+      ]
+    },
+    {
+      "id": "windows_separator",
+      "group": "paths",
+      "args": [
+        "folder\\table.csv"
+      ],
+      "files": [
+        {
+          "path": "folder\\table.csv",
+          "text": "h\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "folder\\table.csv",
+            1,
+            0,
+            2
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      },
+      "platforms": [
+        "nt"
+      ]
+    },
+    {
+      "id": "escaped_missing_path",
+      "group": "io",
+      "args": [
+        "missing\tline\nreturn\r\\file.csv"
+      ],
+      "files": [],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 3,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "missing\tline\nreturn\r\\file.csv",
+            "code": "EIO_READ"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "multiple_files",
+      "group": "multiple",
+      "args": [
+        "first.csv",
+        "second.csv"
+      ],
+      "files": [
+        {
+          "path": "first.csv",
+          "text": "a,b\nx,y\n"
+        },
+        {
+          "path": "second.csv",
+          "text": "h\nz\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "first.csv",
+            2,
+            1,
+            8
+          ],
+          [
+            "second.csv",
+            1,
+            1,
+            4
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "repeated_file",
+      "group": "multiple",
+      "args": [
+        "first.csv",
+        "first.csv"
+      ],
+      "files": [
+        {
+          "path": "first.csv",
+          "text": "a,b\nx,y\n"
+        },
+        {
+          "path": "second.csv",
+          "text": "h\nz\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "first.csv",
+            2,
+            1,
+            8
+          ],
+          [
+            "first.csv",
+            2,
+            1,
+            8
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "mixed_stdin_files",
+      "group": "multiple",
+      "args": [
+        "first.csv",
+        "-",
+        "second.csv"
+      ],
+      "files": [
+        {
+          "path": "first.csv",
+          "text": "a,b\nx,y\n"
+        },
+        {
+          "path": "second.csv",
+          "text": "h\nz\n"
+        }
+      ],
+      "stdin": {
+        "text": "q\n"
+      },
+      "expected": {
+        "exit": 0,
+        "rows": [
+          [
+            "first.csv",
+            2,
+            1,
+            8
+          ],
+          [
+            "-",
+            1,
+            0,
+            2
+          ],
+          [
+            "second.csv",
+            1,
+            1,
+            4
+          ]
+        ],
+        "diagnostics": [],
+        "help": false
+      }
+    },
+    {
+      "id": "all_or_nothing_csv",
+      "group": "precedence",
+      "args": [
+        "first.csv",
+        "bad.csv"
+      ],
+      "files": [
+        {
+          "path": "first.csv",
+          "text": "a,b\nx,y\n"
+        },
+        {
+          "path": "second.csv",
+          "text": "h\nz\n"
+        },
+        {
+          "path": "bad.csv",
+          "text": "a,a\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "bad.csv",
+            "code": "ECSV_HEADER",
+            "line": 1,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "all_or_nothing_io",
+      "group": "io",
+      "args": [
+        "first.csv",
+        "missing.csv"
+      ],
+      "files": [
+        {
+          "path": "first.csv",
+          "text": "a,b\nx,y\n"
+        },
+        {
+          "path": "second.csv",
+          "text": "h\nz\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 3,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "missing.csv",
+            "code": "EIO_READ"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "first_file_csv_before_later_utf8",
+      "group": "precedence",
+      "args": [
+        "bad.csv",
+        "utf8.csv"
+      ],
+      "files": [
+        {
+          "path": "bad.csv",
+          "text": "a,a\n"
+        },
+        {
+          "path": "utf8.csv",
+          "base64": "/w=="
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 1,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "bad.csv",
+            "code": "ECSV_HEADER",
+            "line": 1,
+            "column": 1
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "first_file_io_before_later_csv",
+      "group": "io",
+      "args": [
+        "missing.csv",
+        "bad.csv"
+      ],
+      "files": [
+        {
+          "path": "bad.csv",
+          "text": "a,a\n"
+        }
+      ],
+      "stdin": {
+        "text": ""
+      },
+      "expected": {
+        "exit": 3,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "missing.csv",
+            "code": "EIO_READ"
+          }
+        ],
+        "help": false
+      }
+    },
+    {
+      "id": "all_or_nothing_stdin",
+      "group": "io",
+      "args": [
+        "first.csv",
+        "-"
+      ],
+      "files": [
+        {
+          "path": "first.csv",
+          "text": "a,b\nx,y\n"
+        },
+        {
+          "path": "second.csv",
+          "text": "h\nz\n"
+        }
+      ],
+      "stdin": {
+        "base64": "/w=="
+      },
+      "expected": {
+        "exit": 3,
+        "rows": null,
+        "diagnostics": [
+          {
+            "path": "-",
+            "code": "EIO_READ"
+          }
+        ],
+        "help": false
+      }
+    }
+  ]
+}

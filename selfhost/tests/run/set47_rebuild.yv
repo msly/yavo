@@ -1,0 +1,15 @@
+fn main() {
+    var tags: Set[String] = []
+    for i in 0..80 { tags.add(format("k${i}")) }
+    for i in 0..40 { assert(tags.remove(format("k${i * 2}"))) }
+    for i in 0..40 { tags.add(format("k${i * 2}")) }
+    assert(tags.len() == 80)
+    var copy = tags.clone()
+    for i in 0..80 { assert(copy.remove(format("k${i}"))) }
+    assert(copy.len() == 0 && tags.len() == 80)
+    for i in 0..80 { assert(tags.has(format("k${i}"))) }
+    tags = []
+    tags.add("reused".toString())
+    assert(tags.len() == 1 && tags.has("reused"))
+    println("set rebuild ok")
+}

@@ -73,7 +73,7 @@ pub fn same(a: Type, b: Type) -> bool {
     }
     if a.kind != b.kind { return false }
     if a.kind == .Named || a.kind == .Result || a.kind == .Tuple { return a.decl == b.decl }
-    if a.kind == .Vec || a.kind == .Optional || a.kind == .Slice || a.kind == .Map {
+    if a.kind == .Vec || a.kind == .Optional || a.kind == .Slice || a.kind == .Map || a.kind == .Set {
         return a.elementKind == b.elementKind &&
             ((a.elementKind != .Named && a.elementKind != .Tuple) || a.elementDecl == b.elementDecl)
     }
@@ -81,7 +81,7 @@ pub fn same(a: Type, b: Type) -> bool {
 }
 
 pub fn owned(reg: Registry, ty: Type) -> bool {
-    if ty.kind == .String || ty.kind == .Vec || ty.kind == .Map { return true }
+    if ty.kind == .String || ty.kind == .Vec || ty.kind == .Map || ty.kind == .Set { return true }
     // optional() admits only Copy payloads after named ownership is known.
     if ty.kind == .Optional { return false }
     if ty.kind == .Result {
@@ -106,7 +106,7 @@ pub fn cType(t: Type) -> String {
     if t.kind == .Str { return "yv_str".toString() }
     if t.kind == .String { return "yv_string".toString() }
     if t.kind == .Vec || t.kind == .Args || t.kind == .Slice { return "yv_vec".toString() }
-    if t.kind == .Map { return "yv_map".toString() }
+    if t.kind == .Map || t.kind == .Set { return "yv_map".toString() }
     if t.kind == .Named { return support.join2("sh_type_", support.decimal(t.decl)) }
     if t.kind == .Result { return support.join2("sh_result_", support.decimal(t.decl)) }
     if t.kind == .Tuple { return support.join2("sh_tuple_", support.decimal(t.decl)) }
@@ -185,6 +185,7 @@ pub fn describe(reg: Registry, ts: Vec[Token], t: Type) -> String {
     if t.kind == .Vec { return support.join3("Vec[", describe(reg, ts, element(t)), "]") }
     if t.kind == .Optional { return support.join2("?", describe(reg, ts, element(t))) }
     if t.kind == .Map { return support.join3("Map[String, ", describe(reg, ts, element(t)), "]") }
+    if t.kind == .Set { return "Set[String]".toString() }
     if t.kind == .Args { return "[]str".toString() }
     if t.kind == .Slice { return support.join2("[]", describe(reg, ts, element(t))) }
     if t.kind == .Unit { return "()".toString() }
@@ -339,7 +340,7 @@ pub fn resolve(reg: Registry, ts: Vec[Token], syn: TypeRef) -> Type {
         for index in 0..syn.tupleCount {
             let part = reg.tupleAtoms[syn.tupleStart + index]
             if part.kind == .Tuple || part.kind == .Optional || part.kind == .Result ||
-                part.kind == .Vec || part.kind == .Slice || part.kind == .Map {
+                part.kind == .Vec || part.kind == .Slice || part.kind == .Map || part.kind == .Set {
                 lexer.fail(ts, syn.name, "U0001", "nested tuples and tuple container payloads are outside the selfhost subset")
             }
             items.push(resolve(reg, ts, part))
@@ -361,6 +362,7 @@ pub fn resolve(reg: Registry, ts: Vec[Token], syn: TypeRef) -> Type {
         // mapType() admitted only scalar values.
         return Type{kind: .Map, elementKind: syn.elementKind}
     }
+    if syn.kind == .Set { return Type{kind: .Set, elementKind: .String} }
     if syn.kind == .Slice {
         let elem = resolve(reg, ts, TypeRef{kind: syn.elementKind,
             name: syn.elementName, elementKind: .Unknown})
@@ -451,8 +453,10 @@ fn checkDefault(p: Program, reg: Registry, ts: Vec[Token], item: Field) {
             actual = primitive(.Str)
         }
     } else if e.kind == .Vector && e.argCount == 0 && e.elementKind == .Unknown {
-        if item.ty.kind == .Vec { actual = item.ty }
+        if item.ty.kind == .Vec || item.ty.kind == .Set { actual = item.ty }
     } else if e.kind == .EmptyMap {
+        // Stage0 permits [:] for a Set local, but its constant field-default
+        // checker accepts only [] for Set fields.
         if item.ty.kind == .Map { actual = item.ty }
     } else if e.kind == .Unary && ts[e.token].text == "-" && p.expressions[e.left].kind == .Number {
         // FieldDefault::of accepts a directly negated numeric token only.

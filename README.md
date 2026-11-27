@@ -19,6 +19,8 @@ completed SH-2 fixed point. The first application,
 experiment logs, has passed independent acceptance on all three native platforms.
 This completes **one of the three SH-4 applications**; both stage0 and the
 selfhost compiler can build it, with the selfhost build checked by bootstrap.
+The second candidate, [csv-check](examples/csv-check/README.md), now passes
+independent local acceptance; its three-platform CI gate is pending.
 
 The specification starts from **v0.5**, with dated revisions in [docs/decisions.md](docs/decisions.md). Historical revisions remain unchanged under `history/v0.x/` and Git tags `v0.1` through `v0.5`.
 
@@ -42,7 +44,7 @@ Recent changes implement index assignment, two-phase variable/field receivers, S
 
 | Check | Recorded local result | Scope |
 | --- | --- | --- |
-| Release suite | **145 passed, 0 failed, 1 ignored** | Batch 46: complete suite rerun; no Rust changes and frozen cases unchanged |
+| Release suite | **145 passed, 0 failed, 1 ignored** | Batch 47: complete suite rerun; no Rust changes and frozen cases unchanged |
 | Debug suite | **145 passed, 0 failed, 1 ignored** | Same source, all 19 groups, independent completed local log |
 | Frozen specification | **124 pass, 0 wrong, 3 unsupported, 0 not_run, 2 superseded** | 129 frozen cases; a different counting unit from Cargo test functions |
 | Cross-compilation | Six target formats/architectures build | Linux (static musl), Windows and macOS on x86-64/aarch64; native CI now covers Linux x86-64 plus the Windows x86-64/macOS arm64 selections below |
@@ -52,7 +54,44 @@ The ignored Cargo test is the old exploratory P0 conformance report; the current
 
 Source modules support top-level exports, per-file imports, cyclic imports and original-file diagnostics. Package dependencies and a program lockfile remain open. Multi-file `fix` returns `U0001` without writing; symlink module aliases are unsupported.
 
-### Selfhost Map iteration, String sorting and original atomic ledger (batch 46, 2026-11-26)
+### Selfhost String sets and independent CSV validation CLI (batch 47, 2026-11-27)
+
+Owned `Set[String]` supports empty construction, `add`, `remove`, `has`, `len`
+and deep `clone`, including fields, read-only/inout parameters, returns and
+Result payloads. A Set remains a distinct language type while reusing the
+Map[String,bool] C helpers. Its String keys have one owner; duplicate insertion
+drops the incoming key. Set iteration, other key types, direct Vec[Set] and
+owned Optional remain explicit subset boundaries.
+
+The second independent SH-4 candidate is the four-module, 271-line
+[csv-check](examples/csv-check/README.md). It validates UTF-8 CSV from stdin or
+multiple files, enforces nonempty unique headers and a consistent column count,
+and emits an atomic TSV report or a located diagnostic. Its contract and 139
+independent fixed cases were frozen separately from the implementation. The
+unchanged stage0-accepted application exposed Set[String] as its selfhost
+blocker; this batch adds that capability without rewriting the application.
+
+The matrix has **959 cases**, with 34 new fixtures and no promotions. Final
+complete bootstrap passes **959/959, 18/18, zero skips**, binding the RSS-aware
+runner. Stage2/stage3 C is 1,057,805 bytes and the matching Linux binaries are
+490,192 bytes. The sixth application gate executes
+138 applicable POSIX scenarios across six compiler/mode/cleanup artifacts
+(**828 executions**); Windows has 137 applicable scenarios and 822 executions.
+Separate local native acceptance passes **414/414**, with identical C and
+30,456-byte binaries from two independent Release builds. All 431 commands
+have measured RSS; Debug/Release cold, unchanged and edited builds each retain
+one observation with actual miss/hit/miss cache states.
+
+The frozen original corpus remains **112/392 accepted paths**, or **52/222**
+distinct entry-source byte sequences. Adding the four new application modules
+gives **113/393**, or **53/223**; the original programs have no gains or losses.
+The final-stage2 scan has zero subset violations and timeouts; native CI is
+pending. Full Rust Debug/Release suites each
+pass 145/0/1 and frozen conformance 124/3/2; Rust and the runtime are unchanged.
+The [validation index](compiler/validation/batch47-csv-set-2026-11-27.json)
+binds these local results; see [HANDOFF section 27](HANDOFF.md) for remaining acceptance.
+
+### Selfhost Map iteration, String sorting and original atomic ledger (batch 46, historical)
 
 Read-only two-binding traversal now supports Map[String,int/bool/byte], including
 named fields and whole temporary Maps. Keys remain borrowed and immutable;
@@ -421,7 +460,7 @@ and [module/thread audit](experiments/coldstart-2026-11-22-r5/evidence/manual-re
 
 1. Extend the subset for the original r5/yavo-b/T01 atomic-transfer ledger: read-only Map[String,int] iteration and Vec[String].sort(). Validate ASCII key order, transaction commit/rollback, exact output and ownership cleanup against its archived contract. See [HANDOFF.md](HANDOFF.md).
 2. Preserve the completed [SH-2 fixed point](docs/self-hosting.md), Result, Copy Optional/pop, for, real lexer allocation checks and stage2 ASan/UBSan gate. Retain all four application regression gates, actual resource checks and zero subset violations.
-3. Complete SH-3 before making it the default compiler. SH-4 has one accepted application; add independent structured-text validation and multi-file dependency/index projects, retaining frozen conformance, native checks, diagnostics and resource validation.
+3. Complete SH-3 before making it the default compiler. Finish the second SH-4 application's native acceptance, then deliver an independent multi-file dependency/index project with frozen conformance, diagnostics, resource checks and reproducible native builds.
 4. Resume the qualified [per-request executor](tools/agent_eval/README.md), [prepared document experiment](experiments/docs-ab-2026-11-22-r6/README.md), 60-task pilot and formal cost study as later product evidence. Live API qualification is still **blocked**, with **0 round-six participant sessions**; it no longer blocks compiler development.
 5. Remaining v1 functionality includes user test blocks and `yavo test`, local/Git dependencies and a lockfile, FFI/unsafe/audit, general closures/higher-order parameters, public movable Join and `spawn inout`. Prioritize these only when required by the declared application scope or a concrete bootstrap blocker.
 

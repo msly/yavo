@@ -18,6 +18,73 @@ binds the run, job/step results and artifact metadata. It preserves the original
 platform status. That historical run sanitized stage1-generated applications,
 not the stage2 compiler itself.
 
+## Batch 47 CSV application acceptance (native CI pending)
+
+`examples/csv-check` is the next independent application being qualified for
+SH-4. Its frozen contract and Python oracle contain **139 manual scenarios**:
+138 apply on Linux/macOS and 137 on Windows. The remaining cases are explicitly
+not applicable because of native filename or directory-stdin behavior. They are
+not counted as passed executions. The four application modules separate CLI/I/O,
+CSV parsing, header/width validation and output.
+
+Bootstrap's `csv_check_application` check uses the final stage2 compiler after
+its fixed-point checks. For every applicable scenario it compares exact stdout,
+stderr and exit status across **six artifacts**: ordinary stage0/selfhost Debug
+and Release, plus a supplementary Release exit-check artifact from each frontend.
+The expected execution inventory is 828 on POSIX or 822 on Windows. The test-only
+exit shim leaves generated C and production runtime bytes unchanged; independent
+clean/leak controls must preserve exit 2 and detect the tracked leak with exit
+102. This covers both successful and failed application exits.
+
+The separate native driver, `tools/ci/csv_check.py`, runs three artifacts per
+scenario: stage0 Debug, Release and the exit-check artifact. It also builds two
+Release copies in independent directories with empty Yavo/Zig/temp caches and
+identical relative source layout/output basename, then compares C and executable
+bytes. Separate Debug/Release cold, unchanged and comment-edited source builds
+record cache miss/hit/miss and timings; the comment edit is confined to an
+isolated copy. Paths contain spaces and non-ASCII text. The driver binds source,
+oracle, compiler, runtime and installed locked Zig identities, refuses `YAVO_CC`,
+and never installs or downloads a missing toolchain.
+
+The local Linux RSS run at
+`compiler/target/ci/csv-check-batch47-rss/attempt-xyp1f13q/receipt.json` passes
+**414/414 executions**, both independent Release comparisons, clean/leak controls,
+all six cache-condition observations, and input/artifact change guards. Its
+Release executable is **30,456 bytes** and emitted C is **46,702 bytes**. All
+**431 commands** have measured RSS; the maximum reported command value is
+417,312,768 bytes. [The application README](../../examples/csv-check/README.md)
+records the individual timing/RSS observations and reproduction hashes.
+
+On Linux and macOS the shared runner reaps each command with `wait4` and records
+its OS-reported `ru_maxrss`: Linux KiB are converted to bytes; macOS already
+reports bytes. The receipt's overall memory value is the maximum of these
+per-command observations, not a simultaneous process-tree total or the sum of
+command peaks. Windows records memory as unavailable/null. Timing samples are
+single observations, not P50/P95 estimates or a performance gate; provider token
+usage and monetary cost remain unknown.
+
+Linux CI invokes `--sanitizers required --bootstrap-output
+compiler/target/ci/selfhost`. It must validate clean, ASan use-after-free and UBSan
+signed-overflow capability controls, then run every applicable scenario against
+**both** stage0 C and CSV C freshly emitted by the final stage2 identified and
+verified from the successful bootstrap receipt. The existing general selfhost
+sanitizer gate does not substitute for this application coverage. Other native
+platforms use `--sanitizers off`, recorded as not applicable. This local host has
+no GCC: its sanitizer result is **unavailable, passed null, zero executions**.
+Three-platform CI and the required Linux sanitizer results are still pending;
+this local receipt does not establish completion of a second SH-4 project.
+
+The shared `csv_support.py` preserves raw stdin/stdout/stderr, commands, exit
+status, elapsed time and memory observations, and bounds subprocess trees on
+timeout. The bootstrap wrapper removes materialized special filenames after
+execution while retaining safely named stream evidence. The native driver first
+archives materialized inputs as `fixture-inputs.tar.gz`, verifies every file's
+hash against its execution identity, and then removes the raw names. Rebuildable
+caches are removed. CI additionally packages the full evidence tree as
+`compiler/target/ci/csv-check.tar.gz` using `package_test_summary.py --input
+compiler/target/ci/csv-check --output compiler/target/ci/csv-check.tar.gz --prefix
+csv-check`; upload excludes the unpackaged `csv-check/` tree.
+
 ## Batch 31 for and traversal checks
 
 The manifest has **490 cases and 172 executable inputs**. Its 52 batch cases
@@ -290,6 +357,7 @@ python3 tools/ci/run.py setup
 python3 tools/ci/run.py native --suite full   # Linux x86_64
 python3 tools/ci/run.py native --suite native # Windows/macOS selection
 python3 selfhost/bootstrap.py               # All native platforms
+python3 tools/ci/csv_check.py --bootstrap-output compiler/target/ci/selfhost --sanitizers auto
 python3 tools/ci/selfhost_sanitize.py        # Linux with GCC; consumes bootstrap output
 python3 tools/ci/run.py sanitize             # Separate Rust/P0 gate: Linux with Perl and GCC
 python3 tools/ci/experiment_evidence.py       # Archived round-five evidence

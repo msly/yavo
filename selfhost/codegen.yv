@@ -243,23 +243,28 @@ fn numericTypeName(name: str) -> bool {
 }
 
 fn mapHelper(ty: Type) -> String {
+    if ty.kind == .Set { return "bool".toString() }
     if ty.elementKind == .Int { return "int".toString() }
     if ty.elementKind == .Bool { return "bool".toString() }
     return "byte".toString()
 }
 
 fn useMap(g: inout Generator, ty: Type) {
+    // A Set owns String keys and stores only a hidden true value. Keep its
+    // language type distinct while sharing the Map[String, bool] C helpers.
+    var instance = ty
+    if ty.kind == .Set { instance = Type{kind: .Map, elementKind: .Bool} }
     var i = 0
     while i < g.maps.len() {
-        if g.maps[i].elementKind == ty.elementKind { return }
+        if g.maps[i].elementKind == instance.elementKind { return }
         i += 1
     }
-    g.maps.push(ty)
+    g.maps.push(instance)
 }
 
 fn dropName(reg: Registry, ty: Type) -> String {
     if ty.kind == .String { return "yv_string_drop".toString() }
-    if ty.kind == .Map { return support.join2("sh_map_drop_", mapHelper(ty)) }
+    if ty.kind == .Map || ty.kind == .Set { return support.join2("sh_map_drop_", mapHelper(ty)) }
     if ty.kind == .Result { return support.join2("sh_result_drop_", support.decimal(ty.decl)) }
     if ty.kind == .Vec {
         if types.owned(reg, types.element(ty)) {
@@ -293,7 +298,7 @@ fn cloneExpression(reg: Registry, ty: Type, source: str, lineText: str, columnTe
             out.push(types.cType(elem))
             out.push("), ")
         }
-    } else if ty.kind == .Map {
+    } else if ty.kind == .Map || ty.kind == .Set {
         out.push("sh_map_clone_")
         out.push(mapHelper(ty))
         out.push("(&(")
@@ -316,7 +321,7 @@ fn cloneExpression(reg: Registry, ty: Type, source: str, lineText: str, columnTe
 }
 
 fn dropValue(g: inout Generator, reg: Registry, ty: Type, name: str) {
-    if ty.kind == .Map { useMap(&g, ty) }
+    if ty.kind == .Map || ty.kind == .Set { useMap(&g, ty) }
     if types.owned(reg, ty) {
         put(&g, dropName(reg, ty))
         put(&g, "(&(")
@@ -1285,7 +1290,7 @@ fn methodValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
         emit(&g, "}")
         return result
     }
-    if name == "set" || name == "remove" { return mapUpdate(&g, p, ts, reg, e) }
+    if name == "set" || name == "remove" || name == "add" { return mapUpdate(&g, p, ts, reg, e) }
     if name == "push" || name == "reserve" {
         let target = placeOf(&g, p, ts, reg, e.left, 0)
         readable(g, ts, target.root, e.token)
@@ -1385,7 +1390,7 @@ fn methodValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
         }
         lexer.fail(ts, e.token, "U0001", "vector method is outside the selfhost subset")
     }
-    if base.ty.kind == .Map { return mapQuery(&g, p, ts, reg, e, base) }
+    if base.ty.kind == .Map || base.ty.kind == .Set { return mapQuery(&g, p, ts, reg, e, base) }
     if base.ty.kind == .Optional && (name == "isSome" || name == "isNone") {
         if e.argCount != 0 { lexer.fail(ts, e.token, "E0012", "this Optional method takes no arguments") }
         var code = support.join3("(", base.name, ").has")
@@ -1407,7 +1412,8 @@ fn mapUpdate(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: E
     let name = ts[e.token].text.clone()
     let target = placeOf(&g, p, ts, reg, e.left, 0)
     readable(g, ts, target.root, e.token)
-    if target.ty.kind != .Map {
+    if (target.ty.kind != .Map && target.ty.kind != .Set) ||
+        (target.ty.kind == .Map && name == "add") || (target.ty.kind == .Set && name == "set") {
         lexer.fail(ts, e.token, "U0001", "this modifying method is outside the selfhost subset")
     }
     if !target.mutable { lexer.fail(ts, e.token, "E0014", "cannot modify a read-only value") }
@@ -1416,7 +1422,7 @@ fn mapUpdate(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: E
     if name == "set" {
         if e.argCount != 2 { lexer.fail(ts, e.token, "E0012", "set takes a key and a value") }
     } else if e.argCount != 1 {
-        lexer.fail(ts, e.token, "E0012", "remove takes exactly one argument")
+        lexer.fail(ts, e.token, "E0012", "this collection method takes exactly one argument")
     }
     writable(g, ts, target.root, e.token)
     let reservations = g.reservations.len()
@@ -1426,6 +1432,9 @@ fn mapUpdate(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: E
         let query = emitExpected(&g, p, ts, reg, keyId, types.primitive(.Str))
         if !stringLike(query.ty) { require(reg, ts, p.expressions[keyId].token, query.ty, types.primitive(.Str)) }
         while g.reservations.len() > reservations { let _ = g.reservations.pop() }
+        if target.ty.kind == .Set {
+            return scalar(&g, .Bool, format("sh_map_remove_${s}(&(${target.name}), ${view(query)}).has"))
+        }
         let ty = types.optional(reg, ts, e.token, types.element(target.ty))
         return typedValue(&g, reg, ty, format("sh_map_remove_${s}(&(${target.name}), ${view(query)})"))
     }
@@ -1436,6 +1445,12 @@ fn mapUpdate(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: E
         lexer.fail(ts, p.expressions[keyId].token, "E0403", "the key still borrows the receiver")
     }
     let takenKey = takeValue(&g, reg, ts, p.expressions[keyId].token, key)
+    if target.ty.kind == .Set {
+        while g.reservations.len() > reservations { let _ = g.reservations.pop() }
+        emit(&g, format("sh_map_set_${s}(&(${target.name}), ${takenKey.name}, true, ${lineColumn(ts, e.token)});"))
+        zeroValue(&g, reg, takenKey)
+        return Value{ty: types.primitive(.Unit), name: "".toString()}
+    }
     let valueId = p.lists[e.argStart + 1]
     let valueType = types.element(target.ty)
     let value = emitExpected(&g, p, ts, reg, valueId, valueType)
@@ -1461,7 +1476,7 @@ fn mapQuery(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Ex
         let line = support.decimal(ts[e.token].line + ts[e.token].lineBase)
         return typedValue(&g, reg, base.ty, cloneExpression(reg, base.ty, base.name, line, support.decimal(ts[e.token].column)))
     }
-    if name != "has" && name != "getCopy" {
+    if name != "has" && (name != "getCopy" || base.ty.kind == .Set) {
         lexer.fail(ts, e.token, "U0001", "this Map method is outside the selfhost subset")
     }
     if e.argCount != 1 { lexer.fail(ts, e.token, "E0012", format("${name} takes exactly one argument")) }
@@ -1953,7 +1968,7 @@ fn binaryValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
             lexer.fail(ts, e.token, "E0001", "operator is not defined for this type")
         }
         if lhs.ty.kind == .Vec || lhs.ty.kind == .Args || lhs.ty.kind == .Slice || lhs.ty.kind == .Result ||
-            lhs.ty.kind == .Map || lhs.ty.kind == .Tuple ||
+            lhs.ty.kind == .Map || lhs.ty.kind == .Set || lhs.ty.kind == .Tuple ||
             (lhs.ty.kind == .Named && (reg.entries[lhs.ty.decl].kind == .Struct || !equality)) {
             lexer.fail(ts, e.token, "E0501", "this aggregate does not implement the required comparison")
         }
@@ -2045,6 +2060,11 @@ fn enumValue(g: inout Generator, reg: Registry, ts: Vec[Token], token: int, expe
 }
 
 fn constructValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression) -> Value {
+    if ts[e.token].text == "Set" && e.elementKind == .String {
+        let ty = Type{kind: .Set, elementKind: .String}
+        useMap(&g, ty)
+        return typedValue(&g, reg, ty, "(yv_map){0}")
+    }
     if ts[e.token].text == "String" {
         if e.nameCount > 0 { lexer.fail(ts, p.lists[e.nameStart], "E0010", "String has no constructor fields") }
         return typedValue(&g, reg, types.primitive(.String), "(yv_string){0}")
@@ -2194,6 +2214,13 @@ fn tupleValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: 
 }
 
 fn vectorValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression, expected: Type) -> Value {
+    if expected.kind == .Set && e.elementKind == .Unknown {
+        if e.argCount != 0 {
+            lexer.fail(ts, e.token, "E0001", "a nonempty vector literal cannot initialize a Set")
+        }
+        useMap(&g, expected)
+        return typedValue(&g, reg, expected, "(yv_map){0}")
+    }
     var elem = types.primitive(.Unknown)
     if expected.kind == .Vec { elem = types.element(expected) }
     if e.elementKind != .Unknown {
@@ -2360,7 +2387,10 @@ fn expressionValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry
     }
     if e.kind == .Unit { return Value{ty: types.primitive(.Unit), name: "".toString()} }
     if e.kind == .EmptyMap {
-        if expected.kind != .Map { lexer.fail(ts, e.token, "E0001", "cannot infer the type of [:]; annotate it as a Map") }
+        if expected.kind != .Map && expected.kind != .Set {
+            lexer.fail(ts, e.token, "E0001", "cannot infer the type of [:]; annotate it as a Map or Set")
+        }
+        useMap(&g, expected)
         return typedValue(&g, reg, expected, "(yv_map){0}")
     }
     if e.kind == .Number {
@@ -2802,6 +2832,9 @@ fn forLoopStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registr
         if value.ty.kind == .Map {
             mapLoopHeader(&g, ts, s, value)
         } else {
+            if value.ty.kind == .Set {
+                lexer.fail(ts, s.token, "U0001", "Set iteration is outside the selfhost subset")
+            }
             if value.ty.kind != .Vec && value.ty.kind != .Slice && value.ty.kind != .Args {
                 lexer.fail(ts, s.token, "E0001", "iteration requires a vector or an integer range")
             }
@@ -3404,13 +3437,13 @@ pub fn generate(p: Program, ts: Vec[Token], filename: str) -> String {
     // Instances reached only through struct fields or Result payloads.
     i = 0
     while i < reg.fields.len() {
-        if reg.fields[i].ty.kind == .Map { useMap(&g, reg.fields[i].ty) }
+        if reg.fields[i].ty.kind == .Map || reg.fields[i].ty.kind == .Set { useMap(&g, reg.fields[i].ty) }
         i += 1
     }
     i = 0
     while i < reg.results.len() {
-        if reg.results[i].ok.kind == .Map { useMap(&g, reg.results[i].ok) }
-        if reg.results[i].error.kind == .Map { useMap(&g, reg.results[i].error) }
+        if reg.results[i].ok.kind == .Map || reg.results[i].ok.kind == .Set { useMap(&g, reg.results[i].ok) }
+        if reg.results[i].error.kind == .Map || reg.results[i].error.kind == .Set { useMap(&g, reg.results[i].error) }
         i += 1
     }
     let text = take(&g.out)

@@ -1,6 +1,6 @@
 # Yavo 自举路线与实用验收
 
-2026-11-26 · 第四十六批加入 Map 遍历与 String 排序；覆盖112/392，五项应用回归，SH-3尚未接替
+2026-11-27 · 第四十七批加入 Set[String] 与独立 CSV 校验 CLI；最终959/959、18/18通过，CI待验收，SH-3尚未接替
 
 近期主目标改为：**用 Yavo 实现 Yavo 编译器，完成可重放的自举闭环，再让它承担日常编译工作。** 自举用于暴露真实工程中的语言和工具链缺口；实用验收继续独立执行。
 
@@ -39,7 +39,7 @@
 | SH-1：可用的子集编译器 | 在 `selfhost/` 中实现真实词法器、解析器、最小语义检查和 C 生成；公布精确输入子集 | stage0 构建成功；外部正向程序运行结果正确；负向程序在前端拒绝；未实现语法明确报错；支持的行为与 stage0 差分一致 | 已完成：子集覆盖编译器自身源码；第三十一批语料扩展到 490 例，当前验收见下节 |
 | SH-2：最小自举闭环 | 输入子集覆盖编译器全部 Yavo 源码；可由外部驱动构建 | 在独立目录、清空产物的条件下完成 stage0 → stage1 → stage2 → stage3；stage2/3 对固定输入生成的 C 一致，独立程序结果一致；记录所有源码、运行时、工具链和构建参数的身份 | **已闭合（引导子集）**：stage2.c 与 stage3.c 逐字节一致，stage2/stage3 二进制一致，stage2 在全部用例上与 stage1 输出相同；三平台原生固定点基线及第三十一批扩展均已确认，当前证据见下节 |
 | SH-3：主编译器接替 | 逐步覆盖当前 Rust 前端支持的语义、模块与诊断；承接正常构建入口 | 现有回归与冻结规格报告无未解释退步；独立错误输入与资源测试通过；Linux、Windows、macOS 原生执行相应验收；日常开发默认用自举编译器 | 尚未接替，Rust stage0 仍是主编译器 |
-| SH-4：声明范围内的实用交付 | 以非编译器应用验证语言、库、工具和分发 | 下节中的应用、诊断、可重放构建、资源和平台门槛通过，明确支持范围与仍缺能力 | 首个 test-summary 已通过三平台验收，三个独立应用完成 1 个；SH-4 整体未完成 |
+| SH-4：声明范围内的实用交付 | 以非编译器应用验证语言、库、工具和分发 | 下节中的应用、诊断、可重放构建、资源和平台门槛通过，明确支持范围与仍缺能力 | 当前1/3：test-summary已完成；第二个csv-check候选本机门通过，三平台CI与双份C sanitizer待验收，完成后才回填2/3 |
 
 SH-1 的结果只标为“子集编译器”。SH-2 可以标为“子集自举完成”，同时列出尚未移植的语言能力。覆盖全部当前语言能力并完成 SH-3 后，才把自举实现作为主编译器交付。阶段编号不换算为项目完成百分比。
 
@@ -47,7 +47,47 @@ SH-1 的结果只标为“子集编译器”。SH-2 可以标为“子集自举�
 
 ## 当前进度
 
-### 第四十六批：Map 遍历、String 排序与原始原子账本 CLI
+### 第四十七批：Set[String] 与独立 CSV 校验 CLI（待三平台 CI）
+
+本批基线 `84cd8ef`，第二个正式独立应用候选 [csv-check](../examples/csv-check/README.md) 为main/parser/validator/report四模块、271行。先冻结[SPEC](../examples/csv-check/SPEC.md)并用stage0完整实现，首次check成功，仅移除一条未使用导入后冻结源码，Debug/Release均0错误、0警告；没有行为修复。第46批stage2对原文的唯一实际阻塞是 `validator.yv:15:20` 的Set构造U0001。补Set后候选stage1/stage2直接check/emit-c成功；八次完整编译尝试的源码、工具和结果见[开发记录](../examples/csv-check/evidence/DEVELOPMENT.md)。
+
+`Set[String]`支持拥有局部、参数、返回、结构体字段及Result两侧载荷，接入正常与return/try/catch/break/continue清理。局部空构造为 `[]`、`[:]`、`Set[String]{}`，字段默认仅 `[]`；add消费String并返回Unit，重复键释放传入所有者，has/remove借用str或String查询，remove释放删除的存储键并返回bool，len/clone可用。C复用Map[String,bool] helper，语言类型仍区分Set/Map。保留接收者预留与借用检查；Set遍历/take、其他键、直接Vec[Set[String]]、拥有Optional及查询参数修改自身接收者仍U0001。独立审查修正遍历错误分类、非空初始化分类及字段默认 `[:]` 误接受三处边界。
+
+CSV支持完整UTF-8验证、严格引号/双引号转义、逗号、LF/CRLF和跨行字段；表头非空且按解码内容精确唯一，记录列宽一致。先完整解析当前记录再立即结构校验，保持同记录词法优先、早记录结构错误先于后记录词法错误；位置按UTF-8字节，结构错指向记录起始行第1列。裸CR、开头BOM、除TAB外的ASCII控制及DEL被拒绝。stdin/多文件按顺序处理，失败时stdout保持空，稳定诊断分别以CSV错误1、用法2、读取/UTF-8错误3退出。拥有资源在execute返回时释放，再由main调用os.exit。
+
+139条手工合同预期与独立字节oracle在应用执行前一致，见[冻结记录](../examples/csv-check/tests/oracle-freeze.json)；cases SHA256 `a0abf46feaf6185864573641cfc4df6f64776f7b734907dec2f2d4862929f257`，oracle SHA256 `eff38afb971cd0064430cc0623c3e453696b57788700cecc868e2ead7edd82f9`。POSIX适用138，Windows适用137，平台不适用项保留明确状态。
+
+| 验收路径 | POSIX执行数 | Windows执行数 | 当前证据 |
+| --- | ---: | ---: | --- |
+| bootstrap第18项csv_check_application：stage0/stage2各Debug、Release、Release exit-shim | 828 | 822 | 新runner最终本机828/828；三平台CI待验收 |
+| native：Debug、Release、exit-shim；另建独立Release副本做复现 | 414 | 411 | 新RSS runner本机414/414；Windows/macOS待CI |
+| 独立GCC ASan/UBSan：stage0 C、最终stage2重新emit的C | Linux 276 | 不适用 | clean/UAF/overflow能力控制先行；本机无GCC，unavailable/null；Linux CI required待验收 |
+
+普通及退出清理产物均验证精确输出和退出码，清洁/泄漏控制校准exit-shim；SPEC、oracle、固定输入、应用、验收脚本、运行时、锁定工具链和产物首尾身份受检查。native使用预安装锁定Zig，在含空格/非ASCII的独立目录内建两个空缓存Release副本，生成C与二进制逐字节相同：应用C46,702字节，SHA256 `6d32d6dd002adda1377bd3eba57d22a49f3cca98dbe2a0b10d77123b18c56a27`；Release产物30,456字节，SHA256 `bd53883ea38843a63561a22bae375298462df64b5743117bdc9087aefdcbb996`。回执为 `compiler/target/ci/csv-check-batch47-rss/attempt-xyp1f13q/receipt.json`，3次native构建、6次计时构建均通过。
+
+| 模式 | 构建条件 | 单次耗时（秒） | wait4报告RSS（字节） | 缓存 |
+| --- | --- | ---: | ---: | --- |
+| Debug | 冷构建 | 22.284126 | 411,893,760 | miss |
+| Debug | 不变重建 | 0.170244 | 30,924,800 | hit |
+| Debug | 注释编辑后 | 0.486040 | 84,553,728 | miss |
+| Release | 冷构建 | 4.942010 | 219,435,008 | miss |
+| Release | 不变重建 | 0.020308 | 31,305,728 | hit |
+| Release | 注释编辑后 | 0.825170 | 90,292,224 | miss |
+
+这些条件各一次观察，P50/P95仍为null。新runner全部431条命令均测得RSS，整体最大417,312,768字节，414次应用执行最大26,951,680字节。Linux将ru_maxrss的KiB转为bytes，macOS使用bytes；Windows无法观测时留null与原因。该值是OS对waited child的报告，不是同时进程树RSS，也不对不同命令的峰值求和。正常exit0、非零exit7、两层子进程超时及注入构建失败清缓存控制均通过：超时1.005秒返回−9，三PID均终止，Popen.returncode一致；native五棵临时缓存已清除。控制证据在 `compiler/target/batch47/rss-controls-7x7tqsxm/receipt.json`。
+
+Set新增34例、无旧例提升，矩阵959=242run+32panic+524reject+123unsupported+38shared_unsupported。无Rust/runtime改动，Rust Debug/Release各145/0/1、冻结124/3/2。首轮完整自举 **959/959、18/18、0 skip**，stage2/3 C **1,057,613字节**、二进制 **490,144字节**逐字节相同；C SHA256 `694a454c2e1ba59f4b19fd2bd1e4a641472433e74e53f461baf8b576b4416ded`，binary SHA256 `7dfc1373b1e0ab8ae510c61565abdc93e813748d8869905124a89e255675bcbe`。首轮回执位于 `compiler/target/ci/selfhost-batch47/run-wc7teq0m/receipt.json`。
+
+新runner的最终目录 `compiler/target/ci/selfhost-batch47-final/run-zukpunvi` 已通过最终完整959/959、18/18、0 skip，六项应用门与输入身份检查全部通过；stage2/3 C与二进制逐字节一致。较长输出目录进入源诊断路径，本次C为 **1,057,805字节**，SHA256 `6b88386c7a52c839e6c937345250a7125e187d61686cdab9f0c766dcd5ab8107`；二进制 **490,192字节**，SHA256 `9d3e68bce7b96e59ddd25281a1787d2b006b3aeae8e99c66955b66344d5a5cbb`。前述首轮身份保留为该次运行历史。
+
+| 覆盖输入集合 | 文件数 | stage0接受 | 最终stage2接受 | 按入口字节去重 |
+| --- | ---: | ---: | ---: | ---: |
+| 第46批冻结原集合，路径及字节未改 | 613 | 392 | 112 | 52/222 |
+| 加入CSV四模块后的集合 | 617 | 393 | 113 | 53/223 |
+
+最终stage2扫描退步/越界/超时均0，回执在 `compiler/target/batch47/final-stage2-coverage.json`。首轮自举后补齐了可观测RSS和失败路径清缓存，验收器输入已改变，新runner的最终完整自举已独立重跑通过；[验证索引](../compiler/validation/batch47-csv-set-2026-11-27.json)记录新回执与产物身份。实现提交、三平台CI及Linux两份C sanitizer尚待验收；**SH-4当前仍1/3，全部通过后回填2/3**。SH-3仍只有check/emit-c，正常build/run、结构化诊断与默认接替另计。下一批目标为第三个独立多文件依赖/索引CLI。
+
+### 第四十六批：Map 遍历、String 排序与原始原子账本 CLI（历史记录）
 
 支持只读Map[String,int/bool/byte]两绑定遍历：按插入顺序、跳过删除空槽，借用只读String键和Copy值；循环期间冻结Map或字段所有者。键可clone为拥有值，不能直接移动或修改；完整临时Map活到循环结束，临时结构体的Map字段按stage0报E0305。Vec[String].sort()复用稳定原地归并排序和UTF-8字节比较，描述符移动不新增所有者；接收者、借用和提前退出清理规则保持原约束。引用别名、键视图逃逸、可变遍历及更广Map值类型仍在子集外。
 
@@ -238,7 +278,8 @@ str 与 String 接收者支持 `startsWith`/`endsWith`/`contains`（bool）、`f
 | 已完成 | 整数 min/max 与文本 diff CLI | 第四十四批：本机 875/875、15/15、0 skip；三项应用回归；原有覆盖98→99/391，含新 P0 共100/392、0越界；三平台CI 6/6 |
 | 已完成 | 整数 Vec 排序与窗口中位数 CLI | 第四十五批：本机897/897、16/16、0 skip；第四项应用回归28场景/112执行；覆盖100→106/392、0越界；三平台CI 6/6 |
 | 已完成 | Map遍历、String排序与原子账本CLI | 第四十六批925/925、17/17、0 skip；第五应用32场景/128执行；覆盖106→112/392、0越界；三平台CI 6/6 |
-| 下一步 | 第二个正式独立应用：结构化文本校验 | 冻结真实格式、多模块和失败路径，stage0先交付；保持应用原文补拥有Optional等实际阻塞，完成资源/复现/三平台门 |
+| 待三平台CI | Set[String]及第二个正式独立应用csv-check | 第47批最终959/959、18/18；139固定案例，POSIX六产物828次、新runner native414次及最终stage2覆盖复扫通过；三平台及Linux双份C sanitizer闭合后计入SH-4第2项 |
+| 下一步 | 第三个独立多文件依赖/索引CLI | 冻结真实文件格式、跨文件依赖、模块及缺失/冲突/循环等失败语义；独立oracle与stage0自然实现，保持应用原文按实际阻塞扩充selfhost，再完成资源/复现/三平台门 |
 | 接替阶段 | SH-3接替 | 完成普通check/build/run、稳定及结构化诊断，保持既有回归/冻结规格/资源/三平台门，再默认使用selfhost；cache/fix/verify按依赖迁移 |
 
 固定点现在是回归门：任何修改 `selfhost/` 的提交都必须保持 stage2.c = stage3.c 与 stage1/stage2 全用例一致。
@@ -280,7 +321,7 @@ str 与 String 接收者支持 `startsWith`/`endsWith`/`contains`（bool）、`f
 ## 工作优先级
 
 1. SH-1、SH-2 已完成；保持三平台固定点及已建立的 Linux stage2 编译器自身 ASan/UBSan 回归门。
-2. 用现有 stage0 交付非编译器应用；同时按实际需要扩充自举子集。保持既有回归、冻结规格和原生平台检查。
+2. 完成csv-check第二个正式项目的最终复验与CI，再用stage0实现第三个独立多文件依赖/索引CLI；保持应用原文，按实际依赖扩充自举子集，延续既有回归、冻结规格和原生平台检查。
 3. 逐步完成 SH-3 日常编译与诊断接替，并独立完成 SH-4 声明范围内的实用验收。
 4. 既有 agent 成本实验和文档对照实验保留为后续产品证据；有授权的可计量环境后继续，不再作为自举开发的前置步骤。已有结果与未执行状态保持原样。
 

@@ -1,0 +1,26 @@
+fn main() {
+    var tags: Set[String] = []
+    var second: Set[String] = [:]
+    var third = Set[String]{}
+    assert(tags.len() == 0 && second.len() == 0 && third.len() == 0)
+    tags.add("".toString())
+    tags.add("é猫".toString())
+    tags.add("a\0b".toString())
+    tags.add("".toString())
+    let key = "borrow".toString()
+    tags.add(key.clone())
+    assert(tags.len() == 4 && tags.has(key) && key == "borrow")
+    assert(tags.has("") && tags.has("é猫") && tags.has("a\0b") && !tags.has("a"))
+    let _ = tags.add("é猫".toString())
+    assert(tags.remove("é猫") && !tags.remove("é猫") && tags.len() == 3)
+    tags.add(format("n${tags.len()}"))
+    assert(tags.has("n3"))
+    var copy = tags.clone()
+    assert(copy.remove("a\0b") && tags.has("a\0b"))
+    assert(tags.remove(key) && key == "borrow")
+    assert(Set[String]{}.len() == 0)
+    second.add("left".toString())
+    third.add("right".toString())
+    assert(second.len() == 1 && third.len() == 1)
+    println("set basics ok")
+}

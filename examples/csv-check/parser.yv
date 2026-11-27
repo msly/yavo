@@ -1,0 +1,118 @@
+pub struct Cursor {
+    offset: int = 0
+    line: int = 1
+    column: int = 1
+}
+
+pub struct Record {
+    line: int
+    fields: Vec[String]
+}
+
+pub struct CsvError {
+    line: int
+    column: int
+    code: String
+    message: String
+}
+
+pub fn problem(line: int, column: int, code: str, message: str) -> CsvError {
+    return CsvError{line: line, column: column, code: code.toString(), message: message.toString()}
+}
+
+fn forbiddenControl(b: byte) -> bool {
+    return (b < ' ' && b != '\t' && b != '\r' && b != '\n') || int(b) == 127
+}
+
+fn advanceLine(cursor: inout Cursor, width: int) {
+    cursor.offset += width
+    cursor.line += 1
+    cursor.column = 1
+}
+
+// Called only while unread bytes remain. A complete record is returned before
+// the caller validates it, so later records cannot mask an earlier error.
+pub fn record(text: str, cursor: inout Cursor) -> Record ! CsvError {
+    let startLine = cursor.line
+    var fields: Vec[String] = []
+    var value = String{}
+    // 0: field start, 1: unquoted, 2: quoted, 3: after closing quote.
+    var state = 0
+    var segment = cursor.offset
+    while cursor.offset < text.len() {
+        let b = text[cursor.offset]
+        if cursor.offset == 0 && text.len() >= 3 && int(text[0]) == 239 && int(text[1]) == 187 && int(text[2]) == 191 {
+            return err(problem(cursor.line, cursor.column, "ECSV_FORMAT", "initial UTF-8 BOM is not permitted"))
+        }
+        if forbiddenControl(b) {
+            return err(problem(cursor.line, cursor.column, "ECSV_FORMAT", "invalid control byte"))
+        }
+        if b == '\r' && (cursor.offset + 1 == text.len() || text[cursor.offset + 1] != '\n') {
+            return err(problem(cursor.line, cursor.column, "ECSV_FORMAT", "bare CR is not permitted"))
+        }
+
+        if state == 2 {
+            if b == '"' {
+                value.push(text[segment..cursor.offset])
+                if cursor.offset + 1 < text.len() && text[cursor.offset + 1] == '"' {
+                    value.push("\"")
+                    cursor.offset += 2
+                    cursor.column += 2
+                } else {
+                    state = 3
+                    cursor.offset += 1
+                    cursor.column += 1
+                }
+                segment = cursor.offset
+            } else if b == '\r' {
+                advanceLine(&cursor, 2)
+            } else if b == '\n' {
+                advanceLine(&cursor, 1)
+            } else {
+                cursor.offset += 1
+                cursor.column += 1
+            }
+            continue
+        }
+
+        if b == ',' {
+            if state != 3 { value.push(text[segment..cursor.offset]) }
+            fields.push(value)
+            value = String{}
+            cursor.offset += 1
+            cursor.column += 1
+            segment = cursor.offset
+            state = 0
+        } else if b == '\r' || b == '\n' {
+            if state != 3 { value.push(text[segment..cursor.offset]) }
+            fields.push(value)
+            if b == '\r' {
+                advanceLine(&cursor, 2)
+            } else {
+                advanceLine(&cursor, 1)
+            }
+            return Record{line: startLine, fields: fields}
+        } else if b == '"' {
+            if state != 0 {
+                return err(problem(cursor.line, cursor.column, "ECSV_FORMAT", "quote must open at the start of a field"))
+            }
+            state = 2
+            cursor.offset += 1
+            cursor.column += 1
+            segment = cursor.offset
+        } else {
+            if state == 3 {
+                return err(problem(cursor.line, cursor.column, "ECSV_FORMAT", "unexpected byte after closing quote"))
+            }
+            state = 1
+            cursor.offset += 1
+            cursor.column += 1
+        }
+    }
+    if state == 2 {
+        return err(problem(cursor.line, cursor.column, "ECSV_FORMAT", "unterminated quoted field"))
+    }
+    if state != 3 { value.push(text[segment..text.len()]) }
+    fields.push(value)
+    return Record{line: startLine, fields: fields}
+}

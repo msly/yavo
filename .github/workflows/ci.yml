@@ -91,12 +91,20 @@ jobs:
           YAVO_HOME: ${{ runner.temp }}/yavo-home
           YAVO_CACHE_DIR: ${{ runner.temp }}/yavo-cache
         run: ${{ matrix.python }} tools/ci/test_summary.py
+      - name: Validate the csv-check CLI application
+        env:
+          YAVO_HOME: ${{ runner.temp }}/yavo-home
+          YAVO_CACHE_DIR: ${{ runner.temp }}/yavo-cache
+        run: ${{ matrix.python }} tools/ci/csv_check.py --bootstrap-output compiler/target/ci/selfhost --sanitizers ${{ runner.os == 'Linux' && 'required' || 'off' }}
       - name: Check Yavo-frontend C with independent ASan and UBSan
         if: runner.os == 'Linux'
         run: python3 tools/ci/selfhost_sanitize.py
       - name: Package application evidence with adversarial filenames
         if: always()
         run: ${{ matrix.python }} tools/ci/package_test_summary.py
+      - name: Package CSV application evidence
+        if: always()
+        run: ${{ matrix.python }} tools/ci/package_test_summary.py --input compiler/target/ci/csv-check --output compiler/target/ci/csv-check.tar.gz --prefix csv-check
       - name: Preserve logs and per-platform receipts
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -105,6 +113,7 @@ jobs:
           path: |
             compiler/target/ci/
             !compiler/target/ci/test-summary/**
+            !compiler/target/ci/csv-check/**
           if-no-files-found: error
           retention-days: 14
 

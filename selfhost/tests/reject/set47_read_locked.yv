@@ -1,0 +1,6 @@
+fn modify(tags: inout Set[String]) -> int { tags.add("inner".toString())
+ return 1 }
+fn read(tags: Set[String], n: int) -> int { return tags.len() + n }
+fn main() { var tags: Set[String] = []
+ println(read(tags, modify(&tags)))
+}

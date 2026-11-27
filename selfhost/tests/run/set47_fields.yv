@@ -1,0 +1,18 @@
+struct Holder { tags: Set[String] = [], empty: Set[String] = [], label: String }
+fn make() -> Set[String] {
+    var tags: Set[String] = []
+    tags.add("seed".toString())
+    return tags
+}
+fn size(tags: Set[String]) -> int { return tags.len() }
+fn fill(tags: inout Set[String]) { tags.add("filled".toString()) }
+fn main() {
+    var holder = Holder{tags: make(), label: "owner".toString()}
+    fill(&holder.tags)
+    assert(size(holder.tags) == 2 && holder.tags.has("seed") && holder.empty.len() == 0)
+    assert(make().has("seed"))
+    let copy = holder.tags.clone()
+    let moved = holder
+    assert(size(copy) == 2 && moved.tags.has("filled") && moved.label == "owner")
+    println("set owners ok")
+}

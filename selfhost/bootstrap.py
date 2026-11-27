@@ -270,6 +270,7 @@ def main():
             "text_diff_application": application_module("diff_application").inputs(),
             "sliding_median_application": application_module("median_application").inputs(),
             "atomic_ledger_application": application_module("ledger_application").inputs(),
+            "csv_check_application": application_module("csv_application").inputs(),
         }
         version_result = command("zig-version", [zig, "version"])
         check("locked_zig", succeeded(version_result) and
@@ -587,6 +588,16 @@ def main():
         check("atomic_ledger_application", ledger_record["passed"],
               applicable=ledger_record.get("applicable"), error=ledger_record.get("error"))
 
+        # A second independent SH-4 project validates structured CSV input.
+        # Use the final self-hosted compiler, with fixed cases shared with its
+        # separate native delivery gate.
+        csv_record = application_module("csv_application").check(
+            stage2 if stage2 is not None else binary, stage0, zig, work / "csv-check",
+            environment, frontend_env, CC_FLAGS, EXE)
+        report["csv_check_application"] = csv_record
+        check("csv_check_application", csv_record["passed"],
+              applicable=csv_record.get("applicable"), error=csv_record.get("error"))
+
         # A receipt must not attribute binaries to a source tree edited during the run.
         bound_paths = {
             str(stage0): report["inputs"]["stage0"]["sha256"],
@@ -609,6 +620,7 @@ def main():
             **report["inputs"]["text_diff_application"],
             **report["inputs"]["sliding_median_application"],
             **report["inputs"]["atomic_ledger_application"],
+            **report["inputs"]["csv_check_application"],
         }
         changed = [name for name, expected in bound_paths.items()
                    if not Path(name).is_file() or digest(Path(name)) != expected]

@@ -1,6 +1,6 @@
 {
   "schema": "yavo-selfhost-cases/1",
-  "description": "Independent fixed-oracle probes for the Yavo-written scalar, byte, aggregate, String, owned-vector, user-function Result and Copy Optional/pop, interpolation, source-module, borrowed-return, Vec[str], jumping ??, []T parameter, text query, owned-element iteration, Map[String, scalar] with read-only traversal, owned String vector sorting, owned-value view and std/io subset; not the frozen full-language conformance suite.",
+  "description": "Independent fixed-oracle probes for the Yavo-written scalar, byte, aggregate, String, owned-vector, user-function Result and Copy Optional/pop, interpolation, source-module, borrowed-return, Vec[str], jumping ??, []T parameter, text query, owned-element iteration, Map[String, scalar] with read-only traversal, owned String vector sorting, owned String sets, owned-value view and std/io subset; not the frozen full-language conformance suite.",
   "cases": [
     {
       "id": "arithmetic",
@@ -6291,6 +6291,255 @@
       "batch": "map-iteration-string-sort",
       "diagnostic": "E0305",
       "reason": "A field borrowed from a temporary owning struct cannot survive as a Map iteration source."
+    },
+    {
+      "id": "set47_basic",
+      "kind": "run",
+      "file": "run/set47_basic.yv",
+      "batch": "string-set-csv-cli",
+      "stdout": "set basics ok\n"
+    },
+    {
+      "id": "set47_fields",
+      "kind": "run",
+      "file": "run/set47_fields.yv",
+      "batch": "string-set-csv-cli",
+      "stdout": "set owners ok\n"
+    },
+    {
+      "id": "set47_result",
+      "kind": "run",
+      "file": "run/set47_result.yv",
+      "batch": "string-set-csv-cli",
+      "stdout": "set results ok\n"
+    },
+    {
+      "id": "set47_rebuild",
+      "kind": "run",
+      "file": "run/set47_rebuild.yv",
+      "batch": "string-set-csv-cli",
+      "stdout": "set rebuild ok\n"
+    },
+    {
+      "id": "set47_add_str",
+      "kind": "reject",
+      "file": "reject/set47_add_str.yv",
+      "batch": "string-set-csv-cli",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "set47_add_moved_key",
+      "kind": "reject",
+      "file": "reject/set47_add_moved_key.yv",
+      "batch": "string-set-csv-cli",
+      "diagnostic": "E0402"
+    },
+    {
+      "id": "set47_moved_set",
+      "kind": "reject",
+      "file": "reject/set47_moved_set.yv",
+      "batch": "string-set-csv-cli",
+      "diagnostic": "E0402"
+    },
+    {
+      "id": "set47_readonly_arity",
+      "kind": "reject",
+      "file": "reject/set47_readonly_arity.yv",
+      "batch": "string-set-csv-cli",
+      "diagnostic": "E0014"
+    },
+    {
+      "id": "set47_readonly_field",
+      "kind": "reject",
+      "file": "reject/set47_readonly_field.yv",
+      "batch": "string-set-csv-cli",
+      "diagnostic": "E0014"
+    },
+    {
+      "id": "set47_wrong_arity",
+      "kind": "reject",
+      "file": "reject/set47_wrong_arity.yv",
+      "batch": "string-set-csv-cli",
+      "diagnostic": "E0012"
+    },
+    {
+      "id": "set47_wrong_query",
+      "kind": "reject",
+      "file": "reject/set47_wrong_query.yv",
+      "batch": "string-set-csv-cli",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "set47_map_assignment",
+      "kind": "reject",
+      "file": "reject/set47_map_assignment.yv",
+      "batch": "string-set-csv-cli",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "set47_add_unit",
+      "kind": "reject",
+      "file": "reject/set47_add_unit.yv",
+      "batch": "string-set-csv-cli",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "set47_consume_locked",
+      "kind": "reject",
+      "file": "reject/set47_consume_locked.yv",
+      "batch": "string-set-csv-cli",
+      "diagnostic": "E0403"
+    },
+    {
+      "id": "set47_read_locked",
+      "kind": "reject",
+      "file": "reject/set47_read_locked.yv",
+      "batch": "string-set-csv-cli",
+      "diagnostic": "E0102"
+    },
+    {
+      "id": "set47_key_view",
+      "kind": "reject",
+      "file": "reject/set47_key_view.yv",
+      "batch": "string-set-csv-cli",
+      "diagnostic": "U0001",
+      "reason": "Stage0 reports E0102 for moving a key used by a later view; the subset conservatively rejects persistent owned-value views with U0001."
+    },
+    {
+      "id": "set47_constructor_field",
+      "kind": "reject",
+      "file": "reject/set47_constructor_field.yv",
+      "batch": "string-set-csv-cli",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "set47_nonempty",
+      "kind": "reject",
+      "file": "reject/set47_nonempty.yv",
+      "batch": "string-set-csv-cli",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "set47_arity_zero",
+      "kind": "reject",
+      "file": "reject/set47_arity_zero.yv",
+      "batch": "string-set-csv-cli",
+      "diagnostic": "U0001",
+      "reason": "Stage0 reports E0001 for a missing Set element type; a bare generic type name is outside the selfhost subset."
+    },
+    {
+      "id": "set47_arity_two",
+      "kind": "reject",
+      "file": "reject/set47_arity_two.yv",
+      "batch": "string-set-csv-cli",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "set47_printing",
+      "kind": "reject",
+      "file": "reject/set47_printing.yv",
+      "batch": "string-set-csv-cli",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "set47_comparison",
+      "kind": "reject",
+      "file": "reject/set47_comparison.yv",
+      "batch": "string-set-csv-cli",
+      "diagnostic": "E0501"
+    },
+    {
+      "id": "set47_indexing",
+      "kind": "reject",
+      "file": "reject/set47_indexing.yv",
+      "batch": "string-set-csv-cli",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "set47_readonly_remove",
+      "kind": "reject",
+      "file": "reject/set47_readonly_remove.yv",
+      "batch": "string-set-csv-cli",
+      "diagnostic": "E0014"
+    },
+    {
+      "id": "set47_map_default",
+      "kind": "reject",
+      "file": "reject/set47_map_default.yv",
+      "batch": "string-set-csv-cli",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "set47_int_set",
+      "kind": "unsupported",
+      "file": "unsupported/set47_int_set.yv",
+      "batch": "string-set-csv-cli",
+      "diagnostic": "U0001",
+      "reason": "Only owned String Set elements are supported."
+    },
+    {
+      "id": "set47_str_set",
+      "kind": "unsupported",
+      "file": "unsupported/set47_str_set.yv",
+      "batch": "string-set-csv-cli",
+      "diagnostic": "U0001",
+      "reason": "Borrowed str Set elements are outside the subset."
+    },
+    {
+      "id": "set47_iterate",
+      "kind": "unsupported",
+      "file": "unsupported/set47_iterate.yv",
+      "batch": "string-set-csv-cli",
+      "diagnostic": "U0001",
+      "reason": "Set iteration remains outside the subset."
+    },
+    {
+      "id": "set47_take",
+      "kind": "unsupported",
+      "file": "unsupported/set47_take.yv",
+      "batch": "string-set-csv-cli",
+      "diagnostic": "U0001",
+      "reason": "Taking and resetting a Set remains outside the subset."
+    },
+    {
+      "id": "set47_optional",
+      "kind": "unsupported",
+      "file": "unsupported/set47_optional.yv",
+      "batch": "string-set-csv-cli",
+      "diagnostic": "U0001",
+      "reason": "Owned Optional payloads remain outside the subset."
+    },
+    {
+      "id": "set47_vector",
+      "kind": "unsupported",
+      "file": "unsupported/set47_vector.yv",
+      "batch": "string-set-csv-cli",
+      "diagnostic": "U0001",
+      "reason": "Set vector elements remain outside the subset."
+    },
+    {
+      "id": "set47_map_method",
+      "kind": "shared_unsupported",
+      "file": "unsupported/set47_map_method.yv",
+      "batch": "string-set-csv-cli",
+      "diagnostic": "U0001",
+      "reason": "Set has no Map.set operation in stage0 or the selfhost subset."
+    },
+    {
+      "id": "set47_map_result",
+      "kind": "shared_unsupported",
+      "file": "unsupported/set47_map_result.yv",
+      "batch": "string-set-csv-cli",
+      "diagnostic": "U0001",
+      "reason": "Set has no Map.getCopy operation in stage0 or the selfhost subset."
+    },
+    {
+      "id": "set47_temporary",
+      "kind": "shared_unsupported",
+      "file": "unsupported/set47_temporary.yv",
+      "batch": "string-set-csv-cli",
+      "diagnostic": "U0001",
+      "reason": "Mutating a temporary Set receiver is unsupported by both compilers."
     }
   ],
   "promotions": [

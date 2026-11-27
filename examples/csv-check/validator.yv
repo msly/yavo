@@ -1,0 +1,35 @@
+use parser
+
+pub struct Summary {
+    columns: int
+    rows: int
+    bytes: int
+}
+
+pub fn validate(text: str) -> Summary ! CsvError {
+    if text.len() == 0 {
+        return err(parser.problem(1, 1, "ECSV_EMPTY", "input has no header record"))
+    }
+    var cursor = Cursor{}
+    let header = try parser.record(text, &cursor)
+    var names = Set[String]{}
+    for name in header.fields {
+        if name.len() == 0 {
+            return err(parser.problem(header.line, 1, "ECSV_HEADER", "header name is empty"))
+        }
+        if names.has(name) {
+            return err(parser.problem(header.line, 1, "ECSV_HEADER", "header name is repeated"))
+        }
+        names.add(name.clone())
+    }
+    let columns = header.fields.len()
+    var rows = 0
+    while cursor.offset < text.len() {
+        let row = try parser.record(text, &cursor)
+        if row.fields.len() != columns {
+            return err(parser.problem(row.line, 1, "ECSV_WIDTH", "record field count differs from header"))
+        }
+        rows += 1
+    }
+    return Summary{columns: columns, rows: rows, bytes: text.len()}
+}

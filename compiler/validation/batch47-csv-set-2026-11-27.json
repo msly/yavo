@@ -1,0 +1,678 @@
+{
+  "schema": "yavo-batch47-validation-index/1",
+  "recorded_at_utc": "2026-11-27T04:00:29.607419+00:00",
+  "batch": 47,
+  "scope": "Set[String] subset support and the independently authored CSV application; local results and exact-head CI kept separate",
+  "local_source_context": {
+    "base_commit": "84cd8ef6b3156c8993df328cefd217b443ae0016",
+    "working_tree_changes_bound_by_receipts": true
+  },
+  "local_bootstrap": {
+    "receipt": {
+      "path": "compiler/target/ci/selfhost-batch47-final/receipt.json",
+      "bytes": 12505692,
+      "sha256": "408c05a04c380d724851733e2a18dbeaa4983fe0c8d8711e60021db6bdee74a6"
+    },
+    "status": "passed",
+    "self_hosted": true,
+    "total": 959,
+    "passed": 959,
+    "failed": 0,
+    "checks_passed": 18,
+    "checks_failed": 0,
+    "checks_skipped": 0,
+    "case_counts": {
+      "panic": 32,
+      "reject": 524,
+      "run": 242,
+      "shared_unsupported": 38,
+      "unsupported": 123
+    },
+    "executable_inputs": 274,
+    "checks": [
+      {
+        "id": "locked_zig",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "id": "build_yavo_frontend",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "id": "self_compilation_fixed_point",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "id": "stage3_binary_reproduces_stage2",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "id": "lexer_units",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "id": "lexer_units_selfhost",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "id": "input_output_guard",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "id": "existing_output_guard",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "id": "dot_alias_output_guard",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "id": "hardlink_output_guard",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "id": "symlink_output_guard",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "id": "test_summary_application",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "id": "unit_conversion_application",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "id": "text_diff_application",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "id": "sliding_median_application",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "id": "atomic_ledger_application",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "id": "csv_check_application",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "id": "inputs_unchanged_during_run",
+        "passed": true,
+        "status": "passed"
+      }
+    ],
+    "stages": {
+      "stage2_c": {
+        "bytes": 1057805,
+        "sha256": "6b88386c7a52c839e6c937345250a7125e187d61686cdab9f0c766dcd5ab8107"
+      },
+      "stage2_sha256": "9d3e68bce7b96e59ddd25281a1787d2b006b3aeae8e99c66955b66344d5a5cbb",
+      "stage3_c": {
+        "bytes": 1057805,
+        "sha256": "6b88386c7a52c839e6c937345250a7125e187d61686cdab9f0c766dcd5ab8107"
+      },
+      "stage3_sha256": "9d3e68bce7b96e59ddd25281a1787d2b006b3aeae8e99c66955b66344d5a5cbb",
+      "stage2_binary_bytes": 490192
+    },
+    "bound_compiler_sources": {
+      "selfhost/codegen.yv": "48ade4f29592605c38f61d61622dab6abfd20b6517188b342a7bfcfda4220ada",
+      "selfhost/lexer.yv": "704f57d5c3c925bf3b296b87840209e7970e66e5021bf2d5461c7bd6f2b735b7",
+      "selfhost/lexer_test.yv": "ee2f072e5f7b0cde0e7bf17cf4667b17b28873f56577357b3327df7c7bdb6556",
+      "selfhost/main.yv": "de148ff9dd1c79957d38048c412ed4ff21734319111255ab38194437d40d35a8",
+      "selfhost/model.yv": "d73a92c76c78a54092a1fb1f5c2066957cb5e5f5de3ca629d6546df665b4653c",
+      "selfhost/parser.yv": "d008ffe0c48cad5643b114747c1f339c9449f5a2e8d265ca90ccf70c81a5c4f1",
+      "selfhost/support.yv": "ee73a0c05671b3c607372ab43d2f5376042145d1a77a82d005b51f14b46ca6e9",
+      "selfhost/types.yv": "d086ac6384997748e4574273e141ecf97c60ba12b0b73e66bdbb8bb884fd3153"
+    },
+    "stage0": {
+      "path": "compiler/target/batch47/stage0-snapshot",
+      "sha256": "0aa26645f51df9f0ddb1429f9bbf7b32145eca0a513193deffb7d81f0e262992"
+    },
+    "manifest_sha256": "85fd0d6cd122767f6c12d57006476437a6b3ee0c005af90e2150f89b22efb738",
+    "runtime_sha256": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+    "toolchain_lock_sha256": "a9bbe83e644b0e1cee19c8dba8b5157eaed3e9ddc71b96d8aab2b2d2bb15f53c",
+    "csv": {
+      "frozen_scenarios": 139,
+      "applicable_scenarios": 138,
+      "bound_inputs": {
+        "compiler/runtime/yavo_rt.h": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+        "compiler/toolchain.lock": "a9bbe83e644b0e1cee19c8dba8b5157eaed3e9ddc71b96d8aab2b2d2bb15f53c",
+        "examples/csv-check/SPEC.md": "4a87a12f941122c8dea2244c87ba0124ad72311f20fe1369ba8814237da61a89",
+        "examples/csv-check/main.yv": "878624551562be406ccab79818450359ec5557eebd04edc9526343135f2b2584",
+        "examples/csv-check/parser.yv": "10fb26268e3baac19205349a5d8c4bb72f5c1e54fa34f83adbd5c80a36d6220a",
+        "examples/csv-check/report.yv": "89a1bc7d4818b7eb39e9add9d4ac5ed2338529fa100d1ca7156e3d1ff09013a0",
+        "examples/csv-check/tests/cases.json": "a0abf46feaf6185864573641cfc4df6f64776f7b734907dec2f2d4862929f257",
+        "examples/csv-check/tests/oracle-freeze.json": "41b2504dc0051cf4c5084ce69a13cd4fb9a24a84963006b0400198882038ac83",
+        "examples/csv-check/tests/oracle.py": "eff38afb971cd0064430cc0623c3e453696b57788700cecc868e2ead7edd82f9",
+        "examples/csv-check/validator.yv": "5a4dc8c5c3f6e041fec6331cbb232c555875059be035ffae8a708829ba005b64",
+        "examples/test-summary/tests/cleanup_clean.c": "b2db0ac317eb9e75d8ec4f5fcbbcbd77a5d313cd7d5a873c7471c2ecc660138d",
+        "examples/test-summary/tests/cleanup_leak.c": "ad91d6554ac57fdab13864c92c33d6bfa47d71ede15fd41b826bf4d4d646dfc9",
+        "examples/test-summary/tests/exit_check.h": "77c2b169eabefe4dae59350a8d694e962d5f2746b6a2a5df9a0a056fe8cdb244",
+        "selfhost/csv_application.py": "3052e562dd1e01686a88713e6372b2cf22746ca74488f94d04f71eb65c0723ee",
+        "tools/ci/csv_check.py": "920b707962b79104aab1efb482d0bf350874f2667e8d26bce67b23bd10f26f08",
+        "tools/ci/csv_sanitize.py": "760cab8e062fb711ad3ad76c9454998a773681f4f7a76dfe34918742eb74f8a5",
+        "tools/ci/csv_support.py": "0e8da36fcf733b741baa53bfef136f23c1f7207edeecebee9059f8a96613b1d1",
+        "tools/ci/test_summary.py": "64df98993057eaf63ddc920c369fe56001634a2f83355dc6d29286698d0f8699"
+      },
+      "passed": true,
+      "executions": 828,
+      "ordinary_executions": 552,
+      "cleanup_executions": 276,
+      "inputs_unchanged": true
+    },
+    "prior_run_comparison": {
+      "first_run_c_bytes": 1057613,
+      "final_run_c_bytes": 1057805,
+      "source_directory_occurrences": 8,
+      "only_difference_is_diagnostic_source_directory": true
+    }
+  },
+  "coverage": {
+    "receipt": {
+      "path": "compiler/target/batch47/final-stage2-coverage.json",
+      "bytes": 235974,
+      "sha256": "a035ecb73ce1ee204aa0f10a540be9b163698cd1029662f4ce86bd5f69712cec"
+    },
+    "baseline_receipt": {
+      "path": "compiler/target/batch47/baseline-coverage.json",
+      "bytes": 150660,
+      "sha256": "48bde3e762b12dab73e50fd9d749433af2b9fb1e510606f628a74ef582c5ef7e"
+    },
+    "independent_baseline_recheck": {
+      "path": "compiler/target/batch47/baseline-recheck.json",
+      "bytes": 192563,
+      "sha256": "17f1114842fe7e26f2d34b7eefe07b0bb53c253a5b0b5c322003a8ce6747c00f"
+    },
+    "frozen_corpus_archive": {
+      "path": "compiler/target/batch47/corpus-baseline.tar.gz",
+      "bytes": 119086,
+      "sha256": "febe66aab504dfa741068615b372a5bb1ba0223f95a20625cf6efc087d77765c"
+    },
+    "compiler_sha256": "9d3e68bce7b96e59ddd25281a1787d2b006b3aeae8e99c66955b66344d5a5cbb",
+    "stage0_sha256": "0aa26645f51df9f0ddb1429f9bbf7b32145eca0a513193deffb7d81f0e262992",
+    "summary": {
+      "original": {
+        "sources": 613,
+        "stage0_accepted": 392,
+        "selfhost_accepted": 112,
+        "stage0_unique_entry_bytes": 222,
+        "selfhost_unique_entry_bytes": 52
+      },
+      "all": {
+        "sources": 617,
+        "stage0_accepted": 393,
+        "selfhost_accepted": 113,
+        "stage0_unique_entry_bytes": 223,
+        "selfhost_unique_entry_bytes": 53
+      }
+    },
+    "lost": [],
+    "gained_original": [],
+    "accepted_additions": [
+      "examples/csv-check/main.yv"
+    ],
+    "violations": [],
+    "timeouts": [],
+    "counting_scope": "All original 613 non-selfhost non-target workspace paths, including archived snapshots; unique counts deduplicate entry-file bytes, not tasks or module graphs",
+    "original_sources_unchanged": true
+  },
+  "set_fixtures": {
+    "classifications": {
+      "path": "compiler/target/batch47/set-fixture-checks.json",
+      "bytes": 19076,
+      "sha256": "cfe28cd358f2808733d4c1d78f85dace5a12f4c0c7d9e0dbaa5f1c6edd413733"
+    },
+    "runtime": {
+      "path": "compiler/target/batch47/set-fixture-runtime-receipt.json",
+      "bytes": 26872,
+      "sha256": "209d87d2bec0e226ecb12640cc827b9946436dfa6e9ced2b8b66b33b9e7683b3"
+    },
+    "new": 34,
+    "promoted": 0,
+    "run": 4,
+    "reject": 21,
+    "unsupported": 6,
+    "shared_unsupported": 3,
+    "targeted_allocation_checked_executions": 16,
+    "full_bootstrap_also_passed": true
+  },
+  "native_csv": {
+    "receipt": {
+      "path": "compiler/target/ci/csv-check-batch47-rss/receipt.json",
+      "bytes": 1466975,
+      "sha256": "67f9c48ab8cfd3aa530780b2b41ab9e6aaeea5dac82eec183779ae72cc30bf56"
+    },
+    "status": "passed",
+    "oracle": {
+      "status": "pass",
+      "scenarios": 139,
+      "case_count": 139,
+      "manual_expected_match": true,
+      "cases_sha256": "a0abf46feaf6185864573641cfc4df6f64776f7b734907dec2f2d4862929f257",
+      "oracle_sha256": "eff38afb971cd0064430cc0623c3e453696b57788700cecc868e2ead7edd82f9",
+      "spec_sha256": "4a87a12f941122c8dea2244c87ba0124ad72311f20fe1369ba8814237da61a89",
+      "applicable": 138
+    },
+    "applicable_scenarios": 138,
+    "application_executions": 414,
+    "normal_application_executions": 276,
+    "cleanup_application_executions": 138,
+    "passed": 414,
+    "failed": 0,
+    "build_attempts": 3,
+    "timing_build_attempts": 6,
+    "checks": [
+      {
+        "id": "independent_release_generated_c",
+        "passed": true,
+        "required": true,
+        "left_sha256": "6d32d6dd002adda1377bd3eba57d22a49f3cca98dbe2a0b10d77123b18c56a27",
+        "right_sha256": "6d32d6dd002adda1377bd3eba57d22a49f3cca98dbe2a0b10d77123b18c56a27"
+      },
+      {
+        "id": "independent_release_binary",
+        "passed": true,
+        "required": true,
+        "left_sha256": "bd53883ea38843a63561a22bae375298462df64b5743117bdc9087aefdcbb996",
+        "right_sha256": "bd53883ea38843a63561a22bae375298462df64b5743117bdc9087aefdcbb996"
+      },
+      {
+        "id": "complete_native_inventory",
+        "passed": true,
+        "required": true,
+        "observed_scenarios_per_artifact": {
+          "debug": 138,
+          "release-a": 138,
+          "cleanup-checked": 138
+        },
+        "required_scenarios_per_artifact": 138
+      },
+      {
+        "id": "normal_and_cleanup_outputs",
+        "passed": true,
+        "required": true
+      },
+      {
+        "id": "timing_inventory",
+        "passed": true,
+        "required": true
+      },
+      {
+        "id": "independent_sanitizers",
+        "required": false,
+        "passed": null,
+        "status": "unavailable"
+      },
+      {
+        "id": "source_inventory_unchanged",
+        "passed": true,
+        "required": true
+      },
+      {
+        "id": "gate_input_inventory_unchanged",
+        "passed": true,
+        "required": true
+      },
+      {
+        "id": "inputs_and_artifacts_unchanged",
+        "passed": true,
+        "required": true,
+        "changed": []
+      },
+      {
+        "id": "retained_inputs_and_artifacts_unchanged",
+        "passed": true,
+        "required": true,
+        "changed": []
+      }
+    ],
+    "memory_summary": {
+      "all_commands": {
+        "recorded_commands": 431,
+        "measured_commands": 431,
+        "unavailable_commands": 0,
+        "maximum_reported_rss_bytes": 417312768,
+        "measurement_descriptions": [
+          "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum"
+        ]
+      },
+      "builds": {
+        "recorded_commands": 3,
+        "measured_commands": 3,
+        "unavailable_commands": 0,
+        "maximum_reported_rss_bytes": 417312768,
+        "measurement_descriptions": [
+          "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum"
+        ]
+      },
+      "runs": {
+        "recorded_commands": 414,
+        "measured_commands": 414,
+        "unavailable_commands": 0,
+        "maximum_reported_rss_bytes": 26951680,
+        "measurement_descriptions": [
+          "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum"
+        ]
+      },
+      "cleanup_validation": {
+        "recorded_commands": 5,
+        "measured_commands": 5,
+        "unavailable_commands": 0,
+        "maximum_reported_rss_bytes": 90914816,
+        "measurement_descriptions": [
+          "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum"
+        ]
+      },
+      "timings": {
+        "recorded_commands": 6,
+        "measured_commands": 6,
+        "unavailable_commands": 0,
+        "maximum_reported_rss_bytes": 411893760,
+        "measurement_descriptions": [
+          "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum"
+        ]
+      },
+      "sanitizers": {
+        "recorded_commands": 0,
+        "measured_commands": 0,
+        "unavailable_commands": 0,
+        "maximum_reported_rss_bytes": null,
+        "measurement_descriptions": []
+      }
+    },
+    "memory_measurement": "maximum of per-command wait4 ru_maxrss observations; Linux KiB converted to bytes, macOS bytes; OS-reported RSS for each waited child, not simultaneous process-tree RSS or the sum of command peaks; Windows measurements unavailable",
+    "builds": [
+      {
+        "id": "debug",
+        "mode": "debug",
+        "passed": true,
+        "binary": {
+          "path": "compiler/target/ci/csv-check-batch47-rss/attempt-xyp1f13q/debug space-目录/yavo-csv-check",
+          "bytes": 4174920,
+          "sha256": "8193208a66b9da3e97a0e33e533a13b4d2634fe909041c2119f6654f7b21ba80"
+        },
+        "generated_c": {
+          "path": "compiler/target/ci/csv-check-batch47-rss/attempt-xyp1f13q/debug space-目录/program.c",
+          "bytes": 46702,
+          "sha256": "6d32d6dd002adda1377bd3eba57d22a49f3cca98dbe2a0b10d77123b18c56a27"
+        }
+      },
+      {
+        "id": "release-a",
+        "mode": "release",
+        "passed": true,
+        "binary": {
+          "path": "compiler/target/ci/csv-check-batch47-rss/attempt-xyp1f13q/release-a space-目录/yavo-csv-check",
+          "bytes": 30456,
+          "sha256": "bd53883ea38843a63561a22bae375298462df64b5743117bdc9087aefdcbb996"
+        },
+        "generated_c": {
+          "path": "compiler/target/ci/csv-check-batch47-rss/attempt-xyp1f13q/release-a space-目录/program.c",
+          "bytes": 46702,
+          "sha256": "6d32d6dd002adda1377bd3eba57d22a49f3cca98dbe2a0b10d77123b18c56a27"
+        }
+      },
+      {
+        "id": "release-b",
+        "mode": "release",
+        "passed": true,
+        "binary": {
+          "path": "compiler/target/ci/csv-check-batch47-rss/attempt-xyp1f13q/release-b space-目录/yavo-csv-check",
+          "bytes": 30456,
+          "sha256": "bd53883ea38843a63561a22bae375298462df64b5743117bdc9087aefdcbb996"
+        },
+        "generated_c": {
+          "path": "compiler/target/ci/csv-check-batch47-rss/attempt-xyp1f13q/release-b space-目录/program.c",
+          "bytes": 46702,
+          "sha256": "6d32d6dd002adda1377bd3eba57d22a49f3cca98dbe2a0b10d77123b18c56a27"
+        }
+      }
+    ],
+    "timings": [
+      {
+        "mode": "debug",
+        "phase": "cold",
+        "sample_count": 1,
+        "p50_ms": null,
+        "p95_ms": null,
+        "cache_classification": "miss",
+        "passed": true,
+        "elapsed_seconds": 22.284126399084926,
+        "peak_process_memory_bytes": 411893760,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum"
+      },
+      {
+        "mode": "debug",
+        "phase": "unchanged",
+        "sample_count": 1,
+        "p50_ms": null,
+        "p95_ms": null,
+        "cache_classification": "hit",
+        "passed": true,
+        "elapsed_seconds": 0.17024411633610725,
+        "peak_process_memory_bytes": 30924800,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum"
+      },
+      {
+        "mode": "debug",
+        "phase": "edited",
+        "sample_count": 1,
+        "p50_ms": null,
+        "p95_ms": null,
+        "cache_classification": "miss",
+        "passed": true,
+        "elapsed_seconds": 0.4860401302576065,
+        "peak_process_memory_bytes": 84553728,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum"
+      },
+      {
+        "mode": "release",
+        "phase": "cold",
+        "sample_count": 1,
+        "p50_ms": null,
+        "p95_ms": null,
+        "cache_classification": "miss",
+        "passed": true,
+        "elapsed_seconds": 4.942009648308158,
+        "peak_process_memory_bytes": 219435008,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum"
+      },
+      {
+        "mode": "release",
+        "phase": "unchanged",
+        "sample_count": 1,
+        "p50_ms": null,
+        "p95_ms": null,
+        "cache_classification": "hit",
+        "passed": true,
+        "elapsed_seconds": 0.020308174192905426,
+        "peak_process_memory_bytes": 31305728,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum"
+      },
+      {
+        "mode": "release",
+        "phase": "edited",
+        "sample_count": 1,
+        "p50_ms": null,
+        "p95_ms": null,
+        "cache_classification": "miss",
+        "passed": true,
+        "elapsed_seconds": 0.8251702692359686,
+        "peak_process_memory_bytes": 90292224,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum"
+      }
+    ],
+    "timing_scope": "One observation per cache condition; no P50/P95 claim",
+    "local_sanitizer": {
+      "status": "unavailable",
+      "passed": null,
+      "mode": "auto",
+      "application_executions": 0,
+      "scope": "Linux GCC ASan/UBSan on stage0 and actual final-stage2 generated C",
+      "reason": "system GCC is unavailable",
+      "limits": [
+        "LeakSanitizer is disabled; separate exit-cleanup gates check tracked leaks.",
+        "No TSan or non-Linux sanitizer claim."
+      ]
+    },
+    "transient_caches_removed": [
+      "compiler/target/ci/csv-check-batch47-rss/attempt-xyp1f13q/debug space-目录/caches",
+      "compiler/target/ci/csv-check-batch47-rss/attempt-xyp1f13q/release-a space-目录/caches",
+      "compiler/target/ci/csv-check-batch47-rss/attempt-xyp1f13q/release-b space-目录/caches",
+      "compiler/target/ci/csv-check-batch47-rss/attempt-xyp1f13q/timing-debug space-目录/caches",
+      "compiler/target/ci/csv-check-batch47-rss/attempt-xyp1f13q/timing-release space-目录/caches"
+    ],
+    "bound_inputs": {
+      "examples/csv-check/SPEC.md": "4a87a12f941122c8dea2244c87ba0124ad72311f20fe1369ba8814237da61a89",
+      "examples/csv-check/tests/cases.json": "a0abf46feaf6185864573641cfc4df6f64776f7b734907dec2f2d4862929f257",
+      "examples/csv-check/tests/oracle.py": "eff38afb971cd0064430cc0623c3e453696b57788700cecc868e2ead7edd82f9",
+      "examples/csv-check/tests/oracle-freeze.json": "41b2504dc0051cf4c5084ce69a13cd4fb9a24a84963006b0400198882038ac83",
+      "tools/ci/csv_support.py": "0e8da36fcf733b741baa53bfef136f23c1f7207edeecebee9059f8a96613b1d1",
+      "compiler/runtime/yavo_rt.h": "b1ac73b27e3620a353cb62dff7ebe6b3ef7b945f7a8b97ae7efcc747bd4ffdfc",
+      "compiler/toolchain.lock": "a9bbe83e644b0e1cee19c8dba8b5157eaed3e9ddc71b96d8aab2b2d2bb15f53c",
+      "tools/ci/test_summary.py": "64df98993057eaf63ddc920c369fe56001634a2f83355dc6d29286698d0f8699",
+      "examples/test-summary/tests/exit_check.h": "77c2b169eabefe4dae59350a8d694e962d5f2746b6a2a5df9a0a056fe8cdb244",
+      "examples/test-summary/tests/cleanup_clean.c": "b2db0ac317eb9e75d8ec4f5fcbbcbd77a5d313cd7d5a873c7471c2ecc660138d",
+      "examples/test-summary/tests/cleanup_leak.c": "ad91d6554ac57fdab13864c92c33d6bfa47d71ede15fd41b826bf4d4d646dfc9",
+      "tools/ci/csv_check.py": "920b707962b79104aab1efb482d0bf350874f2667e8d26bce67b23bd10f26f08",
+      "tools/ci/csv_sanitize.py": "760cab8e062fb711ad3ad76c9454998a773681f4f7a76dfe34918742eb74f8a5",
+      "selfhost/csv_application.py": "3052e562dd1e01686a88713e6372b2cf22746ca74488f94d04f71eb65c0723ee",
+      "examples/csv-check/main.yv": "878624551562be406ccab79818450359ec5557eebd04edc9526343135f2b2584",
+      "examples/csv-check/parser.yv": "10fb26268e3baac19205349a5d8c4bb72f5c1e54fa34f83adbd5c80a36d6220a",
+      "examples/csv-check/report.yv": "89a1bc7d4818b7eb39e9add9d4ac5ed2338529fa100d1ca7156e3d1ff09013a0",
+      "examples/csv-check/validator.yv": "5a4dc8c5c3f6e041fec6331cbb232c555875059be035ffae8a708829ba005b64"
+    },
+    "model_usage": null,
+    "monetary_cost": null
+  },
+  "runner_controls": {
+    "receipt": {
+      "path": "compiler/target/batch47/rss-controls-7x7tqsxm/receipt.json",
+      "bytes": 5414,
+      "sha256": "30126f16256f162a5f1e39528563cfe40214330bb966cd1668b506848c9e61fe"
+    },
+    "status": "passed",
+    "controls": [
+      {
+        "id": "positive",
+        "exit_code": 0,
+        "timed_out": false,
+        "elapsed_seconds": 0.03045092150568962,
+        "peak_process_memory_bytes": 61517824
+      },
+      {
+        "id": "nonzero",
+        "exit_code": 7,
+        "timed_out": false,
+        "elapsed_seconds": 0.03168116323649883,
+        "peak_process_memory_bytes": 27664384
+      },
+      {
+        "id": "timeout-descendants",
+        "exit_code": -9,
+        "timed_out": true,
+        "elapsed_seconds": 1.0049766190350056,
+        "peak_process_memory_bytes": 39530496
+      }
+    ],
+    "wait_returncodes_verified": [
+      {
+        "pid": 2562104,
+        "exit": 0,
+        "rss": 61517824
+      },
+      {
+        "pid": 2562105,
+        "exit": 7,
+        "rss": 27664384
+      },
+      {
+        "pid": 2562106,
+        "exit": -9,
+        "rss": 39530496
+      }
+    ],
+    "failure_cache_cleanup": {
+      "passed": true,
+      "receipt": "compiler/target/batch47/rss-controls-7x7tqsxm/cache-failure/receipt.json"
+    }
+  },
+  "rust": {
+    "debug": {
+      "exit": 0,
+      "groups": 19,
+      "totals": [
+        145,
+        0,
+        1
+      ],
+      "conformance": {
+        "pass": 124,
+        "superseded": 2,
+        "unsupported": 3
+      }
+    },
+    "release": {
+      "exit": 0,
+      "groups": 19,
+      "totals": [
+        145,
+        0,
+        1
+      ],
+      "conformance": {
+        "pass": 124,
+        "superseded": 2,
+        "unsupported": 3
+      }
+    }
+  },
+  "ci": {
+    "status": "pending",
+    "formal_sh4_accepted_applications": 1,
+    "required_applications": 3
+  },
+  "remaining": [
+    "Third independent SH-4 project after CSV native acceptance",
+    "SH-3 normal build/run and diagnostics/tooling replacement",
+    "Current independent agent-cost and product-performance evidence"
+  ],
+  "post_local_formatting": {
+    "kind": "Trailing blank lines only; all other bytes identical",
+    "files": [
+      {
+        "path": "tools/ci/csv_check.py",
+        "local_receipt_sha256": "920b707962b79104aab1efb482d0bf350874f2667e8d26bce67b23bd10f26f08",
+        "committed_sha256": "5c1fc10156dca5cdafb52ada14cb7efc4a6b31d2cef8fd4ebbbb6834c7f681ca",
+        "removed_trailing_newlines": 4
+      },
+      {
+        "path": "tools/ci/csv_sanitize.py",
+        "local_receipt_sha256": "760cab8e062fb711ad3ad76c9454998a773681f4f7a76dfe34918742eb74f8a5",
+        "committed_sha256": "1c304610ffb38a4c1535ae4c1b0cb915a9f0cf4add287a40bb5f82fb6e54ad13",
+        "removed_trailing_newlines": 3
+      }
+    ],
+    "validation": "Local receipts retain their original hashes; exact final bytes will be exercised by required three-platform CI"
+  }
+}

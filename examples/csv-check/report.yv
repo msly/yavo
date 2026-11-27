@@ -1,0 +1,57 @@
+use parser
+use validator
+
+pub struct FileRow {
+    path: String
+    summary: Summary
+}
+
+fn escaped(path: str) -> String {
+    var out = String{}
+    var begin = 0
+    for i in 0..path.len() {
+        let b = path[i]
+        if b == '\\' || b == '\t' || b == '\n' || b == '\r' {
+            out.push(path[begin..i])
+            if b == '\\' {
+                out.push("\\\\")
+            } else if b == '\t' {
+                out.push("\\t")
+            } else if b == '\n' {
+                out.push("\\n")
+            } else {
+                out.push("\\r")
+            }
+            begin = i + 1
+        }
+    }
+    out.push(path[begin..path.len()])
+    return out
+}
+
+pub fn help() {
+    println("Usage: yavo-csv-check [--] [FILE...]")
+}
+
+pub fn usageError() {
+    eprintln("ECLI_USAGE: expected file paths and at most one stdin operand")
+    eprintln("Usage: yavo-csv-check [--] [FILE...]")
+}
+
+pub fn readError(path: str) {
+    let name = escaped(path)
+    eprintln("${name}: EIO_READ: cannot read UTF-8 CSV")
+}
+
+pub fn csvError(path: str, problem: CsvError) {
+    let name = escaped(path)
+    eprintln("${name}:${problem.line}:${problem.column}: ${problem.code}: ${problem.message}")
+}
+
+pub fn table(rows: Vec[FileRow]) {
+    println("file\tcolumns\trows\tbytes")
+    for row in rows {
+        let name = escaped(row.path)
+        println("${name}\t${row.summary.columns}\t${row.summary.rows}\t${row.summary.bytes}")
+    }
+}

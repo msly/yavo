@@ -22,7 +22,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--input', type=Path, default=ROOT / 'compiler/target/ci/test-summary')
     parser.add_argument('--output', type=Path, default=ROOT / 'compiler/target/ci/test-summary.tar.gz')
+    parser.add_argument('--prefix', default='test-summary', help='Single directory name inside the archive')
     args = parser.parse_args()
+    if args.prefix in ('', '.', '..') or '/' in args.prefix or '\\' in args.prefix:
+        parser.error('--prefix must be one nonempty directory name')
     source, output = args.input.resolve(), args.output.resolve()
     if not source.exists():
         print('No application evidence directory was produced; nothing to package.')
@@ -40,7 +43,7 @@ def main():
                     raise ValueError('Unexpected symlink in application evidence')
                 if not path.is_file() and not path.is_dir():
                     raise ValueError('Unexpected special file in application evidence')
-                info = archive.gettarinfo(str(path), arcname='test-summary/' + path.relative_to(source).as_posix())
+                info = archive.gettarinfo(str(path), arcname=args.prefix + '/' + path.relative_to(source).as_posix())
                 info.uid = info.gid = info.mtime = 0
                 info.uname = info.gname = ''
                 if info.isdir():
@@ -56,7 +59,8 @@ def main():
     with output.open('rb') as content:
         for block in iter(lambda: content.read(1024 * 1024), b''):
             digest.update(block)
-    result = {'schema': 'yavo-test-summary-evidence-package/1', 'archive': output.name,
+    schema = 'yavo-test-summary-evidence-package/1' if args.prefix == 'test-summary' else 'yavo-application-evidence-package/1'
+    result = {'schema': schema, 'archive': output.name, 'member_prefix': args.prefix,
               'bytes': output.stat().st_size, 'sha256': digest.hexdigest(),
               'files': files, 'directories': directories, 'payload_bytes': size, 'excluded': ['empty-caches'],
               'preserved': 'Original file contents and relative names, including POSIX control characters'}

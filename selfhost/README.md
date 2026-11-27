@@ -14,6 +14,11 @@ subset of the stage0 language that the compiler itself implements (see
 [decision 20–24](../docs/decisions.md)). It is not yet the default compiler:
 stage0 accepts far more of the language (owned optionals, mutable/reference iteration,
 float formatting, methods, generics, broader Map/Set APIs, closures, threads...).
+Batch 47 adds owned `Set[String]` values, driven by the independently authored
+four-module [csv-check](../examples/csv-check/README.md) application. Its
+source passes stage0 before selfhost support is added. `csv_application.py`
+adds a sixth application compatibility gate; `tools/ci/csv_check.py` separately
+validates the project's native delivery requirements.
 Batch 46 adds read-only `Map[String, int/bool/byte]` traversal and stable
 `Vec[String].sort()`. The unchanged r5/yavo-b/T01 atomic-transfer ledger is
 checked by `ledger_application.py` as a fifth bootstrap application gate.
@@ -103,7 +108,52 @@ and writes `receipt.json` with `achieved: "self-hosted-fixed-point"` and
 `self_hosted: true` only when everything passes. Native CI runs this gate on
 Linux, Windows and macOS; a configured job is not itself a passing result.
 
-## Current validation: batch 46 (2026-11-26)
+## Current validation: batch 47 (2026-11-27)
+
+Owned String sets compile the independently authored four-module CSV checker
+without changing its stage0-accepted source. The matrix has **959 cases and
+274 executable inputs**: 242 run, 32 panic, 524 reject, 123 unsupported and
+38 shared_unsupported. The 34 additions are four run, 21 reject, six unsupported
+and three shared_unsupported fixtures; no older source was promoted. Both
+compilers agree on the targeted classifications, and all four run programs
+pass Debug and Release with allocation checks (16 executions).
+
+The Set fixtures cover ownership transfer, duplicate/empty/UTF-8/NUL keys,
+growth/removal/reinsertion, deep clone, aggregate fields, both Result payloads,
+early exits and receiver locks. Independent checking fixed Set iteration to
+reject with U0001 and Set field default `[:]` to reject with E0001, matching
+the stage0 boundary. Local Set initialization with `[:]` remains accepted.
+
+The sixth compatibility gate, `csv_check_application`, binds the SPEC, four
+modules, independent oracle, fixed cases, runtime, toolchain and gate scripts.
+Its 139 frozen cases include 138 POSIX / 137 Windows cases. Both frontends
+produce Debug, Release and an exit-cleanup Release artifact, giving **828
+POSIX / 822 Windows executions**. Clean/leak controls verify the cleanup
+checker; exact streams, diagnostics and status are compared for every case.
+The native delivery gate separately checks three artifacts, reproducibility,
+cache conditions and Linux required ASan+UBSan on C from each frontend.
+
+Final full local bootstrap passes **959/959, 18/18, zero skips**, with the
+RSS-aware scripts bound. Stage2 and stage3 C are byte-identical at **1,057,805
+bytes**, and their Linux binaries match at **490,192 bytes**. Separate native
+acceptance with those scripts passes **414/414**;
+two independent Release builds produce identical C and 30,456-byte binaries.
+Linux/macOS runners record per-command wait4 RSS, with platform and scope
+stated explicitly; Windows records unavailable rather than an invented value.
+Cold, unchanged and edited builds are single observations, not P50/P95.
+
+The 613 original sources and 392 stage0-accepted members remain byte-identical:
+**112/392** accepted, **52/222** by distinct entry-source bytes, with no gains
+or losses. Adding the four CSV modules gives 617 files, **113/393** accepted
+and **53/223** distinct entries. The final-stage2 scan reports no subset violations
+or timeouts. Complete Rust suites each
+retain 145/0/1 and frozen conformance 124/3/2; no Rust/runtime files changed.
+Three-platform CI remains pending, so formal SH-4 delivery is still one of
+three applications. Six compatibility gates have a different counting scope.
+The [validation index](../compiler/validation/batch47-csv-set-2026-11-27.json)
+retains local receipt identities, compiler hashes and the exact counting scopes.
+
+## Historical validation: batch 46 (2026-11-26)
 
 Read-only Map[String,int/bool/byte] iteration and owned String vector sorting
 compile the original r5/yavo-b/T01 atomic-transfer ledger without source edits.
@@ -370,12 +420,13 @@ JSON diagnostics, suggestions and recovery remain future work.
 | String | Empty construction, str.toString, len, clone, push, output, String/str comparison, UTF-8/NUL; byte indexing; startsWith/endsWith/contains/find/split/parseInt/trim/lines/fields |
 | Vec | Typed empty construction, empty/nonempty literals including Vec[byte], len, consuming push, reserve, recursive clone/drop; stable in-place int/String sort on writable local/field/inout places; zero-argument pop for Copy elements on mutable local/field/inout places; checked reads and index/field/compound assignments for Copy elements; expression-local read-only indexing and field projection for owned elements |
 | Map | Map[String, V] for int/bool/byte values; contextual [:], consuming set, has/getCopy/remove, len/clone, locals/parameters/returns/fields and read-only two-binding traversal |
-| Aggregates | Forward/nested fields, construction, reads and mutable fields; Copy values or owned String/Vec/nested struct fields; constant defaults and empty aggregates; by-value cycles rejected |
+| Set | Set[String], empty []/[:]/Set[String]{}, consuming add, has/remove, len/clone; locals, parameters, returns, fields and Result payloads; iteration remains U0001 |
+| Aggregates | Forward/nested fields, construction, reads and mutable fields; Copy values or owned String/Vec/Map/Set/nested struct fields; constant defaults and empty aggregates; by-value cycles rejected |
 | Tuples | Flat int/byte/bool/non-owning struct/payload-free enum elements; construction, numeric `.0`/`.1` projection, locals, arguments, returns, whole-value assignment/inout and Optional payloads; bounded structural signatures |
 | Enums | Qualified and context-inferred cases, nominal type checks, equality/inequality, case-name output |
 | Literals | Decimal integers including negative `INT64_MIN`, contextual byte-range integers, single-quoted ASCII byte literals and seven escapes, booleans, unit, non-interpolated UTF-8 strings with supported escapes and NUL; vector literals with contextual or first-element type inference |
 | Functions | Typed parameters, scalar/String/Vec/struct/Copy-tuple/unit returns, forward calls and recursion; owned ordinary parameters borrow read-only; `inout` parameters with `&variable` or `&variable.field` arguments (later arguments may not use that root, E0102); borrowed str/Vec[str]/slice returns carry their required `of` sources |
-| Results | User-function `T ! E`, contextual `ok(value)`/`err(error)` and implicit success wrapping, `try`, terminating `catch name { ... }`/`catch _ { ... }`; owned String/Vec/struct payloads and cleanup on propagation |
+| Results | User-function `T ! E`, contextual `ok(value)`/`err(error)` and implicit success wrapping, `try`, terminating `catch name { ... }`/`catch _ { ... }`; owned String/Vec/Map/Set/struct payloads and cleanup on propagation |
 | Optionals | `?T` for int/byte/bool/non-owning struct/payload-free enum/flat Copy tuple; `some`, contextual `none`, implicit wrapping, isSome/isNone, lazy `??` and terminating `??` fallbacks; `if let` with else/else-if-let and `_` |
 | Text slices | `s[start..end]` on str/String with int bounds and P-INDEX/P-STR-BOUNDARY checks; views of owned values may be bound locally while their owner stays unchanged; escaping the owner scope remains rejected |
 | Standard calls | `take(&place)` for String/Vec places; `os.args()` (len, indexing to static str), `os.exit(code)`; `io.readAll`, `fs.readText`, `fs.writeNewText` and `String.fromUtf8` only with a `catch _ { ... }` handler that cannot fall through (E0601) |
@@ -392,7 +443,7 @@ must be handled or explicitly discarded with `let _ = ...`. Plain unit-returning
 functions allow `return` or `return ()`. The parser bounds syntactic nesting
 at 128 and expression lowering at 256; exceeding either returns `U0001`.
 
-Aggregate fields may hold int, byte, bool, String, supported vectors, payload-free
+Aggregate fields may hold int, byte, bool, String, supported vectors/Maps/Sets, payload-free
 enums or nested structs. Borrowed `str` fields are rejected with E0301;
 unit fields remain outside this subset. Struct equality/printing/clone and enum ordering are
 rejected consistently with stage0. Explicit constructor fields are evaluated
@@ -467,6 +518,27 @@ is E0305, matching stage0. Local views produced by `key.trim()` may be used
 inside the iteration; returning them, assigning them to outer bindings or
 storing them in another Vec remains U0001. Explicit/mutable references and
 other Map key/value types remain outside this subset.
+
+### String sets
+
+`Set[String]` is a distinct owned language type. Locals can use `[]`, `[:]` or
+`Set[String]{}`; fields accept `[]` as a constant default. Stage0 rejects `[:]`
+as a Set field default, and the subset preserves that distinction. Nonempty
+vector literals cannot initialize a Set.
+
+Supported methods are `add`, `remove`, `has`, `len` and `clone`. `add` consumes
+the owned String key and returns unit. A duplicate insertion drops the incoming
+key and keeps the original. Text queries accept str or String; `remove` returns
+bool and drops the stored key only when present. Clones own independent keys.
+Locals, fields, parameters, returns and either Result payload can contain Sets;
+ordinary scope and early-exit cleanup releases their keys and storage.
+
+The C representation reuses `Map[String, bool]` helpers with a hidden true value,
+while type checking keeps Set and Map distinct. Writable receivers retain the
+existing reservation rules during argument evaluation. A read-only query whose
+argument modifies or moves its own receiver remains U0001. Set iteration,
+`take`, other key types, direct `Vec[Set[String]]` and owned Optional payloads
+remain outside this subset. These are explicit U0001 boundaries.
 
 ### Copy tuples
 
@@ -761,12 +833,12 @@ executable fixtures from earlier increments.
 
 ## Next steps
 
-Self-hosting remains a regression gate: batch46 has 925 fixtures, 17 checks
-and five application gates. The next delivery target is the second formal
-SH-4 project, a structured-text validation CLI with a frozen real format,
-multiple modules, failure cases, resource checks, reproducible builds and
-native Linux/Windows/macOS acceptance. Implement with stage0 first, preserve
-its source, then address the selfhost features it actually requires.
+Self-hosting remains a regression gate: batch47 has 959 fixtures, 18 checks
+and six application gates. Complete CSV native acceptance, then deliver the
+third formal SH-4 project: an independent multi-file dependency/index CLI with
+a frozen format and oracle, failure cases, resource checks, reproducible builds
+and native Linux/Windows/macOS acceptance. Implement with stage0 first,
+preserve its source, then address the selfhost features it actually requires.
 
 The unchanged r5/yavo-b/T02 strict CSV program is an existing regression target
 for owned Optionals. Current stage2 rejects its `?Vec[String]` at 3:24; closing
@@ -779,7 +851,7 @@ only exposes check/emit-c; stable diagnostics and ordinary build/run with the
 locked backend come before wider cache/fix/verify migration. Coverage of the
 existing regressions, frozen specification, resources and native platforms is
 required before the daily default switches from Rust. Formal SH-4 remains one
-of three applications; cost and performance need their own current evidence.
+of three pending CSV native CI; cost and performance need separate current evidence.
 
 ## Historical snapshots
 

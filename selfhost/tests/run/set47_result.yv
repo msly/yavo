@@ -1,0 +1,50 @@
+fn key(fail: bool) -> String ! String {
+    if fail { return err("failed".toString()) }
+    return "later".toString()
+}
+fn make(fail: bool) -> Set[String] ! String {
+    var tags: Set[String] = [:]
+    tags.add("before".toString())
+    tags.add(try key(fail))
+    return tags
+}
+fn count(fail: bool) -> int {
+    let tags = make(fail) catch message {
+        assert(message == "failed")
+        return 7
+    }
+    return tags.len()
+}
+fn failure() -> int ! Set[String] {
+    var tags: Set[String] = []
+    tags.add("error".toString())
+    return err(tags)
+}
+fn propagate() -> int ! Set[String] {
+    var guard: Set[String] = []
+    guard.add("guard".toString())
+    return try failure()
+}
+fn errorCount() -> int {
+    let value = propagate() catch tags {
+        assert(tags.len() == 1 && tags.has("error"))
+        return 9
+    }
+    return value
+}
+fn main() {
+    assert(count(false) == 2 && count(true) == 7)
+    var sum = 0
+    for i in 0..4 {
+        let guard = make(false) catch _ { return }
+        let tags = make(i == 1) catch _ { continue }
+        sum += guard.len() + tags.len()
+        if i == 2 { break }
+    }
+    assert(sum == 8)
+    let _ = make(false)
+    let _ = make(true)
+    let _ = failure()
+    assert(errorCount() == 9)
+    println("set results ok")
+}

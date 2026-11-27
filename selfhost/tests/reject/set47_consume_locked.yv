@@ -1,0 +1,5 @@
+fn modify(tags: inout Set[String]) -> String { tags.add("inner".toString())
+ return "outer".toString() }
+fn main() { var tags: Set[String] = []
+ tags.add(modify(&tags))
+}
