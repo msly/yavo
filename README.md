@@ -17,10 +17,10 @@ replacement and SH-4 non-compiler application acceptance separate from the
 completed SH-2 fixed point. The first application,
 [yavo-test-summary](examples/test-summary/README.md), a verifier for existing
 experiment logs, has passed independent acceptance on all three native platforms.
-This completes **one of the three SH-4 applications**; both stage0 and the
-selfhost compiler can build it, with the selfhost build checked by bootstrap.
-The second candidate, [csv-check](examples/csv-check/README.md), now passes
-independent local acceptance; its three-platform CI gate is pending.
+The second application, [csv-check](examples/csv-check/README.md), also passes
+independent acceptance on all three platforms. **Two of the three SH-4
+applications are complete**; both stage0 and selfhost build them, with the
+selfhost artifacts checked by bootstrap.
 
 The specification starts from **v0.5**, with dated revisions in [docs/decisions.md](docs/decisions.md). Historical revisions remain unchanged under `history/v0.x/` and Git tags `v0.1` through `v0.5`.
 
@@ -63,7 +63,7 @@ Map[String,bool] C helpers. Its String keys have one owner; duplicate insertion
 drops the incoming key. Set iteration, other key types, direct Vec[Set] and
 owned Optional remain explicit subset boundaries.
 
-The second independent SH-4 candidate is the four-module, 271-line
+The second independent SH-4 application is the four-module, 271-line
 [csv-check](examples/csv-check/README.md). It validates UTF-8 CSV from stdin or
 multiple files, enforces nonempty unique headers and a consistent column count,
 and emits an atomic TSV report or a located diagnostic. Its contract and 139
@@ -85,8 +85,10 @@ one observation with actual miss/hit/miss cache states.
 The frozen original corpus remains **112/392 accepted paths**, or **52/222**
 distinct entry-source byte sequences. Adding the four new application modules
 gives **113/393**, or **53/223**; the original programs have no gains or losses.
-The final-stage2 scan has zero subset violations and timeouts; native CI is
-pending. Full Rust Debug/Release suites each
+The final-stage2 scan has zero subset violations and timeouts. [run 45937402633](https://github.com/msly/yavo/actions/runs/45937402633)
+for implementation `0373fb8` passes **6/6 jobs**: all three native bootstrap
+and CSV gates, Linux CSV ASan+UBSan on both frontends' C, and the existing
+selfhost/independent checks. Full Rust Debug/Release suites each
 pass 145/0/1 and frozen conformance 124/3/2; Rust and the runtime are unchanged.
 The [validation index](compiler/validation/batch47-csv-set-2026-11-27.json)
 binds these local results; see [HANDOFF section 27](HANDOFF.md) for remaining acceptance.
@@ -458,9 +460,9 @@ and [module/thread audit](experiments/coldstart-2026-11-22-r5/evidence/manual-re
 
 ## Next work and acceptance gates
 
-1. Extend the subset for the original r5/yavo-b/T01 atomic-transfer ledger: read-only Map[String,int] iteration and Vec[String].sort(). Validate ASCII key order, transaction commit/rollback, exact output and ownership cleanup against its archived contract. See [HANDOFF.md](HANDOFF.md).
-2. Preserve the completed [SH-2 fixed point](docs/self-hosting.md), Result, Copy Optional/pop, for, real lexer allocation checks and stage2 ASan/UBSan gate. Retain all four application regression gates, actual resource checks and zero subset violations.
-3. Complete SH-3 before making it the default compiler. Finish the second SH-4 application's native acceptance, then deliver an independent multi-file dependency/index project with frozen conformance, diagnostics, resource checks and reproducible native builds.
+1. SH-4 has two accepted applications. Deliver the third independent multi-file dependency/index CLI: freeze its format, cross-file relationships and missing/conflicting/cyclic input behavior, implement it with stage0, then address the selfhost blockers without rewriting the application. See [HANDOFF.md](HANDOFF.md).
+2. Preserve the completed [SH-2 fixed point](docs/self-hosting.md), ownership and collection behavior, real lexer allocation checks and stage2 ASan/UBSan gate. Retain all six application regression gates, actual resource checks and zero subset violations.
+3. Complete SH-3 before making it the default compiler: ordinary build/run with the locked backend, structured source diagnostics, semantic coverage and subsequent cache/fix/verify migration. Keep frozen conformance, resource checks and native platform acceptance as replacement gates.
 4. Resume the qualified [per-request executor](tools/agent_eval/README.md), [prepared document experiment](experiments/docs-ab-2026-11-22-r6/README.md), 60-task pilot and formal cost study as later product evidence. Live API qualification is still **blocked**, with **0 round-six participant sessions**; it no longer blocks compiler development.
 5. Remaining v1 functionality includes user test blocks and `yavo test`, local/Git dependencies and a lockfile, FFI/unsafe/audit, general closures/higher-order parameters, public movable Join and `spawn inout`. Prioritize these only when required by the declared application scope or a concrete bootstrap blocker.
 

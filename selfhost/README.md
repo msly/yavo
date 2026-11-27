@@ -148,8 +148,11 @@ or losses. Adding the four CSV modules gives 617 files, **113/393** accepted
 and **53/223** distinct entries. The final-stage2 scan reports no subset violations
 or timeouts. Complete Rust suites each
 retain 145/0/1 and frozen conformance 124/3/2; no Rust/runtime files changed.
-Three-platform CI remains pending, so formal SH-4 delivery is still one of
-three applications. Six compatibility gates have a different counting scope.
+Implementation `0373fb8` passes **6/6 jobs** in [run 45937402633](https://github.com/msly/yavo/actions/runs/45937402633).
+Native Linux, Windows and macOS pass bootstrap and both formal application
+gates; Linux additionally passes CSV ASan+UBSan on stage0 and final-stage2 C.
+Formal SH-4 delivery is **two of three applications**. Six compatibility gates
+have a different counting scope.
 The [validation index](../compiler/validation/batch47-csv-set-2026-11-27.json)
 retains local receipt identities, compiler hashes and the exact counting scopes.
 
@@ -834,8 +837,8 @@ executable fixtures from earlier increments.
 ## Next steps
 
 Self-hosting remains a regression gate: batch47 has 959 fixtures, 18 checks
-and six application gates. Complete CSV native acceptance, then deliver the
-third formal SH-4 project: an independent multi-file dependency/index CLI with
+and six application gates. The next delivery is the third formal SH-4 project:
+an independent multi-file dependency/index CLI with
 a frozen format and oracle, failure cases, resource checks, reproducible builds
 and native Linux/Windows/macOS acceptance. Implement with stage0 first,
 preserve its source, then address the selfhost features it actually requires.
@@ -850,8 +853,8 @@ SH-3 also needs an explicit normal-entrypoint milestone. The current compiler
 only exposes check/emit-c; stable diagnostics and ordinary build/run with the
 locked backend come before wider cache/fix/verify migration. Coverage of the
 existing regressions, frozen specification, resources and native platforms is
-required before the daily default switches from Rust. Formal SH-4 remains one
-of three pending CSV native CI; cost and performance need separate current evidence.
+required before the daily default switches from Rust. Formal SH-4 is two
+of three applications; cost and performance need separate current evidence.
 
 ## Historical snapshots
 

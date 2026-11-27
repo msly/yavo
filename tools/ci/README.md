@@ -18,9 +18,9 @@ binds the run, job/step results and artifact metadata. It preserves the original
 platform status. That historical run sanitized stage1-generated applications,
 not the stage2 compiler itself.
 
-## Batch 47 CSV application acceptance (native CI pending)
+## Batch 47 CSV application acceptance
 
-`examples/csv-check` is the next independent application being qualified for
+`examples/csv-check` is the second independent application accepted for
 SH-4. Its frozen contract and Python oracle contain **139 manual scenarios**:
 138 apply on Linux/macOS and 137 on Windows. The remaining cases are explicitly
 not applicable because of native filename or directory-stdin behavior. They are
@@ -71,8 +71,12 @@ verified from the successful bootstrap receipt. The existing general selfhost
 sanitizer gate does not substitute for this application coverage. Other native
 platforms use `--sanitizers off`, recorded as not applicable. This local host has
 no GCC: its sanitizer result is **unavailable, passed null, zero executions**.
-Three-platform CI and the required Linux sanitizer results are still pending;
-this local receipt does not establish completion of a second SH-4 project.
+Implementation `0373fb8` passes **6/6 jobs** in [run 45937402633](https://github.com/msly/yavo/actions/runs/45937402633).
+All three native bootstrap and CSV application steps, CSV evidence packaging
+and artifact upload succeed. Linux passes the required two-producer sanitizer
+gate (276 CSV executions) as well as the general selfhost sanitizer gate.
+The [validation index](../../compiler/validation/batch47-csv-set-2026-11-27.json)
+records exact-head job/step verification separately from the local receipts.
 
 The shared `csv_support.py` preserves raw stdin/stdout/stderr, commands, exit
 status, elapsed time and memory observations, and bounds subprocess trees on

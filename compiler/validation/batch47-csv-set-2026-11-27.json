@@ -1,6 +1,6 @@
 {
   "schema": "yavo-batch47-validation-index/1",
-  "recorded_at_utc": "2026-11-27T04:00:29.607419+00:00",
+  "recorded_at_utc": "2026-11-27T04:44:25.362438+00:00",
   "batch": 47,
   "scope": "Set[String] subset support and the independently authored CSV application; local results and exact-head CI kept separate",
   "local_source_context": {
@@ -234,7 +234,182 @@
     "violations": [],
     "timeouts": [],
     "counting_scope": "All original 613 non-selfhost non-target workspace paths, including archived snapshots; unique counts deduplicate entry-file bytes, not tasks or module graphs",
-    "original_sources_unchanged": true
+    "original_sources_unchanged": true,
+    "first_blockers": [
+      {
+        "reason": "this standard module is outside the selfhost subset",
+        "paths": 35
+      },
+      {
+        "reason": "type is outside the selfhost subset",
+        "paths": 24
+      },
+      {
+        "reason": "Map values other than int, bool and byte are outside the selfhost subset",
+        "paths": 23
+      },
+      {
+        "reason": "tuple vector elements are outside the selfhost subset",
+        "paths": 22
+      },
+      {
+        "reason": "closures are outside the selfhost subset",
+        "paths": 18
+      },
+      {
+        "reason": "generic types and interfaces are outside the selfhost subset",
+        "paths": 17
+      },
+      {
+        "reason": "floating-point numbers are not in the bootstrap subset",
+        "paths": 16
+      },
+      {
+        "reason": "type suffix is outside the selfhost subset",
+        "paths": 9
+      },
+      {
+        "reason": "numeric conversions are outside the selfhost subset",
+        "paths": 8
+      },
+      {
+        "reason": "expression is outside the selfhost SH-1 subset",
+        "paths": 7
+      },
+      {
+        "reason": "numeric type constants are outside the selfhost subset",
+        "paths": 7
+      },
+      {
+        "reason": "statement is outside the selfhost SH-1 subset",
+        "paths": 7
+      },
+      {
+        "reason": "type 'i64' is outside the selfhost subset",
+        "paths": 7
+      },
+      {
+        "reason": "item is outside the selfhost subset",
+        "paths": 6
+      },
+      {
+        "reason": "methods are outside the selfhost subset",
+        "paths": 6
+      },
+      {
+        "reason": "nested Optional and container payloads are outside the selfhost subset",
+        "paths": 6
+      },
+      {
+        "reason": "this Optional payload type is outside the selfhost subset",
+        "paths": 6
+      },
+      {
+        "reason": "dereference is outside the selfhost subset",
+        "paths": 5
+      },
+      {
+        "reason": "expression catch handlers are outside the selfhost subset",
+        "paths": 5
+      },
+      {
+        "reason": "standard-library error bindings are outside this subset; use catch _",
+        "paths": 5
+      },
+      {
+        "reason": "borrowed returns viewing several owned strings are outside this subset",
+        "paths": 4
+      },
+      {
+        "reason": "enum payloads are outside the selfhost subset",
+        "paths": 4
+      },
+      {
+        "reason": "generics are outside the selfhost SH-1 subset",
+        "paths": 4
+      },
+      {
+        "reason": "vectors of views into owned values are outside this subset",
+        "paths": 3
+      },
+      {
+        "reason": "Map keys other than String are outside the selfhost subset",
+        "paths": 2
+      },
+      {
+        "reason": "assert messages are outside the selfhost subset",
+        "paths": 2
+      },
+      {
+        "reason": "generic expressions are outside the selfhost subset",
+        "paths": 2
+      },
+      {
+        "reason": "nested Vec elements are outside the selfhost subset",
+        "paths": 2
+      },
+      {
+        "reason": "type 'u8' is outside the selfhost subset",
+        "paths": 2
+      },
+      {
+        "reason": "vector slices are outside the selfhost subset",
+        "paths": 2
+      },
+      {
+        "reason": "zero-argument output is outside the selfhost subset",
+        "paths": 2
+      },
+      {
+        "reason": "Optional fields are outside the selfhost subset",
+        "paths": 1
+      },
+      {
+        "reason": "Set elements other than String are outside the selfhost subset",
+        "paths": 1
+      },
+      {
+        "reason": "block statements are outside the selfhost subset",
+        "paths": 1
+      },
+      {
+        "reason": "builtin is outside the selfhost subset",
+        "paths": 1
+      },
+      {
+        "reason": "indexed places for owned vector elements are outside this subset",
+        "paths": 1
+      },
+      {
+        "reason": "slices of this element type are outside the selfhost subset",
+        "paths": 1
+      },
+      {
+        "reason": "tuple destructuring is outside the selfhost subset",
+        "paths": 1
+      },
+      {
+        "reason": "type 'i32' is outside the selfhost subset",
+        "paths": 1
+      },
+      {
+        "reason": "type 'i8' is outside the selfhost subset",
+        "paths": 1
+      },
+      {
+        "reason": "type 'u32' is outside the selfhost subset",
+        "paths": 1
+      },
+      {
+        "reason": "vector method is outside the selfhost subset",
+        "paths": 1
+      },
+      {
+        "reason": "while let is outside the selfhost SH-1 subset",
+        "paths": 1
+      }
+    ],
+    "first_blocker_scope": "First refusal only among stage0-accepted paths; removing it does not imply whole-program acceptance"
   },
   "set_fixtures": {
     "classifications": {
@@ -648,12 +823,94 @@
     }
   },
   "ci": {
-    "status": "pending",
-    "formal_sh4_accepted_applications": 1,
+    "status": "passed",
+    "observed_at": "2026-11-27T04:42:34.069181+00:00",
+    "implementation_commit": "0373fb8a36579a4db8d2fbaedfc853e3bb242492",
+    "url": "https://github.com/msly/yavo/actions/runs/45937402633",
+    "run_id": 45937402633,
+    "attempt": 1,
+    "conclusion": "success",
+    "successful_jobs": 6,
+    "platform_steps": [
+      {
+        "name": "Native Linux x86_64",
+        "Run Debug and Release sequentially": "success",
+        "Build and validate the Yavo-written subset frontend": "success",
+        "Validate the test-summary CLI application": "success",
+        "Validate the csv-check CLI application": "success",
+        "Package CSV application evidence": "success",
+        "Preserve logs and per-platform receipts": "success",
+        "Check Yavo-frontend C with independent ASan and UBSan": "success"
+      },
+      {
+        "name": "Native Windows x86_64",
+        "Run Debug and Release sequentially": "success",
+        "Build and validate the Yavo-written subset frontend": "success",
+        "Validate the test-summary CLI application": "success",
+        "Validate the csv-check CLI application": "success",
+        "Package CSV application evidence": "success",
+        "Preserve logs and per-platform receipts": "success"
+      },
+      {
+        "name": "Native macOS arm64",
+        "Run Debug and Release sequentially": "success",
+        "Build and validate the Yavo-written subset frontend": "success",
+        "Validate the test-summary CLI application": "success",
+        "Validate the csv-check CLI application": "success",
+        "Package CSV application evidence": "success",
+        "Preserve logs and per-platform receipts": "success"
+      }
+    ],
+    "jobs": [
+      {
+        "name": "Agent evaluation preparation",
+        "head_sha": "0373fb8a36579a4db8d2fbaedfc853e3bb242492",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/msly/yavo/actions/runs/45937402633/job/140303678727"
+      },
+      {
+        "name": "Native Linux x86_64",
+        "head_sha": "0373fb8a36579a4db8d2fbaedfc853e3bb242492",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/msly/yavo/actions/runs/45937402633/job/140303679004"
+      },
+      {
+        "name": "Native Windows x86_64",
+        "head_sha": "0373fb8a36579a4db8d2fbaedfc853e3bb242492",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/msly/yavo/actions/runs/45937402633/job/140303679036"
+      },
+      {
+        "name": "Independent Linux ASan and UBSan",
+        "head_sha": "0373fb8a36579a4db8d2fbaedfc853e3bb242492",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/msly/yavo/actions/runs/45937402633/job/140303679122"
+      },
+      {
+        "name": "Native macOS arm64",
+        "head_sha": "0373fb8a36579a4db8d2fbaedfc853e3bb242492",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/msly/yavo/actions/runs/45937402633/job/140303679142"
+      },
+      {
+        "name": "Round-five experiment evidence",
+        "head_sha": "0373fb8a36579a4db8d2fbaedfc853e3bb242492",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/msly/yavo/actions/runs/45937402633/job/140303679226"
+      }
+    ],
+    "evidence_scope": "GitHub API verifies exact implementation head, all six jobs, and required native application/sanitizer/packaging steps; CI artifact payloads not downloaded",
+    "formal_sh4_accepted_applications": 2,
     "required_applications": 3
   },
   "remaining": [
-    "Third independent SH-4 project after CSV native acceptance",
+    "Third independent SH-4 project",
     "SH-3 normal build/run and diagnostics/tooling replacement",
     "Current independent agent-cost and product-performance evidence"
   ],
@@ -673,6 +930,6 @@
         "removed_trailing_newlines": 3
       }
     ],
-    "validation": "Local receipts retain their original hashes; exact final bytes will be exercised by required three-platform CI"
+    "validation": "Exact final bytes exercised by the required three-platform CI run recorded above; local receipts retain their original hashes"
   }
 }

@@ -1,16 +1,16 @@
-# Yavo 交接文档（2026-11-27，第四十七批：Set[String] 与独立 CSV 校验 CLI，待三平台 CI）
+# Yavo 交接文档（2026-11-27，第四十七批：Set[String] 与第二个正式 CLI 交付）
 
 给下一个会话：先读第 1、2、10、26、27 节及 docs/self-hosting.md、selfhost/README.md 再开工。第二十七至第三十批在 `history/handoff-batches-2026-11-23-to-24.md`，第十二至第二十六批在 `history/handoff-batches-2026-11-21-to-23.md`，第六至第十一批在 `history/handoff-batches-2026-11-19-to-21.md`。
 
 ## 1. 一句话状态
 
-**第四十七批实现 Set[String]，独立实现四模块、271行的严格 CSV 校验 CLI 候选；最终本机自举959/959、18/18已通过，三平台 CI 待验收。** `examples/csv-check` 先按冻结合同用 stage0 完整实现，再保持应用原文补 selfhost 的唯一实际阻塞 Set。支持拥有键的构造、add/has/remove/len/clone、字段及 Result 载荷，Set 与 Map 保持不同语言类型。
+**第四十七批实现 Set[String]，交付四模块、271行的严格 CSV 校验 CLI；最终本机自举959/959、18/18和三平台CI 6/6均已通过。** `examples/csv-check` 先按冻结合同用 stage0 完整实现，再保持应用原文补 selfhost 的唯一实际阻塞 Set。支持拥有键的构造、add/has/remove/len/clone、字段及 Result 载荷，Set 与 Map 保持不同语言类型。
 
 原613个源文件及392个stage0接受成员未变，最终stage2覆盖仍为 **112/392**，入口字节去重 **52/222**；加入CSV四模块后为617文件、393个stage0接受输入，最终stage2 **113/393**，去重 **53/223**，退步/越界/超时0。新增接受项是本批完整CSV入口。
 
-当前语料 **959 cases**（新增34、无提升：242run、32panic、524reject、123unsupported、38shared_unsupported），最终完整本机自举 **959/959、18/18、0 skip**。本批无Rust/runtime改动，Rust Debug/Release各 **145/0/1**，冻结 **124/3/2**。CSV独立冻结139场景，POSIX适用138；最终bootstrap双方六产物 **828/828**，新RSS runner的native三种执行产物 **414/414**。RSS与异常清缓存补丁已纳入最终完整自举且输入身份检查通过；CI待提交后执行。
+当前语料 **959 cases**（新增34、无提升：242run、32panic、524reject、123unsupported、38shared_unsupported），最终完整本机自举 **959/959、18/18、0 skip**。本批无Rust/runtime改动，Rust Debug/Release各 **145/0/1**，冻结 **124/3/2**。CSV独立冻结139场景，POSIX适用138；最终bootstrap双方六产物 **828/828**，新RSS runner的native三种执行产物 **414/414**。RSS与异常清缓存补丁已纳入最终完整自举且输入身份检查通过；实现提交 `0373fb8` 的 [run 45937402633](https://github.com/msly/yavo/actions/runs/45937402633) 六项成功，三平台原生CSV与Linux双份C sanitizer均通过。
 
-**SH-2 引导子集固定点已闭合；SH-3 尚未接替，Rust stage0 仍承担日常编译；SH-4 正式交付当前仍为 1/3。** CSV是第二个正式项目候选，须等三平台CI、Linux双份C sanitizer全部通过后回填2/3。selfhost仍只有check/emit-c；普通build/run、结构化诊断及其他工具入口尚待移植。下一步是第三个独立多文件依赖/索引CLI，按其实际依赖扩充子集；每批门槛保持 `docs/decisions.md` 第九节。
+**SH-2 引导子集固定点已闭合；SH-3 尚未接替，Rust stage0 仍承担日常编译；SH-4 正式交付完成 2/3。** test-summary与csv-check均已通过三平台独立验收，CSV的Linux双份C sanitizer亦通过。selfhost仍只有check/emit-c；普通build/run、结构化诊断及其他工具入口尚待移植。下一步是第三个独立多文件依赖/索引CLI，按其实际依赖扩充子集；每批门槛保持 `docs/decisions.md` 第九节。
 
 ## 2. 仓库与环境
 
@@ -196,12 +196,11 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 
 ## 10. 下一个会话的第一步
 
-1. 检查 Git 状态、最新实现提交与 CI；先读第27节、[自举路线](docs/self-hosting.md)、[selfhost说明](selfhost/README.md)。第47批最终959/959、18/18、0 skip，新RSS runner的native414/414与最终stage2覆盖复扫均已通过；三平台CI待回填。
-2. **先完成CSV第二个正式项目的最终验收。** 保持冻结的SPEC、四模块源码、139条固定案例及独立oracle；核对三平台本机运行、普通/退出清理产物、空缓存C/二进制复现、两份C的Linux ASan/UBSan及输入身份。完成后SH-4从1/3回填2/3，保留首次完整编译和唯一Set阻塞记录。
-3. **下一批目标为第三个独立多文件依赖/索引CLI。** 先冻结真实文件格式、跨文件引用/依赖关系、模块划分、成功输出及缺失/冲突/循环等失败语义，再独立实现oracle和应用。先用stage0自然实现，再按保持原文的selfhost结果补具体阻塞；文件与进程API、拥有Optional或更广Map值仅在实际依赖出现时纳入。
-4. **SH-3 正常入口单列验收**：当前selfhost只有check/emit-c。先补稳定源位置/错误码/结构化诊断与普通build/run、锁定工具链驱动，再按依赖迁移cache/fix/verify；默认切换还须满足既有回归、冻结规格、资源与三平台条件。保持U0001显式，不静默转交Rust前端。
-5. 拥有Optional的现成回归目标仍为原始 `experiments/coldstart-2026-11-22-r5/runs/yavo-b/tasks/T02/final/main.yv`，SHA256 `8e03caaec0bf7d2b8ccef92b9ab485035fc91cd88d8e8c159f224df178c470f7`；第46批stage2首拒3:24的 `?Vec[String]`。需覆盖拥有载荷的构造、移动/返回、if-let借用、分支及提前退出析构。其他首拒涉及标准模块、元组Vec、闭包、更广Map值、泛型/接口及浮点，首拒计数不能预测完整程序收益；Set遍历/take及拥有Optional仍显式U0001。
-6. R5仍缺token/金额，R6真实请求、会话和交付均为0；有已授权且完成资格验证的计量环境才恢复。成本实验不阻塞当前工程，但不能用语言特性或兼容门数量代替成本验收。
+1. 检查 Git 状态、最新实现提交与 CI；先读第27节、[自举路线](docs/self-hosting.md)、[selfhost说明](selfhost/README.md)。第47批最终959/959、18/18、0 skip，新RSS runner的native414/414与最终stage2覆盖复扫均已通过；实现 `0373fb8` 的 [run 45937402633](https://github.com/msly/yavo/actions/runs/45937402633) 已6/6成功，完整证据见第27节及验证索引。
+2. **下一批目标为第三个独立多文件依赖/索引CLI。** 先冻结真实文件格式、跨文件引用/依赖关系、模块划分、成功输出及缺失/冲突/循环等失败语义，再独立实现oracle和应用。先用stage0自然实现，再按保持原文的selfhost结果补具体阻塞；文件与进程API、拥有Optional或更广Map值仅在实际依赖出现时纳入。
+3. **SH-3 正常入口单列验收**：当前selfhost只有check/emit-c。先补稳定源位置/错误码/结构化诊断与普通build/run、锁定工具链驱动，再按依赖迁移cache/fix/verify；默认切换还须满足既有回归、冻结规格、资源与三平台条件。保持U0001显式，不静默转交Rust前端。
+4. 拥有Optional的现成回归目标仍为原始 `experiments/coldstart-2026-11-22-r5/runs/yavo-b/tasks/T02/final/main.yv`，SHA256 `8e03caaec0bf7d2b8ccef92b9ab485035fc91cd88d8e8c159f224df178c470f7`；第46批stage2首拒3:24的 `?Vec[String]`。需覆盖拥有载荷的构造、移动/返回、if-let借用、分支及提前退出析构。其他首拒涉及标准模块、元组Vec、闭包、更广Map值、泛型/接口及浮点，首拒计数不能预测完整程序收益；Set遍历/take及拥有Optional仍显式U0001。
+5. R5仍缺token/金额，R6真实请求、会话和交付均为0；有已授权且完成资格验证的计量环境才恢复。成本实验不阻塞当前工程，但不能用语言特性或兼容门数量代替成本验收。
 
 正式门槛仍按 `docs/plan.md`：配对通过率差的单侧95%下界至少−5个百分点，单位成功交付成本较Rust低至少20%并独立复现；冻结运行基准几何均值不超过C的1.5倍。工程指标包括小程序编译P50≤200ms、Linux小程序strip产物≤250KB、Windows原生测试及可复现构建。历史四微基准、PCH测量和本批CSV单次构建观察均不替代正式性能门；最终目录stage2编译器490,192字节与CSV Release应用30,456字节分别记录。
 
@@ -398,18 +397,18 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - **本机验收**：完整自举925/925、17/17、0 skip；stage2/stage3 C **1,039,982字节**、Linux二进制 **484,496字节**逐字节一致。C SHA256 `661b1a564a2af55946b44fc3717419a99cd3cb35050edc291eaa300496ae8b2d`，二进制SHA256 `cebfe5fe704adbe56ca7c44b6462a19503050d569109af96dec6a48bd08d8aa6`。真实lexer、五项应用门及输入不变检查通过；回执在compiler/target/ci/selfhost-batch46/receipt.json，work为run-_nhr3raf。
 - **CI**：实现提交 `bc8aefa` 的 [run 45826605112](https://github.com/msly/yavo/actions/runs/45826605112) **6/6成功**（首次运行）。Linux x86-64、Windows x86-64、macOS arm64的Rust Debug/Release、自举及应用门全部通过；Linux selfhost生成C/stage2 ASan/UBSan与三个独立作业成功。已分别核对run及jobs：head为 `bc8aefa53a469de4cdc888652efbf8bae4e559b4`、main、push、attempt1，六job均completed/success；Windows最后作业于2026-11-26北京时间21:52:15完成。
 
-## 27. 第四十七批：Set[String] 与独立 CSV 校验 CLI（2026-11-27，待三平台 CI）
+## 27. 第四十七批：Set[String] 与独立 CSV 校验 CLI（2026-11-27）
 
-- **基线与目标**：基线 `84cd8ef`。第二个正式SH-4项目候选为 `examples/csv-check`，main/parser/validator/report四模块共271行；[SPEC](examples/csv-check/SPEC.md)先冻结，应用作者未读取独立oracle输出。完整项目首次stage0 check成功，仅W0003未使用导入；删除该导入后冻结源码，Debug/Release均0错误、0警告，无行为修复。八次完整编译调用及源码/工具身份见[开发记录](examples/csv-check/evidence/DEVELOPMENT.md)，未把局部片段探针算成项目交付。
+- **基线与目标**：基线 `84cd8ef`。第二个正式SH-4项目为 `examples/csv-check`，main/parser/validator/report四模块共271行；[SPEC](examples/csv-check/SPEC.md)先冻结，应用作者未读取独立oracle输出。完整项目首次stage0 check成功，仅W0003未使用导入；删除该导入后冻结源码，Debug/Release均0错误、0警告，无行为修复。八次完整编译调用及源码/工具身份见[开发记录](examples/csv-check/evidence/DEVELOPMENT.md)，未把局部片段探针算成项目交付。
 - **真实阻塞**：第46批stage2对冻结原文只在 `validator.yv:15:20` 的Set构造报U0001；补Set后候选stage1/stage2均可check/emit-c，无需改写CSV程序或引入拥有Optional。
 - **Set边界**：仅拥有型 `Set[String]`；局部支持 `[]`、`[:]`、`Set[String]{}`，字段默认值只支持 `[]`。`add`消费String并返回Unit，重复键释放新传入所有者；`has/remove`接受str或String查询且不消费查询值，remove删除时释放存储键并返回bool；支持len和独立拥有键的clone。局部、参数、返回、结构体字段及Result成功/错误载荷均接入正常与提前退出析构。C内部复用Map[String,bool] helper，语言类型检查仍禁止Set/Map互换。
 - **审查修复与限制**：保留写接收者的两阶段预留及借用检查；只读查询参数反过来修改/移动其接收者仍U0001。独立审查修正Set遍历误报E0001、非空Set初始化的分类及字段默认 `[:]` 被误接受三处边界；Set遍历/take、其他键类型、直接Vec[Set[String]]及拥有Optional仍U0001。新增34例（run4、reject21、unsupported6、shared_unsupported3），无旧例提升；总计959（242/32/524/123/38）。
 - **CSV合同**：完整UTF-8解码后逐记录解析；支持引号、双引号转义、逗号、LF/CRLF及引号内跨行字段。表头按解码后内容判非空/唯一且不trim，数据列数须一致；同行词法优先、早记录结构错误先于后记录词法错误。行列按UTF-8字节，结构错误定位记录起始行第1列；拒绝裸CR、开头BOM、除TAB外的ASCII控制符与DEL。stdin/文件可组合，首个失败仅写一条稳定stderr且stdout原子；退出码成功0、CSV错误1、用法2、读取/UTF-8错误3。
 - **独立预期**：139条手工合同预期与独立字节解析oracle在执行应用前一致；POSIX适用138，Windows适用137，其余明确not_applicable。冻结记录为 `examples/csv-check/tests/oracle-freeze.json`；cases SHA256 `a0abf46feaf6185864573641cfc4df6f64776f7b734907dec2f2d4862929f257`，oracle SHA256 `eff38afb971cd0064430cc0623c3e453696b57788700cecc868e2ead7edd82f9`，SPEC SHA256 `4a87a12f941122c8dea2244c87ba0124ad72311f20fe1369ba8814237da61a89`。
-- **应用门矩阵**：bootstrap第18项 `csv_check_application`优先最终stage2，双方Debug/Release及双方Release exit-shim共六产物，POSIX828次、Windows822次；最终本机828/828。独立native门运行Debug、Release、exit-shim三种产物，POSIX414次、Windows411次，另建独立空缓存Release副本比较C/二进制。清洁/泄漏退出控制先校准，成功和错误路径均检查输出、退出与清理。Linux CI须先通过独立GCC clean/UAF/overflow控制，再对stage0 C及从最终bootstrap stage2重新生成的C各跑138例，共276次sanitizer执行；当前此项待CI。
+- **应用门矩阵**：bootstrap第18项 `csv_check_application`优先最终stage2，双方Debug/Release及双方Release exit-shim共六产物，POSIX828次、Windows822次；最终本机828/828。独立native门运行Debug、Release、exit-shim三种产物，POSIX414次、Windows411次，另建独立空缓存Release副本比较C/二进制。清洁/泄漏退出控制先校准，成功和错误路径均检查输出、退出与清理。Linux CI须先通过独立GCC clean/UAF/overflow控制，再对stage0 C及从最终bootstrap stage2重新生成的C各跑138例，共276次sanitizer执行；Linux原生CI已通过此项；Linux/macOS六产物门各完成828/828、Windows822/822，native三产物门对应414/414和411/411。
 - **新runner本机native**：`compiler/target/ci/csv-check-batch47-rss/attempt-xyp1f13q/receipt.json`为passed，414/414、3次native构建、6次计时构建，Release两副本C/二进制逐字节相同。应用C46,702字节，SHA256 `6d32d6dd002adda1377bd3eba57d22a49f3cca98dbe2a0b10d77123b18c56a27`；Release二进制30,456字节，SHA256 `bd53883ea38843a63561a22bae375298462df64b5743117bdc9087aefdcbb996`。Debug冷/不变/注释编辑为22.284126/0.170244/0.486040秒，Release为4.942010/0.020308/0.825170秒，均miss/hit/miss；各条件只有一次观察，非P50/P95。锁定工具链预安装、空缓存和含空格/非ASCII路径均纳入验收，源/工件首尾身份一致。
 - **RSS与超时**：新runner全部431条命令均有wait4 RSS，最大417,312,768字节；414次应用执行最大26,951,680字节。Linux将ru_maxrss KiB转bytes，macOS为bytes，Windows不可测时留null及原因；这是OS对waited child的报告，非同时进程树RSS总量。正常exit0、非零exit7和带子/孙进程超时控制均通过，超时1.005秒返回−9且三PID均已终止；手动reap同步Popen.returncode。finally路径清缓存通过注入构建异常控制，新native五棵缓存均清除。控制回执在 `compiler/target/batch47/rss-controls-7x7tqsxm/receipt.json`；本机无GCC，sanitizer为unavailable/null，未记为通过。
 - **覆盖口径**：原613文件、392个stage0接受成员和全部原字节不变；最终stage2仍112/392，去重52/222。加CSV四模块后617文件、393个stage0接受，最终stage2为113/393，去重53/223；退步/越界/超时0。最终扫描在 `compiler/target/batch47/final-stage2-coverage.json`；该增量为一个完整CSV入口，覆盖计数不换算SH里程碑完成率。
 - **Rust与首轮自举**：无Rust/runtime改动；Debug/Release各145/0/1，冻结124/3/2。首轮完整自举959/959、18/18、0 skip，回执 `compiler/target/ci/selfhost-batch47/run-wc7teq0m/receipt.json`。stage2/3 C1,057,613字节，SHA256 `694a454c2e1ba59f4b19fd2bd1e4a641472433e74e53f461baf8b576b4416ded`；Linux二进制490,144字节，SHA256 `7dfc1373b1e0ab8ae510c61565abdc93e813748d8869905124a89e255675bcbe`，两代逐字节一致。
 - **最终自举**：新runner的 `compiler/target/ci/selfhost-batch47-final/receipt.json` 已通过959/959、18/18、0 skip，六项应用门及输入身份检查全部通过，stage2/3 C与二进制逐字节一致。较长输出目录进入源诊断路径，故本轮C为1,057,805字节、SHA256 `6b88386c7a52c839e6c937345250a7125e187d61686cdab9f0c766dcd5ab8107`，二进制490,192字节、SHA256 `9d3e68bce7b96e59ddd25281a1787d2b006b3aeae8e99c66955b66344d5a5cbb`；首轮身份仅保留为该次运行历史。
-- **待闭合项**：首轮之后发现可观测RSS恒为null及失败时冷缓存未清理两个验收器缺口，已修复并重跑native。RSS脚本冻结后的完整959例、18项门及最终stage2覆盖复扫均已通过；[验证索引](compiler/validation/batch47-csv-set-2026-11-27.json)保存回执、输入与产物身份。实现提交、三平台CI与Linux双份C sanitizer尚待执行/核验。SH-4当前仍1/3，以上全部完成后回填2/3；SH-3仍check/emit-c。下一批为第三个独立多文件依赖/索引CLI。
+- **验收修复与CI**：首轮之后发现可观测RSS恒为null及失败时冷缓存未清理两个验收器缺口，已修复并重跑native。RSS脚本冻结后的完整959例、18项门及最终stage2覆盖复扫均已通过；[验证索引](compiler/validation/batch47-csv-set-2026-11-27.json)保存回执、输入与产物身份。实现提交 `0373fb8a36579a4db8d2fbaedfc853e3bb242492` 的 [run 45937402633](https://github.com/msly/yavo/actions/runs/45937402633) **6/6成功**，首次运行。已核对main/push/exact head、三平台bootstrap/CSV/归档/上传及Linux双份C sanitizer和selfhost sanitizer步骤；CI归档内容未另行下载，平台结论依据执行脚本的必需门与API成功状态。SH-4正式交付更新为2/3；SH-3仍check/emit-c。下一批为第三个独立多文件依赖/索引CLI。

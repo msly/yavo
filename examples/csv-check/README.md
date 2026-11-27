@@ -170,9 +170,24 @@ one sample:
 | Release | Comment-edited copy | miss | 0.825 | 90,292,224 |
 
 This host has no GCC, so its sanitizer result is `unavailable`, `passed: null`,
-with zero sanitizer application executions. Native Linux/Windows/macOS CI and
-the required Linux two-producer sanitizer run remain pending. These local results
-do not yet establish completion of a second formal SH-4 application.
+with zero sanitizer application executions. This local limitation is preserved
+in its receipt.
+
+## Native CI acceptance
+
+Implementation `0373fb8` passes **6/6 jobs** in [run 45937402633](https://github.com/msly/yavo/actions/runs/45937402633).
+Linux x86-64, Windows x86-64 and macOS arm64 pass full bootstrap and this
+application's separate native gate. Bootstrap covers 828 executions on each
+POSIX platform and 822 on Windows; the separate native gate covers 414 and
+411 respectively. All platforms pass independent Release reproduction, cleanup
+controls and source/artifact guards. Linux also passes the required GCC
+ASan+UBSan capability controls and all **276 CSV executions** across stage0
+and final-stage2 C. Evidence packaging/upload succeeds on all three platforms.
+
+This completes the **second of three formal SH-4 applications**. The
+[validation index](../../compiler/validation/batch47-csv-set-2026-11-27.json)
+binds local receipts and exact-head CI job/step results; CI artifact payloads
+were preserved by the jobs and were not downloaded for this summary.
 
 ## Development evidence
 

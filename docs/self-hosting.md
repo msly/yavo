@@ -1,6 +1,6 @@
 # Yavo 自举路线与实用验收
 
-2026-11-27 · 第四十七批加入 Set[String] 与独立 CSV 校验 CLI；最终959/959、18/18通过，CI待验收，SH-3尚未接替
+2026-11-27 · 第四十七批加入 Set[String] 与独立 CSV 校验 CLI；最终959/959、18/18与三平台CI 6/6通过，正式CLI交付2/3，SH-3尚未接替
 
 近期主目标改为：**用 Yavo 实现 Yavo 编译器，完成可重放的自举闭环，再让它承担日常编译工作。** 自举用于暴露真实工程中的语言和工具链缺口；实用验收继续独立执行。
 
@@ -39,7 +39,7 @@
 | SH-1：可用的子集编译器 | 在 `selfhost/` 中实现真实词法器、解析器、最小语义检查和 C 生成；公布精确输入子集 | stage0 构建成功；外部正向程序运行结果正确；负向程序在前端拒绝；未实现语法明确报错；支持的行为与 stage0 差分一致 | 已完成：子集覆盖编译器自身源码；第三十一批语料扩展到 490 例，当前验收见下节 |
 | SH-2：最小自举闭环 | 输入子集覆盖编译器全部 Yavo 源码；可由外部驱动构建 | 在独立目录、清空产物的条件下完成 stage0 → stage1 → stage2 → stage3；stage2/3 对固定输入生成的 C 一致，独立程序结果一致；记录所有源码、运行时、工具链和构建参数的身份 | **已闭合（引导子集）**：stage2.c 与 stage3.c 逐字节一致，stage2/stage3 二进制一致，stage2 在全部用例上与 stage1 输出相同；三平台原生固定点基线及第三十一批扩展均已确认，当前证据见下节 |
 | SH-3：主编译器接替 | 逐步覆盖当前 Rust 前端支持的语义、模块与诊断；承接正常构建入口 | 现有回归与冻结规格报告无未解释退步；独立错误输入与资源测试通过；Linux、Windows、macOS 原生执行相应验收；日常开发默认用自举编译器 | 尚未接替，Rust stage0 仍是主编译器 |
-| SH-4：声明范围内的实用交付 | 以非编译器应用验证语言、库、工具和分发 | 下节中的应用、诊断、可重放构建、资源和平台门槛通过，明确支持范围与仍缺能力 | 当前1/3：test-summary已完成；第二个csv-check候选本机门通过，三平台CI与双份C sanitizer待验收，完成后才回填2/3 |
+| SH-4：声明范围内的实用交付 | 以非编译器应用验证语言、库、工具和分发 | 下节中的应用、诊断、可重放构建、资源和平台门槛通过，明确支持范围与仍缺能力 | 当前2/3：test-summary与csv-check均完成三平台独立验收；CSV两份C的Linux sanitizer通过，第三个多文件依赖/索引项目待交付 |
 
 SH-1 的结果只标为“子集编译器”。SH-2 可以标为“子集自举完成”，同时列出尚未移植的语言能力。覆盖全部当前语言能力并完成 SH-3 后，才把自举实现作为主编译器交付。阶段编号不换算为项目完成百分比。
 
@@ -47,9 +47,9 @@ SH-1 的结果只标为“子集编译器”。SH-2 可以标为“子集自举�
 
 ## 当前进度
 
-### 第四十七批：Set[String] 与独立 CSV 校验 CLI（待三平台 CI）
+### 第四十七批：Set[String] 与独立 CSV 校验 CLI
 
-本批基线 `84cd8ef`，第二个正式独立应用候选 [csv-check](../examples/csv-check/README.md) 为main/parser/validator/report四模块、271行。先冻结[SPEC](../examples/csv-check/SPEC.md)并用stage0完整实现，首次check成功，仅移除一条未使用导入后冻结源码，Debug/Release均0错误、0警告；没有行为修复。第46批stage2对原文的唯一实际阻塞是 `validator.yv:15:20` 的Set构造U0001。补Set后候选stage1/stage2直接check/emit-c成功；八次完整编译尝试的源码、工具和结果见[开发记录](../examples/csv-check/evidence/DEVELOPMENT.md)。
+本批基线 `84cd8ef`，第二个正式独立应用 [csv-check](../examples/csv-check/README.md) 为main/parser/validator/report四模块、271行。先冻结[SPEC](../examples/csv-check/SPEC.md)并用stage0完整实现，首次check成功，仅移除一条未使用导入后冻结源码，Debug/Release均0错误、0警告；没有行为修复。第46批stage2对原文的唯一实际阻塞是 `validator.yv:15:20` 的Set构造U0001。补Set后候选stage1/stage2直接check/emit-c成功；八次完整编译尝试的源码、工具和结果见[开发记录](../examples/csv-check/evidence/DEVELOPMENT.md)。
 
 `Set[String]`支持拥有局部、参数、返回、结构体字段及Result两侧载荷，接入正常与return/try/catch/break/continue清理。局部空构造为 `[]`、`[:]`、`Set[String]{}`，字段默认仅 `[]`；add消费String并返回Unit，重复键释放传入所有者，has/remove借用str或String查询，remove释放删除的存储键并返回bool，len/clone可用。C复用Map[String,bool] helper，语言类型仍区分Set/Map。保留接收者预留与借用检查；Set遍历/take、其他键、直接Vec[Set[String]]、拥有Optional及查询参数修改自身接收者仍U0001。独立审查修正遍历错误分类、非空初始化分类及字段默认 `[:]` 误接受三处边界。
 
@@ -59,9 +59,9 @@ CSV支持完整UTF-8验证、严格引号/双引号转义、逗号、LF/CRLF和�
 
 | 验收路径 | POSIX执行数 | Windows执行数 | 当前证据 |
 | --- | ---: | ---: | --- |
-| bootstrap第18项csv_check_application：stage0/stage2各Debug、Release、Release exit-shim | 828 | 822 | 新runner最终本机828/828；三平台CI待验收 |
-| native：Debug、Release、exit-shim；另建独立Release副本做复现 | 414 | 411 | 新RSS runner本机414/414；Windows/macOS待CI |
-| 独立GCC ASan/UBSan：stage0 C、最终stage2重新emit的C | Linux 276 | 不适用 | clean/UAF/overflow能力控制先行；本机无GCC，unavailable/null；Linux CI required待验收 |
+| bootstrap第18项csv_check_application：stage0/stage2各Debug、Release、Release exit-shim | 828 | 822 | 最终本机828/828；三平台原生门均通过 |
+| native：Debug、Release、exit-shim；另建独立Release副本做复现 | 414 | 411 | 本机414/414；Linux/macOS414、Windows411均通过 |
+| 独立GCC ASan/UBSan：stage0 C、最终stage2重新emit的C | Linux 276 | 不适用 | clean/UAF/overflow能力控制先行；本机无GCC，unavailable/null；Linux CI required已通过276次 |
 
 普通及退出清理产物均验证精确输出和退出码，清洁/泄漏控制校准exit-shim；SPEC、oracle、固定输入、应用、验收脚本、运行时、锁定工具链和产物首尾身份受检查。native使用预安装锁定Zig，在含空格/非ASCII的独立目录内建两个空缓存Release副本，生成C与二进制逐字节相同：应用C46,702字节，SHA256 `6d32d6dd002adda1377bd3eba57d22a49f3cca98dbe2a0b10d77123b18c56a27`；Release产物30,456字节，SHA256 `bd53883ea38843a63561a22bae375298462df64b5743117bdc9087aefdcbb996`。回执为 `compiler/target/ci/csv-check-batch47-rss/attempt-xyp1f13q/receipt.json`，3次native构建、6次计时构建均通过。
 
@@ -85,7 +85,7 @@ Set新增34例、无旧例提升，矩阵959=242run+32panic+524reject+123unsuppo
 | 第46批冻结原集合，路径及字节未改 | 613 | 392 | 112 | 52/222 |
 | 加入CSV四模块后的集合 | 617 | 393 | 113 | 53/223 |
 
-最终stage2扫描退步/越界/超时均0，回执在 `compiler/target/batch47/final-stage2-coverage.json`。首轮自举后补齐了可观测RSS和失败路径清缓存，验收器输入已改变，新runner的最终完整自举已独立重跑通过；[验证索引](../compiler/validation/batch47-csv-set-2026-11-27.json)记录新回执与产物身份。实现提交、三平台CI及Linux两份C sanitizer尚待验收；**SH-4当前仍1/3，全部通过后回填2/3**。SH-3仍只有check/emit-c，正常build/run、结构化诊断与默认接替另计。下一批目标为第三个独立多文件依赖/索引CLI。
+最终stage2扫描退步/越界/超时均0，回执在 `compiler/target/batch47/final-stage2-coverage.json`。首轮自举后补齐了可观测RSS和失败路径清缓存，验收器输入已改变，新runner的最终完整自举已独立重跑通过；[验证索引](../compiler/validation/batch47-csv-set-2026-11-27.json)记录新回执与产物身份。实现提交 `0373fb8` 的 [run 45937402633](https://github.com/msly/yavo/actions/runs/45937402633) **6/6成功**；三平台原生bootstrap、CSV、证据归档/上传以及Linux两份C sanitizer均通过。验证索引保存精确提交与job/step结果，CI归档内容未另行下载。**SH-4正式交付更新为2/3**。SH-3仍只有check/emit-c，正常build/run、结构化诊断与默认接替另计。下一批目标为第三个独立多文件依赖/索引CLI。
 
 ### 第四十六批：Map 遍历、String 排序与原始原子账本 CLI（历史记录）
 
@@ -278,7 +278,7 @@ str 与 String 接收者支持 `startsWith`/`endsWith`/`contains`（bool）、`f
 | 已完成 | 整数 min/max 与文本 diff CLI | 第四十四批：本机 875/875、15/15、0 skip；三项应用回归；原有覆盖98→99/391，含新 P0 共100/392、0越界；三平台CI 6/6 |
 | 已完成 | 整数 Vec 排序与窗口中位数 CLI | 第四十五批：本机897/897、16/16、0 skip；第四项应用回归28场景/112执行；覆盖100→106/392、0越界；三平台CI 6/6 |
 | 已完成 | Map遍历、String排序与原子账本CLI | 第四十六批925/925、17/17、0 skip；第五应用32场景/128执行；覆盖106→112/392、0越界；三平台CI 6/6 |
-| 待三平台CI | Set[String]及第二个正式独立应用csv-check | 第47批最终959/959、18/18；139固定案例，POSIX六产物828次、新runner native414次及最终stage2覆盖复扫通过；三平台及Linux双份C sanitizer闭合后计入SH-4第2项 |
+| 已完成 | Set[String]及第二个正式独立应用csv-check | 第47批最终959/959、18/18，三平台CI 6/6；139固定案例，POSIX六产物828次/native414次、Windows822/411、Linux双份C sanitizer276次；SH-4更新为2/3 |
 | 下一步 | 第三个独立多文件依赖/索引CLI | 冻结真实文件格式、跨文件依赖、模块及缺失/冲突/循环等失败语义；独立oracle与stage0自然实现，保持应用原文按实际阻塞扩充selfhost，再完成资源/复现/三平台门 |
 | 接替阶段 | SH-3接替 | 完成普通check/build/run、稳定及结构化诊断，保持既有回归/冻结规格/资源/三平台门，再默认使用selfhost；cache/fix/verify按依赖迁移 |
 
@@ -321,7 +321,7 @@ str 与 String 接收者支持 `startsWith`/`endsWith`/`contains`（bool）、`f
 ## 工作优先级
 
 1. SH-1、SH-2 已完成；保持三平台固定点及已建立的 Linux stage2 编译器自身 ASan/UBSan 回归门。
-2. 完成csv-check第二个正式项目的最终复验与CI，再用stage0实现第三个独立多文件依赖/索引CLI；保持应用原文，按实际依赖扩充自举子集，延续既有回归、冻结规格和原生平台检查。
+2. 用stage0实现第三个独立多文件依赖/索引CLI；保持应用原文，按实际依赖扩充自举子集，延续既有回归、冻结规格和原生平台检查。
 3. 逐步完成 SH-3 日常编译与诊断接替，并独立完成 SH-4 声明范围内的实用验收。
 4. 既有 agent 成本实验和文档对照实验保留为后续产品证据；有授权的可计量环境后继续，不再作为自举开发的前置步骤。已有结果与未执行状态保持原样。
 
