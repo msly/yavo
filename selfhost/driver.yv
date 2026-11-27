@@ -164,6 +164,23 @@ fn cleanup(directory: str) -> bool {
     return true
 }
 
+fn prepareBuildOutput(path: str) -> bool {
+    // Linkers may keep an existing file's non-executable permissions. Replace
+    // its directory entry only after front-end/source-identity checks finish.
+    fs.removeFile(path) catch _ {
+        let remains = fs.sameFile(path, path) catch _ {
+            eprintln("C toolchain failed: cannot inspect output: ${path}")
+            return false
+        }
+        if remains {
+            eprintln("C toolchain failed: cannot replace output: ${path}")
+            return false
+        }
+        return true
+    }
+    return true
+}
+
 fn buildInside(options: BuildOptions, generated: str, source: str, directory: str,
                executable: str, backendPath: str, args: []str) -> int {
     fs.writeNewText(source, generated) catch _ {
@@ -200,6 +217,7 @@ fn buildInside(options: BuildOptions, generated: str, source: str, directory: st
     compilerArgs.push(source.toString())
     compilerArgs.push("-o".toString())
     compilerArgs.push(executable.toString())
+    if !options.runMode && !prepareBuildOutput(executable) { return 4 }
     let compiled = process.run(backendPath, compilerArgs, true) catch _ {
         eprintln("cannot start pinned C toolchain: ${backendPath}")
         return 3

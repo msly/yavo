@@ -109,7 +109,12 @@ const HELPER: &str = r#"
 #ifdef _WIN32
 #include <windows.h>
 #include <wchar.h>
+#include <io.h>
+#include <fcntl.h>
 int wmain(int argc, wchar_t **argv) {
+    /* The oracle writes exact bytes; do not let the CRT translate LF to CRLF. */
+    if (_setmode(_fileno(stdout), _O_BINARY) == -1 ||
+        _setmode(_fileno(stderr), _O_BINARY) == -1) return 97;
     if (argc > 2 && wcscmp(argv[1], L"slow") == 0) {
         HANDLE file = CreateFileW(argv[2], GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
         if (file == INVALID_HANDLE_VALUE) return 98;
