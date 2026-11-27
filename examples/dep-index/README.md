@@ -126,9 +126,17 @@ Token usage and monetary cost are unmeasured; this application does not establis
 the separate relative-delivery-cost target.
 
 
+
 ### Complete selfhost and platform acceptance
 
 The final full bootstrap passes **1,027/1,027 cases, 19/19 checks, zero skips**.
 This application's actual final-stage2 and stage0 artifacts pass **672/672**
 executions on the local Linux host; all bound sources and artifacts stay unchanged.
-Three-platform CI and the required independent Linux sanitizer gate are pending.
+Implementation `cc78059` passes **6/6 jobs** in [run 45955439200](https://github.com/msly/yavo/actions/runs/45955439200); all three native gates and Linux independent dual-producer C sanitizers pass.
+
+CI executes **672 bootstrap / 336 native** application cases on each of Linux
+and macOS, and **642 / 321** on Windows. Linux independently executes
+**224 ASan+UBSan runs** against stage0 and final-stage2 C, with required
+positive and negative controls. Platform-inapplicable filename cases retain
+explicit not-applicable status. The CI job/step evidence is recorded in the
+[validation index](../../compiler/validation/batch48-dep-index-2026-11-27.json).

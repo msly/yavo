@@ -4,13 +4,13 @@
 
 ## 1. 一句话状态
 
-**第四十八批交付五模块、309行的独立依赖索引CLI，并补齐其拥有型图结构依赖；最终本机自举1,027/1,027、19/19、0 skip。** `examples/dep-index` 的合同、113项独立预期与oracle先冻结，stage0自然实现后五份应用源码保持原字节。三平台CI及Linux独立sanitizer待推送后验收。
+**第四十八批交付五模块、309行的独立依赖索引CLI，并补齐其拥有型图结构依赖；最终本机自举1,027/1,027、19/19、0 skip。** `examples/dep-index` 的合同、113项独立预期与oracle先冻结，stage0自然实现后五份应用源码保持原字节。实现提交 `cc78059` 的 [run 45955439200](https://github.com/msly/yavo/actions/runs/45955439200) **6/6成功**，三平台原生门及Linux双前端C sanitizer均通过。
 
 原613文件、392个stage0接受成员不变，最终stage2 **112→117/392**，入口字节去重 **52→54/222**；包含CSV的上批617文件为 **113→118/393**。加入dep-index五模块后622文件、**119/394**，去重 **56/224**；退步/越界/超时0。五条历史增长来自两种sink程序，新增完整dep-index入口另计。
 
 清单 **1,027项**（68新增、2旧例原字节提升：271run、34panic、549reject、135unsupported、38shared_unsupported）。七项应用门及输入身份通过；最终stage2/stage3 C **1,171,654字节**，Linux二进制 **545,632字节**，分别逐字节一致。dep-index的POSIX六产物 **672/672**、独立native **336/336**。Rust/runtime未改；Debug/Release各145/0/1，冻结124/3/2。
 
-**SH-4正式独立应用仍为2/3**；第三个dep-index已完成本机验收，待三平台CI后计入。 **SH-2保持固定点；SH-3尚未接替，Rust stage0仍是日常主编译器。** 下一批优先公开进程/环境/临时文件接口和锁定后端驱动，形成普通build/run无缓存闭环，再迁移结构化诊断及其他工具入口。性能P50及相对Rust交付成本优势仍需独立验收。
+**SH-4正式独立应用完成3/3**：test-summary、csv-check与dep-index均完成声明范围内的三平台验收。 **SH-2保持固定点；SH-3尚未接替，Rust stage0仍是日常主编译器。** 下一批优先公开进程/环境/临时文件接口和锁定后端驱动，形成普通build/run无缓存闭环，再迁移结构化诊断及其他工具入口。性能P50及相对Rust交付成本优势仍需独立验收。
 
 ## 2. 仓库与环境
 
@@ -196,7 +196,7 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 
 ## 10. 下一个会话的第一步
 
-1. 检查Git状态与最新CI，先读第28节、[自举路线](docs/self-hosting.md)和[selfhost说明](selfhost/README.md)。第48批最终1,027/1,027、19/19、0 skip；最终stage2覆盖119/394，完整身份见[验证索引](compiler/validation/batch48-dep-index-2026-11-27.json)。三平台CI及Linux独立sanitizer待推送后验收。
+1. 检查Git状态与最新CI，先读第28节、[自举路线](docs/self-hosting.md)和[selfhost说明](selfhost/README.md)。第48批最终1,027/1,027、19/19、0 skip；最终stage2覆盖119/394，完整身份见[验证索引](compiler/validation/batch48-dep-index-2026-11-27.json)。实现提交 `cc78059` 的 [run 45955439200](https://github.com/msly/yavo/actions/runs/45955439200) **6/6成功**，三平台原生门及Linux双前端C sanitizer均通过。
 2. **下一批转向SH-3普通build/run的系统接口。** stage0尚无公开进程启动、环境读取、文件状态及目录创建/删除API；`compiler/src/process.rs`属于Rust验证器内部设施。先冻结无shell argv、标准流继承/捕获、启动失败、退出/信号状态、唯一临时目录和失败清理的合同，再补所需接口。
 3. **锁定后端驱动单列验收。** 复用 `compiler/src/toolchain.rs` 的工具链定位、C17/优化参数和诊断转发。先做已安装工具链下的无缓存build/run，覆盖空格/Unicode路径、缺后端、C编译失败和程序非零退出；安装下载、缓存/PCH、fix/verify按依赖后移。默认接替仍须满足既有语义、冻结规格、结构化诊断、资源与三平台门，不能静默转交Rust前端。
 4. 一般拥有Optional仍是语言缺口：现仅支持允许的平坦String元组Optional，`?Vec[String]`、`?String`、更广Heap/Map、元组Vec、捕获闭包、泛型和浮点尚未覆盖。既有原始T02可继续作为真实目标，保持历史源码；首拒桶不直接预测完整项目收益。
@@ -414,6 +414,7 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - **验收修复与CI**：首轮之后发现可观测RSS恒为null及失败时冷缓存未清理两个验收器缺口，已修复并重跑native。RSS脚本冻结后的完整959例、18项门及最终stage2覆盖复扫均已通过；[验证索引](compiler/validation/batch47-csv-set-2026-11-27.json)保存回执、输入与产物身份。实现提交 `0373fb8a36579a4db8d2fbaedfc853e3bb242492` 的 [run 45937402633](https://github.com/msly/yavo/actions/runs/45937402633) **6/6成功**，首次运行。已核对main/push/exact head、三平台bootstrap/CSV/归档/上传及Linux双份C sanitizer和selfhost sanitizer步骤；CI归档内容未另行下载，平台结论依据执行脚本的必需门与API成功状态。SH-4正式交付更新为2/3；SH-3仍check/emit-c。下一批为第三个独立多文件依赖/索引CLI。
 
 
+
 ## 28. 第四十八批：拥有型图结构与独立依赖索引 CLI（2026-11-27）
 
 - **基线与应用**：基线 `5e527961eba9fbf4547251b42a8b1f21daff5b05`；五模块309行，源项目SHA256 `a48f8f8dc9879fa5101efb67d72232a91f61c23a575edaa983fa4f6992d84f64`。SPEC先冻结，应用作者未读selfhost或独立预期；两次check、两次build，仅修else同行语法。应用原文未为selfhost改写；见[开发记录](examples/dep-index/evidence/DEVELOPMENT.md)。
@@ -423,4 +424,4 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - **最终本机**：完整自举 **1027/1027、19/19、0 skip**，七项应用门、真实lexer及输入身份通过。C **1,171,654字节**、SHA256 `4bab3b7a9711045e910a99300b6710435132e1b769164670b2cc72707617163f`；Linux二进制 **545,632字节**、SHA256 `1d39ff5a88157ce680676510c215720e9d4f19be7acf800d1f1480b57244987c`，stage2/3逐字节一致。最终回执 `compiler/target/ci/selfhost-batch48-complete/receipt.json`。
 - **应用与资源**：最终stage2/0六产物672/672，独立native336/336。stage0独立Release C62,982字节，二进制39,328字节，两副本字节相同；Release冷/不变/编辑5.109620/0.008643/1.022913秒，均单次miss/hit/miss。353/353命令有wait4 RSS，最大425,816,064字节；本机无GCC，sanitizer为unavailable/null。CI要求Linux对两个实际producer的C执行ASan+UBSan，正负控必须先通过。
 - **覆盖与Rust**：原613文件和392个stage0接受成员字节不变，112→117/392，去重52→54/222；上批617文件113→118/393；全622文件119/394、去重56/224。历史新增五路径为两种sink源，dep-index新增一个完整入口；退步/越界/超时0。无Rust/runtime变更，完整Debug/Release各145/0/1，冻结124/3/2。
-- **CI与目标**：三平台CI及Linux独立sanitizer待推送后验收。 **SH-4正式独立应用仍为2/3**；第三个dep-index已完成本机验收，待三平台CI后计入。 SH-3仍check/emit-c；公开系统接口、锁定后端普通build/run、结构化诊断和更广语义仍是主工程。性能与成本目标另验收。完整来源见[验证索引](compiler/validation/batch48-dep-index-2026-11-27.json)。
+- **CI与目标**：实现提交 `cc78059` 的 [run 45955439200](https://github.com/msly/yavo/actions/runs/45955439200) **6/6成功**，三平台原生门及Linux双前端C sanitizer均通过。 **SH-4正式独立应用完成3/3**：test-summary、csv-check与dep-index均完成声明范围内的三平台验收。 SH-3仍check/emit-c；公开系统接口、锁定后端普通build/run、结构化诊断和更广语义仍是主工程。性能与成本目标另验收。完整来源见[验证索引](compiler/validation/batch48-dep-index-2026-11-27.json)。

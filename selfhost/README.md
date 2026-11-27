@@ -140,7 +140,7 @@ or 52 to 54/222 by entry-source bytes. Including CSV and dep-index gives
 regressions, strict-subset violations or timeouts. The five historical gains
 are two sink programs with archived copies; the dependency index adds one entry.
 
-Three-platform CI and the required independent Linux sanitizer gate are pending. **Two of three formal SH-4 applications are complete; dep-index awaits platform CI.** Seven compatibility gates use a separate counting scope.
+Implementation `cc78059` passes **6/6 jobs** in [run 45955439200](https://github.com/msly/yavo/actions/runs/45955439200); all three native gates and Linux independent dual-producer C sanitizers pass. **All three formal SH-4 applications are complete within their declared scope.** Seven compatibility gates use a separate counting scope.
 SH-3, formal performance thresholds and relative delivery-cost acceptance remain
 open. See the [validation index](../compiler/validation/batch48-dep-index-2026-11-27.json).
 

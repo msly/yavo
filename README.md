@@ -16,7 +16,7 @@ language. The [roadmap](docs/self-hosting.md) separates SH-3 replacement from
 SH-4 application acceptance and the completed SH-2 fixed point.
 [test-summary](examples/test-summary/README.md), [csv-check](examples/csv-check/README.md)
 and [dep-index](examples/dep-index/README.md) cover log statistics, structured
-text validation and dependencies across files. **Two of three formal SH-4 applications are complete; dep-index awaits platform CI.**
+text validation and dependencies across files. **All three formal SH-4 applications are complete within their declared scope.**
 The next engineering step is public process/environment/filesystem support for
 a locked-toolchain `build/run` path; performance and delivery-cost targets retain
 their separate acceptance requirements.
@@ -74,7 +74,7 @@ builds. Original-corpus coverage rises **112 to 117/392**; including both new
 applications gives **119/394**, or **56/224** distinct entry-source bytes, with
 zero regressions, subset violations or timeouts. Rust and runtime are unchanged.
 
-Three-platform CI and the required independent Linux sanitizer gate are pending. **Two of three formal SH-4 applications are complete; dep-index awaits platform CI.** General owned Optionals, broader containers/closures,
+Implementation `cc78059` passes **6/6 jobs** in [run 45955439200](https://github.com/msly/yavo/actions/runs/45955439200); all three native gates and Linux independent dual-producer C sanitizers pass. **All three formal SH-4 applications are complete within their declared scope.** General owned Optionals, broader containers/closures,
 ordinary selfhost build/run and structured diagnostics remain open. See
 [HANDOFF section 28](HANDOFF.md) and the
 [validation index](compiler/validation/batch48-dep-index-2026-11-27.json).

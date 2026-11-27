@@ -727,8 +727,123 @@
     }
   },
   "ci": {
-    "status": "pending",
-    "required_successful_jobs": 6
+    "status": "passed",
+    "observed_at": "2026-11-27T07:54:22.856363+00:00",
+    "implementation_commit": "cc78059fc78f916b659534978cc6ae211e866546",
+    "url": "https://github.com/msly/yavo/actions/runs/45955439200",
+    "run_id": 45955439200,
+    "attempt": 1,
+    "conclusion": "success",
+    "successful_jobs": 6,
+    "platform_steps": [
+      {
+        "name": "Native Linux x86_64",
+        "Run Debug and Release sequentially": "success",
+        "Build and validate the Yavo-written subset frontend": "success",
+        "Check isolated application runner configurations": "success",
+        "Validate the test-summary CLI application": "success",
+        "Validate the csv-check CLI application": "success",
+        "Validate the dep-index CLI application": "success",
+        "Package dependency-index application evidence": "success",
+        "Preserve logs and per-platform receipts": "success",
+        "Check Yavo-frontend C with independent ASan and UBSan": "success"
+      },
+      {
+        "name": "Native Windows x86_64",
+        "Run Debug and Release sequentially": "success",
+        "Build and validate the Yavo-written subset frontend": "success",
+        "Check isolated application runner configurations": "success",
+        "Validate the test-summary CLI application": "success",
+        "Validate the csv-check CLI application": "success",
+        "Validate the dep-index CLI application": "success",
+        "Package dependency-index application evidence": "success",
+        "Preserve logs and per-platform receipts": "success"
+      },
+      {
+        "name": "Native macOS arm64",
+        "Run Debug and Release sequentially": "success",
+        "Build and validate the Yavo-written subset frontend": "success",
+        "Check isolated application runner configurations": "success",
+        "Validate the test-summary CLI application": "success",
+        "Validate the csv-check CLI application": "success",
+        "Validate the dep-index CLI application": "success",
+        "Package dependency-index application evidence": "success",
+        "Preserve logs and per-platform receipts": "success"
+      }
+    ],
+    "jobs": [
+      {
+        "name": "Round-five experiment evidence",
+        "head_sha": "cc78059fc78f916b659534978cc6ae211e866546",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/msly/yavo/actions/runs/45955439200/job/140360747084",
+        "started_at": "2026-11-27T06:59:54Z",
+        "completed_at": "2026-11-27T07:00:08Z"
+      },
+      {
+        "name": "Native macOS arm64",
+        "head_sha": "cc78059fc78f916b659534978cc6ae211e866546",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/msly/yavo/actions/runs/45955439200/job/140360747257",
+        "started_at": "2026-11-27T06:59:54Z",
+        "completed_at": "2026-11-27T07:14:57Z"
+      },
+      {
+        "name": "Native Linux x86_64",
+        "head_sha": "cc78059fc78f916b659534978cc6ae211e866546",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/msly/yavo/actions/runs/45955439200/job/140360747265",
+        "started_at": "2026-11-27T06:59:54Z",
+        "completed_at": "2026-11-27T07:17:22Z"
+      },
+      {
+        "name": "Agent evaluation preparation",
+        "head_sha": "cc78059fc78f916b659534978cc6ae211e866546",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/msly/yavo/actions/runs/45955439200/job/140360747336",
+        "started_at": "2026-11-27T06:59:54Z",
+        "completed_at": "2026-11-27T07:00:10Z"
+      },
+      {
+        "name": "Independent Linux ASan and UBSan",
+        "head_sha": "cc78059fc78f916b659534978cc6ae211e866546",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/msly/yavo/actions/runs/45955439200/job/140360747404",
+        "started_at": "2026-11-27T06:59:54Z",
+        "completed_at": "2026-11-27T07:00:32Z"
+      },
+      {
+        "name": "Native Windows x86_64",
+        "head_sha": "cc78059fc78f916b659534978cc6ae211e866546",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/msly/yavo/actions/runs/45955439200/job/140360747444",
+        "started_at": "2026-11-27T06:59:54Z",
+        "completed_at": "2026-11-27T07:53:31Z"
+      }
+    ],
+    "scope": "exact implementation head, main push; API job/step conclusions plus required source-bound gate assertions; CI archives were not separately downloaded",
+    "dep_index_executions": {
+      "linux": {
+        "bootstrap": 672,
+        "native": 336,
+        "sanitizer": 224
+      },
+      "macos": {
+        "bootstrap": 672,
+        "native": 336
+      },
+      "windows": {
+        "bootstrap": 642,
+        "native": 321
+      }
+    },
+    "sanitizer_scope": "Linux independent GCC ASan+UBSan, stage0 and actual final-stage2 generated C; capability positive/negative controls required"
   },
   "resolved_review_findings": [
     "Heap aggregate comparisons reject with E0501 instead of accepting invalid generated C.",
@@ -741,5 +856,15 @@
     "sh3": "ordinary build/run, public process/environment/filesystem capabilities, locked backend driver, structured diagnostics and broader language/tool coverage",
     "formal_performance": "independent frozen benchmarks and compile P50 are not established by these single app observations",
     "relative_delivery_cost": "complete token/currency accounting and independent >=20% cost improvement remain unestablished"
+  },
+  "formal_application_acceptance": {
+    "completed": 3,
+    "required": 3,
+    "applications": [
+      "test-summary",
+      "csv-check",
+      "dep-index"
+    ],
+    "scope": "declared independent CLI application gates; not SH-3 replacement, formal performance or relative delivery-cost proof"
   }
 }
