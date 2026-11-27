@@ -15,6 +15,14 @@ subset of the stage0 language that the compiler itself implements (see
 stage0 accepts far more of the language (general owned Optionals,
 mutable/reference iteration, float formatting, methods, generics, broader
 Map/Set APIs, general closures and threads).
+Batch 49 adds a native ordinary `build`/`run` entrypoint in Yavo, using the
+already-installed locked backend and an embedded runtime header. Seven public
+system interfaces cover environment values, host identity, temporary directories,
+file removal/identity and synchronous argv-based processes. Read-only
+`[]String` parameters carry process arguments and the complete source-path
+inventory. The driver has no Yavo build cache and does not yet migrate cross
+targets, structured diagnostics or toolchain installation. This closes one
+SH-3 entrypoint gap; it does not make selfhost the daily default.
 Batch 48 is driven by the independently authored five-module
 [yavo-dep-index](../examples/dep-index/SPEC.md): `main`, `model`, `parser`,
 `graph` and `report` were implemented with stage0 and frozen before extending
@@ -82,16 +90,29 @@ From the repository root, with Rust and the pinned Zig toolchain installed:
 
 ```sh
 cargo build --manifest-path compiler/Cargo.toml --locked --release
+python3 selfhost/embed_runtime.py --check
 python3 selfhost/bootstrap.py
+python3 tools/ci/selfhost_driver.py --bootstrap-output compiler/target/ci/selfhost
 ```
 
-The compiler is a module program whose entry is `main.yv`; it loads
-`support.yv`, `lexer.yv`, `model.yv`, `parser.yv`, `types.yv` and `codegen.yv`
-through `use` and calls across files as `module.f(...)`. `bootstrap.py` copies
-these files (`COMPILER_PARTS`) unchanged into the run directory and gives every
-compiler only the entry file. The lexer unit test's entry is `lexer_test.yv`,
-which uses `support` and `lexer`; its current validation status is listed below.
-To build the compiler by hand: `yavo build selfhost/main.yv -o yavo-selfhost`.
+The compiler has nine Yavo modules: entry `main.yv`, plus `support.yv`,
+`lexer.yv`, `model.yv`, `parser.yv`, `types.yv`, `codegen.yv`, `driver.yv` and
+`runtime_source.yv`. It loads these through `use` and calls across files as
+`module.f(...)`. `bootstrap.py` copies the complete `COMPILER_PARTS` unchanged
+into the run directory and gives each compiler only the entry file; concatenating
+the files is not the module build procedure. The separate lexer unit entry is
+`lexer_test.yv`, which uses `support` and `lexer`.
+To build the compiler by hand:
+`yavo build selfhost/main.yv --release -o yavo-selfhost`.
+
+`runtime_source.yv` is generated from the exact bytes of
+`compiler/runtime/yavo_rt.h` and the version in `compiler/toolchain.lock`.
+After changing either input, run `python3 selfhost/embed_runtime.py` and commit
+the regenerated module with the change. `--check` only compares the expected
+bytes; it never repairs a stale embedding. Bootstrap checks freshness before
+building stage1 and includes the generated module in the source identity checks.
+The resulting executable can build from any working directory without locating
+a runtime header in a repository or installation directory.
 
 `bootstrap.py` accepts `--stage0`, `--zig` and `--output`. Defaults use the
 Release compiler, the toolchain installation described by `compiler/toolchain.lock`,
@@ -100,7 +121,8 @@ and `compiler/target/ci/selfhost/`. Windows executable suffixes and the configur
 
 Each run creates a fresh directory and:
 
-1. assembles the compiler and builds stage1 with stage0;
+1. verifies the runtime/version embedding, assembles the compiler and builds
+   stage1 with stage0;
 2. has stage1 check and emit its own source as `stage2.c`, builds stage2 with
    the locked Zig (`-O2`, `YV_ALLOC_CHECK`), has stage2 emit `stage3.c`, and
    requires byte-identical C and identical stage2/stage3 binaries;
@@ -119,7 +141,54 @@ and writes `receipt.json` with `achieved: "self-hosted-fixed-point"` and
 `self_hosted: true` only when everything passes. Native CI runs this gate on
 Linux, Windows and macOS; a configured job is not itself a passing result.
 
-## Current validation: batch 48 (2026-11-27)
+The separate [ordinary-driver gate](tests/driver49/README.md) runs its frozen
+contract against the Rust-built stage1 and the actual final stage2 from a
+successful complete bootstrap. It distinguishes real locked-Zig builds from
+controlled native probes of backend arguments, streams, errors and cleanup.
+It also requires final stage2's ordinary `build` of the unchanged compiler
+modules to produce a compiler that emits the fixed-point C and executes the
+independent multi-module fixture with ordinary `run`. This gate does not replace
+the broader bootstrap, application or specification checks.
+
+## Current validation: batch 49 (2026-11-27)
+
+The implementation adds the native driver, public system calls and read-only
+String slices. The primary driver contract and independent expectations were
+frozen before executing the implementation; two later scenarios separately
+freeze the review-discovered leading `-`/`@` temporary-root boundary. The gate
+checks source aliases, literal argv, inherited streams, child exit/signal
+statuses, backend diagnostics, failure precedence and temporary-file inventory.
+
+The language regressions cover API arity/types, argument borrowing and
+evaluation order, temporary-owner cleanup, String-slice ownership and explicit
+unsupported standard-error types. Namespace regressions reject a standard and
+user module with the same alias, in either import order and even when unused;
+local variable shadowing and an ordinary same-named function remain distinct
+from that import collision.
+
+The final local bootstrap passes **1,063/1,063 cases, 20/20 checks, zero skips**,
+including all seven existing compatibility applications. The matrix adds 36
+fixtures and one unchanged-source promotion: 279 run, 34 panic, 571 reject,
+141 unsupported and 38 shared-unsupported cases. Stage2/stage3 C is identical at
+**1,614,200 bytes**; their Linux binaries are identical at **678,304 bytes**.
+
+The independent ordinary-driver gate passes **114/114 and 9/9 checks** locally.
+Actual final stage2 rebuilds the compiler with ordinary build; the resulting
+binary and emitted C match the bootstrap fixed point, and the result runs an
+independent multi-module program through ordinary run. All 133 commands have
+wait4 RSS observations; the maximum is 366,190,592 bytes for a waited child,
+not simultaneous process-tree memory. Compile P50 and token/currency cost are unmeasured.
+
+Rust Debug/Release each pass **151/0/1**, with frozen conformance **124/3/2**.
+The production runtime changes in this batch; six new native system integration
+tests, six target object builds and an independent GCC 14.2 ASan+UBSan probe pass.
+Existing corpus coverage remains **119/394**, or **56/224** distinct entry bytes,
+with unchanged sources and zero regressions, subset violations or timeouts.
+
+Local acceptance is complete; exact-commit three-platform CI remains pending. Configured jobs are not passing results. The [validation index](../compiler/validation/batch49-build-run-2026-11-27.json) separates final acceptance from the stopped preliminary namespace-audit run.
+SH-3 default replacement, formal performance and relative delivery-cost acceptance remain open.
+
+## Historical validation: batch 48 (2026-11-27)
 
 The unchanged five-module dependency index passes the final selfhost gate:
 **672/672 executions** across stage0/final-stage2 Debug, Release and exit-cleanup
@@ -430,20 +499,70 @@ first-error `os.exit` paths do not run its heap summary.
 ## CLI
 
 ```sh
-cat selfhost/{support,lexer,model,parser,types,codegen,main}.yv > yavo-selfhost.yv
-compiler/target/release/yavo build yavo-selfhost.yv --release -o yavo-selfhost
+compiler/target/release/yavo build selfhost/main.yv --release -o yavo-selfhost
 ./yavo-selfhost check selfhost/examples/gcd.yv
 ./yavo-selfhost emit-c selfhost/examples/gcd.yv -o gcd.c
+./yavo-selfhost build selfhost/examples/gcd.yv --release -o gcd
+./yavo-selfhost run selfhost/examples/gcd.yv --release
 ```
 
-The output path must be new: successful emission uses `fs.writeNewText`, which
-creates exclusively and refuses an existing path, including a link to the input.
-The frontend completes checking before opening that output. A write failure
-after creation can leave a partial new output file; remove that failed artifact
-before retrying. Compiling generated C requires `compiler/runtime/yavo_rt.h`
-and the locked Zig C compiler, as demonstrated by `bootstrap.py`.
+On Windows use `.exe` for the compiler and explicitly named native output.
+The command forms are:
 
-Exit codes: `0` success, `1` frontend rejection, `2` CLI usage, `3` I/O failure.
+| Command | Supported form |
+| --- | --- |
+| Check | `check <input.yv>` |
+| Emit C | `emit-c <input.yv> -o <output.c>` |
+| Native build | `build <input.yv> [-o <output>] [--release]` |
+| Native run | `run <input.yv> [--release] [-- <program arguments>...]` |
+
+Build/run options may precede or follow the input. Duplicate options, additional
+inputs and unknown options are usage errors. Arguments following run's `--`
+are opaque, including empty strings and option-like values; `run` rejects `-o`.
+Build's default output is the input basename with a trailing `.yv` removed
+(a basename exactly `.yv` is preserved), with `.exe` appended on Windows.
+`--target`, `--emit-c`, `--json` and `--json-diagnostics` are not supported by
+build/run; the separate `emit-c` command remains available.
+
+`emit-c` retains exclusive creation through `fs.writeNewText`: an existing
+output, including a source link, is refused. Its frontend finishes before
+opening the output; a failed write can leave a partial newly created file.
+Native `build` may replace an existing non-source output. Before creating
+temporary files or launching the backend, it compares that output's file
+identity against the entry and every reachable source module, including
+hardlink and symlink aliases. Frontend rejection leaves existing output
+untouched. Backend output is not promised atomic on a failed compilation.
+Manually compiling emitted C still requires `compiler/runtime/yavo_rt.h`;
+ordinary build/run write their embedded copy automatically.
+
+The backend is the already-installed native
+`YAVO_HOME/toolchains/zig-HOST-VERSION/zig[.exe]`. If `YAVO_HOME` is absent,
+the root is `HOME/.yavo` on POSIX or `USERPROFILE/.yavo` on Windows; a defined
+empty root is an error. A nonempty `YAVO_CC` is rejected, while an empty value
+is ignored. Installation remains a stage0 task (`yavo toolchain install`).
+The driver passes `cc -std=c17 -fno-strict-aliasing`, adds `-O0 -g` for Debug
+or `-O2 -s` for Release, and forwards the presence-based `YAVO_ALLOC_CHECK`
+instrumentation switch. Backend stdout and stderr both go directly to driver
+stderr. A launched program inherits stdin/stdout/stderr and receives its argv
+without shell expansion or PATH lookup.
+
+Temporary roots use `TMPDIR` or `/tmp` on POSIX, and `TEMP`, then `TMP`, then
+the current directory on Windows. Defined empty roots fail. The driver creates
+a unique directory after frontend success, deletes its known C/header/program
+files on every handled return path, then requires the directory to be empty
+and removable. Unexpected files are preserved and reported as cleanup failure.
+There is no Yavo binary/PCH cache; the backend's own cache may still operate.
+
+| Exit | Meaning |
+| --- | --- |
+| `0` | Successful check, emission or build; or a successfully run program exiting zero |
+| `1` | Frontend rejection, including unsupported language constructs |
+| `2` | CLI usage or attempted native output replacement of a source file |
+| `3` | Input/output, environment, temporary-directory or backend-launch failure |
+| `4` | Backend nonzero/signal failure, program-launch failure, or temporary-directory cleanup failure |
+| Program status | Ordinary `run` forwards a completed program's normal status; POSIX signal termination maps to `128 + signal` |
+
+Cleanup failure overrides an earlier backend or program status with `4`.
 Diagnostics currently report the first error as
 `path:line:column: CODE: message`; columns count Unicode scalars and stored spans
 use UTF-8 byte offsets. `E0020` is syntax, `U0001` is an unimplemented construct
@@ -454,7 +573,7 @@ JSON diagnostics, suggestions and recovery remain future work.
 
 | Area | Implemented |
 | --- | --- |
-| Files | Source modules via leading `use a`, `use a/b`, `use a/{b, c}`; per-file imports and top-level `pub`, cyclic imports, qualified functions and original source locations; standard fs/io/os imports and the supported std/collections Heap API; required entry `fn main()` |
+| Files | Source modules via leading `use a`, `use a/b`, `use a/{b, c}`; per-file imports and top-level `pub`, cyclic imports, qualified functions and original source locations; standard fs/io/os/process imports and the supported std/collections Heap API; standard/user import alias conflicts are E0011; required entry `fn main()` |
 | Types | `int` (signed 64-bit), `byte` (unsigned 8-bit), `bool`, borrowed `str`, owned `String`, supported scalar/struct/String vectors and `Vec[Vec[int]]`, unit return; nominal structs, payload-free enums, flat tuples including String, supported `T ! E` results, Copy `?T` and Optional flat String tuples |
 | String | Empty construction, str.toString, len, clone, push, output, String/str comparison, UTF-8/NUL; byte indexing; startsWith/endsWith/contains/find/split/parseInt/trim/lines/fields |
 | Vec | Typed empty construction, empty/nonempty literals including Vec[byte] and Vec[Vec[int]], len, consuming push, reserve, recursive clone/drop; stable in-place int/String sort; pop for Copy elements; checked Copy reads/writes and nested-int-vector places; expression-local owned-element access and the restricted slice-parameter aliases described below |
@@ -468,9 +587,9 @@ JSON diagnostics, suggestions and recovery remain future work.
 | Functions | Typed parameters and supported return types, forward calls and recursion; ordinary owned parameters borrow read-only; sink parameters take ownership of supported owning types while Copy inputs remain copies; inout with `&variable`/`&variable.field`; borrowed str/Vec[str]/slice returns require `of` sources and cannot name sink parameters |
 | Results | User-function `T ! E`, contextual `ok(value)`/`err(error)` and implicit success wrapping, `try`, terminating `catch name { ... }`/`catch _ { ... }`; owned String/Vec/Map/Set/struct payloads and cleanup on propagation |
 | Optionals | `?T` for int/byte/bool/non-owning struct/payload-free enum/flat tuple including String; some/none/wrapping, tag queries, lazy coalesce and terminating fallbacks; if-let borrows an existing owned payload or moves a temporary payload; while-let supports temporary owning Optional values |
-| Read-only slices | Supported scalar/str/named element slices, including owned structs; indexed and foreach elements of direct read-only slice parameters may form inferred read-only aliases and alias chains; let/var binding does not grant mutation or ownership |
+| Read-only slices | Supported scalar/str/String/named element slices, including owned structs; Vec-to-slice borrowing, read-only traversal and indexed access; direct owned-struct slice parameters support inferred aliases and alias chains, while persistent String-element aliases remain U0001 |
 | Text slices | `s[start..end]` on str/String with int bounds and P-INDEX/P-STR-BOUNDARY checks; views of owned values may be bound locally while their owner stays unchanged; escaping the owner scope remains rejected |
-| Standard calls | `take(&place)` for String/Vec places; `os.args()` (len, indexing to static str), `os.exit(code)`; `io.readAll`, `fs.readText`, `fs.writeNewText` and `String.fromUtf8` only with a `catch _ { ... }` handler that cannot fall through (E0601) |
+| Standard calls | `take(&place)` for String/Vec places; `os.args()`, `os.exit(code)` and static `os.host()`; `io.readAll`, `fs.readText`, `fs.writeNewText`, `String.fromUtf8`, `os.env`, `fs.tempDir/removeFile/removeDir/sameFile` and `process.run` with a terminating `catch _ { ... }` handler |
 | Locals | `let`/`var`, inferred or explicit types, assignment and arithmetic compound assignment; active locals cannot be shadowed |
 | Control flow | if/else-if/else, if-let and supported while-let; while/loop; int/byte half-open range for; one/two-binding read-only Vec/slice/args traversal and two-binding Map traversal; fresh per-iteration owning payloads, break/continue/return cleanup and return-path checks |
 | Expressions | Parentheses, int unary minus, boolean not, checked int/byte arithmetic, wrapping arithmetic, bit operations/shifts, contextual integer arithmetic, equality/order, short-circuit boolean operators |
@@ -490,6 +609,45 @@ unit fields remain outside this subset. Struct equality/printing/clone and enum 
 rejected consistently with stage0. Explicit constructor fields are evaluated
 in source order. Bare enum cases use annotation/parameter/return/field/
 assignment/RHS comparison context.
+
+### Public system calls and String slices
+
+The seven new calls share the [public standard-library contract](../docs/stdlib_contract.md)
+with stage0. Their runtime behavior is the same in both frontends; selfhost
+currently exposes fallible calls through the discarded-error catch form only.
+
+| Call | Successful value and ownership |
+| --- | --- |
+| `os.env(name, fallback)` | Independent owned String; missing variables copy fallback, while a present empty value remains empty |
+| `os.host()` | Static `str` identifying compilation architecture and OS; no allocation |
+| `fs.tempDir(parent, prefix)` | Owned path of a newly created unique directory under the explicit parent; dropping the String does not remove the directory |
+| `fs.removeFile(path)` | Unit after removing one file directory entry; never recursive |
+| `fs.removeDir(path)` | Unit after removing an empty directory; never recursively deletes contents |
+| `fs.sameFile(first, second)` | Bool from native file identity, following links; missing paths yield false under the contract's ordered lookup |
+| `process.run(program, args, stderrOnly)` | Int after a synchronous explicit-path launch and wait; args is a borrowed `[]String` without argv[0] |
+
+Arguments are borrowed, not consumed, and evaluated left to right. Earlier
+argument owners stay protected through later argument evaluation and the call.
+Temporary program strings and argument vectors are released on success,
+failure and early propagation. `process.run` distinguishes launch/wait errors
+from an ordinary nonzero child exit; POSIX signals are successful results with
+a negative signal number. `stderrOnly` selects inherited stdout/stderr or
+both output streams directed to parent stderr. There is no shell, output
+capture, timeout or environment override in this API.
+
+Fallible calls require `catch _ { ... }` with return, loop control or another
+accepted terminating path. Fallthrough is E0601. Naming or binding an
+`io.Error`, `fs.Error`, `os.Error` or `process.Error`, retaining these standard
+Results as values, and named standard-error catches remain U0001; general
+user-defined Results retain their existing support.
+
+`[]String` parameters borrow an existing `Vec[String]` or supported temporary
+vector. Read-only iteration, indexed text inspection, output, ordinary
+borrowed calls and explicit `.clone()` are supported without moving an
+element. Returning an indexed String as an owner is E0404; implicitly returning
+it as `str` is E0001. An explicit text slice can return a view with the
+corresponding `of` source. Persistent inferred aliases of String elements
+remain U0001. The owner and each temporary stay alive for the full use.
 
 ### Range and vector loops
 
@@ -922,7 +1080,7 @@ The principal remaining U0001 boundaries are:
 | Tuples | Nested or borrowed/container/Optional elements, owned struct elements, tuple fields and Result combinations; destructuring and general tuple containers other than the admitted Heap |
 | Owning Optionals | Payloads other than supported flat String tuples; nested Optional, fields, container elements and Result combinations; named aliases of an existing owning payload; while-let over an existing owning Optional |
 | Heap and callbacks | Other element shapes, fields, Result combinations and unimplemented APIs; captures, calls or block/typed-parameter comparator bodies; ordinary standalone or escaping closures |
-| Broader language | Other collection APIs, enum payloads, imports after other items, Result fields/nesting, named imported io.Error/fs.Error types, arrow catch, user methods, generics, mutable/reference iteration and concurrency |
+| Broader language | Other collection APIs, enum payloads, imports after other items, Result fields/nesting, named imported io.Error/fs.Error/os.Error/process.Error types and retained standard Result values, arrow catch, user methods, generics, mutable/reference iteration and concurrency |
 | Text and numerics | Interpolation outside direct output/format arguments, format specifiers, float/nondecimal literals and integer separators |
 
 Other invalid operations retain their stage0 error categories rather than
@@ -939,14 +1097,20 @@ The frontend remains a subset of the Rust implementation.
 | `parser.yv` | Aggregate/function/statement/expression grammar, imports, slices, borrows, catch, unsupported boundaries |
 | `types.yv` | Resolved nominal/vector/Heap/Optional/flat tuple types within the stated shape limits, bounded tuple signatures, Result pool, field/default checks, cycles/layout order and transitive ownership |
 | `codegen.yv` | Places, borrowed/consuming values, Optional/Result wrapping, lazy coalesce, Result propagation, inout/take/pop/sort, move-state joins, cleanup, loop replay and ordered C |
-| `main.yv` | `compile` returns `String ! Diagnostic`; CLI reports errors, reads input and creates output exclusively |
+| `driver.yv` | Native build/run options, pinned backend resolution, source-identity protection, explicit argv, stream/exit forwarding and temporary-file cleanup |
+| `runtime_source.yv` | Generated runtime-header bytes and pinned backend version for standalone native compilation |
+| `main.yv` | `compile` returns owned generated C and the complete source inventory in `Compilation ! Diagnostic`; check/emit-c dispatch and ordinary command lifetime |
+| `embed_runtime.py` | Deterministic generation and read-only freshness check of runtime_source.yv from the production header and toolchain lock |
 | `lexer_test.yv` | Lexer boundary assertions, including owned error propagation and cleanup on normal test returns |
 | `tests/` and `bootstrap.py` | Independent behavior/rejection oracles, fixed point and reproducible execution |
 
 Inside the compiler, parsing, checking and lowering still call `fail`, which
 prints the first diagnostic and exits with status 1. Lexing returns an owned
 `Diagnostic` containing code, message and byte/line/column location; `compile`
-uses `try`, and `main` catches, reports and exits. Lexer tests catch failures
+uses `try`, and the command entry catches and reports it. All frontend work
+precedes creation of backend temporary files. Ordinary driver success and
+handled errors return through `command`, dropping owned source/options/C
+before `main` forwards a nonzero status. Lexer tests catch failures
 and return normally so allocation checks can observe cleanup. Copy metadata
 stacks retain capacity and pop only their discarded suffix. Loop exit states
 remain in one flat `Vec[bool]` pool.
@@ -958,10 +1122,10 @@ executable fixtures from earlier increments.
 
 ## Next steps
 
-Finish the current batch's complete bootstrap and native Linux/Windows/macOS
-acceptance for the frozen dependency index. The local application gates above
-do not replace those remaining checks; the formal SH-4 count must follow the
-completed native evidence.
+SH-4's three formal CLI applications were accepted in batch 48. The native
+ordinary build/run entrypoint now provides a separate SH-3 integration route;
+its acceptance follows the complete bootstrap and independent three-platform
+driver gate, not the application count.
 
 The unchanged r5/yavo-b/T02 strict CSV program is an existing regression target
 for general owned Optionals. Its `?Vec[String]` remains outside the supported
@@ -969,12 +1133,13 @@ flat String-tuple Optional shape. Closing that gap includes construction,
 owned returns, borrowed access and cleanup across branches and early exits. A single archived CSV
 compatibility gate does not itself satisfy the formal project's conditions.
 
-SH-3 also needs an explicit normal-entrypoint milestone. The current compiler
-only exposes check/emit-c; stable diagnostics and ordinary build/run with the
-locked backend come before wider cache/fix/verify migration. Coverage of the
-existing regressions, frozen specification, resources and native platforms is
-required before the daily default switches from Rust. Cost and performance
-need separate current evidence.
+Remaining SH-3 work includes structured diagnostics and stable diagnostic
+data, broader language and standard-error Result support, cross targets,
+cache/PCH behavior, toolchain installation and the other fix/verify/tool
+entrypoints. Coverage of the existing regressions, frozen specification,
+resources and native platforms is required before the daily default switches
+from Rust. Cost and performance need separate current evidence; driver timings
+from a reusable Zig cache do not supply a compile-latency P50.
 
 ## Historical snapshots
 

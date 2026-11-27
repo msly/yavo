@@ -1,0 +1,4 @@
+fn bad() -> str of static { let words = ["x".toString()]
+    return first(words) }
+fn first(xs: []String) -> str of xs { return xs[0][0..xs[0].len()] }
+fn main() { println(bad()) }

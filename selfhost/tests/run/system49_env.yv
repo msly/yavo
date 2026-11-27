@@ -1,0 +1,13 @@
+use std/os
+fn invalid() -> int {
+    let value = os.env("bad=name", "ignored") catch _ { return 7 }
+    return value.len()
+}
+fn main() {
+    let value = os.env("YAVO_BATCH49_ABSENT_75bcac8f", "fallback") catch _ { return }
+    println(value)
+    let empty = os.env("YAVO_BATCH49_ABSENT_75bcac8f", "") catch _ { return }
+    println(empty.len())
+    println(os.host().len() > 0)
+    println(invalid())
+}

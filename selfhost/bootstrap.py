@@ -37,7 +37,8 @@ LOCATION = re.compile(rb":[1-9][0-9]*:[1-9][0-9]*:")
 # The compiler is a module program whose entry is main.yv; these are the files it
 # loads through `use`. The lexer unit's entry is lexer_test.yv. Both are copied
 # byte for byte into one run directory and built from their entry files.
-COMPILER_PARTS = ["support.yv", "lexer.yv", "model.yv", "parser.yv", "types.yv", "codegen.yv", "main.yv"]
+COMPILER_PARTS = ["support.yv", "lexer.yv", "model.yv", "parser.yv", "types.yv", "codegen.yv",
+                  "driver.yv", "runtime_source.yv", "main.yv"]
 LEXER_UNIT_PARTS = ["support.yv", "lexer.yv", "lexer_test.yv"]
 COMPILER_ENTRY = "main.yv"
 LEXER_UNIT_ENTRY = "lexer_test.yv"
@@ -215,7 +216,7 @@ def main():
     work = Path(tempfile.mkdtemp(prefix="run-", dir=output))
     stage0 = args.stage0.resolve()
     environment = dict(os.environ, YAVO_NO_CACHE="1", YAVO_ALLOC_CHECK="1")
-    for key in ("YAVO_CC", "YAVO_CACHE_TRACE", "YAVO_UPDATE_BASELINE"):
+    for key in ("YAVO_CC", "YAVO_CACHE_TRACE", "YAVO_UPDATE_BASELINE", "YAVO_BATCH49_ABSENT_75bcac8f"):
         environment.pop(key, None)
     frontend_env = dict(environment, PATH="")
     report = {"schema": "yavo-selfhost-bootstrap/1", "status": "running",
@@ -251,6 +252,7 @@ def main():
             "stage0": {"path": str(stage0), "sha256": digest(stage0)},
             "zig": {"path": str(zig), "sha256": digest(zig), "expected_version": version},
             "runtime_sha256": digest(COMPILER / "runtime/yavo_rt.h"),
+            "runtime_generator_sha256": digest(SELFHOST / "embed_runtime.py"),
             "toolchain_lock_sha256": digest(COMPILER / "toolchain.lock"),
             "harness_sha256": digest(Path(__file__)),
             "manifest_sha256": digest(SELFHOST / "tests/cases.json"),
@@ -273,6 +275,10 @@ def main():
             "csv_check_application": application_module("csv_application").inputs(),
             "dep_index_application": application_module("dep_application").inputs(),
         }
+        embedded = command("embedded-runtime-freshness", [sys.executable, SELFHOST / "embed_runtime.py", "--check"])
+        check("embedded_runtime_freshness", succeeded(embedded), command=embedded["record"])
+        if not report["checks"][-1]["passed"]:
+            raise RuntimeError("embedded runtime source differs from the production header or toolchain lock")
         version_result = command("zig-version", [zig, "version"])
         check("locked_zig", succeeded(version_result) and
               version_result["stdout"].decode("utf-8").strip() == version,
@@ -612,6 +618,7 @@ def main():
             str(stage0): report["inputs"]["stage0"]["sha256"],
             str(zig): report["inputs"]["zig"]["sha256"],
             str(COMPILER / "runtime/yavo_rt.h"): report["inputs"]["runtime_sha256"],
+            str(SELFHOST / "embed_runtime.py"): report["inputs"]["runtime_generator_sha256"],
             str(COMPILER / "toolchain.lock"): report["inputs"]["toolchain_lock_sha256"],
             str(Path(__file__).resolve()): report["inputs"]["harness_sha256"],
             str(SELFHOST / "tests/cases.json"): report["inputs"]["manifest_sha256"],

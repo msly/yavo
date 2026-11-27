@@ -12,6 +12,7 @@
 | `ownership` | cheatsheet.md 201–290：九条规则、树与图 | semantics.md 7–115：权限、移动、来源、逃逸、并发 |
 | `order` | semantics.md 116–135：V1–V14 求值与析构 | decisions.md 72–91：字段默认值、索引赋值与 V2a |
 | `io` | cheatsheet.md 291–300、318–361：读取、文件、参数、错误处理 | stdlib_contract.md 77–105：UTF-8 与系统输入 |
+| `system` | stdlib_contract.md 第9节：os.env/host、fs.tempDir/removeFile/removeDir/sameFile、process.run | 七个接口已实现；显式argv、同步等待、非递归清理；selfhost只支持标准调用的catch-_形式 |
 | `strings` | cheatsheet.md 301–307：切分、字节、子串、查找、转换 | stdlib_contract.md 77–105 |
 | `vec` | cheatsheet.md 308–309、312：读写、排序、遍历 | stdlib_contract.md 17–32、61–76 |
 | `map-set` | cheatsheet.md 310–312、314：借用键、更新和 Set | stdlib_contract.md 33–60 |
@@ -22,6 +23,7 @@
 | `modules` | cheatsheet.md 378–409：use/pub、项目根与模块名 | 每文件单独导入；导入不传递；多文件 fix 不支持 |
 | `threads` | cheatsheet.md 410–444：scope/spawn、Mutex/Channel | semantics.md 94–115；stdlib_contract.md 112–141 |
 | `tools` | cheatsheet.md 445–460：check/build/fix/verify/allocations | stdlib_contract.md 142–148：查询输出契约 |
+| `selfhost-driver` | selfhost/README.md 的Native build/run节 | 原生、无缓存、已安装锁定Zig；JSON、交叉目标、安装和其他工具入口尚未迁移 |
 | `diagnostics` | cheatsheet.md 461–494：常见错误和修法 | 报错对应的 `ownership/order/errors/threads` 主题 |
 | `unsupported` | cheatsheet.md 511–513：当前缺口 | 不按 Rust 方法名猜测；必要时构造最小程序 check |
 

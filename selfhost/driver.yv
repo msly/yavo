@@ -1,0 +1,262 @@
+use std/{fs, os, process}
+use support
+use runtime_source
+
+// Native, uncached back-end driver. All front-end work finishes before this
+// module creates a unique directory. Every path after creation reaches cleanup.
+pub struct BuildOptions {
+    input: String
+    output: String
+    runMode: bool
+    releaseMode: bool
+    argumentStart: int
+}
+
+pub struct DriverFailure {
+    status: int
+    message: String
+}
+
+fn failure(status: int, message: str) -> DriverFailure {
+    return DriverFailure{status: status, message: message.toString()}
+}
+
+pub fn usage() {
+    eprintln("       yavo-selfhost build <input.yv> [-o <output>] [--release]")
+    eprintln("       yavo-selfhost run <input.yv> [--release] [-- <arguments>...]")
+}
+
+fn joinPath(parent: str, name: str) -> String {
+    var result = parent.toString()
+    if result.len() > 0 && !result.endsWith("/") && !result.endsWith("\\") {
+        result.push("/")
+    }
+    result.push(name)
+    return result
+}
+
+fn defaultOutput(input: str) -> String {
+    var start = 0
+    for i in 0..input.len() {
+        if input[i] == '/' || input[i] == '\\' { start = i + 1 }
+    }
+    var end = input.len()
+    if end - start > 3 && input.endsWith(".yv") { end -= 3 }
+    var output = input[start..end].toString()
+    if os.host().endsWith("-windows") { output.push(".exe") }
+    return output
+}
+
+pub fn parse(args: []str) -> BuildOptions ! DriverFailure {
+    var input = String{}
+    var output = String{}
+    var hasInput = false
+    var hasOutput = false
+    var releaseMode = false
+    let runMode = args[1] == "run"
+    var argumentStart = args.len()
+    var i = 2
+    while i < args.len() {
+        let argument = args[i]
+        if argument == "--" {
+            if !runMode { return err(failure(2, "build does not support --")) }
+            if !hasInput { return err(failure(2, "missing input before --")) }
+            argumentStart = i + 1
+            break
+        } else if argument == "--release" {
+            if releaseMode { return err(failure(2, "duplicate --release")) }
+            releaseMode = true
+        } else if argument == "-o" {
+            if runMode { return err(failure(2, "run does not support -o")) }
+            if hasOutput { return err(failure(2, "duplicate -o")) }
+            i += 1
+            if i >= args.len() { return err(failure(2, "-o needs an output path")) }
+            if args[i].len() == 0 { return err(failure(2, "output path must not be empty")) }
+            output = args[i].toString()
+            hasOutput = true
+        } else if argument == "--target" {
+            return err(failure(2, "build/run does not support --target yet; this driver is native-only"))
+        } else if argument == "--emit-c" {
+            return err(failure(2, "build/run does not support --emit-c; use the emit-c command"))
+        } else if argument == "--json" || argument == "--json-diagnostics" {
+            return err(failure(2, "build/run does not support structured diagnostics yet"))
+        } else if argument.startsWith("-") {
+            return err(failure(2, support.join2("unknown option: ", argument)))
+        } else {
+            if hasInput { return err(failure(2, "unexpected extra input path")) }
+            if argument.len() == 0 { return err(failure(2, "input path must not be empty")) }
+            input = argument.toString()
+            hasInput = true
+        }
+        i += 1
+    }
+    if !hasInput { return err(failure(2, "missing input file")) }
+    if !runMode && !hasOutput { output = defaultOutput(input) }
+    return ok(BuildOptions{
+        input: input, output: output, runMode: runMode,
+        releaseMode: releaseMode, argumentStart: argumentStart
+    })
+}
+
+fn environment(name: str, fallback: str) -> String ! DriverFailure {
+    let value = os.env(name, fallback) catch _ {
+        return err(failure(3, support.join2("cannot read environment variable: ", name)))
+    }
+    return ok(value)
+}
+
+fn backend() -> String ! DriverFailure {
+    let override = try environment("YAVO_CC", "")
+    if override.len() > 0 {
+        return err(failure(3, "YAVO_CC overrides are not supported by the locked selfhost driver"))
+    }
+    let host = os.host()
+    // Environment values cannot contain NUL; the fallback can. This preserves
+    // missing versus present-empty without sacrificing any real value.
+    var home = try environment("YAVO_HOME", "\0")
+    if home == "\0" {
+        var homeName = "HOME"
+        if host.endsWith("-windows") { homeName = "USERPROFILE" }
+        let userHome = try environment(homeName, "")
+        if userHome.len() == 0 { return err(failure(3, "cannot determine Yavo home; set YAVO_HOME")) }
+        home = joinPath(userHome, ".yavo")
+    }
+    if home.len() == 0 { return err(failure(3, "cannot determine Yavo home; set YAVO_HOME")) }
+    let folder = support.join4("zig-", host, "-", runtime_source.version())
+    let toolchains = joinPath(home, "toolchains")
+    let directory = joinPath(toolchains, folder)
+    var executable = "zig"
+    if host.endsWith("-windows") { executable = "zig.exe" }
+    return ok(joinPath(directory, executable))
+}
+
+fn temporaryParent() -> String ! DriverFailure {
+    if os.host().endsWith("-windows") {
+        let parent = try environment("TEMP", "\0")
+        if parent != "\0" { return ok(parent) }
+        return environment("TMP", ".")
+    }
+    return environment("TMPDIR", "/tmp")
+}
+
+fn removeIfPresent(path: str) {
+    // Missing files are normal on partial writes and failed compilation.
+    // removeDir below is the authoritative check that no file remains.
+    fs.removeFile(path) catch _ { return }
+}
+
+fn cleanup(directory: str) -> bool {
+    removeIfPresent(joinPath(directory, "main.c"))
+    removeIfPresent(joinPath(directory, "yavo_rt.h"))
+    removeIfPresent(joinPath(directory, "program"))
+    removeIfPresent(joinPath(directory, "program.exe"))
+    removeIfPresent(joinPath(directory, "program.pdb"))
+    removeIfPresent(joinPath(directory, "program.obj"))
+    removeIfPresent(joinPath(directory, "program.o"))
+    removeIfPresent(joinPath(directory, "program.exe.pdb"))
+    removeIfPresent(joinPath(directory, "program.exe.obj"))
+    removeIfPresent(joinPath(directory, "main.obj"))
+    removeIfPresent(joinPath(directory, "main.o"))
+    fs.removeDir(directory) catch _ {
+        eprintln("cannot remove temporary directory: ${directory}")
+        return false
+    }
+    return true
+}
+
+fn buildInside(options: BuildOptions, generated: str, source: str, directory: str,
+               executable: str, backendPath: str, args: []str) -> int {
+    fs.writeNewText(source, generated) catch _ {
+        eprintln("cannot write temporary C source")
+        return 3
+    }
+    let header = runtime_source.header()
+    fs.writeNewText(joinPath(directory, "yavo_rt.h"), header) catch _ {
+        eprintln("cannot write temporary runtime header")
+        return 3
+    }
+    var compilerArgs: Vec[String] = []
+    compilerArgs.push("cc".toString())
+    compilerArgs.push("-std=c17".toString())
+    compilerArgs.push("-fno-strict-aliasing".toString())
+    // Allocation checking is a presence-based test hook in stage0 as well.
+    // NUL cannot occur in an actual environment value.
+    let allocCheck = os.env("YAVO_ALLOC_CHECK", "\0") catch _ {
+        eprintln("cannot read environment variable: YAVO_ALLOC_CHECK")
+        return 3
+    }
+    if allocCheck != "\0" {
+        compilerArgs.push("-DYV_ALLOC_CHECK".toString())
+    }
+    if options.releaseMode {
+        compilerArgs.push("-O2".toString())
+        compilerArgs.push("-s".toString())
+    } else {
+        compilerArgs.push("-O0".toString())
+        compilerArgs.push("-g".toString())
+    }
+    compilerArgs.push("-I".toString())
+    compilerArgs.push(directory.toString())
+    compilerArgs.push(source.toString())
+    compilerArgs.push("-o".toString())
+    compilerArgs.push(executable.toString())
+    let compiled = process.run(backendPath, compilerArgs, true) catch _ {
+        eprintln("cannot start pinned C toolchain: ${backendPath}")
+        return 3
+    }
+    if compiled != 0 {
+        eprintln("C toolchain failed (status ${compiled})")
+        return 4
+    }
+    if !options.runMode { return 0 }
+    var programArgs: Vec[String] = []
+    for i in options.argumentStart..args.len() { programArgs.push(args[i].toString()) }
+    let result = process.run(executable, programArgs, false) catch _ {
+        eprintln("cannot start compiled program: ${executable}")
+        return 4
+    }
+    if result < 0 { return 128 - result }
+    return result
+}
+
+pub fn execute(options: BuildOptions, generated: str, sources: []String, args: []str) -> int {
+    if !options.runMode {
+        for source in sources {
+            let same = fs.sameFile(options.output, source) catch _ {
+                eprintln("cannot inspect output/source identity")
+                return 3
+            }
+            if same {
+                eprintln("refusing to overwrite a source file")
+                return 2
+            }
+        }
+    }
+    let backendPath = backend() catch problem {
+        eprintln(problem.message)
+        return problem.status
+    }
+    var parent = temporaryParent() catch problem {
+        eprintln(problem.message)
+        return problem.status
+    }
+    // The back end interprets bare leading '-' and '@' arguments specially.
+    // Preserve these valid relative directories as explicit filesystem paths.
+    if parent.startsWith("-") || parent.startsWith("@") {
+        parent = support.join2("./", parent)
+    }
+    let directory = fs.tempDir(parent, "yavo-selfhost-") catch _ {
+        eprintln("cannot create temporary directory")
+        return 3
+    }
+    let source = joinPath(directory, "main.c")
+    var executable = options.output.clone()
+    if options.runMode {
+        var name = "program"
+        if os.host().endsWith("-windows") { name = "program.exe" }
+        executable = joinPath(directory, name)
+    }
+    let status = buildInside(options, generated, source, directory, executable, backendPath, args)
+    if !cleanup(directory) { return 4 }
+    return status
+}

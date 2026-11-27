@@ -1569,6 +1569,7 @@ impl Gen {
     /// (0 ok, 1 invalid UTF-8, 2 system error, 3 invalid path) that becomes the error case with
     /// the same number - 1.
     fn io_call(&mut self, op: IoOp, args: &[HExpr], e: &HExpr, f: &HFn) -> String {
+        if op == IoOp::Host { return "yv_os_host()".to_string(); }
         let at = pos(e.at);
         let vals: Vec<String> = args.iter().map(|a| self.expr(a, f)).collect();
         let (r, s, code, st, has) = (self.fresh(), self.fresh(), self.fresh(), self.fresh(), self.fresh());
@@ -1584,14 +1585,22 @@ impl Gen {
             IoOp::ReadText => format!("yv_fs_read_text({}, &{s}, &{code}, {at})", vals[0]),
             IoOp::WriteText => format!("yv_fs_write_text({}, {}, &{code}, {at})", vals[0], vals[1]),
             IoOp::WriteNewText => format!("yv_fs_write_new_text({}, {}, &{code}, {at})", vals[0], vals[1]),
+            IoOp::Env => format!("yv_os_env({}, {}, &{s}, &{code}, {at})", vals[0], vals[1]),
+            IoOp::TempDir => format!("yv_fs_temp_dir({}, {}, &{s}, &{code}, {at})", vals[0], vals[1]),
+            IoOp::RemoveFile => format!("yv_fs_remove_file({}, &{code}, {at})", vals[0]),
+            IoOp::RemoveDir => format!("yv_fs_remove_dir({}, &{code}, {at})", vals[0]),
+            IoOp::SameFile => format!("yv_fs_same_file({}, {}, &{r}.val, &{code}, {at})", vals[0], vals[1]),
+            IoOp::ProcessRun => format!("yv_process_run({}, {}, {}, &{r}.val, &{code}, {at})", vals[0], vals[1], vals[2]),
+            IoOp::Host => unreachable!(),
         };
         self.line(&format!("int {st} = {call};"));
         self.line(&format!("if ({st} == 0) {{"));
         self.line(&format!("    {r}.ok = true;"));
         match op {
-            IoOp::ReadAll | IoOp::ReadText => self.line(&format!("    {r}.val = {s};")),
+            IoOp::ReadAll | IoOp::ReadText | IoOp::Env | IoOp::TempDir => self.line(&format!("    {r}.val = {s};")),
             IoOp::ReadLine => self.line(&format!("    if ({has}) {{ {r}.val.has = true; {r}.val.val = {s}; }}")),
-            IoOp::WriteText | IoOp::WriteNewText => {}
+            IoOp::WriteText | IoOp::WriteNewText | IoOp::RemoveFile | IoOp::RemoveDir | IoOp::SameFile | IoOp::ProcessRun => {}
+            IoOp::Host => unreachable!(),
         }
         self.line("} else {");
         self.line(&format!("    yv_string_drop(&{s});"));

@@ -1,0 +1,54 @@
+{
+  "schema": "yavo-driver49-supplemental-cases/1",
+  "origin": "Driver author observed a real leading-dash relative temporary-root failure; the independent reviewer added both option-like and response-file-like relative roots before running the acceptance harness. Primary frozen 55 cases remain byte-identical.",
+  "cases": [
+    {
+      "id": "relative_temporary_dash",
+      "kind": "real_run",
+      "arguments": [
+        "run",
+        "@source"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout": "driver49\nstdin=first\nsecond\n",
+        "stderr": "child-stderr\n",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "setup": "relative_temp",
+      "temporary_name": "-temp"
+    },
+    {
+      "id": "relative_temporary_responsefile",
+      "kind": "real_run",
+      "arguments": [
+        "run",
+        "@source"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout": "driver49\nstdin=first\nsecond\n",
+        "stderr": "child-stderr\n",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "setup": "relative_temp",
+      "temporary_name": "@temp"
+    }
+  ]
+}

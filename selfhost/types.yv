@@ -404,7 +404,7 @@ pub fn resolve(reg: Registry, ts: Vec[Token], syn: TypeRef) -> Type {
         let elem = resolve(reg, ts, TypeRef{kind: syn.elementKind,
             name: syn.elementName, elementKind: .Unknown})
         if elem.kind != .Int && elem.kind != .Byte && elem.kind != .Bool && elem.kind != .Str &&
-            elem.kind != .Named {
+            elem.kind != .String && elem.kind != .Named {
             lexer.fail(ts, syn.elementName, "U0001", "slices of this element type are outside the selfhost subset")
         }
         return Type{kind: .Slice, elementKind: elem.kind, elementDecl: elem.decl}

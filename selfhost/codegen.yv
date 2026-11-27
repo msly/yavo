@@ -1248,12 +1248,13 @@ fn storeSources(g: inout Generator, ts: Vec[Token], token: int, root: int, sourc
 }
 
 fn standardModule(g: Generator, p: Program, ts: Vec[Token], receiver: Expression) -> int {
-    // 1: os, 2: fs, 3: String, 4: io; 0 otherwise.
+    // 1: os, 2: fs, 3: String, 4: io, 5: process; 0 otherwise.
     if receiver.kind != .Name || localIndex(g, ts, receiver.token) >= 0 { return 0 }
     if ts[receiver.token].text == "os" && p.files[g.file].importsOs { return 1 }
     if ts[receiver.token].text == "fs" && p.files[g.file].importsFs { return 2 }
     if ts[receiver.token].text == "String" { return 3 }
     if ts[receiver.token].text == "io" && p.files[g.file].importsIo { return 4 }
+    if ts[receiver.token].text == "process" && p.files[g.file].importsProcess { return 5 }
     return 0
 }
 
@@ -1268,6 +1269,10 @@ fn osCall(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expr
     if ts[e.token].text == "args" {
         if e.argCount != 0 { lexer.fail(ts, e.token, "E0012", "os.args takes no arguments") }
         return typedValue(&g, reg, types.primitive(.Args), "yv_args")
+    }
+    if ts[e.token].text == "host" {
+        if e.argCount != 0 { lexer.fail(ts, e.token, "E0012", "os.host takes no arguments") }
+        return scalar(&g, .Str, "yv_os_host()")
     }
     lexer.fail(ts, e.token, "U0001", "this os function is outside the selfhost subset")
     return Value{ty: types.primitive(.Unit), name: "".toString()}
@@ -1420,7 +1425,7 @@ fn methodValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
     }
     let module = standardModule(g, p, ts, receiver)
     if module == 1 { return osCall(&g, p, ts, reg, e) }
-    if module == 2 || module == 4 || (module == 3 && name == "fromUtf8") {
+    if module == 2 || module == 4 || module == 5 || (module == 3 && name == "fromUtf8") {
         lexer.fail(ts, e.token, "U0001", "fallible standard calls require `catch _ { ... }` in this subset")
     }
     if receiver.kind == .Name && localIndex(g, ts, receiver.token) < 0 {
@@ -1968,6 +1973,91 @@ fn userCatchValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry,
     return resultPayload(&g, reg, taken)
 }
 
+// Process, environment and temporary-file operations borrow their arguments
+// through the entire call. In particular, the argv slice must remain alive
+// while the following stream-mode expression is evaluated.
+fn systemCatchValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry,
+    e: Expression, call: Expression, op: int) -> Value {
+    if ts[e.extra].text != "_" {
+        lexer.fail(ts, e.extra, "U0001", "standard-library error bindings are outside this subset; use catch _")
+    }
+    var arity = 2
+    if op == 7 || op == 8 { arity = 1 }
+    if op == 9 { arity = 3 }
+    if call.argCount != arity { lexer.fail(ts, call.token, "E0012", "wrong number of function arguments") }
+    let locks = g.locks.len()
+    var args = String{}
+    var i = 0
+    while i < arity {
+        let argId = p.lists[call.argStart + i]
+        let argToken = p.expressions[argId].token
+        var expected = types.primitive(.Str)
+        if op == 9 && i == 1 { expected = Type{kind: .Slice, elementKind: .String} }
+        if op == 9 && i == 2 { expected = types.primitive(.Bool) }
+        let arg = emitExpected(&g, p, ts, reg, argId, expected)
+        if expected.kind == .Str {
+            if !stringLike(arg.ty) { require(reg, ts, argToken, arg.ty, expected) }
+            args.push(view(arg))
+        } else {
+            let sliceView = expected.kind == .Slice && arg.ty.kind == .Vec &&
+                types.same(types.element(arg.ty), types.element(expected))
+            if !sliceView { require(reg, ts, argToken, arg.ty, expected) }
+            args.push(arg.name)
+        }
+        args.push(", ")
+        if arg.root >= 0 { g.locks.push(arg.root) }
+        if arg.transient && ownerOf(arg) >= 0 { g.locks.push(ownerOf(arg)) }
+        i += 1
+    }
+    releaseLocks(&g, locks)
+    var resultType = types.primitive(.String)
+    var function = "yv_os_env"
+    if op == 6 { function = "yv_fs_temp_dir" }
+    if op == 7 {
+        function = "yv_fs_remove_file"
+        resultType = types.primitive(.Unit)
+    }
+    if op == 8 {
+        function = "yv_fs_remove_dir"
+        resultType = types.primitive(.Unit)
+    }
+    if op == 9 {
+        function = "yv_process_run"
+        resultType = types.primitive(.Int)
+    }
+    if op == 10 {
+        function = "yv_fs_same_file"
+        resultType = types.primitive(.Bool)
+    }
+    let n = g.counter
+    g.counter += 1
+    let result = temporaryName(n)
+    let status = support.join2("c_", support.decimal(n))
+    emit(&g, support.join3("int64_t ", status, " = 0;"))
+    if resultType.kind != .Unit {
+        emit(&g, support.join5(types.cType(resultType), " ", result, " = {0}", ";"))
+        args.push("&")
+        args.push(result)
+        args.push(", ")
+    }
+    put(&g, support.join5("if (", function, "(", args, "&"))
+    emit(&g, support.join5(status, ", ", lineColumn(ts, call.token), ") != 0) {", ""))
+    if resultType.kind == .String {
+        emit(&g, support.join3("yv_string_drop(&", result, ");"))
+        emit(&g, support.join2(result, " = (yv_string){0};"))
+    }
+    let before = movedState(g)
+    let sourcesBefore = sourceState(g)
+    let flow = emitBlock(&g, p, ts, reg, e.argStart, e.argCount)
+    restoreState(&g, before)
+    restoreSources(&g, sourcesBefore)
+    if flow.falls { lexer.fail(ts, e.token, "E0601", "this catch block can reach its closing brace") }
+    emit(&g, "}")
+    if resultType.kind == .Unit { return Value{ty: resultType, name: "".toString()} }
+    g.temps.push(Temporary{ty: resultType, id: n})
+    return Value{ty: resultType, name: result, temporary: true}
+}
+
 // Standard-library error enums retain their dedicated catch-_ path. User
 // results use the same owned-payload rules for named and discarded errors.
 fn catchValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression) -> Value {
@@ -1980,8 +2070,15 @@ fn catchValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: 
         if module == 2 && ts[call.token].text == "writeNewText" { op = 2 }
         if module == 3 && ts[call.token].text == "fromUtf8" { op = 3 }
         if module == 4 && ts[call.token].text == "readAll" { op = 4 }
+        if module == 1 && ts[call.token].text == "env" { op = 5 }
+        if module == 2 && ts[call.token].text == "tempDir" { op = 6 }
+        if module == 2 && ts[call.token].text == "removeFile" { op = 7 }
+        if module == 2 && ts[call.token].text == "removeDir" { op = 8 }
+        if module == 5 && ts[call.token].text == "run" { op = 9 }
+        if module == 2 && ts[call.token].text == "sameFile" { op = 10 }
     }
     if op == 0 { return userCatchValue(&g, p, ts, reg, e) }
+    if op >= 5 { return systemCatchValue(&g, p, ts, reg, e, call, op) }
     if ts[e.extra].text != "_" {
         lexer.fail(ts, e.extra, "U0001", "standard-library error bindings are outside this subset; use catch _")
     }
@@ -3431,7 +3528,8 @@ fn returnStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry
         var returned = emitExpected(&g, p, ts, reg, expr, resultType)
         // Stage0 permits a String view in a returned str and in call arguments,
         // but an explicit `let view: str = ownedString` remains a type error.
-        if resultType.kind == .Str && returned.ty.kind == .String {
+        if resultType.kind == .Str && returned.ty.kind == .String &&
+            !(returned.indexedBorrow && !returned.field) {
             var converted = scalar(&g, .Str, view(returned))
             converted.transient = true
             converted.root = ownerOf(returned)

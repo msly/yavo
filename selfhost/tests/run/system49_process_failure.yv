@@ -1,0 +1,11 @@
+use std/process
+fn attempt(args: []String) -> int {
+    let code = process.run("", args, false) catch _ { return 17 }
+    return code
+}
+fn main() {
+    let args = ["".toString(), "中文".toString(), "a\\b".toString()]
+    println(attempt(args))
+    println(args.len())
+    println(attempt(["temporary".toString()]))
+}

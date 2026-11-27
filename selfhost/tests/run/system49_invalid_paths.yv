@@ -1,0 +1,22 @@
+use std/fs
+fn same() -> int {
+    let result = fs.sameFile("bad\0path", ".") catch _ { return 1 }
+    if result { return 9 }
+    return 8
+}
+fn temp() -> int {
+    let path = fs.tempDir(".", "../bad") catch _ { return 2 }
+    return path.len()
+}
+fn file() -> int {
+    fs.removeFile("bad\0path") catch _ { return 3 }
+    return 8
+}
+fn directory() -> int {
+    fs.removeDir("bad\0path") catch _ { return 4 }
+    return 8
+}
+fn main() { println(same())
+    println(temp())
+    println(file())
+    println(directory()) }

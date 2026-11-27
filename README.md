@@ -17,9 +17,9 @@ SH-4 application acceptance and the completed SH-2 fixed point.
 [test-summary](examples/test-summary/README.md), [csv-check](examples/csv-check/README.md)
 and [dep-index](examples/dep-index/README.md) cover log statistics, structured
 text validation and dependencies across files. **All three formal SH-4 applications are complete within their declared scope.**
-The next engineering step is public process/environment/filesystem support for
-a locked-toolchain `build/run` path; performance and delivery-cost targets retain
-their separate acceptance requirements.
+Batch 49 adds public system interfaces and a standalone native `build/run` driver
+using the locked toolchain. Structured diagnostics and broader language semantics
+remain on the SH-3 path; performance and delivery-cost targets retain separate acceptance.
 
 The specification starts from **v0.5**, with dated revisions in [docs/decisions.md](docs/decisions.md). Historical revisions remain unchanged under `history/v0.x/` and Git tags `v0.1` through `v0.5`.
 
@@ -43,8 +43,8 @@ Recent changes implement index assignment, two-phase variable/field receivers, S
 
 | Check | Recorded local result | Scope |
 | --- | --- | --- |
-| Release suite | **145 passed, 0 failed, 1 ignored** | Batch 48: complete suite rerun; no Rust changes and frozen cases unchanged |
-| Debug suite | **145 passed, 0 failed, 1 ignored** | Same source, all 19 groups, independent completed local log |
+| Release suite | **151 passed, 0 failed, 1 ignored** | Batch 49: complete suite rerun after public system/runtime changes; six new integration tests |
+| Debug suite | **151 passed, 0 failed, 1 ignored** | Same source, all 20 groups, independent completed local log |
 | Frozen specification | **124 pass, 0 wrong, 3 unsupported, 0 not_run, 2 superseded** | 129 frozen cases; a different counting unit from Cargo test functions |
 | Cross-compilation | Six target formats/architectures build | Linux (static musl), Windows and macOS on x86-64/aarch64; native CI now covers Linux x86-64 plus the Windows x86-64/macOS arm64 selections below |
 | Overall `verify` | **`not_verified`** | Required audit remains unimplemented |
@@ -53,7 +53,29 @@ The ignored Cargo test is the old exploratory P0 conformance report; the current
 
 Source modules support top-level exports, per-file imports, cyclic imports and original-file diagnostics. Package dependencies and a program lockfile remain open. Multi-file `fix` returns `U0001` without writing; symlink module aliases are unsupported.
 
-### Selfhost owned graph structures and independent dependency index (batch 48, 2026-11-27)
+### Native selfhost build/run and public system APIs (batch 49, 2026-11-27)
+
+The Yavo-written compiler now directly builds and runs supported native programs
+with the installed locked Zig, without shell commands or a Rust frontend fallback.
+Its generated runtime embedding removes a source-checkout dependency. Seven new
+public functions cover environment/host, unique temporary directories, explicit
+cleanup, file identity and synchronous process execution; read-only String slices
+support argv and source-path forwarding. Cross-target, cache/PCH, installation and
+structured diagnostics remain outside this driver batch.
+
+Final local bootstrap passes **1,063/1,063 cases, 20/20 checks, zero skips**;
+all seven compatibility applications pass. The independent ordinary-driver gate
+passes **114/114 scenarios and 9/9 checks**. Actual stage2 uses ordinary `build`
+to rebuild itself; its 678,304-byte result and emitted C match the bootstrap fixed
+point, and it can `run` the independent multi-module fixture. Stage2/stage3 C is
+byte-identical at 1,614,200 bytes. The 36 new regressions and one unchanged-source
+promotion retain strict subset boundaries. Existing corpus coverage remains
+**119/394**, or **56/224** distinct entry-source bytes, with zero regressions,
+subset violations or timeouts.
+
+Local acceptance is complete; exact-commit three-platform CI remains pending. Configured jobs are not passing results. See the [validation index](compiler/validation/batch49-build-run-2026-11-27.json) and [driver contract](selfhost/tests/driver49/CONTRACT.md).
+
+### Selfhost owned graph structures and independent dependency index (batch 48, historical)
 
 The five-module, 309-line [dep-index](examples/dep-index/README.md) validates
 explicit UTF-8 module declaration files and emits a deterministic dependency-first

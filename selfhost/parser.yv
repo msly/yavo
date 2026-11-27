@@ -24,6 +24,7 @@ struct State {
     importsFs: bool = false
     importsIo: bool = false
     importsOs: bool = false
+    importsProcess: bool = false
     importsCollections: bool = false
 }
 
@@ -259,10 +260,11 @@ fn typeAtom(s: inout State, ts: Vec[Token]) -> TypeRef {
         // the "." after it and looks the type up in that module.
         if at(s, ts, ".") && ts[s.pos + 1].kind == .Word && !reservedWord(ts[s.pos + 1].text) {
             if ts[s.pos + 1].text == "Error" &&
-                ((ts[name].text == "io" && s.importsIo) || (ts[name].text == "fs" && s.importsFs)) {
+                ((ts[name].text == "io" && s.importsIo) || (ts[name].text == "fs" && s.importsFs) ||
+                (ts[name].text == "os" && s.importsOs) || (ts[name].text == "process" && s.importsProcess)) {
                 // Standard I/O errors are currently available only through
                 // the discarded catch handler, not as named payload types.
-                lexer.fail(ts, name, "U0001", "named standard I/O error types are outside the selfhost subset")
+                lexer.fail(ts, name, "U0001", "named standard error types are outside the selfhost subset")
             }
             s.pos += 2
         }
@@ -1096,6 +1098,7 @@ fn importItem(s: inout State, ts: Vec[Token]) {
         if ts[names[i]].text == "fs" { s.importsFs = true
         } else if ts[names[i]].text == "io" { s.importsIo = true
         } else if ts[names[i]].text == "os" { s.importsOs = true
+        } else if ts[names[i]].text == "process" { s.importsProcess = true
         } else if ts[names[i]].text == "collections" { s.importsCollections = true
         } else {
             lexer.fail(ts, names[i], "U0001", "this standard module is outside the selfhost subset")
@@ -1152,6 +1155,7 @@ pub fn parseFile(s: inout State, ts: Vec[Token]) {
     s.importsFs = false
     s.importsIo = false
     s.importsOs = false
+    s.importsProcess = false
     s.importsCollections = false
     loop {
         newlines(&s, ts)
@@ -1184,12 +1188,22 @@ pub fn parseFile(s: inout State, ts: Vec[Token]) {
     s.files[s.file].importsFs = s.importsFs
     s.files[s.file].importsIo = s.importsIo
     s.files[s.file].importsOs = s.importsOs
+    s.files[s.file].importsProcess = s.importsProcess
     s.files[s.file].importsCollections = s.importsCollections
     s.files[s.file].importCount = s.imports.len() - s.files[s.file].importStart
-    // A module name may not also name a top-level declaration of this file.
+    // User and standard imports share one module namespace. This check is
+    // independent of use sites and import order; a same-named function alone
+    // remains allowed, matching stage0.
+    // A user module name may not also name a top-level declaration of this file.
     var j = s.files[s.file].importStart
     while j < s.imports.len() {
         let alias = s.imports[j].alias
+        let name = ts[alias].text.clone()
+        if (name == "fs" && s.importsFs) || (name == "io" && s.importsIo) ||
+            (name == "os" && s.importsOs) || (name == "process" && s.importsProcess) ||
+            (name == "collections" && s.importsCollections) {
+            lexer.fail(ts, alias, "E0011", support.join3("module name '", name, "' conflicts with a standard import"))
+        }
         var clash = false
         var k = 0
         while k < s.functions.len() {

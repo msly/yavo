@@ -1,0 +1,1494 @@
+{
+  "schema": "yavo-selfhost-driver-cases/1",
+  "baseline": "e4c0302f2ee5b7661b17a2d0992d177d18840cc4",
+  "contract": "CONTRACT.md",
+  "stdin": "first\nsecond",
+  "source_directory": "source space 项目",
+  "entry": "main.yv",
+  "output_name": "output space 程序",
+  "probe_control_arguments": [
+    "control",
+    "",
+    "two words",
+    "\"quoted\"",
+    "\\",
+    "trail\\",
+    "combo\\\"tail\\",
+    "a&b|c;$(x)>",
+    "汉字🙂",
+    "--release",
+    "-o"
+  ],
+  "cases": [
+    {
+      "id": "build_debug_explicit",
+      "kind": "real_build",
+      "arguments": [
+        "build",
+        "@source",
+        "-o",
+        "@output"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": "empty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty",
+        "program": {
+          "exit": 0,
+          "stdout": "driver49\nstdin=first\nsecond\n",
+          "stderr": "child-stderr\n"
+        }
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ]
+    },
+    {
+      "id": "build_release_explicit",
+      "kind": "real_build",
+      "arguments": [
+        "build",
+        "@source",
+        "-o",
+        "@output",
+        "--release"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": "empty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty",
+        "program": {
+          "exit": 0,
+          "stdout": "driver49\nstdin=first\nsecond\n",
+          "stderr": "child-stderr\n"
+        }
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ]
+    },
+    {
+      "id": "build_default_name",
+      "kind": "real_build",
+      "arguments": [
+        "build",
+        "@source"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": "empty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty",
+        "program": {
+          "exit": 0,
+          "stdout": "driver49\nstdin=first\nsecond\n",
+          "stderr": "child-stderr\n"
+        }
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "default_output": true
+    },
+    {
+      "id": "build_options_before_input",
+      "kind": "real_build",
+      "arguments": [
+        "build",
+        "--release",
+        "-o",
+        "@output",
+        "@source"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": "empty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty",
+        "program": {
+          "exit": 0,
+          "stdout": "driver49\nstdin=first\nsecond\n",
+          "stderr": "child-stderr\n"
+        }
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ]
+    },
+    {
+      "id": "build_empty_cc_override",
+      "kind": "real_build",
+      "arguments": [
+        "build",
+        "@source",
+        "-o",
+        "@output"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": "empty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty",
+        "program": {
+          "exit": 0,
+          "stdout": "driver49\nstdin=first\nsecond\n",
+          "stderr": "child-stderr\n"
+        }
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "environment": {
+        "YAVO_CC": ""
+      }
+    },
+    {
+      "id": "build_replace_old_output",
+      "kind": "real_build",
+      "arguments": [
+        "build",
+        "@source",
+        "-o",
+        "@output"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": "empty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty",
+        "program": {
+          "exit": 0,
+          "stdout": "driver49\nstdin=first\nsecond\n",
+          "stderr": "child-stderr\n"
+        },
+        "old_output": "replaced"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "setup": "existing_output"
+    },
+    {
+      "id": "run_debug_stdio",
+      "kind": "real_run",
+      "arguments": [
+        "run",
+        "@source"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout": "driver49\nstdin=first\nsecond\n",
+        "stderr": "child-stderr\n",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ]
+    },
+    {
+      "id": "run_release_exact_arguments",
+      "kind": "real_run",
+      "arguments": [
+        "run",
+        "--release",
+        "@source",
+        "--",
+        "",
+        "two words",
+        "\"quoted\"",
+        "\\",
+        "trail\\",
+        "combo\\\"tail\\",
+        "a&b|c;$(x)>",
+        "汉字🙂",
+        "--release",
+        "-o"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout": "driver49\n0:\n9:two words\n8:\"quoted\"\n1:\\\n6:trail\\\n12:combo\\\"tail\\\n11:a&b|c;$(x)>\n10:汉字🙂\n9:--release\n2:-o\nstdin=first\nsecond\n",
+        "stderr": "child-stderr\n",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ]
+    },
+    {
+      "id": "run_exit37",
+      "kind": "real_run",
+      "arguments": [
+        "run",
+        "@source",
+        "--",
+        "exit37"
+      ],
+      "expected": {
+        "exit": 37,
+        "stdout": "driver49\n6:exit37\nstdin=first\nsecond\n",
+        "stderr": "child-stderr\n",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ]
+    },
+    {
+      "id": "run_empty_separator",
+      "kind": "real_run",
+      "arguments": [
+        "run",
+        "@source",
+        "--"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout": "driver49\nstdin=first\nsecond\n",
+        "stderr": "child-stderr\n",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ]
+    },
+    {
+      "id": "usage_no_arguments",
+      "kind": "frontend_only",
+      "arguments": [],
+      "expected": {
+        "exit": 2,
+        "stdout": "",
+        "stderr": "nonempty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ]
+    },
+    {
+      "id": "usage_unknown_command",
+      "kind": "frontend_only",
+      "arguments": [
+        "unknown",
+        "@source"
+      ],
+      "expected": {
+        "exit": 2,
+        "stdout": "",
+        "stderr": "nonempty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ]
+    },
+    {
+      "id": "usage_missing_input",
+      "kind": "frontend_only",
+      "arguments": [
+        "build"
+      ],
+      "expected": {
+        "exit": 2,
+        "stdout": "",
+        "stderr": "nonempty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ]
+    },
+    {
+      "id": "usage_missing_output_operand",
+      "kind": "frontend_only",
+      "arguments": [
+        "build",
+        "@source",
+        "-o"
+      ],
+      "expected": {
+        "exit": 2,
+        "stdout": "",
+        "stderr": "nonempty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ]
+    },
+    {
+      "id": "usage_duplicate_output",
+      "kind": "frontend_only",
+      "arguments": [
+        "build",
+        "@source",
+        "-o",
+        "@output",
+        "-o",
+        "@other_output"
+      ],
+      "expected": {
+        "exit": 2,
+        "stdout": "",
+        "stderr": "nonempty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ]
+    },
+    {
+      "id": "usage_duplicate_release",
+      "kind": "frontend_only",
+      "arguments": [
+        "run",
+        "@source",
+        "--release",
+        "--release"
+      ],
+      "expected": {
+        "exit": 2,
+        "stdout": "",
+        "stderr": "nonempty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ]
+    },
+    {
+      "id": "usage_extra_input",
+      "kind": "frontend_only",
+      "arguments": [
+        "build",
+        "@source",
+        "@source"
+      ],
+      "expected": {
+        "exit": 2,
+        "stdout": "",
+        "stderr": "nonempty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ]
+    },
+    {
+      "id": "usage_unknown_build_option",
+      "kind": "frontend_only",
+      "arguments": [
+        "build",
+        "@source",
+        "--unknown"
+      ],
+      "expected": {
+        "exit": 2,
+        "stdout": "",
+        "stderr": "nonempty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ]
+    },
+    {
+      "id": "usage_target_boundary",
+      "kind": "frontend_only",
+      "arguments": [
+        "build",
+        "@source",
+        "--target",
+        "x86_64-linux"
+      ],
+      "expected": {
+        "exit": 2,
+        "stdout": "",
+        "stderr": "nonempty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ]
+    },
+    {
+      "id": "usage_json_boundary",
+      "kind": "frontend_only",
+      "arguments": [
+        "build",
+        "@source",
+        "--json"
+      ],
+      "expected": {
+        "exit": 2,
+        "stdout": "",
+        "stderr": "nonempty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ]
+    },
+    {
+      "id": "usage_build_emit_c_boundary",
+      "kind": "frontend_only",
+      "arguments": [
+        "build",
+        "@source",
+        "--emit-c",
+        "@emitted"
+      ],
+      "expected": {
+        "exit": 2,
+        "stdout": "",
+        "stderr": "nonempty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ]
+    },
+    {
+      "id": "usage_run_output_boundary",
+      "kind": "frontend_only",
+      "arguments": [
+        "run",
+        "@source",
+        "-o",
+        "@output"
+      ],
+      "expected": {
+        "exit": 2,
+        "stdout": "",
+        "stderr": "nonempty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ]
+    },
+    {
+      "id": "usage_unknown_run_option",
+      "kind": "frontend_only",
+      "arguments": [
+        "run",
+        "@source",
+        "--unknown"
+      ],
+      "expected": {
+        "exit": 2,
+        "stdout": "",
+        "stderr": "nonempty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ]
+    },
+    {
+      "id": "usage_check_extra_argument",
+      "kind": "frontend_only",
+      "arguments": [
+        "check",
+        "@source",
+        "extra"
+      ],
+      "expected": {
+        "exit": 2,
+        "stdout": "",
+        "stderr": "nonempty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ]
+    },
+    {
+      "id": "usage_emit_missing_output",
+      "kind": "frontend_only",
+      "arguments": [
+        "emit-c",
+        "@source"
+      ],
+      "expected": {
+        "exit": 2,
+        "stdout": "",
+        "stderr": "nonempty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ]
+    },
+    {
+      "id": "check_compatibility",
+      "kind": "frontend_only",
+      "arguments": [
+        "check",
+        "@source"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": "empty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ]
+    },
+    {
+      "id": "emit_c_compatibility",
+      "kind": "emit",
+      "arguments": [
+        "emit-c",
+        "@source",
+        "-o",
+        "@emitted"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": "empty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty",
+        "generated_c": "nonempty"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ]
+    },
+    {
+      "id": "missing_input",
+      "kind": "frontend_only",
+      "arguments": [
+        "build",
+        "@missing",
+        "-o",
+        "@output"
+      ],
+      "expected": {
+        "exit": 3,
+        "stdout": "",
+        "stderr": "nonempty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "stderr_contains": [
+        "cannot read input"
+      ]
+    },
+    {
+      "id": "invalid_utf8_input",
+      "kind": "frontend_only",
+      "arguments": [
+        "build",
+        "@invalid_utf8",
+        "-o",
+        "@output"
+      ],
+      "expected": {
+        "exit": 3,
+        "stdout": "",
+        "stderr": "nonempty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "stderr_contains": [
+        "cannot read input"
+      ]
+    },
+    {
+      "id": "syntax_preserves_output",
+      "kind": "frontend_only",
+      "arguments": [
+        "build",
+        "@syntax",
+        "-o",
+        "@output"
+      ],
+      "expected": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "nonempty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty",
+        "old_output": "unchanged"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "setup": "existing_output",
+      "stderr_contains": [
+        "E0020"
+      ]
+    },
+    {
+      "id": "unsupported_language_boundary",
+      "kind": "frontend_only",
+      "arguments": [
+        "build",
+        "@unsupported",
+        "-o",
+        "@output"
+      ],
+      "expected": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "nonempty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "stderr_contains": [
+        "U0001"
+      ]
+    },
+    {
+      "id": "missing_module_diagnostic",
+      "kind": "frontend_only",
+      "arguments": [
+        "build",
+        "@missing_module",
+        "-o",
+        "@output"
+      ],
+      "expected": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "nonempty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "stderr_contains": [
+        "E0010"
+      ]
+    },
+    {
+      "id": "frontend_before_environment",
+      "kind": "frontend_only",
+      "arguments": [
+        "build",
+        "@syntax",
+        "-o",
+        "@output"
+      ],
+      "expected": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "nonempty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "environment": {
+        "YAVO_CC": "forbidden override"
+      },
+      "stderr_contains": [
+        "E0020"
+      ]
+    },
+    {
+      "id": "protect_entry",
+      "kind": "frontend_only",
+      "arguments": [
+        "build",
+        "@source",
+        "-o",
+        "@source"
+      ],
+      "expected": {
+        "exit": 2,
+        "stdout": "",
+        "stderr": "nonempty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "setup": "normal",
+      "stderr_contains": [
+        "refusing to overwrite a source file"
+      ]
+    },
+    {
+      "id": "protect_entry_normalized",
+      "kind": "frontend_only",
+      "arguments": [
+        "build",
+        "@source",
+        "-o",
+        "@source_normalized"
+      ],
+      "expected": {
+        "exit": 2,
+        "stdout": "",
+        "stderr": "nonempty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "setup": "normal",
+      "stderr_contains": [
+        "refusing to overwrite a source file"
+      ]
+    },
+    {
+      "id": "protect_import",
+      "kind": "frontend_only",
+      "arguments": [
+        "build",
+        "@source",
+        "-o",
+        "@module"
+      ],
+      "expected": {
+        "exit": 2,
+        "stdout": "",
+        "stderr": "nonempty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "setup": "normal",
+      "stderr_contains": [
+        "refusing to overwrite a source file"
+      ]
+    },
+    {
+      "id": "protect_entry_hardlink",
+      "kind": "frontend_only",
+      "arguments": [
+        "build",
+        "@source",
+        "-o",
+        "@source_alias"
+      ],
+      "expected": {
+        "exit": 2,
+        "stdout": "",
+        "stderr": "nonempty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "setup": "entry_hardlink",
+      "stderr_contains": [
+        "refusing to overwrite a source file"
+      ]
+    },
+    {
+      "id": "protect_import_hardlink",
+      "kind": "frontend_only",
+      "arguments": [
+        "build",
+        "@source",
+        "-o",
+        "@source_alias"
+      ],
+      "expected": {
+        "exit": 2,
+        "stdout": "",
+        "stderr": "nonempty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "setup": "module_hardlink",
+      "stderr_contains": [
+        "refusing to overwrite a source file"
+      ]
+    },
+    {
+      "id": "protect_entry_symlink",
+      "kind": "frontend_only",
+      "arguments": [
+        "build",
+        "@source",
+        "-o",
+        "@source_alias"
+      ],
+      "expected": {
+        "exit": 2,
+        "stdout": "",
+        "stderr": "nonempty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin"
+      ],
+      "setup": "entry_symlink",
+      "stderr_contains": [
+        "refusing to overwrite a source file"
+      ]
+    },
+    {
+      "id": "reject_nonempty_cc_override",
+      "kind": "environment_failure",
+      "arguments": [
+        "build",
+        "@source",
+        "-o",
+        "@output"
+      ],
+      "expected": {
+        "exit": 3,
+        "stdout": "",
+        "stderr": "nonempty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "environment": {
+        "YAVO_CC": "not-a-shell-command --flag"
+      },
+      "stderr_contains": [
+        "YAVO_CC overrides are not supported"
+      ]
+    },
+    {
+      "id": "reject_empty_yavo_home",
+      "kind": "environment_failure",
+      "arguments": [
+        "build",
+        "@source",
+        "-o",
+        "@output"
+      ],
+      "expected": {
+        "exit": 3,
+        "stdout": "",
+        "stderr": "nonempty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "environment": {
+        "YAVO_HOME": ""
+      },
+      "stderr_contains": [
+        "cannot determine Yavo home"
+      ]
+    },
+    {
+      "id": "missing_backend",
+      "kind": "environment_failure",
+      "arguments": [
+        "build",
+        "@source",
+        "-o",
+        "@output"
+      ],
+      "expected": {
+        "exit": 3,
+        "stdout": "",
+        "stderr": "nonempty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "setup": "missing_backend",
+      "stderr_contains": [
+        "cannot start pinned C toolchain"
+      ]
+    },
+    {
+      "id": "unexecutable_backend",
+      "kind": "environment_failure",
+      "arguments": [
+        "build",
+        "@source",
+        "-o",
+        "@output"
+      ],
+      "expected": {
+        "exit": 3,
+        "stdout": "",
+        "stderr": "nonempty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "setup": "unexecutable_backend",
+      "stderr_contains": [
+        "cannot start pinned C toolchain"
+      ]
+    },
+    {
+      "id": "missing_temporary_parent",
+      "kind": "environment_failure",
+      "arguments": [
+        "build",
+        "@source",
+        "-o",
+        "@output"
+      ],
+      "expected": {
+        "exit": 3,
+        "stdout": "",
+        "stderr": "nonempty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "setup": "missing_temp",
+      "stderr_contains": [
+        "cannot create temporary directory"
+      ]
+    },
+    {
+      "id": "empty_temporary_parent",
+      "kind": "environment_failure",
+      "arguments": [
+        "build",
+        "@source",
+        "-o",
+        "@output"
+      ],
+      "expected": {
+        "exit": 3,
+        "stdout": "",
+        "stderr": "nonempty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "setup": "empty_temp"
+    },
+    {
+      "id": "output_parent_missing",
+      "kind": "real_failure",
+      "arguments": [
+        "build",
+        "@source",
+        "-o",
+        "@missing_output"
+      ],
+      "expected": {
+        "exit": 4,
+        "stdout": "",
+        "stderr": "nonempty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "stderr_contains": [
+        "C toolchain failed"
+      ]
+    },
+    {
+      "id": "output_is_directory",
+      "kind": "real_failure",
+      "arguments": [
+        "build",
+        "@source",
+        "-o",
+        "@output_directory"
+      ],
+      "expected": {
+        "exit": 4,
+        "stdout": "",
+        "stderr": "nonempty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "stderr_contains": [
+        "C toolchain failed"
+      ]
+    },
+    {
+      "id": "backend_debug_argv_and_streams",
+      "kind": "probe_backend",
+      "arguments": [
+        "build",
+        "@source",
+        "-o",
+        "@output"
+      ],
+      "expected": {
+        "exit": 4,
+        "stdout": "",
+        "stderr": "nonempty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "probe_mode": "failure",
+      "backend_flags": "debug",
+      "stderr_contains_hex": [
+        "4241434b454e442d4f5554ff0a4241434b454e442d455252000a"
+      ],
+      "stderr_contains": [
+        "C toolchain failed"
+      ]
+    },
+    {
+      "id": "backend_release_argv_and_streams",
+      "kind": "probe_backend",
+      "arguments": [
+        "build",
+        "--release",
+        "@source",
+        "-o",
+        "@output"
+      ],
+      "expected": {
+        "exit": 4,
+        "stdout": "",
+        "stderr": "nonempty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "probe_mode": "failure",
+      "backend_flags": "release",
+      "stderr_contains_hex": [
+        "4241434b454e442d4f5554ff0a4241434b454e442d455252000a"
+      ],
+      "stderr_contains": [
+        "C toolchain failed"
+      ]
+    },
+    {
+      "id": "home_fallback_pinned_backend",
+      "kind": "probe_backend",
+      "arguments": [
+        "build",
+        "@source",
+        "-o",
+        "@output"
+      ],
+      "expected": {
+        "exit": 4,
+        "stdout": "",
+        "stderr": "nonempty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "probe_mode": "failure",
+      "backend_flags": "debug",
+      "setup": "fallback_home",
+      "stderr_contains_hex": [
+        "4241434b454e442d4f5554ff0a4241434b454e442d455252000a"
+      ],
+      "stderr_contains": [
+        "C toolchain failed"
+      ]
+    },
+    {
+      "id": "backend_signal_failure",
+      "kind": "probe_backend",
+      "arguments": [
+        "build",
+        "@source",
+        "-o",
+        "@output"
+      ],
+      "expected": {
+        "exit": 4,
+        "stdout": "",
+        "stderr": "nonempty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin"
+      ],
+      "probe_mode": "signal",
+      "backend_flags": "debug",
+      "stderr_contains_hex": [
+        "4241434b454e442d4f5554ff0a4241434b454e442d455252000a"
+      ],
+      "stderr_contains": [
+        "C toolchain failed"
+      ]
+    },
+    {
+      "id": "run_start_failure",
+      "kind": "probe_backend",
+      "arguments": [
+        "run",
+        "@source"
+      ],
+      "expected": {
+        "exit": 4,
+        "stdout": "",
+        "stderr": "nonempty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "probe_mode": "missing-output",
+      "backend_flags": "debug",
+      "stderr_contains": [
+        "cannot start compiled program"
+      ]
+    },
+    {
+      "id": "run_signal_status",
+      "kind": "probe_backend",
+      "arguments": [
+        "run",
+        "@source"
+      ],
+      "expected": {
+        "exit": 143,
+        "stdout": "",
+        "stderr": "empty",
+        "temp": "clean",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin"
+      ],
+      "probe_mode": "run-signal",
+      "backend_flags": "debug"
+    },
+    {
+      "id": "backend_cleanup_failure",
+      "kind": "probe_backend",
+      "arguments": [
+        "build",
+        "@source",
+        "-o",
+        "@output"
+      ],
+      "expected": {
+        "exit": 4,
+        "stdout": "",
+        "stderr": "nonempty",
+        "temp": "known-files-removed-unexpected-file-retained",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "probe_mode": "dirty",
+      "backend_flags": "debug",
+      "stderr_contains_hex": [
+        "4241434b454e442d4f5554ff0a4241434b454e442d455252000a"
+      ],
+      "stderr_contains": [
+        "cannot remove temporary directory"
+      ]
+    },
+    {
+      "id": "child_exit_cleanup_failure",
+      "kind": "probe_backend",
+      "arguments": [
+        "run",
+        "@source"
+      ],
+      "expected": {
+        "exit": 4,
+        "stdout": "child-out\n",
+        "stderr": "nonempty",
+        "temp": "known-files-removed-unexpected-file-retained",
+        "source_bytes": "unchanged",
+        "temporary_neighbor": "unchanged",
+        "program_cache": "empty"
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "probe_mode": "run-exit-dirty",
+      "backend_flags": "debug",
+      "stderr_contains": [
+        "child-err\n",
+        "cannot remove temporary directory"
+      ]
+    }
+  ]
+}

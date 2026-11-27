@@ -1,0 +1,12 @@
+fn head(xs: []String) -> str of xs { return xs[0][0..xs[0].len()] }
+fn show(xs: []String) {
+    println(xs.len())
+    for value in xs { println(value) }
+    println(xs[1].clone())
+}
+fn main() {
+    let words = ["one".toString(), "二".toString()]
+    show(words)
+    println(head(words))
+    println(words[1])
+}

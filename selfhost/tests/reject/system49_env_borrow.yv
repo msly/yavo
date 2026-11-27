@@ -1,0 +1,8 @@
+use std/os
+fn change(name: inout String) -> str of static { name.push("x")
+    return "fallback" }
+fn main() {
+    var name = "YAVO49".toString()
+    let value = os.env(name, change(&name)) catch _ { return }
+    println(value)
+}

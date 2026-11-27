@@ -152,3 +152,37 @@ spawn 的实际参数在父线程中按 V1 求值，移动的拥有值要 Send�
 `yavo allocations <function> --file <source> --json` 返回 `subject`、`status`、`operations`。status 是 `no_alloc`、`may_alloc`、`unknown` 之一；发现任何已知可能分配操作则 may_alloc，否则存在未知调用则 unknown，否则 no_alloc。parameters 和 callee 的操作分别记录。动态接口实现未知不能因接口方法体不可见就判 no_alloc。
 
 查询和 verify 用例的 setup 是运行器场景要求，不是已经运行的日志。C 运行时锁定但未审计时标 trusted_pinned，不可改成 audited。
+
+## 9. 系统接口：环境、文件身份、临时目录与同步子进程（2026-11-27）
+
+以下是第49批新增公开接口，均由 std/os、std/fs 或 std/process 显式导入。字符串与参数切片均只读借用，不消费调用者的所有权。系统接口可能分配；os.host() 返回静态视图且不分配。
+
+~~~text
+enum os.Error { Utf8(offset: int), Io(code: int), InvalidArgument }
+enum process.Error { Utf8(offset: int), Io(code: int), InvalidArgument }
+fn os.env(name: str, fallback: str) -> String ! os.Error
+fn os.host() -> str of static
+fn fs.tempDir(parent: str, prefix: str) -> String ! fs.Error
+fn fs.removeFile(path: str) -> () ! fs.Error
+fn fs.removeDir(path: str) -> () ! fs.Error
+fn fs.sameFile(first: str, second: str) -> bool ! fs.Error
+fn process.run(program: str, args: []String, stderrOnly: bool) -> int ! process.Error
+~~~
+
+os.env 返回环境值的独立 String；只有变量不存在才复制 fallback，存在的空值保持为空。fallback 可含 NUL。变量名必须非空、不得包含 = 或 NUL，否则 InvalidArgument。POSIX 值中的无效 UTF-8 返回 Utf8 及首个无效字节偏移；Windows 使用 UTF-16 环境接口，无效 UTF-16 转换返回 Io 及原生错误码。该接口不修改环境；子进程继承调用时的环境。
+
+os.host 按程序的编译目标返回 x86_64-linux、aarch64-linux、x86_64-macos、aarch64-macos、x86_64-windows 或 aarch64-windows。未知架构或系统对应分量为 unsupported。它不探测另一架构的模拟器，也不选择交叉编译目标。
+
+fs.tempDir 在显式 parent 下原子创建一个唯一空目录，返回路径；不创建父目录，不选系统默认临时位置。parent 必须非空且不含 NUL；prefix 必须为 1–64 个 ASCII 字母、数字、_ 或 -，否则 InvalidPath。POSIX 创建权限为 0700；Windows 继承父目录的 ACL。名称唯一性由原子创建及冲突重试保证，不承诺名字不可预测。目录的生命周期由调用者管理，返回 String 的析构不删除目录。
+
+fs.removeFile 删除文件目录项，不递归；POSIX 文件符号链接删除链接本身，Windows 使用 DeleteFileW 的原生文件链接语义。fs.removeDir 只删除空目录，不删除其内容；Windows 目录链接遵循 RemoveDirectoryW 的原生语义。目标不存在返回 Io，不会伪装成删除成功。路径内 NUL 返回 InvalidPath；其他失败保留原生系统错误码。
+
+fs.sameFile 跟随符号链接比较文件身份（POSIX device/inode；Windows volume/file index），相同内容不代表相同文件。先验证两条路径不含 NUL，再按 first、second 顺序查询；某一步遇到不存在或中间路径不是目录立即返回 false，其他查询失败返回 Io。目录也可比较。该接口只观察当时的身份，不锁定路径，也不承诺随后写入与检查之间的并发原子性。
+
+process.run 同步启动一个本地可执行文件，并等待退出。program 是明确的绝对或相对路径，不搜索 PATH、不调用 shell；Windows 不自动补 .exe。args 不含 argv[0]，每个元素是一个完整参数，空串、空格、引号、反斜杠和 Unicode 均保留。program 为空、program/args 含 NUL，或 Windows 转换后的命令行超过 32,767 个 UTF-16 单元（含终止 NUL）返回 InvalidArgument。Windows 参数编码对应 Microsoft C/CommandLineToArgvW 的引号与反斜杠规则；自行采用其他命令行解析规则的程序需要遵从该程序的参数约定。
+
+子进程继承工作目录、环境与原生标准输入句柄；stderrOnly=false 时继承 stdout/stderr，true 时两种输出都直接写父进程的 stderr。父进程缓冲 stdout 在启动前刷新。没有输出捕获、大小限制、超时、异步任务、shell 展开或环境覆盖；调用者应在外层决定这些策略。Windows 仅继承本次显式列出的三个标准句柄，父进程不存在有效标准句柄时返回系统错误。POSIX 使用 fork/execve，启动错误经 close-on-exec 管道返回，子进程正常退出 127 不会被误判为启动失败。
+
+成功返回值是原始正常退出码（POSIX 0–255，Windows 无符号 32 位值）；POSIX 被信号终止时成功返回 -signalNumber。创建或等待失败返回 Io，非零正常退出仍为成功 Result。参数借用持续到同步调用完成。所有路径转换、参数缓冲、进程/线程句柄和错误管道由运行时释放。
+
+平台行为依据：[CreateProcessW](https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-createprocessw)、[Windows 参数解析](https://learn.microsoft.com/en-us/cpp/c-language/parsing-c-command-line-arguments)、[显式继承句柄列表](https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-updateprocthreadattribute)、[GetEnvironmentVariableW](https://learn.microsoft.com/en-us/windows/win32/api/processenv/nf-processenv-getenvironmentvariablew)。

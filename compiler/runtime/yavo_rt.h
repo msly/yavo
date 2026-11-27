@@ -35,6 +35,8 @@
 #include <signal.h>
 #include <sys/mman.h>
 #include <sys/resource.h>
+#include <sys/stat.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #endif
 
@@ -1445,10 +1447,10 @@ static int yv_io_read_line(yv_string *out, bool *has, int64_t *code, uint32_t li
 
 /* A NUL-terminated copy of a path (not counted as a program allocation); NULL if it has a NUL. */
 static char *yv_path_copy(yv_str path, uint32_t line, uint32_t col) {
-    if (memchr(path.ptr, 0, path.len) != NULL) return NULL;
+    if (path.len > 0 && memchr(path.ptr, 0, path.len) != NULL) return NULL;
     char *p = (char *)malloc(path.len + 1);
     if (p == NULL) yv_panic("P-OOM", "out of memory", line, col);
-    memcpy(p, path.ptr, path.len);
+    if (path.len > 0) memcpy(p, path.ptr, path.len);
     p[path.len] = 0;
     return p;
 }
@@ -1592,6 +1594,413 @@ static int yv_fs_write_new_text(yv_str path, yv_str text, int64_t *code, uint32_
 }
 
 /* `os.args()`: converted and checked once at startup (S5, M5); the strings live until exit. */
+/* ---- Small public system interface (stdlib contract §9). ---- */
+
+static yv_str yv_os_host(void) {
+#if defined(__aarch64__) || defined(_M_ARM64)
+#define YV_HOST_ARCH "aarch64"
+#elif defined(__x86_64__) || defined(_M_X64)
+#define YV_HOST_ARCH "x86_64"
+#else
+#define YV_HOST_ARCH "unsupported"
+#endif
+#if defined(_WIN32)
+#define YV_HOST_OS "windows"
+#elif defined(__APPLE__)
+#define YV_HOST_OS "macos"
+#elif defined(__linux__)
+#define YV_HOST_OS "linux"
+#else
+#define YV_HOST_OS "unsupported"
+#endif
+    static const char value[] = YV_HOST_ARCH "-" YV_HOST_OS;
+    yv_str out = {value, sizeof value - 1};
+#undef YV_HOST_ARCH
+#undef YV_HOST_OS
+    return out;
+}
+
+static int yv_os_env(yv_str name, yv_str fallback, yv_string *out, int64_t *code, uint32_t line, uint32_t col) {
+    if (name.len == 0 || memchr(name.ptr, '=', name.len) != NULL) return 3;
+    char *n = yv_path_copy(name, line, col);
+    if (n == NULL) return 3;
+#ifdef _WIN32
+    wchar_t *wn = yv_wide(n);
+    free(n);
+    if (wn == NULL) return 3;
+    wchar_t *value = NULL;
+    DWORD capacity = 0, length = 0;
+    for (;;) {
+        SetLastError(ERROR_SUCCESS);
+        length = GetEnvironmentVariableW(wn, value, capacity);
+        DWORD error = GetLastError();
+        if (length == 0) {
+            free(value);
+            free(wn);
+            if (error == ERROR_ENVVAR_NOT_FOUND) *out = yv_string_from(fallback, line, col);
+            else if (error != ERROR_SUCCESS) { *code = error; return 2; }
+            return 0;
+        }
+        if (length < capacity) break;
+        capacity = length;
+        free(value);
+        value = (wchar_t *)malloc((size_t)capacity * sizeof(wchar_t));
+        if (value == NULL) yv_panic("P-OOM", "out of memory", line, col);
+    }
+    free(wn);
+    int bytes = WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, value, (int)length, NULL, 0, NULL, NULL);
+    if (bytes <= 0) { *code = GetLastError(); free(value); return 2; }
+    yv_grow((void **)&out->ptr, &out->cap, 1, bytes, line, col);
+    int written = WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, value, (int)length, out->ptr, bytes, NULL, NULL);
+    free(value);
+    if (written != bytes) { *code = GetLastError(); return 2; }
+    out->len = bytes;
+#else
+    const char *value = getenv(n);
+    free(n);
+    if (value == NULL) {
+        *out = yv_string_from(fallback, line, col);
+        return 0;
+    }
+    size_t length = strlen(value);
+    int64_t bad = yv_utf8_check(value, length);
+    if (bad >= 0) { *code = bad; return 1; }
+    yv_str v = {value, length};
+    *out = yv_string_from(v, line, col);
+#endif
+    return 0;
+}
+
+/* Parent is explicit. Prefix is a single portable ASCII component, not a path. */
+static int yv_fs_temp_dir(yv_str parent, yv_str prefix, yv_string *out, int64_t *code, uint32_t line, uint32_t col) {
+    if (parent.len == 0 || prefix.len == 0 || prefix.len > 64 ||
+        memchr(parent.ptr, 0, parent.len) != NULL) return 3;
+    for (size_t i = 0; i < prefix.len; i++) {
+        unsigned char c = (unsigned char)prefix.ptr[i];
+        if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+              (c >= '0' && c <= '9') || c == '-' || c == '_')) return 3;
+    }
+    yv_string candidate = yv_string_from(parent, line, col);
+    yv_string_push(&candidate, (yv_str){"/", 1}, line, col);
+    yv_string_push(&candidate, prefix, line, col);
+#ifdef _WIN32
+    int64_t stem_length = candidate.len;
+    static volatile LONG64 serial = 0;
+    for (unsigned attempt = 0; attempt < 256; attempt++) {
+        FILETIME stamp;
+        GetSystemTimeAsFileTime(&stamp);
+        unsigned long long tick = ((unsigned long long)stamp.dwHighDateTime << 32) | stamp.dwLowDateTime;
+        char tail[96];
+        int n = snprintf(tail, sizeof tail, "%lu-%llx-%llx", (unsigned long)GetCurrentProcessId(),
+            tick, (unsigned long long)InterlockedIncrement64(&serial));
+        candidate.len = stem_length;
+        yv_string_push(&candidate, (yv_str){tail, (size_t)n}, line, col);
+        char *p = yv_path_copy(yv_string_view(&candidate), line, col);
+        wchar_t *w = yv_wide(p);
+        free(p);
+        if (w == NULL) { yv_string_drop(&candidate); return 3; }
+        BOOL created = CreateDirectoryW(w, NULL);
+        DWORD error = created ? 0 : GetLastError();
+        free(w);
+        if (created) { *out = candidate; return 0; }
+        if (error != ERROR_ALREADY_EXISTS && error != ERROR_FILE_EXISTS) {
+            *code = error;
+            yv_string_drop(&candidate);
+            return 2;
+        }
+    }
+    *code = ERROR_ALREADY_EXISTS;
+    yv_string_drop(&candidate);
+    return 2;
+#else
+    yv_string_push(&candidate, (yv_str){"XXXXXX", 6}, line, col);
+    char *p = yv_path_copy(yv_string_view(&candidate), line, col);
+    if (mkdtemp(p) == NULL) {
+        *code = errno;
+        free(p);
+        yv_string_drop(&candidate);
+        return 2;
+    }
+    memcpy(candidate.ptr, p, (size_t)candidate.len);
+    free(p);
+    *out = candidate;
+    return 0;
+#endif
+}
+
+static int yv_fs_remove_file(yv_str path, int64_t *code, uint32_t line, uint32_t col) {
+    char *p = yv_path_copy(path, line, col);
+    if (p == NULL) return 3;
+#ifdef _WIN32
+    wchar_t *w = yv_wide(p);
+    free(p);
+    if (w == NULL) return 3;
+    BOOL ok = DeleteFileW(w);
+    DWORD error = ok ? 0 : GetLastError();
+    free(w);
+    if (!ok) { *code = error; return 2; }
+#else
+    int rc = unlink(p);
+    int error = errno;
+    free(p);
+    if (rc < 0) { *code = error; return 2; }
+#endif
+    return 0;
+}
+
+static int yv_fs_remove_dir(yv_str path, int64_t *code, uint32_t line, uint32_t col) {
+    char *p = yv_path_copy(path, line, col);
+    if (p == NULL) return 3;
+#ifdef _WIN32
+    wchar_t *w = yv_wide(p);
+    free(p);
+    if (w == NULL) return 3;
+    BOOL ok = RemoveDirectoryW(w);
+    DWORD error = ok ? 0 : GetLastError();
+    free(w);
+    if (!ok) { *code = error; return 2; }
+#else
+    int rc = rmdir(p);
+    int error = errno;
+    free(p);
+    if (rc < 0) { *code = error; return 2; }
+#endif
+    return 0;
+}
+
+static int yv_fs_same_file(yv_str first, yv_str second, bool *out, int64_t *code, uint32_t line, uint32_t col) {
+    yv_str paths[2] = {first, second};
+    *out = false;
+    /* Validate both inputs before querying either one. */
+    if ((first.len > 0 && memchr(first.ptr, 0, first.len) != NULL) ||
+        (second.len > 0 && memchr(second.ptr, 0, second.len) != NULL)) return 3;
+#ifdef _WIN32
+    BY_HANDLE_FILE_INFORMATION information[2];
+#else
+    struct stat information[2];
+#endif
+    for (unsigned i = 0; i < 2; i++) {
+        char *p = yv_path_copy(paths[i], line, col);
+#ifdef _WIN32
+        wchar_t *w = yv_wide(p);
+        free(p);
+        if (w == NULL) return 3;
+        HANDLE h = CreateFileW(w, FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+            NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+        DWORD error = h == INVALID_HANDLE_VALUE ? GetLastError() : 0;
+        free(w);
+        if (h == INVALID_HANDLE_VALUE) {
+            if (error == ERROR_FILE_NOT_FOUND || error == ERROR_PATH_NOT_FOUND || error == ERROR_DIRECTORY) return 0;
+            *code = error;
+            return 2;
+        }
+        BOOL ok = GetFileInformationByHandle(h, &information[i]);
+        error = ok ? 0 : GetLastError();
+        CloseHandle(h);
+        if (!ok) { *code = error; return 2; }
+#else
+        int rc = stat(p, &information[i]);
+        int error = errno;
+        free(p);
+        if (rc < 0) {
+            if (error == ENOENT || error == ENOTDIR) return 0;
+            *code = error;
+            return 2;
+        }
+#endif
+    }
+#ifdef _WIN32
+    *out = information[0].dwVolumeSerialNumber == information[1].dwVolumeSerialNumber &&
+        information[0].nFileIndexHigh == information[1].nFileIndexHigh &&
+        information[0].nFileIndexLow == information[1].nFileIndexLow;
+#else
+    *out = information[0].st_dev == information[1].st_dev && information[0].st_ino == information[1].st_ino;
+#endif
+    return 0;
+}
+
+#ifdef _WIN32
+/* Microsoft CRT argv quoting: double every backslash before a quote or the closing
+ * delimiter, and escape literal quotes. Every argument, including empty ones, is quoted.
+ * https://learn.microsoft.com/cpp/c-language/parsing-c-command-line-arguments */
+static void yv_process_quote(yv_string *command, yv_str arg, uint32_t line, uint32_t col) {
+    yv_string_push(command, (yv_str){"\"", 1}, line, col);
+    size_t backslashes = 0;
+    for (size_t i = 0; i < arg.len; i++) {
+        char c = arg.ptr[i];
+        if (c == '\\') { backslashes++; continue; }
+        size_t copies = c == '"' ? backslashes * 2 + 1 : backslashes;
+        for (size_t j = 0; j < copies; j++) yv_string_push(command, (yv_str){"\\", 1}, line, col);
+        backslashes = 0;
+        yv_string_push(command, (yv_str){arg.ptr + i, 1}, line, col);
+    }
+    for (size_t j = 0; j < backslashes * 2; j++) yv_string_push(command, (yv_str){"\\", 1}, line, col);
+    yv_string_push(command, (yv_str){"\"", 1}, line, col);
+}
+#endif
+
+/* args excludes argv[0]. No shell, PATH search, environment mutation, or detached child.
+ * Negative successful result means POSIX signal termination; errors describe failure
+ * to launch/wait, never an ordinary nonzero child exit. */
+static int yv_process_run(yv_str program, yv_vec args, bool stderr_only, int64_t *out, int64_t *code, uint32_t line, uint32_t col) {
+    if (program.len == 0 || memchr(program.ptr, 0, program.len) != NULL) return 3;
+    const yv_string *strings = (const yv_string *)args.ptr;
+    for (int64_t i = 0; i < args.len; i++) {
+        if (strings[i].len > 0 && memchr(strings[i].ptr, 0, (size_t)strings[i].len) != NULL) return 3;
+    }
+    char *p = yv_path_copy(program, line, col);
+    yv_flush();
+#ifdef _WIN32
+    wchar_t *application = yv_wide(p);
+    free(p);
+    if (application == NULL) return 3;
+    yv_string command = {0};
+    yv_process_quote(&command, program, line, col);
+    for (int64_t i = 0; i < args.len; i++) {
+        yv_string_push(&command, (yv_str){" ", 1}, line, col);
+        yv_process_quote(&command, yv_string_view(&strings[i]), line, col);
+    }
+    char *bytes = yv_path_copy(yv_string_view(&command), line, col);
+    yv_string_drop(&command);
+    int wide_length = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, bytes, -1, NULL, 0);
+    if (wide_length <= 0 || wide_length > 32767) {
+        free(bytes); free(application); return 3;
+    }
+    wchar_t *command_line = yv_wide(bytes);
+    free(bytes);
+    if (command_line == NULL) { free(application); return 3; }
+    HANDLE handles[3] = {NULL, NULL, NULL};
+    DWORD sources[3] = {STD_INPUT_HANDLE, stderr_only ? STD_ERROR_HANDLE : STD_OUTPUT_HANDLE, STD_ERROR_HANDLE};
+    DWORD error = 0;
+    for (unsigned i = 0; i < 3; i++) {
+        HANDLE original = GetStdHandle(sources[i]);
+        if (original == NULL || original == INVALID_HANDLE_VALUE) { error = ERROR_INVALID_HANDLE; break; }
+        if (!DuplicateHandle(GetCurrentProcess(), original, GetCurrentProcess(), &handles[i], 0, TRUE, DUPLICATE_SAME_ACCESS)) {
+            error = GetLastError(); break;
+        }
+    }
+    STARTUPINFOEXW startup = {0};
+    startup.StartupInfo.cb = sizeof startup;
+    startup.StartupInfo.dwFlags = STARTF_USESTDHANDLES;
+    startup.StartupInfo.hStdInput = handles[0];
+    startup.StartupInfo.hStdOutput = handles[1];
+    startup.StartupInfo.hStdError = handles[2];
+    SIZE_T attribute_bytes = 0;
+    bool attributes_initialized = false;
+    if (error == 0) {
+        InitializeProcThreadAttributeList(NULL, 1, 0, &attribute_bytes);
+        startup.lpAttributeList = (LPPROC_THREAD_ATTRIBUTE_LIST)malloc(attribute_bytes);
+        if (startup.lpAttributeList == NULL) yv_panic("P-OOM", "out of memory", line, col);
+        if (!InitializeProcThreadAttributeList(startup.lpAttributeList, 1, 0, &attribute_bytes)) error = GetLastError();
+        else {
+            attributes_initialized = true;
+            if (!UpdateProcThreadAttribute(startup.lpAttributeList, 0, PROC_THREAD_ATTRIBUTE_HANDLE_LIST,
+                    handles, sizeof handles, NULL, NULL)) error = GetLastError();
+        }
+    }
+    PROCESS_INFORMATION child = {0};
+    if (error == 0 && !CreateProcessW(application, command_line, NULL, NULL, TRUE,
+            EXTENDED_STARTUPINFO_PRESENT, NULL, NULL, &startup.StartupInfo, &child)) error = GetLastError();
+    if (attributes_initialized) DeleteProcThreadAttributeList(startup.lpAttributeList);
+    free(startup.lpAttributeList);
+    for (unsigned i = 0; i < 3; i++) if (handles[i] != NULL) CloseHandle(handles[i]);
+    free(command_line);
+    free(application);
+    if (error != 0) { *code = error; return 2; }
+    CloseHandle(child.hThread);
+    DWORD wait = WaitForSingleObject(child.hProcess, INFINITE);
+    DWORD status = 0;
+    if (wait != WAIT_OBJECT_0) error = GetLastError();
+    else if (!GetExitCodeProcess(child.hProcess, &status)) error = GetLastError();
+    CloseHandle(child.hProcess);
+    if (error != 0) { *code = error; return 2; }
+    *out = (int64_t)status;
+#else
+    if ((uint64_t)args.len > SIZE_MAX / sizeof(char *) - 2) yv_capacity_overflow(line, col);
+    char **argv = (char **)calloc((size_t)args.len + 2, sizeof(char *));
+    if (argv == NULL) yv_panic("P-OOM", "out of memory", line, col);
+    argv[0] = p;
+    for (int64_t i = 0; i < args.len; i++) argv[i + 1] = yv_path_copy(yv_string_view(&strings[i]), line, col);
+    int errors[2] = {-1, -1};
+    /* Serialize only creation/CLOEXEC/fork, so a concurrent launch cannot inherit
+     * the briefly non-CLOEXEC error pipe. Never hold this mutex while waiting. */
+    static pthread_mutex_t spawn_lock = PTHREAD_MUTEX_INITIALIZER;
+    int failure = pthread_mutex_lock(&spawn_lock);
+    bool locked = failure == 0;
+    if (failure == 0 && pipe(errors) < 0) failure = errno;
+    /* Closed standard streams must not let the launch-error pipe occupy fd 0/1/2:
+     * stdout redirection below must never replace our error-reporting descriptor. */
+    for (unsigned i = 0; failure == 0 && i < 2; i++) {
+        if (errors[i] <= STDERR_FILENO) {
+            int moved = fcntl(errors[i], F_DUPFD, STDERR_FILENO + 1);
+            if (moved < 0) failure = errno;
+            else { close(errors[i]); errors[i] = moved; }
+        }
+    }
+    if (failure == 0 && (fcntl(errors[0], F_SETFD, FD_CLOEXEC) < 0 ||
+                        fcntl(errors[1], F_SETFD, FD_CLOEXEC) < 0)) failure = errno;
+    pid_t pid = -1;
+    if (failure == 0) {
+        pid = fork();
+        if (pid < 0) failure = errno;
+        else if (pid == 0) {
+            /* Only async-signal-safe calls between fork and exec, including failure reporting. */
+            close(errors[0]);
+            int error = 0;
+            if (stderr_only) {
+                int rc;
+                do rc = dup2(STDERR_FILENO, STDOUT_FILENO); while (rc < 0 && errno == EINTR);
+                if (rc < 0) error = errno;
+            }
+            if (error == 0) {
+                extern char **environ;
+                execve(p, argv, environ);
+                error = errno;
+            }
+            const char *data = (const char *)&error;
+            size_t left = sizeof error;
+            while (left > 0) {
+                ssize_t n = write(errors[1], data, left);
+                if (n < 0 && errno == EINTR) continue;
+                if (n <= 0) break;
+                data += n;
+                left -= (size_t)n;
+            }
+            _exit(127);
+        }
+    }
+    if (locked) {
+        int unlocked = pthread_mutex_unlock(&spawn_lock);
+        if (failure == 0 && unlocked != 0) failure = unlocked;
+    }
+    if (errors[1] >= 0) close(errors[1]);
+    int status = 0, launch_error = 0;
+    if (pid > 0) {
+        size_t got = 0;
+        while (got < sizeof launch_error) {
+            ssize_t n = read(errors[0], (char *)&launch_error + got, sizeof launch_error - got);
+            if (n < 0 && errno == EINTR) continue;
+            if (n < 0) { failure = errno; break; }
+            if (n == 0) break;
+            got += (size_t)n;
+        }
+        if (got != 0 && got != sizeof launch_error && failure == 0) failure = EIO;
+        if (got == sizeof launch_error) failure = launch_error;
+        pid_t waited;
+        do waited = waitpid(pid, &status, 0); while (waited < 0 && errno == EINTR);
+        if (waited < 0 && failure == 0) failure = errno;
+    }
+    if (errors[0] >= 0) close(errors[0]);
+    for (int64_t i = 0; i <= args.len; i++) free(argv[i]);
+    free(argv);
+    if (failure != 0) { *code = failure; return 2; }
+    if (WIFEXITED(status)) *out = WEXITSTATUS(status);
+    else if (WIFSIGNALED(status)) *out = -(int64_t)WTERMSIG(status);
+    else { *code = EIO; return 2; }
+#endif
+    return 0;
+}
+
 static yv_vec yv_args = {0};
 
 YV_NORETURN static void yv_startup_utf8(int64_t index) {

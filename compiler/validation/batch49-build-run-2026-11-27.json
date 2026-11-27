@@ -1,0 +1,775 @@
+{
+  "schema": "yavo-batch49-validation-index/1",
+  "batch": 49,
+  "recorded_at_utc": "2026-11-27T09:05:33.442614+00:00",
+  "baseline_commit": "e4c0302f2ee5b7661b17a2d0992d177d18840cc4",
+  "scope": "Native ordinary selfhost build/run with embedded runtime and locked backend; SH-3 default replacement remains incomplete.",
+  "source_identity": {
+    "selfhost_sources": [
+      {
+        "path": "selfhost/support.yv",
+        "bytes": 2304,
+        "sha256": "ee73a0c05671b3c607372ab43d2f5376042145d1a77a82d005b51f14b46ca6e9"
+      },
+      {
+        "path": "selfhost/lexer.yv",
+        "bytes": 22396,
+        "sha256": "704f57d5c3c925bf3b296b87840209e7970e66e5021bf2d5461c7bd6f2b735b7"
+      },
+      {
+        "path": "selfhost/model.yv",
+        "bytes": 5258,
+        "sha256": "a585f852e20067dcdfd42ba9bb4c1f8ed1ccca056ae4737758d2f3467e702eaf"
+      },
+      {
+        "path": "selfhost/parser.yv",
+        "bytes": 46743,
+        "sha256": "dffd2089ddf51feca9d1088f7040436b6ff3b20cda786e4edb0f2b51ebc1a301"
+      },
+      {
+        "path": "selfhost/types.yv",
+        "bytes": 27036,
+        "sha256": "ca9ae26aeccae15d8d19ad978af4d143f80c7805524c1336c15f7d5799baa689"
+      },
+      {
+        "path": "selfhost/codegen.yv",
+        "bytes": 184080,
+        "sha256": "96c0b25194171dd500a09362d89332d6aa93ae59d40bb126287d80a317e880e2"
+      },
+      {
+        "path": "selfhost/driver.yv",
+        "bytes": 10044,
+        "sha256": "a2398b95514a80f46e6cbe42f61d85b677e46cb0f1a2cba4704b53eef4b6e754"
+      },
+      {
+        "path": "selfhost/runtime_source.yv",
+        "bytes": 93029,
+        "sha256": "21a5f8f7d558d7c6570b2525d4525ede1d75d64e58371b8c8589315d2a18e754"
+      },
+      {
+        "path": "selfhost/main.yv",
+        "bytes": 5139,
+        "sha256": "a00fcc3a218cabe3763c9c1bb1abde8791ad4f57cd71c27488ed0a79e06943cd"
+      }
+    ],
+    "runtime": {
+      "path": "compiler/runtime/yavo_rt.h",
+      "bytes": 89063,
+      "sha256": "4b490ca18f810211b35acca525e9ec1b1284e1488dd38d9ce6e391c78ac79b0a"
+    },
+    "runtime_generator": {
+      "path": "selfhost/embed_runtime.py",
+      "bytes": 2594,
+      "sha256": "eb6c51bb9508cc8e7f499529f66a3368a0f9befc3944ea27bc0fc2f73ec67cd4"
+    },
+    "toolchain_lock": {
+      "path": "compiler/toolchain.lock",
+      "bytes": 1096,
+      "sha256": "a9bbe83e644b0e1cee19c8dba8b5157eaed3e9ddc71b96d8aab2b2d2bb15f53c"
+    },
+    "stage0": {
+      "path": "compiler/target/batch49/stage0",
+      "bytes": 2883136,
+      "sha256": "b0dc58747ed0d10e27928f9673546c6381afad5f95b67627733c4042da03b2cb"
+    },
+    "rust_changes": [
+      {
+        "path": "compiler/src/check.rs",
+        "bytes": 442477,
+        "sha256": "b4c6afca48494ae997ae82bf7c4a892a20062b016d1ac3851482ef8df48b6ec3"
+      },
+      {
+        "path": "compiler/src/codegen.rs",
+        "bytes": 137645,
+        "sha256": "67ea9af58d22cbf067a2bfdd449349cc2f1683f8a3b8e7e847e506c535857218"
+      },
+      {
+        "path": "compiler/src/allocations.rs",
+        "bytes": 47380,
+        "sha256": "0909ab1da1e2715343309334ab5475089ead36fae28e991599e989b03a060c9f"
+      },
+      {
+        "path": "compiler/tests/system.rs",
+        "bytes": 18506,
+        "sha256": "21b95682a4b7e1b3125fb4bc17032db6e697cdfbe3b0766ed9a6cba060371ea7"
+      }
+    ],
+    "rust_and_production_runtime_unchanged": false
+  },
+  "public_system_api": {
+    "added_functions": [
+      "os.env",
+      "os.host",
+      "fs.tempDir",
+      "fs.removeFile",
+      "fs.removeDir",
+      "fs.sameFile",
+      "process.run"
+    ],
+    "process_contract": "Synchronous explicit program plus read-only String argv; no shell/PATH search; inherited streams or child stdout+stderr to parent stderr; normal status or negative POSIX signal.",
+    "selfhost_error_boundary": "Only discarded catch handlers for standard fallible calls; named standard Error and first-class standard Result remain U0001."
+  },
+  "regressions": {
+    "total": 1063,
+    "counts": {
+      "panic": 34,
+      "reject": 571,
+      "run": 279,
+      "shared_unsupported": 38,
+      "unsupported": 141
+    },
+    "new_cases": 36,
+    "new_counts": {
+      "run": 7,
+      "reject": 22,
+      "unsupported": 7
+    },
+    "promotions": [
+      "slice_owned_elements"
+    ],
+    "old_fixture_source_bytes_unchanged": true,
+    "manifest": {
+      "path": "selfhost/tests/cases.json",
+      "bytes": 226454,
+      "sha256": "6955d814bdf4b3db6a927de40f879e6a005f75a136429069d4ab6541f18d0d23"
+    },
+    "registration": {
+      "path": "compiler/target/batch49/regression-registration-freeze.json",
+      "bytes": 16422,
+      "sha256": "1ba41c4be77a646de8e76b3d2512c5a955e1ec2db87cdcb930f72d030ef131f1"
+    },
+    "new_sources": {
+      "run/system49_env.yv": "309290cdf7d035b07feda687ada159c5c0537879545be189b1868fa74f11d47f",
+      "run/system49_temp.yv": "1e9fd9aa7b1b28fcc7b7823c0e49f404caf16e2070983d1dbdd4928dfcd75b95",
+      "run/system49_process_failure.yv": "071cadd7cb91259afae806cbfff22a89222bd3d848dcc17fcfa88da361cf0be8",
+      "run/system49_evaluation_order.yv": "775680fd368d038a0ee91e2bf155f204b26b225e48d27c9f051a748bae76fdd5",
+      "run/system49_slice.yv": "89644e993ad29fd18303074ec34a2a1baa08a60a7dc954de2dc72c2b3af026b1",
+      "run/system49_failure_cleanup.yv": "ea6a356bf78bbef28eb6a15f484a6dad15d5e582e793282f435de63cac2f875a",
+      "run/system49_invalid_paths.yv": "14fe96ae89f699084001ec9744b6750fd1c17d298cad93eaa58289248fa660bb",
+      "reject/system49_env_arity.yv": "fe9318bcb109c543933b4a8950285f020d13de3611e95b55a334514f3dc8f9ee",
+      "reject/system49_env_type.yv": "a654fb892ea27b855ac14903f9053cc63f6cc0264477a3189a7b1b7247f87aa6",
+      "reject/system49_host_arity.yv": "e656e3d5fb2062291a96c7c88a4bdba67a3559c8026c1a544338893c5a7b77ae",
+      "reject/system49_temp_arity.yv": "06e83e187026ff59bf4ec62d7bf36e77e04eb21ace1e913bbdcba8b9bd245ee3",
+      "reject/system49_temp_type.yv": "525ae35c0b559761692d4e8ebca6995e3f4ad37c92f023e67f918bed6b97003e",
+      "reject/system49_remove_arity.yv": "68cad5af4da8aa54c34c40e9241df4d5770b2dd9485d865245b1f9b6de0ccf13",
+      "reject/system49_remove_type.yv": "f45b27ca118d21ef686a93f5bbbc7639e1f6673a56f012521d838f50d43c9936",
+      "reject/system49_samefile_arity.yv": "1490ac03242772d341d702d7c10c82897decb6d03e8aaf967a2cb29637dc3cd7",
+      "reject/system49_samefile_type.yv": "d59b13f19f81bb088f16c6ef3e5bcad7a03ff7b9eca6db81571c520e9efa54c3",
+      "reject/system49_process_arity.yv": "10f7398faa3667f202ed29ad04291d222a924b563361336e186f7505af0a62bb",
+      "reject/system49_process_program.yv": "e0ca29ddbc28d04982e078800d5faf91aea2b82dc1c792e3ae96da446c3ccc53",
+      "reject/system49_process_args.yv": "20e190fc552259a9bb6f8a0bb89748b7a0726e379e7c77e267cfee1ba5ced778",
+      "reject/system49_process_mode.yv": "a3033df950c04d14c30aafa068bb31d8a09f3d11827dc1758e291d0a4baa3e6e",
+      "reject/system49_process_borrow.yv": "da4eb633d16340d3264d72239e680e543b664d265d9ad4c8d95ebdecf3e05175",
+      "reject/system49_env_borrow.yv": "129baa7020d891cbc9d32690983725eef4710bd8f37bc86ffc2b3616add76aa3",
+      "reject/system49_slice_move.yv": "9f4ea8d8b624d35ee53326f40e02d5013b5dfdedf9e2e4f8dc9b3f69e8f34216",
+      "reject/system49_slice_escape.yv": "7f2da06f6c63d920e243534c578fc00baea1fcc2d6b7c602a7d3ec4724e1e7b6",
+      "unsupported/system49_env_named_catch.yv": "d6d1a82f5501a199aebb5ce93c14167c63463b9ed3414e7d2dc73f0c45db833f",
+      "unsupported/system49_process_named_catch.yv": "499c4599c974a8c2c64c5d4ac16ed303be59d0153a8f552a4f25739d3b90d97b",
+      "unsupported/system49_os_error_type.yv": "4de14ac6649cf07a50c2299688a44a452e69df8af2df2d3ad2cb2364bfd67bf3",
+      "unsupported/system49_process_error_type.yv": "c3c295d61344a71e48b3ac453c26bc55ec0802ca13ecc4bf9038d40135e25786",
+      "unsupported/system49_env_result_binding.yv": "5216a3acc79c9d7472b0a018a81e2f03be3ac01704902a88dd90e617409da35d",
+      "unsupported/system49_process_result_binding.yv": "b9f356918b1bb899f755020e6218d2ca1481f8ac090c77b48b8ac4cfb7cce498",
+      "unsupported/system49_slice_alias.yv": "f0a522610e85d1d86e687b4c8660f264d5c8f8ff87a82802f89f15d525fa786e",
+      "reject/system49_slice_return_view.yv": "ceae3fa2627fb17e5ac27915beafb3a59d5cfe73d9f6d1a9c3464556017adf53",
+      "reject/system49_vector_return_view.yv": "cf65e0a1fb2a3a65e32acc4f90dd5bb8a65408ea3d08ce2e976db0baa709986d",
+      "modules/system49_import_std_first/main.yv": "79b1dca1a0b54a7f98614b3a1937b53ed0fe6e9e80541bb04216015041cbfcdb",
+      "modules/system49_import_user_first/main.yv": "7065a25a949a150ac972313491ce5b0fe661525c75581017e804d8f36e1c824f",
+      "modules/system49_import_unused/main.yv": "a2a0e2f852502b0d5a5c719b086e90f507f5a477f45302205a676f5183d0f77a"
+    },
+    "namespace_supplement": {
+      "reason": "Independent review found std/process and a same-named user import were accepted instead of E0011; fix before final bootstrap.",
+      "cases": [
+        {
+          "id": "system49_import_std_first",
+          "kind": "reject",
+          "diagnostic": "E0011",
+          "file": "modules/system49_import_std_first/main.yv"
+        },
+        {
+          "id": "system49_import_user_first",
+          "kind": "reject",
+          "diagnostic": "E0011",
+          "file": "modules/system49_import_user_first/main.yv"
+        },
+        {
+          "id": "system49_import_unused",
+          "kind": "reject",
+          "diagnostic": "E0011",
+          "file": "modules/system49_import_unused/main.yv"
+        }
+      ],
+      "source_sha256": {
+        "selfhost/tests/modules/system49_import_unused/process.yv": "6ceabfdc1a0403517ca6b5435c92c50542a2bbcd9f5e1fe6c4f4246e387029d7",
+        "selfhost/tests/modules/system49_import_unused/main.yv": "a2a0e2f852502b0d5a5c719b086e90f507f5a477f45302205a676f5183d0f77a",
+        "selfhost/tests/modules/system49_import_std_first/process.yv": "6ceabfdc1a0403517ca6b5435c92c50542a2bbcd9f5e1fe6c4f4246e387029d7",
+        "selfhost/tests/modules/system49_import_std_first/main.yv": "79b1dca1a0b54a7f98614b3a1937b53ed0fe6e9e80541bb04216015041cbfcdb",
+        "selfhost/tests/modules/system49_import_user_first/process.yv": "6ceabfdc1a0403517ca6b5435c92c50542a2bbcd9f5e1fe6c4f4246e387029d7",
+        "selfhost/tests/modules/system49_import_user_first/main.yv": "7065a25a949a150ac972313491ce5b0fe661525c75581017e804d8f36e1c824f"
+      }
+    },
+    "classification": {
+      "path": "compiler/target/batch49/classification-candidate2/results.json",
+      "bytes": 524569,
+      "sha256": "b91a262c08f8e532a16e2b5857a3ca70ed610c98eb971dd7023de078f4c8c828"
+    }
+  },
+  "local_bootstrap": {
+    "status": "passed",
+    "receipt": {
+      "path": "compiler/target/ci/selfhost-batch49-complete/receipt.json",
+      "bytes": 15971121,
+      "sha256": "194d547457483c6a829f1f49cab96e28d35d9713306d6f50440a8a395d69210a"
+    },
+    "work": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch49-complete/run-f6stfx97",
+    "cases_passed": 1063,
+    "cases_total": 1063,
+    "cases_failed": 0,
+    "checks_passed": 20,
+    "checks_failed": 0,
+    "checks_skipped": 0,
+    "checks": [
+      {
+        "id": "embedded_runtime_freshness",
+        "status": "passed",
+        "passed": true
+      },
+      {
+        "id": "locked_zig",
+        "status": "passed",
+        "passed": true
+      },
+      {
+        "id": "build_yavo_frontend",
+        "status": "passed",
+        "passed": true
+      },
+      {
+        "id": "self_compilation_fixed_point",
+        "status": "passed",
+        "passed": true
+      },
+      {
+        "id": "stage3_binary_reproduces_stage2",
+        "status": "passed",
+        "passed": true
+      },
+      {
+        "id": "lexer_units",
+        "status": "passed",
+        "passed": true
+      },
+      {
+        "id": "lexer_units_selfhost",
+        "status": "passed",
+        "passed": true
+      },
+      {
+        "id": "input_output_guard",
+        "status": "passed",
+        "passed": true
+      },
+      {
+        "id": "existing_output_guard",
+        "status": "passed",
+        "passed": true
+      },
+      {
+        "id": "dot_alias_output_guard",
+        "status": "passed",
+        "passed": true
+      },
+      {
+        "id": "hardlink_output_guard",
+        "status": "passed",
+        "passed": true
+      },
+      {
+        "id": "symlink_output_guard",
+        "status": "passed",
+        "passed": true
+      },
+      {
+        "id": "test_summary_application",
+        "status": "passed",
+        "passed": true
+      },
+      {
+        "id": "unit_conversion_application",
+        "status": "passed",
+        "passed": true
+      },
+      {
+        "id": "text_diff_application",
+        "status": "passed",
+        "passed": true
+      },
+      {
+        "id": "sliding_median_application",
+        "status": "passed",
+        "passed": true
+      },
+      {
+        "id": "atomic_ledger_application",
+        "status": "passed",
+        "passed": true
+      },
+      {
+        "id": "csv_check_application",
+        "status": "passed",
+        "passed": true
+      },
+      {
+        "id": "dep_index_application",
+        "status": "passed",
+        "passed": true
+      },
+      {
+        "id": "inputs_unchanged_during_run",
+        "status": "passed",
+        "passed": true
+      }
+    ],
+    "stage2_c": {
+      "bytes": 1614200,
+      "sha256": "9919319c50ebd915682d186792ef2d049e354b06978ac0827246310c426e4893"
+    },
+    "stage3_c": {
+      "bytes": 1614200,
+      "sha256": "9919319c50ebd915682d186792ef2d049e354b06978ac0827246310c426e4893"
+    },
+    "stage2_binary": {
+      "path": "compiler/target/ci/selfhost-batch49-complete/run-f6stfx97/stages/stage2/yavo-selfhost",
+      "bytes": 678304,
+      "sha256": "5a57fdd4f210f59b45cd91d2c9e147d7b6a907977cfe1ace39760a82b9880ed9"
+    },
+    "stage3_binary": {
+      "path": "compiler/target/ci/selfhost-batch49-complete/run-f6stfx97/stages/stage3/yavo-selfhost",
+      "bytes": 678304,
+      "sha256": "5a57fdd4f210f59b45cd91d2c9e147d7b6a907977cfe1ace39760a82b9880ed9"
+    },
+    "c_byte_identical": true,
+    "binary_byte_identical": true,
+    "compatibility_applications": {
+      "test_summary_application": {
+        "passed": true,
+        "applicable": 71
+      },
+      "unit_conversion_application": {
+        "passed": true,
+        "applicable": 20
+      },
+      "text_diff_application": {
+        "passed": true,
+        "applicable": 35,
+        "executions": 140
+      },
+      "sliding_median_application": {
+        "passed": true,
+        "applicable": 28,
+        "executions": 112
+      },
+      "atomic_ledger_application": {
+        "passed": true,
+        "applicable": 32,
+        "executions": 128
+      },
+      "csv_check_application": {
+        "passed": true,
+        "applicable": 138,
+        "executions": 828,
+        "ordinary_executions": 552,
+        "cleanup_executions": 276
+      },
+      "dep_index_application": {
+        "passed": true,
+        "applicable": 112,
+        "executions": 672,
+        "ordinary_executions": 448,
+        "cleanup_executions": 224
+      }
+    }
+  },
+  "ordinary_driver": {
+    "status": "passed",
+    "formal": true,
+    "receipt": {
+      "path": "compiler/target/ci/selfhost-driver-batch49/receipt.json",
+      "bytes": 1158995,
+      "sha256": "fdb852a646d160083af99283c5fd3db66823ef45c6b5fe3ed84c5e340e154e56"
+    },
+    "contract": {
+      "path": "selfhost/tests/driver49/CONTRACT.md",
+      "bytes": 4567,
+      "sha256": "a2ee58db84ab85c48bc7d0dcaa0213eb151ef35d6b7900134b4ecaf6fdeab5da"
+    },
+    "freeze": {
+      "schema": "yavo-driver49-frozen-oracle/1",
+      "frozen_at_utc": "2026-11-27T08:40:43.158367+00:00",
+      "baseline": "e4c0302f2ee5b7661b17a2d0992d177d18840cc4",
+      "production_driver_executed_before_freeze": false,
+      "production_driver_source_read_before_freeze": false,
+      "independent_preflight": "oracle-preflight.json",
+      "case_count": 55,
+      "applicable": {
+        "linux": 55,
+        "darwin": 55,
+        "win32": 52
+      },
+      "fixture_development": "Initial baseline-stage0 check diagnosed missing of static on utility.banner; corrected before this freeze. No driver-dependent fixture rewrite. Independent native argv control and immutable batch48 stage0 fixture run then passed.",
+      "sha256": {
+        "CONTRACT.md": "a2ee58db84ab85c48bc7d0dcaa0213eb151ef35d6b7900134b4ecaf6fdeab5da",
+        "cases.json": "56928ddae61ccee21fe5ee19e7ec20e63d36337d09ea16388683376ad2b9293c",
+        "main.yv": "2bd19ae6e9aa9acef3fc0ef97e4654c5af13c597cf5f7cee91e508db6e78fe41",
+        "utility.yv": "2858ce2c241f7d6be136cb19646ca2b567d2241cfbcad242e24d80f2cb10b823",
+        "syntax.yv": "3660c90fc92553ef7e6be9a7b680af5a1721c91a314bdff47ddcb4fe2bd6ed7a",
+        "unsupported.yv": "49d5e31404ad978e95d6597150427d775bd30947f613238f0822ce59fd042bd9",
+        "missing_module.yv": "940ea587b1a060fb6c049d0d7ea32ab3fa1cdda5d2b3427f8edcd8fc3d5ba45d",
+        "native_probe.c": "f4536a69c3c45a86a47e76634f0aeb4daaf75b854c8ec3a566e5e48c90869a2e",
+        "oracle-preflight.json": "6e2513c2601e83b04bb7735d312d352ad71d517a36ca8f975318d111164358db"
+      }
+    },
+    "supplemental_freeze": {
+      "schema": "yavo-driver49-supplemental-freeze/1",
+      "frozen_at_utc": "2026-11-27T08:42:48.051734+00:00",
+      "production_acceptance_harness_executed_before_freeze": false,
+      "source": "supplemental-cases.json",
+      "sha256": "f610edc7af32914811606b84dadcabb10fe4df1ed21c5c09e344e4291ee24b85",
+      "case_count": 2,
+      "applicable_all_three_platforms": true,
+      "primary_freeze_unchanged": "e50b846965ac8f655fe6ea4d54b224ec465e5894e96d896ca6c4eccad62ce8a9"
+    },
+    "primary_cases": 55,
+    "supplemental_cases": 2,
+    "applicable_per_driver": {
+      "posix": 57,
+      "windows": 54
+    },
+    "expected_dual_driver_executions": {
+      "posix": 114,
+      "windows": 108
+    },
+    "local_executions": 114,
+    "local_passed": 114,
+    "local_failed": 0,
+    "local_checks": [
+      {
+        "id": "locked_zig",
+        "passed": true
+      },
+      {
+        "id": "embedded_runtime_freshness",
+        "passed": true
+      },
+      {
+        "id": "native_probe_build",
+        "passed": true
+      },
+      {
+        "id": "native_probe_independent_argv_control",
+        "passed": true
+      },
+      {
+        "id": "ordinary_stage2_builds_compiler",
+        "passed": true
+      },
+      {
+        "id": "ordinary_rebuilt_emits_fixed_point_c",
+        "passed": true
+      },
+      {
+        "id": "ordinary_rebuilt_runs_program",
+        "passed": true
+      },
+      {
+        "id": "inputs_unchanged_during_run",
+        "passed": true
+      },
+      {
+        "id": "complete_case_inventory",
+        "passed": true
+      }
+    ],
+    "resources": {
+      "commands": 133,
+      "commands_with_rss": 133,
+      "max_observed_child_rss_bytes": 366190592,
+      "scope": "wait4 waited-child RSS on POSIX; not simultaneous process-tree RSS; no P50 or token/cost claim"
+    },
+    "rebuilt_by_ordinary_stage2": {
+      "path": "compiler/target/ci/selfhost-driver-batch49/attempt-z506of74/ordinary self build 自举/rebuilt-selfhost",
+      "bytes": 678304,
+      "sha256": "5a57fdd4f210f59b45cd91d2c9e147d7b6a907977cfe1ace39760a82b9880ed9"
+    },
+    "rebuilt_fixed_point_c": {
+      "path": "compiler/target/ci/selfhost-driver-batch49/attempt-z506of74/ordinary self build 自举/rebuilt-fixed-point.c",
+      "bytes": 1614200,
+      "sha256": "9919319c50ebd915682d186792ef2d049e354b06978ac0827246310c426e4893"
+    },
+    "rebuilt_binary_equals_bootstrap_stage2": true,
+    "ordinary_self_build_seconds_single_observation": 11.886352872475982,
+    "compile_p50_seconds": null,
+    "tokens": null,
+    "monetary_cost": null,
+    "zig_cache_cleanup": {
+      "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-driver-batch49/attempt-z506of74/zig-caches",
+      "status": "removed"
+    }
+  },
+  "system_runtime_validation": {
+    "rust_new_integration_tests": 6,
+    "native_probe": {
+      "path": "compiler/target/batch49/system-probe-local/receipt.json",
+      "bytes": 1643,
+      "sha256": "dc19607de1e8626f5ce4e7e0529c48474d06195b4ccdbf351e3c3a514d6af504"
+    },
+    "cross_compiled_objects": [
+      {
+        "target": "x86_64-windows-gnu",
+        "status": "passed",
+        "runtime_sha256": "4b490ca18f810211b35acca525e9ec1b1284e1488dd38d9ce6e391c78ac79b0a",
+        "exit_code": 0,
+        "stderr": "",
+        "seconds": 0.7595090866088867
+      },
+      {
+        "target": "aarch64-macos",
+        "status": "passed",
+        "runtime_sha256": "4b490ca18f810211b35acca525e9ec1b1284e1488dd38d9ce6e391c78ac79b0a",
+        "exit_code": 0,
+        "stderr": "",
+        "seconds": 0.12399172782897949
+      },
+      {
+        "target": "aarch64-windows-gnu",
+        "status": "passed",
+        "runtime_sha256": "4b490ca18f810211b35acca525e9ec1b1284e1488dd38d9ce6e391c78ac79b0a",
+        "exit_code": 0,
+        "stderr": "",
+        "seconds": 0.3089334964752197
+      },
+      {
+        "target": "x86_64-macos",
+        "status": "passed",
+        "runtime_sha256": "4b490ca18f810211b35acca525e9ec1b1284e1488dd38d9ce6e391c78ac79b0a",
+        "exit_code": 0,
+        "stderr": "",
+        "seconds": 0.12282276153564453
+      },
+      {
+        "target": "x86_64-linux-musl",
+        "status": "passed",
+        "runtime_sha256": "4b490ca18f810211b35acca525e9ec1b1284e1488dd38d9ce6e391c78ac79b0a",
+        "exit_code": 0,
+        "stderr": "",
+        "seconds": 0.12157821655273438
+      },
+      {
+        "target": "aarch64-linux-musl",
+        "status": "passed",
+        "runtime_sha256": "4b490ca18f810211b35acca525e9ec1b1284e1488dd38d9ce6e391c78ac79b0a",
+        "exit_code": 0,
+        "stderr": "",
+        "seconds": 0.11765360832214355
+      }
+    ],
+    "independent_gcc_asan_ubsan": {
+      "status": "passed",
+      "compiler": "gcc (Debian 14.2.0-19) 14.2.0",
+      "runtime_sha256": "4b490ca18f810211b35acca525e9ec1b1284e1488dd38d9ce6e391c78ac79b0a",
+      "probe_sha256": "2c681ef355e9cfacbed11656d35be7b306a6b1d6e94e8a4c1cf1891d4beedf23",
+      "evidence": {
+        "path": "compiler/target/batch49/system-independent-gcc.json",
+        "bytes": 15741,
+        "sha256": "1292ed8aef1f1a4f21b78b952761778a87c0222739424997cfda85a103c7276c"
+      },
+      "positive_negative_controls": 3,
+      "process_api_calls": 102,
+      "normal_exits": 67,
+      "signal_terminations": 1,
+      "launch_failures": 33,
+      "invalid_arguments": 1,
+      "successful_child_program_executions": 68
+    },
+    "ci_required_sanitized_entry_executions": 15,
+    "ci_scope": "One direct C runtime probe plus seven frozen system49 run cases generated independently by stage0 and actual final stage2; controls excluded from 15."
+  },
+  "rust_full_regressions": {
+    "debug": {
+      "passed": 151,
+      "failed": 0,
+      "ignored": 1,
+      "groups": 20,
+      "job": {
+        "path": "compiler/target/batch49/rust-debug.json",
+        "bytes": 279,
+        "sha256": "c509c7322e60bb5c4f908d6196901105a2cae18b2caa4a3b448efc3fc32067fe"
+      },
+      "stdout": {
+        "path": "compiler/target/batch49/rust-debug.stdout",
+        "bytes": 12893,
+        "sha256": "b542ebb7f8b0e3fcbed6d4b2eec80cc46b9fe15e601f472e6fa6580d3d53e6ce"
+      }
+    },
+    "release": {
+      "passed": 151,
+      "failed": 0,
+      "ignored": 1,
+      "groups": 20,
+      "job": {
+        "path": "compiler/target/batch49/rust-release.json",
+        "bytes": 298,
+        "sha256": "1ef64927c8d442eac3e60e0f44b3018ca17ae2d0c74e5b380791b19fed143a4e"
+      },
+      "stdout": {
+        "path": "compiler/target/batch49/rust-release.stdout",
+        "bytes": 12891,
+        "sha256": "5f630fe0f196c557538679facef489d4b235591838cca7c97ebcae95410d9272"
+      }
+    }
+  },
+  "frozen_conformance": {
+    "counts": {
+      "pass": 124,
+      "superseded": 2,
+      "unsupported": 3
+    },
+    "report": {
+      "path": "compiler/target/tmp/conformance-report.json",
+      "bytes": 14930,
+      "sha256": "eb67ee505e0a0f0fad8dacfad2df80851a80fdfd3db1aed1b7e02c2531edeefe"
+    }
+  },
+  "coverage": {
+    "schema": "yavo-batch49-coverage/1",
+    "compiler": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch49-complete/run-f6stfx97/stages/stage2/yavo-selfhost",
+    "compiler_sha256": "5a57fdd4f210f59b45cd91d2c9e147d7b6a907977cfe1ace39760a82b9880ed9",
+    "stage0_sha256": "b0dc58747ed0d10e27928f9673546c6381afad5f95b67627733c4042da03b2cb",
+    "baseline_sha256": "162fd5c0f40b13b960a91a25ad9f12cb714cbb9e5831856cb1bfb51ef710ba60",
+    "summary": {
+      "original": {
+        "sources": 613,
+        "stage0_accepted": 392,
+        "selfhost_accepted": 117,
+        "stage0_unique_entry_bytes": 222,
+        "selfhost_unique_entry_bytes": 54
+      },
+      "batch47": {
+        "sources": 617,
+        "stage0_accepted": 393,
+        "selfhost_accepted": 118,
+        "stage0_unique_entry_bytes": 223,
+        "selfhost_unique_entry_bytes": 55
+      },
+      "batch48": {
+        "sources": 622,
+        "stage0_accepted": 394,
+        "selfhost_accepted": 119,
+        "stage0_unique_entry_bytes": 224,
+        "selfhost_unique_entry_bytes": 56
+      },
+      "all": {
+        "sources": 622,
+        "stage0_accepted": 394,
+        "selfhost_accepted": 119,
+        "stage0_unique_entry_bytes": 224,
+        "selfhost_unique_entry_bytes": 56
+      }
+    },
+    "lost": [],
+    "gained_previous": [],
+    "accepted_additions": [],
+    "violations": [],
+    "timeouts": [],
+    "abnormal_exits": [],
+    "previous_source_changes": [],
+    "stage0_classification_changes": [],
+    "source_changes_during_run": [],
+    "compiler_identities_unchanged": true,
+    "passed": true
+  },
+  "coverage_evidence": {
+    "path": "compiler/target/batch49/final-stage2-coverage.json",
+    "bytes": 366950,
+    "sha256": "22f882baf1674d31692be692819c701bf1f66d34ad01f15cb43c0523311381c3"
+  },
+  "first_unsupported_reasons": {
+    "this standard module is outside the selfhost subset": 29,
+    "Map values other than int, bool and byte are outside the selfhost subset": 27,
+    "tuple vector elements are outside the selfhost subset": 25,
+    "generic types and interfaces are outside the selfhost subset": 18,
+    "floating-point numbers are not in the bootstrap subset": 16,
+    "standard-library error bindings are outside this subset; use catch _": 11,
+    "type suffix is outside the selfhost subset": 10,
+    "expression is outside the selfhost SH-1 subset": 9,
+    "this Optional payload type is outside the selfhost subset": 9,
+    "numeric conversions are outside the selfhost subset": 8,
+    "type is outside the selfhost subset": 7,
+    "numeric type constants are outside the selfhost subset": 7,
+    "statement is outside the selfhost SH-1 subset": 7,
+    "type 'i64' is outside the selfhost subset": 7,
+    "methods are outside the selfhost subset": 6,
+    "expression catch handlers are outside the selfhost subset": 6,
+    "item is outside the selfhost subset": 6,
+    "nested Optional and container payloads are outside the selfhost subset": 6,
+    "owned Optional payloads other than flat String tuples are outside the selfhost subset": 6,
+    "dereference is outside the selfhost subset": 5,
+    "enum payloads are outside the selfhost subset": 4,
+    "Optional fields are outside the selfhost subset": 4,
+    "generics are outside the selfhost SH-1 subset": 4,
+    "borrowed returns viewing several owned strings are outside this subset": 4,
+    "generic expressions are outside the selfhost subset": 3,
+    "zero-argument output is outside the selfhost subset": 3,
+    "vector method is outside the selfhost subset": 3,
+    "this Map method is outside the selfhost subset": 3,
+    "vectors of views into owned values are outside this subset": 3,
+    "assert messages are outside the selfhost subset": 2,
+    "vector slices are outside the selfhost subset": 2,
+    "type 'u8' is outside the selfhost subset": 2,
+    "Map keys other than String are outside the selfhost subset": 2,
+    "type 'i32' is outside the selfhost subset": 1,
+    "type 'i8' is outside the selfhost subset": 1,
+    "type 'u32' is outside the selfhost subset": 1,
+    "builtin is outside the selfhost subset": 1,
+    "only Heap[(String, int)] is in the selfhost subset": 1,
+    "block statements are outside the selfhost subset": 1,
+    "Set elements other than String are outside the selfhost subset": 1,
+    "string method is outside the selfhost subset": 1,
+    "tuple destructuring is outside the selfhost subset": 1,
+    "named standard error types are outside the selfhost subset": 1,
+    "indexed places for owned vector elements are outside this subset": 1
+  },
+  "review_corrections": [
+    "String indexed borrow cannot implicitly become a returned str; explicit slice required.",
+    "Standard/user module alias collisions reject E0011 while ordinary same-named functions remain valid.",
+    "POSIX launch-error pipes avoid fd 0/1/2 and serialize creation/CLOEXEC/fork only, not child waits.",
+    "Zero-length NULL path inputs avoid memchr/memcpy nonnull UB.",
+    "Relative temporary roots beginning with - or @ are protected from backend option/response-file parsing."
+  ],
+  "excluded_preliminary_attempts": [
+    {
+      "path": "compiler/target/batch49/bootstrap-final-aborted.json",
+      "bytes": 3279529,
+      "sha256": "bfae46ed331e1db69cfc14fd646ef338ab7ecd2eb420544c3dc94e9d15eb35db"
+    },
+    {
+      "path": "compiler/target/batch49/coverage-inventory-correction.json",
+      "bytes": 193,
+      "sha256": "53b366aabb269b3b299bcfeec96fb041f4f391973da5fa0ab59ba73a8cb4ae60"
+    }
+  ],
+  "milestones": {
+    "SH-2": "complete for declared subset",
+    "SH-3": "native ordinary build/run complete locally; not the daily default compiler",
+    "SH-4_formal_cli": "3/3 maintained",
+    "formal_performance": "not independently accepted",
+    "relative_delivery_cost": "unproven; complete token/currency measurement absent"
+  },
+  "next_batch": "Freeze check --json success/first-error contract; source ranges and snapshot hashes; preserve human diagnostics and exact unsupported boundaries. Broader language semantics remain required for SH-3.",
+  "ci": {
+    "status": "pending",
+    "implementation_commit": null,
+    "jobs_passed": null,
+    "jobs_total": 6,
+    "scope": "Exact implementation commit must pass native Linux x86-64, Windows x86-64, macOS arm64 and three independent jobs; configured steps are not results."
+  }
+}

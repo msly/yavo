@@ -1,5 +1,34 @@
 # GitHub CI
 
+## Batch 49 ordinary selfhost build/run acceptance
+
+`tools/ci/selfhost_driver.py` runs after a successful complete bootstrap on all
+three native platforms. It binds the actual final stage2 and the Rust-built
+stage1 to unchanged compiler/runtime/toolchain inputs, then applies the same
+frozen driver cases to both. The independent primary inventory is 55 on POSIX
+and 52 on Windows; two separately frozen relative-temporary-root regressions
+bring each driver to 57 or 54. The expected scenario execution inventory is
+therefore **114 on POSIX or 108 on Windows**, excluding setup controls, explicit
+execution of built programs and the ordinary self-build checks.
+
+The driver gate covers native Debug/Release `build/run`, multiple source files,
+spaces/Unicode paths, empty/quoted/backslash/shell-metacharacter arguments,
+stdio and exit propagation, source-identity protection including hardlinks,
+pinned-backend failure modes, unsupported options, no program-cache writes,
+and temporary cleanup including deliberate unknown residue. A controlled native
+probe in a private pinned-toolchain path checks backend argv and raw diagnostic
+bytes separately from real Zig builds. Final stage2 also uses ordinary `build`
+on unchanged compiler sources; the resulting compiler must emit the existing
+fixed-point C and run the independent test program. This establishes the native
+uncached driver closure, not complete SH-3 or a performance/cost target.
+
+Bootstrap adds an `embedded_runtime_freshness` check and binds the embedding
+generator, production header, toolchain lock and generated Yavo module. Native
+Rust CI also runs the `system` integration target in Debug and Release. Driver
+evidence is packed as `compiler/target/ci/selfhost-driver.tar.gz`; regenerable Zig
+caches are removed first. The [frozen driver contract and cases](../../selfhost/tests/driver49/README.md)
+describe the independent-preflight and supplemental-regression provenance.
+
 `Yavo CI` runs on pushes to `main`, pull requests, and manual dispatches. Changes
 limited to Markdown or archived validation JSON do not rerun it; compiler,
 runtime, fixtures, scripts, locks and workflow changes still trigger every job.

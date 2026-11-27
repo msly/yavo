@@ -1,0 +1,12 @@
+use std/process
+fn program() -> String { print("p")
+    return "".toString() }
+fn arguments() -> Vec[String] { print("a")
+    return ["arg".toString()] }
+fn mode() -> bool { print("m")
+    return false }
+fn launch() -> int {
+    let code = process.run(program(), arguments(), mode()) catch _ { return 7 }
+    return code
+}
+fn main() { println(launch()) }

@@ -1,0 +1,75 @@
+{
+  "schema": "yavo-driver49-independent-oracle-preflight/1",
+  "production_driver_executed": false,
+  "checks": [
+    {
+      "id": "probe-build",
+      "argv": [
+        "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+        "cc",
+        "-std=c17",
+        "-O2",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/driver49/native_probe.c",
+        "-o",
+        "/data1/workspace/github/workspace/yavo/compiler/target/batch49/driver-oracle-preflight/probe"
+      ],
+      "exit": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "probe-control",
+      "argv": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/batch49/driver-oracle-preflight/probe",
+        "control",
+        "",
+        "two words",
+        "\"quoted\"",
+        "\\",
+        "trail\\",
+        "combo\\\"tail\\",
+        "a&b|c;$(x)>",
+        "汉字🙂",
+        "--release",
+        "-o"
+      ],
+      "exit": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "baseline-fixture-build",
+      "argv": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/batch48/stage0",
+        "build",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/driver49/main.yv",
+        "--release",
+        "-o",
+        "/data1/workspace/github/workspace/yavo/compiler/target/batch49/driver-oracle-preflight/fixture"
+      ],
+      "exit": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "baseline-fixture-run",
+      "argv": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/batch49/driver-oracle-preflight/fixture",
+        "",
+        "two words",
+        "\"quoted\"",
+        "\\",
+        "trail\\",
+        "combo\\\"tail\\",
+        "a&b|c;$(x)>",
+        "汉字🙂",
+        "--release",
+        "-o"
+      ],
+      "exit": 0,
+      "stdout_sha256": "0c05e4d3f4990e4a2e7af202d25d202f3354d466233aedabb008cf08f2062c7e",
+      "stderr_sha256": "5ae43001884cd615ebc28995395198d0417d3533601a43e96c935625e9aa59c0"
+    }
+  ],
+  "status": "passed"
+}

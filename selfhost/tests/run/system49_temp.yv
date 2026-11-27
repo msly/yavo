@@ -1,0 +1,18 @@
+use std/fs
+fn main() {
+    let first = fs.tempDir(".", "yavo49-") catch _ { return }
+    let second = fs.tempDir(".", "yavo49-") catch _ { return }
+    let path = format("${first}/probe.txt")
+    let alias = format("${first}/./probe.txt")
+    fs.writeNewText(path, "payload") catch _ { return }
+    println(first != second)
+    let same = fs.sameFile(path, alias) catch _ { return }
+    println(same)
+    let missing = fs.sameFile(path, format("${second}/missing")) catch _ { return }
+    println(missing)
+    let contents = fs.readText(path) catch _ { return }
+    println(contents)
+    fs.removeFile(path) catch _ { return }
+    fs.removeDir(first) catch _ { return }
+    fs.removeDir(second) catch _ { return }
+}

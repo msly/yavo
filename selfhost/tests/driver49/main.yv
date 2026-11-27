@@ -1,0 +1,22 @@
+use std/{io, os}
+use utility
+
+fn run() -> int {
+    let arguments = os.args()
+    println(utility.banner())
+    var i = 1
+    while i < arguments.len() {
+        println("${arguments[i].len()}:${arguments[i]}")
+        i += 1
+    }
+    let input = io.readAll() catch _ { return 91 }
+    println("stdin=${input}")
+    eprintln("child-stderr")
+    if arguments.len() > 1 && arguments[1] == "exit37" { return 37 }
+    return 0
+}
+
+fn main() {
+    let status = run()
+    os.exit(status)
+}

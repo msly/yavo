@@ -4488,9 +4488,9 @@
     },
     {
       "id": "slice_owned_elements",
-      "kind": "unsupported",
-      "diagnostic": "U0001",
-      "file": "unsupported/slice_owned_elements.yv"
+      "file": "unsupported/slice_owned_elements.yv",
+      "kind": "run",
+      "stdout": "1\n"
     },
     {
       "id": "slice_range",
@@ -7035,6 +7035,222 @@
       "batch": "nested-vec-owned-tuple-heap-dep-cli",
       "diagnostic": "U0001",
       "reason": "The imported standard fs.Error type remains outside the selfhost subset; stage0 accepts this source."
+    },
+    {
+      "id": "system49_env",
+      "kind": "run",
+      "file": "run/system49_env.yv",
+      "stdout": "fallback\n0\ntrue\n7\n"
+    },
+    {
+      "id": "system49_temp",
+      "kind": "run",
+      "file": "run/system49_temp.yv",
+      "stdout": "true\ntrue\nfalse\npayload\n"
+    },
+    {
+      "id": "system49_process_failure",
+      "kind": "run",
+      "file": "run/system49_process_failure.yv",
+      "stdout": "17\n3\n17\n"
+    },
+    {
+      "id": "system49_evaluation_order",
+      "kind": "run",
+      "file": "run/system49_evaluation_order.yv",
+      "stdout": "pam7\n"
+    },
+    {
+      "id": "system49_slice",
+      "kind": "run",
+      "file": "run/system49_slice.yv",
+      "stdout": "2\none\n二\n二\none\n二\n"
+    },
+    {
+      "id": "system49_failure_cleanup",
+      "kind": "run",
+      "file": "run/system49_failure_cleanup.yv",
+      "stdout": "clean\n"
+    },
+    {
+      "id": "system49_invalid_paths",
+      "kind": "run",
+      "file": "run/system49_invalid_paths.yv",
+      "stdout": "1\n2\n3\n4\n"
+    },
+    {
+      "id": "system49_env_arity",
+      "kind": "reject",
+      "file": "reject/system49_env_arity.yv",
+      "diagnostic": "E0012"
+    },
+    {
+      "id": "system49_env_type",
+      "kind": "reject",
+      "file": "reject/system49_env_type.yv",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "system49_host_arity",
+      "kind": "reject",
+      "file": "reject/system49_host_arity.yv",
+      "diagnostic": "E0012"
+    },
+    {
+      "id": "system49_temp_arity",
+      "kind": "reject",
+      "file": "reject/system49_temp_arity.yv",
+      "diagnostic": "E0012"
+    },
+    {
+      "id": "system49_temp_type",
+      "kind": "reject",
+      "file": "reject/system49_temp_type.yv",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "system49_remove_arity",
+      "kind": "reject",
+      "file": "reject/system49_remove_arity.yv",
+      "diagnostic": "E0012"
+    },
+    {
+      "id": "system49_remove_type",
+      "kind": "reject",
+      "file": "reject/system49_remove_type.yv",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "system49_samefile_arity",
+      "kind": "reject",
+      "file": "reject/system49_samefile_arity.yv",
+      "diagnostic": "E0012"
+    },
+    {
+      "id": "system49_samefile_type",
+      "kind": "reject",
+      "file": "reject/system49_samefile_type.yv",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "system49_process_arity",
+      "kind": "reject",
+      "file": "reject/system49_process_arity.yv",
+      "diagnostic": "E0012"
+    },
+    {
+      "id": "system49_process_program",
+      "kind": "reject",
+      "file": "reject/system49_process_program.yv",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "system49_process_args",
+      "kind": "reject",
+      "file": "reject/system49_process_args.yv",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "system49_process_mode",
+      "kind": "reject",
+      "file": "reject/system49_process_mode.yv",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "system49_process_borrow",
+      "kind": "reject",
+      "file": "reject/system49_process_borrow.yv",
+      "diagnostic": "E0102"
+    },
+    {
+      "id": "system49_env_borrow",
+      "kind": "reject",
+      "file": "reject/system49_env_borrow.yv",
+      "diagnostic": "E0102"
+    },
+    {
+      "id": "system49_slice_move",
+      "kind": "reject",
+      "file": "reject/system49_slice_move.yv",
+      "diagnostic": "E0404"
+    },
+    {
+      "id": "system49_slice_escape",
+      "kind": "reject",
+      "file": "reject/system49_slice_escape.yv",
+      "diagnostic": "E0303"
+    },
+    {
+      "id": "system49_env_named_catch",
+      "kind": "unsupported",
+      "file": "unsupported/system49_env_named_catch.yv",
+      "diagnostic": "U0001"
+    },
+    {
+      "id": "system49_process_named_catch",
+      "kind": "unsupported",
+      "file": "unsupported/system49_process_named_catch.yv",
+      "diagnostic": "U0001"
+    },
+    {
+      "id": "system49_os_error_type",
+      "kind": "unsupported",
+      "file": "unsupported/system49_os_error_type.yv",
+      "diagnostic": "U0001"
+    },
+    {
+      "id": "system49_process_error_type",
+      "kind": "unsupported",
+      "file": "unsupported/system49_process_error_type.yv",
+      "diagnostic": "U0001"
+    },
+    {
+      "id": "system49_env_result_binding",
+      "kind": "unsupported",
+      "file": "unsupported/system49_env_result_binding.yv",
+      "diagnostic": "U0001"
+    },
+    {
+      "id": "system49_process_result_binding",
+      "kind": "unsupported",
+      "file": "unsupported/system49_process_result_binding.yv",
+      "diagnostic": "U0001"
+    },
+    {
+      "id": "system49_slice_alias",
+      "kind": "unsupported",
+      "file": "unsupported/system49_slice_alias.yv",
+      "diagnostic": "U0001"
+    },
+    {
+      "id": "system49_slice_return_view",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/system49_slice_return_view.yv"
+    },
+    {
+      "id": "system49_vector_return_view",
+      "kind": "reject",
+      "diagnostic": "E0001",
+      "file": "reject/system49_vector_return_view.yv"
+    },
+    {
+      "id": "system49_import_std_first",
+      "kind": "reject",
+      "diagnostic": "E0011",
+      "file": "modules/system49_import_std_first/main.yv"
+    },
+    {
+      "id": "system49_import_user_first",
+      "kind": "reject",
+      "diagnostic": "E0011",
+      "file": "modules/system49_import_user_first/main.yv"
+    },
+    {
+      "id": "system49_import_unused",
+      "kind": "reject",
+      "diagnostic": "E0011",
+      "file": "modules/system49_import_unused/main.yv"
     }
   ],
   "promotions": [
@@ -7411,6 +7627,17 @@
       "kind": "run",
       "source_sha256": "a957ed1b8b17a7b6579ae17d52006b30bde9e4d6c6fb5d0adbaea7d3d3564c5a",
       "reason": "The original flat tuple containing String and int is now supported; the original source path and bytes are unchanged."
+    },
+    {
+      "previous_id": "slice_owned_elements",
+      "previous_file": "unsupported/slice_owned_elements.yv",
+      "previous_kind": "unsupported",
+      "baseline_commit": "e4c0302f2ee5b7661b17a2d0992d177d18840cc4",
+      "id": "slice_owned_elements",
+      "file": "unsupported/slice_owned_elements.yv",
+      "kind": "run",
+      "source_sha256": "9a878cdbffe889ae7fbe5447fa010e7fce3283092be4a0f7edfec073691c1290",
+      "reason": "Read-only String slices are now supported for argv and source-path forwarding; the original source path and bytes are unchanged."
     }
   ]
 }

@@ -387,6 +387,13 @@ pub enum IoOp {
     ReadText,
     WriteText,
     WriteNewText,
+    Env,
+    Host,
+    TempDir,
+    RemoveFile,
+    RemoveDir,
+    SameFile,
+    ProcessRun,
 }
 
 /// The element type of a `Vec[T]` or `[]T`.
@@ -450,6 +457,7 @@ const MODULES: &[(&str, &[&str])] = &[
     ("io", &[]),
     ("fs", &[]),
     ("os", &[]),
+    ("process", &[]),
     ("math", &[]),
     ("time", &[]),
     ("rand", &[]),
@@ -1347,6 +1355,8 @@ impl FieldDefault {
 const LIBRARY_ENUMS: &[(&str, &[(&str, &[&str])])] = &[
     ("io.Error", &[("Utf8", &["offset"]), ("Io", &["code"])]),
     ("fs.Error", &[("Utf8", &["offset"]), ("Io", &["code"]), ("InvalidPath", &[])]),
+    ("os.Error", &[("Utf8", &["offset"]), ("Io", &["code"]), ("InvalidArgument", &[])]),
+    ("process.Error", &[("Utf8", &["offset"]), ("Io", &["code"]), ("InvalidArgument", &[])]),
     // Prelude (K2): the result of `cmp`. Tags: Less 0, Equal 1, Greater 2.
     ("Ordering", &[("Less", &[]), ("Equal", &[]), ("Greater", &[])]),
 ];
@@ -9030,26 +9040,49 @@ impl Checker<'_> {
             ("fs", "readText") => (IoOp::ReadText, 1, Ty::Res(res_of(Ty::String, lib(self, "fs.Error")))),
             ("fs", "writeText") => (IoOp::WriteText, 2, Ty::Res(res_of(Ty::Unit, lib(self, "fs.Error")))),
             ("fs", "writeNewText") => (IoOp::WriteNewText, 2, Ty::Res(res_of(Ty::Unit, lib(self, "fs.Error")))),
+            ("os", "env") => (IoOp::Env, 2, Ty::Res(res_of(Ty::String, lib(self, "os.Error")))),
+            ("os", "host") => (IoOp::Host, 0, Ty::Str),
+            ("fs", "tempDir") => (IoOp::TempDir, 2, Ty::Res(res_of(Ty::String, lib(self, "fs.Error")))),
+            ("fs", "removeFile") => (IoOp::RemoveFile, 1, Ty::Res(res_of(Ty::Unit, lib(self, "fs.Error")))),
+            ("fs", "removeDir") => (IoOp::RemoveDir, 1, Ty::Res(res_of(Ty::Unit, lib(self, "fs.Error")))),
+            ("fs", "sameFile") => (IoOp::SameFile, 2, Ty::Res(res_of(Ty::Bool, lib(self, "fs.Error")))),
+            ("process", "run") => (IoOp::ProcessRun, 3, Ty::Res(res_of(Ty::Int(IntTy::I64), lib(self, "process.Error")))),
             _ => return None,
         };
         if args.len() != nargs {
-            let what = ["no arguments", "one argument (the path)", "two arguments (the path and the text)"][nargs];
-            self.diags.error("E0012", span, format!("`{m}.{name}` takes {what}"));
+            self.diags.error("E0012", span, format!("`{m}.{name}` takes {}", plural(nargs, "argument")));
             return Some(err_expr(span));
         }
+        let shared_mark = cx.call_shared.len();
+        let mutable_mark = cx.call_mut.len();
         let mut hargs = Vec::new();
-        for a in args {
-            let h = self.expr(a, Some(Ty::Str), cx);
+        for (i, a) in args.iter().enumerate() {
+            let expected = match (op, i) {
+                (IoOp::ProcessRun, 1) => Ty::Slice(slice_of(Ty::String)),
+                (IoOp::ProcessRun, 2) => Ty::Bool,
+                _ => Ty::Str,
+            };
+            let h = self.expr(a, Some(expected), cx);
             let h = self.deref(h);
-            let h = if h.ty == Ty::String {
+            let h = if expected == Ty::Str && h.ty == Ty::String {
                 let (span, at) = (h.span, h.at);
                 HExpr { kind: HExprKind::StrView(Box::new(h)), ty: Ty::Str, span, at }
             } else {
                 h
             };
-            self.expect_ty(&h, Ty::Str);
+            let h = match (expected, h.ty) {
+                (Ty::Slice(s), Ty::Vec(v)) if slice_elem(s) == vec_elem(v) => {
+                    let (span, at) = (h.span, h.at);
+                    HExpr { kind: HExprKind::SliceOf(Box::new(h)), ty: expected, span, at }
+                }
+                _ => h,
+            };
+            self.expect_ty(&h, expected);
+            self.hold_call_argument(&h, false, false, cx);
             hargs.push(h);
         }
+        cx.call_shared.truncate(shared_mark);
+        cx.call_mut.truncate(mutable_mark);
         Some(HExpr { kind: HExprKind::Io { op, args: hargs }, ty, span, at })
     }
 

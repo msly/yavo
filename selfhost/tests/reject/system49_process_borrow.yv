@@ -1,0 +1,8 @@
+use std/process
+fn change(xs: inout Vec[String]) -> bool { xs.push("later".toString())
+    return false }
+fn main() {
+    var args: Vec[String] = []
+    let value = process.run("missing", args, change(&args)) catch _ { return }
+    println(value)
+}

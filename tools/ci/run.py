@@ -21,7 +21,7 @@ REPORT = OUTPUT / "results.json"
 NATIVE_TESTS = [
     "p0", "alloc_check", "arena", "modules", "index_assignment",
     "mutref_returns", "collections", "fix", "runtime_io_concurrency", "stdlib_io",
-    "fs_create_new", "selfhost_blockers",
+    "fs_create_new", "selfhost_blockers", "system",
 ]
 SUMMARY = re.compile(
     r"test result: (?:ok|FAILED)\. (\d+) passed; (\d+) failed; (\d+) ignored; "

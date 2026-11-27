@@ -891,9 +891,20 @@ impl Visitor<'_, '_> {
                     IoOp::ReadText => "fs.readText",
                     IoOp::WriteText => "fs.writeText",
                     IoOp::WriteNewText => "fs.writeNewText",
+                    IoOp::Env => "os.env",
+                    IoOp::Host => "os.host",
+                    IoOp::TempDir => "fs.tempDir",
+                    IoOp::RemoveFile => "fs.removeFile",
+                    IoOp::RemoveDir => "fs.removeDir",
+                    IoOp::SameFile => "fs.sameFile",
+                    IoOp::ProcessRun => "process.run",
                 };
-                self.builtin(name, expr, self.borrowed_exprs(args), Effect::MAY,
-                    "I/O may allocate buffers or platform path conversions under the stdlib contract")
+                if *op == IoOp::Host {
+                    self.builtin(name, expr, Vec::new(), Effect::NONE, "returns a static compilation-target identifier")
+                } else {
+                    self.builtin(name, expr, self.borrowed_exprs(args), Effect::MAY,
+                        "I/O may allocate buffers or platform path conversions under the stdlib contract")
+                }
             }
             E::OsArgs => self.builtin(
                 "os.args", expr, Vec::new(), Effect::NONE,

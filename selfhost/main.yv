@@ -4,6 +4,7 @@ use lexer
 use model
 use parser
 use codegen
+use driver
 
 // Command-line entry. The input is fully lexed, parsed, checked and lowered
 // before the output file is created; any diagnostic stops the process first.
@@ -11,7 +12,12 @@ use codegen
 fn usage() {
     eprintln("usage: yavo-selfhost check <input.yv>")
     eprintln("       yavo-selfhost emit-c <input.yv> -o <output.c>")
-    os.exit(2)
+    driver.usage()
+}
+
+struct Compilation {
+    generated: String
+    sources: Vec[String]
 }
 
 // `a/b/c` for an import; module files are named relative to the entry directory.
@@ -29,7 +35,7 @@ fn moduleKey(ts: Vec[Token], item: ModuleImport) -> String {
 
 // Loads the entry file and every module it reaches, breadth first. File index
 // k is the k-th distinct module path; a cycle or self-import reuses its index.
-fn compile(source: str, path: str) -> String ! Diagnostic {
+fn compile(source: str, path: str) -> Compilation ! Diagnostic {
     var tokens: Vec[Token] = []
     let _ = try lexer.lexInto(source, path, &tokens)
     var cut = -1
@@ -81,33 +87,73 @@ fn compile(source: str, path: str) -> String ! Diagnostic {
         file += 1
     }
     let program = parser.finishParse(&state)
-    return ok(codegen.generate(program, tokens, path))
+    return ok(Compilation{generated: codegen.generate(program, tokens, path), sources: paths})
 }
 
-fn main() {
-    let args = os.args()
-    if args.len() < 3 { usage() }
+fn command(args: []str) -> int {
+    if args.len() < 2 {
+        usage()
+        return 2
+    }
+    if args[1] == "build" || args[1] == "run" {
+        let options = driver.parse(args) catch problem {
+            eprintln(problem.message)
+            usage()
+            return problem.status
+        }
+        let source = fs.readText(options.input) catch _ {
+            eprintln("cannot read input")
+            return 3
+        }
+        let compiled = compile(source, options.input) catch diagnostic {
+            support.report(options.input, diagnostic.line, diagnostic.column,
+                           diagnostic.code, diagnostic.message)
+            return 1
+        }
+        return driver.execute(options, compiled.generated, compiled.sources, args)
+    }
+    if args.len() < 3 {
+        usage()
+        return 2
+    }
     let checkMode = args[1] == "check"
     let emitMode = args[1] == "emit-c"
-    if !checkMode && !emitMode { usage() }
-    if checkMode && args.len() != 3 { usage() }
-    if emitMode && (args.len() != 5 || args[3] != "-o") { usage() }
+    if !checkMode && !emitMode {
+        usage()
+        return 2
+    }
+    if checkMode && args.len() != 3 {
+        usage()
+        return 2
+    }
+    if emitMode && (args.len() != 5 || args[3] != "-o") {
+        usage()
+        return 2
+    }
     if emitMode && args[2] == args[4] {
         eprintln("refusing to overwrite the source file")
-        os.exit(2)
+        return 2
     }
     let source = fs.readText(args[2]) catch _ {
         eprintln("cannot read input")
-        os.exit(3)
+        return 3
     }
-    let generated = compile(source, args[2]) catch diagnostic {
+    let compiled = compile(source, args[2]) catch diagnostic {
         support.report(args[2], diagnostic.line, diagnostic.column, diagnostic.code, diagnostic.message)
-        os.exit(1)
+        return 1
     }
     if emitMode {
-        fs.writeNewText(args[4], generated) catch _ {
+        fs.writeNewText(args[4], compiled.generated) catch _ {
             eprintln("cannot write output")
-            os.exit(3)
+            return 3
         }
     }
+    return 0
+}
+
+fn main() {
+    // The command frame drops its owned source/options/generated text before
+    // forwarding a program status. All ordinary back-end paths have cleaned up.
+    let status = command(os.args())
+    if status != 0 { os.exit(status) }
 }

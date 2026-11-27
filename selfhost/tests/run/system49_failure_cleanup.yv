@@ -1,0 +1,12 @@
+use std/process
+enum Failure { Stop }
+fn failed() -> bool ! Failure { return err(.Stop) }
+fn launch() -> int ! Failure {
+    let code = process.run("missing".toString(), ["arg".toString()], try failed()) catch _ { return -1 }
+    return code
+}
+fn main() {
+    let code = launch() catch _ { println("clean")
+    return }
+    println(code)
+}
