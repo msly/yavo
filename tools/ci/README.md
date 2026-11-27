@@ -1,6 +1,89 @@
 # GitHub CI
 
-## Batch 50 structured diagnostics acceptance
+## Batch 51 standard-error acceptance
+
+`tools/ci/selfhost_errors.py` requires the complete current bootstrap and uses
+its actual stage0, stage1 and final stage2. The three frontends emit independent
+C for the frozen multi-mode driver; each original C is compiled in Debug and
+Release with allocation counters and the existing test-only checked-exit header.
+Candidate and reference-only preflights are explicitly preliminary and cannot
+establish an actual stage2 identity.
+
+| Required inventory | Linux / macOS | Windows |
+| --- | ---: | ---: |
+| Frozen real-I/O cases | 48 | 46 |
+| Actual frontends × native build modes | 3 × 2 | 3 × 2 |
+| Native application executions | **288** | **276** |
+| Oracle positive / negative controls | 1 / 5 | 1 / 5 |
+| Allocation-exit clean / leak controls | 2 / 2 | 2 / 2 |
+| Original nondecimal-source frontend checks | 3 | 3 |
+| Independent GCC ASan+UBSan executions | **96 on Linux**, off on macOS | off |
+
+Each case gets a fresh input directory. The receipt preserves exact stdin,
+stdout/stderr, exit status, input-file identities in a separate `before` snapshot
+and the final filesystem tree. The independent frozen Python oracle checks
+output bytes and side effects, including non-destructive exclusive-write
+failure. Native Io payloads must be nonzero; semantic fixtures separately check
+exact artificial payload formatting without assuming portable errno numbers.
+Windows explicitly excludes directory-as-stdin and invalid native UTF-8
+environment bytes; neither is a dynamically skipped failure.
+
+The [contract and freezes](../../selfhost/tests/errors51/CONTRACT.md) include 73
+new semantic probes, ten unchanged original-source promotions and 48 I/O cases.
+One of the 73 newly authored semantic fixtures originally used `['a', 0xE2, 0x82]`, outside the existing nondecimal lexer subset. A single recorded amendment adds the equivalent decimal source `['a', 226, 130]` and changes only that manifest entry's file. The original source, freeze, manifest snapshot and first candidate U0001 failure remain preserved; old stage0 executes both versions in Debug/Release with the unchanged `1\n` output. Formal boundary checks retain stage0 acceptance and stage1/stage2 U0001 for the original source. The formal gate verifies the exact one-field manifest overlay and
+all **101** bound frozen inputs; every other original input remains unchanged.
+
+```sh
+python3 tools/ci/selfhost_errors.py \
+  --bootstrap-output compiler/target/ci/selfhost \
+  --sanitizers required
+python3 tools/ci/package_test_summary.py \
+  --input compiler/target/ci/selfhost-errors \
+  --output compiler/target/ci/selfhost-errors.tar.gz \
+  --prefix selfhost-errors
+```
+
+Use `--sanitizers required` on Linux CI; native macOS/Windows use `off`.
+The Linux gate first proves clean/address/undefined capability controls, then
+builds the **original stage0 C and actual final-stage2 C** with independent GCC
+ASan+UBSan and executes 48 cases per product. Sanitizer flags/environment,
+compiler/library identities and raw outputs are recorded. LSan remains disabled;
+allocation counters and checked exit controls cover tracked leaks. No non-Linux
+sanitizer or performance result is implied by native success.
+
+Default output is `compiler/target/ci/selfhost-errors/receipt.json`, schema
+`yavo-selfhost-errors/1`, plus per-attempt evidence. CI runs the gate after
+bootstrap and packages `selfhost-errors.tar.gz` even after failure. A formal
+receipt must bind all current compiler modules, manifest/harness, producer
+binaries and frozen inputs, and verify they remain unchanged. Isolated Zig
+caches are removed on success and failure.
+
+### Promoted-fixture execution isolation
+
+The bootstrap manifest may attach `environment` and `isolated_cwd` only to
+run/panic cases. Environment keys are restricted to literal `name` and `PATH`;
+string values must not contain NUL, and null removes the variable. Each
+reference/candidate × Debug/Release execution receives its own fresh cwd when
+requested. These options affect execution only; compiler environments are
+unchanged. `selfhost_sanitize.py` verifies and transports the same options in its
+program bundle, and `tools/sanitizers/run.py` applies them without replacing
+ASAN_OPTIONS, UBSAN_OPTIONS or YAVO_ALLOC_CHECK. Five real subprocess probes and
+27 invalid-option controls verify absence/empty PATH, isolation and preserved
+sanitizer controls.
+
+### Current evidence and archive audit
+
+Local bootstrap passes **1136/1136 and 20/20**, the formal native error gate
+**288/288 with nine checks**, and the six newly accepted original programs pass
+**48/48** runtime checks. The local error sanitizer mode is off. Formal local gates pass. Exact-commit three-platform CI and the independent Linux ASan+UBSan error gate remain pending. The local error sanitizer gate is off and supplies no sanitizer pass.
+The [batch51 index](../../compiler/validation/batch51-standard-errors-2026-11-27.json) binds current evidence and the explicit
+fixture correction. The offline auditor checks actual six-product provenance,
+raw command/stream identities, before/after trees, oracle and cleanup controls,
+the Linux instrumented products, and promoted-fixture environment/cwd records.
+Nested archives retain bounded streaming TAR indexing and validated member
+paths instead of fully extracting arbitrary evidence trees.
+
+## Batch 50 structured diagnostics acceptance (historical batch; retained gate)
 
 `tools/ci/selfhost_diagnostics.py` requires a successful complete current
 bootstrap and checks the Rust-built stage1 and actual final stage2 on all three

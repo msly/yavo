@@ -1,0 +1,138 @@
+use std/{fs, io, os, process}
+
+fn showFile(error: fs.Error) {
+    match error {
+        .Utf8(offset) => println("fs:utf8:${offset}")
+        .Io(code) => println("fs:io:${code != 0}")
+        .InvalidPath => println("fs:invalid")
+    }
+}
+fn showInput(error: io.Error) {
+    match error {
+        .Utf8(offset) => println("io:utf8:${offset}")
+        .Io(code) => println("io:io:${code != 0}")
+    }
+}
+fn showEnvironment(error: os.Error) {
+    match error {
+        .Utf8(offset) => println("os:utf8:${offset}")
+        .Io(code) => println("os:io:${code != 0}")
+        .InvalidArgument => println("os:invalid")
+    }
+}
+fn showProcess(error: process.Error) {
+    match error {
+        .Utf8(offset) => println("process:utf8:${offset}")
+        .Io(code) => println("process:io:${code != 0}")
+        .InvalidArgument => println("process:invalid")
+    }
+}
+fn read(path: str) -> String ! fs.Error { return try fs.readText(path) }
+fn input() -> String ! io.Error { return io.readAll() }
+fn write(path: str) -> () ! fs.Error { try fs.writeNewText(path, "written\n")
+    return }
+fn temporary(parent: str, prefix: str) -> String ! fs.Error { return try fs.tempDir(parent, prefix) }
+fn removeFile(path: str) -> () ! fs.Error { return fs.removeFile(path) }
+fn removeDir(path: str) -> () ! fs.Error { return fs.removeDir(path) }
+fn same(first: str, second: str) -> bool ! fs.Error { return try fs.sameFile(first, second) }
+fn environment(name: str) -> String ! os.Error { return try os.env(name, "fallback\0tail") }
+fn child(program: str, args: []String) -> int ! process.Error { return try process.run(program, args, false) }
+
+fn main() {
+    let args = os.args()
+    let mode = args[1]
+    if mode == "child" { println("child")
+        os.exit(17) }
+    if mode == "read" || mode == "read-nul" {
+        var path = args[2].toString()
+        if mode == "read-nul" { path = "bad\0path".toString() }
+        let result = read(path)
+        let text = result catch error { showFile(error)
+            return }
+        println("read:${text}")
+        return
+    }
+    if mode == "stdin" {
+        let result = input()
+        let text = result catch error { showInput(error)
+            return }
+        println("stdin:${text}")
+        return
+    }
+    if mode == "write" || mode == "write-nul" {
+        var path = args[2].toString()
+        if mode == "write-nul" { path = "bad\0path".toString() }
+        write(path) catch error { showFile(error)
+            return }
+        println("written")
+        return
+    }
+    if mode == "temp" || mode == "temp-nul" {
+        var parent = args[2].toString()
+        if mode == "temp-nul" { parent = "bad\0parent".toString() }
+        let path = temporary(parent, args[3]) catch error { showFile(error)
+            return }
+        removeDir(path) catch error { showFile(error)
+            return }
+        println("temporary-clean")
+        return
+    }
+    if mode == "remove-file" || mode == "remove-file-nul" {
+        var path = args[2].toString()
+        if mode == "remove-file-nul" { path = "bad\0path".toString() }
+        removeFile(path) catch error { showFile(error)
+            return }
+        println("removed")
+        return
+    }
+    if mode == "remove-dir" || mode == "remove-dir-nul" {
+        var path = args[2].toString()
+        if mode == "remove-dir-nul" { path = "bad\0path".toString() }
+        removeDir(path) catch error { showFile(error)
+            return }
+        println("removed")
+        return
+    }
+    if mode == "same" || mode == "same-nul" {
+        var path = args[2].toString()
+        if mode == "same-nul" { path = "bad\0path".toString() }
+        let answer = same(path, args[3]) catch error { showFile(error)
+            return }
+        println("same:${answer}")
+        return
+    }
+    if mode == "env" || mode == "env-nul" {
+        var name = args[2].toString()
+        if mode == "env-nul" { name = "bad\0name".toString() }
+        let text = environment(name) catch error { showEnvironment(error)
+            return }
+        println("env:${text}")
+        return
+    }
+    if mode == "process-self" {
+        let childArgs = ["child".toString()]
+        let code = child(args[0], childArgs) catch error { showProcess(error)
+            return }
+        println("status:${code}")
+        return
+    }
+    if mode == "process" || mode == "process-nul" || mode == "process-arg-nul" {
+        var program = args[2].toString()
+        var childArgs: Vec[String] = []
+        if mode == "process-nul" { program = "bad\0program".toString() }
+        if mode == "process-arg-nul" { childArgs.push("bad\0arg".toString()) }
+        let code = child(program, childArgs) catch error { showProcess(error)
+            return }
+        println("status:${code}")
+        return
+    }
+    if mode == "utf8" {
+        let bytes: Vec[byte] = [97, 226, 130]
+        let result = String.fromUtf8(bytes)
+        let text = result catch error { println("utf8:${error.offset}")
+            return }
+        println(text)
+        return
+    }
+    println("unexpected-mode")
+}

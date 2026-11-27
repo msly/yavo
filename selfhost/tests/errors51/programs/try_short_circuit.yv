@@ -1,0 +1,13 @@
+use std/fs
+fn fail() -> bool ! fs.Error { print("E")
+    return err(.InvalidPath) }
+fn work() -> bool ! fs.Error {
+    let first = false && try fail()
+    let second = true || try fail()
+    println(first)
+    println(second)
+    return true && try fail()
+}
+fn main() { let x = work() catch e { println(e)
+    return }
+    println(x) }

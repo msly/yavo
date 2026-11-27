@@ -1,0 +1,9 @@
+use std/fs
+fn read(path: str) -> String ! String {
+    let text = fs.readText(path) catch e { return err(format("failed:${e}")) }
+    return text
+}
+fn pass() -> String ! String { return try read("bad\0path") }
+fn main() { let text = pass() catch e { println(e)
+    return }
+    println(text) }

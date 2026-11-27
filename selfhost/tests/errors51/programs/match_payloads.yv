@@ -1,0 +1,12 @@
+use std/fs
+fn describe(e: fs.Error) -> int {
+    return match e { .Utf8(offset) => offset
+        .Io(code) => code + 10
+        .InvalidPath => -1 }
+}
+fn main() { println(describe(makeFsUtf8(3)))
+    println(describe(makeFsIo(8)))
+    println(describe(fs.Error.InvalidPath)) }
+
+fn makeFsUtf8(n: int) -> fs.Error { return .Utf8(offset: n) }
+fn makeFsIo(n: int) -> fs.Error { return .Io(code: n) }

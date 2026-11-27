@@ -1,0 +1,10 @@
+use std/fs
+fn read(path: str) -> String ! fs.Error {
+    let result = fs.readText(path)
+    let text = result catch e { return err(e) }
+    return text
+}
+fn main() { let result = read("bad\0path")
+    let text = result catch e { println(e)
+        return }
+    println(text) }

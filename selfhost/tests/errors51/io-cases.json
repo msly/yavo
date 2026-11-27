@@ -1,0 +1,1108 @@
+{
+  "schema": "yavo-standard-errors51-io-cases/1",
+  "cases": [
+    {
+      "id": "read_empty",
+      "mode": "read",
+      "args": [
+        "a"
+      ],
+      "files": {
+        "a": ""
+      },
+      "stdin_hex": "",
+      "environment": {},
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "726561643a0a",
+        "stderr_hex": "",
+        "files_after": {
+          "a": ""
+        }
+      }
+    },
+    {
+      "id": "read_unicode",
+      "mode": "read",
+      "args": [
+        "目录/数据"
+      ],
+      "files": {
+        "目录": null,
+        "目录/数据": "e4bda0e5a5bd0d0a776f726c640a"
+      },
+      "stdin_hex": "",
+      "environment": {},
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "726561643ae4bda0e5a5bd0d0a776f726c640a0a",
+        "stderr_hex": "",
+        "files_after": {
+          "目录": null,
+          "目录/数据": "e4bda0e5a5bd0d0a776f726c640a"
+        }
+      }
+    },
+    {
+      "id": "read_embedded_nul",
+      "mode": "read",
+      "args": [
+        "a"
+      ],
+      "files": {
+        "a": "610062"
+      },
+      "stdin_hex": "",
+      "environment": {},
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "726561643a6100620a",
+        "stderr_hex": "",
+        "files_after": {
+          "a": "610062"
+        }
+      }
+    },
+    {
+      "id": "read_missing",
+      "mode": "read",
+      "args": [
+        "missing"
+      ],
+      "files": {},
+      "stdin_hex": "",
+      "environment": {},
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "66733a696f3a747275650a",
+        "stderr_hex": "",
+        "files_after": {}
+      }
+    },
+    {
+      "id": "read_nul",
+      "mode": "read-nul",
+      "args": [
+        "unused"
+      ],
+      "files": {
+        "bad": "6b656570"
+      },
+      "stdin_hex": "",
+      "environment": {},
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "66733a696e76616c69640a",
+        "stderr_hex": "",
+        "files_after": {
+          "bad": "6b656570"
+        }
+      }
+    },
+    {
+      "id": "read_bad_first",
+      "mode": "read",
+      "args": [
+        "a"
+      ],
+      "files": {
+        "a": "ff"
+      },
+      "stdin_hex": "",
+      "environment": {},
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "66733a757466383a300a",
+        "stderr_hex": "",
+        "files_after": {
+          "a": "ff"
+        }
+      }
+    },
+    {
+      "id": "read_bad_ascii",
+      "mode": "read",
+      "args": [
+        "a"
+      ],
+      "files": {
+        "a": "616263ff7461696c"
+      },
+      "stdin_hex": "",
+      "environment": {},
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "66733a757466383a330a",
+        "stderr_hex": "",
+        "files_after": {
+          "a": "616263ff7461696c"
+        }
+      }
+    },
+    {
+      "id": "read_bad_unicode",
+      "mode": "read",
+      "args": [
+        "a"
+      ],
+      "files": {
+        "a": "e4b8adff"
+      },
+      "stdin_hex": "",
+      "environment": {},
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "66733a757466383a330a",
+        "stderr_hex": "",
+        "files_after": {
+          "a": "e4b8adff"
+        }
+      }
+    },
+    {
+      "id": "read_incomplete",
+      "mode": "read",
+      "args": [
+        "a"
+      ],
+      "files": {
+        "a": "61e282"
+      },
+      "stdin_hex": "",
+      "environment": {},
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "66733a757466383a310a",
+        "stderr_hex": "",
+        "files_after": {
+          "a": "61e282"
+        }
+      }
+    },
+    {
+      "id": "write_new",
+      "mode": "write",
+      "args": [
+        "new"
+      ],
+      "files": {},
+      "stdin_hex": "",
+      "environment": {},
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "7772697474656e0a",
+        "stderr_hex": "",
+        "files_after": {
+          "new": "7772697474656e0a"
+        }
+      }
+    },
+    {
+      "id": "write_existing",
+      "mode": "write",
+      "args": [
+        "existing"
+      ],
+      "files": {
+        "existing": "707265736572766564"
+      },
+      "stdin_hex": "",
+      "environment": {},
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "66733a696f3a747275650a",
+        "stderr_hex": "",
+        "files_after": {
+          "existing": "707265736572766564"
+        }
+      }
+    },
+    {
+      "id": "write_missing_parent",
+      "mode": "write",
+      "args": [
+        "missing/new"
+      ],
+      "files": {},
+      "stdin_hex": "",
+      "environment": {},
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "66733a696f3a747275650a",
+        "stderr_hex": "",
+        "files_after": {}
+      }
+    },
+    {
+      "id": "write_nul",
+      "mode": "write-nul",
+      "args": [
+        "unused"
+      ],
+      "files": {
+        "bad": "707265736572766564"
+      },
+      "stdin_hex": "",
+      "environment": {},
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "66733a696e76616c69640a",
+        "stderr_hex": "",
+        "files_after": {
+          "bad": "707265736572766564"
+        }
+      }
+    },
+    {
+      "id": "temp_ok",
+      "mode": "temp",
+      "args": [
+        ".",
+        "errors51-"
+      ],
+      "files": {},
+      "stdin_hex": "",
+      "environment": {},
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "74656d706f726172792d636c65616e0a",
+        "stderr_hex": "",
+        "files_after": {}
+      }
+    },
+    {
+      "id": "temp_bad_prefix",
+      "mode": "temp",
+      "args": [
+        ".",
+        "../escape"
+      ],
+      "files": {},
+      "stdin_hex": "",
+      "environment": {},
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "66733a696e76616c69640a",
+        "stderr_hex": "",
+        "files_after": {}
+      }
+    },
+    {
+      "id": "temp_empty_prefix",
+      "mode": "temp",
+      "args": [
+        ".",
+        ""
+      ],
+      "files": {},
+      "stdin_hex": "",
+      "environment": {},
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "66733a696e76616c69640a",
+        "stderr_hex": "",
+        "files_after": {}
+      }
+    },
+    {
+      "id": "temp_missing_parent",
+      "mode": "temp",
+      "args": [
+        "missing",
+        "safe"
+      ],
+      "files": {},
+      "stdin_hex": "",
+      "environment": {},
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "66733a696f3a747275650a",
+        "stderr_hex": "",
+        "files_after": {}
+      }
+    },
+    {
+      "id": "temp_nul",
+      "mode": "temp-nul",
+      "args": [
+        "unused",
+        "safe"
+      ],
+      "files": {},
+      "stdin_hex": "",
+      "environment": {},
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "66733a696e76616c69640a",
+        "stderr_hex": "",
+        "files_after": {}
+      }
+    },
+    {
+      "id": "remove_file",
+      "mode": "remove-file",
+      "args": [
+        "a"
+      ],
+      "files": {
+        "a": "64617461"
+      },
+      "stdin_hex": "",
+      "environment": {},
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "72656d6f7665640a",
+        "stderr_hex": "",
+        "files_after": {}
+      }
+    },
+    {
+      "id": "remove_file_missing",
+      "mode": "remove-file",
+      "args": [
+        "missing"
+      ],
+      "files": {},
+      "stdin_hex": "",
+      "environment": {},
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "66733a696f3a747275650a",
+        "stderr_hex": "",
+        "files_after": {}
+      }
+    },
+    {
+      "id": "remove_file_nul",
+      "mode": "remove-file-nul",
+      "args": [
+        "unused"
+      ],
+      "files": {
+        "bad": "64617461"
+      },
+      "stdin_hex": "",
+      "environment": {},
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "66733a696e76616c69640a",
+        "stderr_hex": "",
+        "files_after": {
+          "bad": "64617461"
+        }
+      }
+    },
+    {
+      "id": "remove_dir",
+      "mode": "remove-dir",
+      "args": [
+        "empty"
+      ],
+      "files": {
+        "empty": null
+      },
+      "stdin_hex": "",
+      "environment": {},
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "72656d6f7665640a",
+        "stderr_hex": "",
+        "files_after": {}
+      }
+    },
+    {
+      "id": "remove_dir_nonempty",
+      "mode": "remove-dir",
+      "args": [
+        "dir"
+      ],
+      "files": {
+        "dir": null,
+        "dir/a": "64617461"
+      },
+      "stdin_hex": "",
+      "environment": {},
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "66733a696f3a747275650a",
+        "stderr_hex": "",
+        "files_after": {
+          "dir": null,
+          "dir/a": "64617461"
+        }
+      }
+    },
+    {
+      "id": "remove_dir_missing",
+      "mode": "remove-dir",
+      "args": [
+        "missing"
+      ],
+      "files": {},
+      "stdin_hex": "",
+      "environment": {},
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "66733a696f3a747275650a",
+        "stderr_hex": "",
+        "files_after": {}
+      }
+    },
+    {
+      "id": "remove_dir_nul",
+      "mode": "remove-dir-nul",
+      "args": [
+        "unused"
+      ],
+      "files": {
+        "bad": null
+      },
+      "stdin_hex": "",
+      "environment": {},
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "66733a696e76616c69640a",
+        "stderr_hex": "",
+        "files_after": {
+          "bad": null
+        }
+      }
+    },
+    {
+      "id": "same_identity",
+      "mode": "same",
+      "args": [
+        "a",
+        "./a"
+      ],
+      "files": {
+        "a": "64617461"
+      },
+      "stdin_hex": "",
+      "environment": {},
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "73616d653a747275650a",
+        "stderr_hex": "",
+        "files_after": {
+          "a": "64617461"
+        }
+      }
+    },
+    {
+      "id": "same_different",
+      "mode": "same",
+      "args": [
+        "a",
+        "b"
+      ],
+      "files": {
+        "a": "64617461",
+        "b": "64617461"
+      },
+      "stdin_hex": "",
+      "environment": {},
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "73616d653a66616c73650a",
+        "stderr_hex": "",
+        "files_after": {
+          "a": "64617461",
+          "b": "64617461"
+        }
+      }
+    },
+    {
+      "id": "same_missing",
+      "mode": "same",
+      "args": [
+        "a",
+        "missing"
+      ],
+      "files": {
+        "a": "64617461"
+      },
+      "stdin_hex": "",
+      "environment": {},
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "73616d653a66616c73650a",
+        "stderr_hex": "",
+        "files_after": {
+          "a": "64617461"
+        }
+      }
+    },
+    {
+      "id": "same_nul",
+      "mode": "same-nul",
+      "args": [
+        "unused",
+        "a"
+      ],
+      "files": {
+        "a": "64617461",
+        "bad": "64617461"
+      },
+      "stdin_hex": "",
+      "environment": {},
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "66733a696e76616c69640a",
+        "stderr_hex": "",
+        "files_after": {
+          "a": "64617461",
+          "bad": "64617461"
+        }
+      }
+    },
+    {
+      "id": "env_missing",
+      "mode": "env",
+      "args": [
+        "YAVO_ERRORS51_VALUE"
+      ],
+      "files": {},
+      "stdin_hex": "",
+      "environment": {
+        "YAVO_ERRORS51_VALUE": null
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "656e763a66616c6c6261636b007461696c0a",
+        "stderr_hex": "",
+        "files_after": {}
+      }
+    },
+    {
+      "id": "env_empty",
+      "mode": "env",
+      "args": [
+        "YAVO_ERRORS51_VALUE"
+      ],
+      "files": {},
+      "stdin_hex": "",
+      "environment": {
+        "YAVO_ERRORS51_VALUE": {
+          "hex": ""
+        }
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "656e763a0a",
+        "stderr_hex": "",
+        "files_after": {}
+      }
+    },
+    {
+      "id": "env_unicode",
+      "mode": "env",
+      "args": [
+        "YAVO_ERRORS51_VALUE"
+      ],
+      "files": {},
+      "stdin_hex": "",
+      "environment": {
+        "YAVO_ERRORS51_VALUE": {
+          "hex": "e4bda0e5a5bd"
+        }
+      },
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "656e763ae4bda0e5a5bd0a",
+        "stderr_hex": "",
+        "files_after": {}
+      }
+    },
+    {
+      "id": "env_invalid_name",
+      "mode": "env",
+      "args": [
+        "bad=name"
+      ],
+      "files": {},
+      "stdin_hex": "",
+      "environment": {},
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "6f733a696e76616c69640a",
+        "stderr_hex": "",
+        "files_after": {}
+      }
+    },
+    {
+      "id": "env_empty_name",
+      "mode": "env",
+      "args": [
+        ""
+      ],
+      "files": {},
+      "stdin_hex": "",
+      "environment": {},
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "6f733a696e76616c69640a",
+        "stderr_hex": "",
+        "files_after": {}
+      }
+    },
+    {
+      "id": "env_nul",
+      "mode": "env-nul",
+      "args": [
+        "unused"
+      ],
+      "files": {},
+      "stdin_hex": "",
+      "environment": {},
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "6f733a696e76616c69640a",
+        "stderr_hex": "",
+        "files_after": {}
+      }
+    },
+    {
+      "id": "env_invalid_utf8",
+      "mode": "env",
+      "args": [
+        "YAVO_ERRORS51_VALUE"
+      ],
+      "files": {},
+      "stdin_hex": "",
+      "environment": {
+        "YAVO_ERRORS51_VALUE": {
+          "hex": "61ff"
+        }
+      },
+      "platforms": [
+        "linux",
+        "darwin"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "6f733a757466383a310a",
+        "stderr_hex": "",
+        "files_after": {}
+      }
+    },
+    {
+      "id": "process_self",
+      "mode": "process-self",
+      "args": [],
+      "files": {},
+      "stdin_hex": "",
+      "environment": {},
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "6368696c640a7374617475733a31370a",
+        "stderr_hex": "",
+        "files_after": {}
+      }
+    },
+    {
+      "id": "process_missing",
+      "mode": "process",
+      "args": [
+        "./missing-program"
+      ],
+      "files": {},
+      "stdin_hex": "",
+      "environment": {},
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "70726f636573733a696f3a747275650a",
+        "stderr_hex": "",
+        "files_after": {}
+      }
+    },
+    {
+      "id": "process_empty",
+      "mode": "process",
+      "args": [
+        ""
+      ],
+      "files": {},
+      "stdin_hex": "",
+      "environment": {},
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "70726f636573733a696e76616c69640a",
+        "stderr_hex": "",
+        "files_after": {}
+      }
+    },
+    {
+      "id": "process_nul",
+      "mode": "process-nul",
+      "args": [
+        "unused"
+      ],
+      "files": {},
+      "stdin_hex": "",
+      "environment": {},
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "70726f636573733a696e76616c69640a",
+        "stderr_hex": "",
+        "files_after": {}
+      }
+    },
+    {
+      "id": "process_arg_nul",
+      "mode": "process-arg-nul",
+      "args": [
+        "./missing-program"
+      ],
+      "files": {},
+      "stdin_hex": "",
+      "environment": {},
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "70726f636573733a696e76616c69640a",
+        "stderr_hex": "",
+        "files_after": {}
+      }
+    },
+    {
+      "id": "stdin_empty",
+      "mode": "stdin",
+      "args": [],
+      "files": {},
+      "stdin_hex": "",
+      "environment": {},
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "737464696e3a0a",
+        "stderr_hex": "",
+        "files_after": {}
+      }
+    },
+    {
+      "id": "stdin_unicode",
+      "mode": "stdin",
+      "args": [],
+      "files": {},
+      "stdin_hex": "e4bda0e5a5bd0d0a",
+      "environment": {},
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "737464696e3ae4bda0e5a5bd0d0a0a",
+        "stderr_hex": "",
+        "files_after": {}
+      }
+    },
+    {
+      "id": "stdin_bad_first",
+      "mode": "stdin",
+      "args": [],
+      "files": {},
+      "stdin_hex": "ff",
+      "environment": {},
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "696f3a757466383a300a",
+        "stderr_hex": "",
+        "files_after": {}
+      }
+    },
+    {
+      "id": "stdin_bad_after",
+      "mode": "stdin",
+      "args": [],
+      "files": {},
+      "stdin_hex": "616263ff",
+      "environment": {},
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "696f3a757466383a330a",
+        "stderr_hex": "",
+        "files_after": {}
+      }
+    },
+    {
+      "id": "stdin_incomplete",
+      "mode": "stdin",
+      "args": [],
+      "files": {},
+      "stdin_hex": "61e282",
+      "environment": {},
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "696f3a757466383a310a",
+        "stderr_hex": "",
+        "files_after": {}
+      }
+    },
+    {
+      "id": "stdin_read_error",
+      "mode": "stdin",
+      "args": [],
+      "files": {},
+      "stdin_hex": "",
+      "environment": {},
+      "platforms": [
+        "linux",
+        "darwin"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "696f3a696f3a747275650a",
+        "stderr_hex": "",
+        "files_after": {}
+      },
+      "stdin_error": true
+    },
+    {
+      "id": "utf8_consumed_failure",
+      "mode": "utf8",
+      "args": [],
+      "files": {},
+      "stdin_hex": "",
+      "environment": {},
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "expected": {
+        "exit": 0,
+        "stdout_hex": "757466383a310a",
+        "stderr_hex": "",
+        "files_after": {}
+      }
+    }
+  ],
+  "case_count": 48,
+  "contract_sha256": "90f5616aa59db4945315efaa20bb950ebc114721507bd157233cbccbf7944dbd",
+  "applicable": {
+    "linux": 48,
+    "darwin": 48,
+    "win32": 46
+  }
+}

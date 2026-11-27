@@ -1,0 +1,6 @@
+use std/{fs, io}
+fn main() { let e = makeFsIo(1)
+    match e { io.Error.Utf8(n) => println(n)
+        _ => println(0) } }
+
+fn makeFsIo(n: int) -> fs.Error { return .Io(code: n) }

@@ -19,8 +19,10 @@ and [dep-index](examples/dep-index/README.md) cover log statistics, structured
 text validation and dependencies across files. **All three formal SH-4 applications are complete within their declared scope.**
 Batch 49 adds public system interfaces and a standalone native `build/run` driver
 using the locked toolchain. Batch 50 adds first-error `check --json` with exact
-UTF-8 source ranges and immutable source SHA256 identities. Broader semantics and
-remaining tools still block SH-3; performance and delivery cost retain separate acceptance.
+UTF-8 source ranges and immutable source SHA256 identities. Batch 51 adds nominal
+standard error values, complete Results from the existing fallible calls, named
+catch bindings and payload matching. Broader semantics and remaining tools still
+block SH-3; performance and delivery cost retain separate acceptance.
 
 The specification starts from **v0.5**, with dated revisions in [docs/decisions.md](docs/decisions.md). Historical revisions remain unchanged under `history/v0.x/` and Git tags `v0.1` through `v0.5`.
 
@@ -54,7 +56,37 @@ The ignored Cargo test is the old exploratory P0 conformance report; the current
 
 Source modules support top-level exports, per-file imports, cyclic imports and original-file diagnostics. Package dependencies and a program lockfile remain open. Multi-file `fix` returns `U0001` without writing; symlink module aliases are unsupported.
 
-### Selfhost structured diagnostics and source snapshots (batch 50, 2026-11-27)
+### Standard error values and real I/O acceptance (batch 51, 2026-11-27)
+
+The Yavo-written compiler now supports distinct `fs.Error`, `io.Error`, `os.Error`
+and `process.Error` Copy values, the `Utf8Error.offset` field, and full Results
+from ten existing fallible calls. Results may be saved, passed, returned,
+propagated with `try`, or handled by terminating named catches. Standard errors
+retain their actual payloads for display and exhaustive matching. General user
+payload enums, arbitrary match, direct error containers and qualified payload
+constructors remain outside the declared subset.
+
+| Current local evidence | Result |
+| --- | --- |
+| Complete bootstrap | **1,136/1,136 cases, 20/20 checks, zero skips** |
+| Independent error I/O | **48 scenarios × actual stage0/stage1/stage2 × Debug/Release = 288/288**; six oracle controls, four allocation-exit controls and three preserved lexical-boundary checks |
+| Existing diagnostics / hashing / driver | **196 JSON + 160 text + 16 supplemental**, **276 SHA256 vectors**, **114 ordinary-driver scenarios / 9 checks** |
+| Fixed point | Stage2/stage3 C **1,774,302 bytes**, Linux binaries **729,968 bytes**; each pair byte-identical |
+| Original 622-source corpus | **119→125/394**, distinct entry bytes **56→62/224**; zero regressions, subset violations or timeouts |
+| Newly accepted original programs | Six unchanged entry sources; 12 scenarios and **48** stage0/final-stage2 Debug/Release executions |
+
+There are 73 new semantic cases and ten unchanged-source promotions, totaling
+1,136 cases. One of the 73 newly authored semantic fixtures originally used `['a', 0xE2, 0x82]`, outside the existing nondecimal lexer subset. A single recorded amendment adds the equivalent decimal source `['a', 226, 130]` and changes only that manifest entry's file. The original source, freeze, manifest snapshot and first candidate U0001 failure remain preserved; old stage0 executes both versions in Debug/Release with the unchanged `1\n` output. Formal boundary checks retain stage0 acceptance and stage1/stage2 U0001 for the original source.
+No Rust, production runtime or toolchain-lock source changed; the local full Rust
+results remain the previously recorded source-identical batch49 runs.
+
+Formal local gates pass. Exact-commit three-platform CI and the independent Linux ASan+UBSan error gate remain pending. The local error sanitizer gate is off and supplies no sanitizer pass.
+The [validation index](compiler/validation/batch51-standard-errors-2026-11-27.json), [frozen contract](selfhost/tests/errors51/CONTRACT.md)
+and [explicit fixture amendment](selfhost/tests/errors51/semantic-amendment.json)
+keep source identity, local and CI scope separate. The test driver adds no fourth
+formal application: SH-4 remains **3/3**, and SH-3 daily replacement is still open.
+
+### Selfhost structured diagnostics and source snapshots (batch 50, historical)
 
 `check INPUT --json` and `check --json INPUT` (also `--json-diagnostics`)
 produce one `yavo-diagnostics/p0` object with explicit selfhost/first-error mode,

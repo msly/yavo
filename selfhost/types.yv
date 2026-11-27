@@ -47,6 +47,8 @@ pub struct Registry {
     tupleAtoms: Vec[TypeRef] = []
     files: Vec[SourceFile] = []
     imports: Vec[ModuleImport] = []
+    builtinErrors: int = 0
+    utf8Error: bool = false
 }
 
 pub fn primitive(kind: BasicType) -> Type {
@@ -74,7 +76,7 @@ pub fn same(a: Type, b: Type) -> bool {
         return true
     }
     if a.kind != b.kind { return false }
-    if a.kind == .Named || a.kind == .Result || a.kind == .Tuple { return a.decl == b.decl }
+    if a.kind == .Named || a.kind == .Result || a.kind == .Tuple || a.kind == .StdError { return a.decl == b.decl }
     if a.kind == .Vec || a.kind == .Optional || a.kind == .Slice || a.kind == .Map || a.kind == .Set || a.kind == .Heap {
         return a.elementKind == b.elementKind &&
             ((a.elementKind != .Named && a.elementKind != .Tuple) || a.elementDecl == b.elementDecl)
@@ -112,6 +114,8 @@ pub fn cType(t: Type) -> String {
     if t.kind == .Bool { return "bool".toString() }
     if t.kind == .Str { return "yv_str".toString() }
     if t.kind == .String { return "yv_string".toString() }
+    if t.kind == .StdError { return support.join2("sh_std_error_", support.decimal(t.decl)) }
+    if t.kind == .Utf8Error { return "sh_utf8_error".toString() }
     if t.kind == .Vec || t.kind == .Args || t.kind == .Slice { return "yv_vec".toString() }
     if t.kind == .Map || t.kind == .Set { return "yv_map".toString() }
     if t.kind == .Heap { return "yv_heap".toString() }
@@ -192,6 +196,8 @@ pub fn describe(reg: Registry, ts: Vec[Token], t: Type) -> String {
     if t.kind == .Bool { return "bool".toString() }
     if t.kind == .Str { return "str".toString() }
     if t.kind == .String { return "String".toString() }
+    if t.kind == .StdError { return standardErrorName(t.decl).toString() }
+    if t.kind == .Utf8Error { return "Utf8Error".toString() }
     if t.kind == .Vec { return support.join3("Vec[", describe(reg, ts, element(t)), "]") }
     if t.kind == .Heap { return support.join3("Heap[", describe(reg, ts, element(t)), "]") }
     if t.kind == .Optional { return support.join2("?", describe(reg, ts, element(t))) }
@@ -223,6 +229,142 @@ pub fn fileOf(reg: Registry, token: int) -> int {
     var file = reg.files.len() - 1
     while file > 0 && reg.files[file].firstToken > token { file -= 1 }
     return file
+}
+
+// Distinct nominal Copy errors. Ids match codegen's standardModule:
+// os=1, fs=2, io=4, process=5. String.fromUtf8 has its own struct payload.
+pub fn standardError(module: int) -> Type {
+    return Type{kind: .StdError, decl: module, elementKind: .Unknown}
+}
+
+pub fn standardErrorName(module: int) -> str of static {
+    if module == 1 { return "os.Error" }
+    if module == 2 { return "fs.Error" }
+    if module == 4 { return "io.Error" }
+    if module == 5 { return "process.Error" }
+    return "<unknown standard error>"
+}
+
+pub fn standardVariant(ty: Type, name: str) -> int {
+    if ty.kind != .StdError { return -1 }
+    if name == "Utf8" { return 0 }
+    if name == "Io" { return 1 }
+    if ty.decl == 2 && name == "InvalidPath" { return 2 }
+    if (ty.decl == 1 || ty.decl == 5) && name == "InvalidArgument" { return 2 }
+    return -1
+}
+
+pub fn standardVariantCount(ty: Type) -> int {
+    if ty.kind != .StdError { return 0 }
+    if ty.decl == 4 { return 2 }
+    return 3
+}
+
+// A user module named fs/io/os/process takes its own exported types. Standard
+// imports never bring the short name Error into scope, exactly as in stage0.
+pub fn builtinType(reg: Registry, ts: Vec[Token], token: int) -> Type {
+    if ts[token].text == "Utf8Error" && ts[token + 1].text != "." {
+        return primitive(.Utf8Error)
+    }
+    if ts[token + 1].text != "." || ts[token + 2].text != "Error" {
+        return primitive(.Unknown)
+    }
+    if let _module = importedFile(reg, ts, token) { return primitive(.Unknown) }
+    let file = reg.files[fileOf(reg, token)]
+    var module = 0
+    var imported = false
+    if ts[token].text == "os" {
+        module = 1
+        imported = file.importsOs
+    }
+    if ts[token].text == "fs" {
+        module = 2
+        imported = file.importsFs
+    }
+    if ts[token].text == "io" {
+        module = 4
+        imported = file.importsIo
+    }
+    if ts[token].text == "process" {
+        module = 5
+        imported = file.importsProcess
+    }
+    if module == 0 { return primitive(.Unknown) }
+    if !imported {
+        lexer.fail(ts, token, "E0010", support.join3("module '", ts[token].text, "' is not imported"))
+    }
+    return standardError(module)
+}
+
+fn standardSuccess(module: int, name: str) -> Type {
+    if (module == 1 && name == "env") ||
+        (module == 2 && (name == "readText" || name == "tempDir")) ||
+        (module == 3 && name == "fromUtf8") || (module == 4 && name == "readAll") {
+        return primitive(.String)
+    }
+    if module == 2 && (name == "writeNewText" || name == "removeFile" || name == "removeDir") {
+        return primitive(.Unit)
+    }
+    if module == 2 && name == "sameFile" { return primitive(.Bool) }
+    if module == 5 && name == "run" { return primitive(.Int) }
+    return primitive(.Unknown)
+}
+
+pub fn standardResult(reg: Registry, module: int, name: str) -> Type {
+    let ok = standardSuccess(module, name)
+    if ok.kind == .Unknown { return primitive(.Unknown) }
+    var error = standardError(module)
+    if module == 3 { error = primitive(.Utf8Error) }
+    for index, item in reg.results {
+        if same(item.ok, ok) && same(item.error, error) {
+            return Type{kind: .Result, decl: index, elementKind: .Unknown}
+        }
+    }
+    return primitive(.Unknown)
+}
+
+fn internResult(reg: inout Registry, ok: Type, error: Type) -> int {
+    for index, item in reg.results {
+        if same(item.ok, ok) && same(item.error, error) { return index }
+    }
+    let index = reg.results.len()
+    reg.results.push(ResultInfo{ok: ok, error: error})
+    return index
+}
+
+fn collectStandardResults(p: Program, ts: Vec[Token], reg: inout Registry) {
+    // Only admitted source modules/types require these layouts. Programs that
+    // do not use the new builtins retain their existing generated C bytes.
+    for file in p.files {
+        if file.importsOs {
+            reg.builtinErrors = reg.builtinErrors | (1 << 1)
+            let _id = internResult(&reg, primitive(.String), standardError(1))
+        }
+        if file.importsFs {
+            reg.builtinErrors = reg.builtinErrors | (1 << 2)
+            let _read = internResult(&reg, primitive(.String), standardError(2))
+            let _write = internResult(&reg, primitive(.Unit), standardError(2))
+            let _same = internResult(&reg, primitive(.Bool), standardError(2))
+        }
+        if file.importsIo {
+            reg.builtinErrors = reg.builtinErrors | (1 << 4)
+            let _id = internResult(&reg, primitive(.String), standardError(4))
+        }
+        if file.importsProcess {
+            reg.builtinErrors = reg.builtinErrors | (1 << 5)
+            let _id = internResult(&reg, primitive(.Int), standardError(5))
+        }
+    }
+    for expr in p.expressions {
+        if expr.kind == .Method && ts[expr.token].text == "fromUtf8" &&
+            p.expressions[expr.left].kind == .Name && ts[p.expressions[expr.left].token].text == "String" {
+            reg.utf8Error = true
+            let _id = internResult(&reg, primitive(.String), primitive(.Utf8Error))
+        }
+    }
+    for token in ts {
+        if token.kind == .Word && token.text == "Utf8Error" { reg.utf8Error = true }
+    }
 }
 
 // The module file imported under `alias` by the alias token's own file, or -1.
@@ -410,6 +552,8 @@ pub fn resolve(reg: Registry, ts: Vec[Token], syn: TypeRef) -> Type {
         return Type{kind: .Slice, elementKind: elem.kind, elementDecl: elem.decl}
     }
     if syn.kind != .Named { return primitive(syn.kind) }
+    let builtin = builtinType(reg, ts, syn.name)
+    if builtin.kind != .Unknown { return builtin }
     if ts[syn.name].text == "String" { return primitive(.String) }
     if ts[syn.name].text == "Vec" {
         lexer.fail(ts, syn.name, "E0001", "Vec takes exactly one type argument")
@@ -455,16 +599,7 @@ fn collectResults(p: Program, ts: Vec[Token], reg: inout Registry) {
         if carriesBorrow(error) {
             lexer.fail(ts, syntax.errorToken, "E0301", "an error value cannot hold a borrowed view; use String")
         }
-        var found = -1
-        var j = 0
-        while j < reg.results.len() {
-            if same(reg.results[j].ok, ok) && same(reg.results[j].error, error) { found = j }
-            j += 1
-        }
-        if found < 0 {
-            found = reg.results.len()
-            reg.results.push(ResultInfo{ok: ok, error: error})
-        }
+        let found = internResult(&reg, ok, error)
         reg.resultRefs.push(found)
         i += 1
     }
@@ -545,6 +680,7 @@ pub fn collect(p: Program, ts: Vec[Token]) -> Registry {
     // Every annotation was pooled by the parser; intern before any signature or
     // expression is lowered so C result layouts are complete and stable.
     collectResults(p, ts, &reg)
+    collectStandardResults(p, ts, &reg)
     i = 0
     while i < p.types.len() {
         let d = p.types[i]

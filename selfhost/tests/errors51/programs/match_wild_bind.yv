@@ -1,0 +1,11 @@
+use std/fs
+fn rest(e: fs.Error) -> String { return match e {
+    .Utf8(_) => "utf8".toString()
+    other => format("rest:${other}")
+} }
+fn wild(e: fs.Error) -> int { return match e { .Io(code) => code
+    _ => 9 } }
+fn main() { println(rest(fs.Error.InvalidPath))
+    println(wild(makeFsUtf8(1))) }
+
+fn makeFsUtf8(n: int) -> fs.Error { return .Utf8(offset: n) }

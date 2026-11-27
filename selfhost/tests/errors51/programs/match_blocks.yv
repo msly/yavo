@@ -1,0 +1,15 @@
+use std/fs
+fn work(e: fs.Error) -> int { match e {
+    .Utf8(n) => { let guard = ["owned".toString()]
+        println(n)
+        return guard.len() }
+    .Io(n) => { println(n)
+        return 2 }
+    .InvalidPath => return 3
+} }
+fn main() { println(work(makeFsUtf8(8)))
+    println(work(makeFsIo(9)))
+    println(work(fs.Error.InvalidPath)) }
+
+fn makeFsUtf8(n: int) -> fs.Error { return .Utf8(offset: n) }
+fn makeFsIo(n: int) -> fs.Error { return .Io(code: n) }

@@ -1,0 +1,12 @@
+use std/fs
+fn main() { var n = 0
+    while n < 3 { n += 1
+        let guard = ["guard".toString()]
+        match fs.Error.InvalidPath {
+            .InvalidPath => { if n < 2 { continue }
+                break }
+            _ => println(guard.len())
+        }
+    }
+    println(n)
+}

@@ -77,8 +77,37 @@ def succeeded(result):
     return result["record"]["exit_code"] == 0 and not result["record"]["timed_out"]
 
 
-def run(argv, directory, environment, timeout=120):
+def fixture_environment(case, environment):
+    """Apply the frozen executable fixture's narrow environment delta."""
+    delta = case.get("environment", {})
+    if not isinstance(delta, dict):
+        raise ValueError("fixture environment must be an object")
+    if "isolated_cwd" in case and type(case["isolated_cwd"]) is not bool:
+        raise ValueError("fixture isolated_cwd must be a boolean")
+    result = dict(environment)
+    for key, value in delta.items():
+        if key not in ("name", "PATH"):
+            raise ValueError("fixture environment may only change name and PATH")
+        if value is not None and (not isinstance(value, str) or "\0" in value):
+            raise ValueError("fixture environment values must be strings without NUL or null")
+        # Windows environment names are case insensitive; remove an inherited
+        # NAME/Path spelling before applying the exact frozen delta.
+        if os.name == "nt":
+            for inherited in list(result):
+                if inherited.casefold() == key.casefold():
+                    result.pop(inherited)
+        else:
+            result.pop(key, None)
+        if value is not None:
+            result[key] = value
+    return result
+
+
+def run(argv, directory, environment, timeout=120, cwd=None, environment_delta=None):
     """Bound child trees, preserve full streams, and never reuse old output."""
+    command_cwd = ROOT if cwd is None else Path(cwd).resolve()
+    if environment_delta is not None:
+        environment = fixture_environment({"environment": environment_delta}, environment)
     directory.mkdir(parents=True, exist_ok=False)
     started = time.monotonic()
     timed_out = False
@@ -87,7 +116,7 @@ def run(argv, directory, environment, timeout=120):
                if os.name == "nt" else {"start_new_session": True})
     with (directory / "stdout").open("wb") as stdout, (directory / "stderr").open("wb") as stderr:
         try:
-            process = subprocess.Popen([str(arg) for arg in argv], cwd=ROOT,
+            process = subprocess.Popen([str(arg) for arg in argv], cwd=command_cwd,
                                        env=environment, stdin=subprocess.DEVNULL,
                                        stdout=stdout, stderr=stderr, **options)
             try:
@@ -115,13 +144,15 @@ def run(argv, directory, environment, timeout=120):
         except OSError as error:
             stderr.write(str(error).encode("utf-8"))
     out, err = (directory / "stdout").read_bytes(), (directory / "stderr").read_bytes()
-    record = {"argv": [str(arg) for arg in argv], "cwd": str(ROOT),
+    record = {"argv": [str(arg) for arg in argv], "cwd": str(command_cwd),
               "exit_code": code, "timed_out": timed_out,
               "elapsed_seconds": time.monotonic() - started,
               "stdout": bytes_record(out), "stderr": bytes_record(err),
               "environment": {key: environment.get(key) for key in
                               ("PATH", "YAVO_ALLOC_CHECK", "YAVO_NO_CACHE")}}
     # PATH contains executable locations only; no inherited secrets are recorded.
+    if environment_delta is not None:
+        record["fixture_environment"] = environment_delta
     save(directory / "command.json", record)
     return {"record": record, "stdout": out, "stderr": err}
 
@@ -184,6 +215,9 @@ def validate_cases():
         ids.add(case["id"])
         if case["kind"] not in ("run", "panic", "reject", "unsupported", "shared_unsupported"):
             raise ValueError("invalid fixture kind")
+        if ("environment" in case or "isolated_cwd" in case) and case["kind"] not in ("run", "panic"):
+            raise ValueError("fixture execution options are only valid for run or panic cases")
+        fixture_environment(case, {})
         file = Path(case["file"])
         source = (SELFHOST / "tests" / file).resolve()
         if file.is_absolute() or not source.is_relative_to((SELFHOST / "tests").resolve()):
@@ -229,9 +263,10 @@ def main():
         save(work / "receipt.json", report)
         save(output / "receipt.json", report)
 
-    def command(label, argv, frontend=False, timeout=120):
+    def command(label, argv, frontend=False, timeout=120, cwd=None, environment_delta=None):
         return run(argv, work / "commands" / label,
-                   frontend_env if frontend else environment, timeout)
+                   frontend_env if frontend else environment, timeout, cwd=cwd,
+                   environment_delta=environment_delta)
 
     def check(label, passed, **details):
         report["checks"].append({"id": label, "status": "passed" if passed else "failed",
@@ -489,8 +524,16 @@ def main():
                               "reference_build": reference_build["record"],
                               "candidate_build": candidate_build["record"]}
                     if succeeded(reference_build) and succeeded(candidate_build):
-                        reference_run = command(name + "-" + mode + "-reference-run", [reference], timeout=10)
-                        candidate_run = command(name + "-" + mode + "-candidate-run", [candidate], timeout=10)
+                        executions = []
+                        for producer, executable in (("reference", reference), ("candidate", candidate)):
+                            execution_cwd = None
+                            if case.get("isolated_cwd", False):
+                                execution_cwd = directory / (producer + "-" + mode + "-cwd")
+                                execution_cwd.mkdir(exist_ok=False)
+                            executions.append(command(name + "-" + mode + "-" + producer + "-run",
+                                                      [executable], timeout=10, cwd=execution_cwd,
+                                                      environment_delta=case.get("environment")))
+                        reference_run, candidate_run = executions
                         expected_out = case["stdout"].encode("utf-8")
                         expected_exit = 101 if kind == "panic" else 0
                         observed = []

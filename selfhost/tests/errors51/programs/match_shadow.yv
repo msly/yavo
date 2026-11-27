@@ -1,0 +1,12 @@
+use std/fs
+fn main() { let n = 99
+    let e = makeFsIo(7)
+    let result = match e { .Utf8(n) => n
+        .Io(n) => n + 1
+        .InvalidPath => 0 }
+    println(result)
+    println(n)
+    println(e)
+}
+
+fn makeFsIo(n: int) -> fs.Error { return .Io(code: n) }

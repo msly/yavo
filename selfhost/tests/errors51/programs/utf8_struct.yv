@@ -1,0 +1,8 @@
+struct Holder { error: Utf8Error }
+fn copy(e: Utf8Error) -> Utf8Error { return e }
+fn main() {
+    let e = Utf8Error{offset: 7}
+    let holder = Holder{error: copy(e)}
+    println(e.offset)
+    println(holder.error.offset)
+}

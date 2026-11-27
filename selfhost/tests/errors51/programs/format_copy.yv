@@ -1,0 +1,11 @@
+use std/fs
+fn label(e: fs.Error) -> String { return format("read error: ${e}") }
+fn main() {
+    let e = makeFsIo(41)
+    let copied = e
+    println(label(e))
+    println(copied)
+    eprintln("${e}")
+}
+
+fn makeFsIo(n: int) -> fs.Error { return .Io(code: n) }

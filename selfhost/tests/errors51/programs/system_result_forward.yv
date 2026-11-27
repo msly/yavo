@@ -1,0 +1,16 @@
+use std/{fs, os, process}
+fn env() -> String ! os.Error { return os.env("bad=name", "") }
+fn run() -> int ! process.Error { let args: Vec[String] = []
+    return try process.run("bad\0program", args, false) }
+fn remove() -> () ! fs.Error { return fs.removeFile("bad\0path") }
+fn showEnv() { let x = env() catch e { println(e)
+    return }
+    println(x) }
+fn showRun() { let x = run() catch e { println(e)
+    return }
+    println(x) }
+fn showRemove() { remove() catch e { println(e)
+    return } }
+fn main() { showEnv()
+    showRun()
+    showRemove() }

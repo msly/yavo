@@ -1,0 +1,13 @@
+use std/{fs, io}
+struct Errors { file: fs.Error, input: io.Error }
+fn pass(e: fs.Error) -> fs.Error { return e }
+fn main() {
+    let x = Errors{file: makeFsUtf8(3), input: makeIoIo(4)}
+    let y = x
+    println(pass(x.file))
+    println(y.input)
+    println(x.file)
+}
+
+fn makeFsUtf8(n: int) -> fs.Error { return .Utf8(offset: n) }
+fn makeIoIo(n: int) -> io.Error { return .Io(code: n) }

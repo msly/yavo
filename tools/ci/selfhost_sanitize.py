@@ -141,11 +141,27 @@ def load_inputs(receipt_path):
                     "exit_code": 101 if case["kind"] == "panic" else 0}
         if case["kind"] == "panic":
             expected["panic"] = {"category": case["panic"]}
-        programs.append({"id": case["id"], "entry": str(source.relative_to(ROOT)),
-                         "source": source.read_text(encoding="utf-8"),
-                         "source_sha256": row["source_sha256"],
-                         "c": c_file.read_text(encoding="utf-8"),
-                         "c_sha256": row["generated_c_sha256"], "expected": expected})
+        program = {"id": case["id"], "entry": str(source.relative_to(ROOT)),
+                   "source": source.read_text(encoding="utf-8"),
+                   "source_sha256": row["source_sha256"],
+                   "c": c_file.read_text(encoding="utf-8"),
+                   "c_sha256": row["generated_c_sha256"], "expected": expected}
+        for key in ("environment", "isolated_cwd"):
+            if key in case:
+                program[key] = case[key]
+        # The manifest's execution requirements must have been applied to
+        # both compilers in both modes before this independent run is accepted.
+        if "environment" in case or case.get("isolated_cwd", False):
+            for mode in row["modes"]:
+                for producer in ("reference", "candidate"):
+                    executed = mode[producer + "_run"]
+                    if "environment" in case and executed.get("fixture_environment") != case["environment"]:
+                        raise ValueError("bootstrap fixture environment mismatch: " + case["id"])
+                    if case.get("isolated_cwd", False):
+                        wanted = directory / (producer + "-" + mode["mode"] + "-cwd")
+                        if Path(executed["cwd"]).resolve() != wanted.resolve():
+                            raise ValueError("bootstrap fixture cwd mismatch: " + case["id"])
+        programs.append(program)
     if assembled != inputs["assembled_sources"]:
         raise ValueError("assembled source list does not match the bootstrap receipt")
     if not programs:

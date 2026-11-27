@@ -1,0 +1,16 @@
+use std/fs
+fn write(path: str) -> () ! fs.Error { try fs.writeNewText(path, "hello")
+    return }
+fn read(path: str) -> String ! fs.Error { return try fs.readText(path) }
+fn same(a: str, b: str) -> bool ! fs.Error { return try fs.sameFile(a, b) }
+fn work() -> () ! fs.Error {
+    let dir = try fs.tempDir(".", "errors51-")
+    let path = format("${dir}/file")
+    try write(path)
+    println(try read(path))
+    println(try same(path, path))
+    try fs.removeFile(path)
+    try fs.removeDir(dir)
+}
+fn main() { work() catch e { println(e)
+    return } }

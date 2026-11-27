@@ -1,0 +1,6 @@
+use std/fs
+fn main() { println(makeFsUtf8(9223372036854775807))
+    println(makeFsIo(-9223372036854775808)) }
+
+fn makeFsUtf8(n: int) -> fs.Error { return .Utf8(offset: n) }
+fn makeFsIo(n: int) -> fs.Error { return .Io(code: n) }

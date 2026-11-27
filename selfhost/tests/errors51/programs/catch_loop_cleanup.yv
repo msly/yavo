@@ -1,0 +1,14 @@
+use std/fs
+fn main() { var n = 0
+    while n < 3 {
+        n += 1
+        let guard = ["live".toString()]
+        let text = fs.readText("bad\0path") catch e {
+            println("${n}:${e}")
+            if n < 2 { continue }
+            break
+        }
+        println(text)
+    }
+    println(n)
+}

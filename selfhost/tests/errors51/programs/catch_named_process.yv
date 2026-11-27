@@ -1,0 +1,7 @@
+use std/process
+fn main() { let arguments = ["kept".toString()]
+    let value = process.run("bad\0program", arguments, false) catch e {
+        println(e)
+        println(arguments[0])
+        return }
+    println(value) }

@@ -18,6 +18,8 @@ pub enum BasicType {
     Tuple
     Set
     Heap
+    StdError
+    Utf8Error
 }
 
 pub struct TypeRef {
@@ -94,6 +96,7 @@ pub enum ExprKind {
     Tuple
     HeapType
     Closure
+    Match
 }
 
 // args/names index Program.lists. A Slice keeps its end in extra; a Catch
@@ -126,6 +129,28 @@ pub struct StringPart {
     spec: int = -1
 }
 
+// Only standard error enums have payload patterns in this subset. The parser
+// keeps the original spelling; checking selects the nominal error type.
+pub enum MatchPatternKind {
+    Wild
+    Bind
+    Case
+}
+
+pub struct MatchArm {
+    token: int
+    kind: MatchPatternKind
+    typeToken: int = -1
+    variant: int = -1
+    binding: int = -1
+    payloadStart: int = 0
+    payloadCount: int = 0
+    bodyStart: int = 0
+    bodyCount: int = 0
+    value: int = -1
+    block: bool = false
+}
+
 pub enum StmtKind {
     Bind
     Assign
@@ -140,6 +165,7 @@ pub enum StmtKind {
     Continue
     ForRange
     ForEach
+    Match
 }
 
 // body/otherwise index Program.lists. For loops keep the first binding token in
@@ -218,6 +244,7 @@ pub struct Program {
     resultTypes: Vec[ResultRef] = []
     tupleAtoms: Vec[TypeRef] = []
     stringParts: Vec[StringPart] = []
+    matchArms: Vec[MatchArm] = []
     files: Vec[SourceFile] = []
     imports: Vec[ModuleImport] = []
 }

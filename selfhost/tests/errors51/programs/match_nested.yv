@@ -1,0 +1,11 @@
+use std/{fs, io}
+fn main() { let outer = makeFsUtf8(5)
+    let inner = makeIoIo(7)
+    let n = match outer { .Utf8(a) => match inner { .Utf8(b) => a + b
+        .Io(b) => a * b }
+        _ => 0 }
+    println(n)
+}
+
+fn makeFsUtf8(n: int) -> fs.Error { return .Utf8(offset: n) }
+fn makeIoIo(n: int) -> io.Error { return .Io(code: n) }

@@ -35,12 +35,39 @@ def check_digest(data, wanted, label):
         raise ValueError(f"{label}: input digest mismatch {actual} != {wanted}")
 
 
-def invoke(argv, directory, prefix, environment, timeout):
+def fixture_environment(case, environment):
+    """Mirror the portable bundle's narrow executable-fixture contract."""
+    delta = case.get("environment", {})
+    if not isinstance(delta, dict):
+        raise ValueError("fixture environment must be an object")
+    if "isolated_cwd" in case and type(case["isolated_cwd"]) is not bool:
+        raise ValueError("fixture isolated_cwd must be a boolean")
+    result = dict(environment)
+    for key, value in delta.items():
+        if key not in ("name", "PATH"):
+            raise ValueError("fixture environment may only change name and PATH")
+        if value is not None and (not isinstance(value, str) or "\0" in value):
+            raise ValueError("fixture environment values must be strings without NUL or null")
+        if os.name == "nt":
+            for inherited in list(result):
+                if inherited.casefold() == key.casefold():
+                    result.pop(inherited)
+        else:
+            result.pop(key, None)
+        if value is not None:
+            result[key] = value
+    return result
+
+
+def invoke(argv, directory, prefix, environment, timeout, cwd=None, environment_delta=None):
+    command_cwd = directory.resolve() if cwd is None else Path(cwd).resolve()
+    if environment_delta is not None:
+        environment = fixture_environment({"environment": environment_delta}, environment)
     stdout_path = directory / (prefix + ".stdout")
     stderr_path = directory / (prefix + ".stderr")
     started = time.monotonic()
     with stdout_path.open("wb") as out, stderr_path.open("wb") as err:
-        process = subprocess.Popen(argv, cwd=directory, env=environment,
+        process = subprocess.Popen(argv, cwd=command_cwd, env=environment,
                                    stdin=subprocess.DEVNULL, stdout=out, stderr=err,
                                    start_new_session=True)
         timed_out = False
@@ -54,10 +81,15 @@ def invoke(argv, directory, prefix, environment, timeout):
             except subprocess.TimeoutExpired:
                 os.killpg(process.pid, signal.SIGKILL)
                 code = process.wait(timeout=5)
-    return {"argv": argv, "cwd": str(directory.resolve()), "exit_code": code,
+    record = {"argv": argv, "cwd": str(command_cwd), "exit_code": code,
             "timed_out": timed_out, "timeout_seconds": timeout,
             "elapsed_seconds": time.monotonic() - started,
             "stdout": artifact(stdout_path), "stderr": artifact(stderr_path)}
+    if environment_delta is not None:
+        record["fixture_environment"] = environment_delta
+        record["environment"] = {key: environment.get(key) for key in
+                                 ("ASAN_OPTIONS", "UBSAN_OPTIONS", "YAVO_ALLOC_CHECK", "PATH")}
+    return record
 
 
 def bytes_of(record, name):
@@ -93,6 +125,7 @@ def main():
     check_digest(header, bundle["runtime"]["sha256"], "runtime")
     (directory / "yavo_rt.h").write_bytes(header)
     for p in programs:
+        fixture_environment(p, {})
         if not re.fullmatch(r"[A-Za-z0-9_.-]+", p["id"]) or p["id"] in ids:
             parser.error("invalid or duplicate program ID")
         ids.add(p["id"])
@@ -191,7 +224,12 @@ int main(int argc, char **argv) {
             row["diagnostic"] = bytes_of(built, "stderr").decode("utf-8", "replace")
             return row
         row["artifact"] = artifact(binary)
-        execution = invoke([str(binary)], local, "run", environment, 20)
+        execution_cwd = None
+        if p.get("isolated_cwd", False):
+            execution_cwd = local / "isolated-cwd"
+            execution_cwd.mkdir(exist_ok=False)
+        execution = invoke([str(binary)], local, "run", environment, 20,
+                           cwd=execution_cwd, environment_delta=p.get("environment"))
         row["execution"] = execution
         row["ran_on"] = report["host"]
         out, err = bytes_of(execution, "stdout"), bytes_of(execution, "stderr")

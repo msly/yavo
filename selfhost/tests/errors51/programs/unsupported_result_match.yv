@@ -1,0 +1,3 @@
+use std/fs
+fn main() { match fs.readText("bad\0path") { ok(value) => println(value)
+    err(e) => println(e) } }

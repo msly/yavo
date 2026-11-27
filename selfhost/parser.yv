@@ -18,6 +18,7 @@ struct State {
     resultTypes: Vec[ResultRef] = []
     tupleAtoms: Vec[TypeRef] = []
     stringParts: Vec[StringPart] = []
+    matchArms: Vec[MatchArm] = []
     files: Vec[SourceFile] = []
     imports: Vec[ModuleImport] = []
     file: int = 0
@@ -259,13 +260,6 @@ fn typeAtom(s: inout State, ts: Vec[Token]) -> TypeRef {
         // `module.Type`: the reference keeps the module token; resolve() sees
         // the "." after it and looks the type up in that module.
         if at(s, ts, ".") && ts[s.pos + 1].kind == .Word && !reservedWord(ts[s.pos + 1].text) {
-            if ts[s.pos + 1].text == "Error" &&
-                ((ts[name].text == "io" && s.importsIo) || (ts[name].text == "fs" && s.importsFs) ||
-                (ts[name].text == "os" && s.importsOs) || (ts[name].text == "process" && s.importsProcess)) {
-                // Standard I/O errors are currently available only through
-                // the discarded catch handler, not as named payload types.
-                lexer.fail(ts, name, "U0001", "named standard error types are outside the selfhost subset")
-            }
             s.pos += 2
         }
         result = TypeRef{elementKind: .Unknown, kind: .Named, name: name}
@@ -481,8 +475,106 @@ fn closure(s: inout State, ts: Vec[Token]) -> int {
     return id
 }
 
+fn matchPattern(s: inout State, ts: Vec[Token]) -> MatchArm {
+    let token = s.pos
+    var arm = MatchArm{token: token, kind: .Case}
+    if eat(&s, ts, "_") {
+        arm.kind = .Wild
+        return arm
+    }
+    if eat(&s, ts, ".") {
+        arm.variant = identifier(&s, ts)
+    } else if ts[s.pos].kind == .Word && !reservedWord(ts[s.pos].text) {
+        let first = identifier(&s, ts)
+        if !eat(&s, ts, ".") {
+            if at(s, ts, "(") ||
+                (!ts[first].text.startsWith("_") && (ts[first].text[0] < 'a' || ts[first].text[0] > 'z')) {
+                lexer.fail(ts, first, "U0001", "this match pattern is outside the selfhost subset")
+            }
+            arm.kind = .Bind
+            arm.binding = first
+            return arm
+        }
+        arm.typeToken = first
+        arm.variant = identifier(&s, ts)
+        if eat(&s, ts, ".") { arm.variant = identifier(&s, ts) }
+    } else {
+        syntax(s, ts, "U0001", "this match pattern is outside the selfhost subset")
+    }
+    var payloads: Vec[int] = []
+    if eat(&s, ts, "(") {
+        while !at(s, ts, ")") {
+            if ts[s.pos].kind != .Word || reservedWord(ts[s.pos].text) {
+                syntax(s, ts, "U0001", "standard error payload patterns require a name or underscore")
+            }
+            let name = identifier(&s, ts)
+            if at(s, ts, ":") || at(s, ts, "(") || at(s, ts, ".") {
+                syntax(s, ts, "U0001", "nested or named-field match patterns are outside the selfhost subset")
+            }
+            if !ts[name].text.startsWith("_") && (ts[name].text[0] < 'a' || ts[name].text[0] > 'z') {
+                lexer.fail(ts, name, "U0001", "a payload pattern must be a binding or underscore")
+            }
+            payloads.push(name)
+            if !eat(&s, ts, ",") { break }
+        }
+        expect(&s, ts, ")")
+    }
+    arm.payloadStart = store(&s, payloads)
+    arm.payloadCount = payloads.len()
+    return arm
+}
+
+fn matchExpression(s: inout State, ts: Vec[Token], statement: bool) -> int {
+    enter(&s, ts)
+    let token = expect(&s, ts, "match")
+    let value = parseExpression(&s, ts)
+    expect(&s, ts, "{")
+    var arms: Vec[MatchArm] = []
+    loop {
+        while ts[s.pos].kind == .Newline || at(s, ts, ",") { s.pos += 1 }
+        if eat(&s, ts, "}") { break }
+        if ts[s.pos].kind == .Eof { syntax(s, ts, "E0020", "unclosed match") }
+        var arm = matchPattern(&s, ts)
+        expect(&s, ts, "=>")
+        if at(s, ts, "{") {
+            let body = parseBlock(&s, ts)
+            arm.bodyStart = store(&s, body)
+            arm.bodyCount = body.len()
+            arm.block = true
+        } else if statement {
+            let item = parseStatement(&s, ts)
+            arm.bodyStart = store(&s, [item])
+            arm.bodyCount = 1
+            arm.block = true
+        } else if at(s, ts, "return") || at(s, ts, "break") || at(s, ts, "continue") {
+            let keyword = s.pos
+            s.pos += 1
+            var returned = -1
+            if ts[keyword].text == "return" && ts[s.pos].kind != .Newline && ts[s.pos].kind != .Eof &&
+                !at(s, ts, "}") && !at(s, ts, ")") && !at(s, ts, ",") {
+                returned = parseExpression(&s, ts)
+            }
+            arm.value = pushExpr(&s, .Jump, keyword, returned, -1)
+        } else {
+            arm.value = parseExpression(&s, ts)
+        }
+        arms.push(arm)
+        if ts[s.pos].kind != .Newline && !at(s, ts, ",") && !at(s, ts, "}") {
+            syntax(s, ts, "E0020", "expected a newline or comma after the match arm")
+        }
+    }
+    let start = s.matchArms.len()
+    for arm in arms { s.matchArms.push(arm) }
+    let id = pushExpr(&s, .Match, token, value, -1)
+    s.expressions[id].argStart = start
+    s.expressions[id].argCount = arms.len()
+    s.nesting -= 1
+    return id
+}
+
 fn primary(s: inout State, ts: Vec[Token]) -> int {
     let p = s.pos
+    if at(s, ts, "match") { return matchExpression(&s, ts, false) }
     if ts[p].kind == .StringStart { return interpolatedString(&s, ts) }
     if ts[p].kind == .Number {
         s.pos += 1
@@ -545,7 +637,7 @@ fn primary(s: inout State, ts: Vec[Token]) -> int {
         s.nesting -= 1
         return pushExpr(&s, .Ref, p, target, -1)
     }
-    if at(s, ts, "match") || at(s, ts, "spawn") {
+    if at(s, ts, "spawn") {
         syntax(s, ts, "U0001", "expression is outside the selfhost SH-1 subset")
     }
     if at(s, ts, "*") { syntax(s, ts, "U0001", "dereference is outside the selfhost subset") }
@@ -634,18 +726,36 @@ fn postfix(s: inout State, ts: Vec[Token]) -> int {
             let target = s.expressions[current].token
             let targetKind = s.expressions[current].kind
             let receiver = s.expressions[current].left
-            if targetKind != .Name && targetKind != .Field {
+            if targetKind != .Name && targetKind != .Field && targetKind != .Variant {
                 syntax(s, ts, "U0001", "this call target is outside the selfhost subset")
             }
             s.pos += 1
             var args: Vec[int] = []
+            var labels: Vec[int] = []
+            var hasLabels = false
             while !at(s, ts, ")") {
+                var label = -1
+                if ts[s.pos].kind == .Word && ts[s.pos + 1].text == ":" {
+                    if targetKind != .Variant {
+                        syntax(s, ts, "U0001", "named call arguments are outside the selfhost subset")
+                    }
+                    label = identifier(&s, ts)
+                    expect(&s, ts, ":")
+                    hasLabels = true
+                }
                 let arg = parseExpression(&s, ts)
                 args.push(arg)
+                labels.push(label)
                 if !eat(&s, ts, ",") { break }
             }
             expect(&s, ts, ")")
-            if targetKind == .Field {
+            if targetKind == .Variant {
+                current = pushList(&s, .Variant, target, -1, args)
+                if hasLabels {
+                    s.expressions[current].nameStart = store(&s, labels)
+                    s.expressions[current].nameCount = labels.len()
+                }
+            } else if targetKind == .Field {
                 current = pushList(&s, .Method, target, receiver, args)
             } else {
                 current = pushList(&s, .Call, target, -1, args)
@@ -894,6 +1004,10 @@ fn forStatement(s: inout State, ts: Vec[Token]) -> int {
 
 fn parseStatement(s: inout State, ts: Vec[Token]) -> int {
     let p = s.pos
+    if at(s, ts, "match") {
+        let value = matchExpression(&s, ts, true)
+        return pushStmt(&s, .Match, p, value)
+    }
     if at(s, ts, "{") { syntax(s, ts, "U0001", "block statements are outside the selfhost subset") }
     if at(s, ts, "let") || at(s, ts, "var") {
         let mutable = at(s, ts, "var")
@@ -913,7 +1027,7 @@ fn parseStatement(s: inout State, ts: Vec[Token]) -> int {
     }
     if eat(&s, ts, "return") {
         var value = -1
-        if ts[s.pos].kind != .Newline && !at(s, ts, "}") {
+        if ts[s.pos].kind != .Newline && !at(s, ts, "}") && !at(s, ts, ",") {
             value = parseExpression(&s, ts)
         }
         return pushStmt(&s, .Return, p, value)
@@ -1227,6 +1341,7 @@ pub fn finishParse(s: inout State) -> Program {
         functions: take(&s.functions), types: take(&s.types), lists: take(&s.lists),
         params: take(&s.params), fields: take(&s.fields),
         resultTypes: take(&s.resultTypes), tupleAtoms: take(&s.tupleAtoms), stringParts: take(&s.stringParts),
+        matchArms: take(&s.matchArms),
         files: take(&s.files), imports: take(&s.imports)}
 }
 

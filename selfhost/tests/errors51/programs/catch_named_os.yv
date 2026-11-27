@@ -1,0 +1,7 @@
+use std/os
+fn main() { let text = os.env("bad=name", "fallback") catch e {
+    println(e)
+    match e { .InvalidArgument => println("invalid")
+        _ => println("wrong") }
+    return }
+    println(text) }

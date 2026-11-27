@@ -1,0 +1,4362 @@
+{
+  "schema": "yavo-errors51-stage0-io-reference/1",
+  "source": {
+    "path": "/data1/workspace/github/workspace/yavo/selfhost/tests/errors51/driver.yv",
+    "bytes": 5044,
+    "sha256": "22a37eff14edb77917d300bff144df0ba109466a8cff16ba95efb014a780417c"
+  },
+  "stage0": {
+    "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch49/stage0",
+    "bytes": 2883136,
+    "sha256": "b0dc58747ed0d10e27928f9673546c6381afad5f95b67627733c4042da03b2cb"
+  },
+  "zig": {
+    "path": "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+    "bytes": 185530576,
+    "sha256": "58959f01285c05a74276f09327b551d42ed6006bf325a78dc661a024e314987b"
+  },
+  "generated": {
+    "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program.c",
+    "bytes": 38356,
+    "sha256": "211f6430ff9ef2217add2a5d3c4d2ff64f545bb6bc70bc1be0b916bb1961493c"
+  },
+  "emit": {
+    "argv": [
+      "/data1/workspace/github/workspace/yavo/compiler/target/batch49/stage0",
+      "check",
+      "/data1/workspace/github/workspace/yavo/selfhost/tests/errors51/driver.yv",
+      "--emit-c",
+      "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program.c"
+    ],
+    "cwd": "/data1/workspace/github/workspace/yavo",
+    "environment": {},
+    "exit_code": 0,
+    "timed_out": false,
+    "launch_error": null,
+    "elapsed_seconds": 0.004714474081993103,
+    "peak_process_memory_bytes": 16834560,
+    "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+    "stdout": {
+      "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/emit/stdout.bin",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "stderr": {
+      "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/emit/stderr.bin",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "stdin": {
+      "kind": "devnull"
+    }
+  },
+  "builds": [
+    {
+      "mode": "debug",
+      "build": {
+        "argv": [
+          "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+          "cc",
+          "-std=c17",
+          "-fno-strict-aliasing",
+          "-DYV_ALLOC_CHECK",
+          "-O0",
+          "-g",
+          "-I",
+          "/data1/workspace/github/workspace/yavo/compiler/runtime",
+          "-include",
+          "/data1/workspace/github/workspace/yavo/examples/test-summary/tests/exit_check.h",
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program.c",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 20.695245541632175,
+        "peak_process_memory_bytes": 412389376,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/build-debug/stdout.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/build-debug/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "kind": "devnull"
+        }
+      },
+      "binary": {
+        "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+        "bytes": 4172992,
+        "sha256": "4a73ff3683663bb52d21cfcf469d65fcc88f5f0b92c98ad49905a8decb06b4bf"
+      }
+    },
+    {
+      "mode": "release",
+      "build": {
+        "argv": [
+          "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+          "cc",
+          "-std=c17",
+          "-fno-strict-aliasing",
+          "-DYV_ALLOC_CHECK",
+          "-O2",
+          "-s",
+          "-I",
+          "/data1/workspace/github/workspace/yavo/compiler/runtime",
+          "-include",
+          "/data1/workspace/github/workspace/yavo/examples/test-summary/tests/exit_check.h",
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program.c",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 3.684322189539671,
+        "peak_process_memory_bytes": 146681856,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/build-release/stdout.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/build-release/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "kind": "devnull"
+        }
+      },
+      "binary": {
+        "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+        "bytes": 31664,
+        "sha256": "9a689798b8c09ef15c529689b1af061bf4164fa8d2f1cbbed21e90886d5067e0"
+      }
+    }
+  ],
+  "runs": [
+    {
+      "id": "read_empty",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "read",
+          "a"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/read_empty/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0024060439318418503,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/read_empty/command/stdout.bin",
+          "bytes": 6,
+          "sha256": "b576254feca85378b5e9bf23e0a9b32d53e195887968db32b5158672a42ab541"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/read_empty/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/read_empty/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {
+        "a": ""
+      }
+    },
+    {
+      "id": "read_unicode",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "read",
+          "目录/数据"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/read_unicode/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0022586043924093246,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/read_unicode/command/stdout.bin",
+          "bytes": 20,
+          "sha256": "6879e9a836bf9726d1651bce15f8ab8b9a4d6fe735599cd35a0610941f547347"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/read_unicode/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/read_unicode/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {
+        "目录": null,
+        "目录/数据": "e4bda0e5a5bd0d0a776f726c640a"
+      }
+    },
+    {
+      "id": "read_embedded_nul",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "read",
+          "a"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/read_embedded_nul/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0024112239480018616,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/read_embedded_nul/command/stdout.bin",
+          "bytes": 9,
+          "sha256": "9d21791fc03c2e1251930ede58687dea4de88f9b36d1f39fee5022e797cdc344"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/read_embedded_nul/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/read_embedded_nul/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {
+        "a": "610062"
+      }
+    },
+    {
+      "id": "read_missing",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "read",
+          "missing"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/read_missing/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.001451408490538597,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/read_missing/command/stdout.bin",
+          "bytes": 11,
+          "sha256": "fe33769102ab83daffd5990bb5d8f485c81eb5f3b2fd1ff51df68b617dd514dc"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/read_missing/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/read_missing/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "read_nul",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "read-nul",
+          "unused"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/read_nul/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0023273061960935593,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/read_nul/command/stdout.bin",
+          "bytes": 11,
+          "sha256": "329516649e5f2a4f8dfed95bcad4cde845bf476cb7e33792fcac884632c8e170"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/read_nul/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/read_nul/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {
+        "bad": "6b656570"
+      }
+    },
+    {
+      "id": "read_bad_first",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "read",
+          "a"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/read_bad_first/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0020637083798646927,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/read_bad_first/command/stdout.bin",
+          "bytes": 10,
+          "sha256": "5fe92fe0091bfd43d409d3922ab6f5c868a89abf8d07905c4cc651d27d2ac13c"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/read_bad_first/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/read_bad_first/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {
+        "a": "ff"
+      }
+    },
+    {
+      "id": "read_bad_ascii",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "read",
+          "a"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/read_bad_ascii/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.002321746200323105,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/read_bad_ascii/command/stdout.bin",
+          "bytes": 10,
+          "sha256": "3191fa23afc8f663a7ea8139b67b967e9c3c2b7e6076e95e80b02f005204f56c"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/read_bad_ascii/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/read_bad_ascii/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {
+        "a": "616263ff7461696c"
+      }
+    },
+    {
+      "id": "read_bad_unicode",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "read",
+          "a"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/read_bad_unicode/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.002154570072889328,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/read_bad_unicode/command/stdout.bin",
+          "bytes": 10,
+          "sha256": "3191fa23afc8f663a7ea8139b67b967e9c3c2b7e6076e95e80b02f005204f56c"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/read_bad_unicode/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/read_bad_unicode/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {
+        "a": "e4b8adff"
+      }
+    },
+    {
+      "id": "read_incomplete",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "read",
+          "a"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/read_incomplete/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.002511240541934967,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/read_incomplete/command/stdout.bin",
+          "bytes": 10,
+          "sha256": "c0d24ea0052a72547b0830065159b6b1d9674a0d4aa4d5639bfbdb3c8af7c841"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/read_incomplete/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/read_incomplete/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {
+        "a": "61e282"
+      }
+    },
+    {
+      "id": "write_new",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "write",
+          "new"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/write_new/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0019733496010303497,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/write_new/command/stdout.bin",
+          "bytes": 8,
+          "sha256": "d9ed84a15ec3aa6e344981cb5b92da385361d08a8b6e579c73ce716e55cdecab"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/write_new/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/write_new/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {
+        "new": "7772697474656e0a"
+      }
+    },
+    {
+      "id": "write_existing",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "write",
+          "existing"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/write_existing/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0021980833262205124,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/write_existing/command/stdout.bin",
+          "bytes": 11,
+          "sha256": "fe33769102ab83daffd5990bb5d8f485c81eb5f3b2fd1ff51df68b617dd514dc"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/write_existing/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/write_existing/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {
+        "existing": "707265736572766564"
+      }
+    },
+    {
+      "id": "write_missing_parent",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "write",
+          "missing/new"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/write_missing_parent/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0009149201214313507,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/write_missing_parent/command/stdout.bin",
+          "bytes": 11,
+          "sha256": "fe33769102ab83daffd5990bb5d8f485c81eb5f3b2fd1ff51df68b617dd514dc"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/write_missing_parent/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/write_missing_parent/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "write_nul",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "write-nul",
+          "unused"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/write_nul/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.001981005072593689,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/write_nul/command/stdout.bin",
+          "bytes": 11,
+          "sha256": "329516649e5f2a4f8dfed95bcad4cde845bf476cb7e33792fcac884632c8e170"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/write_nul/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/write_nul/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {
+        "bad": "707265736572766564"
+      }
+    },
+    {
+      "id": "temp_ok",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "temp",
+          ".",
+          "errors51-"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/temp_ok/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0021844562143087387,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/temp_ok/command/stdout.bin",
+          "bytes": 16,
+          "sha256": "a6dbdf16a5cf1526673139527fa73fa52bc707491eafb90213cbac50fcfc60b6"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/temp_ok/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/temp_ok/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "temp_bad_prefix",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "temp",
+          ".",
+          "../escape"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/temp_bad_prefix/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0009485147893428802,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/temp_bad_prefix/command/stdout.bin",
+          "bytes": 11,
+          "sha256": "329516649e5f2a4f8dfed95bcad4cde845bf476cb7e33792fcac884632c8e170"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/temp_bad_prefix/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/temp_bad_prefix/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "temp_empty_prefix",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "temp",
+          ".",
+          ""
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/temp_empty_prefix/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0011936742812395096,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/temp_empty_prefix/command/stdout.bin",
+          "bytes": 11,
+          "sha256": "329516649e5f2a4f8dfed95bcad4cde845bf476cb7e33792fcac884632c8e170"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/temp_empty_prefix/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/temp_empty_prefix/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "temp_missing_parent",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "temp",
+          "missing",
+          "safe"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/temp_missing_parent/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0009710956364870071,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/temp_missing_parent/command/stdout.bin",
+          "bytes": 11,
+          "sha256": "fe33769102ab83daffd5990bb5d8f485c81eb5f3b2fd1ff51df68b617dd514dc"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/temp_missing_parent/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/temp_missing_parent/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "temp_nul",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "temp-nul",
+          "unused",
+          "safe"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/temp_nul/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0012580938637256622,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/temp_nul/command/stdout.bin",
+          "bytes": 11,
+          "sha256": "329516649e5f2a4f8dfed95bcad4cde845bf476cb7e33792fcac884632c8e170"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/temp_nul/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/temp_nul/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "remove_file",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "remove-file",
+          "a"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/remove_file/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.002417083829641342,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/remove_file/command/stdout.bin",
+          "bytes": 8,
+          "sha256": "6b95743f7339e0aff16c1d1b9f453711ffcdc3fed9b6787af264f9601c4e2961"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/remove_file/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/remove_file/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "remove_file_missing",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "remove-file",
+          "missing"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/remove_file_missing/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.004541307687759399,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/remove_file_missing/command/stdout.bin",
+          "bytes": 11,
+          "sha256": "fe33769102ab83daffd5990bb5d8f485c81eb5f3b2fd1ff51df68b617dd514dc"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/remove_file_missing/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/remove_file_missing/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "remove_file_nul",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "remove-file-nul",
+          "unused"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/remove_file_nul/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.002406524494290352,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/remove_file_nul/command/stdout.bin",
+          "bytes": 11,
+          "sha256": "329516649e5f2a4f8dfed95bcad4cde845bf476cb7e33792fcac884632c8e170"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/remove_file_nul/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/remove_file_nul/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {
+        "bad": "64617461"
+      }
+    },
+    {
+      "id": "remove_dir",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "remove-dir",
+          "empty"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/remove_dir/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0021110884845256805,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/remove_dir/command/stdout.bin",
+          "bytes": 8,
+          "sha256": "6b95743f7339e0aff16c1d1b9f453711ffcdc3fed9b6787af264f9601c4e2961"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/remove_dir/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/remove_dir/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "remove_dir_nonempty",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "remove-dir",
+          "dir"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/remove_dir_nonempty/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0022370759397745132,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/remove_dir_nonempty/command/stdout.bin",
+          "bytes": 11,
+          "sha256": "fe33769102ab83daffd5990bb5d8f485c81eb5f3b2fd1ff51df68b617dd514dc"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/remove_dir_nonempty/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/remove_dir_nonempty/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {
+        "dir": null,
+        "dir/a": "64617461"
+      }
+    },
+    {
+      "id": "remove_dir_missing",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "remove-dir",
+          "missing"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/remove_dir_missing/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0011128820478916168,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/remove_dir_missing/command/stdout.bin",
+          "bytes": 11,
+          "sha256": "fe33769102ab83daffd5990bb5d8f485c81eb5f3b2fd1ff51df68b617dd514dc"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/remove_dir_missing/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/remove_dir_missing/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "remove_dir_nul",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "remove-dir-nul",
+          "unused"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/remove_dir_nul/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.002048170194029808,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/remove_dir_nul/command/stdout.bin",
+          "bytes": 11,
+          "sha256": "329516649e5f2a4f8dfed95bcad4cde845bf476cb7e33792fcac884632c8e170"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/remove_dir_nul/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/remove_dir_nul/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {
+        "bad": null
+      }
+    },
+    {
+      "id": "same_identity",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "same",
+          "a",
+          "./a"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/same_identity/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.002086672931909561,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/same_identity/command/stdout.bin",
+          "bytes": 10,
+          "sha256": "bc30810639a2777bf916a73562dbc406ed3ef3daf7df53d64e60e359dc1e1058"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/same_identity/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/same_identity/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {
+        "a": "64617461"
+      }
+    },
+    {
+      "id": "same_different",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "same",
+          "a",
+          "b"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/same_different/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0010064225643873215,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/same_different/command/stdout.bin",
+          "bytes": 11,
+          "sha256": "10d3393122784d0932783b9549be25160ff7f43c34e1f9a941aef7ac9a258aa2"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/same_different/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/same_different/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {
+        "a": "64617461",
+        "b": "64617461"
+      }
+    },
+    {
+      "id": "same_missing",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "same",
+          "a",
+          "missing"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/same_missing/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0010139457881450653,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/same_missing/command/stdout.bin",
+          "bytes": 11,
+          "sha256": "10d3393122784d0932783b9549be25160ff7f43c34e1f9a941aef7ac9a258aa2"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/same_missing/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/same_missing/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {
+        "a": "64617461"
+      }
+    },
+    {
+      "id": "same_nul",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "same-nul",
+          "unused",
+          "a"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/same_nul/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0021839942783117294,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/same_nul/command/stdout.bin",
+          "bytes": 11,
+          "sha256": "329516649e5f2a4f8dfed95bcad4cde845bf476cb7e33792fcac884632c8e170"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/same_nul/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/same_nul/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {
+        "a": "64617461",
+        "bad": "64617461"
+      }
+    },
+    {
+      "id": "env_missing",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "env",
+          "YAVO_ERRORS51_VALUE"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/env_missing/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0028575826436281204,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/env_missing/command/stdout.bin",
+          "bytes": 18,
+          "sha256": "95e7dc49b3abb7df6e9c33c5522e55adb3198f8198d57f313fafa406a68779f7"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/env_missing/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/env_missing/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "env_empty",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "env",
+          "YAVO_ERRORS51_VALUE"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/env_empty/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0011382084339857101,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/env_empty/command/stdout.bin",
+          "bytes": 5,
+          "sha256": "10a594f34b7f0ea573da78703e274930db718c942caf3c04251755f623c60d5c"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/env_empty/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/env_empty/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "env_unicode",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "env",
+          "YAVO_ERRORS51_VALUE"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/env_unicode/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0021521858870983124,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/env_unicode/command/stdout.bin",
+          "bytes": 11,
+          "sha256": "63f494467b0bdd920185860c881219a2f859dceb502942550577b46f5e4df2bf"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/env_unicode/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/env_unicode/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "env_invalid_name",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "env",
+          "bad=name"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/env_invalid_name/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0012707188725471497,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/env_invalid_name/command/stdout.bin",
+          "bytes": 11,
+          "sha256": "25b188d2c6996e6febee68f501f8248ec89610130d43146db4f2ea04444b0c95"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/env_invalid_name/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/env_invalid_name/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "env_empty_name",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "env",
+          ""
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/env_empty_name/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0022514835000038147,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/env_empty_name/command/stdout.bin",
+          "bytes": 11,
+          "sha256": "25b188d2c6996e6febee68f501f8248ec89610130d43146db4f2ea04444b0c95"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/env_empty_name/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/env_empty_name/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "env_nul",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "env-nul",
+          "unused"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/env_nul/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0022650472819805145,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/env_nul/command/stdout.bin",
+          "bytes": 11,
+          "sha256": "25b188d2c6996e6febee68f501f8248ec89610130d43146db4f2ea04444b0c95"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/env_nul/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/env_nul/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "env_invalid_utf8",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "env",
+          "YAVO_ERRORS51_VALUE"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/env_invalid_utf8/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0022720620036125183,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/env_invalid_utf8/command/stdout.bin",
+          "bytes": 10,
+          "sha256": "94b6f6d99bd9c49f0e403786448c9767ce160e9ba85fb710d623b9a5657840ed"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/env_invalid_utf8/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/env_invalid_utf8/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "process_self",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "process-self"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/process_self/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.004330942407250404,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/process_self/command/stdout.bin",
+          "bytes": 16,
+          "sha256": "b362d571c96771a671579f46758c297ec822720d1de1223d42b8d93bb3916ebf"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/process_self/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/process_self/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "process_missing",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "process",
+          "./missing-program"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/process_missing/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0026485472917556763,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/process_missing/command/stdout.bin",
+          "bytes": 16,
+          "sha256": "a1ca7aed53c45eb6582052381e95b7cd760aa7c17cc2523ca9ec2bf41dbe431a"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/process_missing/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/process_missing/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "process_empty",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "process",
+          ""
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/process_empty/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0024041980504989624,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/process_empty/command/stdout.bin",
+          "bytes": 16,
+          "sha256": "1b515b2a172d048baef99d1c9dd90d3ebb82bdad2ea2410b1f508b047be96c28"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/process_empty/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/process_empty/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "process_nul",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "process-nul",
+          "unused"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/process_nul/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0026921313256025314,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/process_nul/command/stdout.bin",
+          "bytes": 16,
+          "sha256": "1b515b2a172d048baef99d1c9dd90d3ebb82bdad2ea2410b1f508b047be96c28"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/process_nul/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/process_nul/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "process_arg_nul",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "process-arg-nul",
+          "./missing-program"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/process_arg_nul/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.002784537151455879,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/process_arg_nul/command/stdout.bin",
+          "bytes": 16,
+          "sha256": "1b515b2a172d048baef99d1c9dd90d3ebb82bdad2ea2410b1f508b047be96c28"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/process_arg_nul/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/process_arg_nul/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "stdin_empty",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "stdin"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/stdin_empty/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0024223029613494873,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/stdin_empty/command/stdout.bin",
+          "bytes": 7,
+          "sha256": "3192e96e713270038065a33fb2d1ef92172a060e8c33f4c0afa6896bb1c380e0"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/stdin_empty/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/stdin_empty/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "stdin_unicode",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "stdin"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/stdin_unicode/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0024571679532527924,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/stdin_unicode/command/stdout.bin",
+          "bytes": 15,
+          "sha256": "b5b8372ab818a771fbe03191a7cd85dda86bf1af306a54325e11a2fa8bb9cca2"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/stdin_unicode/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/stdin_unicode/command/stdin.bin",
+          "bytes": 8,
+          "sha256": "659764dc18bf51c18d50c25bb6335e72fc5c78dac81217f9b3c13114ecbb876d"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "stdin_bad_first",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "stdin"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/stdin_bad_first/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.001901734620332718,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/stdin_bad_first/command/stdout.bin",
+          "bytes": 10,
+          "sha256": "d34a88a046dd1421d468eb46810ce69fcada76654c17e196619ca415369b55ec"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/stdin_bad_first/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/stdin_bad_first/command/stdin.bin",
+          "bytes": 1,
+          "sha256": "a8100ae6aa1940d0b663bb31cd466142ebbdbd5187131b92d93818987832eb89"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "stdin_bad_after",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "stdin"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/stdin_bad_after/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0028480440378189087,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/stdin_bad_after/command/stdout.bin",
+          "bytes": 10,
+          "sha256": "72b2817226f7d0f56d7c20e0d539f67a0526c46fe562c8c6a35ee7db460f7eb0"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/stdin_bad_after/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/stdin_bad_after/command/stdin.bin",
+          "bytes": 4,
+          "sha256": "8e3b08dc1236880bf0c55873db58b12d8bf0398b1b17c9686e015ccfe098d35d"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "stdin_incomplete",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "stdin"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/stdin_incomplete/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0013067461550235748,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/stdin_incomplete/command/stdout.bin",
+          "bytes": 10,
+          "sha256": "7555814d053fd4ea323a6421e45ddfaf12d18693836dfe6042f15f3e96e4b476"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/stdin_incomplete/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/stdin_incomplete/command/stdin.bin",
+          "bytes": 3,
+          "sha256": "e4115755b1fbfccd2501725d68fd7fdf75e1acde4e7f10fad048fa149774e975"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "stdin_read_error",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "stdin"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/stdin_read_error/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0012066680938005447,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/stdin_read_error/command/stdout.bin",
+          "bytes": 11,
+          "sha256": "427efb338090aa59a94122fa821a6323301d2fc052dd36862d6f735e71ecbf83"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/stdin_read_error/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/stdin_read_error/command/stdin-directory",
+          "kind": "directory-read-error"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "utf8_consumed_failure",
+      "mode": "debug",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-debug",
+          "utf8"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/utf8_consumed_failure/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0012756790965795517,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/utf8_consumed_failure/command/stdout.bin",
+          "bytes": 7,
+          "sha256": "4aa6b4f6b85474dffe2cee71c79be96a22d5e08ddb5c1f31e87593aa58eec786"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/utf8_consumed_failure/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/debug/utf8_consumed_failure/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "read_empty",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "read",
+          "a"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/read_empty/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0023678001016378403,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/read_empty/command/stdout.bin",
+          "bytes": 6,
+          "sha256": "b576254feca85378b5e9bf23e0a9b32d53e195887968db32b5158672a42ab541"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/read_empty/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/read_empty/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {
+        "a": ""
+      }
+    },
+    {
+      "id": "read_unicode",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "read",
+          "目录/数据"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/read_unicode/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0010803993791341782,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/read_unicode/command/stdout.bin",
+          "bytes": 20,
+          "sha256": "6879e9a836bf9726d1651bce15f8ab8b9a4d6fe735599cd35a0610941f547347"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/read_unicode/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/read_unicode/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {
+        "目录": null,
+        "目录/数据": "e4bda0e5a5bd0d0a776f726c640a"
+      }
+    },
+    {
+      "id": "read_embedded_nul",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "read",
+          "a"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/read_embedded_nul/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0010683462023735046,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/read_embedded_nul/command/stdout.bin",
+          "bytes": 9,
+          "sha256": "9d21791fc03c2e1251930ede58687dea4de88f9b36d1f39fee5022e797cdc344"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/read_embedded_nul/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/read_embedded_nul/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {
+        "a": "610062"
+      }
+    },
+    {
+      "id": "read_missing",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "read",
+          "missing"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/read_missing/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0024913810193538666,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/read_missing/command/stdout.bin",
+          "bytes": 11,
+          "sha256": "fe33769102ab83daffd5990bb5d8f485c81eb5f3b2fd1ff51df68b617dd514dc"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/read_missing/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/read_missing/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "read_nul",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "read-nul",
+          "unused"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/read_nul/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.002188565209507942,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/read_nul/command/stdout.bin",
+          "bytes": 11,
+          "sha256": "329516649e5f2a4f8dfed95bcad4cde845bf476cb7e33792fcac884632c8e170"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/read_nul/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/read_nul/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {
+        "bad": "6b656570"
+      }
+    },
+    {
+      "id": "read_bad_first",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "read",
+          "a"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/read_bad_first/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0011228714138269424,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/read_bad_first/command/stdout.bin",
+          "bytes": 10,
+          "sha256": "5fe92fe0091bfd43d409d3922ab6f5c868a89abf8d07905c4cc651d27d2ac13c"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/read_bad_first/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/read_bad_first/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {
+        "a": "ff"
+      }
+    },
+    {
+      "id": "read_bad_ascii",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "read",
+          "a"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/read_bad_ascii/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.001020226627588272,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/read_bad_ascii/command/stdout.bin",
+          "bytes": 10,
+          "sha256": "3191fa23afc8f663a7ea8139b67b967e9c3c2b7e6076e95e80b02f005204f56c"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/read_bad_ascii/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/read_bad_ascii/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {
+        "a": "616263ff7461696c"
+      }
+    },
+    {
+      "id": "read_bad_unicode",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "read",
+          "a"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/read_bad_unicode/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.002271300181746483,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/read_bad_unicode/command/stdout.bin",
+          "bytes": 10,
+          "sha256": "3191fa23afc8f663a7ea8139b67b967e9c3c2b7e6076e95e80b02f005204f56c"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/read_bad_unicode/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/read_bad_unicode/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {
+        "a": "e4b8adff"
+      }
+    },
+    {
+      "id": "read_incomplete",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "read",
+          "a"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/read_incomplete/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0010313689708709717,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/read_incomplete/command/stdout.bin",
+          "bytes": 10,
+          "sha256": "c0d24ea0052a72547b0830065159b6b1d9674a0d4aa4d5639bfbdb3c8af7c841"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/read_incomplete/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/read_incomplete/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {
+        "a": "61e282"
+      }
+    },
+    {
+      "id": "write_new",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "write",
+          "new"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/write_new/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0009513292461633682,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/write_new/command/stdout.bin",
+          "bytes": 8,
+          "sha256": "d9ed84a15ec3aa6e344981cb5b92da385361d08a8b6e579c73ce716e55cdecab"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/write_new/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/write_new/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {
+        "new": "7772697474656e0a"
+      }
+    },
+    {
+      "id": "write_existing",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "write",
+          "existing"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/write_existing/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0009399056434631348,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/write_existing/command/stdout.bin",
+          "bytes": 11,
+          "sha256": "fe33769102ab83daffd5990bb5d8f485c81eb5f3b2fd1ff51df68b617dd514dc"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/write_existing/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/write_existing/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {
+        "existing": "707265736572766564"
+      }
+    },
+    {
+      "id": "write_missing_parent",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "write",
+          "missing/new"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/write_missing_parent/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0023619811981916428,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/write_missing_parent/command/stdout.bin",
+          "bytes": 11,
+          "sha256": "fe33769102ab83daffd5990bb5d8f485c81eb5f3b2fd1ff51df68b617dd514dc"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/write_missing_parent/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/write_missing_parent/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "write_nul",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "write-nul",
+          "unused"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/write_nul/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0010249055922031403,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/write_nul/command/stdout.bin",
+          "bytes": 11,
+          "sha256": "329516649e5f2a4f8dfed95bcad4cde845bf476cb7e33792fcac884632c8e170"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/write_nul/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/write_nul/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {
+        "bad": "707265736572766564"
+      }
+    },
+    {
+      "id": "temp_ok",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "temp",
+          ".",
+          "errors51-"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/temp_ok/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0023402776569128036,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/temp_ok/command/stdout.bin",
+          "bytes": 16,
+          "sha256": "a6dbdf16a5cf1526673139527fa73fa52bc707491eafb90213cbac50fcfc60b6"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/temp_ok/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/temp_ok/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "temp_bad_prefix",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "temp",
+          ".",
+          "../escape"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/temp_bad_prefix/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0012843925505876541,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/temp_bad_prefix/command/stdout.bin",
+          "bytes": 11,
+          "sha256": "329516649e5f2a4f8dfed95bcad4cde845bf476cb7e33792fcac884632c8e170"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/temp_bad_prefix/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/temp_bad_prefix/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "temp_empty_prefix",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "temp",
+          ".",
+          ""
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/temp_empty_prefix/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.002349015325307846,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/temp_empty_prefix/command/stdout.bin",
+          "bytes": 11,
+          "sha256": "329516649e5f2a4f8dfed95bcad4cde845bf476cb7e33792fcac884632c8e170"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/temp_empty_prefix/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/temp_empty_prefix/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "temp_missing_parent",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "temp",
+          "missing",
+          "safe"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/temp_missing_parent/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.002603495493531227,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/temp_missing_parent/command/stdout.bin",
+          "bytes": 11,
+          "sha256": "fe33769102ab83daffd5990bb5d8f485c81eb5f3b2fd1ff51df68b617dd514dc"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/temp_missing_parent/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/temp_missing_parent/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "temp_nul",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "temp-nul",
+          "unused",
+          "safe"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/temp_nul/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.002374233677983284,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/temp_nul/command/stdout.bin",
+          "bytes": 11,
+          "sha256": "329516649e5f2a4f8dfed95bcad4cde845bf476cb7e33792fcac884632c8e170"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/temp_nul/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/temp_nul/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "remove_file",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "remove-file",
+          "a"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/remove_file/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0011275894939899445,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/remove_file/command/stdout.bin",
+          "bytes": 8,
+          "sha256": "6b95743f7339e0aff16c1d1b9f453711ffcdc3fed9b6787af264f9601c4e2961"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/remove_file/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/remove_file/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "remove_file_missing",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "remove-file",
+          "missing"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/remove_file_missing/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0009203609079122543,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/remove_file_missing/command/stdout.bin",
+          "bytes": 11,
+          "sha256": "fe33769102ab83daffd5990bb5d8f485c81eb5f3b2fd1ff51df68b617dd514dc"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/remove_file_missing/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/remove_file_missing/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "remove_file_nul",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "remove-file-nul",
+          "unused"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/remove_file_nul/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0012170765548944473,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/remove_file_nul/command/stdout.bin",
+          "bytes": 11,
+          "sha256": "329516649e5f2a4f8dfed95bcad4cde845bf476cb7e33792fcac884632c8e170"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/remove_file_nul/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/remove_file_nul/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {
+        "bad": "64617461"
+      }
+    },
+    {
+      "id": "remove_dir",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "remove-dir",
+          "empty"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/remove_dir/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.001449134200811386,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/remove_dir/command/stdout.bin",
+          "bytes": 8,
+          "sha256": "6b95743f7339e0aff16c1d1b9f453711ffcdc3fed9b6787af264f9601c4e2961"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/remove_dir/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/remove_dir/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "remove_dir_nonempty",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "remove-dir",
+          "dir"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/remove_dir_nonempty/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0022879615426063538,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/remove_dir_nonempty/command/stdout.bin",
+          "bytes": 11,
+          "sha256": "fe33769102ab83daffd5990bb5d8f485c81eb5f3b2fd1ff51df68b617dd514dc"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/remove_dir_nonempty/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/remove_dir_nonempty/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {
+        "dir": null,
+        "dir/a": "64617461"
+      }
+    },
+    {
+      "id": "remove_dir_missing",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "remove-dir",
+          "missing"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/remove_dir_missing/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0013511106371879578,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/remove_dir_missing/command/stdout.bin",
+          "bytes": 11,
+          "sha256": "fe33769102ab83daffd5990bb5d8f485c81eb5f3b2fd1ff51df68b617dd514dc"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/remove_dir_missing/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/remove_dir_missing/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "remove_dir_nul",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "remove-dir-nul",
+          "unused"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/remove_dir_nul/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0013062860816717148,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/remove_dir_nul/command/stdout.bin",
+          "bytes": 11,
+          "sha256": "329516649e5f2a4f8dfed95bcad4cde845bf476cb7e33792fcac884632c8e170"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/remove_dir_nul/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/remove_dir_nul/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {
+        "bad": null
+      }
+    },
+    {
+      "id": "same_identity",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "same",
+          "a",
+          "./a"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/same_identity/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.00101475790143013,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/same_identity/command/stdout.bin",
+          "bytes": 10,
+          "sha256": "bc30810639a2777bf916a73562dbc406ed3ef3daf7df53d64e60e359dc1e1058"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/same_identity/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/same_identity/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {
+        "a": "64617461"
+      }
+    },
+    {
+      "id": "same_different",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "same",
+          "a",
+          "b"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/same_different/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0011203978210687637,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/same_different/command/stdout.bin",
+          "bytes": 11,
+          "sha256": "10d3393122784d0932783b9549be25160ff7f43c34e1f9a941aef7ac9a258aa2"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/same_different/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/same_different/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {
+        "a": "64617461",
+        "b": "64617461"
+      }
+    },
+    {
+      "id": "same_missing",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "same",
+          "a",
+          "missing"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/same_missing/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0010613258928060532,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/same_missing/command/stdout.bin",
+          "bytes": 11,
+          "sha256": "10d3393122784d0932783b9549be25160ff7f43c34e1f9a941aef7ac9a258aa2"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/same_missing/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/same_missing/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {
+        "a": "64617461"
+      }
+    },
+    {
+      "id": "same_nul",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "same-nul",
+          "unused",
+          "a"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/same_nul/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0010093487799167633,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/same_nul/command/stdout.bin",
+          "bytes": 11,
+          "sha256": "329516649e5f2a4f8dfed95bcad4cde845bf476cb7e33792fcac884632c8e170"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/same_nul/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/same_nul/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {
+        "a": "64617461",
+        "bad": "64617461"
+      }
+    },
+    {
+      "id": "env_missing",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "env",
+          "YAVO_ERRORS51_VALUE"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/env_missing/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0009816959500312805,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/env_missing/command/stdout.bin",
+          "bytes": 18,
+          "sha256": "95e7dc49b3abb7df6e9c33c5522e55adb3198f8198d57f313fafa406a68779f7"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/env_missing/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/env_missing/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "env_empty",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "env",
+          "YAVO_ERRORS51_VALUE"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/env_empty/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.001069348305463791,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/env_empty/command/stdout.bin",
+          "bytes": 5,
+          "sha256": "10a594f34b7f0ea573da78703e274930db718c942caf3c04251755f623c60d5c"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/env_empty/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/env_empty/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "env_unicode",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "env",
+          "YAVO_ERRORS51_VALUE"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/env_unicode/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0010763835161924362,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/env_unicode/command/stdout.bin",
+          "bytes": 11,
+          "sha256": "63f494467b0bdd920185860c881219a2f859dceb502942550577b46f5e4df2bf"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/env_unicode/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/env_unicode/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "env_invalid_name",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "env",
+          "bad=name"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/env_invalid_name/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0010286252945661545,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/env_invalid_name/command/stdout.bin",
+          "bytes": 11,
+          "sha256": "25b188d2c6996e6febee68f501f8248ec89610130d43146db4f2ea04444b0c95"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/env_invalid_name/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/env_invalid_name/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "env_empty_name",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "env",
+          ""
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/env_empty_name/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0025229323655366898,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/env_empty_name/command/stdout.bin",
+          "bytes": 11,
+          "sha256": "25b188d2c6996e6febee68f501f8248ec89610130d43146db4f2ea04444b0c95"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/env_empty_name/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/env_empty_name/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "env_nul",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "env-nul",
+          "unused"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/env_nul/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0018181875348091125,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/env_nul/command/stdout.bin",
+          "bytes": 11,
+          "sha256": "25b188d2c6996e6febee68f501f8248ec89610130d43146db4f2ea04444b0c95"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/env_nul/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/env_nul/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "env_invalid_utf8",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "env",
+          "YAVO_ERRORS51_VALUE"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/env_invalid_utf8/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0025139357894659042,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/env_invalid_utf8/command/stdout.bin",
+          "bytes": 10,
+          "sha256": "94b6f6d99bd9c49f0e403786448c9767ce160e9ba85fb710d623b9a5657840ed"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/env_invalid_utf8/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/env_invalid_utf8/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "process_self",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "process-self"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/process_self/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0029107332229614258,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/process_self/command/stdout.bin",
+          "bytes": 16,
+          "sha256": "b362d571c96771a671579f46758c297ec822720d1de1223d42b8d93bb3916ebf"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/process_self/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/process_self/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "process_missing",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "process",
+          "./missing-program"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/process_missing/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.002402234822511673,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/process_missing/command/stdout.bin",
+          "bytes": 16,
+          "sha256": "a1ca7aed53c45eb6582052381e95b7cd760aa7c17cc2523ca9ec2bf41dbe431a"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/process_missing/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/process_missing/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "process_empty",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "process",
+          ""
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/process_empty/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.00226556695997715,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/process_empty/command/stdout.bin",
+          "bytes": 16,
+          "sha256": "1b515b2a172d048baef99d1c9dd90d3ebb82bdad2ea2410b1f508b047be96c28"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/process_empty/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/process_empty/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "process_nul",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "process-nul",
+          "unused"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/process_nul/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0010579004883766174,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/process_nul/command/stdout.bin",
+          "bytes": 16,
+          "sha256": "1b515b2a172d048baef99d1c9dd90d3ebb82bdad2ea2410b1f508b047be96c28"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/process_nul/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/process_nul/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "process_arg_nul",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "process-arg-nul",
+          "./missing-program"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/process_arg_nul/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.002250371500849724,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/process_arg_nul/command/stdout.bin",
+          "bytes": 16,
+          "sha256": "1b515b2a172d048baef99d1c9dd90d3ebb82bdad2ea2410b1f508b047be96c28"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/process_arg_nul/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/process_arg_nul/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "stdin_empty",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "stdin"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/stdin_empty/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.001413857564330101,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/stdin_empty/command/stdout.bin",
+          "bytes": 7,
+          "sha256": "3192e96e713270038065a33fb2d1ef92172a060e8c33f4c0afa6896bb1c380e0"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/stdin_empty/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/stdin_empty/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "stdin_unicode",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "stdin"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/stdin_unicode/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0011127423495054245,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/stdin_unicode/command/stdout.bin",
+          "bytes": 15,
+          "sha256": "b5b8372ab818a771fbe03191a7cd85dda86bf1af306a54325e11a2fa8bb9cca2"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/stdin_unicode/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/stdin_unicode/command/stdin.bin",
+          "bytes": 8,
+          "sha256": "659764dc18bf51c18d50c25bb6335e72fc5c78dac81217f9b3c13114ecbb876d"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "stdin_bad_first",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "stdin"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/stdin_bad_first/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0010457653552293777,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/stdin_bad_first/command/stdout.bin",
+          "bytes": 10,
+          "sha256": "d34a88a046dd1421d468eb46810ce69fcada76654c17e196619ca415369b55ec"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/stdin_bad_first/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/stdin_bad_first/command/stdin.bin",
+          "bytes": 1,
+          "sha256": "a8100ae6aa1940d0b663bb31cd466142ebbdbd5187131b92d93818987832eb89"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "stdin_bad_after",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "stdin"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/stdin_bad_after/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.002445656806230545,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/stdin_bad_after/command/stdout.bin",
+          "bytes": 10,
+          "sha256": "72b2817226f7d0f56d7c20e0d539f67a0526c46fe562c8c6a35ee7db460f7eb0"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/stdin_bad_after/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/stdin_bad_after/command/stdin.bin",
+          "bytes": 4,
+          "sha256": "8e3b08dc1236880bf0c55873db58b12d8bf0398b1b17c9686e015ccfe098d35d"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "stdin_incomplete",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "stdin"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/stdin_incomplete/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0022579748183488846,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/stdin_incomplete/command/stdout.bin",
+          "bytes": 10,
+          "sha256": "7555814d053fd4ea323a6421e45ddfaf12d18693836dfe6042f15f3e96e4b476"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/stdin_incomplete/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/stdin_incomplete/command/stdin.bin",
+          "bytes": 3,
+          "sha256": "e4115755b1fbfccd2501725d68fd7fdf75e1acde4e7f10fad048fa149774e975"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "stdin_read_error",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "stdin"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/stdin_read_error/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.0023965947329998016,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/stdin_read_error/command/stdout.bin",
+          "bytes": 11,
+          "sha256": "427efb338090aa59a94122fa821a6323301d2fc052dd36862d6f735e71ecbf83"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/stdin_read_error/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/stdin_read_error/command/stdin-directory",
+          "kind": "directory-read-error"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    },
+    {
+      "id": "utf8_consumed_failure",
+      "mode": "release",
+      "command": {
+        "argv": [
+          "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/program-release",
+          "utf8"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/utf8_consumed_failure/inputs",
+        "environment": {},
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 0.002383491024374962,
+        "peak_process_memory_bytes": 19222528,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/utf8_consumed_failure/command/stdout.bin",
+          "bytes": 7,
+          "sha256": "4aa6b4f6b85474dffe2cee71c79be96a22d5e08ddb5c1f31e87593aa58eec786"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/utf8_consumed_failure/command/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch51/io-reference/release/utf8_consumed_failure/command/stdin.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "checks": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true,
+        "files_after": true,
+        "completed": true
+      },
+      "passed": true,
+      "files_after": {}
+    }
+  ],
+  "passed": 96,
+  "total": 96,
+  "complete": true
+}

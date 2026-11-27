@@ -15,7 +15,35 @@ compiles itself to a stage2/stage3 fixed point, originally confirmed on Linux,
 Windows and macOS. Rust remains the daily compiler; SH-3 default replacement
 still requires broader language coverage and the remaining tool entrypoints.
 
-### Batch 50: selfhost diagnostics and source identities
+### Batch 51: selfhost standard error values and I/O
+
+The selfhost compiler adds four distinct Copy standard Error enums, prelude
+Utf8Error, complete Results for the ten previously supported fallible calls,
+named catch bindings and standard-error payload matching. The Rust frontend,
+production runtime and toolchain lock are unchanged. Stage0 remains the daily
+compiler and the independent semantic reference; this is a selfhost subset
+extension, not a new Rust language/API implementation.
+
+Formal local bootstrap passes **1,136/1,136, 20/20, zero skips**. The new error
+gate executes 48 frozen scenarios across actual stage0/stage1/stage2 and
+Debug/Release: **288/288**, plus six oracle controls, four allocation-exit
+controls and three preserved nondecimal-boundary checks. The existing JSON/text/
+supplemental gates pass **196/160/16**, SHA256 passes **276**, and ordinary build/run
+passes **114/114 with nine checks**. Fixed-point C is **1,774,302 bytes** and the
+Linux compiler binary **729,968 bytes**; stage2/stage3 match byte-for-byte.
+
+There are 73 new semantic cases and ten unchanged-source promotions. One of the 73 newly authored semantic fixtures originally used `['a', 0xE2, 0x82]`, outside the existing nondecimal lexer subset. A single recorded amendment adds the equivalent decimal source `['a', 226, 130]` and changes only that manifest entry's file. The original source, freeze, manifest snapshot and first candidate U0001 failure remain preserved; old stage0 executes both versions in Debug/Release with the unchanged `1\n` output. Formal boundary checks retain stage0 acceptance and stage1/stage2 U0001 for the original source.
+The original 622-source corpus remains byte-identical, with acceptance increasing
+to **125/394**, or **62/224** distinct entry bytes. Six newly accepted original
+programs also pass 48 differential executions across 12 scenarios.
+
+Formal local gates pass. Exact-commit three-platform CI and the independent Linux ASan+UBSan error gate remain pending. The local error sanitizer gate is off and supplies no sanitizer pass.
+No new local full Rust run is claimed: source-identical batch49 Debug/Release
+151/0/1 results remain historical evidence. Current platform results and full
+versus selected-native Rust scope are recorded in the
+[batch51 index](validation/batch51-standard-errors-2026-11-27.json).
+
+### Batch 50: selfhost diagnostics and source identities (historical)
 
 The Yavo-written compiler adds first-error `check --json` / `--json-diagnostics`,
 precise UTF-8 ranges, captured source identities and a pure Yavo SHA256 module.

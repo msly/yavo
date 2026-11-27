@@ -1,0 +1,12 @@
+use std/fs
+fn choose(e: fs.Error) -> String { return match e {
+    .Utf8(n) => format("u:${n}")
+    .Io(n) => format("i:${n}")
+    .InvalidPath => "path".toString()
+} }
+fn main() { let a = choose(makeFsUtf8(4))
+    let b = choose(fs.Error.InvalidPath)
+    println(a)
+    println(b) }
+
+fn makeFsUtf8(n: int) -> fs.Error { return .Utf8(offset: n) }

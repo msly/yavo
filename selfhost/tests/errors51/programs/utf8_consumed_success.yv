@@ -1,0 +1,5 @@
+fn pass(bytes: sink Vec[byte]) -> String ! Utf8Error { return try String.fromUtf8(bytes) }
+fn main() { let bytes: Vec[byte] = ['A', 'B']
+    let text = pass(bytes) catch e { println(e.offset)
+        return }
+    println(text) }

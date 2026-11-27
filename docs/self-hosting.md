@@ -1,6 +1,6 @@
 # Yavo 自举路线与实用验收
 
-2026-11-27 · 第五十批 check JSON、精确源范围与快照 SHA256；本机 1063/1063、20/20；SH-3 尚未默认接替
+2026-11-27 · 第五十一批标准错误值、完整Result与真实IO；本机1136/1136、20/20；SH-3仍未默认接替
 
 近期主目标改为：**用 Yavo 实现 Yavo 编译器，完成可重放的自举闭环，再让它承担日常编译工作。** 自举用于暴露真实工程中的语言和工具链缺口；实用验收继续独立执行。
 
@@ -38,7 +38,7 @@
 | --- | --- | --- | --- |
 | SH-1：可用的子集编译器 | 在 `selfhost/` 中实现真实词法器、解析器、最小语义检查和 C 生成；公布精确输入子集 | stage0 构建成功；外部正向程序运行结果正确；负向程序在前端拒绝；未实现语法明确报错；支持的行为与 stage0 差分一致 | 已完成：子集覆盖编译器自身源码；第三十一批语料扩展到 490 例，当前验收见下节 |
 | SH-2：最小自举闭环 | 输入子集覆盖编译器全部 Yavo 源码；可由外部驱动构建 | 在独立目录、清空产物的条件下完成 stage0 → stage1 → stage2 → stage3；stage2/3 对固定输入生成的 C 一致，独立程序结果一致；记录所有源码、运行时、工具链和构建参数的身份 | **已闭合（引导子集）**：stage2.c 与 stage3.c 逐字节一致，stage2/stage3 二进制一致，stage2 在全部用例上与 stage1 输出相同；三平台原生固定点基线及第三十一批扩展均已确认，当前证据见下节 |
-| SH-3：主编译器接替 | 逐步覆盖当前 Rust 前端支持的语义、模块与诊断；承接正常构建入口 | 现有回归与冻结规格报告无未解释退步；独立错误输入与资源测试通过；Linux、Windows、macOS 原生执行相应验收；日常开发默认用自举编译器 | 原生普通build/run与check首错JSON已交付；尚未默认接替，Rust stage0仍是主编译器 |
+| SH-3：主编译器接替 | 逐步覆盖当前 Rust 前端支持的语义、模块与诊断；承接正常构建入口 | 现有回归与冻结规格报告无未解释退步；独立错误输入与资源测试通过；Linux、Windows、macOS 原生执行相应验收；日常开发默认用自举编译器 | 原生普通build/run、check首错JSON与标准错误完整Result已交付；尚未默认接替，Rust stage0仍是主编译器 |
 | SH-4：声明范围内的实用交付 | 以非编译器应用验证语言、库、工具和分发 | 下节中的应用、诊断、可重放构建、资源和平台门槛通过，明确支持范围与仍缺能力 | 当前3/3：三个正式CLI均完成三平台独立验收；CSV与dep-index双份C的Linux sanitizer通过 |
 
 SH-1 的结果只标为“子集编译器”。SH-2 可以标为“子集自举完成”，同时列出尚未移植的语言能力。覆盖全部当前语言能力并完成 SH-3 后，才把自举实现作为主编译器交付。阶段编号不换算为项目完成百分比。
@@ -47,7 +47,27 @@ SH-1 的结果只标为“子集编译器”。SH-2 可以标为“子集自举�
 
 ## 当前进度
 
-### 第五十批：结构化诊断与不可变源码快照
+### 第五十一批：标准错误值、完整 Result 与独立真实 I/O
+
+四种名义Copy错误`fs.Error`/`io.Error`/`os.Error`/`process.Error`与prelude `Utf8Error`进入selfhost子集。已有十个fallible调用产出完整Result，支持保存、函数传参/返回、try和终止式命名catch；标准Error保留真实payload显示与穷尽match。源码文件各自导入标准模块，短名Error不会自动导入；不同模块错误不会因相同载荷布局而互换。一般用户payload enum/普通match、直接错误容器、qualified payload构造和未声明API仍保持范围边界。
+
+| 正式本机门 | 结果 |
+| --- | --- |
+| 完整自举 | **1136/1136、20/20、0 skip**；七应用兼容门通过 |
+| 标准错误真实IO | **48场景 × stage0/实际stage1/最终stage2 × Debug/Release = 288/288** |
+| 独立控制 | 6项oracle正负控、4项clean/leak退出控制、3项原hex词法边界；9项harness检查 |
+| 诊断 / 哈希 / 普通驱动 | JSON/text/supplement **196/160/16**；SHA256 **276**；普通driver **114/114、9/9** |
+| 固定点 | C **1,774,302字节**、Linux二进制 **729,968字节**，stage2/3分别逐字节相同 |
+| 既有语料 | **119→125/394、56→62/224**，622份原源与stage0分类不变；零退步/越界/超时 |
+| 原语料运行复核 | 6份原入口、12场景、stage0/最终stage2各D/R共 **48/48** |
+
+新增73项、10旧例原源码提升；清单1136=319run+34panic+600reject+141unsupported+42shared_unsupported。73个新增语义用例中，一项最初使用 `['a', 0xE2, 0x82]`，触及既有非十进制词法 U0001 边界。按显式唯一 amendment 新增等值 `['a', 226, 130]` 源文件，并只替换该 manifest 项的 file；原稿、原 freeze、原 manifest 快照和首次候选失败全部保留。旧 stage0 对原/新源 Debug/Release 的4次执行均输出 `1\n`，预期未改；正式 stage0 接受原稿，stage1/2仍报 U0001。 101个冻结输入分别绑定原合同、语义预期、IO oracle与唯一修订，见[合同](../selfhost/tests/errors51/CONTRACT.md)、[amendment](../selfhost/tests/errors51/semantic-amendment.json)与[验证索引](../compiler/validation/batch51-standard-errors-2026-11-27.json)。
+
+Windows固定排除目录stdin和无效native UTF-8环境值两例，标准错误门为46×6=276次；Linux/macOS48×6=288次。本机sanitizer模式off。本机正式门已通过；本提交的三平台 CI 和 Linux 独立 ASan+UBSan 标准错误门仍待确认。本机该 sanitizer 门为 off，未计为通过。 本批未重新运行本机 Rust 全量；同源 batch49 的 Debug/Release 各151/0/1保留为历史证据。 本批未改Rust、生产runtime或锁定工具链。
+
+SH-4正式CLI仍3/3；真实IO测试driver不另计应用。SH-3尚有269个stage0接受入口未接受，入口字节去重为162份。下一批优先 Copy 元组 Vec：当前首阻塞共25路径/11份入口字节，其中Copy为22/8，另3/3是包含String的拥有型元组。先冻结空/非空构造、push/pop、字段及参数/返回、索引读写/遍历与边界诊断，再用原文暴露后续限制。Map值首阻塞27/14混合Counter、元组、String、Vec和Set，不统一归入Copy。首阻塞计数不等于预期覆盖增量。 更广语义和工具入口、正式性能P50与相对Rust成本优势分别验收。
+
+### 第五十批：结构化诊断与不可变源码快照（历史记录）
 
 `check INPUT --json` / `check --json INPUT`（别名 `--json-diagnostics`）交付首错结构化诊断：显式 frontend/mode、UTF-8 字节半开范围、Unicode scalar 行列、根源码 SHA256 与成功读入的 BFS 文件前缀。普通文本输出保持原样。词法失败范围按独立合同冻结；后续阶段指向原主 token。文件读取后改变磁盘内容仍使用捕获快照，哈希由纯 Yavo 位运算模块计算。
 
@@ -330,7 +350,9 @@ str 与 String 接收者支持 `startsWith`/`endsWith`/`contains`（bool）、`f
 | 已完成 | 第三个独立多文件依赖/索引CLI | 第48批1027/1027、19/19；113案例，POSIX六产物672次/native336次；三平台CI 6/6，Windows642/321，Linux双份C sanitizer224次；正式应用3/3 |
 | 已完成 | 系统接口与原生普通build/run | 第49批本机1063/1063、20/20；普通driver本机114/114、9/9，本机普通build自身的C和二进制保持固定点；三平台CI 6/6，Linux/macOS driver114、Windows108；SH-3尚未默认接替 |
 | 已完成 | check首错JSON、精确范围与源码快照 | 第50批本机1063/1063、20/20；JSON/text/supplement196/160/16，SHA256276；Rust/runtime/旧清单不变，覆盖119/394；三平台状态见本批索引 |
-| 接替阶段 | SH-3接替 | 在原生普通build/run与check首错JSON上扩标准错误值和更广语义，迁移剩余工具入口，保持既有回归/冻结规格/资源/三平台门，再默认使用selfhost |
+| 本机完成，平台状态见索引 | 标准错误值、完整Result与真实IO | 第51批1136/1136、20/20；48场景×6产品288次，73新增+10原源提升；覆盖125/394、62/224；唯一decimal fixture修订与原失败保留 |
+| 下一批 | Copy元组Vec | 当前首阻塞22路径/8份入口字节；总tuple-Vec25/11另含3份String拥有元组。按独立合同扩构造、push/pop、索引/遍历及函数接口，不承诺首拒计数等量变为覆盖 |
+| 接替阶段 | SH-3接替 | 在原生普通build/run、check首错JSON和标准错误Result上扩更广语义与剩余工具入口，保持回归/冻结规格/资源/三平台门，再默认使用selfhost |
 
 固定点现在是回归门：任何修改 `selfhost/` 的提交都必须保持 stage2.c = stage3.c 与 stage1/stage2 全用例一致。
 
@@ -371,7 +393,7 @@ str 与 String 接收者支持 `startsWith`/`endsWith`/`contains`（bool）、`f
 ## 工作优先级
 
 1. SH-1、SH-2 已完成；保持三平台固定点及已建立的 Linux stage2 编译器自身 ASan/UBSan 回归门。
-2. SH-3原生普通build/run与七个公开系统函数已交付。下一批先冻结并实现 `check --json` 的成功/首错合同、完整源范围与加载时快照身份，保持当前文本诊断及U0001边界。
+2. SH-3原生普通build/run、check首错JSON与标准错误完整Result已交付。下一批优先Copy元组Vec，冻结独立合同后用原程序检验；标准Error-only match、直接错误容器及非十进制词法边界保持明确。
 3. 扩大真实语料的语义覆盖，再迁移交叉目标、缓存/PCH、安装与其他工具入口，满足SH-3默认接替条件；维持SH-4三个正式CLI已完成的三平台独立验收。
 4. 既有 agent 成本实验和文档对照实验保留为后续产品证据；有授权的可计量环境后继续，不再作为自举开发的前置步骤。已有结果与未执行状态保持原样。
 

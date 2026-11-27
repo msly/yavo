@@ -25,6 +25,10 @@ targets or toolchain installation. Batch 50 adds independent first-error JSON
 checking with source snapshots, exact byte/scalar ranges and a pure Yavo SHA256
 module. Richer diagnostics and JSON build/run remain separate work. This closes one
 SH-3 entrypoint gap; it does not make selfhost the daily default.
+Batch 51 adds four nominal standard error enums and prelude Utf8Error, full
+Results from existing fallible calls, terminating named catches, error display
+and standard-error-only payload matching. These values remain Copy while owned
+success payloads follow the existing movement and cleanup rules.
 Batch 48 is driven by the independently authored five-module
 [yavo-dep-index](../examples/dep-index/SPEC.md): `main`, `model`, `parser`,
 `graph` and `report` were implemented with stage0 and frozen before extending
@@ -97,7 +101,12 @@ python3 selfhost/bootstrap.py
 python3 tools/ci/selfhost_driver.py --bootstrap-output compiler/target/ci/selfhost
 python3 tools/ci/selfhost_digest.py --bootstrap-output compiler/target/ci/selfhost
 python3 tools/ci/selfhost_diagnostics.py --bootstrap-output compiler/target/ci/selfhost
+python3 tools/ci/selfhost_errors.py --bootstrap-output compiler/target/ci/selfhost
 ```
+
+The standard-error gate runs six products from actual stage0/stage1/stage2.
+Linux CI additionally passes `--sanitizers required`; other native platforms
+retain `--sanitizers off`. Candidate/reference-only runs are preliminary.
 
 The compiler has ten Yavo modules: entry `main.yv`, plus `digest.yv`, `support.yv`,
 `lexer.yv`, `model.yv`, `parser.yv`, `types.yv`, `codegen.yv`, `driver.yv` and
@@ -154,7 +163,45 @@ modules to produce a compiler that emits the fixed-point C and executes the
 independent multi-module fixture with ordinary `run`. This gate does not replace
 the broader bootstrap, application or specification checks.
 
-## Current validation: batch 50 (2026-11-27)
+## Current validation: batch 51 (2026-11-27)
+
+Four standard error enums keep distinct nominal identities and real integer
+payloads; `Utf8Error` is a Copy struct with `offset`. The ten existing fallible
+calls now produce complete typed Results. Named catch, display, propagation and
+standard-error-only match use the same ownership and cleanup machinery as
+supported user Results. Rust, the production runtime and the toolchain lock are
+unchanged.
+
+| Formal local gate | Result |
+| --- | --- |
+| Complete bootstrap | **1,136/1,136**, **20/20**, zero skips; all seven compatibility applications |
+| Error I/O products | **288/288**: 48 cases through actual stage0/stage1/stage2, Debug and Release |
+| Error controls | Six oracle controls, four clean/leak exit controls, three original nondecimal-source boundary checks; nine harness checks |
+| Retained diagnostics | **196 JSON/CLI + 160 text + 16 supplemental = 372** commands |
+| SHA256 / ordinary driver | **276** vector executions; **114/114** driver scenarios and nine checks |
+| Fixed point | C **1,774,302 bytes**; Linux binaries **729,968 bytes**; stage2/stage3 byte-identical |
+| Original corpus | **125/394**, **62/224** distinct entry-source bytes; six additional accepted original entries |
+| Original-program runtime checks | Six unchanged source programs, 12 scenarios, **48/48** stage0/final-stage2 Debug/Release executions |
+
+The manifest adds 73 probes and promotes ten original fixtures without editing
+their source bytes: **319 run, 34 panic, 600 reject, 141 unsupported,
+42 shared-unsupported**. One of the 73 newly authored semantic fixtures originally used `['a', 0xE2, 0x82]`, outside the existing nondecimal lexer subset. A single recorded amendment adds the equivalent decimal source `['a', 226, 130]` and changes only that manifest entry's file. The original source, freeze, manifest snapshot and first candidate U0001 failure remain preserved; old stage0 executes both versions in Debug/Release with the unchanged `1\n` output. Formal boundary checks retain stage0 acceptance and stage1/stage2 U0001 for the original source.
+
+The error gate checks exact stdin/stdout/stderr and exit status, before/after
+filesystem bytes, runtime-error payloads and preserved input identities. It
+materializes fresh inputs for every product and case. Linux/macOS apply all 48
+cases; Windows excludes directory stdin and invalid native UTF-8 environment
+bytes, giving 46 cases / 276 executions. The local error sanitizer mode is off.
+Formal local gates pass. Exact-commit three-platform CI and the independent Linux ASan+UBSan error gate remain pending. The local error sanitizer gate is off and supplies no sanitizer pass.
+
+Original 622 corpus bytes and stage0 classifications remain unchanged; acceptance
+increases from 119/394 to 125/394, or 56/224 to 62/224 distinct entry bytes, with
+zero regressions, subset violations or timeouts. The Rust local full-suite record
+is inherited source-identical batch49 evidence, not a new batch51 execution.
+See the [validation index](../compiler/validation/batch51-standard-errors-2026-11-27.json), [error contract](tests/errors51/CONTRACT.md)
+and [fixture amendment](tests/errors51/semantic-amendment.json).
+
+## Historical validation: batch 50 (2026-11-27)
 
 The [independent diagnostic contract](tests/diagnostics50/CONTRACT.md), 98 cases
 and strict Python oracle were frozen before the new JSON frontend was executed.
@@ -650,7 +697,7 @@ JSON diagnostics, suggestions and recovery remain future work.
 | Area | Implemented |
 | --- | --- |
 | Files | Source modules via leading `use a`, `use a/b`, `use a/{b, c}`; per-file imports and top-level `pub`, cyclic imports, qualified functions and original source locations; standard fs/io/os/process imports and the supported std/collections Heap API; standard/user import alias conflicts are E0011; required entry `fn main()` |
-| Types | `int` (signed 64-bit), `byte` (unsigned 8-bit), `bool`, borrowed `str`, owned `String`, supported scalar/struct/String vectors and `Vec[Vec[int]]`, unit return; nominal structs, payload-free enums, flat tuples including String, supported `T ! E` results, Copy `?T` and Optional flat String tuples |
+| Types | `int` (signed 64-bit), `byte` (unsigned 8-bit), `bool`, borrowed `str`, owned `String`, supported scalar/struct/String vectors and `Vec[Vec[int]]`, unit return; nominal structs, payload-free user enums, four nominal standard Error enums, prelude Utf8Error, flat tuples including String, supported `T ! E` results, Copy `?T` and Optional flat String tuples |
 | String | Empty construction, str.toString, len, clone, push, output, String/str comparison, UTF-8/NUL; byte indexing; startsWith/endsWith/contains/find/split/parseInt/trim/lines/fields |
 | Vec | Typed empty construction, empty/nonempty literals including Vec[byte] and Vec[Vec[int]], len, consuming push, reserve, recursive clone/drop; stable in-place int/String sort; pop for Copy elements; checked Copy reads/writes and nested-int-vector places; expression-local owned-element access and the restricted slice-parameter aliases described below |
 | Map | Map[String, V] for int/bool/byte values; contextual [:], consuming set, has/getCopy/remove, len/clone, locals/parameters/returns/fields and read-only two-binding traversal |
@@ -658,16 +705,16 @@ JSON diagnostics, suggestions and recovery remain future work.
 | Heap | `Heap[(String, int)].by((a, b) => expression)` after `use std/collections`; pure capture-free comparator, consuming push, owning pop, len, whole-value moves and recursive cleanup; locals, ordinary/sink/inout parameters and returns |
 | Aggregates | Forward/nested fields, construction, reads and mutable fields; Copy values or owned String/Vec/Map/Set/nested struct fields; constant defaults and empty aggregates; by-value cycles rejected |
 | Tuples | Flat int/byte/bool/String/non-owning struct/payload-free enum elements; left-to-right construction and ownership transfer, numeric projection, locals, arguments, returns, whole-value assignment/inout and Optional payloads; bounded structural signatures |
-| Enums | Qualified and context-inferred cases, nominal type checks, equality/inequality, case-name output |
+| Enums | Payload-free user enums support qualified/context-inferred cases, nominal type checks, equality/inequality and case-name output; standard Error enums additionally preserve their integer payloads for construction, display and match, and reject equality/order |
 | Literals | Decimal integers including negative `INT64_MIN`, contextual byte-range integers, single-quoted ASCII byte literals and seven escapes, booleans, unit, non-interpolated UTF-8 strings with supported escapes and NUL; vector literals with contextual or first-element type inference |
 | Functions | Typed parameters and supported return types, forward calls and recursion; ordinary owned parameters borrow read-only; sink parameters take ownership of supported owning types while Copy inputs remain copies; inout with `&variable`/`&variable.field`; borrowed str/Vec[str]/slice returns require `of` sources and cannot name sink parameters |
-| Results | User-function `T ! E`, contextual `ok(value)`/`err(error)` and implicit success wrapping, `try`, terminating `catch name { ... }`/`catch _ { ... }`; owned String/Vec/Map/Set/struct payloads and cleanup on propagation |
+| Results | User-function `T ! E` and complete Results from the ten supported fallible standard calls; contextual `ok(value)`/`err(error)`, implicit success wrapping, `try`, terminating `catch name { ... }`/`catch _ { ... }`; standard Error/Utf8Error and supported owned String/Vec/Map/Set/struct payloads, with cleanup on propagation |
 | Optionals | `?T` for int/byte/bool/non-owning struct/payload-free enum/flat tuple including String; some/none/wrapping, tag queries, lazy coalesce and terminating fallbacks; if-let borrows an existing owned payload or moves a temporary payload; while-let supports temporary owning Optional values |
 | Read-only slices | Supported scalar/str/String/named element slices, including owned structs; Vec-to-slice borrowing, read-only traversal and indexed access; direct owned-struct slice parameters support inferred aliases and alias chains, while persistent String-element aliases remain U0001 |
 | Text slices | `s[start..end]` on str/String with int bounds and P-INDEX/P-STR-BOUNDARY checks; views of owned values may be bound locally while their owner stays unchanged; escaping the owner scope remains rejected |
-| Standard calls | `take(&place)` for String/Vec places; `os.args()`, `os.exit(code)` and static `os.host()`; `io.readAll`, `fs.readText`, `fs.writeNewText`, `String.fromUtf8`, `os.env`, `fs.tempDir/removeFile/removeDir/sameFile` and `process.run` with a terminating `catch _ { ... }` handler |
+| Standard calls | `take(&place)` for String/Vec places; `os.args()`, `os.exit(code)` and static `os.host()`; `io.readAll`, `fs.readText`, `fs.writeNewText`, `String.fromUtf8`, `os.env`, `fs.tempDir/removeFile/removeDir/sameFile` and `process.run` return full typed Results, supporting saved values, return, try and named/discard catch |
 | Locals | `let`/`var`, inferred or explicit types, assignment and arithmetic compound assignment; active locals cannot be shadowed |
-| Control flow | if/else-if/else, if-let and supported while-let; while/loop; int/byte half-open range for; one/two-binding read-only Vec/slice/args traversal and two-binding Map traversal; fresh per-iteration owning payloads, break/continue/return cleanup and return-path checks |
+| Control flow | if/else-if/else, if-let and supported while-let; standard-Error-only match expressions/statements with real payload bindings; while/loop; int/byte half-open range for; one/two-binding read-only Vec/slice/args traversal and two-binding Map traversal; fresh per-iteration owning payloads, break/continue/return cleanup and return-path checks |
 | Expressions | Parentheses, int unary minus, boolean not, checked int/byte arithmetic, wrapping arithmetic, bit operations/shifts, contextual integer arithmetic, equality/order, short-circuit boolean operators |
 | Builtins | Single-argument `print`/`println`/`eprintln` as direct statements including decimal byte output, `assert(bool)`, explicit `int(...)`/`byte(...)` conversions, checked `abs(int)`, identity `abs(byte)` and matching int/byte `min`/`max`; user functions take precedence over assert/abs/min/max preludes |
 | Ownership | Consuming bindings/assignment/construction/returns and sink calls; moved-value checking, read-only parameters/aliases, argument staging, indexed-receiver exclusive access and root-based receiver protection |
@@ -679,8 +726,8 @@ must be handled or explicitly discarded with `let _ = ...`. Plain unit-returning
 functions allow `return` or `return ()`. The parser bounds syntactic nesting
 at 128 and expression lowering at 256; exceeding either returns `U0001`.
 
-Aggregate fields may hold int, byte, bool, String, supported vectors/Maps/Sets, payload-free
-enums or nested structs. Borrowed `str` fields are rejected with E0301;
+Aggregate fields may hold int, byte, bool, String, supported vectors/Maps/Sets,
+payload-free enums, standard Error/Utf8Error values or nested structs. Borrowed `str` fields are rejected with E0301;
 unit fields remain outside this subset. Struct equality/printing/clone and enum ordering are
 rejected consistently with stage0. Explicit constructor fields are evaluated
 in source order. Bare enum cases use annotation/parameter/return/field/
@@ -689,8 +736,9 @@ assignment/RHS comparison context.
 ### Public system calls and String slices
 
 The seven new calls share the [public standard-library contract](../docs/stdlib_contract.md)
-with stage0. Their runtime behavior is the same in both frontends; selfhost
-currently exposes fallible calls through the discarded-error catch form only.
+with stage0. Their runtime behavior is the same in both frontends. Supported
+fallible calls produce ordinary typed Results with the corresponding nominal
+standard error type; their successful payload and argument ownership are unchanged.
 
 | Call | Successful value and ownership |
 | --- | --- |
@@ -711,11 +759,12 @@ a negative signal number. `stderrOnly` selects inherited stdout/stderr or
 both output streams directed to parent stderr. There is no shell, output
 capture, timeout or environment override in this API.
 
-Fallible calls require `catch _ { ... }` with return, loop control or another
-accepted terminating path. Fallthrough is E0601. Naming or binding an
-`io.Error`, `fs.Error`, `os.Error` or `process.Error`, retaining these standard
-Results as values, and named standard-error catches remain U0001; general
-user-defined Results retain their existing support.
+Fallible results may be saved, explicitly discarded, returned, propagated with
+`try`, or handled with `catch e { ... }` / `catch _ { ... }`. A catch handler must
+terminate with return, loop control or another accepted terminating path;
+fallthrough is E0601. The immutable error binding is local to the handler and
+cannot shadow an existing binding. Error types do not implicitly convert across
+standard modules. General user-function Results retain their existing support.
 
 `[]String` parameters borrow an existing `Vec[String]` or supported temporary
 vector. Read-only iteration, indexed text inspection, output, ordinary
@@ -993,6 +1042,52 @@ statement temporaries and initialized prefixes of aggregate/vector values.
 Result fields, `Vec[Result]`, nested Results and public Result member/method
 operations remain outside this subset; Result comparisons are E0501.
 
+### Standard errors and payload matching
+
+| Nominal type | Variants / fields |
+| --- | --- |
+| `fs.Error` | `Utf8(offset: int)`, `Io(code: int)`, `InvalidPath` |
+| `io.Error` | `Utf8(offset: int)`, `Io(code: int)` |
+| `os.Error` | `Utf8(offset: int)`, `Io(code: int)`, `InvalidArgument` |
+| `process.Error` | `Utf8(offset: int)`, `Io(code: int)`, `InvalidArgument` |
+| `Utf8Error` | Prelude Copy struct with `offset: int` |
+
+These values are Copy and may be locals, parameters, return values, ordinary
+struct fields and supported Result payloads. Each standard Error requires its
+module import in the current source file; standard imports do **not** introduce
+the short type name `Error`. User-defined or imported user-module types named
+Error retain their normal identity. Identical tag/payload layouts do not make
+different modules' errors interchangeable.
+
+Contextual `.Utf8(5)` / `.Utf8(offset: 5)` and `.Io(-7)` / `.Io(code: -7)`
+construct real payloads under an expected error type. Field names, arity and
+types are checked. Qualified zero-payload `fs.Error.InvalidPath` is accepted.
+Qualified payload construction such as `fs.Error.Utf8(5)` remains U0001 in both
+the current stage0 and this subset. `Utf8Error { offset: 5 }` exposes `.offset`;
+mutation follows the existing place/borrow rules.
+
+Error display is exactly `Utf8(offset: 5)`, `Io(code: -7)`, `InvalidPath` or
+`InvalidArgument`, without a module prefix, through direct output, interpolation
+and format. Display does not consume these Copy values. Error comparisons reject
+with E0501. Direct output/interpolation of the Utf8Error struct rejects with E0001;
+display its offset explicitly.
+
+Only standard Error enum values may be matched. Flat contextual/qualified case
+patterns bind an int payload; zero-payload cases, wildcard and whole-value
+bindings are supported. The scrutinee evaluates once. Arms may be expressions,
+statements or blocks; owned expression results and return/break/continue use the
+existing branch-merge and cleanup rules. Matches must be exhaustive (E0602),
+nominal types and payload arity must agree, and arm bindings cannot escape or
+shadow existing locals. Stage0-accepted duplicate/covered arms are not turned
+into new errors.
+
+Direct Error/Utf8Error vector, Optional and tuple storage, general user payload
+enums, other enum/Optional/Result match and nested payload patterns remain U0001.
+Arrow catch, `io.readLine` and `fs.writeText` remain outside this scope. The
+complete ten-call list, original semantic evidence and exact I/O oracle are in
+the [frozen contract](tests/errors51/CONTRACT.md); the sole new-fixture source
+correction is recorded in the [amendment](tests/errors51/semantic-amendment.json).
+
 ### Byte values and text reads
 
 `byte` is a Copy unsigned 8-bit value. A single-quoted literal has a fixed
@@ -1156,7 +1251,7 @@ The principal remaining U0001 boundaries are:
 | Tuples | Nested or borrowed/container/Optional elements, owned struct elements, tuple fields and Result combinations; destructuring and general tuple containers other than the admitted Heap |
 | Owning Optionals | Payloads other than supported flat String tuples; nested Optional, fields, container elements and Result combinations; named aliases of an existing owning payload; while-let over an existing owning Optional |
 | Heap and callbacks | Other element shapes, fields, Result combinations and unimplemented APIs; captures, calls or block/typed-parameter comparator bodies; ordinary standalone or escaping closures |
-| Broader language | Other collection APIs, enum payloads, imports after other items, Result fields/nesting, named imported io.Error/fs.Error/os.Error/process.Error types and retained standard Result values, arrow catch, user methods, generics, mutable/reference iteration and concurrency |
+| Broader language | Other collection APIs, general user enum payloads and matching, imports after other items, Result fields/nesting, direct standard Error/Utf8Error Vec/Optional/tuple storage, qualified standard-error payload construction, arrow catch, io.readLine/fs.writeText, user methods, generics, mutable/reference iteration and concurrency |
 | Text and numerics | Interpolation outside direct output/format arguments, format specifiers, float/nondecimal literals and integer separators |
 
 Other invalid operations retain their stage0 error categories rather than
@@ -1171,9 +1266,9 @@ The frontend remains a subset of the Rust implementation.
 | `support.yv` | Owned diagnostics, source identities, byte/scalar coordinates and text/JSON rendering |
 | `lexer.yv` | UTF-8-aware tokens, escapes, source spans, newline termination; returns `Vec[Token] ! Diagnostic`; precise lexical ends and JSON-only source snapshots on file EOF |
 | `model.yv` | Copy AST nodes; child lists are ranges in shared Program pools |
-| `parser.yv` | Aggregate/function/statement/expression grammar, imports, slices, borrows, catch, unsupported boundaries |
-| `types.yv` | Resolved nominal/vector/Heap/Optional/flat tuple types within the stated shape limits, bounded tuple signatures, Result pool, field/default checks, cycles/layout order and transitive ownership |
-| `codegen.yv` | Places, borrowed/consuming values, Optional/Result wrapping, lazy coalesce, Result propagation, inout/take/pop/sort, move-state joins, cleanup, loop replay and ordered C |
+| `parser.yv` | Aggregate/function/statement/expression grammar, imports, slices, borrows, catch, contextual payload construction and flat match arms, unsupported boundaries |
+| `types.yv` | Resolved nominal/vector/Heap/Optional/flat tuple types within the stated shape limits, nominal standard errors and Utf8Error, bounded tuple signatures, Result pool, field/default checks, cycles/layout order and transitive ownership |
+| `codegen.yv` | Places, borrowed/consuming values, Optional/Result wrapping and standard-call Results, error payload construction/display/match, lazy coalesce, propagation, inout/take/pop/sort, move-state joins, cleanup, loop replay and ordered C |
 | `driver.yv` | Native build/run options, pinned backend resolution, source-identity protection, explicit argv, stream/exit forwarding and temporary-file cleanup |
 | `runtime_source.yv` | Generated runtime-header bytes and pinned backend version for standalone native compilation |
 | `main.yv` | Source loading and identities, JSON/text check dispatch, emit-c and ordinary command lifetime |
@@ -1199,24 +1294,23 @@ executable fixtures from earlier increments.
 
 ## Next steps
 
-SH-4's three formal CLI applications were accepted in batch 48. The native
-ordinary build/run entrypoint now provides a separate SH-3 integration route;
-its acceptance follows the complete bootstrap and independent three-platform
-driver gate, not the application count.
+SH-4's three formal CLI applications were accepted in batch48. Native ordinary
+build/run, first-error check JSON and standard error values now provide separate
+SH-3 capabilities. The error test driver is not a new formal application.
 
-The unchanged r5/yavo-b/T02 strict CSV program is an existing regression target
-for general owned Optionals. Its `?Vec[String]` remains outside the supported
-flat String-tuple Optional shape. Closing that gap includes construction,
-owned returns, borrowed access and cleanup across branches and early exits. A single archived CSV
-compatibility gate does not itself satisfy the formal project's conditions.
+Prioritize Copy tuple vectors next: the current first blocker affects 25 paths / 11 distinct entry-source byte sequences, split into 22/8 Copy tuples and 3/3 String-owning tuples. Freeze construction, push/pop, parameters/returns, fields, indexing, traversal and rejection rules before extending the subset. The 27/14 Map-value blockers mix Copy aggregates with owned String/Vec/Set values; they are not one Copy-only group. These counts do not promise equivalent coverage gains.
 
-Remaining SH-3 work starts with standard-library error values and `catch e`,
-then broader language semantics, richer diagnostic data and cross targets,
-cache/PCH behavior, toolchain installation and the other fix/verify/tool
-entrypoints. Coverage of the existing regressions, frozen specification,
-resources and native platforms is required before the daily default switches
-from Rust. Cost and performance need separate current evidence; driver timings
-from a reusable Zig cache do not supply a compile-latency P50.
+General owned Optionals remain a separate regression target: the unchanged
+r5/yavo-b/T02 CSV program uses `?Vec[String]`, outside the supported flat
+String-tuple Optional shape. That work includes owned construction/returns,
+borrowed access and cleanup across branches and early exits.
+
+The current corpus still has 269 unsupported stage0-accepted entries, or
+162 distinct entry-source byte sequences. Broader semantics, richer diagnostics,
+cross targets, cache/PCH, toolchain installation and remaining fix/verify/tool
+entrypoints must satisfy their declared regression, resource and native-platform
+gates before selfhost becomes the daily default. Performance P50 and measured
+agent delivery cost remain independent acceptance requirements.
 
 ## Historical snapshots
 

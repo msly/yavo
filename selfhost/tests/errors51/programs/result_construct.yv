@@ -1,0 +1,21 @@
+use std/{fs, io, os, process}
+fn file() -> int ! fs.Error { return err(.Utf8(offset: 5)) }
+fn input() -> int ! io.Error { return err(.Io(code: 7)) }
+fn system() -> int ! os.Error { return err(.InvalidArgument) }
+fn child() -> int ! process.Error { return err(.InvalidArgument) }
+fn runFile() { let n = file() catch e { println(e)
+    return }
+    println(n) }
+fn runInput() { let n = input() catch e { println(e)
+    return }
+    println(n) }
+fn runSystem() { let n = system() catch e { println(e)
+    return }
+    println(n) }
+fn runChild() { let n = child() catch e { println(e)
+    return }
+    println(n) }
+fn main() { runFile()
+    runInput()
+    runSystem()
+    runChild() }

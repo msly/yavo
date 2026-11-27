@@ -1,0 +1,97 @@
+{
+  "schema": "yavo-errors51-semantic-amendment/1",
+  "baseline_commit": "b3cf7a22031846459d9955397759fb24823a9ee5",
+  "recorded_at_utc": "2026-11-27T14:21:37.766348+00:00",
+  "reason": "The newly authored UTF-8 cleanup probe used two hexadecimal byte literals outside the pre-existing lexical subset. Preserve its original bytes and first candidate failure, retain the non-decimal U0001 boundary, and exercise the identical byte vector through equivalent decimal literals without changing any expected output or original corpus source.",
+  "candidate_failure_observed": true,
+  "candidate_output_used_to_derive_expectations": false,
+  "replacement": {
+    "id": "errors51_utf8_consumed_failure",
+    "old_file": "errors51/programs/utf8_consumed_failure.yv",
+    "new_file": "errors51/programs/utf8_consumed_failure_decimal.yv",
+    "old_sha256": "029c705a68de6be1c61f1eef2eec48662a53756344dc9ca9ced7541a8f910c95",
+    "new_sha256": "95bfe3798366526a9c103af50f2f3ae65e92c52c3a7527e08cdb7bfbb5f84e07",
+    "literal_replacements": [
+      {
+        "old": "0xE2",
+        "new": "226"
+      },
+      {
+        "old": "0x82",
+        "new": "130"
+      }
+    ]
+  },
+  "expected_unchanged": {
+    "kind": "run",
+    "stdout": "1\n",
+    "stderr": "",
+    "exit": 0
+  },
+  "manifest": {
+    "original_snapshot": "selfhost/tests/errors51/manifest-before-amendment.json",
+    "original": {
+      "bytes": 248890,
+      "sha256": "84e7e9d18431dce4825e3abd19fb1786c1b06024ac9a9ed7f87f5e076bd891b8"
+    },
+    "effective": {
+      "bytes": 248898,
+      "sha256": "50edd0c6f4ea548b13efd5d2de6d107846c4130341c40809c935f2200babf2dd"
+    },
+    "only_changed_field": "cases[id=errors51_utf8_consumed_failure].file",
+    "case_count": 1136
+  },
+  "stage0_equivalence": {
+    "path": "selfhost/tests/errors51/amendment-reference.json",
+    "executions": 4,
+    "modes": [
+      "debug",
+      "release"
+    ],
+    "versions": [
+      "original",
+      "decimal"
+    ],
+    "passed": true
+  },
+  "first_candidate_failure": "selfhost/tests/errors51/amendment-candidate-failure.json",
+  "original_source_frontend_expectations": {
+    "stage0": {
+      "exit": 0
+    },
+    "selfhost": {
+      "exit": 1,
+      "diagnostic": "U0001"
+    }
+  },
+  "inputs": {
+    "selfhost/tests/errors51/manifest-before-amendment.json": {
+      "bytes": 248890,
+      "sha256": "84e7e9d18431dce4825e3abd19fb1786c1b06024ac9a9ed7f87f5e076bd891b8"
+    },
+    "selfhost/tests/errors51/programs/utf8_consumed_failure.yv": {
+      "bytes": 277,
+      "sha256": "029c705a68de6be1c61f1eef2eec48662a53756344dc9ca9ced7541a8f910c95"
+    },
+    "selfhost/tests/errors51/programs/utf8_consumed_failure_decimal.yv": {
+      "bytes": 275,
+      "sha256": "95bfe3798366526a9c103af50f2f3ae65e92c52c3a7527e08cdb7bfbb5f84e07"
+    },
+    "selfhost/tests/errors51/amendment-reference.json": {
+      "bytes": 18888,
+      "sha256": "76be7811f9325870f0f56d7731a4fcac89e825b723d4cb5164c59478bb393089"
+    },
+    "selfhost/tests/errors51/amendment-candidate-failure.json": {
+      "bytes": 1619,
+      "sha256": "d04d8bce70ae106e6bea6a2735f804bbda6cd0134def315c84ad1558e3716537"
+    },
+    "selfhost/tests/errors51/semantic-freeze.json": {
+      "bytes": 15858,
+      "sha256": "0aac5221778b6152a87fad23e7095fc9f82b3834921f5d269963bbea4b78c510"
+    },
+    "selfhost/tests/errors51/cases.json": {
+      "bytes": 15720,
+      "sha256": "bb44ee1f2ef2d92ae2aab0ea59751b0748c5b5c4de968fa4a26b718cb99c7748"
+    }
+  }
+}

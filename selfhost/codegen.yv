@@ -108,6 +108,12 @@ struct Flow {
     breaks: bool = false
 }
 
+struct MatchValue {
+    value: Value
+    falls: bool = true
+    breaks: bool = false
+}
+
 struct Generator {
     out: String = ""
     counter: int = 0
@@ -726,6 +732,20 @@ fn printValue(g: inout Generator, reg: Registry, ts: Vec[Token], token: int, arg
         put(&g, target)
         put(&g, view(arg))
         emit(&g, ");")
+    } else if arg.ty.kind == .StdError {
+        emit(&g, format("switch ((${arg.name}).tag) {"))
+        emit(&g, format("case 0: yv_out_bytes(&o_${output}, \"Utf8(offset: \", 13);"))
+        emit(&g, format("yv_out_i64(&o_${output}, (${arg.name}).payload);"))
+        emit(&g, format("yv_out_bytes(&o_${output}, \")\", 1); break;"))
+        emit(&g, format("case 1: yv_out_bytes(&o_${output}, \"Io(code: \", 9);"))
+        emit(&g, format("yv_out_i64(&o_${output}, (${arg.name}).payload);"))
+        emit(&g, format("yv_out_bytes(&o_${output}, \")\", 1); break;"))
+        if arg.ty.decl == 2 {
+            emit(&g, format("case 2: yv_out_bytes(&o_${output}, \"InvalidPath\", 11); break;"))
+        } else if arg.ty.decl != 4 {
+            emit(&g, format("case 2: yv_out_bytes(&o_${output}, \"InvalidArgument\", 15); break;"))
+        }
+        emit(&g, "}")
     } else if arg.ty.kind == .Named && reg.entries[arg.ty.decl].kind == .Enum {
         emit(&g, support.join3("switch (", arg.name, ") {"))
         let start = reg.entries[arg.ty.decl].variantStart
@@ -1411,10 +1431,27 @@ fn heapPush(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry,
     return Value{ty: types.primitive(.Unit), name: String{}}
 }
 
+fn builtinReceiverType(g: Generator, p: Program, ts: Vec[Token], reg: Registry,
+    receiver: Expression) -> Type {
+    if receiver.kind == .Name && ts[receiver.token].text == "Utf8Error" && localIndex(g, ts, receiver.token) < 0 {
+        return types.builtinType(reg, ts, receiver.token)
+    }
+    if receiver.kind == .Field && ts[receiver.token].text == "Error" {
+        let base = p.expressions[receiver.left]
+        if base.kind == .Name && localIndex(g, ts, base.token) < 0 {
+            return types.builtinType(reg, ts, base.token)
+        }
+    }
+    return types.primitive(.Unknown)
+}
+
 fn methodValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression) -> Value {
     let name = ts[e.token].text.clone()
     let receiver = p.expressions[e.left]
     if receiver.kind == .HeapType { return heapConstructor(&g, p, ts, reg, e) }
+    if builtinReceiverType(g, p, ts, reg, receiver).kind == .StdError {
+        lexer.fail(ts, e.token, "U0001", "qualified enum payload construction is outside the stage0 subset")
+    }
     let userModule = moduleOf(g, reg, ts, receiver)
     if userModule >= 0 {
         let index = functionIn(p, ts, userModule, e.token)
@@ -1424,9 +1461,11 @@ fn methodValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
         return userCall(&g, p, ts, reg, e, index)
     }
     let module = standardModule(g, p, ts, receiver)
+    let operation = standardCallOp(module, name)
+    if operation > 0 { return standardCallValue(&g, p, ts, reg, e, module, operation) }
     if module == 1 { return osCall(&g, p, ts, reg, e) }
-    if module == 2 || module == 4 || module == 5 || (module == 3 && name == "fromUtf8") {
-        lexer.fail(ts, e.token, "U0001", "fallible standard calls require `catch _ { ... }` in this subset")
+    if module == 2 || module == 4 || module == 5 {
+        lexer.fail(ts, e.token, "U0001", "this standard function is outside the selfhost subset")
     }
     if receiver.kind == .Name && localIndex(g, ts, receiver.token) < 0 {
         let declared = types.lookup(reg, ts, receiver.token)
@@ -1973,18 +2012,55 @@ fn userCatchValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry,
     return resultPayload(&g, reg, taken)
 }
 
-// Process, environment and temporary-file operations borrow their arguments
-// through the entire call. In particular, the argv slice must remain alive
-// while the following stream-mode expression is evaluated.
-fn systemCatchValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry,
-    e: Expression, call: Expression, op: int) -> Value {
-    if ts[e.extra].text != "_" {
-        lexer.fail(ts, e.extra, "U0001", "standard-library error bindings are outside this subset; use catch _")
-    }
-    var arity = 2
-    if op == 7 || op == 8 { arity = 1 }
+// The runtime status becomes a nominal Copy error value. All fallible
+// standard calls use the ordinary Result ownership, catch and try machinery.
+fn standardCallOp(module: int, name: str) -> int {
+    if module == 2 && name == "readText" { return 1 }
+    if module == 2 && name == "writeNewText" { return 2 }
+    if module == 3 && name == "fromUtf8" { return 3 }
+    if module == 4 && name == "readAll" { return 4 }
+    if module == 1 && name == "env" { return 5 }
+    if module == 2 && name == "tempDir" { return 6 }
+    if module == 2 && name == "removeFile" { return 7 }
+    if module == 2 && name == "removeDir" { return 8 }
+    if module == 5 && name == "run" { return 9 }
+    if module == 2 && name == "sameFile" { return 10 }
+    return 0
+}
+
+fn standardCallValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry,
+    call: Expression, module: int, op: int) -> Value {
+    var arity = 1
+    if op == 2 || op == 5 || op == 6 || op == 10 { arity = 2 }
+    if op == 4 { arity = 0 }
     if op == 9 { arity = 3 }
     if call.argCount != arity { lexer.fail(ts, call.token, "E0012", "wrong number of function arguments") }
+    let resultType = types.standardResult(reg, module, ts[call.token].text)
+    if op == 3 {
+        let bytesType = Type{kind: .Vec, elementKind: .Byte}
+        let argId = p.lists[call.argStart]
+        let arg = emitExpected(&g, p, ts, reg, argId, bytesType)
+        require(reg, ts, p.expressions[argId].token, arg.ty, bytesType)
+        let taken = takeValue(&g, reg, ts, p.expressions[argId].token, arg)
+        let result = typedValue(&g, reg, resultType, format("(${types.cType(resultType)}){0}"))
+        let suffix = support.decimal(g.counter)
+        g.counter += 1
+        let buffer = support.join2("b_", suffix)
+        let status = support.join2("c_", suffix)
+        emit(&g, format("yv_vec ${buffer} = ${taken.name};"))
+        zeroValue(&g, reg, taken)
+        emit(&g, format("int64_t ${status} = yv_utf8_check(${buffer}.ptr ? (const char *)${buffer}.ptr : \"\", (size_t)${buffer}.len);"))
+        emit(&g, format("if (${status} >= 0) {"))
+        emit(&g, format("yv_vec_free(&${buffer});"))
+        emit(&g, format("${result.name}.err.offset = ${status};"))
+        emit(&g, "} else {")
+        emit(&g, format("${result.name}.ok = true;"))
+        emit(&g, format("${result.name}.val = (yv_string){ (char *)${buffer}.ptr, ${buffer}.len, ${buffer}.cap };"))
+        emit(&g, "}")
+        return result
+    }
+    // Hold every argument's owner through later argument evaluation. A process
+    // argv slice in particular must survive the stream-mode expression.
     let locks = g.locks.len()
     var args = String{}
     var i = 0
@@ -2010,153 +2086,41 @@ fn systemCatchValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registr
         i += 1
     }
     releaseLocks(&g, locks)
-    var resultType = types.primitive(.String)
-    var function = "yv_os_env"
+    var function = "yv_fs_read_text"
+    if op == 2 { function = "yv_fs_write_new_text" }
+    if op == 4 { function = "yv_io_read_all" }
+    if op == 5 { function = "yv_os_env" }
     if op == 6 { function = "yv_fs_temp_dir" }
-    if op == 7 {
-        function = "yv_fs_remove_file"
-        resultType = types.primitive(.Unit)
-    }
-    if op == 8 {
-        function = "yv_fs_remove_dir"
-        resultType = types.primitive(.Unit)
-    }
-    if op == 9 {
-        function = "yv_process_run"
-        resultType = types.primitive(.Int)
-    }
-    if op == 10 {
-        function = "yv_fs_same_file"
-        resultType = types.primitive(.Bool)
-    }
-    let n = g.counter
+    if op == 7 { function = "yv_fs_remove_file" }
+    if op == 8 { function = "yv_fs_remove_dir" }
+    if op == 9 { function = "yv_process_run" }
+    if op == 10 { function = "yv_fs_same_file" }
+    // Register the Result only after argument expressions can no longer leave
+    // via try/return; its zero initialization precedes every runtime branch.
+    let result = typedValue(&g, reg, resultType, format("(${types.cType(resultType)}){0}"))
+    let successType = types.resultOk(reg, resultType)
+    if successType.kind != .Unit { args.push(format("&${result.name}.val, ")) }
+    let suffix = support.decimal(g.counter)
     g.counter += 1
-    let result = temporaryName(n)
-    let status = support.join2("c_", support.decimal(n))
-    emit(&g, support.join3("int64_t ", status, " = 0;"))
-    if resultType.kind != .Unit {
-        emit(&g, support.join5(types.cType(resultType), " ", result, " = {0}", ";"))
-        args.push("&")
-        args.push(result)
-        args.push(", ")
+    let status = support.join2("s_", suffix)
+    let code = support.join2("c_", suffix)
+    emit(&g, format("int64_t ${code} = 0;"))
+    emit(&g, format("int ${status} = ${function}(${args}&${code}, ${lineColumn(ts, call.token)});"))
+    emit(&g, format("if (${status} == 0) {"))
+    emit(&g, format("${result.name}.ok = true;"))
+    emit(&g, "} else {")
+    if successType.kind == .String {
+        emit(&g, format("yv_string_drop(&${result.name}.val);"))
+        emit(&g, format("${result.name}.val = (yv_string){0};"))
     }
-    put(&g, support.join5("if (", function, "(", args, "&"))
-    emit(&g, support.join5(status, ", ", lineColumn(ts, call.token), ") != 0) {", ""))
-    if resultType.kind == .String {
-        emit(&g, support.join3("yv_string_drop(&", result, ");"))
-        emit(&g, support.join2(result, " = (yv_string){0};"))
-    }
-    let before = movedState(g)
-    let sourcesBefore = sourceState(g)
-    let flow = emitBlock(&g, p, ts, reg, e.argStart, e.argCount)
-    restoreState(&g, before)
-    restoreSources(&g, sourcesBefore)
-    if flow.falls { lexer.fail(ts, e.token, "E0601", "this catch block can reach its closing brace") }
+    emit(&g, format("${result.name}.err.tag = ${status} - 1;"))
+    emit(&g, format("if (${status} == 1 || ${status} == 2) ${result.name}.err.payload = ${code};"))
     emit(&g, "}")
-    if resultType.kind == .Unit { return Value{ty: resultType, name: "".toString()} }
-    g.temps.push(Temporary{ty: resultType, id: n})
-    return Value{ty: resultType, name: result, temporary: true}
+    return result
 }
 
-// Standard-library error enums retain their dedicated catch-_ path. User
-// results use the same owned-payload rules for named and discarded errors.
 fn catchValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression) -> Value {
-    let callId = e.left
-    let call = p.expressions[callId]
-    var op = 0
-    if call.kind == .Method {
-        let module = standardModule(g, p, ts, p.expressions[call.left])
-        if module == 2 && ts[call.token].text == "readText" { op = 1 }
-        if module == 2 && ts[call.token].text == "writeNewText" { op = 2 }
-        if module == 3 && ts[call.token].text == "fromUtf8" { op = 3 }
-        if module == 4 && ts[call.token].text == "readAll" { op = 4 }
-        if module == 1 && ts[call.token].text == "env" { op = 5 }
-        if module == 2 && ts[call.token].text == "tempDir" { op = 6 }
-        if module == 2 && ts[call.token].text == "removeFile" { op = 7 }
-        if module == 2 && ts[call.token].text == "removeDir" { op = 8 }
-        if module == 5 && ts[call.token].text == "run" { op = 9 }
-        if module == 2 && ts[call.token].text == "sameFile" { op = 10 }
-    }
-    if op == 0 { return userCatchValue(&g, p, ts, reg, e) }
-    if op >= 5 { return systemCatchValue(&g, p, ts, reg, e, call, op) }
-    if ts[e.extra].text != "_" {
-        lexer.fail(ts, e.extra, "U0001", "standard-library error bindings are outside this subset; use catch _")
-    }
-    var arity = 1
-    if op == 2 { arity = 2 }
-    if op == 4 { arity = 0 }
-    if call.argCount != arity { lexer.fail(ts, call.token, "E0012", "wrong number of function arguments") }
-    let n = g.counter
-    g.counter += 1
-    let result = temporaryName(n)
-    let status = support.join2("c_", support.decimal(n))
-    let locks = g.locks.len()
-    var resultType = types.primitive(.String)
-    if op == 3 {
-        let bytesType = Type{kind: .Vec, elementKind: .Byte, elementDecl: -1}
-        let argId = p.lists[call.argStart]
-        let arg = emitExpected(&g, p, ts, reg, argId, bytesType)
-        require(reg, ts, p.expressions[argId].token, arg.ty, bytesType)
-        let taken = takeValue(&g, reg, ts, p.expressions[argId].token, arg)
-        let buffer = support.join2("b_", support.decimal(n))
-        emit(&g, support.join5("yv_vec ", buffer, " = ", taken.name, ";"))
-        zeroValue(&g, reg, taken)
-        put(&g, support.join5("int64_t ", status, " = yv_utf8_check(", buffer, ".ptr ? (const char *)"))
-        emit(&g, support.join5(buffer, ".ptr : \"\", (size_t)", buffer, ".len);", ""))
-        emit(&g, support.join3("yv_string ", result, " = {0};"))
-        emit(&g, support.join3("if (", status, " >= 0) {"))
-        emit(&g, support.join3("yv_vec_free(&", buffer, ");"))
-        let before = movedState(g)
-        let sourcesBefore = sourceState(g)
-        let flow = emitBlock(&g, p, ts, reg, e.argStart, e.argCount)
-        restoreState(&g, before)
-        restoreSources(&g, sourcesBefore)
-        if flow.falls { lexer.fail(ts, e.token, "E0601", "this catch block can reach its closing brace") }
-        emit(&g, "}")
-        emit(&g, support.join5(result, " = (yv_string){ (char *)", buffer, ".ptr, ", support.join5(buffer, ".len, ", buffer, ".cap };", "")))
-    } else {
-        var args = String{}
-        var i = 0
-        while i < arity {
-            let argId = p.lists[call.argStart + i]
-            let arg = emitExpected(&g, p, ts, reg, argId, types.primitive(.Str))
-            if !stringLike(arg.ty) { require(reg, ts, p.expressions[argId].token, arg.ty, types.primitive(.Str)) }
-            args.push(view(arg))
-            args.push(", ")
-            if arg.root >= 0 { g.locks.push(arg.root) }
-            i += 1
-        }
-        releaseLocks(&g, locks)
-        emit(&g, support.join3("int64_t ", status, " = 0;"))
-        if op == 1 {
-            emit(&g, support.join3("yv_string ", result, " = {0};"))
-            put(&g, support.join5("if (yv_fs_read_text(", args, "&", result, ", &"))
-        } else if op == 4 {
-            // io.readAll(): the rest of standard input; any failure takes the handler.
-            emit(&g, support.join3("yv_string ", result, " = {0};"))
-            put(&g, support.join3("if (yv_io_read_all(&", result, ", &"))
-        } else {
-            resultType = types.primitive(.Unit)
-            put(&g, support.join2("if (yv_fs_write_new_text(", args))
-            put(&g, "&")
-        }
-        put(&g, support.join3(status, ", ", lineColumn(ts, call.token)))
-        emit(&g, ") != 0) {")
-        if op == 1 || op == 4 {
-            emit(&g, support.join3("yv_string_drop(&", result, ");"))
-            emit(&g, support.join2(result, " = (yv_string){0};"))
-        }
-        let before = movedState(g)
-        let sourcesBefore = sourceState(g)
-        let flow = emitBlock(&g, p, ts, reg, e.argStart, e.argCount)
-        restoreState(&g, before)
-        restoreSources(&g, sourcesBefore)
-        if flow.falls { lexer.fail(ts, e.token, "E0601", "this catch block can reach its closing brace") }
-        emit(&g, "}")
-    }
-    if resultType.kind == .Unit { return Value{ty: resultType, name: "".toString()} }
-    g.temps.push(Temporary{ty: resultType, id: n})
-    return Value{ty: resultType, name: result, temporary: true}
+    return userCatchValue(&g, p, ts, reg, e)
 }
 
 // Match stage0's contextual integer expression set. These expressions have no
@@ -2249,6 +2213,7 @@ fn binaryValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
         }
         if lhs.ty.kind == .Vec || lhs.ty.kind == .Args || lhs.ty.kind == .Slice || lhs.ty.kind == .Result ||
             lhs.ty.kind == .Map || lhs.ty.kind == .Set || lhs.ty.kind == .Heap || lhs.ty.kind == .Tuple ||
+            lhs.ty.kind == .StdError || lhs.ty.kind == .Utf8Error ||
             (lhs.ty.kind == .Named && (reg.entries[lhs.ty.decl].kind == .Struct || !equality)) {
             lexer.fail(ts, e.token, "E0501", "this aggregate does not implement the required comparison")
         }
@@ -2330,6 +2295,206 @@ fn unparenthesized(p: Program, id: int) -> int {
     return current
 }
 
+fn declareErrorBinding(g: inout Generator, ts: Vec[Token], token: int,
+    ty: Type, value: str, root: int) {
+    if token < 0 || ts[token].text == "_" { return }
+    declare(&g, ts, token, ty, false, false, false)
+    let index = g.locals.len() - 1
+    var binding = 2
+    if root >= 0 && !g.locals[root].mutable { binding = 1 }
+    g.locals[index].matchRoot = root
+    g.locals[index].matchBinding = binding
+    emit(&g, format("${types.cType(ty)} v_${token} = ${value};"))
+}
+
+// Only the built-in Copy error enums are admitted here. Their payloads are
+// integers, so no borrowed or owned enum payload is silently generalized.
+fn matchValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry,
+    e: Expression, expected: Type, statement: bool) -> MatchValue {
+    let scrutinee = emitExpr(&g, p, ts, reg, e.left)
+    if scrutinee.ty.kind != .StdError {
+        lexer.fail(ts, e.token, "U0001", "match requires a standard-library error value in this subset")
+    }
+    let variants = types.standardVariantCount(scrutinee.ty)
+    let complete = (1 << variants) - 1
+    var covered = 0
+    var root = -1
+    let rootToken = placeRoot(p, e.left)
+    if rootToken >= 0 { root = localIndex(g, ts, rootToken) }
+    let localsBefore = g.locals.len()
+    let tempsBefore = g.temps.len()
+    let before = movedState(g)
+    let sourcesBefore = sourceState(g)
+    var liveState = before.clone()
+    var allState = before.clone()
+    var liveSources = sourcesBefore.clone()
+    var allSources = sourcesBefore.clone()
+    var falls = false
+    var breaks = false
+    var resultType = expected
+    if statement || resultType.kind == .Unit { resultType = types.primitive(.Unknown) }
+    let resultId = g.counter
+    g.counter += 1
+    let resultName = temporaryName(resultId)
+    var resultSources = 0
+    // The output type may be inferred from a later non-diverging arm. Buffer
+    // arm code so its zero-initialized slot can precede all branch scopes.
+    let prefix = take(&g.out)
+    var i = 0
+    while i < e.argCount {
+        let arm = p.matchArms[e.argStart + i]
+        restoreState(&g, before)
+        restoreSources(&g, sourcesBefore)
+        var condition = "true".toString()
+        if arm.kind == .Case {
+            if arm.typeToken >= 0 {
+                let patternType = types.builtinType(reg, ts, arm.typeToken)
+                require(reg, ts, arm.typeToken, patternType, scrutinee.ty)
+            }
+            let variant = types.standardVariant(scrutinee.ty, ts[arm.variant].text)
+            if variant < 0 { lexer.fail(ts, arm.variant, "E0010", "unknown enum case") }
+            var arity = 1
+            if variant == 2 { arity = 0 }
+            if arm.payloadCount != arity {
+                lexer.fail(ts, arm.variant, "E0012", "wrong number of enum payload patterns")
+            }
+            covered = covered | (1 << variant)
+            condition = format("(${scrutinee.name}).tag == ${variant}")
+        } else {
+            covered = complete
+        }
+        if i > 0 { put(&g, "else ") }
+        emit(&g, format("if (${condition}) {"))
+        if arm.kind == .Bind {
+            declareErrorBinding(&g, ts, arm.binding, scrutinee.ty, scrutinee.name, root)
+        } else if arm.kind == .Case && arm.payloadCount == 1 {
+            declareErrorBinding(&g, ts, p.lists[arm.payloadStart], types.primitive(.Int),
+                format("(${scrutinee.name}).payload"), root)
+        }
+        var flow = Flow{}
+        if arm.block {
+            flow = emitBlock(&g, p, ts, reg, arm.bodyStart, arm.bodyCount)
+            if !statement && flow.falls {
+                lexer.fail(ts, arm.token, "E0001", "a block arm of a match expression must leave its scope")
+            }
+        } else {
+            let valueExpr = p.expressions[arm.value]
+            if valueExpr.kind == .Jump {
+                if ts[valueExpr.token].text == "return" {
+                    flow = returnStatement(&g, p, ts, reg, valueExpr.token, valueExpr.left)
+                } else {
+                    flow = loopExit(&g, ts, reg, valueExpr.token, ts[valueExpr.token].text == "break")
+                }
+            } else {
+                let value = emitExpected(&g, p, ts, reg, arm.value, resultType)
+                if value.ty.kind == .Unit { lexer.fail(ts, valueExpr.token, "E0001", "this match arm produces no value") }
+                if resultType.kind == .Unknown { resultType = value.ty }
+                require(reg, ts, valueExpr.token, value.ty, resultType)
+                if value.transient {
+                    lexer.fail(ts, valueExpr.token, "U0001", "match results borrowing an owned string are outside this subset")
+                }
+                let taken = takeValue(&g, reg, ts, valueExpr.token, value)
+                resultSources = resultSources | taken.sources
+                emit(&g, format("${resultName} = ${taken.name};"))
+                zeroValue(&g, reg, taken)
+            }
+        }
+        discardTemps(&g, reg, tempsBefore)
+        cleanLocals(&g, reg, localsBefore)
+        while g.locals.len() > localsBefore { let _ = g.locals.pop() }
+        let ended = movedState(g)
+        let endSources = sourceState(g)
+        if i == 0 {
+            allState = ended.clone()
+            allSources = endSources.clone()
+        } else {
+            allState = joinStates(allState, ended)
+            allSources = joinSources(allSources, endSources)
+        }
+        if flow.falls {
+            if falls {
+                liveState = joinStates(liveState, ended)
+                liveSources = joinSources(liveSources, endSources)
+            } else {
+                liveState = ended.clone()
+                liveSources = endSources.clone()
+            }
+        }
+        falls = falls || flow.falls
+        breaks = breaks || flow.breaks
+        emit(&g, "}")
+        i += 1
+    }
+    if covered != complete { lexer.fail(ts, e.token, "E0602", "this match does not handle every error case") }
+    if falls {
+        restoreState(&g, liveState)
+        restoreSources(&g, liveSources)
+    } else {
+        restoreState(&g, allState)
+        restoreSources(&g, allSources)
+    }
+    let branches = take(&g.out)
+    g.out = prefix
+    if statement || resultType.kind == .Unknown {
+        g.out.push(branches)
+        return MatchValue{value: Value{ty: types.primitive(.Unit), name: String{}}, falls: falls, breaks: breaks}
+    }
+    useTuple(&g, resultType)
+    if resultType.kind == .Heap { useHeap(&g, resultType) }
+    emit(&g, format("${types.cType(resultType)} ${resultName} = {0};"))
+    g.out.push(branches)
+    let owned = types.owned(reg, resultType)
+    if owned { g.temps.push(Temporary{ty: resultType, id: resultId}) }
+    return MatchValue{value: Value{ty: resultType, name: resultName, temporary: owned, sources: resultSources},
+        falls: falls, breaks: breaks}
+}
+
+fn standardErrorValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry,
+    e: Expression, expected: Type) -> Value {
+    let which = types.standardVariant(expected, ts[e.token].text)
+    if which < 0 { lexer.fail(ts, e.token, "E0010", "unknown enum case") }
+    var arity = 1
+    if which == 2 { arity = 0 }
+    if e.argCount < arity { lexer.fail(ts, e.token, "E0018", "missing enum payload field") }
+    if e.argCount != arity { lexer.fail(ts, e.token, "E0012", "wrong number of enum payload arguments") }
+    if e.nameCount > 0 {
+        let label = p.lists[e.nameStart]
+        if label >= 0 {
+            var wanted = "offset"
+            if which == 1 { wanted = "code" }
+            if ts[label].text != wanted { lexer.fail(ts, label, "E0010", "unknown enum payload field") }
+        }
+    }
+    var payload = "0".toString()
+    if arity == 1 {
+        let argId = p.lists[e.argStart]
+        let value = emitExpected(&g, p, ts, reg, argId, types.primitive(.Int))
+        require(reg, ts, p.expressions[argId].token, value.ty, types.primitive(.Int))
+        payload = value.name.clone()
+    }
+    return typedValue(&g, reg, expected,
+        format("(${types.cType(expected)}){ .tag = ${which}, .payload = ${payload} }"))
+}
+
+fn utf8ErrorConstruct(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression) -> Value {
+    var offset = "0".toString()
+    var seen = false
+    var i = 0
+    while i < e.nameCount {
+        let field = p.lists[e.nameStart + i]
+        if ts[field].text != "offset" { lexer.fail(ts, field, "E0010", "unknown struct field") }
+        if seen { lexer.fail(ts, field, "E0011", "duplicate constructor field") }
+        seen = true
+        let argId = p.lists[e.argStart + i]
+        let value = emitExpected(&g, p, ts, reg, argId, types.primitive(.Int))
+        require(reg, ts, p.expressions[argId].token, value.ty, types.primitive(.Int))
+        offset = value.name.clone()
+        i += 1
+    }
+    if !seen { lexer.fail(ts, e.token, "E0018", "missing struct field without a default") }
+    return typedValue(&g, reg, types.primitive(.Utf8Error), format("(sh_utf8_error){ .offset = ${offset} }"))
+}
+
 fn enumValue(g: inout Generator, reg: Registry, ts: Vec[Token], token: int, expected: Type) -> Value {
     if expected.kind != .Named || reg.entries[expected.decl].kind != .Enum {
         lexer.fail(ts, token, "E0001", "an enum case requires an expected enum type")
@@ -2340,6 +2505,11 @@ fn enumValue(g: inout Generator, reg: Registry, ts: Vec[Token], token: int, expe
 }
 
 fn constructValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression) -> Value {
+    var typeToken = e.token
+    if e.extra >= 0 { typeToken = e.extra }
+    let builtin = types.builtinType(reg, ts, typeToken)
+    if builtin.kind == .Utf8Error { return utf8ErrorConstruct(&g, p, ts, reg, e) }
+    if builtin.kind == .StdError { lexer.fail(ts, e.token, "E0001", "struct construction requires a struct type") }
     if ts[e.token].text == "Set" && e.elementKind == .String {
         let ty = Type{kind: .Set, elementKind: .String}
         useMap(&g, ty)
@@ -2425,6 +2595,13 @@ fn constructValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry,
 
 fn fieldValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression) -> Value {
     let baseExpr = p.expressions[e.left]
+    let builtin = builtinReceiverType(g, p, ts, reg, baseExpr)
+    if builtin.kind == .StdError {
+        return standardErrorValue(&g, p, ts, reg, e, builtin)
+    }
+    if builtinReceiverType(g, p, ts, reg, e).kind != .Unknown || builtin.kind == .Utf8Error {
+        lexer.fail(ts, e.token, "E0001", "a type name is not a value")
+    }
     if moduleOf(g, reg, ts, baseExpr) >= 0 {
         // module.Name as a value: only types are exported in this subset.
         let _ = types.qualifiedType(reg, ts, baseExpr.token, e.token)
@@ -2445,6 +2622,10 @@ fn fieldValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: 
         }
     }
     let base = emitExpr(&g, p, ts, reg, e.left)
+    if base.ty.kind == .Utf8Error {
+        if ts[e.token].text != "offset" { lexer.fail(ts, e.token, "E0010", "unknown struct field") }
+        return scalar(&g, .Int, format("(${base.name}).offset"))
+    }
     if base.ty.kind == .Tuple {
         let index = support.parseDecimal(ts[e.token].text)
         if ts[e.token].kind != .Number || index < 0 || index >= types.tupleCount(reg, base.ty) {
@@ -2719,7 +2900,7 @@ fn expressionValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry
     if e.kind == .Name {
         let index = localIndex(g, ts, e.token)
         if index < 0 {
-            if types.lookup(reg, ts, e.token) >= 0 {
+            if types.lookup(reg, ts, e.token) >= 0 || types.builtinType(reg, ts, e.token).kind != .Unknown {
                 lexer.fail(ts, e.token, "E0001", "a type name is not a value")
             }
             if numericTypeName(ts[e.token].text) {
@@ -2766,11 +2947,17 @@ fn expressionValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry
         return scalar(&g, .Int, support.join5("yv_neg_i64(", arg.name, ", ", lineColumn(ts, e.token), ")"))
     }
     if e.kind == .Binary { return binaryValue(&g, p, ts, reg, e, expected) }
+    if e.kind == .Match {
+        let matched = matchValue(&g, p, ts, reg, e, expected, false)
+        return copyValue(matched.value)
+    }
     if e.kind == .Variant {
         var hint = expected
         if hint.kind == .Result { hint = types.resultOk(reg, hint) } else if hint.kind == .Optional {
             hint = types.element(hint)
         }
+        if hint.kind == .StdError { return standardErrorValue(&g, p, ts, reg, e, hint) }
+        if e.argCount > 0 { lexer.fail(ts, e.token, "U0001", "user enum payload construction is outside this subset") }
         return enumValue(&g, reg, ts, e.token, hint)
     }
     if e.kind == .Construct { return constructValue(&g, p, ts, reg, e) }
@@ -2802,6 +2989,11 @@ fn placeRoot(p: Program, id: int) -> int {
 }
 
 fn fieldPlace(reg: Registry, ts: Vec[Token], e: Expression, base: Place) -> Place {
+    if base.ty.kind == .Utf8Error {
+        if ts[e.token].text != "offset" { lexer.fail(ts, e.token, "E0010", "unknown struct field") }
+        return Place{ty: types.primitive(.Int), name: format("(${base.name}).offset"),
+            mutable: base.mutable, root: base.root, whole: false, indexed: base.indexed}
+    }
     if base.ty.kind == .Tuple && !base.mutable {
         lexer.fail(ts, e.token, "E0014", "cannot modify a read-only tuple")
     }
@@ -3450,6 +3642,10 @@ fn emitStatement(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, 
         return Flow{}
     }
     if s.kind == .Return { return returnStatement(&g, p, ts, reg, s.token, s.expr) }
+    if s.kind == .Match {
+        let matched = matchValue(&g, p, ts, reg, p.expressions[s.expr], types.primitive(.Unknown), true)
+        return Flow{falls: matched.falls, breaks: matched.breaks}
+    }
     if s.kind == .If || s.kind == .IfLet {
         let tempCount = g.temps.len()
         var condition = Value{ty: types.primitive(.Unknown), name: String{}}
@@ -3731,6 +3927,14 @@ fn resultLifecycle(g: inout Generator, reg: Registry) {
 }
 
 fn declarations(g: inout Generator, reg: Registry) {
+    var module = 1
+    while module <= 5 {
+        if (reg.builtinErrors & (1 << module)) != 0 {
+            emit(&g, format("typedef struct sh_std_error_${module} { int64_t tag; int64_t payload; } sh_std_error_${module};"))
+        }
+        module += 1
+    }
+    if reg.utf8Error { emit(&g, "typedef struct sh_utf8_error { int64_t offset; } sh_utf8_error;") }
     var i = 0
     while i < reg.entries.len() {
         if reg.entries[i].kind == .Enum { emit(&g, support.join3("typedef int64_t sh_type_", support.decimal(i), ";")) }

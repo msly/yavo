@@ -1,0 +1,12 @@
+use std/fs
+struct Holder { head: String, words: Vec[String] }
+fn fail() -> String ! fs.Error { return try fs.readText("bad\0path") }
+fn piece(tag: str) -> String { print(tag)
+    return tag.toString() }
+fn work() -> Holder ! fs.Error {
+    let guard = piece("L")
+    return Holder{head: piece("H"), words: [piece("A"), try fail(), piece("Z")]}
+}
+fn main() { let value = work() catch e { println(e)
+    return }
+    println(value.head) }

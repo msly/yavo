@@ -39,9 +39,9 @@ jobs:
   native:
     name: Native ${{ matrix.platform }}
     runs-on: ${{ matrix.runner }}
-    # Windows runners vary widely: the same run has taken 17 to 44 minutes, and a
-    # slow toolchain download alone has taken 24.
-    timeout-minutes: 75
+    # Windows runners vary widely; batch50 took 67 minutes with all gates.
+    # Allow the larger semantic suite and independent standard-error I/O gate.
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
@@ -114,6 +114,11 @@ jobs:
           YAVO_HOME: ${{ runner.temp }}/yavo-home
           YAVO_CACHE_DIR: ${{ runner.temp }}/yavo-cache
         run: ${{ matrix.python }} tools/ci/selfhost_diagnostics.py --bootstrap-output compiler/target/ci/selfhost
+      - name: Validate selfhost standard error values
+        env:
+          YAVO_HOME: ${{ runner.temp }}/yavo-home
+          YAVO_CACHE_DIR: ${{ runner.temp }}/yavo-cache
+        run: ${{ matrix.python }} tools/ci/selfhost_errors.py --bootstrap-output compiler/target/ci/selfhost --sanitizers ${{ runner.os == 'Linux' && 'required' || 'off' }}
       - name: Validate the test-summary CLI application
         env:
           YAVO_HOME: ${{ runner.temp }}/yavo-home
@@ -153,6 +158,9 @@ jobs:
       - name: Package selfhost structured diagnostic evidence
         if: always()
         run: ${{ matrix.python }} tools/ci/package_test_summary.py --input compiler/target/ci/selfhost-diagnostics --output compiler/target/ci/selfhost-diagnostics.tar.gz --prefix selfhost-diagnostics
+      - name: Package selfhost standard error evidence
+        if: always()
+        run: ${{ matrix.python }} tools/ci/package_test_summary.py --input compiler/target/ci/selfhost-errors --output compiler/target/ci/selfhost-errors.tar.gz --prefix selfhost-errors
       - name: Package system interface sanitizer evidence
         if: always() && runner.os == 'Linux'
         run: python3 tools/ci/package_test_summary.py --input compiler/target/ci/system-sanitize --output compiler/target/ci/system-sanitize.tar.gz --prefix system-sanitize
@@ -172,6 +180,7 @@ jobs:
             !compiler/target/ci/selfhost-driver/**
             !compiler/target/ci/selfhost-digest/**
             !compiler/target/ci/selfhost-diagnostics/**
+            !compiler/target/ci/selfhost-errors/**
             !compiler/target/ci/system-sanitize/**
             !compiler/target/ci/selfhost-sanitizers/**
           if-no-files-found: error

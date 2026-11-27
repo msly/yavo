@@ -1,0 +1,519 @@
+{
+  "schema": "yavo-standard-errors51-cases/1",
+  "cases": [
+    {
+      "id": "errors51_all_variants",
+      "kind": "run",
+      "file": "errors51/programs/all_variants.yv",
+      "batch": "standard-error-values",
+      "stdout": "Utf8(offset: 5)\nIo(code: -7)\nInvalidPath\nUtf8(offset: 9)\nIo(code: 12)\nUtf8(offset: 13)\nIo(code: 14)\nInvalidArgument\nUtf8(offset: 17)\nIo(code: 18)\nInvalidArgument\n"
+    },
+    {
+      "id": "errors51_format_copy",
+      "kind": "run",
+      "file": "errors51/programs/format_copy.yv",
+      "batch": "standard-error-values",
+      "stdout": "read error: Io(code: 41)\nIo(code: 41)\n",
+      "stderr": "Io(code: 41)\n"
+    },
+    {
+      "id": "errors51_fields_parameters",
+      "kind": "run",
+      "file": "errors51/programs/fields_parameters.yv",
+      "batch": "standard-error-values",
+      "stdout": "Utf8(offset: 3)\nIo(code: 4)\nUtf8(offset: 3)\n"
+    },
+    {
+      "id": "errors51_local_error_name",
+      "kind": "run",
+      "file": "errors51/programs/local_error_name.yv",
+      "batch": "standard-error-values",
+      "stdout": "Local\nInvalidPath\n"
+    },
+    {
+      "id": "errors51_utf8_struct",
+      "kind": "run",
+      "file": "errors51/programs/utf8_struct.yv",
+      "batch": "standard-error-values",
+      "stdout": "7\n7\n"
+    },
+    {
+      "id": "errors51_match_payloads",
+      "kind": "run",
+      "file": "errors51/programs/match_payloads.yv",
+      "batch": "standard-error-values",
+      "stdout": "3\n18\n-1\n"
+    },
+    {
+      "id": "errors51_match_qualified",
+      "kind": "run",
+      "file": "errors51/programs/match_qualified.yv",
+      "batch": "standard-error-values",
+      "stdout": "99\n9\n3\n6\n"
+    },
+    {
+      "id": "errors51_match_wild_bind",
+      "kind": "run",
+      "file": "errors51/programs/match_wild_bind.yv",
+      "batch": "standard-error-values",
+      "stdout": "rest:InvalidPath\n9\n"
+    },
+    {
+      "id": "errors51_match_evaluation_once",
+      "kind": "run",
+      "file": "errors51/programs/match_evaluation_once.yv",
+      "batch": "standard-error-values",
+      "stdout": "once:12\n"
+    },
+    {
+      "id": "errors51_match_owned_arms",
+      "kind": "run",
+      "file": "errors51/programs/match_owned_arms.yv",
+      "batch": "standard-error-values",
+      "stdout": "u:4\npath\n"
+    },
+    {
+      "id": "errors51_match_blocks",
+      "kind": "run",
+      "file": "errors51/programs/match_blocks.yv",
+      "batch": "standard-error-values",
+      "stdout": "8\n1\n9\n2\n3\n"
+    },
+    {
+      "id": "errors51_catch_named_fs",
+      "kind": "run",
+      "file": "errors51/programs/catch_named_fs.yv",
+      "batch": "standard-error-values",
+      "stdout": "read:InvalidPath\n8\n1\n"
+    },
+    {
+      "id": "errors51_catch_named_io_empty",
+      "kind": "run",
+      "file": "errors51/programs/catch_named_io_empty.yv",
+      "batch": "standard-error-values",
+      "stdout": "0\n"
+    },
+    {
+      "id": "errors51_catch_named_os",
+      "kind": "run",
+      "file": "errors51/programs/catch_named_os.yv",
+      "batch": "standard-error-values",
+      "stdout": "InvalidArgument\ninvalid\n"
+    },
+    {
+      "id": "errors51_catch_named_process",
+      "kind": "run",
+      "file": "errors51/programs/catch_named_process.yv",
+      "batch": "standard-error-values",
+      "stdout": "InvalidArgument\nkept\n"
+    },
+    {
+      "id": "errors51_utf8_consumed_success",
+      "kind": "run",
+      "file": "errors51/programs/utf8_consumed_success.yv",
+      "batch": "standard-error-values",
+      "stdout": "AB\n"
+    },
+    {
+      "id": "errors51_utf8_consumed_failure",
+      "kind": "run",
+      "file": "errors51/programs/utf8_consumed_failure.yv",
+      "batch": "standard-error-values",
+      "stdout": "1\n"
+    },
+    {
+      "id": "errors51_result_store_rethrow",
+      "kind": "run",
+      "file": "errors51/programs/result_store_rethrow.yv",
+      "batch": "standard-error-values",
+      "stdout": "InvalidPath\n"
+    },
+    {
+      "id": "errors51_try_error_conversion",
+      "kind": "run",
+      "file": "errors51/programs/try_error_conversion.yv",
+      "batch": "standard-error-values",
+      "stdout": "failed:InvalidPath\n"
+    },
+    {
+      "id": "errors51_result_construct",
+      "kind": "run",
+      "file": "errors51/programs/result_construct.yv",
+      "batch": "standard-error-values",
+      "stdout": "Utf8(offset: 5)\nIo(code: 7)\nInvalidArgument\nInvalidArgument\n"
+    },
+    {
+      "id": "errors51_result_try_nested_cleanup",
+      "kind": "run",
+      "file": "errors51/programs/result_try_nested_cleanup.yv",
+      "batch": "standard-error-values",
+      "stdout": "LHAInvalidPath\n"
+    },
+    {
+      "id": "errors51_catch_loop_cleanup",
+      "kind": "run",
+      "file": "errors51/programs/catch_loop_cleanup.yv",
+      "batch": "standard-error-values",
+      "stdout": "1:InvalidPath\n2:InvalidPath\n2\n"
+    },
+    {
+      "id": "errors51_try_short_circuit",
+      "kind": "run",
+      "file": "errors51/programs/try_short_circuit.yv",
+      "batch": "standard-error-values",
+      "stdout": "false\ntrue\nEInvalidPath\n"
+    },
+    {
+      "id": "errors51_system_result_forward",
+      "kind": "run",
+      "file": "errors51/programs/system_result_forward.yv",
+      "batch": "standard-error-values",
+      "stdout": "InvalidArgument\nInvalidArgument\nInvalidPath\n"
+    },
+    {
+      "id": "errors51_discard_result_cleanup",
+      "kind": "run",
+      "file": "errors51/programs/discard_result_cleanup.yv",
+      "batch": "standard-error-values",
+      "stdout": "done\n"
+    },
+    {
+      "id": "errors51_success_file_roundtrip",
+      "kind": "run",
+      "file": "errors51/programs/success_file_roundtrip.yv",
+      "batch": "standard-error-values",
+      "stdout": "hello\ntrue\n"
+    },
+    {
+      "id": "errors51_match_loop_transfer",
+      "kind": "run",
+      "file": "errors51/programs/match_loop_transfer.yv",
+      "batch": "standard-error-values",
+      "stdout": "2\n"
+    },
+    {
+      "id": "errors51_match_nested",
+      "kind": "run",
+      "file": "errors51/programs/match_nested.yv",
+      "batch": "standard-error-values",
+      "stdout": "35\n"
+    },
+    {
+      "id": "errors51_match_shadow",
+      "kind": "reject",
+      "file": "errors51/programs/match_shadow.yv",
+      "batch": "standard-error-values",
+      "diagnostic": "E0011"
+    },
+    {
+      "id": "errors51_error_limits",
+      "kind": "run",
+      "file": "errors51/programs/error_limits.yv",
+      "batch": "standard-error-values",
+      "stdout": "Utf8(offset: 9223372036854775807)\nIo(code: -9223372036854775808)\n"
+    },
+    {
+      "id": "errors51_wrong_error_assignment",
+      "kind": "reject",
+      "file": "errors51/programs/wrong_error_assignment.yv",
+      "batch": "standard-error-values",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "errors51_wrong_error_try",
+      "kind": "reject",
+      "file": "errors51/programs/wrong_error_try.yv",
+      "batch": "standard-error-values",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "errors51_wrong_error_return",
+      "kind": "reject",
+      "file": "errors51/programs/wrong_error_return.yv",
+      "batch": "standard-error-values",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "errors51_unknown_variant",
+      "kind": "reject",
+      "file": "errors51/programs/unknown_variant.yv",
+      "batch": "standard-error-values",
+      "diagnostic": "E0010"
+    },
+    {
+      "id": "errors51_wrong_constructor_arity",
+      "kind": "reject",
+      "file": "errors51/programs/wrong_constructor_arity.yv",
+      "batch": "standard-error-values",
+      "diagnostic": "E0018"
+    },
+    {
+      "id": "errors51_wrong_constructor_type",
+      "kind": "reject",
+      "file": "errors51/programs/wrong_constructor_type.yv",
+      "batch": "standard-error-values",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "errors51_wrong_constructor_field",
+      "kind": "reject",
+      "file": "errors51/programs/wrong_constructor_field.yv",
+      "batch": "standard-error-values",
+      "diagnostic": "E0010"
+    },
+    {
+      "id": "errors51_payload_on_zero_variant",
+      "kind": "reject",
+      "file": "errors51/programs/payload_on_zero_variant.yv",
+      "batch": "standard-error-values",
+      "diagnostic": "E0012"
+    },
+    {
+      "id": "errors51_match_nonexhaustive",
+      "kind": "reject",
+      "file": "errors51/programs/match_nonexhaustive.yv",
+      "batch": "standard-error-values",
+      "diagnostic": "E0602"
+    },
+    {
+      "id": "errors51_match_wrong_variant_type",
+      "kind": "reject",
+      "file": "errors51/programs/match_wrong_variant_type.yv",
+      "batch": "standard-error-values",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "errors51_match_wrong_payload_arity",
+      "kind": "reject",
+      "file": "errors51/programs/match_wrong_payload_arity.yv",
+      "batch": "standard-error-values",
+      "diagnostic": "E0012"
+    },
+    {
+      "id": "errors51_match_zero_payload",
+      "kind": "reject",
+      "file": "errors51/programs/match_zero_payload.yv",
+      "batch": "standard-error-values",
+      "diagnostic": "E0012"
+    },
+    {
+      "id": "errors51_match_unknown_variant",
+      "kind": "reject",
+      "file": "errors51/programs/match_unknown_variant.yv",
+      "batch": "standard-error-values",
+      "diagnostic": "E0010"
+    },
+    {
+      "id": "errors51_match_arm_types",
+      "kind": "reject",
+      "file": "errors51/programs/match_arm_types.yv",
+      "batch": "standard-error-values",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "errors51_match_binding_scope",
+      "kind": "reject",
+      "file": "errors51/programs/match_binding_scope.yv",
+      "batch": "standard-error-values",
+      "diagnostic": "E0010"
+    },
+    {
+      "id": "errors51_match_move_join",
+      "kind": "reject",
+      "file": "errors51/programs/match_move_join.yv",
+      "batch": "standard-error-values",
+      "diagnostic": "E0402"
+    },
+    {
+      "id": "errors51_catch_falls",
+      "kind": "reject",
+      "file": "errors51/programs/catch_falls.yv",
+      "batch": "standard-error-values",
+      "diagnostic": "E0601"
+    },
+    {
+      "id": "errors51_catch_binding_scope",
+      "kind": "reject",
+      "file": "errors51/programs/catch_binding_scope.yv",
+      "batch": "standard-error-values",
+      "diagnostic": "E0010"
+    },
+    {
+      "id": "errors51_utf8_consumed_again",
+      "kind": "reject",
+      "file": "errors51/programs/utf8_consumed_again.yv",
+      "batch": "standard-error-values",
+      "diagnostic": "E0402"
+    },
+    {
+      "id": "errors51_utf8_wrong_field",
+      "kind": "reject",
+      "file": "errors51/programs/utf8_wrong_field.yv",
+      "batch": "standard-error-values",
+      "diagnostic": "E0010"
+    },
+    {
+      "id": "errors51_utf8_format",
+      "kind": "reject",
+      "file": "errors51/programs/utf8_format.yv",
+      "batch": "standard-error-values",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "errors51_error_compare",
+      "kind": "reject",
+      "file": "errors51/programs/error_compare.yv",
+      "batch": "standard-error-values",
+      "diagnostic": "E0501"
+    },
+    {
+      "id": "errors51_utf8_compare",
+      "kind": "reject",
+      "file": "errors51/programs/utf8_compare.yv",
+      "batch": "standard-error-values",
+      "diagnostic": "E0501"
+    },
+    {
+      "id": "errors51_short_error_one",
+      "kind": "reject",
+      "file": "errors51/programs/short_error_one.yv",
+      "batch": "standard-error-values",
+      "diagnostic": "E0010"
+    },
+    {
+      "id": "errors51_short_error_many",
+      "kind": "reject",
+      "file": "errors51/programs/short_error_many.yv",
+      "batch": "standard-error-values",
+      "diagnostic": "E0010"
+    },
+    {
+      "id": "errors51_missing_import",
+      "kind": "reject",
+      "file": "errors51/programs/missing_import.yv",
+      "batch": "standard-error-values",
+      "diagnostic": "E0010"
+    },
+    {
+      "id": "errors51_utf8_reserved",
+      "kind": "reject",
+      "file": "errors51/programs/utf8_reserved.yv",
+      "batch": "standard-error-values",
+      "diagnostic": "E0011"
+    },
+    {
+      "id": "errors51_ignored_result",
+      "kind": "reject",
+      "file": "errors51/programs/ignored_result.yv",
+      "batch": "standard-error-values",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "errors51_unsupported_result_match",
+      "kind": "unsupported",
+      "file": "errors51/programs/unsupported_result_match.yv",
+      "batch": "standard-error-values",
+      "diagnostic": "U0001"
+    },
+    {
+      "id": "errors51_unsupported_user_payload",
+      "kind": "unsupported",
+      "file": "errors51/programs/unsupported_user_payload.yv",
+      "batch": "standard-error-values",
+      "diagnostic": "U0001"
+    },
+    {
+      "id": "errors51_unsupported_arrow_catch",
+      "kind": "unsupported",
+      "file": "errors51/programs/unsupported_arrow_catch.yv",
+      "batch": "standard-error-values",
+      "diagnostic": "U0001"
+    },
+    {
+      "id": "errors51_unsupported_readline",
+      "kind": "unsupported",
+      "file": "errors51/programs/unsupported_readline.yv",
+      "batch": "standard-error-values",
+      "diagnostic": "U0001"
+    },
+    {
+      "id": "errors51_qualified_payload_fs",
+      "kind": "shared_unsupported",
+      "file": "errors51/programs/qualified_payload_fs.yv",
+      "diagnostic": "U0001",
+      "batch": "standard-error-values"
+    },
+    {
+      "id": "errors51_qualified_payload_io",
+      "kind": "shared_unsupported",
+      "file": "errors51/programs/qualified_payload_io.yv",
+      "diagnostic": "U0001",
+      "batch": "standard-error-values"
+    },
+    {
+      "id": "errors51_qualified_payload_os",
+      "kind": "shared_unsupported",
+      "file": "errors51/programs/qualified_payload_os.yv",
+      "diagnostic": "U0001",
+      "batch": "standard-error-values"
+    },
+    {
+      "id": "errors51_qualified_payload_process",
+      "kind": "shared_unsupported",
+      "file": "errors51/programs/qualified_payload_process.yv",
+      "diagnostic": "U0001",
+      "batch": "standard-error-values"
+    },
+    {
+      "id": "errors51_module_user_error",
+      "kind": "run",
+      "file": "modules/errors51_user_error/main.yv",
+      "batch": "standard-error-values",
+      "stdout": "Local\nLocal\nInvalidPath\n"
+    },
+    {
+      "id": "errors51_unsupported_error_vec",
+      "kind": "unsupported",
+      "file": "errors51/programs/unsupported_error_vec.yv",
+      "diagnostic": "U0001",
+      "batch": "standard-error-values"
+    },
+    {
+      "id": "errors51_unsupported_error_optional",
+      "kind": "unsupported",
+      "file": "errors51/programs/unsupported_error_optional.yv",
+      "diagnostic": "U0001",
+      "batch": "standard-error-values"
+    },
+    {
+      "id": "errors51_unsupported_error_tuple",
+      "kind": "unsupported",
+      "file": "errors51/programs/unsupported_error_tuple.yv",
+      "diagnostic": "U0001",
+      "batch": "standard-error-values"
+    },
+    {
+      "id": "errors51_unsupported_utf8_vec",
+      "kind": "unsupported",
+      "file": "errors51/programs/unsupported_utf8_vec.yv",
+      "diagnostic": "U0001",
+      "batch": "standard-error-values"
+    },
+    {
+      "id": "errors51_unsupported_utf8_optional",
+      "kind": "unsupported",
+      "file": "errors51/programs/unsupported_utf8_optional.yv",
+      "diagnostic": "U0001",
+      "batch": "standard-error-values"
+    },
+    {
+      "id": "errors51_unsupported_utf8_tuple",
+      "kind": "unsupported",
+      "file": "errors51/programs/unsupported_utf8_tuple.yv",
+      "diagnostic": "U0001",
+      "batch": "standard-error-values"
+    }
+  ],
+  "case_count": 73,
+  "contract_sha256": "90f5616aa59db4945315efaa20bb950ebc114721507bd157233cbccbf7944dbd"
+}

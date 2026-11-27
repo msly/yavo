@@ -1,0 +1,23 @@
+use std/{fs, io, os, process}
+fn main() {
+    println(makeFsUtf8(5))
+    println(makeFsIo(-7))
+    println(fs.Error.InvalidPath)
+    println(makeIoUtf8(9))
+    println(makeIoIo(12))
+    println(makeOsUtf8(13))
+    println(makeOsIo(14))
+    println(os.Error.InvalidArgument)
+    println(makeProcessUtf8(17))
+    println(makeProcessIo(18))
+    println(process.Error.InvalidArgument)
+}
+
+fn makeFsUtf8(n: int) -> fs.Error { return .Utf8(offset: n) }
+fn makeFsIo(n: int) -> fs.Error { return .Io(code: n) }
+fn makeIoUtf8(n: int) -> io.Error { return .Utf8(offset: n) }
+fn makeIoIo(n: int) -> io.Error { return .Io(code: n) }
+fn makeOsUtf8(n: int) -> os.Error { return .Utf8(offset: n) }
+fn makeOsIo(n: int) -> os.Error { return .Io(code: n) }
+fn makeProcessUtf8(n: int) -> process.Error { return .Utf8(offset: n) }
+fn makeProcessIo(n: int) -> process.Error { return .Io(code: n) }

@@ -1,0 +1,8 @@
+use std/fs
+fn main() {
+    let _ = fs.readText("bad\0path")
+    let saved = fs.readText("bad\0path")
+    let bytes: Vec[byte] = [255]
+    let _ = String.fromUtf8(bytes)
+    println("done")
+}

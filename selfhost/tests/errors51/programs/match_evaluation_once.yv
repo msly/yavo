@@ -1,0 +1,9 @@
+use std/fs
+fn make() -> fs.Error { print("once:")
+    return makeFsUtf8(12) }
+fn main() { let v = match make() { .Utf8(n) => n
+    .Io(n) => n
+    .InvalidPath => 0 }
+    println(v) }
+
+fn makeFsUtf8(n: int) -> fs.Error { return .Utf8(offset: n) }

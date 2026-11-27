@@ -1,0 +1,11 @@
+use std/fs
+fn work() -> int { let guard = ["live".toString()]
+    let path = "bad\0path".toString()
+    let text = fs.readText(path) catch e {
+        println("read:${e}")
+        println(path.len())
+        return guard.len()
+    }
+    return text.len()
+}
+fn main() { println(work()) }

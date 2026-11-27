@@ -1,0 +1,20 @@
+use std/{fs, io, os, process}
+fn file(e: fs.Error) -> int { match e {
+    fs.Error.Utf8(offset) => return offset
+    fs.Error.Io(code) => return code
+    fs.Error.InvalidPath => return 99
+} }
+fn input(e: io.Error) -> int { return match e { io.Error.Utf8(n) => n
+    io.Error.Io(n) => n + 1 } }
+fn system(e: os.Error) -> int { return match e { .Utf8(_) => 1
+    .Io(_) => 2
+    .InvalidArgument => 3 } }
+fn child(e: process.Error) -> int { return match e { .Utf8(_) => 4
+    .Io(_) => 5
+    .InvalidArgument => 6 } }
+fn main() { println(file(fs.Error.InvalidPath))
+    println(input(makeIoIo(8)))
+    println(system(os.Error.InvalidArgument))
+    println(child(process.Error.InvalidArgument)) }
+
+fn makeIoIo(n: int) -> io.Error { return .Io(code: n) }
