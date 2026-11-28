@@ -1,0 +1,3748 @@
+{
+  "schema": "yavo-batch54-paired-performance/1",
+  "status": "passed",
+  "recorded_at": "2026-11-28T09:59:16.173725+00:00",
+  "producer": {
+    "run_id": 46132191802,
+    "run_url": "https://github.com/msly/yavo/actions/runs/46132191802",
+    "head_sha": "cec3862644c477d1d3fb1e8e4bba8ad9636abbf8",
+    "job_id": 140939620862,
+    "job_name": "Isolated paired performance",
+    "job_conclusion": "success",
+    "job_started_at": "2026-11-28T09:48:46Z",
+    "job_completed_at": "2026-11-28T09:53:50Z",
+    "workflow_run_conclusion": "failure",
+    "workflow_failure_scope": "three native jobs failed an obsolete subset_features stage0-acceptance assertion; paired-performance job succeeded independently",
+    "artifact": {
+      "id": 15257974188,
+      "node_id": "MDg6QXJ0aWZhY3QxNTI1Nzk3NDE4OA==",
+      "name": "paired-performance-cec3862644c477d1d3fb1e8e4bba8ad9636abbf8",
+      "size_in_bytes": 6128882,
+      "url": "https://api.github.com/repos/msly/yavo/actions/artifacts/15257974188",
+      "archive_download_url": "https://api.github.com/repos/msly/yavo/actions/artifacts/15257974188/zip",
+      "expired": false,
+      "digest": "sha256:a3f8b7194673ed4ce19223954e84819b316f5b538f335df1bc3f9390a731afce",
+      "created_at": "2026-11-28T09:53:47Z",
+      "updated_at": "2026-11-28T09:53:47Z",
+      "expires_at": "2026-12-12T09:53:36Z",
+      "workflow_run": {
+        "id": 46132191802,
+        "repository_id": 1467240913,
+        "head_repository_id": 1467240913,
+        "head_branch": "main",
+        "head_sha": "cec3862644c477d1d3fb1e8e4bba8ad9636abbf8"
+      }
+    },
+    "core_report": {
+      "path": "compiler/validation/batch54-paired-performance-raw-2026-11-28.json",
+      "bytes": 1736291,
+      "sha256": "ff3043ba74db9a6970b2f628dc138e52d6b4c90998b185cf58f44531d566f421"
+    }
+  },
+  "qualification": {
+    "eligible_for_controlled_52_53_performance_comparison": true,
+    "current54_role": "separate four-case PCH observation, not a paired 53-to-54 regression estimate",
+    "measurement_contract_valid": true,
+    "performance_target_passed_for_measured_pch_arms": true,
+    "pch_arm_count": 12,
+    "formal_general_performance_goal_completed": false,
+    "isolation": {
+      "dedicated_github_hosted_job_required": true,
+      "sequential_builds": true,
+      "foreign_build_poll_seconds": 0.05,
+      "foreign_build_policy": "invalidate and retain; never stop other processes",
+      "process_audit_scope": "50ms recognized-name observations during measured commands; preparation checked immediately before each command",
+      "process_audit_limit": "very short or unrecognized processes can evade polling; dedicated hosted VM and serial scheduling are the primary isolation boundary",
+      "cpu_affinity": "same inherited full allowed CPU set for every arm",
+      "os_page_cache": "not flushed; no cold-OS claim"
+    },
+    "host": {
+      "platform": "Linux-7.0.0-1018-aws-x86_64-with-glibc2.39",
+      "uname": [
+        "Linux",
+        "ip-10-0-140-83",
+        "7.0.0-1018-aws",
+        "#19~24.04.1-Ubuntu SMP PREEMPT Thu Nov 12 17:17:32 UTC 2026",
+        "x86_64",
+        "x86_64"
+      ],
+      "cpu_model": "Intel(R) Xeon(R) 6975P-C",
+      "cpu_features": [
+        "fpu",
+        "vme",
+        "de",
+        "pse",
+        "tsc",
+        "msr",
+        "pae",
+        "mce",
+        "cx8",
+        "apic",
+        "sep",
+        "mtrr",
+        "pge",
+        "mca",
+        "cmov",
+        "pat",
+        "pse36",
+        "clflush",
+        "mmx",
+        "fxsr",
+        "sse",
+        "sse2",
+        "ss",
+        "ht",
+        "syscall",
+        "nx",
+        "pdpe1gb",
+        "rdtscp",
+        "lm",
+        "constant_tsc",
+        "arch_perfmon",
+        "rep_good",
+        "nopl",
+        "xtopology",
+        "nonstop_tsc",
+        "cpuid",
+        "aperfmperf",
+        "tsc_known_freq",
+        "pni",
+        "pclmulqdq",
+        "monitor",
+        "vmx",
+        "ssse3",
+        "fma",
+        "cx16",
+        "pdcm",
+        "pcid",
+        "sse4_1",
+        "sse4_2",
+        "x2apic",
+        "movbe",
+        "popcnt",
+        "tsc_deadline_timer",
+        "aes",
+        "xsave",
+        "avx",
+        "f16c",
+        "rdrand",
+        "hypervisor",
+        "lahf_lm",
+        "abm",
+        "3dnowprefetch",
+        "cpuid_fault",
+        "ssbd",
+        "ibrs",
+        "ibpb",
+        "stibp",
+        "ibrs_enhanced",
+        "tpr_shadow",
+        "flexpriority",
+        "ept",
+        "vpid",
+        "ept_ad",
+        "fsgsbase",
+        "tsc_adjust",
+        "bmi1",
+        "avx2",
+        "smep",
+        "bmi2",
+        "erms",
+        "invpcid",
+        "avx512f",
+        "avx512dq",
+        "rdseed",
+        "adx",
+        "smap",
+        "avx512ifma",
+        "clflushopt",
+        "clwb",
+        "avx512cd",
+        "sha_ni",
+        "avx512bw",
+        "avx512vl",
+        "xsaveopt",
+        "xsavec",
+        "xgetbv1",
+        "xsaves",
+        "avx_vnni",
+        "avx512_bf16",
+        "wbnoinvd",
+        "ida",
+        "arat",
+        "vnmi",
+        "avx512vbmi",
+        "umip",
+        "pku",
+        "ospke",
+        "waitpkg",
+        "avx512_vbmi2",
+        "gfni",
+        "vaes",
+        "vpclmulqdq",
+        "avx512_vnni",
+        "avx512_bitalg",
+        "tme",
+        "avx512_vpopcntdq",
+        "rdpid",
+        "bus_lock_detect",
+        "cldemote",
+        "movdiri",
+        "movdir64b",
+        "md_clear",
+        "serialize",
+        "amx_bf16",
+        "avx512_fp16",
+        "amx_tile",
+        "amx_int8",
+        "flush_l1d",
+        "arch_capabilities"
+      ],
+      "cpu_governors": {},
+      "cpu_count": 4,
+      "clock_ticks_per_second": 100,
+      "runner_environment": {
+        "GITHUB_ACTIONS": "true",
+        "GITHUB_RUN_ID": "46132191802",
+        "GITHUB_RUN_ATTEMPT": "1",
+        "GITHUB_SHA": "cec3862644c477d1d3fb1e8e4bba8ad9636abbf8",
+        "RUNNER_ENVIRONMENT": "github-hosted",
+        "RUNNER_OS": "Linux",
+        "RUNNER_ARCH": "X64",
+        "RUNNER_NAME": "GitHub Actions 1000001241",
+        "ImageOS": "ubuntu24",
+        "ImageVersion": "20261122.23.1",
+        "YAVO_HOME": "/home/runner/work/_temp/yavo-home"
+      },
+      "os_release": "PRETTY_NAME=\"Ubuntu 24.04.5 LTS\"\nNAME=\"Ubuntu\"\nVERSION_ID=\"24.04\"\nVERSION=\"24.04.5 LTS (Noble Numbat)\"\nVERSION_CODENAME=noble\nID=ubuntu\nID_LIKE=debian\nHOME_URL=\"https://www.ubuntu.com/\"\nSUPPORT_URL=\"https://help.ubuntu.com/\"\nBUG_REPORT_URL=\"https://bugs.launchpad.net/ubuntu/\"\nPRIVACY_POLICY_URL=\"https://www.ubuntu.com/legal/terms-and-policies/privacy-policy\"\nUBUNTU_CODENAME=noble\nLOGO=ubuntu-logo\n",
+      "cgroup": {
+        "cpu.stat": "usage_usec 17764434\nuser_usec 10336431\nsystem_usec 7428003\nnice_usec 7000\ncore_sched.force_idle_usec 0\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0",
+        "cpuset.cpus.effective": "0-3"
+      },
+      "snapshot": {
+        "observed_at_unix_ns": 1795859338512386972,
+        "load_average": [
+          0.43994140625,
+          0.3544921875,
+          0.1640625
+        ],
+        "proc_loadavg": "0.44 0.35 0.16 1/290 2279",
+        "cpu_ticks": {
+          "cpu": [
+            1032,
+            0,
+            739,
+            78056,
+            5936,
+            0,
+            3,
+            14,
+            0,
+            0
+          ],
+          "cpu0": [
+            181,
+            0,
+            217,
+            19540,
+            1479,
+            0,
+            0,
+            7,
+            0,
+            0
+          ],
+          "cpu1": [
+            217,
+            0,
+            171,
+            19715,
+            1349,
+            0,
+            1,
+            1,
+            0,
+            0
+          ],
+          "cpu2": [
+            241,
+            0,
+            155,
+            19580,
+            1458,
+            0,
+            0,
+            5,
+            0,
+            0
+          ],
+          "cpu3": [
+            392,
+            0,
+            195,
+            19220,
+            1648,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        "cpu_tick_fields": [
+          "user",
+          "nice",
+          "system",
+          "idle",
+          "iowait",
+          "irq",
+          "softirq",
+          "steal",
+          "guest",
+          "guest_nice"
+        ],
+        "cpu_frequency_khz": {},
+        "allowed_cpu_affinity": [
+          0,
+          1,
+          2,
+          3
+        ]
+      }
+    },
+    "tool_versions": {
+      "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1",
+      "cargo": "cargo 1.99.1 (5f94df478 2026-08-27)",
+      "cc": "cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."
+    },
+    "rust_toolchain": "1.99.1",
+    "zig": {
+      "path": "/home/runner/work/_temp/yavo-home/toolchains/zig-x86_64-linux-0.17.1/zig",
+      "bytes": 185530576,
+      "sha256": "58959f01285c05a74276f09327b551d42ed6006bf325a78dc661a024e314987b",
+      "version": "0.17.1",
+      "lock_sha256": "a9bbe83e644b0e1cee19c8dba8b5157eaed3e9ddc71b96d8aab2b2d2bb15f53c"
+    },
+    "memory_controls": {
+      "passed": true,
+      "true_child_rss_before_kib": 1324,
+      "true_child_rss_with_64mb_parent_kib": 1324,
+      "child_known_32mb_allocation_rss_kib": 42844
+    },
+    "review": {
+      "evidence_review_passed": true,
+      "source_files_verified_against_exact_git_blobs": 117,
+      "archived_files_identity_checked": 512,
+      "measured_commands": 199,
+      "command_scope_counts": {
+        "instrumentation_control": 3,
+        "warmup": 4,
+        "paired_performance": 32,
+        "small_warmup": 20,
+        "small_paired": 112,
+        "current54_pch_observation": 28
+      },
+      "load_average_min": [
+        1.06689453125,
+        0.87255859375,
+        0.369140625
+      ],
+      "load_average_max": [
+        1.8173828125,
+        1.00048828125,
+        0.49169921875
+      ],
+      "cpu_model": "Intel(R) Xeon(R) 6975P-C",
+      "cpu_count": 4,
+      "core_report_sha256": "ff3043ba74db9a6970b2f628dc138e52d6b4c90998b185cf58f44531d566f421"
+    },
+    "recognized_foreign_build_observations": 0,
+    "affinity_changes": 0,
+    "sample_rejections_or_retries": 0
+  },
+  "source_inputs": {
+    "52": {
+      "revision": "5fa6401db5726c635a34f8d4ce5c6cc32abc88cc",
+      "files": {
+        "benchmarks/small-c-v1/deque_ring.yv": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/52/benchmarks/small-c-v1/deque_ring.yv",
+          "bytes": 666,
+          "sha256": "fe67ff3f3064c1f224b85c5ecf83bb7764fd879576433eecb2d77b24bcf4ccab"
+        },
+        "benchmarks/small-c-v1/integer_recurrence.yv": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/52/benchmarks/small-c-v1/integer_recurrence.yv",
+          "bytes": 521,
+          "sha256": "a28b5a0809f78ca35efa42c0ca7bc8bd1d611661625208b91809f071014d0e77"
+        },
+        "benchmarks/small-c-v1/manifest.json": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/52/benchmarks/small-c-v1/manifest.json",
+          "bytes": 1947,
+          "sha256": "19745a14d3a460fbdfbf3136ba5b1b41dfbcb085c2c6e60dfdea333fc8bc76e9"
+        },
+        "benchmarks/small-c-v1/mutref_scatter.yv": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/52/benchmarks/small-c-v1/mutref_scatter.yv",
+          "bytes": 753,
+          "sha256": "919c079186f9f2250452018c6d0021bf96de59c1d8e55f17df39a964c438b8ea"
+        },
+        "benchmarks/small-c-v1/reference.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/52/benchmarks/small-c-v1/reference.rs",
+          "bytes": 1861,
+          "sha256": "73ffc2c264e3d3383872eeb62aaed126bf0fad0523f2cff9b47838e5263d62a6"
+        },
+        "benchmarks/small-c-v1/vec_transform.yv": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/52/benchmarks/small-c-v1/vec_transform.yv",
+          "bytes": 631,
+          "sha256": "3f9312b939aec5a69f324b4caa871b3e31d2f6006ca75ac5d6a4f31254fe58a3"
+        },
+        "compiler/Cargo.lock": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/52/compiler/Cargo.lock",
+          "bytes": 4855,
+          "sha256": "1855e4b98bba9e064b54ffdb43935981e5dc2f22d8c5561688cac88bcf73ad41"
+        },
+        "compiler/Cargo.toml": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/52/compiler/Cargo.toml",
+          "bytes": 285,
+          "sha256": "c3d8cd3d23c13ced4499ea298eefabeef20bf522ad7ec573ef6692b8b75b87a9"
+        },
+        "compiler/runtime/yavo_rt.h": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/52/compiler/runtime/yavo_rt.h",
+          "bytes": 89063,
+          "sha256": "4b490ca18f810211b35acca525e9ec1b1284e1488dd38d9ce6e391c78ac79b0a"
+        },
+        "compiler/src/allocations.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/52/compiler/src/allocations.rs",
+          "bytes": 47380,
+          "sha256": "0909ab1da1e2715343309334ab5475089ead36fae28e991599e989b03a060c9f"
+        },
+        "compiler/src/ast.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/52/compiler/src/ast.rs",
+          "bytes": 10250,
+          "sha256": "e2205244e7dfd902c6860c044c1ff4ca8dae79db123d7d80c0799bc23ed1b343"
+        },
+        "compiler/src/cache.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/52/compiler/src/cache.rs",
+          "bytes": 14240,
+          "sha256": "71491bfa1220cd34c72498ab2aea9c8d8dfe59503c54189fda5d13400d9a6280"
+        },
+        "compiler/src/check.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/52/compiler/src/check.rs",
+          "bytes": 442477,
+          "sha256": "b4c6afca48494ae997ae82bf7c4a892a20062b016d1ac3851482ef8df48b6ec3"
+        },
+        "compiler/src/closure_free.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/52/compiler/src/closure_free.rs",
+          "bytes": 11250,
+          "sha256": "2bc028fe53ebd14d6af6fc68d704bc8d132c091a6d9527292cc125dd4abd92f5"
+        },
+        "compiler/src/codegen.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/52/compiler/src/codegen.rs",
+          "bytes": 137645,
+          "sha256": "67ea9af58d22cbf067a2bfdd449349cc2f1683f8a3b8e7e847e506c535857218"
+        },
+        "compiler/src/diag.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/52/compiler/src/diag.rs",
+          "bytes": 7508,
+          "sha256": "738f097f5f537ce20acf9ae4ad4eb3338b7811275428d231e69d453b3e5e85e6"
+        },
+        "compiler/src/fix.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/52/compiler/src/fix.rs",
+          "bytes": 16646,
+          "sha256": "1170ca66e4cbea997eb5ac3faa966fab0c07ebcf048998a796904afdef5dae78"
+        },
+        "compiler/src/fix_plan.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/52/compiler/src/fix_plan.rs",
+          "bytes": 30988,
+          "sha256": "e2a611ab76f61c401d4d9f9bd020eb48f60ab3135272fee77ab0a26485c688d0"
+        },
+        "compiler/src/lexer.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/52/compiler/src/lexer.rs",
+          "bytes": 21863,
+          "sha256": "705f24fcd337ecd1ce1118709f4e36c0e4e3e6bb03134367cd9ee27fd9557fc1"
+        },
+        "compiler/src/main.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/52/compiler/src/main.rs",
+          "bytes": 20776,
+          "sha256": "5f606ac7ae223a054fcc267d1603c21236f518de255914a34847b0f4560d5a28"
+        },
+        "compiler/src/parser.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/52/compiler/src/parser.rs",
+          "bytes": 66941,
+          "sha256": "9d25ae708d1f9ab06b65923d63e380c405e9c1083e14e3ce0af901bb88396c90"
+        },
+        "compiler/src/process.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/52/compiler/src/process.rs",
+          "bytes": 12494,
+          "sha256": "b03f4c08f1fa763faeeb20379fbb21bfb06416f6baa6782aba673e727c729164"
+        },
+        "compiler/src/project.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/52/compiler/src/project.rs",
+          "bytes": 28662,
+          "sha256": "3f24b0c0eb161cd843a2be8e1a84ad5c0b6642974afca4198af9eba48170af62"
+        },
+        "compiler/src/subset.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/52/compiler/src/subset.rs",
+          "bytes": 30578,
+          "sha256": "c6880b3867286ca541c940c76299ff1eb951467bb9b02d0042cba50165c43f8f"
+        },
+        "compiler/src/toolchain.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/52/compiler/src/toolchain.rs",
+          "bytes": 10908,
+          "sha256": "c76e499e77ae812a46b0841c332312a4fb28c91e80b998ad1421c2ba81d79a81"
+        },
+        "compiler/src/types.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/52/compiler/src/types.rs",
+          "bytes": 34882,
+          "sha256": "6affdbd9bd5dd15c7a8ff251cba4821e1a2a15ad18cfd7c61480527909696d15"
+        },
+        "compiler/src/verify.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/52/compiler/src/verify.rs",
+          "bytes": 42068,
+          "sha256": "a2fc0b21a9ecd0727dfda6150b21a0a104bc844213279b857a9beebaf1b440bf"
+        },
+        "compiler/toolchain.lock": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/52/compiler/toolchain.lock",
+          "bytes": 1096,
+          "sha256": "a9bbe83e644b0e1cee19c8dba8b5157eaed3e9ddc71b96d8aab2b2d2bb15f53c"
+        },
+        "selfhost/codegen.yv": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/52/selfhost/codegen.yv",
+          "bytes": 193797,
+          "sha256": "6a2a5249d7f58aaeaacfb526d2e201abffbab6f868e954e187bc16a2ea0f12bb"
+        },
+        "selfhost/digest.yv": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/52/selfhost/digest.yv",
+          "bytes": 4291,
+          "sha256": "e7c6a6a496bbdcdee401f897032ee9447f1b7f9982e23c1bf9f7e124f4cb68d7"
+        },
+        "selfhost/driver.yv": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/52/selfhost/driver.yv",
+          "bytes": 10693,
+          "sha256": "01f543793f2bce65c2bf04aca0e463a894d1d9336feb0d96b55c335bec647464"
+        },
+        "selfhost/lexer.yv": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/52/selfhost/lexer.yv",
+          "bytes": 27576,
+          "sha256": "668743282425eaea209ded5e499a6a12608728bd4e6bae16fb03886fe7485b40"
+        },
+        "selfhost/lexer_test.yv": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/52/selfhost/lexer_test.yv",
+          "bytes": 20115,
+          "sha256": "9105c9728e6728237070fce90c7755e1c30acd652594534ccf11d875b46bf49f"
+        },
+        "selfhost/main.yv": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/52/selfhost/main.yv",
+          "bytes": 6758,
+          "sha256": "fcf554007b4dda50dcc0d7ef3e4c57b234878ca0352161a5055fa6001a203be5"
+        },
+        "selfhost/model.yv": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/52/selfhost/model.yv",
+          "bytes": 5825,
+          "sha256": "f2d86728ecd702ec2e181d7ce9c416148a5db58c57c8a6e14d21e92f62efe9ad"
+        },
+        "selfhost/parser.yv": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/52/selfhost/parser.yv",
+          "bytes": 51164,
+          "sha256": "48f5bb3fbdda3e354382d437b577c4983c6e054c7cfab965d5566214adb55873"
+        },
+        "selfhost/runtime_source.yv": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/52/selfhost/runtime_source.yv",
+          "bytes": 93029,
+          "sha256": "21a5f8f7d558d7c6570b2525d4525ede1d75d64e58371b8c8589315d2a18e754"
+        },
+        "selfhost/support.yv": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/52/selfhost/support.yv",
+          "bytes": 6399,
+          "sha256": "12a4b08856d7b8f1203e95f2d92639a6de7c3be56d35ad964cb0f526868197ce"
+        },
+        "selfhost/types.yv": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/52/selfhost/types.yv",
+          "bytes": 32421,
+          "sha256": "563810f92124d2ef24d96bff8368aa20a6ed8ee6f0130a1c464ff3f0d8a91037"
+        }
+      }
+    },
+    "53": {
+      "revision": "f0183c07195c658de0d0fc859d79406b53893655",
+      "files": {
+        "benchmarks/small-c-v1/deque_ring.yv": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/53/benchmarks/small-c-v1/deque_ring.yv",
+          "bytes": 666,
+          "sha256": "fe67ff3f3064c1f224b85c5ecf83bb7764fd879576433eecb2d77b24bcf4ccab"
+        },
+        "benchmarks/small-c-v1/integer_recurrence.yv": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/53/benchmarks/small-c-v1/integer_recurrence.yv",
+          "bytes": 521,
+          "sha256": "a28b5a0809f78ca35efa42c0ca7bc8bd1d611661625208b91809f071014d0e77"
+        },
+        "benchmarks/small-c-v1/manifest.json": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/53/benchmarks/small-c-v1/manifest.json",
+          "bytes": 1947,
+          "sha256": "19745a14d3a460fbdfbf3136ba5b1b41dfbcb085c2c6e60dfdea333fc8bc76e9"
+        },
+        "benchmarks/small-c-v1/mutref_scatter.yv": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/53/benchmarks/small-c-v1/mutref_scatter.yv",
+          "bytes": 753,
+          "sha256": "919c079186f9f2250452018c6d0021bf96de59c1d8e55f17df39a964c438b8ea"
+        },
+        "benchmarks/small-c-v1/reference.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/53/benchmarks/small-c-v1/reference.rs",
+          "bytes": 1861,
+          "sha256": "73ffc2c264e3d3383872eeb62aaed126bf0fad0523f2cff9b47838e5263d62a6"
+        },
+        "benchmarks/small-c-v1/vec_transform.yv": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/53/benchmarks/small-c-v1/vec_transform.yv",
+          "bytes": 631,
+          "sha256": "3f9312b939aec5a69f324b4caa871b3e31d2f6006ca75ac5d6a4f31254fe58a3"
+        },
+        "compiler/Cargo.lock": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/53/compiler/Cargo.lock",
+          "bytes": 4855,
+          "sha256": "1855e4b98bba9e064b54ffdb43935981e5dc2f22d8c5561688cac88bcf73ad41"
+        },
+        "compiler/Cargo.toml": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/53/compiler/Cargo.toml",
+          "bytes": 285,
+          "sha256": "c3d8cd3d23c13ced4499ea298eefabeef20bf522ad7ec573ef6692b8b75b87a9"
+        },
+        "compiler/runtime/yavo_rt.h": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/53/compiler/runtime/yavo_rt.h",
+          "bytes": 89063,
+          "sha256": "4b490ca18f810211b35acca525e9ec1b1284e1488dd38d9ce6e391c78ac79b0a"
+        },
+        "compiler/src/allocations.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/53/compiler/src/allocations.rs",
+          "bytes": 47380,
+          "sha256": "0909ab1da1e2715343309334ab5475089ead36fae28e991599e989b03a060c9f"
+        },
+        "compiler/src/ast.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/53/compiler/src/ast.rs",
+          "bytes": 10250,
+          "sha256": "e2205244e7dfd902c6860c044c1ff4ca8dae79db123d7d80c0799bc23ed1b343"
+        },
+        "compiler/src/cache.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/53/compiler/src/cache.rs",
+          "bytes": 14240,
+          "sha256": "71491bfa1220cd34c72498ab2aea9c8d8dfe59503c54189fda5d13400d9a6280"
+        },
+        "compiler/src/check.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/53/compiler/src/check.rs",
+          "bytes": 442477,
+          "sha256": "b4c6afca48494ae997ae82bf7c4a892a20062b016d1ac3851482ef8df48b6ec3"
+        },
+        "compiler/src/closure_free.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/53/compiler/src/closure_free.rs",
+          "bytes": 11250,
+          "sha256": "2bc028fe53ebd14d6af6fc68d704bc8d132c091a6d9527292cc125dd4abd92f5"
+        },
+        "compiler/src/codegen.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/53/compiler/src/codegen.rs",
+          "bytes": 137645,
+          "sha256": "67ea9af58d22cbf067a2bfdd449349cc2f1683f8a3b8e7e847e506c535857218"
+        },
+        "compiler/src/diag.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/53/compiler/src/diag.rs",
+          "bytes": 7508,
+          "sha256": "738f097f5f537ce20acf9ae4ad4eb3338b7811275428d231e69d453b3e5e85e6"
+        },
+        "compiler/src/fix.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/53/compiler/src/fix.rs",
+          "bytes": 16646,
+          "sha256": "1170ca66e4cbea997eb5ac3faa966fab0c07ebcf048998a796904afdef5dae78"
+        },
+        "compiler/src/fix_plan.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/53/compiler/src/fix_plan.rs",
+          "bytes": 30988,
+          "sha256": "e2a611ab76f61c401d4d9f9bd020eb48f60ab3135272fee77ab0a26485c688d0"
+        },
+        "compiler/src/lexer.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/53/compiler/src/lexer.rs",
+          "bytes": 21863,
+          "sha256": "705f24fcd337ecd1ce1118709f4e36c0e4e3e6bb03134367cd9ee27fd9557fc1"
+        },
+        "compiler/src/main.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/53/compiler/src/main.rs",
+          "bytes": 20813,
+          "sha256": "6b428f7c32ea0ae75b3b827e0a1ab00df4d96f3fac1c8eda0acfa737b10bde8f"
+        },
+        "compiler/src/parser.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/53/compiler/src/parser.rs",
+          "bytes": 66941,
+          "sha256": "9d25ae708d1f9ab06b65923d63e380c405e9c1083e14e3ce0af901bb88396c90"
+        },
+        "compiler/src/process.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/53/compiler/src/process.rs",
+          "bytes": 12494,
+          "sha256": "b03f4c08f1fa763faeeb20379fbb21bfb06416f6baa6782aba673e727c729164"
+        },
+        "compiler/src/project.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/53/compiler/src/project.rs",
+          "bytes": 28662,
+          "sha256": "3f24b0c0eb161cd843a2be8e1a84ad5c0b6642974afca4198af9eba48170af62"
+        },
+        "compiler/src/subset.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/53/compiler/src/subset.rs",
+          "bytes": 31175,
+          "sha256": "42d0c7497ecdefe146b74a74875009c024aa32defc0bc8ae1092d638031acd76"
+        },
+        "compiler/src/toolchain.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/53/compiler/src/toolchain.rs",
+          "bytes": 10908,
+          "sha256": "c76e499e77ae812a46b0841c332312a4fb28c91e80b998ad1421c2ba81d79a81"
+        },
+        "compiler/src/types.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/53/compiler/src/types.rs",
+          "bytes": 34882,
+          "sha256": "6affdbd9bd5dd15c7a8ff251cba4821e1a2a15ad18cfd7c61480527909696d15"
+        },
+        "compiler/src/verify.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/53/compiler/src/verify.rs",
+          "bytes": 42068,
+          "sha256": "a2fc0b21a9ecd0727dfda6150b21a0a104bc844213279b857a9beebaf1b440bf"
+        },
+        "compiler/toolchain.lock": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/53/compiler/toolchain.lock",
+          "bytes": 1096,
+          "sha256": "a9bbe83e644b0e1cee19c8dba8b5157eaed3e9ddc71b96d8aab2b2d2bb15f53c"
+        },
+        "selfhost/codegen.yv": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/53/selfhost/codegen.yv",
+          "bytes": 205522,
+          "sha256": "146db08285f644f66011fe02cf0c96b32a8bfd9f12af77f8f3bab34c24d3e5cd"
+        },
+        "selfhost/digest.yv": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/53/selfhost/digest.yv",
+          "bytes": 4291,
+          "sha256": "e7c6a6a496bbdcdee401f897032ee9447f1b7f9982e23c1bf9f7e124f4cb68d7"
+        },
+        "selfhost/driver.yv": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/53/selfhost/driver.yv",
+          "bytes": 10693,
+          "sha256": "01f543793f2bce65c2bf04aca0e463a894d1d9336feb0d96b55c335bec647464"
+        },
+        "selfhost/lexer.yv": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/53/selfhost/lexer.yv",
+          "bytes": 27576,
+          "sha256": "668743282425eaea209ded5e499a6a12608728bd4e6bae16fb03886fe7485b40"
+        },
+        "selfhost/lexer_test.yv": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/53/selfhost/lexer_test.yv",
+          "bytes": 20115,
+          "sha256": "9105c9728e6728237070fce90c7755e1c30acd652594534ccf11d875b46bf49f"
+        },
+        "selfhost/main.yv": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/53/selfhost/main.yv",
+          "bytes": 6758,
+          "sha256": "fcf554007b4dda50dcc0d7ef3e4c57b234878ca0352161a5055fa6001a203be5"
+        },
+        "selfhost/model.yv": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/53/selfhost/model.yv",
+          "bytes": 6227,
+          "sha256": "6cac6c08a9fa708b8a586082ccb6cb0179ebefe0a48ff3a75537d1710f70cfd3"
+        },
+        "selfhost/parser.yv": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/53/selfhost/parser.yv",
+          "bytes": 52789,
+          "sha256": "31c565dbf7705879ad7dd2cb538bdfee344e1a695272960109cd5606674e1687"
+        },
+        "selfhost/runtime_source.yv": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/53/selfhost/runtime_source.yv",
+          "bytes": 93029,
+          "sha256": "21a5f8f7d558d7c6570b2525d4525ede1d75d64e58371b8c8589315d2a18e754"
+        },
+        "selfhost/support.yv": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/53/selfhost/support.yv",
+          "bytes": 6399,
+          "sha256": "12a4b08856d7b8f1203e95f2d92639a6de7c3be56d35ad964cb0f526868197ce"
+        },
+        "selfhost/types.yv": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/53/selfhost/types.yv",
+          "bytes": 36828,
+          "sha256": "7bf34f875fadddd8463cf2e80beab8b5c18677ddf527274be6da73d00b05f291"
+        }
+      }
+    },
+    "54": {
+      "revision": "cec3862644c477d1d3fb1e8e4bba8ad9636abbf8",
+      "files": {
+        "benchmarks/small-c-v1/deque_ring.yv": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/54/benchmarks/small-c-v1/deque_ring.yv",
+          "bytes": 666,
+          "sha256": "fe67ff3f3064c1f224b85c5ecf83bb7764fd879576433eecb2d77b24bcf4ccab"
+        },
+        "benchmarks/small-c-v1/integer_recurrence.yv": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/54/benchmarks/small-c-v1/integer_recurrence.yv",
+          "bytes": 521,
+          "sha256": "a28b5a0809f78ca35efa42c0ca7bc8bd1d611661625208b91809f071014d0e77"
+        },
+        "benchmarks/small-c-v1/manifest.json": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/54/benchmarks/small-c-v1/manifest.json",
+          "bytes": 1947,
+          "sha256": "19745a14d3a460fbdfbf3136ba5b1b41dfbcb085c2c6e60dfdea333fc8bc76e9"
+        },
+        "benchmarks/small-c-v1/mutref_scatter.yv": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/54/benchmarks/small-c-v1/mutref_scatter.yv",
+          "bytes": 753,
+          "sha256": "919c079186f9f2250452018c6d0021bf96de59c1d8e55f17df39a964c438b8ea"
+        },
+        "benchmarks/small-c-v1/reference.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/54/benchmarks/small-c-v1/reference.rs",
+          "bytes": 1861,
+          "sha256": "73ffc2c264e3d3383872eeb62aaed126bf0fad0523f2cff9b47838e5263d62a6"
+        },
+        "benchmarks/small-c-v1/vec_transform.yv": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/54/benchmarks/small-c-v1/vec_transform.yv",
+          "bytes": 631,
+          "sha256": "3f9312b939aec5a69f324b4caa871b3e31d2f6006ca75ac5d6a4f31254fe58a3"
+        },
+        "compiler/Cargo.lock": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/54/compiler/Cargo.lock",
+          "bytes": 4855,
+          "sha256": "1855e4b98bba9e064b54ffdb43935981e5dc2f22d8c5561688cac88bcf73ad41"
+        },
+        "compiler/Cargo.toml": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/54/compiler/Cargo.toml",
+          "bytes": 285,
+          "sha256": "c3d8cd3d23c13ced4499ea298eefabeef20bf522ad7ec573ef6692b8b75b87a9"
+        },
+        "compiler/runtime/yavo_rt.h": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/54/compiler/runtime/yavo_rt.h",
+          "bytes": 89063,
+          "sha256": "4b490ca18f810211b35acca525e9ec1b1284e1488dd38d9ce6e391c78ac79b0a"
+        },
+        "compiler/src/allocations.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/54/compiler/src/allocations.rs",
+          "bytes": 47380,
+          "sha256": "0909ab1da1e2715343309334ab5475089ead36fae28e991599e989b03a060c9f"
+        },
+        "compiler/src/ast.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/54/compiler/src/ast.rs",
+          "bytes": 10250,
+          "sha256": "e2205244e7dfd902c6860c044c1ff4ca8dae79db123d7d80c0799bc23ed1b343"
+        },
+        "compiler/src/cache.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/54/compiler/src/cache.rs",
+          "bytes": 14240,
+          "sha256": "71491bfa1220cd34c72498ab2aea9c8d8dfe59503c54189fda5d13400d9a6280"
+        },
+        "compiler/src/check.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/54/compiler/src/check.rs",
+          "bytes": 450633,
+          "sha256": "2849c4bc65c19b61bdb6ede7b074cc19187574342db03a297f4b065e900448cb"
+        },
+        "compiler/src/closure_free.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/54/compiler/src/closure_free.rs",
+          "bytes": 11250,
+          "sha256": "2bc028fe53ebd14d6af6fc68d704bc8d132c091a6d9527292cc125dd4abd92f5"
+        },
+        "compiler/src/codegen.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/54/compiler/src/codegen.rs",
+          "bytes": 137645,
+          "sha256": "67ea9af58d22cbf067a2bfdd449349cc2f1683f8a3b8e7e847e506c535857218"
+        },
+        "compiler/src/diag.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/54/compiler/src/diag.rs",
+          "bytes": 7508,
+          "sha256": "738f097f5f537ce20acf9ae4ad4eb3338b7811275428d231e69d453b3e5e85e6"
+        },
+        "compiler/src/fix.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/54/compiler/src/fix.rs",
+          "bytes": 16646,
+          "sha256": "1170ca66e4cbea997eb5ac3faa966fab0c07ebcf048998a796904afdef5dae78"
+        },
+        "compiler/src/fix_plan.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/54/compiler/src/fix_plan.rs",
+          "bytes": 30988,
+          "sha256": "e2a611ab76f61c401d4d9f9bd020eb48f60ab3135272fee77ab0a26485c688d0"
+        },
+        "compiler/src/lexer.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/54/compiler/src/lexer.rs",
+          "bytes": 21863,
+          "sha256": "705f24fcd337ecd1ce1118709f4e36c0e4e3e6bb03134367cd9ee27fd9557fc1"
+        },
+        "compiler/src/main.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/54/compiler/src/main.rs",
+          "bytes": 20813,
+          "sha256": "6b428f7c32ea0ae75b3b827e0a1ab00df4d96f3fac1c8eda0acfa737b10bde8f"
+        },
+        "compiler/src/parser.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/54/compiler/src/parser.rs",
+          "bytes": 66941,
+          "sha256": "9d25ae708d1f9ab06b65923d63e380c405e9c1083e14e3ce0af901bb88396c90"
+        },
+        "compiler/src/process.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/54/compiler/src/process.rs",
+          "bytes": 12494,
+          "sha256": "b03f4c08f1fa763faeeb20379fbb21bfb06416f6baa6782aba673e727c729164"
+        },
+        "compiler/src/project.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/54/compiler/src/project.rs",
+          "bytes": 28662,
+          "sha256": "3f24b0c0eb161cd843a2be8e1a84ad5c0b6642974afca4198af9eba48170af62"
+        },
+        "compiler/src/subset.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/54/compiler/src/subset.rs",
+          "bytes": 31175,
+          "sha256": "42d0c7497ecdefe146b74a74875009c024aa32defc0bc8ae1092d638031acd76"
+        },
+        "compiler/src/toolchain.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/54/compiler/src/toolchain.rs",
+          "bytes": 10908,
+          "sha256": "c76e499e77ae812a46b0841c332312a4fb28c91e80b998ad1421c2ba81d79a81"
+        },
+        "compiler/src/types.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/54/compiler/src/types.rs",
+          "bytes": 34882,
+          "sha256": "6affdbd9bd5dd15c7a8ff251cba4821e1a2a15ad18cfd7c61480527909696d15"
+        },
+        "compiler/src/verify.rs": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/54/compiler/src/verify.rs",
+          "bytes": 42068,
+          "sha256": "a2fc0b21a9ecd0727dfda6150b21a0a104bc844213279b857a9beebaf1b440bf"
+        },
+        "compiler/toolchain.lock": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/54/compiler/toolchain.lock",
+          "bytes": 1096,
+          "sha256": "a9bbe83e644b0e1cee19c8dba8b5157eaed3e9ddc71b96d8aab2b2d2bb15f53c"
+        },
+        "selfhost/codegen.yv": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/54/selfhost/codegen.yv",
+          "bytes": 205522,
+          "sha256": "146db08285f644f66011fe02cf0c96b32a8bfd9f12af77f8f3bab34c24d3e5cd"
+        },
+        "selfhost/digest.yv": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/54/selfhost/digest.yv",
+          "bytes": 4291,
+          "sha256": "e7c6a6a496bbdcdee401f897032ee9447f1b7f9982e23c1bf9f7e124f4cb68d7"
+        },
+        "selfhost/driver.yv": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/54/selfhost/driver.yv",
+          "bytes": 10693,
+          "sha256": "01f543793f2bce65c2bf04aca0e463a894d1d9336feb0d96b55c335bec647464"
+        },
+        "selfhost/lexer.yv": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/54/selfhost/lexer.yv",
+          "bytes": 27576,
+          "sha256": "668743282425eaea209ded5e499a6a12608728bd4e6bae16fb03886fe7485b40"
+        },
+        "selfhost/lexer_test.yv": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/54/selfhost/lexer_test.yv",
+          "bytes": 20115,
+          "sha256": "9105c9728e6728237070fce90c7755e1c30acd652594534ccf11d875b46bf49f"
+        },
+        "selfhost/main.yv": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/54/selfhost/main.yv",
+          "bytes": 6758,
+          "sha256": "fcf554007b4dda50dcc0d7ef3e4c57b234878ca0352161a5055fa6001a203be5"
+        },
+        "selfhost/model.yv": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/54/selfhost/model.yv",
+          "bytes": 6227,
+          "sha256": "6cac6c08a9fa708b8a586082ccb6cb0179ebefe0a48ff3a75537d1710f70cfd3"
+        },
+        "selfhost/parser.yv": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/54/selfhost/parser.yv",
+          "bytes": 52789,
+          "sha256": "31c565dbf7705879ad7dd2cb538bdfee344e1a695272960109cd5606674e1687"
+        },
+        "selfhost/runtime_source.yv": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/54/selfhost/runtime_source.yv",
+          "bytes": 93029,
+          "sha256": "21a5f8f7d558d7c6570b2525d4525ede1d75d64e58371b8c8589315d2a18e754"
+        },
+        "selfhost/support.yv": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/54/selfhost/support.yv",
+          "bytes": 6399,
+          "sha256": "12a4b08856d7b8f1203e95f2d92639a6de7c3be56d35ad964cb0f526868197ce"
+        },
+        "selfhost/types.yv": {
+          "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/snapshots/54/selfhost/types.yv",
+          "bytes": 36828,
+          "sha256": "7bf34f875fadddd8463cf2e80beab8b5c18677ddf527274be6da73d00b05f291"
+        }
+      }
+    }
+  },
+  "harness": {
+    "paired_performance.py": {
+      "path": "/home/runner/work/yavo/yavo/tools/ci/paired_performance.py",
+      "bytes": 36556,
+      "sha256": "f4c5fe66b3f64c9efc5c7a841b958a1dca7153a0f56d90ac57db683c6431232f"
+    },
+    "perf_support.py": {
+      "path": "/home/runner/work/yavo/yavo/tools/ci/perf_support.py",
+      "bytes": 26624,
+      "sha256": "bd566adbcbeea168857bda0497303933586e5f9be467e37bc846ebf6ccb71efd"
+    },
+    "perf_wait4.c": {
+      "path": "/home/runner/work/yavo/yavo/tools/ci/perf_wait4.c",
+      "bytes": 4491,
+      "sha256": "2beeac075d84553e30c79d8c74d2cc8d87b289331ec6dc876bb5a89e6a45df83"
+    }
+  },
+  "versions": {
+    "52": {
+      "revision": "5fa6401db5726c635a34f8d4ce5c6cc32abc88cc",
+      "stage0": {
+        "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/cargo-target/52/release/yavo",
+        "bytes": 2924568,
+        "sha256": "978d36dfdc1f021df17f219dd9426b46f415de595077ff0aa08dee01d04a075f"
+      },
+      "retained": {
+        "generated_c": {
+          "path": "/home/runner/work/yavo/yavo/compiler/target/ci/perf54/artifacts/52/selfhost.c",
+          "bytes": 1778752,
+          "sha256": "1df5d9c8fc255081556924bfd54bdb34385d45fc927adbd2e84c8f4780d872e6"
+        },
+        "stripped_binary": {
+          "path": "/home/runner/work/yavo/yavo/compiler/target/ci/perf54/artifacts/52/selfhost",
+          "bytes": 739576,
+          "sha256": "f15f62ad179cda4d9f0447d3cfcfd2603f4fa77542f0a0480b5bcd930b795782"
+        }
+      },
+      "fixed_point": true
+    },
+    "53": {
+      "revision": "f0183c07195c658de0d0fc859d79406b53893655",
+      "stage0": {
+        "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/cargo-target/53/release/yavo",
+        "bytes": 2924152,
+        "sha256": "6f481b8433f3076909825bbeec02dfbd8aded381c0c25793d96761872409cd0e"
+      },
+      "retained": {
+        "generated_c": {
+          "path": "/home/runner/work/yavo/yavo/compiler/target/ci/perf54/artifacts/53/selfhost.c",
+          "bytes": 1493832,
+          "sha256": "c93898b1a7b061da4f0e12c9c0ae3f36f38c8aa20c8a908c16cc2a5b7e45f913"
+        },
+        "stripped_binary": {
+          "path": "/home/runner/work/yavo/yavo/compiler/target/ci/perf54/artifacts/53/selfhost",
+          "bytes": 773080,
+          "sha256": "0099d37771484484c6ee44ac3766dae59663e4a501feacc4e994b8365289a175"
+        }
+      },
+      "fixed_point": true
+    },
+    "54": {
+      "revision": "cec3862644c477d1d3fb1e8e4bba8ad9636abbf8",
+      "stage0": {
+        "path": "/home/runner/work/_temp/yavo-paired-perf-vlhlm8uu/cargo-target/54/release/yavo",
+        "bytes": 2946104,
+        "sha256": "498098ec23edae0a015441d0525036b3f717e8e47f8ae45b834721cb75d6fa3e"
+      },
+      "retained": null,
+      "fixed_point": false
+    }
+  },
+  "measurement_contract": {
+    "clock": "C supervisor CLOCK_MONOTONIC immediately before fork through wait4",
+    "usage": "raw Linux wait4 rusage; maxrss is kernel peak accounting, not simultaneous tree-RSS sum",
+    "python_receipts": "no Full receipt is parsed; child fork occurs in a low-RSS C supervisor",
+    "primary_backend": "fresh translation-unit contents; independent arm caches; warmed toolchain after one recorded warmup",
+    "small_program": "Rust stage0 Release/default native target; edited sources/build-cache miss; PCH hit required",
+    "small_target_ms": 200,
+    "formal_general_performance_goal_completed": false,
+    "job_pass_means": "identity, isolation, correctness and sample contract completed; threshold results are separate",
+    "cold_cache_warmups": "retained single observations, not a cold-build distribution"
+  },
+  "selfhost": {
+    "frontend": {
+      "paired_differences": [
+        {
+          "round": 1,
+          "delta_53_minus_52_seconds": 0.008691078999999997,
+          "ratio_53_over_52": 1.1889044601609091
+        },
+        {
+          "round": 2,
+          "delta_53_minus_52_seconds": 0.0029331400000000007,
+          "ratio_53_over_52": 1.0685641503188246
+        },
+        {
+          "round": 3,
+          "delta_53_minus_52_seconds": 0.00010067799999999988,
+          "ratio_53_over_52": 1.0022961204440815
+        },
+        {
+          "round": 4,
+          "delta_53_minus_52_seconds": 7.416899999999893e-05,
+          "ratio_53_over_52": 1.001708112540824
+        },
+        {
+          "round": 5,
+          "delta_53_minus_52_seconds": 0.0032937270000000032,
+          "ratio_53_over_52": 1.079383819634075
+        },
+        {
+          "round": 6,
+          "delta_53_minus_52_seconds": 0.005161238999999998,
+          "ratio_53_over_52": 1.126162019144157
+        },
+        {
+          "round": 7,
+          "delta_53_minus_52_seconds": -0.0007359509999999986,
+          "ratio_53_over_52": 0.983227471729913
+        },
+        {
+          "round": 8,
+          "delta_53_minus_52_seconds": 0.0018023770000000008,
+          "ratio_53_over_52": 1.0409822625985627
+        },
+        {
+          "round": 9,
+          "delta_53_minus_52_seconds": 0.0025006490000000006,
+          "ratio_53_over_52": 1.0597229084261985
+        }
+      ],
+      "median_paired_delta_seconds": 0.0025006490000000006,
+      "median_paired_ratio_53_over_52": 1.0597229084261985,
+      "warmups": {
+        "52": "selfhost-frontend-52-0",
+        "53": "selfhost-frontend-53-0"
+      },
+      "arms": {
+        "52": {
+          "distribution": {
+            "samples": 9,
+            "p50_seconds": 0.043421612,
+            "p95_seconds": 0.046007802,
+            "min_seconds": 0.04090961,
+            "max_seconds": 0.046007802,
+            "peak_wait4_rss_bytes": 28078080,
+            "median_user_seconds": 0.035345,
+            "median_system_seconds": 0.008953
+          },
+          "samples": [
+            "selfhost-frontend-52-1",
+            "selfhost-frontend-52-2",
+            "selfhost-frontend-52-3",
+            "selfhost-frontend-52-4",
+            "selfhost-frontend-52-5",
+            "selfhost-frontend-52-6",
+            "selfhost-frontend-52-7",
+            "selfhost-frontend-52-8",
+            "selfhost-frontend-52-9"
+          ]
+        },
+        "53": {
+          "distribution": {
+            "samples": 9,
+            "p50_seconds": 0.04478489,
+            "p95_seconds": 0.054698881,
+            "min_seconds": 0.043142407,
+            "max_seconds": 0.054698881,
+            "peak_wait4_rss_bytes": 28573696,
+            "median_user_seconds": 0.036708,
+            "median_system_seconds": 0.008928
+          },
+          "samples": [
+            "selfhost-frontend-53-1",
+            "selfhost-frontend-53-2",
+            "selfhost-frontend-53-3",
+            "selfhost-frontend-53-4",
+            "selfhost-frontend-53-5",
+            "selfhost-frontend-53-6",
+            "selfhost-frontend-53-7",
+            "selfhost-frontend-53-8",
+            "selfhost-frontend-53-9"
+          ]
+        }
+      },
+      "order": "52/53 then 53/52 on successive rounds; warmup is round zero",
+      "p50_change_percent": 3.139630099407653,
+      "peak_rss_change_bytes": 495616,
+      "slower_53_pairs": 8
+    },
+    "backend": {
+      "paired_differences": [
+        {
+          "round": 1,
+          "delta_53_minus_52_seconds": 0.33319275800000003,
+          "ratio_53_over_52": 1.0517766830426547
+        },
+        {
+          "round": 2,
+          "delta_53_minus_52_seconds": 0.20803480699999977,
+          "ratio_53_over_52": 1.032421224326784
+        },
+        {
+          "round": 3,
+          "delta_53_minus_52_seconds": 0.38460161999999976,
+          "ratio_53_over_52": 1.0601512212693354
+        },
+        {
+          "round": 4,
+          "delta_53_minus_52_seconds": 0.21347022400000082,
+          "ratio_53_over_52": 1.0331920981522107
+        },
+        {
+          "round": 5,
+          "delta_53_minus_52_seconds": 0.252019668,
+          "ratio_53_over_52": 1.0397531727019038
+        },
+        {
+          "round": 6,
+          "delta_53_minus_52_seconds": 0.40435103500000036,
+          "ratio_53_over_52": 1.064640931351432
+        },
+        {
+          "round": 7,
+          "delta_53_minus_52_seconds": 0.2643774619999997,
+          "ratio_53_over_52": 1.0415228713704128
+        }
+      ],
+      "median_paired_delta_seconds": 0.2643774619999997,
+      "median_paired_ratio_53_over_52": 1.0415228713704128,
+      "warmups": {
+        "52": "selfhost-backend-52-0",
+        "53": "selfhost-backend-53-0"
+      },
+      "arms": {
+        "52": {
+          "distribution": {
+            "samples": 7,
+            "p50_seconds": 6.393912075,
+            "p95_seconds": 6.435189325,
+            "min_seconds": 6.255340487,
+            "max_seconds": 6.435189325,
+            "peak_wait4_rss_bytes": 205324288,
+            "median_user_seconds": 6.148531,
+            "median_system_seconds": 0.251378
+          },
+          "samples": [
+            "selfhost-backend-52-1",
+            "selfhost-backend-52-2",
+            "selfhost-backend-52-3",
+            "selfhost-backend-52-4",
+            "selfhost-backend-52-5",
+            "selfhost-backend-52-6",
+            "selfhost-backend-52-7"
+          ]
+        },
+        "53": {
+          "distribution": {
+            "samples": 7,
+            "p50_seconds": 6.644826959,
+            "p95_seconds": 6.778513695,
+            "min_seconds": 6.591631097,
+            "max_seconds": 6.778513695,
+            "peak_wait4_rss_bytes": 210759680,
+            "median_user_seconds": 6.352319,
+            "median_system_seconds": 0.278524
+          },
+          "samples": [
+            "selfhost-backend-53-1",
+            "selfhost-backend-53-2",
+            "selfhost-backend-53-3",
+            "selfhost-backend-53-4",
+            "selfhost-backend-53-5",
+            "selfhost-backend-53-6",
+            "selfhost-backend-53-7"
+          ]
+        }
+      },
+      "order": "52/53 then 53/52 on successive rounds; warmup is round zero",
+      "p50_change_percent": 3.9242779859465005,
+      "peak_rss_change_bytes": 5435392,
+      "slower_53_pairs": 7
+    }
+  },
+  "small_programs": [
+    {
+      "case": "integer_recurrence",
+      "52": {
+        "plain": {
+          "p50_ms": 143.86449000000002,
+          "p95_ms": 144.77804799999998,
+          "peak_rss_mib": 79.9140625,
+          "samples": 7,
+          "target_p50_le_200ms": null
+        },
+        "pch": {
+          "p50_ms": 115.080346,
+          "p95_ms": 117.194651,
+          "peak_rss_mib": 76.59765625,
+          "samples": 7,
+          "target_p50_le_200ms": true
+        },
+        "pch_savings_ms": 28.784144000000012,
+        "pch_savings_percent": 20.007817078418732
+      },
+      "53": {
+        "plain": {
+          "p50_ms": 142.821071,
+          "p95_ms": 144.316522,
+          "peak_rss_mib": 79.60546875,
+          "samples": 7,
+          "target_p50_le_200ms": null
+        },
+        "pch": {
+          "p50_ms": 113.387698,
+          "p95_ms": 116.97840599999999,
+          "peak_rss_mib": 76.66015625,
+          "samples": 7,
+          "target_p50_le_200ms": true
+        },
+        "pch_savings_ms": 29.43337299999999,
+        "pch_savings_percent": 20.608564824443864
+      },
+      "54_pch_separate_observation": {
+        "p50_ms": 115.712867,
+        "p95_ms": 116.738093,
+        "peak_rss_mib": 76.41015625,
+        "samples": 7,
+        "target_p50_le_200ms": true
+      }
+    },
+    {
+      "case": "vec_transform",
+      "52": {
+        "plain": {
+          "p50_ms": 154.431342,
+          "p95_ms": 161.17576,
+          "peak_rss_mib": 80.5390625,
+          "samples": 7,
+          "target_p50_le_200ms": null
+        },
+        "pch": {
+          "p50_ms": 126.147603,
+          "p95_ms": 129.655817,
+          "peak_rss_mib": 77.41015625,
+          "samples": 7,
+          "target_p50_le_200ms": true
+        },
+        "pch_savings_ms": 28.283738999999997,
+        "pch_savings_percent": 18.31476605312411
+      },
+      "53": {
+        "plain": {
+          "p50_ms": 153.327993,
+          "p95_ms": 155.230934,
+          "peak_rss_mib": 80.6640625,
+          "samples": 7,
+          "target_p50_le_200ms": null
+        },
+        "pch": {
+          "p50_ms": 124.890379,
+          "p95_ms": 129.11566599999998,
+          "peak_rss_mib": 77.16015625,
+          "samples": 7,
+          "target_p50_le_200ms": true
+        },
+        "pch_savings_ms": 28.437613999999996,
+        "pch_savings_percent": 18.54691595682727
+      },
+      "54_pch_separate_observation": {
+        "p50_ms": 123.287416,
+        "p95_ms": 124.1989,
+        "peak_rss_mib": 77.6015625,
+        "samples": 7,
+        "target_p50_le_200ms": true
+      }
+    },
+    {
+      "case": "mutref_scatter",
+      "52": {
+        "plain": {
+          "p50_ms": 153.592245,
+          "p95_ms": 159.104237,
+          "peak_rss_mib": 80.1640625,
+          "samples": 7,
+          "target_p50_le_200ms": null
+        },
+        "pch": {
+          "p50_ms": 126.00398099999998,
+          "p95_ms": 127.72995100000001,
+          "peak_rss_mib": 77.1640625,
+          "samples": 7,
+          "target_p50_le_200ms": true
+        },
+        "pch_savings_ms": 27.58826400000001,
+        "pch_savings_percent": 17.962016246328073
+      },
+      "53": {
+        "plain": {
+          "p50_ms": 155.489263,
+          "p95_ms": 160.60129,
+          "peak_rss_mib": 79.9140625,
+          "samples": 7,
+          "target_p50_le_200ms": null
+        },
+        "pch": {
+          "p50_ms": 126.054215,
+          "p95_ms": 126.98845,
+          "peak_rss_mib": 76.78515625,
+          "samples": 7,
+          "target_p50_le_200ms": true
+        },
+        "pch_savings_ms": 29.435047999999995,
+        "pch_savings_percent": 18.930598442671887
+      },
+      "54_pch_separate_observation": {
+        "p50_ms": 122.19972399999999,
+        "p95_ms": 122.832916,
+        "peak_rss_mib": 76.91015625,
+        "samples": 7,
+        "target_p50_le_200ms": true
+      }
+    },
+    {
+      "case": "deque_ring",
+      "52": {
+        "plain": {
+          "p50_ms": 156.937515,
+          "p95_ms": 161.899453,
+          "peak_rss_mib": 80.0390625,
+          "samples": 7,
+          "target_p50_le_200ms": null
+        },
+        "pch": {
+          "p50_ms": 128.153292,
+          "p95_ms": 130.937176,
+          "peak_rss_mib": 77.03515625,
+          "samples": 7,
+          "target_p50_le_200ms": true
+        },
+        "pch_savings_ms": 28.784222999999997,
+        "pch_savings_percent": 18.341199680649968
+      },
+      "53": {
+        "plain": {
+          "p50_ms": 156.43864599999998,
+          "p95_ms": 166.636051,
+          "peak_rss_mib": 80.0390625,
+          "samples": 7,
+          "target_p50_le_200ms": null
+        },
+        "pch": {
+          "p50_ms": 128.936378,
+          "p95_ms": 133.55184,
+          "peak_rss_mib": 77.1015625,
+          "samples": 7,
+          "target_p50_le_200ms": true
+        },
+        "pch_savings_ms": 27.502267999999987,
+        "pch_savings_percent": 17.580226308018542
+      },
+      "54_pch_separate_observation": {
+        "p50_ms": 125.97060600000002,
+        "p95_ms": 126.70678399999998,
+        "peak_rss_mib": 77.41015625,
+        "samples": 7,
+        "target_p50_le_200ms": true
+      }
+    }
+  ],
+  "phase_diagnostics": {
+    "trigger": "PCH P50 > 200ms",
+    "primary_cases": {},
+    "current54_cases": {},
+    "commands_executed": 0,
+    "reason": "all 12 PCH arms met the stated threshold; conditional diagnostics were not triggered",
+    "historical_above_200ms_cause": "not identified by this experiment; those unqualified shared-server observations are not a controlled host-to-host comparison"
+  },
+  "binary_attribution": {
+    "module_text_deltas": {
+      "codegen": {
+        "52": 402613,
+        "53": 431222,
+        "delta": 28609
+      },
+      "main": {
+        "52": 27731,
+        "53": 27915,
+        "delta": 184
+      },
+      "generated-helper": {
+        "52": 8994,
+        "53": 9347,
+        "delta": 353
+      },
+      "support": {
+        "52": 18364,
+        "53": 18364,
+        "delta": 0
+      },
+      "types": {
+        "52": 21845,
+        "53": 23662,
+        "delta": 1817
+      },
+      "parser": {
+        "52": 66824,
+        "53": 68452,
+        "delta": 1628
+      },
+      "yv_string_from": {
+        "52": 279,
+        "53": 279,
+        "delta": 0
+      },
+      "yv_out_bytes": {
+        "52": 268,
+        "53": 268,
+        "delta": 0
+      },
+      "lexer": {
+        "52": 26293,
+        "53": 26293,
+        "delta": 0
+      },
+      "yv_vec_at": {
+        "52": 50,
+        "53": 50,
+        "delta": 0
+      },
+      "yv_panic": {
+        "52": 47,
+        "53": 47,
+        "delta": 0
+      },
+      "yv_fs_remove_file": {
+        "52": 194,
+        "53": 194,
+        "delta": 0
+      },
+      "yv_process_run": {
+        "52": 1238,
+        "53": 1238,
+        "delta": 0
+      },
+      "yv_os_write": {
+        "52": 103,
+        "53": 103,
+        "delta": 0
+      },
+      "yv_os_exit": {
+        "52": 26,
+        "53": 26,
+        "delta": 0
+      },
+      "yv_vec_push_slot": {
+        "52": 225,
+        "53": 225,
+        "delta": 0
+      },
+      "_dl_relocate_static_pie": {
+        "52": 5,
+        "53": 5,
+        "delta": 0
+      },
+      "yv_os_env": {
+        "52": 859,
+        "53": 859,
+        "delta": 0
+      },
+      "yv_exit_process": {
+        "52": 9,
+        "53": 9,
+        "delta": 0
+      },
+      "yv_os_write_u32": {
+        "52": 167,
+        "53": 167,
+        "delta": 0
+      },
+      "yv_output_failure": {
+        "52": 164,
+        "53": 164,
+        "delta": 0
+      },
+      "yv_fs_same_file": {
+        "52": 490,
+        "53": 490,
+        "delta": 0
+      },
+      "driver": {
+        "52": 13651,
+        "53": 13651,
+        "delta": 0
+      },
+      "yv_out_str": {
+        "52": 7,
+        "53": 7,
+        "delta": 0
+      },
+      "yv_fs_write_new_text": {
+        "52": 371,
+        "53": 371,
+        "delta": 0
+      },
+      "yv_vec_with_cap": {
+        "52": 253,
+        "53": 253,
+        "delta": 0
+      },
+      "yv_panic_begin": {
+        "52": 513,
+        "53": 513,
+        "delta": 0
+      },
+      "yv_string_drop": {
+        "52": 109,
+        "53": 109,
+        "delta": 0
+      },
+      "yv_write": {
+        "52": 478,
+        "53": 478,
+        "delta": 0
+      },
+      "_start": {
+        "52": 38,
+        "53": 38,
+        "delta": 0
+      },
+      "yv_string_push": {
+        "52": 228,
+        "53": 228,
+        "delta": 0
+      },
+      "yv_panic_end": {
+        "52": 36,
+        "53": 36,
+        "delta": 0
+      },
+      "yv_flush": {
+        "52": 249,
+        "53": 249,
+        "delta": 0
+      },
+      "yv_fault": {
+        "52": 89,
+        "53": 89,
+        "delta": 0
+      },
+      "yv_fs_read_text": {
+        "52": 909,
+        "53": 909,
+        "delta": 0
+      },
+      "yv_out_i64": {
+        "52": 199,
+        "53": 199,
+        "delta": 0
+      },
+      "yv_startup_utf8": {
+        "52": 70,
+        "53": 70,
+        "delta": 0
+      },
+      "yv_out_lock": {
+        "52": 80,
+        "53": 80,
+        "delta": 0
+      },
+      "yv_stack_overflow": {
+        "52": 195,
+        "53": 195,
+        "delta": 0
+      },
+      "yv_source_location": {
+        "52": 88,
+        "53": 88,
+        "delta": 0
+      },
+      "yv_capacity_overflow": {
+        "52": 27,
+        "53": 27,
+        "delta": 0
+      },
+      "yv_vec_free": {
+        "52": 109,
+        "53": 109,
+        "delta": 0
+      }
+    },
+    "flags": [
+      "-std=c17",
+      "-fno-strict-aliasing",
+      "-DYV_ALLOC_CHECK",
+      "-O2",
+      "-s"
+    ],
+    "same_header_sha256": "4b490ca18f810211b35acca525e9ec1b1284e1488dd38d9ce6e391c78ac79b0a",
+    "stripped_binary_delta_bytes": 33504,
+    "section_file_deltas": [
+      {
+        "section": "",
+        "52": 0,
+        "53": 0,
+        "delta": 0
+      },
+      {
+        "section": ".interp",
+        "52": 28,
+        "53": 28,
+        "delta": 0
+      },
+      {
+        "section": ".note.ABI-tag",
+        "52": 32,
+        "53": 32,
+        "delta": 0
+      },
+      {
+        "section": ".dynsym",
+        "52": 1104,
+        "53": 1104,
+        "delta": 0
+      },
+      {
+        "section": ".gnu.version",
+        "52": 92,
+        "53": 92,
+        "delta": 0
+      },
+      {
+        "section": ".gnu.version_r",
+        "52": 128,
+        "53": 128,
+        "delta": 0
+      },
+      {
+        "section": ".gnu.hash",
+        "52": 28,
+        "53": 28,
+        "delta": 0
+      },
+      {
+        "section": ".hash",
+        "52": 376,
+        "53": 376,
+        "delta": 0
+      },
+      {
+        "section": ".dynstr",
+        "52": 560,
+        "53": 560,
+        "delta": 0
+      },
+      {
+        "section": ".rela.dyn",
+        "52": 72,
+        "53": 72,
+        "delta": 0
+      },
+      {
+        "section": ".rela.plt",
+        "52": 936,
+        "53": 936,
+        "delta": 0
+      },
+      {
+        "section": ".rodata",
+        "52": 121726,
+        "53": 122110,
+        "delta": 384
+      },
+      {
+        "section": ".eh_frame_hdr",
+        "52": 1788,
+        "53": 1852,
+        "delta": 64
+      },
+      {
+        "section": ".eh_frame",
+        "52": 9840,
+        "53": 10216,
+        "delta": 376
+      },
+      {
+        "section": ".text",
+        "52": 596402,
+        "53": 629090,
+        "delta": 32688
+      },
+      {
+        "section": ".init",
+        "52": 27,
+        "53": 27,
+        "delta": 0
+      },
+      {
+        "section": ".fini",
+        "52": 13,
+        "53": 13,
+        "delta": 0
+      },
+      {
+        "section": ".plt",
+        "52": 640,
+        "53": 640,
+        "delta": 0
+      },
+      {
+        "section": ".tbss",
+        "52": 0,
+        "53": 0,
+        "delta": 0
+      },
+      {
+        "section": ".fini_array",
+        "52": 8,
+        "53": 8,
+        "delta": 0
+      },
+      {
+        "section": ".init_array",
+        "52": 8,
+        "53": 8,
+        "delta": 0
+      },
+      {
+        "section": ".data.rel.ro",
+        "52": 1808,
+        "53": 1792,
+        "delta": -16
+      },
+      {
+        "section": ".dynamic",
+        "52": 448,
+        "53": 448,
+        "delta": 0
+      },
+      {
+        "section": ".got",
+        "52": 24,
+        "53": 24,
+        "delta": 0
+      },
+      {
+        "section": ".got.plt",
+        "52": 336,
+        "53": 336,
+        "delta": 0
+      },
+      {
+        "section": ".relro_padding",
+        "52": 0,
+        "53": 0,
+        "delta": 0
+      },
+      {
+        "section": ".tm_clone_table",
+        "52": 0,
+        "53": 0,
+        "delta": 0
+      },
+      {
+        "section": ".data",
+        "52": 8,
+        "53": 8,
+        "delta": 0
+      },
+      {
+        "section": ".bss",
+        "52": 0,
+        "53": 0,
+        "delta": 0
+      },
+      {
+        "section": ".comment",
+        "52": 85,
+        "53": 85,
+        "delta": 0
+      },
+      {
+        "section": ".shstrtab",
+        "52": 285,
+        "53": 285,
+        "delta": 0
+      }
+    ],
+    "non_section_file_delta_bytes": 8,
+    "text_symbol_deltas": [
+      {
+        "name": "codegen.printValue",
+        "52": 0,
+        "53": 8018,
+        "delta": 8018
+      },
+      {
+        "name": "codegen.declarations",
+        "52": 9564,
+        "53": 16839,
+        "delta": 7275
+      },
+      {
+        "name": "codegen.enumValue",
+        "52": 993,
+        "53": 7414,
+        "delta": 6421
+      },
+      {
+        "name": "codegen.outputValue",
+        "52": 8832,
+        "53": 2501,
+        "delta": -6331
+      },
+      {
+        "name": "codegen.patternsComplete",
+        "52": 0,
+        "53": 4360,
+        "delta": 4360
+      },
+      {
+        "name": "codegen.bindPattern",
+        "52": 0,
+        "53": 3558,
+        "delta": 3558
+      },
+      {
+        "name": "parser.pattern",
+        "52": 0,
+        "53": 3254,
+        "delta": 3254
+      },
+      {
+        "name": "codegen.patternConstructor",
+        "52": 0,
+        "53": 2654,
+        "delta": 2654
+      },
+      {
+        "name": "codegen.standardErrorValue",
+        "52": 2506,
+        "53": 0,
+        "delta": -2506
+      },
+      {
+        "name": "parser.matchExpression",
+        "52": 5958,
+        "53": 3453,
+        "delta": -2505
+      },
+      {
+        "name": "codegen.patternCondition",
+        "52": 0,
+        "53": 2321,
+        "delta": 2321
+      },
+      {
+        "name": "codegen.methodValue",
+        "52": 45927,
+        "53": 44134,
+        "delta": -1793
+      },
+      {
+        "name": "codegen.declareErrorBinding",
+        "52": 1438,
+        "53": 0,
+        "delta": -1438
+      },
+      {
+        "name": "codegen.expressionValue",
+        "52": 84548,
+        "53": 85918,
+        "delta": 1370
+      },
+      {
+        "name": "codegen.optionalLifecycle",
+        "52": 0,
+        "53": 1351,
+        "delta": 1351
+      },
+      {
+        "name": "types.variantName",
+        "52": 0,
+        "53": 1268,
+        "delta": 1268
+      },
+      {
+        "name": "codegen.matchField",
+        "52": 0,
+        "53": 938,
+        "delta": 938
+      },
+      {
+        "name": "codegen.matchValue",
+        "52": 16487,
+        "53": 17398,
+        "delta": 911
+      },
+      {
+        "name": "codegen.cString",
+        "52": 687,
+        "53": 1597,
+        "delta": 910
+      },
+      {
+        "name": "types.variantFieldName",
+        "52": 0,
+        "53": 754,
+        "delta": 754
+      },
+      {
+        "name": "codegen.matchTag",
+        "52": 0,
+        "53": 737,
+        "delta": 737
+      },
+      {
+        "name": "codegen.generate",
+        "52": 34153,
+        "53": 34793,
+        "delta": 640
+      },
+      {
+        "name": "parser.parseFile",
+        "52": 15233,
+        "53": 15864,
+        "delta": 631
+      },
+      {
+        "name": "types.variantField",
+        "52": 0,
+        "53": 561,
+        "delta": 561
+      },
+      {
+        "name": "types.optional",
+        "52": 426,
+        "53": 0,
+        "delta": -426
+      },
+      {
+        "name": "codegen.mapQuery",
+        "52": 6261,
+        "53": 5882,
+        "delta": -379
+      },
+      {
+        "name": "generated-helper:sh_drop_#",
+        "52": 5694,
+        "53": 6047,
+        "delta": 353
+      },
+      {
+        "name": "codegen.mapUpdate",
+        "52": 8804,
+        "53": 8475,
+        "delta": -329
+      },
+      {
+        "name": "codegen.coalesceValue",
+        "52": 8756,
+        "53": 8433,
+        "delta": -323
+      },
+      {
+        "name": "codegen.textQuery",
+        "52": 10934,
+        "53": 10681,
+        "delta": -253
+      },
+      {
+        "name": "parser.postfix",
+        "52": 12620,
+        "53": 12868,
+        "delta": 248
+      },
+      {
+        "name": "types.standardVariant",
+        "52": 245,
+        "53": 0,
+        "delta": -245
+      },
+      {
+        "name": "codegen.someConstructor",
+        "52": 1999,
+        "53": 1762,
+        "delta": -237
+      },
+      {
+        "name": "types.resolve",
+        "52": 5353,
+        "53": 5131,
+        "delta": -222
+      },
+      {
+        "name": "main.compile",
+        "52": 9673,
+        "53": 9857,
+        "delta": 184
+      },
+      {
+        "name": "codegen.dropName",
+        "52": 1111,
+        "53": 1273,
+        "delta": 162
+      },
+      {
+        "name": "codegen.emitBlock",
+        "52": 25209,
+        "53": 25321,
+        "delta": 112
+      },
+      {
+        "name": "codegen.forLoopStatement",
+        "52": 16388,
+        "53": 16500,
+        "delta": 112
+      },
+      {
+        "name": "codegen.userCall",
+        "52": 11193,
+        "53": 11260,
+        "delta": 67
+      },
+      {
+        "name": "codegen.returnStatement",
+        "52": 6121,
+        "53": 6161,
+        "delta": 40
+      },
+      {
+        "name": "types.describe",
+        "52": 4233,
+        "53": 4271,
+        "delta": 38
+      },
+      {
+        "name": "types.cType",
+        "52": 1307,
+        "53": 1342,
+        "delta": 35
+      },
+      {
+        "name": "codegen.emitLoopBody",
+        "52": 16838,
+        "53": 16870,
+        "delta": 32
+      },
+      {
+        "name": "types.owned",
+        "52": 1421,
+        "53": 1443,
+        "delta": 22
+      },
+      {
+        "name": "codegen.emitHint",
+        "52": 3797,
+        "53": 3816,
+        "delta": 19
+      },
+      {
+        "name": "codegen.heapPush",
+        "52": 3104,
+        "53": 3123,
+        "delta": 19
+      },
+      {
+        "name": "codegen.signature",
+        "52": 2597,
+        "53": 2615,
+        "delta": 18
+      },
+      {
+        "name": "types.internResult",
+        "52": 629,
+        "53": 645,
+        "delta": 16
+      },
+      {
+        "name": "codegen.minMaxValue",
+        "52": 3328,
+        "53": 3344,
+        "delta": 16
+      },
+      {
+        "name": "codegen.messageWrites",
+        "52": 2536,
+        "53": 2552,
+        "delta": 16
+      },
+      {
+        "name": "types.builtinType",
+        "52": 1447,
+        "53": 1463,
+        "delta": 16
+      },
+      {
+        "name": "codegen.whileLetHeader",
+        "52": 1635,
+        "53": 1651,
+        "delta": 16
+      },
+      {
+        "name": "codegen.placeType",
+        "52": 3419,
+        "53": 3431,
+        "delta": 12
+      },
+      {
+        "name": "codegen.resultPayload",
+        "52": 1083,
+        "53": 1095,
+        "delta": 12
+      },
+      {
+        "name": "codegen.emitExpected",
+        "52": 2309,
+        "53": 2318,
+        "delta": 9
+      },
+      {
+        "name": "codegen.takeValue",
+        "52": 2308,
+        "53": 2316,
+        "delta": 8
+      },
+      {
+        "name": "codegen.placeOf",
+        "52": 4056,
+        "53": 4062,
+        "delta": 6
+      },
+      {
+        "name": "codegen.requireHint",
+        "52": 774,
+        "53": 780,
+        "delta": 6
+      },
+      {
+        "name": "codegen.require",
+        "52": 1231,
+        "53": 1237,
+        "delta": 6
+      },
+      {
+        "name": "codegen.loopExit",
+        "52": 1207,
+        "53": 1213,
+        "delta": 6
+      },
+      {
+        "name": "codegen.refPlace",
+        "52": 1192,
+        "53": 1198,
+        "delta": 6
+      },
+      {
+        "name": "codegen.wrapOptional",
+        "52": 1149,
+        "53": 1155,
+        "delta": 6
+      },
+      {
+        "name": "codegen.wrapResult",
+        "52": 2282,
+        "53": 2288,
+        "delta": 6
+      },
+      {
+        "name": "codegen.vectorLifecycle",
+        "52": 1961,
+        "53": 1965,
+        "delta": 4
+      },
+      {
+        "name": "codegen.fieldPlace",
+        "52": 1410,
+        "53": 1413,
+        "delta": 3
+      },
+      {
+        "name": "codegen.cleanTemps",
+        "52": 428,
+        "53": 431,
+        "delta": 3
+      },
+      {
+        "name": "codegen.bindOptionalPayload",
+        "52": 2208,
+        "53": 2211,
+        "delta": 3
+      },
+      {
+        "name": "codegen.cleanLocals",
+        "52": 535,
+        "53": 538,
+        "delta": 3
+      },
+      {
+        "name": "codegen.emitContext",
+        "52": 948,
+        "53": 950,
+        "delta": 2
+      },
+      {
+        "name": "codegen.typedValue",
+        "52": 1191,
+        "53": 1193,
+        "delta": 2
+      },
+      {
+        "name": "codegen.builtinReceiverType",
+        "52": 671,
+        "53": 673,
+        "delta": 2
+      },
+      {
+        "name": "main.jsonFlag",
+        "52": 105,
+        "53": 105,
+        "delta": 0
+      },
+      {
+        "name": "codegen.hintName",
+        "52": 695,
+        "53": 695,
+        "delta": 0
+      },
+      {
+        "name": "support.jsonHeader",
+        "52": 3884,
+        "53": 3884,
+        "delta": 0
+      },
+      {
+        "name": "support.positionAt",
+        "52": 377,
+        "53": 377,
+        "delta": 0
+      },
+      {
+        "name": "main.command",
+        "52": 15579,
+        "53": 15579,
+        "delta": 0
+      },
+      {
+        "name": "codegen.zeroValue",
+        "52": 555,
+        "53": 555,
+        "delta": 0
+      },
+      {
+        "name": "parser.construction",
+        "52": 1910,
+        "53": 1910,
+        "delta": 0
+      },
+      {
+        "name": "parser.parseBlock",
+        "52": 1048,
+        "53": 1048,
+        "delta": 0
+      },
+      {
+        "name": "types.tupleCount",
+        "52": 182,
+        "53": 182,
+        "delta": 0
+      },
+      {
+        "name": "generated-helper:sh_vec_drop_type_#",
+        "52": 542,
+        "53": 542,
+        "delta": 0
+      },
+      {
+        "name": "parser.identifier",
+        "52": 311,
+        "53": 311,
+        "delta": 0
+      },
+      {
+        "name": "support.jsonLocation",
+        "52": 2566,
+        "53": 2566,
+        "delta": 0
+      },
+      {
+        "name": "parser.expect",
+        "52": 422,
+        "53": 422,
+        "delta": 0
+      },
+      {
+        "name": "parser.parseExpression",
+        "52": 1731,
+        "53": 1731,
+        "delta": 0
+      },
+      {
+        "name": "parser.closure",
+        "52": 1378,
+        "53": 1378,
+        "delta": 0
+      },
+      {
+        "name": "yv_string_from",
+        "52": 279,
+        "53": 279,
+        "delta": 0
+      },
+      {
+        "name": "parser.syntax",
+        "52": 180,
+        "53": 180,
+        "delta": 0
+      },
+      {
+        "name": "types.fieldIndex",
+        "52": 477,
+        "53": 477,
+        "delta": 0
+      },
+      {
+        "name": "parser.parseBinary",
+        "52": 1831,
+        "53": 1831,
+        "delta": 0
+      },
+      {
+        "name": "generated-helper:sh_map_drop_int",
+        "52": 282,
+        "53": 282,
+        "delta": 0
+      },
+      {
+        "name": "codegen.iterationSources",
+        "52": 866,
+        "53": 866,
+        "delta": 0
+      },
+      {
+        "name": "yv_out_bytes",
+        "52": 268,
+        "53": 268,
+        "delta": 0
+      },
+      {
+        "name": "lexer.sourceIdentities",
+        "52": 1199,
+        "53": 1199,
+        "delta": 0
+      },
+      {
+        "name": "yv_vec_at",
+        "52": 50,
+        "53": 50,
+        "delta": 0
+      },
+      {
+        "name": "support.report",
+        "52": 268,
+        "53": 268,
+        "delta": 0
+      },
+      {
+        "name": "yv_panic",
+        "52": 47,
+        "53": 47,
+        "delta": 0
+      },
+      {
+        "name": "support.parseDecimal",
+        "52": 473,
+        "53": 473,
+        "delta": 0
+      },
+      {
+        "name": "codegen.pushDigit",
+        "52": 333,
+        "53": 333,
+        "delta": 0
+      },
+      {
+        "name": "codegen.copyValue",
+        "52": 337,
+        "53": 337,
+        "delta": 0
+      },
+      {
+        "name": "yv_fs_remove_file",
+        "52": 194,
+        "53": 194,
+        "delta": 0
+      },
+      {
+        "name": "yv_process_run",
+        "52": 1238,
+        "53": 1238,
+        "delta": 0
+      },
+      {
+        "name": "types.tuple",
+        "52": 921,
+        "53": 921,
+        "delta": 0
+      },
+      {
+        "name": "support.join5",
+        "52": 1069,
+        "53": 1069,
+        "delta": 0
+      },
+      {
+        "name": "yv_os_write",
+        "52": 103,
+        "53": 103,
+        "delta": 0
+      },
+      {
+        "name": "parser.unary",
+        "52": 792,
+        "53": 792,
+        "delta": 0
+      },
+      {
+        "name": "parser.typeName",
+        "52": 730,
+        "53": 730,
+        "delta": 0
+      },
+      {
+        "name": "codegen.integerOperation",
+        "52": 3110,
+        "53": 3110,
+        "delta": 0
+      },
+      {
+        "name": "types.importedFile",
+        "52": 631,
+        "53": 631,
+        "delta": 0
+      },
+      {
+        "name": "yv_os_exit",
+        "52": 26,
+        "53": 26,
+        "delta": 0
+      },
+      {
+        "name": "yv_vec_push_slot",
+        "52": 225,
+        "53": 225,
+        "delta": 0
+      },
+      {
+        "name": "codegen.minimumMagnitude",
+        "52": 251,
+        "53": 251,
+        "delta": 0
+      },
+      {
+        "name": "_dl_relocate_static_pie",
+        "52": 5,
+        "53": 5,
+        "delta": 0
+      },
+      {
+        "name": "support.join3",
+        "52": 681,
+        "53": 681,
+        "delta": 0
+      },
+      {
+        "name": "support.identify",
+        "52": 3525,
+        "53": 3525,
+        "delta": 0
+      },
+      {
+        "name": "codegen.numericTypeName",
+        "52": 450,
+        "53": 450,
+        "delta": 0
+      },
+      {
+        "name": "yv_os_env",
+        "52": 859,
+        "53": 859,
+        "delta": 0
+      },
+      {
+        "name": "yv_exit_process",
+        "52": 9,
+        "53": 9,
+        "delta": 0
+      },
+      {
+        "name": "lexer.fail",
+        "52": 497,
+        "53": 497,
+        "delta": 0
+      },
+      {
+        "name": "yv_os_write_u32",
+        "52": 167,
+        "53": 167,
+        "delta": 0
+      },
+      {
+        "name": "types.qualifiedType",
+        "52": 879,
+        "53": 879,
+        "delta": 0
+      },
+      {
+        "name": "types.vector",
+        "52": 254,
+        "53": 254,
+        "delta": 0
+      },
+      {
+        "name": "parser.mapType",
+        "52": 932,
+        "53": 932,
+        "delta": 0
+      },
+      {
+        "name": "codegen.takeCall",
+        "52": 1568,
+        "53": 1568,
+        "delta": 0
+      },
+      {
+        "name": "parser.precedence",
+        "52": 656,
+        "53": 656,
+        "delta": 0
+      },
+      {
+        "name": "codegen.vectorHelper",
+        "52": 397,
+        "53": 397,
+        "delta": 0
+      },
+      {
+        "name": "codegen.writable",
+        "52": 898,
+        "53": 898,
+        "delta": 0
+      },
+      {
+        "name": "yv_output_failure",
+        "52": 164,
+        "53": 164,
+        "delta": 0
+      },
+      {
+        "name": "types.fieldOf",
+        "52": 168,
+        "53": 168,
+        "delta": 0
+      },
+      {
+        "name": "types.reservedType",
+        "52": 954,
+        "53": 954,
+        "delta": 0
+      },
+      {
+        "name": "parser.at",
+        "52": 155,
+        "53": 155,
+        "delta": 0
+      },
+      {
+        "name": "yv_fs_same_file",
+        "52": 490,
+        "53": 490,
+        "delta": 0
+      },
+      {
+        "name": "types.unsupportedType",
+        "52": 389,
+        "53": 389,
+        "delta": 0
+      },
+      {
+        "name": "lexer.lexTokenRange",
+        "52": 19506,
+        "53": 19506,
+        "delta": 0
+      },
+      {
+        "name": "parser.pushExpr",
+        "52": 153,
+        "53": 153,
+        "delta": 0
+      },
+      {
+        "name": "parser.vectorType",
+        "52": 796,
+        "53": 796,
+        "delta": 0
+      },
+      {
+        "name": "generated-helper:sh_result_drop_#",
+        "52": 581,
+        "53": 581,
+        "delta": 0
+      },
+      {
+        "name": "support.join4",
+        "52": 881,
+        "53": 881,
+        "delta": 0
+      },
+      {
+        "name": "parser.enter",
+        "52": 209,
+        "53": 209,
+        "delta": 0
+      },
+      {
+        "name": "support.decimal",
+        "52": 1130,
+        "53": 1130,
+        "delta": 0
+      },
+      {
+        "name": "driver.environment",
+        "52": 914,
+        "53": 914,
+        "delta": 0
+      },
+      {
+        "name": "types.lookup",
+        "52": 1319,
+        "53": 1319,
+        "delta": 0
+      },
+      {
+        "name": "yv_out_str",
+        "52": 7,
+        "53": 7,
+        "delta": 0
+      },
+      {
+        "name": "parser.vectorLiteral",
+        "52": 1868,
+        "53": 1868,
+        "delta": 0
+      },
+      {
+        "name": "generated-helper:sh_map_set_int",
+        "52": 1690,
+        "53": 1690,
+        "delta": 0
+      },
+      {
+        "name": "parser.setBody",
+        "52": 234,
+        "53": 234,
+        "delta": 0
+      },
+      {
+        "name": "parser.parseStatement",
+        "52": 6554,
+        "53": 6554,
+        "delta": 0
+      },
+      {
+        "name": "codegen.lineColumn",
+        "52": 555,
+        "53": 555,
+        "delta": 0
+      },
+      {
+        "name": "support.jsonString",
+        "52": 1676,
+        "53": 1676,
+        "delta": 0
+      },
+      {
+        "name": "codegen.cloneExpression",
+        "52": 6845,
+        "53": 6845,
+        "delta": 0
+      },
+      {
+        "name": "support.join2",
+        "52": 481,
+        "53": 481,
+        "delta": 0
+      },
+      {
+        "name": "lexer.lexIntoMode",
+        "52": 4209,
+        "53": 4209,
+        "delta": 0
+      },
+      {
+        "name": "parser.reservedWord",
+        "52": 1396,
+        "53": 1396,
+        "delta": 0
+      },
+      {
+        "name": "yv_fs_write_new_text",
+        "52": 371,
+        "53": 371,
+        "delta": 0
+      },
+      {
+        "name": "lexer.exponentAhead",
+        "52": 211,
+        "53": 211,
+        "delta": 0
+      },
+      {
+        "name": "driver.failure",
+        "52": 284,
+        "53": 284,
+        "delta": 0
+      },
+      {
+        "name": "yv_vec_with_cap",
+        "52": 253,
+        "53": 253,
+        "delta": 0
+      },
+      {
+        "name": "parser.typeArgumentsAhead",
+        "52": 514,
+        "53": 514,
+        "delta": 0
+      },
+      {
+        "name": "driver.joinPath",
+        "52": 663,
+        "53": 663,
+        "delta": 0
+      },
+      {
+        "name": "codegen.outputBuiltin",
+        "52": 193,
+        "53": 193,
+        "delta": 0
+      },
+      {
+        "name": "yv_panic_begin",
+        "52": 513,
+        "53": 513,
+        "delta": 0
+      },
+      {
+        "name": "main",
+        "52": 1620,
+        "53": 1620,
+        "delta": 0
+      },
+      {
+        "name": "codegen.mapLifecycle",
+        "52": 7585,
+        "53": 7585,
+        "delta": 0
+      },
+      {
+        "name": "codegen.useMap",
+        "52": 176,
+        "53": 176,
+        "delta": 0
+      },
+      {
+        "name": "parser.pushList",
+        "52": 269,
+        "53": 269,
+        "delta": 0
+      },
+      {
+        "name": "lexer.stopWithEnd",
+        "52": 407,
+        "53": 407,
+        "delta": 0
+      },
+      {
+        "name": "yv_string_drop",
+        "52": 109,
+        "53": 109,
+        "delta": 0
+      },
+      {
+        "name": "codegen.localName",
+        "52": 589,
+        "53": 589,
+        "delta": 0
+      },
+      {
+        "name": "codegen.pushLoop",
+        "52": 242,
+        "53": 242,
+        "delta": 0
+      },
+      {
+        "name": "parser.pushStmt",
+        "52": 138,
+        "53": 138,
+        "delta": 0
+      },
+      {
+        "name": "codegen.useHeap",
+        "52": 472,
+        "53": 472,
+        "delta": 0
+      },
+      {
+        "name": "yv_write",
+        "52": 478,
+        "53": 478,
+        "delta": 0
+      },
+      {
+        "name": "_start",
+        "52": 38,
+        "53": 38,
+        "delta": 0
+      },
+      {
+        "name": "main.usage",
+        "52": 296,
+        "53": 296,
+        "delta": 0
+      },
+      {
+        "name": "support.successJson",
+        "52": 394,
+        "53": 394,
+        "delta": 0
+      },
+      {
+        "name": "codegen.storeSources",
+        "52": 468,
+        "53": 468,
+        "delta": 0
+      },
+      {
+        "name": "codegen.readable",
+        "52": 321,
+        "53": 321,
+        "delta": 0
+      },
+      {
+        "name": "yv_string_push",
+        "52": 228,
+        "53": 228,
+        "delta": 0
+      },
+      {
+        "name": "yv_panic_end",
+        "52": 36,
+        "53": 36,
+        "delta": 0
+      },
+      {
+        "name": "codegen.dropValue",
+        "52": 1085,
+        "53": 1085,
+        "delta": 0
+      },
+      {
+        "name": "parser.setType",
+        "52": 584,
+        "53": 584,
+        "delta": 0
+      },
+      {
+        "name": "codegen.localIndex",
+        "52": 412,
+        "53": 412,
+        "delta": 0
+      },
+      {
+        "name": "parser.typeAtom",
+        "52": 5016,
+        "53": 5016,
+        "delta": 0
+      },
+      {
+        "name": "yv_flush",
+        "52": 249,
+        "53": 249,
+        "delta": 0
+      },
+      {
+        "name": "codegen.scalar",
+        "52": 818,
+        "53": 818,
+        "delta": 0
+      },
+      {
+        "name": "driver.buildInside",
+        "52": 11790,
+        "53": 11790,
+        "delta": 0
+      },
+      {
+        "name": "codegen.untypedInteger",
+        "52": 1007,
+        "53": 1007,
+        "delta": 0
+      },
+      {
+        "name": "generated-helper:sh_vec_drop_string",
+        "52": 205,
+        "53": 205,
+        "delta": 0
+      },
+      {
+        "name": "yv_fault",
+        "52": 89,
+        "53": 89,
+        "delta": 0
+      },
+      {
+        "name": "yv_fs_read_text",
+        "52": 909,
+        "53": 909,
+        "delta": 0
+      },
+      {
+        "name": "yv_out_i64",
+        "52": 199,
+        "53": 199,
+        "delta": 0
+      },
+      {
+        "name": "yv_startup_utf8",
+        "52": 70,
+        "53": 70,
+        "delta": 0
+      },
+      {
+        "name": "lexer.bump",
+        "52": 264,
+        "53": 264,
+        "delta": 0
+      },
+      {
+        "name": "codegen.mapHelper",
+        "52": 315,
+        "53": 315,
+        "delta": 0
+      },
+      {
+        "name": "parser.eat",
+        "52": 164,
+        "53": 164,
+        "delta": 0
+      },
+      {
+        "name": "yv_out_lock",
+        "52": 80,
+        "53": 80,
+        "delta": 0
+      },
+      {
+        "name": "codegen.view",
+        "52": 380,
+        "53": 380,
+        "delta": 0
+      },
+      {
+        "name": "codegen.optionalLayout",
+        "52": 439,
+        "53": 439,
+        "delta": 0
+      },
+      {
+        "name": "yv_stack_overflow",
+        "52": 195,
+        "53": 195,
+        "delta": 0
+      },
+      {
+        "name": "codegen.temporaryName",
+        "52": 301,
+        "53": 301,
+        "delta": 0
+      },
+      {
+        "name": "yv_source_location",
+        "52": 88,
+        "53": 88,
+        "delta": 0
+      },
+      {
+        "name": "codegen.put",
+        "52": 237,
+        "53": 237,
+        "delta": 0
+      },
+      {
+        "name": "yv_capacity_overflow",
+        "52": 27,
+        "53": 27,
+        "delta": 0
+      },
+      {
+        "name": "main.rootDiagnostic",
+        "52": 458,
+        "53": 458,
+        "delta": 0
+      },
+      {
+        "name": "types.tupleElement",
+        "52": 610,
+        "53": 610,
+        "delta": 0
+      },
+      {
+        "name": "codegen.standardModule",
+        "52": 764,
+        "53": 764,
+        "delta": 0
+      },
+      {
+        "name": "codegen.emit",
+        "52": 401,
+        "53": 401,
+        "delta": 0
+      },
+      {
+        "name": "parser.ifStatement",
+        "52": 2273,
+        "53": 2273,
+        "delta": 0
+      },
+      {
+        "name": "yv_vec_free",
+        "52": 109,
+        "53": 109,
+        "delta": 0
+      },
+      {
+        "name": "support.reportJson",
+        "52": 959,
+        "53": 959,
+        "delta": 0
+      },
+      {
+        "name": "codegen.comparatorExpression",
+        "52": 959,
+        "53": 959,
+        "delta": 0
+      },
+      {
+        "name": "codegen.functionIn",
+        "52": 388,
+        "53": 388,
+        "delta": 0
+      },
+      {
+        "name": "codegen.popLoop",
+        "52": 2093,
+        "53": 2093,
+        "delta": 0
+      },
+      {
+        "name": "parser.heapType",
+        "52": 769,
+        "53": 769,
+        "delta": 0
+      }
+    ],
+    "symbol_accounting": "defined .text symbols, exact-region aliases deduplicated; inlined code is charged to its compiled caller; alignment/padding and uncovered bytes remain separate",
+    "text_bytes_not_explained_by_symbol_size_delta": 97,
+    "string_representation_control": {
+      "string_token_count": 2837,
+      "decoded_string_sequence_sha256": "f7c6bbb40a6f98a34f04f15dd3930eba82fb0541cb51ed61c83190e2eae20c98",
+      "arms": {
+        "original": {
+          "c": {
+            "path": "/home/runner/work/yavo/yavo/compiler/target/ci/perf54/artifacts/string-control/original.c",
+            "bytes": 1493832,
+            "sha256": "c93898b1a7b061da4f0e12c9c0ae3f36f38c8aa20c8a908c16cc2a5b7e45f913"
+          },
+          "binary": {
+            "path": "/home/runner/work/yavo/yavo/compiler/target/ci/perf54/artifacts/string-control/original",
+            "bytes": 773080,
+            "sha256": "0099d37771484484c6ee44ac3766dae59663e4a501feacc4e994b8365289a175"
+          }
+        },
+        "all-octal": {
+          "c": {
+            "path": "/home/runner/work/yavo/yavo/compiler/target/ci/perf54/artifacts/string-control/all-octal.c",
+            "bytes": 1856574,
+            "sha256": "f7b00f68b73f1f46f9e8728962f9bb61e3a536a0c06e7c9eda5cd6820f4ec4e6"
+          },
+          "binary": {
+            "path": "/home/runner/work/yavo/yavo/compiler/target/ci/perf54/artifacts/string-control/all-octal",
+            "bytes": 773080,
+            "sha256": "0099d37771484484c6ee44ac3766dae59663e4a501feacc4e994b8365289a175"
+          }
+        }
+      },
+      "identical_stripped_binary": true,
+      "scope": "same batch53 program, flags, input filename, output filename, header and toolchain; only byte-equivalent ordinary C string token spelling changes"
+    },
+    "sizes": {
+      "52": {
+        "generated_c": {
+          "path": "/home/runner/work/yavo/yavo/compiler/target/ci/perf54/artifacts/52/selfhost.c",
+          "bytes": 1778752,
+          "sha256": "1df5d9c8fc255081556924bfd54bdb34385d45fc927adbd2e84c8f4780d872e6"
+        },
+        "stripped_binary": {
+          "path": "/home/runner/work/yavo/yavo/compiler/target/ci/perf54/artifacts/52/selfhost",
+          "bytes": 739576,
+          "sha256": "f15f62ad179cda4d9f0447d3cfcfd2603f4fa77542f0a0480b5bcd930b795782"
+        },
+        "canonical_c_bytes": 1779238
+      },
+      "53": {
+        "generated_c": {
+          "path": "/home/runner/work/yavo/yavo/compiler/target/ci/perf54/artifacts/53/selfhost.c",
+          "bytes": 1493832,
+          "sha256": "c93898b1a7b061da4f0e12c9c0ae3f36f38c8aa20c8a908c16cc2a5b7e45f913"
+        },
+        "stripped_binary": {
+          "path": "/home/runner/work/yavo/yavo/compiler/target/ci/perf54/artifacts/53/selfhost",
+          "bytes": 773080,
+          "sha256": "0099d37771484484c6ee44ac3766dae59663e4a501feacc4e994b8365289a175"
+        },
+        "canonical_c_bytes": 1856574
+      }
+    },
+    "generated_c_delta_bytes": -284920,
+    "generated_c_delta_percent": -16.017972151261105,
+    "stripped_binary_delta_percent": 4.530163228660755,
+    "canonical_c_delta_bytes": 77336,
+    "semantic_mapping_and_ELF_review": {
+      "52": {
+        "canonical_c_bytes": 1779238,
+        "canonical_c_sha256": "77b4e183d6805cca634cf524e722e835ced9d15faf5764fdde75cb7cdef716d0",
+        "string_tokens": {
+          "string_token_count": 2746,
+          "decoded_string_sequence_sha256": "6d591cf26506f6f980806f79eb891fa8bc6de5ee247825e3f91b96837fd2a9d3"
+        },
+        "symbol_map_validation": {
+          "definition_count": 300,
+          "parameter_counts_checked": 300,
+          "entrypoint_calls": [
+            6
+          ],
+          "unique_body_anchors_checked": 477,
+          "anchored_modules": [
+            "codegen",
+            "digest",
+            "driver",
+            "lexer",
+            "main",
+            "parser",
+            "runtime_source",
+            "support",
+            "types"
+          ],
+          "selected_body_anchors": [
+            {
+              "module": "main",
+              "function": "usage",
+              "index": 0,
+              "kind": "decoded_string",
+              "bytes": 67,
+              "sha256": "3192409144a4c70e4e895292d2c90d9527dc441561737f1549c31d347db1278a"
+            },
+            {
+              "module": "main",
+              "function": "usage",
+              "index": 0,
+              "kind": "decoded_string",
+              "bytes": 52,
+              "sha256": "b5421316899c68d813a46b839d2133b52dc6f1150c458fbb33a325dc513ec8ea"
+            },
+            {
+              "module": "support",
+              "function": "jsonHeader",
+              "index": 18,
+              "kind": "decoded_string",
+              "bytes": 93,
+              "sha256": "c90fcaf3cad33172d8d41fb17625db59abd3e18428f2c142e0f5ef1286d49625"
+            },
+            {
+              "module": "support",
+              "function": "jsonHeader",
+              "index": 18,
+              "kind": "decoded_string",
+              "bytes": 34,
+              "sha256": "cad05a2f45ad27ef137456e3be68391768e68e3108b75497cc41b62e9730905e"
+            },
+            {
+              "module": "lexer",
+              "function": "byteToken",
+              "index": 42,
+              "kind": "decoded_string",
+              "bytes": 67,
+              "sha256": "737ee13741d955edca1b295b54d3efc07c09dd84a320b5798421a4fc0daff0ce"
+            },
+            {
+              "module": "lexer",
+              "function": "lexTokenRange",
+              "index": 47,
+              "kind": "decoded_string",
+              "bytes": 56,
+              "sha256": "e9f0ec78eaf52e7e225d1cdefd6bfa43044c3b04dc16484925628a0e5a41ce6a"
+            },
+            {
+              "module": "parser",
+              "function": "typeAtom",
+              "index": 63,
+              "kind": "decoded_string",
+              "bytes": 82,
+              "sha256": "f7122e19f7bc105b201748ef9bc9859cf8002885cabbf49b75b3fcd8c0655ec2"
+            },
+            {
+              "module": "parser",
+              "function": "mapType",
+              "index": 59,
+              "kind": "decoded_string",
+              "bytes": 72,
+              "sha256": "0f1faf22879a86a7dcb2ce29f1c1b7a0f34dbe66a3f348dfcef24e81cae866d6"
+            },
+            {
+              "module": "codegen",
+              "function": "writable",
+              "index": 134,
+              "kind": "decoded_string",
+              "bytes": 82,
+              "sha256": "75c29c324935824283923c71f35e1bfe9d2fb8e61f6a11baff350465deb3f318"
+            },
+            {
+              "module": "codegen",
+              "function": "wrapResult",
+              "index": 183,
+              "kind": "decoded_string",
+              "bytes": 82,
+              "sha256": "699730607b3363c9537e7ee69c01caf3b2ccc4fd7f46120aa5184587c27920a5"
+            },
+            {
+              "module": "driver",
+              "function": "usage",
+              "index": 245,
+              "kind": "decoded_string",
+              "bytes": 67,
+              "sha256": "9b73d8b63e2246deb218d564abc76f8834a222de47ae9e2229f2cdc90e8450ed"
+            },
+            {
+              "module": "driver",
+              "function": "parse",
+              "index": 248,
+              "kind": "decoded_string",
+              "bytes": 67,
+              "sha256": "127811e4ba6e02639f9e8c04aab903516f1ed292b44cbb9b37acf35c8c3d6209"
+            },
+            {
+              "module": "digest",
+              "function": "sha256",
+              "index": 259,
+              "kind": "integer",
+              "value": "1013904242"
+            },
+            {
+              "module": "digest",
+              "function": "sha256",
+              "index": 259,
+              "kind": "integer",
+              "value": "1116352408"
+            },
+            {
+              "module": "types",
+              "function": "optional",
+              "index": 293,
+              "kind": "decoded_string",
+              "bytes": 85,
+              "sha256": "7d8b1f6fd9640716d7e9627642bb67345c8ebf09d34e2615627ed1f05938980a"
+            },
+            {
+              "module": "types",
+              "function": "tuple",
+              "index": 269,
+              "kind": "decoded_string",
+              "bytes": 81,
+              "sha256": "b447666308090667ed79640758ba84c7d7b7914fab1806b3a51ad155ee85227c"
+            },
+            {
+              "module": "runtime_source",
+              "function": "header",
+              "index": 299,
+              "kind": "decoded_string",
+              "bytes": 2050,
+              "sha256": "02299591fd99ba220526c5d360aa4e5f5913598df263aaf271d182cf21fef039"
+            },
+            {
+              "module": "runtime_source",
+              "function": "header",
+              "index": 299,
+              "kind": "decoded_string",
+              "bytes": 2049,
+              "sha256": "76aace6bcc37a65585b8ba81ce47e7b9821a412c79d7557487ffdab7596baac0"
+            }
+          ]
+        },
+        "ELF_sections_and_symbols_recomputed": true
+      },
+      "53": {
+        "canonical_c_bytes": 1856574,
+        "canonical_c_sha256": "f7b00f68b73f1f46f9e8728962f9bb61e3a536a0c06e7c9eda5cd6820f4ec4e6",
+        "string_tokens": {
+          "string_token_count": 2837,
+          "decoded_string_sequence_sha256": "f7c6bbb40a6f98a34f04f15dd3930eba82fb0541cb51ed61c83190e2eae20c98"
+        },
+        "symbol_map_validation": {
+          "definition_count": 316,
+          "parameter_counts_checked": 316,
+          "entrypoint_calls": [
+            6
+          ],
+          "unique_body_anchors_checked": 478,
+          "anchored_modules": [
+            "codegen",
+            "digest",
+            "driver",
+            "lexer",
+            "main",
+            "parser",
+            "runtime_source",
+            "support",
+            "types"
+          ],
+          "selected_body_anchors": [
+            {
+              "module": "main",
+              "function": "usage",
+              "index": 0,
+              "kind": "decoded_string",
+              "bytes": 67,
+              "sha256": "3192409144a4c70e4e895292d2c90d9527dc441561737f1549c31d347db1278a"
+            },
+            {
+              "module": "main",
+              "function": "usage",
+              "index": 0,
+              "kind": "decoded_string",
+              "bytes": 52,
+              "sha256": "b5421316899c68d813a46b839d2133b52dc6f1150c458fbb33a325dc513ec8ea"
+            },
+            {
+              "module": "support",
+              "function": "jsonHeader",
+              "index": 18,
+              "kind": "decoded_string",
+              "bytes": 93,
+              "sha256": "c90fcaf3cad33172d8d41fb17625db59abd3e18428f2c142e0f5ef1286d49625"
+            },
+            {
+              "module": "support",
+              "function": "jsonHeader",
+              "index": 18,
+              "kind": "decoded_string",
+              "bytes": 34,
+              "sha256": "cad05a2f45ad27ef137456e3be68391768e68e3108b75497cc41b62e9730905e"
+            },
+            {
+              "module": "lexer",
+              "function": "byteToken",
+              "index": 42,
+              "kind": "decoded_string",
+              "bytes": 67,
+              "sha256": "737ee13741d955edca1b295b54d3efc07c09dd84a320b5798421a4fc0daff0ce"
+            },
+            {
+              "module": "lexer",
+              "function": "lexTokenRange",
+              "index": 47,
+              "kind": "decoded_string",
+              "bytes": 56,
+              "sha256": "e9f0ec78eaf52e7e225d1cdefd6bfa43044c3b04dc16484925628a0e5a41ce6a"
+            },
+            {
+              "module": "parser",
+              "function": "typeAtom",
+              "index": 63,
+              "kind": "decoded_string",
+              "bytes": 82,
+              "sha256": "f7122e19f7bc105b201748ef9bc9859cf8002885cabbf49b75b3fcd8c0655ec2"
+            },
+            {
+              "module": "parser",
+              "function": "mapType",
+              "index": 59,
+              "kind": "decoded_string",
+              "bytes": 72,
+              "sha256": "0f1faf22879a86a7dcb2ce29f1c1b7a0f34dbe66a3f348dfcef24e81cae866d6"
+            },
+            {
+              "module": "codegen",
+              "function": "writable",
+              "index": 135,
+              "kind": "decoded_string",
+              "bytes": 82,
+              "sha256": "75c29c324935824283923c71f35e1bfe9d2fb8e61f6a11baff350465deb3f318"
+            },
+            {
+              "module": "codegen",
+              "function": "wrapResult",
+              "index": 184,
+              "kind": "decoded_string",
+              "bytes": 82,
+              "sha256": "699730607b3363c9537e7ee69c01caf3b2ccc4fd7f46120aa5184587c27920a5"
+            },
+            {
+              "module": "driver",
+              "function": "usage",
+              "index": 253,
+              "kind": "decoded_string",
+              "bytes": 67,
+              "sha256": "9b73d8b63e2246deb218d564abc76f8834a222de47ae9e2229f2cdc90e8450ed"
+            },
+            {
+              "module": "driver",
+              "function": "parse",
+              "index": 256,
+              "kind": "decoded_string",
+              "bytes": 67,
+              "sha256": "127811e4ba6e02639f9e8c04aab903516f1ed292b44cbb9b37acf35c8c3d6209"
+            },
+            {
+              "module": "digest",
+              "function": "sha256",
+              "index": 267,
+              "kind": "integer",
+              "value": "1013904242"
+            },
+            {
+              "module": "digest",
+              "function": "sha256",
+              "index": 267,
+              "kind": "integer",
+              "value": "1116352408"
+            },
+            {
+              "module": "types",
+              "function": "tuple",
+              "index": 277,
+              "kind": "decoded_string",
+              "bytes": 81,
+              "sha256": "b447666308090667ed79640758ba84c7d7b7914fab1806b3a51ad155ee85227c"
+            },
+            {
+              "module": "types",
+              "function": "resolve",
+              "index": 310,
+              "kind": "decoded_string",
+              "bytes": 74,
+              "sha256": "32688d31ce31fbc65e124fd3992b90b4a8abf9ac45614981eac391bc8cb8a261"
+            },
+            {
+              "module": "runtime_source",
+              "function": "header",
+              "index": 315,
+              "kind": "decoded_string",
+              "bytes": 2050,
+              "sha256": "02299591fd99ba220526c5d360aa4e5f5913598df263aaf271d182cf21fef039"
+            },
+            {
+              "module": "runtime_source",
+              "function": "header",
+              "index": 315,
+              "kind": "decoded_string",
+              "bytes": 2049,
+              "sha256": "76aace6bcc37a65585b8ba81ce47e7b9821a412c79d7557487ffdab7596baac0"
+            }
+          ]
+        },
+        "ELF_sections_and_symbols_recomputed": true
+      }
+    },
+    "interpretation": [
+      "The compact source spelling saves C bytes but not machine bytes: the same 53 program with all-octal strings produced the exact same stripped binary.",
+      "Most file growth is executable text. codegen adds 28609 bytes, types 1817 and parser 1628; padding/uncovered text adds 97 bytes.",
+      "A newly present symbol is not necessarily new source logic: printValue existed in 52 but was inlined; printValue plus outputValue grows by 1687 bytes together.",
+      "These are same-run CI artifacts. The historical server file increase of 33360 bytes is a separate artifact pair, not expected to equal this 33504-byte delta."
+    ]
+  },
+  "historical_observations": {
+    "source": {
+      "path": "compiler/validation/batch53-metrics-correction-2026-11-28.json",
+      "bytes": 13705,
+      "sha256": "178882e13b993113242a1581a63c2f5dd2b5fab79d6cbe87b9b6384e5d5d7ebf"
+    },
+    "performance_qualification": "unqualified",
+    "arms": {
+      "52": {
+        "compiler": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch52-final2/run-ofvhiukz/stages/stage2/yavo-selfhost",
+          "bytes": 733152,
+          "sha256": "e0e27e417737f373fa6d363e04e6fe6a35e6aaa4d81f77ad4cf20d26b2816020"
+        },
+        "generated_c": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch52-final2/run-ofvhiukz/stages/stage3/yavo-selfhost.c",
+          "bytes": 1780336,
+          "sha256": "92af61c8544abe05f6599ce76de4da228b4ac58a7fb95cdd281d231cccd7d677"
+        },
+        "frontend": {
+          "samples": 5,
+          "p50_seconds": 0.08766848035156727,
+          "p95_seconds": 0.08814369328320026,
+          "peak_rss_bytes": 30429184,
+          "rss_observations": 5
+        },
+        "backend_observation": {
+          "argv": [
+            "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+            "cc",
+            "-std=c17",
+            "-fno-strict-aliasing",
+            "-DYV_ALLOC_CHECK",
+            "-O2",
+            "-s",
+            "-I",
+            "/data1/workspace/github/workspace/yavo/compiler/runtime",
+            "/data1/workspace/github/workspace/yavo/compiler/target/batch53/baseline52-remeasure/metrics-mndi75e0/sample-5.c",
+            "-o",
+            "/data1/workspace/github/workspace/yavo/compiler/target/batch53/baseline52-remeasure/metrics-mndi75e0/yavo-selfhost"
+          ],
+          "cwd": "/data1/workspace/github/workspace/yavo",
+          "environment": {
+            "YAVO_NO_CACHE": "1",
+            "YAVO_ALLOC_CHECK": "1"
+          },
+          "exit_code": 0,
+          "timed_out": false,
+          "launch_error": null,
+          "elapsed_seconds": 12.22082351706922,
+          "peak_process_memory_bytes": 205021184,
+          "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+          "stdout": {
+            "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch53/baseline52-remeasure/metrics-mndi75e0/backend/stdout.bin",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stderr": {
+            "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch53/baseline52-remeasure/metrics-mndi75e0/backend/stderr.bin",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stdin": {
+            "kind": "devnull"
+          }
+        },
+        "host": {
+          "system": "Linux",
+          "machine": "x86_64",
+          "load_average": [
+            0.07421875,
+            0.3623046875,
+            0.76708984375
+          ]
+        },
+        "cache": "Yavo frontend cache disabled; existing OS and Zig caches; not cold builds",
+        "memory_scope": "OS wait4 RSS of the waited compiler child, not a process-tree sum; the measurement process does not parse the Full receipt; Python launcher floor remains; null where unavailable",
+        "performance_qualification": "unqualified_shared_server",
+        "cpu_model": null,
+        "cpu_model_scope": "not recorded in this legacy receipt; current host values are not substituted"
+      },
+      "53": {
+        "compiler": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch53-final/run-179er036/stages/stage2/yavo-selfhost",
+          "bytes": 766512,
+          "sha256": "6dde1be270fcde1ac87d4b862ca9fc01303c939e3b122506ed8eb95b547ffa9f"
+        },
+        "generated_c": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch53-final/run-179er036/stages/stage3/yavo-selfhost.c",
+          "bytes": 1494217,
+          "sha256": "92c65ef72ec2cab00ccda3358a9c9c972d0e45b56604307eb06ec65967f5fb68"
+        },
+        "frontend": {
+          "samples": 5,
+          "p50_seconds": 0.08799215033650398,
+          "p95_seconds": 0.09818404540419579,
+          "peak_rss_bytes": 30380032,
+          "rss_observations": 5
+        },
+        "backend_observation": {
+          "argv": [
+            "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+            "cc",
+            "-std=c17",
+            "-fno-strict-aliasing",
+            "-DYV_ALLOC_CHECK",
+            "-O2",
+            "-s",
+            "-I",
+            "/data1/workspace/github/workspace/yavo/compiler/runtime",
+            "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch53-final/metrics-8p_2qwhz/sample-5.c",
+            "-o",
+            "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch53-final/metrics-8p_2qwhz/yavo-selfhost"
+          ],
+          "cwd": "/data1/workspace/github/workspace/yavo",
+          "environment": {
+            "YAVO_NO_CACHE": "1",
+            "YAVO_ALLOC_CHECK": "1"
+          },
+          "exit_code": 0,
+          "timed_out": false,
+          "launch_error": null,
+          "elapsed_seconds": 13.947603506967425,
+          "peak_process_memory_bytes": 203980800,
+          "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+          "stdout": {
+            "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch53-final/metrics-8p_2qwhz/backend/stdout.bin",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stderr": {
+            "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch53-final/metrics-8p_2qwhz/backend/stderr.bin",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stdin": {
+            "kind": "devnull"
+          }
+        },
+        "host": {
+          "system": "Linux",
+          "machine": "x86_64",
+          "load_average": [
+            0.005859375,
+            0.4248046875,
+            0.822265625
+          ]
+        },
+        "cache": "Yavo frontend cache disabled; existing OS and Zig caches; not cold builds",
+        "memory_scope": "OS wait4 RSS of the waited compiler child, not a process-tree sum; the measurement process does not parse the Full receipt; Python launcher floor remains; null where unavailable",
+        "performance_qualification": "unqualified_shared_server",
+        "cpu_model": null,
+        "cpu_model_scope": "not recorded in this legacy receipt; current host values are not substituted"
+      }
+    },
+    "static_size_evidence": {
+      "path": "compiler/validation/batch54-static-size-2026-11-28.json",
+      "bytes": 39602,
+      "sha256": "3946b223b7e33527d88c5f0300090aaefc64e1025e6de18d52396b512a38a5ed"
+    },
+    "small_pch_p50_ms_range": [
+      205.947,
+      221.043
+    ],
+    "comparison_rule": "Do not infer a speedup from historical 12.2208/13.9476s or 205.947–221.043ms to the new Xeon runner numbers; hardware, paths, cache procedure and isolation differ. Neither cordis-rs causation nor batch54 optimization benefit is identified."
+  },
+  "attempt_history": [
+    {
+      "run_id": 46132017263,
+      "head_sha": "505f5f983b2391cbfc7f194d8908db2f7e622a88",
+      "outcome": "workflow_validation_failure",
+      "performance_jobs_started": 0,
+      "performance_samples": 0,
+      "cause": "runner.temp is unavailable in job-level env; moved YAVO_HOME to the measurement step env"
+    },
+    {
+      "run_id": 46132191802,
+      "head_sha": "cec3862644c477d1d3fb1e8e4bba8ad9636abbf8",
+      "outcome": "paired_performance_job_success",
+      "performance_samples_including_controls_and_warmups": 199
+    }
+  ],
+  "reuse_constraint": "Qualification belongs to this exact producer/run and recorded input hashes. A later report-only or test/policy-only commit may reference it only after compiler/runtime/selfhost/benchmark and performance-harness input equivalence is checked; it is not a fresh measurement of a later head.",
+  "evidence_retention": {
+    "raw_report": "copied byte-for-byte into repository",
+    "original_artifact_zip": "compiler/target/batch54/performance-runs/46132191802/artifact.zip",
+    "download_receipt": "compiler/target/batch54/performance-runs/46132191802/download-receipt.json",
+    "per_command_usage_and_logs": "retained in the single focused performance archive; no native ZIPs downloaded"
+  }
+}

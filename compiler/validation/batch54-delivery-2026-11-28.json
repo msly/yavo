@@ -1,7 +1,7 @@
 {
   "schema": "yavo-batch54-delivery/1",
   "batch": 54,
-  "recorded_at_utc": "2026-11-28T09:48:30.318274+00:00",
+  "recorded_at_utc": "2026-11-28T10:02:39.416033+00:00",
   "baseline_commit": "f0183c07195c658de0d0fc859d79406b53893655",
   "status": "local_core_passed_ci_pending",
   "tested_commit": null,
@@ -107,6 +107,21 @@
       "path": "compiler/validation/batch54-static-size-2026-11-28.json",
       "bytes": 39602,
       "sha256": "3946b223b7e33527d88c5f0300090aaefc64e1025e6de18d52396b512a38a5ed"
+    },
+    "paired_performance": {
+      "path": "compiler/validation/batch54-paired-performance-2026-11-28.json",
+      "bytes": 113965,
+      "sha256": "ce6b32ee62cad6461002a0f803f49507426b493fc1eba7d5a041e466b835feea"
+    },
+    "paired_performance_raw": {
+      "path": "compiler/validation/batch54-paired-performance-raw-2026-11-28.json",
+      "bytes": 1736291,
+      "sha256": "ff3043ba74db9a6970b2f628dc138e52d6b4c90998b185cf58f44531d566f421"
+    },
+    "p0_sanitizers": {
+      "path": "compiler/validation/batch54-p0-sanitizers-2026-11-28.json",
+      "bytes": 40366,
+      "sha256": "6cc213bc484f5539a9b003b376894706c1ecd926164036efcb7f448253570174"
     }
   },
   "implementation_file_identities": [
@@ -181,11 +196,6 @@
       "sha256": "6cf8dbe97e45fe704277607a353cc96f78070a205b34b7dfa3389a580e2918dc"
     },
     {
-      "path": "tools/ci/validation-policy.json",
-      "bytes": 690,
-      "sha256": "8a2edd0a5986bb4aee77042dfcdd74ef39e5835d98d1dd8d3f66abf4041fe7e3"
-    },
-    {
       "path": "tools/ci/validation_plan.py",
       "bytes": 2575,
       "sha256": "daa78948d53b6cc70e7784d09567bbf38553bd4d496641cdcef947007889c876"
@@ -219,6 +229,16 @@
       "path": "tools/sanitizers/run.py",
       "bytes": 15050,
       "sha256": "c7c7bb0dae8957e1f737d8fcb578cc715422f80f3a49fe605c9c94993a024c61"
+    },
+    {
+      "path": "tools/ci/validation-policy.json",
+      "bytes": 3571,
+      "sha256": "5fc1aae6b5043faf3e25da957f1b10183b7b34a25821b47de1e5da4755a376ff"
+    },
+    {
+      "path": "compiler/tests/subset_features.rs",
+      "bytes": 9654,
+      "sha256": "2a2845d3415d4cf71d4673f97dc5923e9b2493cf887563544825a466c6affbf9"
     }
   ],
   "local_core": {
@@ -707,10 +727,16 @@
       "modules_each": 9,
       "main_function_index_each": 6,
       "sources": "existing exact historical source and C bytes; no recompile or performance measurement"
+    },
+    "subset_features_after_safety_reclassification": {
+      "passed": 15,
+      "failed": 0,
+      "command": "cargo test --manifest-path compiler/Cargo.toml --locked --offline --release --test subset_features",
+      "log": "compiler/target/batch54/subset-features-migration.log"
     }
   },
   "ci": {
-    "status": "retry_after_workflow_context_fix",
+    "status": "qualified_special_jobs_complete_corrected_native_core_pending",
     "run": null,
     "native_core": null,
     "external_p0_sanitizers": null,
@@ -726,9 +752,154 @@
         "performance_samples": 0,
         "failure_phase": "workflow_validation",
         "message": ".github/workflows/ci.yml Line 303 Col 18: Unrecognized named-value: 'runner'. Located at position 1 within expression: runner.temp",
-        "correction": "Move YAVO_HOME from paired-performance job env to its measurement step env; compiler and measurement scripts unchanged."
+        "correction": "Move YAVO_HOME from paired-performance job env to its measurement step env; compiler and measurement scripts unchanged.",
+        "terminal_evidence": {
+          "path": "compiler/target/batch54/ci-watch/terminal-evidence.json",
+          "bytes": 15306,
+          "sha256": "b3e649c0ca20680cc908ece64938a02f92fc7db151e737431e68cc6da4ab9f11"
+        }
+      },
+      {
+        "id": 46132191802,
+        "url": "https://github.com/msly/yavo/actions/runs/46132191802",
+        "head_sha": "cec3862644c477d1d3fb1e8e4bba8ad9636abbf8",
+        "status": "completed",
+        "conclusion": "failure",
+        "jobs": [
+          {
+            "id": 140939581549,
+            "name": "Validation tier",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-28T09:48:35Z",
+            "completed_at": "2026-11-28T09:48:43Z"
+          },
+          {
+            "id": 140939620862,
+            "name": "Isolated paired performance",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-28T09:48:46Z",
+            "completed_at": "2026-11-28T09:53:50Z"
+          },
+          {
+            "id": 140939620867,
+            "name": "Native macOS arm64",
+            "status": "completed",
+            "conclusion": "failure",
+            "started_at": "2026-11-28T09:48:45Z",
+            "completed_at": "2026-11-28T09:49:29Z"
+          },
+          {
+            "id": 140939620873,
+            "name": "Native Linux x86_64",
+            "status": "completed",
+            "conclusion": "failure",
+            "started_at": "2026-11-28T09:48:45Z",
+            "completed_at": "2026-11-28T09:49:45Z"
+          },
+          {
+            "id": 140939620892,
+            "name": "Independent Linux ASan and UBSan",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-28T09:48:45Z",
+            "completed_at": "2026-11-28T09:49:30Z"
+          },
+          {
+            "id": 140939620903,
+            "name": "Native Windows x86_64",
+            "status": "completed",
+            "conclusion": "failure",
+            "started_at": "2026-11-28T09:48:45Z",
+            "completed_at": "2026-11-28T09:53:45Z"
+          },
+          {
+            "id": 140939622472,
+            "name": "Agent evaluation preparation",
+            "status": "completed",
+            "conclusion": "skipped",
+            "started_at": "2026-11-28T09:48:44Z",
+            "completed_at": "2026-11-28T09:48:43Z"
+          },
+          {
+            "id": 140939622700,
+            "name": "Round-five experiment evidence",
+            "status": "completed",
+            "conclusion": "skipped",
+            "started_at": "2026-11-28T09:48:44Z",
+            "completed_at": "2026-11-28T09:48:43Z"
+          }
+        ],
+        "failure_scope": "All three native jobs stopped at the obsolete subset_features acceptance assertion; independent sanitizer and performance jobs completed successfully.",
+        "terminal_evidence": {
+          "path": "compiler/target/batch54/ci-watch-fixed/terminal-evidence.json",
+          "bytes": 73718,
+          "sha256": "dac0f1a35a12646413a543d6e0dca3395f8d243b3183d43dff6c0db872910bd9"
+        }
       }
-    ]
+    ],
+    "completed_qualifications": {
+      "p0_sanitizers": {
+        "batch": 54,
+        "status": "completed",
+        "producer_commit": "cec3862644c477d1d3fb1e8e4bba8ad9636abbf8",
+        "run_id": 46132191802,
+        "job_id": 140939620892,
+        "job_conclusion": "success",
+        "completed_at": "2026-11-28T09:49:30Z",
+        "report": {
+          "path": "compiler/validation/batch54-p0-sanitizers-2026-11-28.json",
+          "bytes": 40366,
+          "sha256": "6cc213bc484f5539a9b003b376894706c1ecd926164036efcb7f448253570174"
+        },
+        "scope": "Linux external GCC ASan+UBSan: all 50 run and 15 panic entries; one positive and two negative controls"
+      },
+      "paired_performance": {
+        "batch": 54,
+        "status": "completed",
+        "producer_commit": "cec3862644c477d1d3fb1e8e4bba8ad9636abbf8",
+        "run_id": 46132191802,
+        "job_id": 140939620862,
+        "job_conclusion": "success",
+        "completed_at": "2026-11-28T09:53:50Z",
+        "raw_report": {
+          "path": "compiler/validation/batch54-paired-performance-raw-2026-11-28.json",
+          "bytes": 1736291,
+          "sha256": "ff3043ba74db9a6970b2f628dc138e52d6b4c90998b185cf58f44531d566f421"
+        },
+        "report": {
+          "path": "compiler/validation/batch54-paired-performance-2026-11-28.json",
+          "bytes": 113965,
+          "sha256": "ce6b32ee62cad6461002a0f803f49507426b493fc1eba7d5a041e466b835feea"
+        },
+        "scope": "Dedicated Linux runner: frozen batch52/batch53 pairs and separate current54 PCH observation"
+      }
+    },
+    "qualification_reuse": {
+      "producer_commit": "cec3862644c477d1d3fb1e8e4bba8ad9636abbf8",
+      "verified_input_scopes": [
+        "compiler/src",
+        "compiler/runtime",
+        "compiler/Cargo.toml",
+        "compiler/Cargo.lock",
+        "compiler/toolchain.lock",
+        "selfhost",
+        "benchmarks/small-c-v1",
+        "tools/ci/paired_performance.py",
+        "tools/ci/perf_support.py",
+        "tools/ci/perf_wait4.c",
+        "tools/ci/paired_performance_test.py",
+        "tools/ci/run.py",
+        "tools/sanitizers",
+        "compiler/tests/p0.rs",
+        "compiler/tests/p0",
+        ".github/workflows/ci.yml"
+      ],
+      "all_inputs_unchanged": true,
+      "different_test_contract": "compiler/tests/subset_features.rs",
+      "scope": "Reference the existing successful jobs; no new measurements are claimed for the later Core-only head."
+    }
   },
   "metrics": {
     "generated_c_bytes": 1494217,
@@ -737,7 +908,7 @@
       "generated_c_bytes": 0,
       "binary_bytes": 0
     },
-    "controlled_timing_status": "awaiting isolated CI; local observations are excluded",
+    "controlled_timing_status": "qualified dedicated CI comparison completed",
     "unqualified_local_observation": {
       "frontend": {
         "samples": 5,
@@ -831,7 +1002,259 @@
       "text_growth_bytes": 32560,
       "rodata_growth_bytes": 374,
       "text_fraction_of_total_growth": 0.9760191846522782,
-      "function_level_attribution": "awaiting same-toolchain isolated CI"
+      "function_level_attribution": "Qualified CI shows codegen module +28,609B, types +1,817B and parser +1,628B; total ELF +33,504B and text +32,688B under its own exact inputs/runner. Historical ELF +33,360B is a separate byte identity. Same-program string representation control produced an identical binary."
+    },
+    "controlled_summary": {
+      "producer": {
+        "run_id": 46132191802,
+        "head_sha": "cec3862644c477d1d3fb1e8e4bba8ad9636abbf8",
+        "job_id": 140939620862,
+        "job_conclusion": "success"
+      },
+      "cpu_model": "Intel(R) Xeon(R) 6975P-C",
+      "cpu_count": 4,
+      "selfhost": {
+        "frontend": {
+          "arms": {
+            "52": {
+              "samples": 9,
+              "p50_seconds": 0.043421612,
+              "p95_seconds": 0.046007802,
+              "min_seconds": 0.04090961,
+              "max_seconds": 0.046007802,
+              "peak_wait4_rss_bytes": 28078080,
+              "median_user_seconds": 0.035345,
+              "median_system_seconds": 0.008953
+            },
+            "53": {
+              "samples": 9,
+              "p50_seconds": 0.04478489,
+              "p95_seconds": 0.054698881,
+              "min_seconds": 0.043142407,
+              "max_seconds": 0.054698881,
+              "peak_wait4_rss_bytes": 28573696,
+              "median_user_seconds": 0.036708,
+              "median_system_seconds": 0.008928
+            }
+          },
+          "p50_change_percent": 3.139630099407653,
+          "median_paired_ratio_53_over_52": 1.0597229084261985
+        },
+        "backend": {
+          "arms": {
+            "52": {
+              "samples": 7,
+              "p50_seconds": 6.393912075,
+              "p95_seconds": 6.435189325,
+              "min_seconds": 6.255340487,
+              "max_seconds": 6.435189325,
+              "peak_wait4_rss_bytes": 205324288,
+              "median_user_seconds": 6.148531,
+              "median_system_seconds": 0.251378
+            },
+            "53": {
+              "samples": 7,
+              "p50_seconds": 6.644826959,
+              "p95_seconds": 6.778513695,
+              "min_seconds": 6.591631097,
+              "max_seconds": 6.778513695,
+              "peak_wait4_rss_bytes": 210759680,
+              "median_user_seconds": 6.352319,
+              "median_system_seconds": 0.278524
+            }
+          },
+          "p50_change_percent": 3.9242779859465005,
+          "median_paired_ratio_53_over_52": 1.0415228713704128
+        }
+      },
+      "small_programs": [
+        {
+          "case": "integer_recurrence",
+          "52": {
+            "plain": {
+              "p50_ms": 143.86449000000002,
+              "p95_ms": 144.77804799999998,
+              "peak_rss_mib": 79.9140625,
+              "samples": 7,
+              "target_p50_le_200ms": null
+            },
+            "pch": {
+              "p50_ms": 115.080346,
+              "p95_ms": 117.194651,
+              "peak_rss_mib": 76.59765625,
+              "samples": 7,
+              "target_p50_le_200ms": true
+            },
+            "pch_savings_ms": 28.784144000000012,
+            "pch_savings_percent": 20.007817078418732
+          },
+          "53": {
+            "plain": {
+              "p50_ms": 142.821071,
+              "p95_ms": 144.316522,
+              "peak_rss_mib": 79.60546875,
+              "samples": 7,
+              "target_p50_le_200ms": null
+            },
+            "pch": {
+              "p50_ms": 113.387698,
+              "p95_ms": 116.97840599999999,
+              "peak_rss_mib": 76.66015625,
+              "samples": 7,
+              "target_p50_le_200ms": true
+            },
+            "pch_savings_ms": 29.43337299999999,
+            "pch_savings_percent": 20.608564824443864
+          },
+          "54_pch_separate_observation": {
+            "p50_ms": 115.712867,
+            "p95_ms": 116.738093,
+            "peak_rss_mib": 76.41015625,
+            "samples": 7,
+            "target_p50_le_200ms": true
+          }
+        },
+        {
+          "case": "vec_transform",
+          "52": {
+            "plain": {
+              "p50_ms": 154.431342,
+              "p95_ms": 161.17576,
+              "peak_rss_mib": 80.5390625,
+              "samples": 7,
+              "target_p50_le_200ms": null
+            },
+            "pch": {
+              "p50_ms": 126.147603,
+              "p95_ms": 129.655817,
+              "peak_rss_mib": 77.41015625,
+              "samples": 7,
+              "target_p50_le_200ms": true
+            },
+            "pch_savings_ms": 28.283738999999997,
+            "pch_savings_percent": 18.31476605312411
+          },
+          "53": {
+            "plain": {
+              "p50_ms": 153.327993,
+              "p95_ms": 155.230934,
+              "peak_rss_mib": 80.6640625,
+              "samples": 7,
+              "target_p50_le_200ms": null
+            },
+            "pch": {
+              "p50_ms": 124.890379,
+              "p95_ms": 129.11566599999998,
+              "peak_rss_mib": 77.16015625,
+              "samples": 7,
+              "target_p50_le_200ms": true
+            },
+            "pch_savings_ms": 28.437613999999996,
+            "pch_savings_percent": 18.54691595682727
+          },
+          "54_pch_separate_observation": {
+            "p50_ms": 123.287416,
+            "p95_ms": 124.1989,
+            "peak_rss_mib": 77.6015625,
+            "samples": 7,
+            "target_p50_le_200ms": true
+          }
+        },
+        {
+          "case": "mutref_scatter",
+          "52": {
+            "plain": {
+              "p50_ms": 153.592245,
+              "p95_ms": 159.104237,
+              "peak_rss_mib": 80.1640625,
+              "samples": 7,
+              "target_p50_le_200ms": null
+            },
+            "pch": {
+              "p50_ms": 126.00398099999998,
+              "p95_ms": 127.72995100000001,
+              "peak_rss_mib": 77.1640625,
+              "samples": 7,
+              "target_p50_le_200ms": true
+            },
+            "pch_savings_ms": 27.58826400000001,
+            "pch_savings_percent": 17.962016246328073
+          },
+          "53": {
+            "plain": {
+              "p50_ms": 155.489263,
+              "p95_ms": 160.60129,
+              "peak_rss_mib": 79.9140625,
+              "samples": 7,
+              "target_p50_le_200ms": null
+            },
+            "pch": {
+              "p50_ms": 126.054215,
+              "p95_ms": 126.98845,
+              "peak_rss_mib": 76.78515625,
+              "samples": 7,
+              "target_p50_le_200ms": true
+            },
+            "pch_savings_ms": 29.435047999999995,
+            "pch_savings_percent": 18.930598442671887
+          },
+          "54_pch_separate_observation": {
+            "p50_ms": 122.19972399999999,
+            "p95_ms": 122.832916,
+            "peak_rss_mib": 76.91015625,
+            "samples": 7,
+            "target_p50_le_200ms": true
+          }
+        },
+        {
+          "case": "deque_ring",
+          "52": {
+            "plain": {
+              "p50_ms": 156.937515,
+              "p95_ms": 161.899453,
+              "peak_rss_mib": 80.0390625,
+              "samples": 7,
+              "target_p50_le_200ms": null
+            },
+            "pch": {
+              "p50_ms": 128.153292,
+              "p95_ms": 130.937176,
+              "peak_rss_mib": 77.03515625,
+              "samples": 7,
+              "target_p50_le_200ms": true
+            },
+            "pch_savings_ms": 28.784222999999997,
+            "pch_savings_percent": 18.341199680649968
+          },
+          "53": {
+            "plain": {
+              "p50_ms": 156.43864599999998,
+              "p95_ms": 166.636051,
+              "peak_rss_mib": 80.0390625,
+              "samples": 7,
+              "target_p50_le_200ms": null
+            },
+            "pch": {
+              "p50_ms": 128.936378,
+              "p95_ms": 133.55184,
+              "peak_rss_mib": 77.1015625,
+              "samples": 7,
+              "target_p50_le_200ms": true
+            },
+            "pch_savings_ms": 27.502267999999987,
+            "pch_savings_percent": 17.580226308018542
+          },
+          "54_pch_separate_observation": {
+            "p50_ms": 125.97060600000002,
+            "p95_ms": 126.70678399999998,
+            "peak_rss_mib": 77.41015625,
+            "samples": 7,
+            "target_p50_le_200ms": true
+          }
+        }
+      ],
+      "pch_arms_passing_200ms": 12,
+      "historical_comparison": "Old shared-host absolute times are unqualified and not comparable to this different runner. No attribution to cordis-rs or batch54 optimization is established."
     }
   },
   "cost_experiment": {
@@ -914,7 +1337,16 @@
       "correction": "Move YAVO_HOME from paired-performance job env to its measurement step env; compiler and measurement scripts unchanged.",
       "run_id": 46132017263,
       "scope": "No jobs or measurements started."
+    },
+    {
+      "issue": "The old batch53_does_not_certify_flow_sensitive_match_views Rust test still required stage0 acceptance of escaping_view, which now correctly emits E0305.",
+      "run_id": 46132191802,
+      "observed_gate_result": "13 passed / 1 failed on Linux and macOS before Core bootstrap",
+      "correction": "Keep original fixture bytes; assert all three migrated stage0 rejections and exact E0305/E0303/E0303. Preserve the legal borrow_return case as the positive structural-profile incompleteness control.",
+      "focused_recheck": "15 passed / 0 failed",
+      "compiler_or_runtime_changed": false
     }
   ],
-  "implementation_commit": "505f5f983b2391cbfc7f194d8908db2f7e622a88"
+  "implementation_commit": "505f5f983b2391cbfc7f194d8908db2f7e622a88",
+  "workflow_context_fix_commit": "cec3862644c477d1d3fb1e8e4bba8ad9636abbf8"
 }

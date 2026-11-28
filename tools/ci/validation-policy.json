@@ -4,7 +4,75 @@
   "baseline_commit": "f0183c07195c658de0d0fc859d79406b53893655",
   "full_every_batches": 5,
   "milestone": false,
-  "reason": "Batch 54: stage0 borrowed-result expression source and cleanup audit across all 34 AST expression classes, plus validation protocol improvements. Core remains the routine tier; the existing external P0 sanitizer gate runs on Full cadence, next at batch 55. Its strengthened inventory/protocol and an independent paired-performance measurement each receive one separate qualification without escalating batch 54 to Full.",
-  "p0_sanitizer_qualification_batch": 54,
-  "performance_qualification_batch": 54
+  "reason": "Batch 54: stage0 borrowed-result expression source and cleanup audit across all 34 AST expression classes. The independent P0 sanitizer and paired-performance qualifications completed on their recorded cec3862 producer; subsequent test-contract, policy and documentation corrections retain Core and reference those frozen results after input-equivalence review. The next periodic Full gate remains batch 55.",
+  "completed_qualifications": {
+    "p0_sanitizers": {
+      "batch": 54,
+      "status": "completed",
+      "producer_commit": "cec3862644c477d1d3fb1e8e4bba8ad9636abbf8",
+      "run_id": 46132191802,
+      "job_id": 140939620892,
+      "job_conclusion": "success",
+      "completed_at": "2026-11-28T09:49:30Z",
+      "report": {
+        "path": "compiler/validation/batch54-p0-sanitizers-2026-11-28.json",
+        "bytes": 40366,
+        "sha256": "6cc213bc484f5539a9b003b376894706c1ecd926164036efcb7f448253570174"
+      },
+      "scope": "Linux external GCC ASan+UBSan: all 50 run and 15 panic entries; one positive and two negative controls"
+    },
+    "paired_performance": {
+      "batch": 54,
+      "status": "completed",
+      "producer_commit": "cec3862644c477d1d3fb1e8e4bba8ad9636abbf8",
+      "run_id": 46132191802,
+      "job_id": 140939620862,
+      "job_conclusion": "success",
+      "completed_at": "2026-11-28T09:53:50Z",
+      "raw_report": {
+        "path": "compiler/validation/batch54-paired-performance-raw-2026-11-28.json",
+        "bytes": 1736291,
+        "sha256": "ff3043ba74db9a6970b2f628dc138e52d6b4c90998b185cf58f44531d566f421"
+      },
+      "report": {
+        "path": "compiler/validation/batch54-paired-performance-2026-11-28.json",
+        "bytes": 113965,
+        "sha256": "ce6b32ee62cad6461002a0f803f49507426b493fc1eba7d5a041e466b835feea"
+      },
+      "scope": "Dedicated Linux runner: frozen batch52/batch53 pairs and separate current54 PCH observation"
+    }
+  },
+  "qualification_reuse": {
+    "checked_at": "2026-11-28T10:00:19.179184+00:00",
+    "producer_commit": "cec3862644c477d1d3fb1e8e4bba8ad9636abbf8",
+    "comparison": "producer commit to the working tree immediately before this policy update",
+    "tracked_changes_checked": [
+      "compiler/tests/subset_features.rs",
+      "compiler/validation/batch54-delivery-2026-11-28.json"
+    ],
+    "new_evidence_files_checked": [
+      "compiler/validation/batch54-p0-sanitizers-2026-11-28.json",
+      "compiler/validation/batch54-paired-performance-2026-11-28.json",
+      "compiler/validation/batch54-paired-performance-raw-2026-11-28.json"
+    ],
+    "compiler_runtime_selfhost_workload_and_gate_inputs_unchanged": true,
+    "unchanged_input_scopes": [
+      "compiler/src/**",
+      "compiler/runtime/**",
+      "compiler/Cargo.toml",
+      "compiler/Cargo.lock",
+      "compiler/toolchain.lock",
+      "selfhost/*.yv",
+      "benchmarks/small-c-v1/**",
+      "tools/ci/paired_performance.py",
+      "tools/ci/perf_support.py",
+      "tools/ci/perf_wait4.c",
+      "tools/ci/paired_performance_test.py",
+      "tools/ci/run.py",
+      "tools/sanitizers/**",
+      "compiler/tests/p0.rs",
+      "compiler/tests/p0/**"
+    ],
+    "constraint": "These qualifications belong to the original producer. Any change to measured compiler/runtime/workload or sanitizer/performance gate inputs requires a fresh explicit qualification; Core must still pass on the corrected head."
+  }
 }

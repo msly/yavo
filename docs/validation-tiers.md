@@ -1,6 +1,6 @@
 # 自举验收分层（第 52 批起）
 
-每批保留三平台真实固定点、核心语义和全原语料分类；重复产品矩阵与归档审计移至完整门。策略由[`validation-policy.json`](../tools/ci/validation-policy.json)驱动，当前批次54、基线`f0183c0`，间隔**N=5**。本批保持Core，另对强化后的既有P0外部sanitizer门做一次资格验证，并在另一独占runner执行52/53配对性能复测；这两项资格标志仅匹配第54批，不把后续普通批次升级为Full。
+每批保留三平台真实固定点、核心语义和全原语料分类；重复产品矩阵与归档审计移至完整门。策略由[`validation-policy.json`](../tools/ci/validation-policy.json)驱动，当前批次54、基线`f0183c0`，间隔**N=5**。本批保持Core；强化后的P0外部sanitizer门与独立runner的52/53配对性能复测已在cec3862的各自作业完成，producer、报告身份和输入等价检查写入completed_qualifications。修复旧测试合同的后续提交只重跑三平台Core；实测输入改变时须重新专项验证。第55批周期Full和其中的P0 sanitizer照常执行。
 
 | 层级 | 触发 | 必跑项目 | 不计作本层通过的项目 |
 | --- | --- | --- | --- |

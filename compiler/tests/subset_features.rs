@@ -132,12 +132,20 @@ fn fixture(relative: &str) -> Value {
 }
 
 fn fixture_at(relative: &str, selected: &str) -> Value {
-    let input=std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../selfhost/tests").join(relative);
-    let output=common::output(Command::new(env!("CARGO_BIN_EXE_yavo"))
-        .arg("subset-features").arg(input).args(["--profile",selected]).stdin(Stdio::null()),common::RUN_TIMEOUT).unwrap();
-    let report:Value=serde_json::from_slice(&output.stdout).unwrap();
-    assert!(output.status.success(),"{relative}: {report}");
+    let (code,report)=fixture_profile_at(relative,selected);
+    assert_eq!(code,0,"{relative}: {report}");
     report
+}
+
+fn fixture_profile_at(relative: &str, selected: &str) -> (i32,Value) {
+    let input=std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../selfhost/tests").join(relative);
+    let before=fs::read(&input).unwrap();
+    let output=common::output(Command::new(env!("CARGO_BIN_EXE_yavo"))
+        .arg("subset-features").arg(&input).args(["--profile",selected]).stdin(Stdio::null()),common::RUN_TIMEOUT).unwrap();
+    assert_eq!(fs::read(&input).unwrap(),before,"analysis edited {relative}");
+    assert!(output.stderr.is_empty(),"{relative}: {}",String::from_utf8_lossy(&output.stderr));
+    let report:Value=serde_json::from_slice(&output.stdout).unwrap();
+    (output.status.code().unwrap(),report)
 }
 
 #[test]
@@ -212,7 +220,27 @@ fn main() {
 
 #[test]
 fn batch53_does_not_certify_flow_sensitive_match_views() {
-    let r=fixture_at("patterns53/programs/escaping_view.yv","batch53");
+    let r=fixture_at("patterns53/programs/borrow_return.yv","batch53");
+    assert_eq!(r["stage0_accepted"],true);
+    assert_eq!(r["ast_complete"],true);
+    assert_eq!(r["typed_ir_complete"],true);
     assert_eq!(r["semantic_complete"],false);
     assert!(r["unknown"].as_array().unwrap().iter().any(|x|x=="flow_sensitive_selfhost_restrictions"));
+}
+
+#[test]
+fn batch54_reclassified_match_views_are_rejected_before_profiling() {
+    for (name,diagnostic) in [("escaping_view","E0305"),("escape_local_view","E0303"),("borrow_wrong_source","E0303")] {
+        let file=format!("patterns53/programs/{name}.yv");
+        let (code,r)=fixture_profile_at(&file,"batch53");
+        assert_eq!(code,1,"{file}: {r}");
+        assert_eq!(r["stage0_accepted"],false,"{file}: {r}");
+        assert_eq!(r["ast_complete"],false,"{file}: {r}");
+        assert_eq!(r["semantic_complete"],false,"{file}: {r}");
+        assert_eq!(r["unknown"],serde_json::json!(["stage0_rejected"]),"{file}: {r}");
+        assert_eq!(r["diagnostics"]["error_count"],1,"{file}: {r}");
+        let errors:Vec<&str>=r["diagnostics"]["diagnostics"].as_array().unwrap().iter()
+            .filter(|d|d["severity"]=="ERROR").map(|d|d["code"].as_str().unwrap()).collect();
+        assert_eq!(errors,vec![diagnostic],"{file}: {r}");
+    }
 }
