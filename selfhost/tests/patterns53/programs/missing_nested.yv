@@ -1,0 +1,4 @@
+enum Bit { A, B }
+enum Pair { Both(x:Bit,y:Bit) }
+fn f(x:Pair) { match x { .Both(.A,_) => println(0), .Both(.B,.A) => println(1) } }
+fn main() {}

@@ -1,0 +1,3 @@
+enum E { Text(s:String) }
+fn escape() -> str of static { return match E.Text("x".toString()) { .Text(s) => s[0..s.len()] } }
+fn main() {}

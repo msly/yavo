@@ -1,0 +1,6 @@
+enum E { A, B }
+fn consume(s:sink String) {}
+fn f(x:E) { let s="x".toString()
+ match x { .A => consume(s), .B => println(0) }
+ println(s) }
+fn main() {}

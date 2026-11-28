@@ -131,6 +131,12 @@ jobs:
         run: ${{ matrix.python }} tools/ci/subset_core.py --bootstrap-output compiler/target/ci/selfhost
       - name: Record self-compilation timing, memory and generated sizes
         run: ${{ matrix.python }} tools/ci/selfhost_metrics.py --bootstrap-output compiler/target/ci/selfhost
+      - name: Validate original enum and result programs
+        if: needs.plan.outputs.tier == 'full'
+        run: ${{ matrix.python }} tools/ci/selfhost_patterns.py --bootstrap-output compiler/target/ci/selfhost --originals
+      - name: Check pattern payload destruction before arm execution
+        if: needs.plan.outputs.tier == 'full'
+        run: ${{ matrix.python }} tools/ci/selfhost_patterns.py --bootstrap-output compiler/target/ci/selfhost --case patterns53_drop_before_body
       - name: Check isolated application runner configurations
         if: needs.plan.outputs.tier == 'full'
         run: ${{ matrix.python }} tools/ci/dep_support_test.py

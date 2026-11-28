@@ -1,0 +1,7 @@
+enum Pair { Both(left: int, right: int) }
+fn tick(n: int) -> int { print(n)
+ return n }
+fn main() {
+ let p=Pair.Both(right:tick(2),left:tick(1))
+ match p { .Both(a,b) => println(a*10+b) }
+}

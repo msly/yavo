@@ -1,0 +1,6 @@
+enum Leaf { Text(value: String), End }
+enum Tree { Node(left: Leaf, right: Leaf), Nil }
+fn main() {
+ match Tree.Node(.Text("a".toString()),.Text("b".toString())) {
+ .Node(.Text(a),.Text(b)) => println("${a}${b}"), .Node(_,_) => println("other"), .Nil => println("nil") }
+}

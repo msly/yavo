@@ -15,7 +15,7 @@ use crate::diag::{Diags, Span};
 use crate::project::Project;
 use crate::types::{self, IntTy, Ty};
 
-pub fn run(input: &Path, legacy_radix: bool) -> i32 {
+pub fn run(input: &Path, profile: &str) -> i32 {
     let result = (|| -> Result<Value, String> {
         let source = std::fs::read_to_string(input).map_err(|e| e.to_string())?;
         let mut diags = Diags::default();
@@ -26,9 +26,9 @@ pub fn run(input: &Path, legacy_radix: bool) -> i32 {
                 "ast_complete":false, "semantic_complete":false,
                 "unknown":["stage0_rejected"], "diagnostics":project.json(&diags)}));
         };
-        let mut a = Analysis::new(&project, legacy_radix);
+        let mut a = Analysis::new(&project, profile);
         a.program(&project.program, &typed);
-        Ok(json!({"schema":"yavo-subset-features/1", "profile":if legacy_radix {"selfhost-batch51-structural-v1"} else {"selfhost-batch52-structural-v1"},
+        Ok(json!({"schema":"yavo-subset-features/1", "profile":format!("selfhost-{profile}-structural-v1"),
             "stage0_accepted":true, "ast_complete":true, "typed_ir_complete":true,
             "semantic_complete":false,
             "unknown":["flow_sensitive_selfhost_restrictions", "unmodeled_structural_capabilities", "implementation_limits"],
@@ -59,6 +59,7 @@ struct Analysis<'a> {
     ast_nodes: usize,
     typed_nodes: usize,
     legacy_radix: bool,
+    general_patterns: bool,
 }
 
 fn primitive(t: Ty) -> bool { matches!(t, Ty::Int(IntTy::I64 | IntTy::U8) | Ty::Bool) }
@@ -87,9 +88,9 @@ fn pure_heap_expression(e: &Expr) -> bool {
 }
 
 impl<'a> Analysis<'a> {
-    fn new(project: &'a Project, legacy_radix: bool) -> Self {
+    fn new(project: &'a Project, profile: &str) -> Self {
         Self { project, blockers:BTreeMap::new(), seen:BTreeSet::new(), seen_types:HashSet::new(),
-            ast_nodes:0, typed_nodes:0, legacy_radix }
+            ast_nodes:0, typed_nodes:0, legacy_radix:profile=="batch51", general_patterns:profile=="batch53" }
     }
     fn add(&mut self, feature: &str, span: Span, detail: impl Into<String>) {
         let detail = detail.into();
@@ -140,7 +141,8 @@ impl<'a> Analysis<'a> {
             Ty::Opt(id) => {
                 let e=types::opt_inner(id);
                 if standard_error_type(e) {self.add("optional_standard_error",span,text.clone());}
-                if !(primitive(e) || matches!(e,Ty::Struct(_) | Ty::Enum(_)) && e.is_copy() || flat_tuple(e)) {
+                let pattern_owned = self.general_patterns && matches!(e,Ty::String | Ty::Struct(_) | Ty::Enum(_));
+                if !(primitive(e) || matches!(e,Ty::Struct(_) | Ty::Enum(_)) && e.is_copy() || flat_tuple(e) || pattern_owned) {
                     self.add(if e.needs_drop() {"optional_owned"} else {"optional_general"},span,text);
                 }
                 self.ty(e,span);
@@ -217,7 +219,7 @@ impl<'a> Analysis<'a> {
             for f in &s.methods { self.function(f); }
         }
         for e in &p.enums {
-            if e.variants.iter().any(|v| !v.fields.is_empty()) { self.add("enum_payload",e.name_span,e.name.clone()); }
+            if !self.general_patterns && e.variants.iter().any(|v| !v.fields.is_empty()) { self.add("enum_payload",e.name_span,e.name.clone()); }
             if !e.impls.is_empty() { self.add("interfaces",e.name_span,e.name.clone()); }
             for v in &e.variants { for f in &v.fields {
                 self.syn_type(&f.ty); if let Some(x)=&f.default { self.expr(x,false); }
@@ -239,10 +241,15 @@ impl<'a> Analysis<'a> {
                 }
                 self.ty(*t,span);
             }
-            if !standard_error(s.ty) && s.variants.iter().any(|(_,fs)|!fs.is_empty()) {
+            if !self.general_patterns && !standard_error(s.ty) && s.variants.iter().any(|(_,fs)|!fs.is_empty()) {
                 self.add("enum_payload",span,s.ty.to_string());
             }
-            for (_,fs) in &s.variants { for (_,t) in fs { self.ty(*t,span); }}
+            for (_,fs) in &s.variants { for (_,t) in fs {
+                if self.general_patterns && matches!(t,Ty::Opt(_) | Ty::Tuple(_) | Ty::Res(_) | Ty::Heap(_)) {
+                    self.add("enum_payload_composition",span,format!("{} payload: {t}",s.ty));
+                }
+                self.ty(*t,span);
+            }}
         }
         for f in &h.fns {
             let span=p.fns.iter().find(|x| x.name==f.name).map(|x|x.name_span).unwrap_or_default();
@@ -294,13 +301,13 @@ impl<'a> Analysis<'a> {
         self.ast_nodes+=1;
         match p {
             Pattern::Some(x)|Pattern::Ok(x)|Pattern::Err(x)=> {
-                self.add("patterns_optional_result",span,"some/ok/err pattern");
-                if depth>0 { self.add("patterns_nested",span,"nested pattern"); }
+                if !self.general_patterns { self.add("patterns_optional_result",span,"some/ok/err pattern"); }
+                if !self.general_patterns && depth>0 { self.add("patterns_nested",span,"nested pattern"); }
                 self.pattern(x,span,depth+1);
             }
-            Pattern::None=>self.add("patterns_optional_result",span,"none pattern"),
+            Pattern::None=>if !self.general_patterns { self.add("patterns_optional_result",span,"none pattern"); },
             Pattern::Case{args,..}=>{
-                if depth>0 {self.add("patterns_nested",span,"nested enum pattern");}
+                if !self.general_patterns && depth>0 {self.add("patterns_nested",span,"nested enum pattern");}
                 for p in args {self.pattern(p,span,depth+1);}
             }
             Pattern::Bind{..}|Pattern::Wild=>{}
@@ -394,7 +401,7 @@ impl<'a> Analysis<'a> {
         }
     }}}
     fn arms(&mut self,scrut:&HExpr,arms:&[HArm],f:&HFn) {
-        if !standard_error(scrut.ty) {
+        if !self.general_patterns && !standard_error(scrut.ty) {
             self.add(if matches!(scrut.ty,Ty::Opt(_) | Ty::Res(_)) {"patterns_optional_result"} else {"match_user_enum"},
                 scrut.span,scrut.ty.to_string());
         }

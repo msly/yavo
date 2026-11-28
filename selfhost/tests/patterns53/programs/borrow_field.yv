@@ -1,0 +1,7 @@
+enum Item { Text(s:String), Empty }
+struct Holder { item:Item }
+fn main() {
+ let h=Holder{item:.Text("held".toString())}
+ match h.item { .Text(s) => println(s), .Empty => println("empty") }
+ match h.item { .Text(s) => println(s.len()), .Empty => println(0) }
+}

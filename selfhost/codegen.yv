@@ -171,16 +171,26 @@ fn pushDigit(out: inout String, d: int) {
     out.push("0123456789"[d..d + 1])
 }
 
-// Three octal digits per byte preserve UTF-8/NUL without C escape ambiguity.
+// Printable ASCII remains readable; question marks are escaped so C17
+// trigraph translation cannot alter source bytes. Other bytes use exactly
+// three octal digits, including UTF-8/NUL and controls, so a following digit
+// cannot extend the escape.
 pub fn cString(text: str) -> String {
     var out = "\"".toString()
     var i = 0
     while i < text.len() {
         let b = int(text[i])
-        out.push("\\")
-        pushDigit(&out, b / 64)
-        pushDigit(&out, (b / 8) % 8)
-        pushDigit(&out, b % 8)
+        if b >= 32 && b <= 126 {
+            if b == 34 { out.push("\\\"")
+            } else if b == 92 { out.push("\\\\")
+            } else if b == 63 { out.push("\\?")
+            } else { out.push(text[i..i + 1]) }
+        } else {
+            out.push("\\")
+            pushDigit(&out, b / 64)
+            pushDigit(&out, (b / 8) % 8)
+            pushDigit(&out, b % 8)
+        }
         i += 1
     }
     out.push("\"")
@@ -288,7 +298,11 @@ fn dropName(reg: Registry, ty: Type) -> String {
     if ty.kind == .Map || ty.kind == .Set { return support.join2("sh_map_drop_", mapHelper(ty)) }
     if ty.kind == .Result { return support.join2("sh_result_drop_", support.decimal(ty.decl)) }
     if ty.kind == .Tuple { return support.join2("sh_tuple_drop_", support.decimal(ty.decl)) }
-    if ty.kind == .Optional { return support.join2("sh_optional_tuple_drop_", support.decimal(ty.elementDecl)) }
+    if ty.kind == .Optional {
+        if ty.elementKind == .String { return "sh_optional_string_drop".toString() }
+        if ty.elementKind == .Named { return support.join2("sh_optional_drop_", support.decimal(ty.elementDecl)) }
+        return support.join2("sh_optional_tuple_drop_", support.decimal(ty.elementDecl))
+    }
     if ty.kind == .Heap { return support.join2("sh_heap_drop_", support.decimal(ty.elementDecl)) }
     if ty.kind == .Vec {
         if types.owned(reg, types.element(ty)) {
@@ -732,35 +746,29 @@ fn printValue(g: inout Generator, reg: Registry, ts: Vec[Token], token: int, arg
         put(&g, target)
         put(&g, view(arg))
         emit(&g, ");")
-    } else if arg.ty.kind == .StdError {
-        emit(&g, format("switch ((${arg.name}).tag) {"))
-        emit(&g, format("case 0: yv_out_bytes(&o_${output}, \"Utf8(offset: \", 13);"))
-        emit(&g, format("yv_out_i64(&o_${output}, (${arg.name}).payload);"))
-        emit(&g, format("yv_out_bytes(&o_${output}, \")\", 1); break;"))
-        emit(&g, format("case 1: yv_out_bytes(&o_${output}, \"Io(code: \", 9);"))
-        emit(&g, format("yv_out_i64(&o_${output}, (${arg.name}).payload);"))
-        emit(&g, format("yv_out_bytes(&o_${output}, \")\", 1); break;"))
-        if arg.ty.decl == 2 {
-            emit(&g, format("case 2: yv_out_bytes(&o_${output}, \"InvalidPath\", 11); break;"))
-        } else if arg.ty.decl != 4 {
-            emit(&g, format("case 2: yv_out_bytes(&o_${output}, \"InvalidArgument\", 15); break;"))
-        }
-        emit(&g, "}")
-    } else if arg.ty.kind == .Named && reg.entries[arg.ty.decl].kind == .Enum {
-        emit(&g, support.join3("switch (", arg.name, ") {"))
-        let start = reg.entries[arg.ty.decl].variantStart
-        let count = reg.entries[arg.ty.decl].variantCount
-        var i = 0
-        while i < count {
-            let text = ts[reg.variants[start + i]].text.clone()
-            put(&g, support.join3("case ", support.decimal(i), ": yv_out_bytes(&o_"))
-            put(&g, support.decimal(output))
-            put(&g, ", ")
-            put(&g, cString(text))
-            put(&g, ", ")
-            put(&g, support.decimal(text.len()))
-            emit(&g, "); break;")
-            i += 1
+    } else if arg.ty.kind == .StdError || (arg.ty.kind == .Named && reg.entries[arg.ty.decl].kind == .Enum) {
+        emit(&g, format("switch (${matchTag(reg, arg.ty, arg.name)}) {"))
+        for i in 0..types.variantCount(reg, arg.ty) {
+            let text = types.variantName(reg, ts, arg.ty, i)
+            emit(&g, format("case ${i}: yv_out_bytes(&o_${output}, ${cString(text)}, ${text.len()});"))
+            let count = types.variantPayloadCount(reg, arg.ty, i)
+            if count > 0 { emit(&g, format("yv_out_bytes(&o_${output}, \"(\", 1);")) }
+            for field in 0..count {
+                var label = String{}
+                if field > 0 { label.push(", ") }
+                label.push(types.variantFieldName(reg, ts, arg.ty, i, field))
+                label.push(": ")
+                emit(&g, format("yv_out_bytes(&o_${output}, ${cString(label)}, ${label.len()});"))
+                let ty = types.variantField(reg, arg.ty, i, field).ty
+                if integerType(ty) || ty.kind == .Bool || stringLike(ty) || ty.kind == .StdError ||
+                    (ty.kind == .Named && reg.entries[ty.decl].kind == .Enum) {
+                    printValue(&g, reg, ts, token, Value{ty: ty, name: matchField(reg, arg.ty, i, field, arg.name)}, output)
+                } else {
+                    emit(&g, format("yv_out_bytes(&o_${output}, \"..\", 2);"))
+                }
+            }
+            if count > 0 { emit(&g, format("yv_out_bytes(&o_${output}, \")\", 1);")) }
+            emit(&g, "break;")
         }
         emit(&g, "}")
     } else {
@@ -1448,10 +1456,23 @@ fn builtinReceiverType(g: Generator, p: Program, ts: Vec[Token], reg: Registry,
 fn methodValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression) -> Value {
     let name = ts[e.token].text.clone()
     let receiver = p.expressions[e.left]
-    if receiver.kind == .HeapType { return heapConstructor(&g, p, ts, reg, e) }
     if builtinReceiverType(g, p, ts, reg, receiver).kind == .StdError {
         lexer.fail(ts, e.token, "U0001", "qualified enum payload construction is outside the stage0 subset")
     }
+    if receiver.kind == .Name && localIndex(g, ts, receiver.token) < 0 {
+        let declared = types.lookup(reg, ts, receiver.token)
+        if declared >= 0 && reg.entries[declared].kind == .Enum {
+            return enumValue(&g, p, reg, ts, e, Type{kind: .Named, decl: declared, elementKind: .Unknown})
+        }
+    }
+    if receiver.kind == .Field && moduleOf(g, reg, ts, p.expressions[receiver.left]) >= 0 {
+        let declared = types.qualifiedType(reg, ts, p.expressions[receiver.left].token, receiver.token)
+        if reg.entries[declared].kind == .Enum {
+            return enumValue(&g, p, reg, ts, e, Type{kind: .Named, decl: declared, elementKind: .Unknown})
+        }
+    }
+    if e.nameCount > 0 { lexer.fail(ts, e.token, "U0001", "named arguments outside enum construction are outside this subset") }
+    if receiver.kind == .HeapType { return heapConstructor(&g, p, ts, reg, e) }
     let userModule = moduleOf(g, reg, ts, receiver)
     if userModule >= 0 {
         let index = functionIn(p, ts, userModule, e.token)
@@ -1466,12 +1487,6 @@ fn methodValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
     if module == 1 { return osCall(&g, p, ts, reg, e) }
     if module == 2 || module == 4 || module == 5 {
         lexer.fail(ts, e.token, "U0001", "this standard function is outside the selfhost subset")
-    }
-    if receiver.kind == .Name && localIndex(g, ts, receiver.token) < 0 {
-        let declared = types.lookup(reg, ts, receiver.token)
-        if declared >= 0 && reg.entries[declared].kind == .Enum {
-            lexer.fail(ts, e.token, "U0001", "enum payload construction is outside this subset")
-        }
     }
     if name == "sort" { return sortValue(&g, p, ts, reg, e) }
     if name == "pop" {
@@ -1798,10 +1813,10 @@ fn wrapOptional(g: inout Generator, reg: Registry, ts: Vec[Token], token: int, t
     return result
 }
 
-fn liftHint(reg: Registry, expected: Hint) -> Hint {
+fn liftHint(_reg: Registry, expected: Hint) -> Hint {
     let ty = expected.ty
     if expected.extra == 0 && (ty.kind == .Int || ty.kind == .Byte || ty.kind == .Bool || ty.kind == .Tuple ||
-        (ty.kind == .Named && !types.owned(reg, ty))) {
+        ty.kind == .String || ty.kind == .Named) {
         return Hint{ty: Type{kind: .Optional, elementKind: ty.kind, elementDecl: ty.decl}}
     }
     return Hint{ty: ty, extra: expected.extra + 1}
@@ -2214,7 +2229,7 @@ fn binaryValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e:
         if lhs.ty.kind == .Vec || lhs.ty.kind == .Args || lhs.ty.kind == .Slice || lhs.ty.kind == .Result ||
             lhs.ty.kind == .Map || lhs.ty.kind == .Set || lhs.ty.kind == .Heap || lhs.ty.kind == .Tuple ||
             lhs.ty.kind == .StdError || lhs.ty.kind == .Utf8Error ||
-            (lhs.ty.kind == .Named && (reg.entries[lhs.ty.decl].kind == .Struct || !equality)) {
+            (lhs.ty.kind == .Named && (reg.entries[lhs.ty.decl].kind == .Struct || types.enumPayload(reg, lhs.ty) || !equality)) {
             lexer.fail(ts, e.token, "E0501", "this aggregate does not implement the required comparison")
         }
         return scalar(&g, .Bool, support.join5("(", lhs.name, support.join3(" ", op, " "), rhs.name, ")"))
@@ -2295,32 +2310,146 @@ fn unparenthesized(p: Program, id: int) -> int {
     return current
 }
 
-fn declareErrorBinding(g: inout Generator, ts: Vec[Token], token: int,
-    ty: Type, value: str, root: int) {
-    if token < 0 || ts[token].text == "_" { return }
-    declare(&g, ts, token, ty, false, false, false)
-    let index = g.locals.len() - 1
-    var binding = 2
-    if root >= 0 && !g.locals[root].mutable { binding = 1 }
-    g.locals[index].matchRoot = root
-    g.locals[index].matchBinding = binding
-    emit(&g, format("${types.cType(ty)} v_${token} = ${value};"))
+// All sum types use one constructor view; layout adapters do not type-check.
+fn patternConstructor(reg: Registry, p: Program, ts: Vec[Token], id: int, ty: Type) -> int {
+    if id < 0 { return -1 }
+    let pat = p.patterns[id]
+    if pat.kind == .Wild || pat.kind == .Bind { return -1 }
+    var variant = -1
+    if pat.kind == .Some || pat.kind == .None {
+        if ty.kind != .Optional { lexer.fail(ts, pat.token, "E0001", "an Optional pattern requires an Optional value") }
+        variant = 0
+        if pat.kind == .Some { variant = 1 }
+    } else if pat.kind == .Ok || pat.kind == .Err {
+        if ty.kind != .Result { lexer.fail(ts, pat.token, "E0001", "a Result pattern requires a Result value") }
+        variant = 0
+        if pat.kind == .Ok { variant = 1 }
+    } else {
+        if ty.kind != .StdError && (ty.kind != .Named || reg.entries[ty.decl].kind != .Enum) {
+            lexer.fail(ts, pat.token, "E0001", "an enum case pattern requires an enum value")
+        }
+        if pat.typeToken >= 0 { require(reg, ts, pat.typeToken, types.patternType(reg, ts, pat.typeToken), ty) }
+        variant = types.variantByName(reg, ts, ty, pat.variant)
+        if variant < 0 { lexer.fail(ts, pat.variant, "E0010", "unknown enum case") }
+    }
+    if pat.payloadCount != types.variantPayloadCount(reg, ty, variant) {
+        lexer.fail(ts, pat.token, "E0012", "wrong number of payload patterns")
+    }
+    return variant
 }
 
-// Only the built-in Copy error enums are admitted here. Their payloads are
-// integers, so no borrowed or owned enum payload is silently generalized.
+fn patternCondition(p: Program, ts: Vec[Token], reg: Registry,
+    id: int, ty: Type, name: str, depth: int) -> String {
+    let pat = p.patterns[id]
+    if depth >= 256 { lexer.fail(ts, pat.token, "U0001", "selfhost pattern nesting limit (256) exceeded") }
+    let variant = patternConstructor(reg, p, ts, id, ty)
+    if variant < 0 { return "true".toString() }
+    var condition = format("(${matchTag(reg, ty, name)}) == ${variant}")
+    for i in 0..pat.payloadCount {
+        let field = types.variantField(reg, ty, variant, i)
+        let nested = patternCondition(p, ts, reg, p.lists[pat.payloadStart + i], field.ty,
+            matchField(reg, ty, variant, i, name), depth + 1)
+        if nested != "true" { condition.push(format(" && (${nested})")) }
+    }
+    return condition
+}
+
+fn bindPattern(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry,
+    id: int, ty: Type, name: str, root: int, owned: bool, sources: int, depth: int) {
+    let pat = p.patterns[id]
+    if depth >= 256 { lexer.fail(ts, pat.token, "U0001", "selfhost pattern nesting limit (256) exceeded") }
+    if pat.kind == .Wild { return }
+    if pat.kind == .Bind {
+        let token = pat.binding
+        if ty.kind == .Unit {
+            if ts[token].text.startsWith("_") { return }
+            lexer.fail(ts, token, "E0001", "a unit payload cannot be bound to a value")
+        }
+        let ownsValue = types.owned(reg, ty)
+        let borrowed = ownsValue && !owned
+        declare(&g, ts, token, ty, false, borrowed, false)
+        let index = g.locals.len() - 1
+        var binding = 2
+        if root >= 0 && !g.locals[root].mutable { binding = 1 }
+        g.locals[index].matchRoot = root
+        g.locals[index].matchBinding = binding
+        g.locals[index].sources = sources
+        if borrowed { g.locals[index].viewOf = root }
+        emit(&g, format("${types.cType(ty)} v_${token} = ${name};"))
+        if owned && ownsValue { zeroValue(&g, reg, Value{ty: ty, name: name.toString()}) }
+        return
+    }
+    let variant = patternConstructor(reg, p, ts, id, ty)
+    for i in 0..pat.payloadCount {
+        let field = types.variantField(reg, ty, variant, i)
+        bindPattern(&g, p, ts, reg, p.lists[pat.payloadStart + i], field.ty,
+            matchField(reg, ty, variant, i, name), root, owned, sources, depth + 1)
+    }
+}
+
+fn wildPattern(p: Program, id: int) -> bool {
+    return id < 0 || p.patterns[id].kind == .Wild || p.patterns[id].kind == .Bind
+}
+
+// Specialize every column of the pattern matrix, preserving correlations
+// between sibling fields. -1 denotes a synthetic wildcard; no tag bitmask.
+fn patternsComplete(p: Program, ts: Vec[Token], reg: Registry, token: int,
+    rows: []int, rowCount: int, columns: []Type, depth: int) -> bool {
+    if rowCount == 0 { return false }
+    if columns.len() == 0 { return true }
+    for r in 0..rowCount {
+        var all = true
+        for c in 0..columns.len() {
+            if !wildPattern(p, rows[r * columns.len() + c]) { all = false }
+        }
+        if all { return true }
+    }
+    if depth >= 256 { lexer.fail(ts, token, "U0001", "selfhost pattern matrix nesting limit (256) exceeded") }
+    let head = columns[0]
+    let variants = types.variantCount(reg, head)
+    var choices = variants
+    if choices == 0 { choices = 1 }
+    for v in 0..choices {
+        var arity = 0
+        if variants > 0 { arity = types.variantPayloadCount(reg, head, v) }
+        var nextTypes: Vec[Type] = []
+        for f in 0..arity { nextTypes.push(types.variantField(reg, head, v, f).ty) }
+        for c in 1..columns.len() { nextTypes.push(columns[c]) }
+        var nextRows: Vec[int] = []
+        var count = 0
+        for r in 0..rowCount {
+            let id = rows[r * columns.len()]
+            let wild = wildPattern(p, id)
+            if wild || (variants > 0 && patternConstructor(reg, p, ts, id, head) == v) {
+                for f in 0..arity {
+                    var child = -1
+                    if !wild { child = p.lists[p.patterns[id].payloadStart + f] }
+                    nextRows.push(child)
+                }
+                for c in 1..columns.len() { nextRows.push(rows[r * columns.len() + c]) }
+                count += 1
+            }
+        }
+        if !patternsComplete(p, ts, reg, token, nextRows, count, nextTypes, depth + 1) { return false }
+    }
+    return true
+}
+
+// Shared type checking, coverage, borrowing and cleanup for every match.
 fn matchValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry,
     e: Expression, expected: Type, statement: bool) -> MatchValue {
     let scrutinee = emitExpr(&g, p, ts, reg, e.left)
-    if scrutinee.ty.kind != .StdError {
-        lexer.fail(ts, e.token, "U0001", "match requires a standard-library error value in this subset")
+    if scrutinee.transient {
+        lexer.fail(ts, e.token, "U0001", "matching a transient owned view requires tracked pattern lifetimes")
     }
-    let variants = types.standardVariantCount(scrutinee.ty)
-    let complete = (1 << variants) - 1
-    var covered = 0
     var root = -1
     let rootToken = placeRoot(p, e.left)
     if rootToken >= 0 { root = localIndex(g, ts, rootToken) }
+    let ownsScrutinee = root < 0 && !scrutinee.indexedBorrow && !scrutinee.field
+    if root < 0 && types.owned(reg, scrutinee.ty) && !scrutinee.temporary {
+        lexer.fail(ts, e.token, "U0001", "matching an owned projection of a temporary requires a tracked reference")
+    }
+    var patterns: Vec[int] = []
     let localsBefore = g.locals.len()
     let tempsBefore = g.temps.len()
     let before = movedState(g)
@@ -2345,31 +2474,16 @@ fn matchValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry,
         let arm = p.matchArms[e.argStart + i]
         restoreState(&g, before)
         restoreSources(&g, sourcesBefore)
-        var condition = "true".toString()
-        if arm.kind == .Case {
-            if arm.typeToken >= 0 {
-                let patternType = types.builtinType(reg, ts, arm.typeToken)
-                require(reg, ts, arm.typeToken, patternType, scrutinee.ty)
-            }
-            let variant = types.standardVariant(scrutinee.ty, ts[arm.variant].text)
-            if variant < 0 { lexer.fail(ts, arm.variant, "E0010", "unknown enum case") }
-            var arity = 1
-            if variant == 2 { arity = 0 }
-            if arm.payloadCount != arity {
-                lexer.fail(ts, arm.variant, "E0012", "wrong number of enum payload patterns")
-            }
-            covered = covered | (1 << variant)
-            condition = format("(${scrutinee.name}).tag == ${variant}")
-        } else {
-            covered = complete
-        }
+        patterns.push(arm.pattern)
+        let condition = patternCondition(p, ts, reg, arm.pattern, scrutinee.ty, scrutinee.name, 0)
         if i > 0 { put(&g, "else ") }
         emit(&g, format("if (${condition}) {"))
-        if arm.kind == .Bind {
-            declareErrorBinding(&g, ts, arm.binding, scrutinee.ty, scrutinee.name, root)
-        } else if arm.kind == .Case && arm.payloadCount == 1 {
-            declareErrorBinding(&g, ts, p.lists[arm.payloadStart], types.primitive(.Int),
-                format("(${scrutinee.name}).payload"), root)
+        bindPattern(&g, p, ts, reg, arm.pattern, scrutinee.ty, scrutinee.name,
+            root, ownsScrutinee, scrutinee.sources, 0)
+        if ownsScrutinee {
+            // Moved fields are empty. Unbound owners die before the arm starts.
+            dropValue(&g, reg, scrutinee.ty, scrutinee.name)
+            zeroValue(&g, reg, scrutinee)
         }
         var flow = Flow{}
         if arm.block {
@@ -2386,12 +2500,25 @@ fn matchValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry,
                     flow = loopExit(&g, ts, reg, valueExpr.token, ts[valueExpr.token].text == "break")
                 }
             } else {
-                let value = emitExpected(&g, p, ts, reg, arm.value, resultType)
+                var value = emitExpected(&g, p, ts, reg, arm.value, resultType)
                 if value.ty.kind == .Unit { lexer.fail(ts, valueExpr.token, "E0001", "this match arm produces no value") }
                 if resultType.kind == .Unknown { resultType = value.ty }
                 require(reg, ts, valueExpr.token, value.ty, resultType)
                 if value.transient {
-                    lexer.fail(ts, valueExpr.token, "U0001", "match results borrowing an owned string are outside this subset")
+                    var owner = ownerOf(value)
+                    // Pattern aliases can refer to another pattern alias. Only
+                    // an immutable parameter is a durable source in this model.
+                    while owner >= 0 && g.locals[owner].viewOf >= 0 {
+                        owner = g.locals[owner].viewOf
+                    }
+                    if owner < 0 || owner >= localsBefore || owner >= 62 ||
+                        !g.locals[owner].borrowed || g.locals[owner].byRef ||
+                        g.locals[owner].element || g.locals[owner].matchBinding > 0 {
+                        lexer.fail(ts, valueExpr.token, "U0001", "a match result view requires an immutable parameter source")
+                    }
+                    value.sources = value.sources | sourceBit(owner)
+                    value.transient = false
+                    value.owner = -1
                 }
                 let taken = takeValue(&g, reg, ts, valueExpr.token, value)
                 resultSources = resultSources | taken.sources
@@ -2425,7 +2552,9 @@ fn matchValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry,
         emit(&g, "}")
         i += 1
     }
-    if covered != complete { lexer.fail(ts, e.token, "E0602", "this match does not handle every error case") }
+    if !patternsComplete(p, ts, reg, e.token, patterns, patterns.len(), [scrutinee.ty], 0) {
+        lexer.fail(ts, e.token, "E0602", "this match does not handle every case")
+    }
     if falls {
         restoreState(&g, liveState)
         restoreSources(&g, liveSources)
@@ -2451,29 +2580,7 @@ fn matchValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry,
 
 fn standardErrorValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry,
     e: Expression, expected: Type) -> Value {
-    let which = types.standardVariant(expected, ts[e.token].text)
-    if which < 0 { lexer.fail(ts, e.token, "E0010", "unknown enum case") }
-    var arity = 1
-    if which == 2 { arity = 0 }
-    if e.argCount < arity { lexer.fail(ts, e.token, "E0018", "missing enum payload field") }
-    if e.argCount != arity { lexer.fail(ts, e.token, "E0012", "wrong number of enum payload arguments") }
-    if e.nameCount > 0 {
-        let label = p.lists[e.nameStart]
-        if label >= 0 {
-            var wanted = "offset"
-            if which == 1 { wanted = "code" }
-            if ts[label].text != wanted { lexer.fail(ts, label, "E0010", "unknown enum payload field") }
-        }
-    }
-    var payload = "0".toString()
-    if arity == 1 {
-        let argId = p.lists[e.argStart]
-        let value = emitExpected(&g, p, ts, reg, argId, types.primitive(.Int))
-        require(reg, ts, p.expressions[argId].token, value.ty, types.primitive(.Int))
-        payload = value.name.clone()
-    }
-    return typedValue(&g, reg, expected,
-        format("(${types.cType(expected)}){ .tag = ${which}, .payload = ${payload} }"))
+    return enumValue(&g, p, reg, ts, e, expected)
 }
 
 fn utf8ErrorConstruct(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression) -> Value {
@@ -2495,13 +2602,80 @@ fn utf8ErrorConstruct(g: inout Generator, p: Program, ts: Vec[Token], reg: Regis
     return typedValue(&g, reg, types.primitive(.Utf8Error), format("(sh_utf8_error){ .offset = ${offset} }"))
 }
 
-fn enumValue(g: inout Generator, reg: Registry, ts: Vec[Token], token: int, expected: Type) -> Value {
-    if expected.kind != .Named || reg.entries[expected.decl].kind != .Enum {
-        lexer.fail(ts, token, "E0001", "an enum case requires an expected enum type")
+// These adapters only describe storage. Pattern checking and branch lowering
+// use one algorithm for named enums, standard errors, Optional and Result.
+fn matchTag(reg: Registry, ty: Type, name: str) -> String {
+    if ty.kind == .Optional { return format("(${name}).has") }
+    if ty.kind == .Result { return format("(${name}).ok") }
+    if ty.kind == .StdError || types.enumPayload(reg, ty) { return format("(${name}).tag") }
+    return name.toString()
+}
+
+fn matchField(_reg: Registry, ty: Type, variant: int, field: int, name: str) -> String {
+    if ty.kind == .Optional { return format("(${name}).val") }
+    if ty.kind == .Result {
+        if variant == 1 { return format("(${name}).val") }
+        return format("(${name}).err")
     }
-    let which = types.variantIndex(reg, ts, expected.decl, token)
-    if which < 0 { lexer.fail(ts, token, "E0010", "unknown enum case") }
-    return typedValue(&g, reg, expected, support.decimal(which))
+    if ty.kind == .StdError { return format("(${name}).payload") }
+    return format("(${name}).payload.v_${variant}.f_${field}")
+}
+
+fn enumValue(g: inout Generator, p: Program, reg: Registry, ts: Vec[Token], e: Expression, expected: Type) -> Value {
+    if expected.kind != .StdError &&
+        (expected.kind != .Named || reg.entries[expected.decl].kind != .Enum) {
+        lexer.fail(ts, e.token, "E0001", "an enum case requires an expected enum type")
+    }
+    var which = -1
+    for index in 0..types.variantCount(reg, expected) {
+        if types.variantName(reg, ts, expected, index) == ts[e.token].text { which = index }
+    }
+    if which < 0 { lexer.fail(ts, e.token, "E0010", "unknown enum case") }
+    let count = types.variantPayloadCount(reg, expected, which)
+    if count > 0 && e.argCount == 0 && ts[e.token + 1].text != "(" {
+        lexer.fail(ts, e.token, "E0012", "this enum case requires payload arguments")
+    }
+    var slots: Vec[int] = []
+    var taken: Vec[Value] = []
+    var next = 0
+    for i in 0..e.argCount {
+        let argId = p.lists[e.argStart + i]
+        var field = next
+        var label = -1
+        if e.nameCount > 0 { label = p.lists[e.nameStart + i] }
+        if label >= 0 {
+            field = -1
+            for candidate in 0..count {
+                if types.variantFieldName(reg, ts, expected, which, candidate) == ts[label].text { field = candidate }
+            }
+            if field < 0 { lexer.fail(ts, label, "E0010", "unknown enum payload field") }
+        } else {
+            next += 1
+            if field >= count { lexer.fail(ts, p.expressions[argId].token, "E0012", "too many enum payload arguments") }
+        }
+        if contains(slots, field) { lexer.fail(ts, p.expressions[argId].token, "E0011", "duplicate enum payload field") }
+        let ty = types.variantField(reg, expected, which, field).ty
+        let value = emitExpected(&g, p, ts, reg, argId, ty)
+        require(reg, ts, p.expressions[argId].token, value.ty, ty)
+        taken.push(takeValue(&g, reg, ts, p.expressions[argId].token, value))
+        slots.push(field)
+    }
+    if slots.len() != count { lexer.fail(ts, e.token, "E0018", "missing enum payload field") }
+    if expected.kind == .Named && !types.enumPayload(reg, expected) {
+        return typedValue(&g, reg, expected, support.decimal(which))
+    }
+    var fields = format(".tag = ${which}")
+    for i in 0..count {
+        var k = 0
+        while slots[k] != i { k += 1 }
+        if expected.kind == .StdError { fields.push(", .payload = ") } else {
+            fields.push(format(", .payload.v_${which}.f_${i} = "))
+        }
+        fields.push(taken[k].name)
+    }
+    let result = typedValue(&g, reg, expected, format("(${types.cType(expected)}){${fields}}"))
+    for value in taken { zeroValue(&g, reg, value) }
+    return result
 }
 
 fn constructValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: Expression) -> Value {
@@ -2611,14 +2785,14 @@ fn fieldValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry, e: 
         // module.Enum.Case
         let declared = types.qualifiedType(reg, ts, p.expressions[baseExpr.left].token, baseExpr.token)
         if reg.entries[declared].kind == .Enum {
-            return enumValue(&g, reg, ts, e.token, Type{kind: .Named, decl: declared, elementKind: .Unknown})
+            return enumValue(&g, p, reg, ts, e, Type{kind: .Named, decl: declared, elementKind: .Unknown})
         }
         lexer.fail(ts, e.token, "U0001", "member access on this type is outside the selfhost subset")
     }
     if baseExpr.kind == .Name && localIndex(g, ts, baseExpr.token) < 0 {
         let declared = types.lookup(reg, ts, baseExpr.token)
         if declared >= 0 && reg.entries[declared].kind == .Enum {
-            return enumValue(&g, reg, ts, e.token, Type{kind: .Named, decl: declared, elementKind: .Unknown})
+            return enumValue(&g, p, reg, ts, e, Type{kind: .Named, decl: declared, elementKind: .Unknown})
         }
     }
     let base = emitExpr(&g, p, ts, reg, e.left)
@@ -2957,8 +3131,7 @@ fn expressionValue(g: inout Generator, p: Program, ts: Vec[Token], reg: Registry
             hint = types.element(hint)
         }
         if hint.kind == .StdError { return standardErrorValue(&g, p, ts, reg, e, hint) }
-        if e.argCount > 0 { lexer.fail(ts, e.token, "U0001", "user enum payload construction is outside this subset") }
-        return enumValue(&g, reg, ts, e.token, hint)
+        return enumValue(&g, p, reg, ts, e, hint)
     }
     if e.kind == .Construct { return constructValue(&g, p, ts, reg, e) }
     if e.kind == .Vector { return vectorValue(&g, p, ts, reg, e, expected) }
@@ -3884,13 +4057,22 @@ fn optionalLayouts(g: inout Generator, reg: Registry) {
     optionalLayout(&g, types.primitive(.Int))
     optionalLayout(&g, types.primitive(.Byte))
     optionalLayout(&g, types.primitive(.Bool))
+    optionalLayout(&g, types.primitive(.String))
     var i = 0
     while i < reg.entries.len() {
-        if !reg.entries[i].owned {
-            optionalLayout(&g, Type{kind: .Named, decl: i, elementKind: .Unknown})
-        }
+        optionalLayout(&g, Type{kind: .Named, decl: i, elementKind: .Unknown})
         i += 1
     }
+}
+
+fn optionalLifecycle(g: inout Generator, reg: Registry, elem: Type) {
+    let ty = Type{kind: .Optional, elementKind: elem.kind, elementDecl: elem.decl}
+    emit(&g, format("static void ${dropName(reg, ty)}(${types.cType(ty)} *p) {"))
+    emit(&g, "if (p->has) {")
+    dropValue(&g, reg, elem, "p->val")
+    emit(&g, "}")
+    emit(&g, format("*p = (${types.cType(ty)}){0};"))
+    emit(&g, "}")
 }
 
 fn resultLayouts(g: inout Generator, reg: Registry) {
@@ -3937,7 +4119,9 @@ fn declarations(g: inout Generator, reg: Registry) {
     if reg.utf8Error { emit(&g, "typedef struct sh_utf8_error { int64_t offset; } sh_utf8_error;") }
     var i = 0
     while i < reg.entries.len() {
-        if reg.entries[i].kind == .Enum { emit(&g, support.join3("typedef int64_t sh_type_", support.decimal(i), ";")) }
+        if reg.entries[i].kind == .Enum && reg.entries[i].fieldCount == 0 {
+            emit(&g, support.join3("typedef int64_t sh_type_", support.decimal(i), ";"))
+        }
         i += 1
     }
     var k = 0
@@ -3953,6 +4137,20 @@ fn declarations(g: inout Generator, reg: Registry) {
                 j += 1
             }
             emit(&g, support.join3("} sh_type_", support.decimal(index), ";"))
+        } else if item.fieldCount > 0 {
+            let ty = Type{kind: .Named, decl: index, elementKind: .Unknown}
+            emit(&g, format("typedef struct sh_type_${index} { int64_t tag; union {"))
+            for variant in 0..types.variantCount(reg, ty) {
+                let count = types.variantPayloadCount(reg, ty, variant)
+                if count > 0 {
+                    emit(&g, "struct {")
+                    for field in 0..count {
+                        emit(&g, format("${types.cType(types.variantField(reg, ty, variant, field).ty)} f_${field};"))
+                    }
+                    emit(&g, format("} v_${variant};"))
+                }
+            }
+            emit(&g, format("} payload; } sh_type_${index};"))
         }
         k += 1
     }
@@ -4004,30 +4202,68 @@ fn declarations(g: inout Generator, reg: Registry) {
         if reg.entries[index].owned {
             let n = support.decimal(index)
             emit(&g, support.join5("static void sh_drop_", n, "(sh_type_", n, " *p) {"))
-            var j = reg.entries[index].fieldCount
-            while j > 0 {
-                j -= 1
-                let ty = types.fieldOf(reg, index, j).ty
-                if types.owned(reg, ty) { emit(&g, support.join4(dropName(reg, ty), "(&p->f_", support.decimal(j), ");")) }
+            let named = Type{kind: .Named, decl: index, elementKind: .Unknown}
+            if reg.entries[index].kind == .Enum {
+                emit(&g, "switch (p->tag) {")
+                for variant in 0..types.variantCount(reg, named) {
+                    emit(&g, format("case ${variant}:"))
+                    var field = types.variantPayloadCount(reg, named, variant)
+                    while field > 0 {
+                        field -= 1
+                        let ty = types.variantField(reg, named, variant, field).ty
+                        dropValue(&g, reg, ty, format("p->payload.v_${variant}.f_${field}"))
+                    }
+                    emit(&g, "break;")
+                }
+                emit(&g, "}")
+            } else {
+                var j = reg.entries[index].fieldCount
+                while j > 0 {
+                    j -= 1
+                    let ty = types.fieldOf(reg, index, j).ty
+                    if types.owned(reg, ty) { emit(&g, support.join4(dropName(reg, ty), "(&p->f_", support.decimal(j), ");")) }
+                }
             }
             emit(&g, support.join3("*p = (sh_type_", n, "){0};"))
             emit(&g, "}")
             emit(&g, support.join5(support.join3("static sh_type_", n, " sh_clone_"), n, "(const sh_type_", n,
                 " *p, uint32_t line, uint32_t col) {"))
             emit(&g, support.join3("sh_type_", n, " out = *p;"))
-            var field = 0
-            while field < reg.entries[index].fieldCount {
-                let ty = types.fieldOf(reg, index, field).ty
-                if types.owned(reg, ty) {
-                    let cloned = cloneExpression(reg, ty, support.join2("p->f_", support.decimal(field)), "line", "col")
-                    emit(&g, support.join5("out.f_", support.decimal(field), " = ", cloned, ";"))
+            if reg.entries[index].kind == .Enum {
+                emit(&g, "switch (p->tag) {")
+                for variant in 0..types.variantCount(reg, named) {
+                    emit(&g, format("case ${variant}:"))
+                    for field in 0..types.variantPayloadCount(reg, named, variant) {
+                        let ty = types.variantField(reg, named, variant, field).ty
+                        if types.owned(reg, ty) {
+                            let cloned = cloneExpression(reg, ty, format("p->payload.v_${variant}.f_${field}"), "line", "col")
+                            emit(&g, format("out.payload.v_${variant}.f_${field} = ${cloned};"))
+                        }
+                    }
+                    emit(&g, "break;")
                 }
-                field += 1
+                emit(&g, "}")
+            } else {
+                var field = 0
+                while field < reg.entries[index].fieldCount {
+                    let ty = types.fieldOf(reg, index, field).ty
+                    if types.owned(reg, ty) {
+                        let cloned = cloneExpression(reg, ty, support.join2("p->f_", support.decimal(field)), "line", "col")
+                        emit(&g, support.join5("out.f_", support.decimal(field), " = ", cloned, ";"))
+                    }
+                    field += 1
+                }
             }
             emit(&g, "return out;")
             emit(&g, "}")
         }
         k += 1
+    }
+    optionalLifecycle(&g, reg, types.primitive(.String))
+    for index in 0..reg.entries.len() {
+        if reg.entries[index].owned {
+            optionalLifecycle(&g, reg, Type{kind: .Named, decl: index, elementKind: .Unknown})
+        }
     }
     resultLifecycle(&g, reg)
 }

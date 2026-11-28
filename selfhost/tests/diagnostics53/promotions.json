@@ -1,0 +1,97 @@
+{
+  "schema": "yavo-diagnostics53-promotions/1",
+  "batch": 53,
+  "base_manifest": "selfhost/tests/diagnostics50/cases.json",
+  "base_manifest_sha256": "248609abc98feb03d81e114b7d2a82d5094b0b3f6b04e383ab28021b384e8edc",
+  "base_freeze_sha256": "ee3930a89003dd6c361df89b7b3803225d025925ec0d51282ad2e6110350fa9f",
+  "source_bytes_unchanged": true,
+  "expectation_basis": "Batch 53 implements String and owned named Optional payloads with shared storage and ownership handling. The unchanged ?String = none fixture is valid and has a successful check JSON/text contract; this expectation is derived from the source semantics and the independent frozen diagnostic oracle.",
+  "promotions": [
+    {
+      "id": "unsupported_owned_optional",
+      "before_case_sha256": "743f086d320b2c4ae3d390209e91834ca326bbc9ec142cdb900ea13f86c0d2dd",
+      "files": [
+        {
+          "path": "main.yv",
+          "fixture": "fixtures/unsupported_owned_optional/main.yv",
+          "sha256": "c06ba729a68c22c6dca93483d85647de8bce33712d793bdbc7b3ac3311400c59",
+          "bytes": 40
+        }
+      ],
+      "before_expected": {
+        "exit": 1,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "c06ba729a68c22c6dca93483d85647de8bce33712d793bdbc7b3ac3311400c59",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 40,
+              "sha256": "c06ba729a68c22c6dca93483d85647de8bce33712d793bdbc7b3ac3311400c59"
+            }
+          ],
+          "error_count": 1,
+          "warning_count": 0,
+          "diagnostics": [
+            {
+              "severity": "ERROR",
+              "code": "U0001",
+              "message": "this Optional payload type is outside the selfhost subset",
+              "file": "main.yv",
+              "line": 1,
+              "column": 24,
+              "end_line": 1,
+              "end_column": 25,
+              "primary": {
+                "file": "main.yv",
+                "start": 23,
+                "end": 24,
+                "line": 1,
+                "column": 24,
+                "end_line": 1,
+                "end_column": 25
+              },
+              "notes": [],
+              "fixes": []
+            }
+          ]
+        },
+        "stderr": ""
+      },
+      "before_legacy_text": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.yv:1:24: U0001: this Optional payload type is outside the selfhost subset\n"
+      },
+      "after_expected": {
+        "exit": 0,
+        "document": {
+          "schema": "yavo-diagnostics/p0",
+          "frontend": "selfhost",
+          "diagnostic_mode": "first-error",
+          "file": "main.yv",
+          "source_sha256": "c06ba729a68c22c6dca93483d85647de8bce33712d793bdbc7b3ac3311400c59",
+          "sources": [
+            {
+              "path": "main.yv",
+              "bytes": 40,
+              "sha256": "c06ba729a68c22c6dca93483d85647de8bce33712d793bdbc7b3ac3311400c59"
+            }
+          ],
+          "error_count": 0,
+          "warning_count": 0,
+          "diagnostics": []
+        },
+        "stderr": ""
+      },
+      "after_legacy_text": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+enum E { Pair(text:String, nums:Vec[int]), Empty }
+fn make() -> E { return .Pair("x".toString(),[1,2]) }
+fn main() {
+ match make() { .Pair(_,_) => println("drop0"), .Empty => println("empty") }
+ match make() { .Pair(s,_) => { println("keep1")
+ println(s) }, .Empty => println("empty") }
+ let place=make()
+ match place { .Pair(_,_) => println("borrow2"), .Empty => println("empty") }
+}

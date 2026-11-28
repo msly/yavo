@@ -1,0 +1,4 @@
+enum Failure { Bad(code:int), Empty }
+fn work(n:int) -> String ! Failure { if n==0 { return "good".toString() }
+ return err(.Bad(n)) }
+fn main() { for n in 0..2 { match work(n) { ok(s) => println(s), err(.Bad(c)) => println(c), err(.Empty) => println("empty") } } }

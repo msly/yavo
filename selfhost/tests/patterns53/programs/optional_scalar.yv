@@ -1,0 +1,7 @@
+fn score(x: ?int) -> int { return match x { some(n) => n, none => -1 } }
+fn main() {
+ println(score(some(7)))
+ println(score(none))
+ let x:?int=some(2)
+ match x { none => println(0), _ => println(1) }
+}

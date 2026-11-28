@@ -1,0 +1,7 @@
+enum Item { Text(s:String), Empty }
+fn main() {
+ var xs:Vec[Item]=[.Text("a".toString()),.Empty]
+ xs.push(.Text("bb".toString()))
+ for x in xs { match x { .Text(s) => println(s), .Empty => println("empty") } }
+ println(xs.len())
+}

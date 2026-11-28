@@ -1,0 +1,9 @@
+enum Item { Text(value: String), Empty }
+fn show(x: Item) { match x { .Text(s) => println(s), .Empty => println("empty") } }
+fn sinkItem(x: sink Item) { show(x) }
+fn main() {
+ let a=Item.Text("borrow".toString())
+ match a { x => show(x) }
+ show(a)
+ match Item.Text("move".toString()) { x => sinkItem(x) }
+}

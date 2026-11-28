@@ -766,10 +766,10 @@
     },
     {
       "id": "unsupported_enum_payload",
-      "kind": "unsupported",
+      "kind": "run",
       "file": "unsupported/unsupported_enum_payload.yv",
-      "batch": "copy-aggregates",
-      "diagnostic": "U0001"
+      "batch": "patterns53",
+      "stdout": ""
     },
     {
       "id": "unsupported_struct_method",
@@ -2872,27 +2872,27 @@
     },
     {
       "id": "unsupported_vec_pop_string",
-      "kind": "unsupported",
-      "diagnostic": "U0001",
+      "kind": "run",
       "reason": "This batch supports Copy-element pop; String payload ownership in Optional is outside the subset.",
       "file": "unsupported/unsupported_vec_pop_string.yv",
-      "batch": "copy-optional-pop"
+      "batch": "patterns53",
+      "stdout": ""
     },
     {
       "id": "unsupported_vec_pop_owned_struct",
-      "kind": "unsupported",
-      "diagnostic": "U0001",
+      "kind": "run",
       "reason": "A struct containing String and Vec[String] is owned, so its pop result is outside the Copy-only Optional subset.",
       "file": "unsupported/unsupported_vec_pop_owned_struct.yv",
-      "batch": "copy-optional-pop"
+      "batch": "patterns53",
+      "stdout": ""
     },
     {
       "id": "unsupported_optional_string",
-      "kind": "unsupported",
-      "diagnostic": "U0001",
+      "kind": "run",
       "reason": "Owned String Optional payloads are outside this Copy-only batch.",
       "file": "unsupported/unsupported_optional_string.yv",
-      "batch": "copy-optional-pop"
+      "batch": "patterns53",
+      "stdout": "true\n"
     },
     {
       "id": "unsupported_optional_vec",
@@ -2904,11 +2904,11 @@
     },
     {
       "id": "unsupported_optional_owned_struct",
-      "kind": "unsupported",
-      "diagnostic": "U0001",
+      "kind": "run",
       "reason": "Owned nominal Optional payloads are outside this Copy-only batch.",
       "file": "unsupported/unsupported_optional_owned_struct.yv",
-      "batch": "copy-optional-pop"
+      "batch": "patterns53",
+      "stdout": "true\n"
     },
     {
       "id": "unsupported_optional_str",
@@ -2983,11 +2983,11 @@
     },
     {
       "id": "unsupported_optional_match",
-      "kind": "unsupported",
-      "diagnostic": "U0001",
+      "kind": "run",
       "reason": "Optional pattern matching remains outside this batch.",
       "file": "unsupported/unsupported_optional_match.yv",
-      "batch": "copy-optional-pop"
+      "batch": "patterns53",
+      "stdout": "1\n"
     },
     {
       "id": "optional_coalesce_return",
@@ -3031,11 +3031,11 @@
     },
     {
       "id": "unsupported_optional_none_owned_hint",
-      "kind": "unsupported",
-      "diagnostic": "U0001",
+      "kind": "run",
       "reason": "The String context infers an owned Optional for none, which remains outside this batch.",
       "file": "unsupported/unsupported_optional_none_owned_hint.yv",
-      "batch": "copy-optional-pop"
+      "batch": "patterns53",
+      "stdout": "x\n"
     },
     {
       "id": "unsupported_optional_print",
@@ -5284,17 +5284,17 @@
     },
     {
       "id": "iflet42_owned_string",
-      "kind": "unsupported",
+      "kind": "run",
       "file": "unsupported/iflet42_owned_string.yv",
-      "diagnostic": "U0001",
-      "batch": "indexed-for-if-let"
+      "batch": "patterns53",
+      "stdout": "owned\n"
     },
     {
       "id": "iflet42_owned_struct",
-      "kind": "unsupported",
+      "kind": "run",
       "file": "unsupported/iflet42_owned_struct.yv",
-      "diagnostic": "U0001",
-      "batch": "indexed-for-if-let"
+      "batch": "patterns53",
+      "stdout": "owned\n"
     },
     {
       "id": "iflet42_mutable_binding",
@@ -6898,11 +6898,11 @@
     },
     {
       "id": "batch48_optional_owned_string",
-      "kind": "unsupported",
+      "kind": "run",
       "file": "unsupported/batch48_optional_owned_string.yv",
-      "batch": "nested-vec-owned-tuple-heap-dep-cli",
-      "diagnostic": "U0001",
-      "reason": "Ordinary owned String Optionals remain unsupported; the String tuple exception serves Heap.pop."
+      "batch": "patterns53",
+      "reason": "Ordinary owned String Optionals remain unsupported; the String tuple exception serves Heap.pop.",
+      "stdout": "true\n"
     },
     {
       "id": "batch48_optional_owned_vector",
@@ -7687,17 +7687,17 @@
     },
     {
       "id": "errors51_unsupported_result_match",
-      "kind": "unsupported",
+      "kind": "run",
       "file": "errors51/programs/unsupported_result_match.yv",
-      "batch": "standard-error-values",
-      "diagnostic": "U0001"
+      "batch": "patterns53",
+      "stdout": "InvalidPath\n"
     },
     {
       "id": "errors51_unsupported_user_payload",
-      "kind": "unsupported",
+      "kind": "run",
       "file": "errors51/programs/unsupported_user_payload.yv",
-      "batch": "standard-error-values",
-      "diagnostic": "U0001"
+      "batch": "patterns53",
+      "stdout": "Message(code: 1)\n"
     },
     {
       "id": "errors51_unsupported_arrow_catch",
@@ -7880,6 +7880,378 @@
       "file": "integers52/octal_u128_overflow.yv",
       "batch": "integer-radices",
       "diagnostic": "E0003"
+    },
+    {
+      "id": "patterns53_copy_fields",
+      "kind": "run",
+      "file": "patterns53/programs/copy_fields.yv",
+      "stdout": "12\n12\n0\nCircle(r: 2)\nRect(w: 3, h: 4)\n"
+    },
+    {
+      "id": "patterns53_constructor_order",
+      "kind": "run",
+      "file": "patterns53/programs/constructor_order.yv",
+      "stdout": "2112\n"
+    },
+    {
+      "id": "patterns53_owned_place",
+      "kind": "run",
+      "file": "patterns53/programs/owned_place.yv",
+      "stdout": "hello\nhello\npair:2\npair:2\n"
+    },
+    {
+      "id": "patterns53_owned_temporary",
+      "kind": "run",
+      "file": "patterns53/programs/owned_temporary.yv",
+      "stdout": "moved:3\n"
+    },
+    {
+      "id": "patterns53_owned_wildcard",
+      "kind": "run",
+      "file": "patterns53/programs/owned_wildcard.yv",
+      "stdout": "dropped\nwhole\n"
+    },
+    {
+      "id": "patterns53_owned_root_bind",
+      "kind": "run",
+      "file": "patterns53/programs/owned_root_bind.yv",
+      "stdout": "borrow\nborrow\nmove\n"
+    },
+    {
+      "id": "patterns53_nested_owned",
+      "kind": "run",
+      "file": "patterns53/programs/nested_owned.yv",
+      "stdout": "ab\n"
+    },
+    {
+      "id": "patterns53_nested_product",
+      "kind": "run",
+      "file": "patterns53/programs/nested_product.yv",
+      "stdout": "0\n1\n2\n3\n"
+    },
+    {
+      "id": "patterns53_nested_wildcard_rows",
+      "kind": "run",
+      "file": "patterns53/programs/nested_wildcard_rows.yv",
+      "stdout": "10\n20\n30\n"
+    },
+    {
+      "id": "patterns53_optional_scalar",
+      "kind": "run",
+      "file": "patterns53/programs/optional_scalar.yv",
+      "stdout": "7\n-1\n1\n"
+    },
+    {
+      "id": "patterns53_optional_enum",
+      "kind": "run",
+      "file": "patterns53/programs/optional_enum.yv",
+      "stdout": "4\n-1\n-2\n"
+    },
+    {
+      "id": "patterns53_result_utf8",
+      "kind": "run",
+      "file": "patterns53/programs/result_utf8.yv",
+      "stdout": "AB\n1\n"
+    },
+    {
+      "id": "patterns53_result_standard_nested",
+      "kind": "run",
+      "file": "patterns53/programs/result_standard_nested.yv",
+      "stdout": "ok\n7\nother\n"
+    },
+    {
+      "id": "patterns53_result_user_payload",
+      "kind": "run",
+      "file": "patterns53/programs/result_user_payload.yv",
+      "stdout": "good\n1\n"
+    },
+    {
+      "id": "patterns53_result_unit",
+      "kind": "run",
+      "file": "patterns53/programs/result_unit.yv",
+      "stdout": "yes\nno\n"
+    },
+    {
+      "id": "patterns53_borrow_field",
+      "kind": "run",
+      "file": "patterns53/programs/borrow_field.yv",
+      "stdout": "held\n4\n"
+    },
+    {
+      "id": "patterns53_vector_owned",
+      "kind": "run",
+      "file": "patterns53/programs/vector_owned.yv",
+      "stdout": "a\nempty\nbb\n3\n"
+    },
+    {
+      "id": "patterns53_loop_cleanup",
+      "kind": "run",
+      "file": "patterns53/programs/loop_cleanup.yv",
+      "stdout": "kept\n1\n3\n"
+    },
+    {
+      "id": "patterns53_return_cleanup",
+      "kind": "run",
+      "file": "patterns53/programs/return_cleanup.yv",
+      "stdout": "a\nb\n"
+    },
+    {
+      "id": "patterns53_branch_move_live",
+      "kind": "run",
+      "file": "patterns53/programs/branch_move_live.yv",
+      "stdout": "kept\nlast\nkept\n"
+    },
+    {
+      "id": "patterns53_single_eval",
+      "kind": "run",
+      "file": "patterns53/programs/single_eval.yv",
+      "stdout": "once:8\n"
+    },
+    {
+      "id": "patterns53_scalar_bind",
+      "kind": "run",
+      "file": "patterns53/programs/scalar_bind.yv",
+      "stdout": "8\nbool\n"
+    },
+    {
+      "id": "patterns53_duplicate_warning",
+      "kind": "run",
+      "file": "patterns53/programs/duplicate_warning.yv",
+      "stdout": "4\n0\n"
+    },
+    {
+      "id": "patterns53_many_variants",
+      "kind": "run",
+      "file": "patterns53/programs/many_variants.yv",
+      "stdout": "0\n66\n"
+    },
+    {
+      "id": "patterns53_missing_variant",
+      "kind": "reject",
+      "file": "patterns53/programs/missing_variant.yv",
+      "diagnostic": "E0602"
+    },
+    {
+      "id": "patterns53_missing_nested",
+      "kind": "reject",
+      "file": "patterns53/programs/missing_nested.yv",
+      "diagnostic": "E0602"
+    },
+    {
+      "id": "patterns53_missing_optional",
+      "kind": "reject",
+      "file": "patterns53/programs/missing_optional.yv",
+      "diagnostic": "E0602"
+    },
+    {
+      "id": "patterns53_missing_result",
+      "kind": "reject",
+      "file": "patterns53/programs/missing_result.yv",
+      "diagnostic": "E0602"
+    },
+    {
+      "id": "patterns53_wrong_nominal",
+      "kind": "reject",
+      "file": "patterns53/programs/wrong_nominal.yv",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "patterns53_wrong_pattern_type",
+      "kind": "reject",
+      "file": "patterns53/programs/wrong_pattern_type.yv",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "patterns53_unknown_variant",
+      "kind": "reject",
+      "file": "patterns53/programs/unknown_variant.yv",
+      "diagnostic": "E0010"
+    },
+    {
+      "id": "patterns53_wrong_arity",
+      "kind": "reject",
+      "file": "patterns53/programs/wrong_arity.yv",
+      "diagnostic": "E0012"
+    },
+    {
+      "id": "patterns53_borrowed_move",
+      "kind": "reject",
+      "file": "patterns53/programs/borrowed_move.yv",
+      "diagnostic": "E0401"
+    },
+    {
+      "id": "patterns53_borrowed_root_move",
+      "kind": "reject",
+      "file": "patterns53/programs/borrowed_root_move.yv",
+      "diagnostic": "E0401"
+    },
+    {
+      "id": "patterns53_source_mutation",
+      "kind": "reject",
+      "file": "patterns53/programs/source_mutation.yv",
+      "diagnostic": "U0001",
+      "reference_diagnostic": "E0102",
+      "note": "conservative source liveness guard"
+    },
+    {
+      "id": "patterns53_borrowed_mutation",
+      "kind": "reject",
+      "file": "patterns53/programs/borrowed_mutation.yv",
+      "diagnostic": "E0101"
+    },
+    {
+      "id": "patterns53_branch_move_join",
+      "kind": "reject",
+      "file": "patterns53/programs/branch_move_join.yv",
+      "diagnostic": "E0402"
+    },
+    {
+      "id": "patterns53_arm_type",
+      "kind": "reject",
+      "file": "patterns53/programs/arm_type.yv",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "patterns53_binding_scope",
+      "kind": "reject",
+      "file": "patterns53/programs/binding_scope.yv",
+      "diagnostic": "E0010"
+    },
+    {
+      "id": "patterns53_duplicate_binding",
+      "kind": "reject",
+      "file": "patterns53/programs/duplicate_binding.yv",
+      "diagnostic": "E0011"
+    },
+    {
+      "id": "patterns53_escaping_view",
+      "kind": "unsupported",
+      "file": "patterns53/programs/escaping_view.yv",
+      "diagnostic": "U0001",
+      "note": "stage0 accepts but emitted view outlives moved binding; selfhost conservatively rejects"
+    },
+    {
+      "id": "patterns53_construct_wrong_payload",
+      "kind": "reject",
+      "file": "patterns53/programs/construct_wrong_payload.yv",
+      "diagnostic": "E0001"
+    },
+    {
+      "id": "patterns53_construct_missing_payload",
+      "kind": "reject",
+      "file": "patterns53/programs/construct_missing_payload.yv",
+      "diagnostic": "E0018"
+    },
+    {
+      "id": "patterns53_recursive_layout",
+      "kind": "reject",
+      "file": "patterns53/programs/recursive_layout.yv",
+      "diagnostic": "E0017"
+    },
+    {
+      "id": "patterns53_optional_owned_string",
+      "kind": "run",
+      "file": "patterns53/programs/optional_owned_string.yv",
+      "stdout": "hello\n5\ntemp\n"
+    },
+    {
+      "id": "patterns53_optional_owned_enum",
+      "kind": "run",
+      "file": "patterns53/programs/optional_owned_enum.yv",
+      "stdout": "hello\nhello\nend\nnone\n"
+    },
+    {
+      "id": "patterns53_result_owned_error",
+      "kind": "run",
+      "file": "patterns53/programs/result_owned_error.yv",
+      "stdout": "7\nbad\n"
+    },
+    {
+      "id": "patterns53_mixed_arguments",
+      "kind": "run",
+      "file": "patterns53/programs/mixed_arguments.yv",
+      "stdout": "12\n"
+    },
+    {
+      "id": "patterns53_borrow_return",
+      "kind": "run",
+      "file": "patterns53/programs/borrow_return.yv",
+      "stdout": "view\n"
+    },
+    {
+      "id": "patterns53_aggregate_payload",
+      "kind": "run",
+      "file": "patterns53/programs/aggregate_payload.yv",
+      "stdout": "5:4:true\nData(p: .., b: 4, flag: true)\n"
+    },
+    {
+      "id": "patterns53_empty_enum",
+      "kind": "run",
+      "file": "patterns53/programs/empty_enum.yv",
+      "stdout": "ok\n"
+    },
+    {
+      "id": "patterns53_empty_match",
+      "kind": "reject",
+      "file": "patterns53/programs/empty_match.yv",
+      "diagnostic": "E0602"
+    },
+    {
+      "id": "patterns53_duplicate_field",
+      "kind": "reject",
+      "file": "patterns53/programs/duplicate_field.yv",
+      "diagnostic": "E0011"
+    },
+    {
+      "id": "patterns53_unknown_field",
+      "kind": "reject",
+      "file": "patterns53/programs/unknown_field.yv",
+      "diagnostic": "E0010"
+    },
+    {
+      "id": "patterns53_payload_equality",
+      "kind": "reject",
+      "file": "patterns53/programs/payload_equality.yv",
+      "diagnostic": "E0501"
+    },
+    {
+      "id": "patterns53_drop_before_body",
+      "kind": "run",
+      "file": "patterns53/programs/drop_before_body.yv",
+      "stdout": "drop0\nkeep1\nx\nborrow2\n",
+      "live_blocks_at_output": {
+        "drop0": 0,
+        "keep1": 1,
+        "borrow2": 2
+      }
+    },
+    {
+      "id": "patterns53_escape_local_view",
+      "kind": "unsupported",
+      "file": "patterns53/programs/escape_local_view.yv",
+      "diagnostic": "U0001",
+      "note": "stage0 omits match arm result loans; candidate rejects escaping view"
+    },
+    {
+      "id": "patterns53_escape_temporary_view",
+      "kind": "reject",
+      "file": "patterns53/programs/escape_temporary_view.yv",
+      "diagnostic": "U0001",
+      "reference_diagnostic": "E0305",
+      "note": "stage0 rejects temporary-loan binding; selfhost conservatively rejects transient scrutinee"
+    },
+    {
+      "id": "string53_literal_roundtrip",
+      "kind": "run",
+      "stdout": "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n\u000b\f\r\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~|octal:\u00010123456789\u0007777\u0000099||trigraphs:??= ??/ ??' ??( ??) ??! ??< ??> ??-||quotes:\"\" backslashes:\\\\\\ end:\\||unicode:é漢🙂|\n",
+      "file": "strings53/literal_roundtrip.yv"
+    },
+    {
+      "id": "patterns53_borrow_wrong_source",
+      "kind": "unsupported",
+      "file": "patterns53/programs/borrow_wrong_source.yv",
+      "diagnostic": "E0303",
+      "note": "stage0 currently loses match arm result loans; selfhost rejects return sourced from an unlisted parameter"
     }
   ],
   "promotions": [

@@ -1,0 +1,12 @@
+enum Item { Text(value: String), Pair(text: String, nums: Vec[int]), Empty }
+fn inspect(x: Item) {
+ match x { .Text(s) => println(s), .Pair(s,n) => println("${s}:${n.len()}"), .Empty => println("empty") }
+}
+fn main() {
+ let x=Item.Text("hello".toString())
+ inspect(x)
+ inspect(x)
+ let y: Item=.Pair("pair".toString(),[1,2])
+ inspect(y)
+ inspect(y)
+}

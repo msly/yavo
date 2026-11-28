@@ -1,0 +1,4 @@
+enum E { A(n:int), B }
+fn f(x:E) -> int { return match x { .A(n) => n, .A(_n) => 99, .B => 0, _ => -1 } }
+fn main() { println(f(.A(4)))
+ println(f(.B)) }

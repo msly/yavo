@@ -1,0 +1,2075 @@
+{
+  "schema": "yavo-batch53-delivery/1",
+  "batch": 53,
+  "recorded_at_utc": "2026-11-28T00:52:23.851021+00:00",
+  "baseline_commit": "5fa6401db5726c635a34f8d4ce5c6cc32abc88cc",
+  "status": "local_full_and_ci_pending",
+  "validation_tier": {
+    "schema": "yavo-validation-policy/1",
+    "batch": 53,
+    "baseline_commit": "5fa6401db5726c635a34f8d4ce5c6cc32abc88cc",
+    "full_every_batches": 5,
+    "milestone": true,
+    "reason": "Batch 53 ownership milestone: user enum payload layouts/destruction and shared nested pattern matching; full gates cover new ownership paths. Routine batches remain Core; next cadence is batch 55."
+  },
+  "delivered": [
+    "user enum multiple Copy/owned payloads and shared variant descriptors",
+    "one recursive pattern checker and matrix exhaustiveness for enum/standard Error/Optional/Result/scalar wildcard",
+    "owned temporary binding transfer and pre-arm destruction, readonly-place borrowing and parameter source propagation",
+    "owned String/named Optional layouts",
+    "safe ASCII C literal encoding with exact-byte roundtrip"
+  ],
+  "coverage": {
+    "status": "preliminary; final stage2 sweep follows full bootstrap",
+    "original_corpus": {
+      "path": "selfhost/tests/original-corpus.json",
+      "bytes": 116250,
+      "sha256": "a6fef66afce2c2e2d87c6a7df3cd5b98e5bb33f41516c4e945db88931d5669b0"
+    },
+    "before": {
+      "sources": 622,
+      "stage0_accepted": {
+        "paths": 394,
+        "unique_entry_bytes": 224,
+        "unique_module_graphs": 224
+      },
+      "selfhost_accepted": {
+        "paths": 125,
+        "unique_entry_bytes": 62,
+        "unique_module_graphs": 62
+      },
+      "stage0_rejected": 228,
+      "blocked": {
+        "paths": 269,
+        "unique_entry_bytes": 162,
+        "unique_module_graphs": 162
+      },
+      "analysis_complete": 394,
+      "unresolved_semantics": 269,
+      "accepted_profile_false_positive_paths": 0
+    },
+    "after": {
+      "sources": 622,
+      "stage0_accepted": {
+        "paths": 394,
+        "unique_entry_bytes": 224,
+        "unique_module_graphs": 224
+      },
+      "selfhost_accepted": {
+        "paths": 135,
+        "unique_entry_bytes": 68,
+        "unique_module_graphs": 68
+      },
+      "stage0_rejected": 228,
+      "blocked": {
+        "paths": 259,
+        "unique_entry_bytes": 156,
+        "unique_module_graphs": 156
+      },
+      "analysis_complete": 394,
+      "unresolved_semantics": 259,
+      "accepted_profile_false_positive_paths": 10
+    },
+    "new_paths": [
+      {
+        "path": "compiler/tests/p0/run_enums.yv",
+        "sha256": "1045c9b5ea77d5059ac648c494893713ad33eb1ddfe24396ae49687b9cfcda5a",
+        "project_sha256": "cd5b047829436966d21f6c36e29e24cefd4200712709c0fb8a3bb7c7f823b755",
+        "previous_modeled_blockers": [
+          "enum_payload",
+          "match_user_enum",
+          "optional_owned",
+          "patterns_nested",
+          "patterns_optional_result"
+        ]
+      },
+      {
+        "path": "experiments/coldstart-2026-11-21/yavo/T02.yv",
+        "sha256": "d0a4c9700bd1441b153469ffd773e1435d00cbea1bb447bf81221209d70f35d9",
+        "project_sha256": "fb1b901ecf8091b3f2f717fcb68f7446372074d6139ce9c4a9b893d7e42b7fb5",
+        "previous_modeled_blockers": [
+          "optional_owned",
+          "patterns_optional_result"
+        ]
+      },
+      {
+        "path": "history/v0.4/yavo-tests/check/T-C5.yv",
+        "sha256": "47e0cf3a9136273852c45af8496c0d0e97a78862868fd8a6a42635210d59ee27",
+        "project_sha256": "bedf2cbf62c4345534f131179167e08fde7648e618f6bb76bc706475e7d144ee",
+        "previous_modeled_blockers": [
+          "optional_owned"
+        ]
+      },
+      {
+        "path": "history/v0.4/yavo-tests/run/T-S2.yv",
+        "sha256": "b3804a22f5e2a080b98c640a9a8fe31f14d7362d91e8e665a9c01d84618080a5",
+        "project_sha256": "1e8b137f8a7bab37eb704776d3e6c37adc30ff143341515eea3e3f889d9783d1",
+        "previous_modeled_blockers": [
+          "patterns_nested",
+          "patterns_optional_result"
+        ]
+      },
+      {
+        "path": "history/v0.5/yavo-tests/check/T-C5.yv",
+        "sha256": "47e0cf3a9136273852c45af8496c0d0e97a78862868fd8a6a42635210d59ee27",
+        "project_sha256": "bedf2cbf62c4345534f131179167e08fde7648e618f6bb76bc706475e7d144ee",
+        "previous_modeled_blockers": [
+          "optional_owned"
+        ]
+      },
+      {
+        "path": "history/v0.5/yavo-tests/run/T-GR4.yv",
+        "sha256": "df513d36aeabbec9cb63ad143736cc3bed94eaaf8d7f61215b293b6189a5ce92",
+        "project_sha256": "0a45776562a119672dde215707c676581b2822353981a6792666e8e0899c13d7",
+        "previous_modeled_blockers": [
+          "patterns_optional_result"
+        ]
+      },
+      {
+        "path": "history/v0.5/yavo-tests/run/T-S2.yv",
+        "sha256": "762748605b9fae6e76498663f13c675dd66a8206ef624b05e9ab014482dbff13",
+        "project_sha256": "fd3bc3b10558767b8edef71c42d11dfa074d5093446d340f97ce1c9f44da268f",
+        "previous_modeled_blockers": [
+          "patterns_nested",
+          "patterns_optional_result"
+        ]
+      },
+      {
+        "path": "yavo-tests/check/T-C5.yv",
+        "sha256": "47e0cf3a9136273852c45af8496c0d0e97a78862868fd8a6a42635210d59ee27",
+        "project_sha256": "bedf2cbf62c4345534f131179167e08fde7648e618f6bb76bc706475e7d144ee",
+        "previous_modeled_blockers": [
+          "optional_owned"
+        ]
+      },
+      {
+        "path": "yavo-tests/run/T-GR4.yv",
+        "sha256": "df513d36aeabbec9cb63ad143736cc3bed94eaaf8d7f61215b293b6189a5ce92",
+        "project_sha256": "0a45776562a119672dde215707c676581b2822353981a6792666e8e0899c13d7",
+        "previous_modeled_blockers": [
+          "patterns_optional_result"
+        ]
+      },
+      {
+        "path": "yavo-tests/run/T-S2.yv",
+        "sha256": "762748605b9fae6e76498663f13c675dd66a8206ef624b05e9ab014482dbff13",
+        "project_sha256": "fd3bc3b10558767b8edef71c42d11dfa074d5093446d340f97ce1c9f44da268f",
+        "previous_modeled_blockers": [
+          "patterns_nested",
+          "patterns_optional_result"
+        ]
+      }
+    ],
+    "added_paths": 10,
+    "added_module_graphs": 6,
+    "regressions": [],
+    "violations": [],
+    "timeouts": [],
+    "abnormal_exits": []
+  },
+  "semantic_inventory": {
+    "manifest": {
+      "path": "selfhost/tests/cases.json",
+      "bytes": 261745,
+      "sha256": "28220351a93ff7d7a0e1137e7b43592ed61db77f7b028dc14bd18e89a07a7e57"
+    },
+    "counts": {
+      "run": 368,
+      "panic": 34,
+      "reject": 636,
+      "unsupported": 129,
+      "shared_unsupported": 42
+    },
+    "total": 1209,
+    "new_patterns": 59,
+    "new_literal_roundtrip": 1,
+    "unchanged_source_promotions": 12
+  },
+  "evidence": {
+    "patterns": {
+      "path": "compiler/validation/batch53-patterns-2026-11-28.json",
+      "bytes": 215837,
+      "sha256": "6245a5f08e3164bd978b23eb07802801b7fa92f6813463e7c90ffae1a77fdeaa"
+    },
+    "cstring": {
+      "path": "compiler/validation/batch53-cstring-2026-11-28.json",
+      "bytes": 10499,
+      "sha256": "8d8bb5ce40a6108902cccf0adc951ff38bec6e6d4ae289a72fb9ee405501db0b"
+    },
+    "promotion_runtime": {
+      "receipt": {
+        "path": "compiler/target/batch53/promoted/report.json",
+        "bytes": 68834,
+        "sha256": "35b5d5112b2ec8edef1cd14df0d2f70df737f9def1a3febdb0002cf7d8c7ebd5"
+      },
+      "data": {
+        "count": 12,
+        "passed": 12,
+        "allocation_check": true,
+        "stage1_stage2_identical_c_compiled_once_per_mode": true,
+        "rows": [
+          {
+            "id": "unsupported_enum_payload",
+            "file": "unsupported/unsupported_enum_payload.yv",
+            "source_sha256": "a6f416a878c6387b67acd8d66d9a9286c61dfaca2b743f6c0bf4f855689b080f",
+            "expected_stdout": "",
+            "steps": [
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage1",
+                  "emit-c",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_enum_payload.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_enum_payload/stage1.c"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.0011736378073692322
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage2",
+                  "emit-c",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_enum_payload.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_enum_payload/stage2.c"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.001139441505074501
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage0",
+                  "build",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_enum_payload.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_enum_payload/stage0-debug"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.18086970411241055
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_enum_payload/stage0-debug"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.0018056444823741913
+              },
+              {
+                "argv": [
+                  "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+                  "cc",
+                  "-std=c17",
+                  "-fno-strict-aliasing",
+                  "-DYV_ALLOC_CHECK",
+                  "-O0",
+                  "-I",
+                  "/data1/workspace/github/workspace/yavo/compiler/runtime",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_enum_payload/stage2.c",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_enum_payload/selfhost-debug"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.185793349519372
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_enum_payload/selfhost-debug"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.0027816295623779297
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage0",
+                  "build",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_enum_payload.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_enum_payload/stage0-release",
+                  "--release"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.21071610040962696
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_enum_payload/stage0-release"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.0013258233666419983
+              },
+              {
+                "argv": [
+                  "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+                  "cc",
+                  "-std=c17",
+                  "-fno-strict-aliasing",
+                  "-DYV_ALLOC_CHECK",
+                  "-O2",
+                  "-I",
+                  "/data1/workspace/github/workspace/yavo/compiler/runtime",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_enum_payload/stage2.c",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_enum_payload/selfhost-release"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.2194330282509327
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_enum_payload/selfhost-release"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.0013308804482221603
+              }
+            ],
+            "passed": true,
+            "c_identical": true,
+            "source_preserved": true,
+            "generated_c": {
+              "stage1": {
+                "path": "compiler/target/batch53/promoted/unsupported_enum_payload/stage1.c",
+                "bytes": 2722,
+                "sha256": "f09d123afd632690723528e250237603f73099b91473bb88871250d46457bfa3"
+              },
+              "stage2": {
+                "path": "compiler/target/batch53/promoted/unsupported_enum_payload/stage2.c",
+                "bytes": 2722,
+                "sha256": "f09d123afd632690723528e250237603f73099b91473bb88871250d46457bfa3"
+              }
+            }
+          },
+          {
+            "id": "unsupported_vec_pop_string",
+            "file": "unsupported/unsupported_vec_pop_string.yv",
+            "source_sha256": "d38d2c297207535739d4a7e065419a88a86f030d24a50034994f25d62b94f863",
+            "expected_stdout": "",
+            "steps": [
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage1",
+                  "emit-c",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_vec_pop_string.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_vec_pop_string/stage1.c"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.0015314780175685883
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage2",
+                  "emit-c",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_vec_pop_string.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_vec_pop_string/stage2.c"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.0014944300055503845
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage0",
+                  "build",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_vec_pop_string.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_vec_pop_string/stage0-debug"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.16460566967725754
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_vec_pop_string/stage0-debug"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.0011263974010944366
+              },
+              {
+                "argv": [
+                  "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+                  "cc",
+                  "-std=c17",
+                  "-fno-strict-aliasing",
+                  "-DYV_ALLOC_CHECK",
+                  "-O0",
+                  "-I",
+                  "/data1/workspace/github/workspace/yavo/compiler/runtime",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_vec_pop_string/stage2.c",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_vec_pop_string/selfhost-debug"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.17652097903192043
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_vec_pop_string/selfhost-debug"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.0015524569898843765
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage0",
+                  "build",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_vec_pop_string.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_vec_pop_string/stage0-release",
+                  "--release"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.22014952264726162
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_vec_pop_string/stage0-release"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.0011009909212589264
+              },
+              {
+                "argv": [
+                  "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+                  "cc",
+                  "-std=c17",
+                  "-fno-strict-aliasing",
+                  "-DYV_ALLOC_CHECK",
+                  "-O2",
+                  "-I",
+                  "/data1/workspace/github/workspace/yavo/compiler/runtime",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_vec_pop_string/stage2.c",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_vec_pop_string/selfhost-release"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.2558225616812706
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_vec_pop_string/selfhost-release"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.0010394416749477386
+              }
+            ],
+            "passed": true,
+            "c_identical": true,
+            "source_preserved": true,
+            "generated_c": {
+              "stage1": {
+                "path": "compiler/target/batch53/promoted/unsupported_vec_pop_string/stage1.c",
+                "bytes": 3132,
+                "sha256": "6681abc2ae3c9dabea72c0e864997b0cc382fb08ab047a4ea7a0d8f7e9cd13da"
+              },
+              "stage2": {
+                "path": "compiler/target/batch53/promoted/unsupported_vec_pop_string/stage2.c",
+                "bytes": 3132,
+                "sha256": "6681abc2ae3c9dabea72c0e864997b0cc382fb08ab047a4ea7a0d8f7e9cd13da"
+              }
+            }
+          },
+          {
+            "id": "unsupported_vec_pop_owned_struct",
+            "file": "unsupported/unsupported_vec_pop_owned_struct.yv",
+            "source_sha256": "833817ecb1be509dbad02e4df674e54e89b7cd4c3163e3eb13479c5a43a34532",
+            "expected_stdout": "",
+            "steps": [
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage1",
+                  "emit-c",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_vec_pop_owned_struct.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_vec_pop_owned_struct/stage1.c"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.0008644647896289825
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage2",
+                  "emit-c",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_vec_pop_owned_struct.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_vec_pop_owned_struct/stage2.c"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.00270678848028183
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage0",
+                  "build",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_vec_pop_owned_struct.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_vec_pop_owned_struct/stage0-debug"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.17615504190325737
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_vec_pop_owned_struct/stage0-debug"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.0014222636818885803
+              },
+              {
+                "argv": [
+                  "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+                  "cc",
+                  "-std=c17",
+                  "-fno-strict-aliasing",
+                  "-DYV_ALLOC_CHECK",
+                  "-O0",
+                  "-I",
+                  "/data1/workspace/github/workspace/yavo/compiler/runtime",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_vec_pop_owned_struct/stage2.c",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_vec_pop_owned_struct/selfhost-debug"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.17197907157242298
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_vec_pop_owned_struct/selfhost-debug"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.0012478064745664597
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage0",
+                  "build",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_vec_pop_owned_struct.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_vec_pop_owned_struct/stage0-release",
+                  "--release"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.23089268989861012
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_vec_pop_owned_struct/stage0-release"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.001170700415968895
+              },
+              {
+                "argv": [
+                  "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+                  "cc",
+                  "-std=c17",
+                  "-fno-strict-aliasing",
+                  "-DYV_ALLOC_CHECK",
+                  "-O2",
+                  "-I",
+                  "/data1/workspace/github/workspace/yavo/compiler/runtime",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_vec_pop_owned_struct/stage2.c",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_vec_pop_owned_struct/selfhost-release"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.2859463896602392
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_vec_pop_owned_struct/selfhost-release"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.0010134540498256683
+              }
+            ],
+            "passed": true,
+            "c_identical": true,
+            "source_preserved": true,
+            "generated_c": {
+              "stage1": {
+                "path": "compiler/target/batch53/promoted/unsupported_vec_pop_owned_struct/stage1.c",
+                "bytes": 4909,
+                "sha256": "ced5c1b27bd4c9525101e2b76732464fb245d2cf794c3e5a63d7074c9ba9b37d"
+              },
+              "stage2": {
+                "path": "compiler/target/batch53/promoted/unsupported_vec_pop_owned_struct/stage2.c",
+                "bytes": 4909,
+                "sha256": "ced5c1b27bd4c9525101e2b76732464fb245d2cf794c3e5a63d7074c9ba9b37d"
+              }
+            }
+          },
+          {
+            "id": "unsupported_optional_string",
+            "file": "unsupported/unsupported_optional_string.yv",
+            "source_sha256": "f17c6689ad1861386ac60f61677b7a37b0a0acaf8cde348c716a1fa72b23dd78",
+            "expected_stdout": "true\n",
+            "steps": [
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage1",
+                  "emit-c",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_string.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_string/stage1.c"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.000906623899936676
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage2",
+                  "emit-c",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_string.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_string/stage2.c"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.0009712260216474533
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage0",
+                  "build",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_string.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_string/stage0-debug"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.17942903749644756
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_string/stage0-debug"
+                ],
+                "exit": 0,
+                "stdout": "true\n",
+                "stderr": "",
+                "seconds": 0.0012328773736953735
+              },
+              {
+                "argv": [
+                  "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+                  "cc",
+                  "-std=c17",
+                  "-fno-strict-aliasing",
+                  "-DYV_ALLOC_CHECK",
+                  "-O0",
+                  "-I",
+                  "/data1/workspace/github/workspace/yavo/compiler/runtime",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_string/stage2.c",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_string/selfhost-debug"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.160834189504385
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_string/selfhost-debug"
+                ],
+                "exit": 0,
+                "stdout": "true\n",
+                "stderr": "",
+                "seconds": 0.0010511372238397598
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage0",
+                  "build",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_string.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_string/stage0-release",
+                  "--release"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.21154871582984924
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_string/stage0-release"
+                ],
+                "exit": 0,
+                "stdout": "true\n",
+                "stderr": "",
+                "seconds": 0.0010468494147062302
+              },
+              {
+                "argv": [
+                  "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+                  "cc",
+                  "-std=c17",
+                  "-fno-strict-aliasing",
+                  "-DYV_ALLOC_CHECK",
+                  "-O2",
+                  "-I",
+                  "/data1/workspace/github/workspace/yavo/compiler/runtime",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_string/stage2.c",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_string/selfhost-release"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.32095956802368164
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_string/selfhost-release"
+                ],
+                "exit": 0,
+                "stdout": "true\n",
+                "stderr": "",
+                "seconds": 0.0009871851652860641
+              }
+            ],
+            "passed": true,
+            "c_identical": true,
+            "source_preserved": true,
+            "generated_c": {
+              "stage1": {
+                "path": "compiler/target/batch53/promoted/unsupported_optional_string/stage1.c",
+                "bytes": 2879,
+                "sha256": "78f72405e772dbe5ba3375facb2b5549073a37861e4bdd195042ec32d6126573"
+              },
+              "stage2": {
+                "path": "compiler/target/batch53/promoted/unsupported_optional_string/stage2.c",
+                "bytes": 2879,
+                "sha256": "78f72405e772dbe5ba3375facb2b5549073a37861e4bdd195042ec32d6126573"
+              }
+            }
+          },
+          {
+            "id": "unsupported_optional_owned_struct",
+            "file": "unsupported/unsupported_optional_owned_struct.yv",
+            "source_sha256": "20a18104bcb278d7a8627d7c0e862515f4ebc44a452f62b17542bc145492352f",
+            "expected_stdout": "true\n",
+            "steps": [
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage1",
+                  "emit-c",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_owned_struct.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_owned_struct/stage1.c"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.0013487860560417175
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage2",
+                  "emit-c",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_owned_struct.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_owned_struct/stage2.c"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.001145603135228157
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage0",
+                  "build",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_owned_struct.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_owned_struct/stage0-debug"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.17034398764371872
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_owned_struct/stage0-debug"
+                ],
+                "exit": 0,
+                "stdout": "true\n",
+                "stderr": "",
+                "seconds": 0.001427963376045227
+              },
+              {
+                "argv": [
+                  "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+                  "cc",
+                  "-std=c17",
+                  "-fno-strict-aliasing",
+                  "-DYV_ALLOC_CHECK",
+                  "-O0",
+                  "-I",
+                  "/data1/workspace/github/workspace/yavo/compiler/runtime",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_owned_struct/stage2.c",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_owned_struct/selfhost-debug"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.18095017410814762
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_owned_struct/selfhost-debug"
+                ],
+                "exit": 0,
+                "stdout": "true\n",
+                "stderr": "",
+                "seconds": 0.0012363642454147339
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage0",
+                  "build",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_owned_struct.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_owned_struct/stage0-release",
+                  "--release"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.22060895711183548
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_owned_struct/stage0-release"
+                ],
+                "exit": 0,
+                "stdout": "true\n",
+                "stderr": "",
+                "seconds": 0.0013049915432929993
+              },
+              {
+                "argv": [
+                  "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+                  "cc",
+                  "-std=c17",
+                  "-fno-strict-aliasing",
+                  "-DYV_ALLOC_CHECK",
+                  "-O2",
+                  "-I",
+                  "/data1/workspace/github/workspace/yavo/compiler/runtime",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_owned_struct/stage2.c",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_owned_struct/selfhost-release"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.23657425679266453
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_owned_struct/selfhost-release"
+                ],
+                "exit": 0,
+                "stdout": "true\n",
+                "stderr": "",
+                "seconds": 0.0010891370475292206
+              }
+            ],
+            "passed": true,
+            "c_identical": true,
+            "source_preserved": true,
+            "generated_c": {
+              "stage1": {
+                "path": "compiler/target/batch53/promoted/unsupported_optional_owned_struct/stage1.c",
+                "bytes": 4120,
+                "sha256": "7b9964121aed93eca02b97e01084922d4ab0ddb2f13bfbdbd5d29f8fbed8d7ac"
+              },
+              "stage2": {
+                "path": "compiler/target/batch53/promoted/unsupported_optional_owned_struct/stage2.c",
+                "bytes": 4120,
+                "sha256": "7b9964121aed93eca02b97e01084922d4ab0ddb2f13bfbdbd5d29f8fbed8d7ac"
+              }
+            }
+          },
+          {
+            "id": "unsupported_optional_match",
+            "file": "unsupported/unsupported_optional_match.yv",
+            "source_sha256": "ee0b1d186a0c258b18a3043ef3dcf092470fe20ed1352a141deb9d3049c50648",
+            "expected_stdout": "1\n",
+            "steps": [
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage1",
+                  "emit-c",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_match.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_match/stage1.c"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.0012833233922719955
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage2",
+                  "emit-c",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_match.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_match/stage2.c"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.0010789595544338226
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage0",
+                  "build",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_match.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_match/stage0-debug"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.16880147717893124
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_match/stage0-debug"
+                ],
+                "exit": 0,
+                "stdout": "1\n",
+                "stderr": "",
+                "seconds": 0.0011341329663991928
+              },
+              {
+                "argv": [
+                  "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+                  "cc",
+                  "-std=c17",
+                  "-fno-strict-aliasing",
+                  "-DYV_ALLOC_CHECK",
+                  "-O0",
+                  "-I",
+                  "/data1/workspace/github/workspace/yavo/compiler/runtime",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_match/stage2.c",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_match/selfhost-debug"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.17010486871004105
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_match/selfhost-debug"
+                ],
+                "exit": 0,
+                "stdout": "1\n",
+                "stderr": "",
+                "seconds": 0.001344345510005951
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage0",
+                  "build",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_match.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_match/stage0-release",
+                  "--release"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.21805398538708687
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_match/stage0-release"
+                ],
+                "exit": 0,
+                "stdout": "1\n",
+                "stderr": "",
+                "seconds": 0.0008495170623064041
+              },
+              {
+                "argv": [
+                  "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+                  "cc",
+                  "-std=c17",
+                  "-fno-strict-aliasing",
+                  "-DYV_ALLOC_CHECK",
+                  "-O2",
+                  "-I",
+                  "/data1/workspace/github/workspace/yavo/compiler/runtime",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_match/stage2.c",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_match/selfhost-release"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.2260190974920988
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_match/selfhost-release"
+                ],
+                "exit": 0,
+                "stdout": "1\n",
+                "stderr": "",
+                "seconds": 0.0010450761765241623
+              }
+            ],
+            "passed": true,
+            "c_identical": true,
+            "source_preserved": true,
+            "generated_c": {
+              "stage1": {
+                "path": "compiler/target/batch53/promoted/unsupported_optional_match/stage1.c",
+                "bytes": 3063,
+                "sha256": "e9b7580f87de0ccc742883d7da49f4596d794260e151e4e18a2fe9d389c2083f"
+              },
+              "stage2": {
+                "path": "compiler/target/batch53/promoted/unsupported_optional_match/stage2.c",
+                "bytes": 3063,
+                "sha256": "e9b7580f87de0ccc742883d7da49f4596d794260e151e4e18a2fe9d389c2083f"
+              }
+            }
+          },
+          {
+            "id": "unsupported_optional_none_owned_hint",
+            "file": "unsupported/unsupported_optional_none_owned_hint.yv",
+            "source_sha256": "26effd10e1246246e7847251c64868728f4c8f5397948630f870e1b031ad3281",
+            "expected_stdout": "x\n",
+            "steps": [
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage1",
+                  "emit-c",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_none_owned_hint.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_none_owned_hint/stage1.c"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.0013069882988929749
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage2",
+                  "emit-c",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_none_owned_hint.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_none_owned_hint/stage2.c"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.001382218673825264
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage0",
+                  "build",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_none_owned_hint.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_none_owned_hint/stage0-debug"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.16551776602864265
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_none_owned_hint/stage0-debug"
+                ],
+                "exit": 0,
+                "stdout": "x\n",
+                "stderr": "",
+                "seconds": 0.0013660863041877747
+              },
+              {
+                "argv": [
+                  "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+                  "cc",
+                  "-std=c17",
+                  "-fno-strict-aliasing",
+                  "-DYV_ALLOC_CHECK",
+                  "-O0",
+                  "-I",
+                  "/data1/workspace/github/workspace/yavo/compiler/runtime",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_none_owned_hint/stage2.c",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_none_owned_hint/selfhost-debug"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.1761418841779232
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_none_owned_hint/selfhost-debug"
+                ],
+                "exit": 0,
+                "stdout": "x\n",
+                "stderr": "",
+                "seconds": 0.0012618526816368103
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage0",
+                  "build",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/unsupported_optional_none_owned_hint.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_none_owned_hint/stage0-release",
+                  "--release"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.23169352300465107
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_none_owned_hint/stage0-release"
+                ],
+                "exit": 0,
+                "stdout": "x\n",
+                "stderr": "",
+                "seconds": 0.0011567045003175735
+              },
+              {
+                "argv": [
+                  "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+                  "cc",
+                  "-std=c17",
+                  "-fno-strict-aliasing",
+                  "-DYV_ALLOC_CHECK",
+                  "-O2",
+                  "-I",
+                  "/data1/workspace/github/workspace/yavo/compiler/runtime",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_none_owned_hint/stage2.c",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_none_owned_hint/selfhost-release"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.24886884167790413
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/unsupported_optional_none_owned_hint/selfhost-release"
+                ],
+                "exit": 0,
+                "stdout": "x\n",
+                "stderr": "",
+                "seconds": 0.001199275255203247
+              }
+            ],
+            "passed": true,
+            "c_identical": true,
+            "source_preserved": true,
+            "generated_c": {
+              "stage1": {
+                "path": "compiler/target/batch53/promoted/unsupported_optional_none_owned_hint/stage1.c",
+                "bytes": 3152,
+                "sha256": "c7d4284a10a6efa9dfa572c37f1913db567fb9113b652cf21c66878af7b485ed"
+              },
+              "stage2": {
+                "path": "compiler/target/batch53/promoted/unsupported_optional_none_owned_hint/stage2.c",
+                "bytes": 3152,
+                "sha256": "c7d4284a10a6efa9dfa572c37f1913db567fb9113b652cf21c66878af7b485ed"
+              }
+            }
+          },
+          {
+            "id": "iflet42_owned_string",
+            "file": "unsupported/iflet42_owned_string.yv",
+            "source_sha256": "f144e7eca8d7e8da6fac9819cb45bbc168f57172a16a36104751914cbc6a483e",
+            "expected_stdout": "owned\n",
+            "steps": [
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage1",
+                  "emit-c",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/iflet42_owned_string.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/iflet42_owned_string/stage1.c"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.0014442261308431625
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage2",
+                  "emit-c",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/iflet42_owned_string.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/iflet42_owned_string/stage2.c"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.0012603476643562317
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage0",
+                  "build",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/iflet42_owned_string.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/iflet42_owned_string/stage0-debug"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.16389033570885658
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/iflet42_owned_string/stage0-debug"
+                ],
+                "exit": 0,
+                "stdout": "owned\n",
+                "stderr": "",
+                "seconds": 0.0012550298124551773
+              },
+              {
+                "argv": [
+                  "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+                  "cc",
+                  "-std=c17",
+                  "-fno-strict-aliasing",
+                  "-DYV_ALLOC_CHECK",
+                  "-O0",
+                  "-I",
+                  "/data1/workspace/github/workspace/yavo/compiler/runtime",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/iflet42_owned_string/stage2.c",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/iflet42_owned_string/selfhost-debug"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.15301654487848282
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/iflet42_owned_string/selfhost-debug"
+                ],
+                "exit": 0,
+                "stdout": "owned\n",
+                "stderr": "",
+                "seconds": 0.0014210492372512817
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage0",
+                  "build",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/iflet42_owned_string.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/iflet42_owned_string/stage0-release",
+                  "--release"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.21231159940361977
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/iflet42_owned_string/stage0-release"
+                ],
+                "exit": 0,
+                "stdout": "owned\n",
+                "stderr": "",
+                "seconds": 0.0009586215019226074
+              },
+              {
+                "argv": [
+                  "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+                  "cc",
+                  "-std=c17",
+                  "-fno-strict-aliasing",
+                  "-DYV_ALLOC_CHECK",
+                  "-O2",
+                  "-I",
+                  "/data1/workspace/github/workspace/yavo/compiler/runtime",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/iflet42_owned_string/stage2.c",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/iflet42_owned_string/selfhost-release"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.24617930501699448
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/iflet42_owned_string/selfhost-release"
+                ],
+                "exit": 0,
+                "stdout": "owned\n",
+                "stderr": "",
+                "seconds": 0.0013393890112638474
+              }
+            ],
+            "passed": true,
+            "c_identical": true,
+            "source_preserved": true,
+            "generated_c": {
+              "stage1": {
+                "path": "compiler/target/batch53/promoted/iflet42_owned_string/stage1.c",
+                "bytes": 3040,
+                "sha256": "6fb5a8879acfe02bf6596e8132efb8549ae14e14c142b3f528aff6addd3e4f8d"
+              },
+              "stage2": {
+                "path": "compiler/target/batch53/promoted/iflet42_owned_string/stage2.c",
+                "bytes": 3040,
+                "sha256": "6fb5a8879acfe02bf6596e8132efb8549ae14e14c142b3f528aff6addd3e4f8d"
+              }
+            }
+          },
+          {
+            "id": "iflet42_owned_struct",
+            "file": "unsupported/iflet42_owned_struct.yv",
+            "source_sha256": "a51a0cdce2e16aa2df6999856025aef023530b82ea57c777981e464a9ae15155",
+            "expected_stdout": "owned\n",
+            "steps": [
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage1",
+                  "emit-c",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/iflet42_owned_struct.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/iflet42_owned_struct/stage1.c"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.001779915764927864
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage2",
+                  "emit-c",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/iflet42_owned_struct.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/iflet42_owned_struct/stage2.c"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.0013555996119976044
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage0",
+                  "build",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/iflet42_owned_struct.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/iflet42_owned_struct/stage0-debug"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.16733783669769764
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/iflet42_owned_struct/stage0-debug"
+                ],
+                "exit": 0,
+                "stdout": "owned\n",
+                "stderr": "",
+                "seconds": 0.0009987466037273407
+              },
+              {
+                "argv": [
+                  "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+                  "cc",
+                  "-std=c17",
+                  "-fno-strict-aliasing",
+                  "-DYV_ALLOC_CHECK",
+                  "-O0",
+                  "-I",
+                  "/data1/workspace/github/workspace/yavo/compiler/runtime",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/iflet42_owned_struct/stage2.c",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/iflet42_owned_struct/selfhost-debug"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.17504498548805714
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/iflet42_owned_struct/selfhost-debug"
+                ],
+                "exit": 0,
+                "stdout": "owned\n",
+                "stderr": "",
+                "seconds": 0.001498417928814888
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage0",
+                  "build",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/iflet42_owned_struct.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/iflet42_owned_struct/stage0-release",
+                  "--release"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.21865511499345303
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/iflet42_owned_struct/stage0-release"
+                ],
+                "exit": 0,
+                "stdout": "owned\n",
+                "stderr": "",
+                "seconds": 0.0011700298637151718
+              },
+              {
+                "argv": [
+                  "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+                  "cc",
+                  "-std=c17",
+                  "-fno-strict-aliasing",
+                  "-DYV_ALLOC_CHECK",
+                  "-O2",
+                  "-I",
+                  "/data1/workspace/github/workspace/yavo/compiler/runtime",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/iflet42_owned_struct/stage2.c",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/iflet42_owned_struct/selfhost-release"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.22373992390930653
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/iflet42_owned_struct/selfhost-release"
+                ],
+                "exit": 0,
+                "stdout": "owned\n",
+                "stderr": "",
+                "seconds": 0.0010034460574388504
+              }
+            ],
+            "passed": true,
+            "c_identical": true,
+            "source_preserved": true,
+            "generated_c": {
+              "stage1": {
+                "path": "compiler/target/batch53/promoted/iflet42_owned_struct/stage1.c",
+                "bytes": 4350,
+                "sha256": "ae5ebb2f43b8dbadb04a222462e974c9efddb1d9534e921ffc58b64abc9f0ce7"
+              },
+              "stage2": {
+                "path": "compiler/target/batch53/promoted/iflet42_owned_struct/stage2.c",
+                "bytes": 4350,
+                "sha256": "ae5ebb2f43b8dbadb04a222462e974c9efddb1d9534e921ffc58b64abc9f0ce7"
+              }
+            }
+          },
+          {
+            "id": "batch48_optional_owned_string",
+            "file": "unsupported/batch48_optional_owned_string.yv",
+            "source_sha256": "8007e79142f939ae27ca17f7b30300a49ab9d5c953dbfbd8e8df4f7e590eac87",
+            "expected_stdout": "true\n",
+            "steps": [
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage1",
+                  "emit-c",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/batch48_optional_owned_string.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/batch48_optional_owned_string/stage1.c"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.0009390730410814285
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage2",
+                  "emit-c",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/batch48_optional_owned_string.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/batch48_optional_owned_string/stage2.c"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.0010291039943695068
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage0",
+                  "build",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/batch48_optional_owned_string.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/batch48_optional_owned_string/stage0-debug"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.14257674850523472
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/batch48_optional_owned_string/stage0-debug"
+                ],
+                "exit": 0,
+                "stdout": "true\n",
+                "stderr": "",
+                "seconds": 0.0010038167238235474
+              },
+              {
+                "argv": [
+                  "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+                  "cc",
+                  "-std=c17",
+                  "-fno-strict-aliasing",
+                  "-DYV_ALLOC_CHECK",
+                  "-O0",
+                  "-I",
+                  "/data1/workspace/github/workspace/yavo/compiler/runtime",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/batch48_optional_owned_string/stage2.c",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/batch48_optional_owned_string/selfhost-debug"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.15900138393044472
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/batch48_optional_owned_string/selfhost-debug"
+                ],
+                "exit": 0,
+                "stdout": "true\n",
+                "stderr": "",
+                "seconds": 0.0013493876904249191
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage0",
+                  "build",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/unsupported/batch48_optional_owned_string.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/batch48_optional_owned_string/stage0-release",
+                  "--release"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.23427773267030716
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/batch48_optional_owned_string/stage0-release"
+                ],
+                "exit": 0,
+                "stdout": "true\n",
+                "stderr": "",
+                "seconds": 0.0011627264320850372
+              },
+              {
+                "argv": [
+                  "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+                  "cc",
+                  "-std=c17",
+                  "-fno-strict-aliasing",
+                  "-DYV_ALLOC_CHECK",
+                  "-O2",
+                  "-I",
+                  "/data1/workspace/github/workspace/yavo/compiler/runtime",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/batch48_optional_owned_string/stage2.c",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/batch48_optional_owned_string/selfhost-release"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.2927652895450592
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/batch48_optional_owned_string/selfhost-release"
+                ],
+                "exit": 0,
+                "stdout": "true\n",
+                "stderr": "",
+                "seconds": 0.0016160178929567337
+              }
+            ],
+            "passed": true,
+            "c_identical": true,
+            "source_preserved": true,
+            "generated_c": {
+              "stage1": {
+                "path": "compiler/target/batch53/promoted/batch48_optional_owned_string/stage1.c",
+                "bytes": 3048,
+                "sha256": "9e75d76abc54d21e470b16dc3ffccf358b9a9d3ccb7b801500272c68e9de5bc7"
+              },
+              "stage2": {
+                "path": "compiler/target/batch53/promoted/batch48_optional_owned_string/stage2.c",
+                "bytes": 3048,
+                "sha256": "9e75d76abc54d21e470b16dc3ffccf358b9a9d3ccb7b801500272c68e9de5bc7"
+              }
+            }
+          },
+          {
+            "id": "errors51_unsupported_result_match",
+            "file": "errors51/programs/unsupported_result_match.yv",
+            "source_sha256": "7eb14591130a5db31f9228b98e57a5f51b7656f23f5a086711875b3468ec6ecc",
+            "expected_stdout": "InvalidPath\n",
+            "steps": [
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage1",
+                  "emit-c",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/errors51/programs/unsupported_result_match.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/errors51_unsupported_result_match/stage1.c"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.0024059321731328964
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage2",
+                  "emit-c",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/errors51/programs/unsupported_result_match.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/errors51_unsupported_result_match/stage2.c"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.0015064515173435211
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage0",
+                  "build",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/errors51/programs/unsupported_result_match.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/errors51_unsupported_result_match/stage0-debug"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.20439627952873707
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/errors51_unsupported_result_match/stage0-debug"
+                ],
+                "exit": 0,
+                "stdout": "InvalidPath\n",
+                "stderr": "",
+                "seconds": 0.0013977568596601486
+              },
+              {
+                "argv": [
+                  "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+                  "cc",
+                  "-std=c17",
+                  "-fno-strict-aliasing",
+                  "-DYV_ALLOC_CHECK",
+                  "-O0",
+                  "-I",
+                  "/data1/workspace/github/workspace/yavo/compiler/runtime",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/errors51_unsupported_result_match/stage2.c",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/errors51_unsupported_result_match/selfhost-debug"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.20077743753790855
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/errors51_unsupported_result_match/selfhost-debug"
+                ],
+                "exit": 0,
+                "stdout": "InvalidPath\n",
+                "stderr": "",
+                "seconds": 0.001325700432062149
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage0",
+                  "build",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/errors51/programs/unsupported_result_match.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/errors51_unsupported_result_match/stage0-release",
+                  "--release"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.21980716846883297
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/errors51_unsupported_result_match/stage0-release"
+                ],
+                "exit": 0,
+                "stdout": "InvalidPath\n",
+                "stderr": "",
+                "seconds": 0.0010555032640695572
+              },
+              {
+                "argv": [
+                  "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+                  "cc",
+                  "-std=c17",
+                  "-fno-strict-aliasing",
+                  "-DYV_ALLOC_CHECK",
+                  "-O2",
+                  "-I",
+                  "/data1/workspace/github/workspace/yavo/compiler/runtime",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/errors51_unsupported_result_match/stage2.c",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/errors51_unsupported_result_match/selfhost-release"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.2780475504696369
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/errors51_unsupported_result_match/selfhost-release"
+                ],
+                "exit": 0,
+                "stdout": "InvalidPath\n",
+                "stderr": "",
+                "seconds": 0.0014172550290822983
+              }
+            ],
+            "passed": true,
+            "c_identical": true,
+            "source_preserved": true,
+            "generated_c": {
+              "stage1": {
+                "path": "compiler/target/batch53/promoted/errors51_unsupported_result_match/stage1.c",
+                "bytes": 4428,
+                "sha256": "5a1b30a30b5dbccb90359fbcf4aabc10aacab34f65ea696e4cba6ecca05b5153"
+              },
+              "stage2": {
+                "path": "compiler/target/batch53/promoted/errors51_unsupported_result_match/stage2.c",
+                "bytes": 4428,
+                "sha256": "5a1b30a30b5dbccb90359fbcf4aabc10aacab34f65ea696e4cba6ecca05b5153"
+              }
+            }
+          },
+          {
+            "id": "errors51_unsupported_user_payload",
+            "file": "errors51/programs/unsupported_user_payload.yv",
+            "source_sha256": "5996933d5a15290fc9116cc6d08dfb79e6a388236f6418eaffd2f22122a91497",
+            "expected_stdout": "Message(code: 1)\n",
+            "steps": [
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage1",
+                  "emit-c",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/errors51/programs/unsupported_user_payload.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/errors51_unsupported_user_payload/stage1.c"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.0012579448521137238
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage2",
+                  "emit-c",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/errors51/programs/unsupported_user_payload.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/errors51_unsupported_user_payload/stage2.c"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.0015003103762865067
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage0",
+                  "build",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/errors51/programs/unsupported_user_payload.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/errors51_unsupported_user_payload/stage0-debug"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.166254797950387
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/errors51_unsupported_user_payload/stage0-debug"
+                ],
+                "exit": 0,
+                "stdout": "Message(code: 1)\n",
+                "stderr": "",
+                "seconds": 0.0011980626732110977
+              },
+              {
+                "argv": [
+                  "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+                  "cc",
+                  "-std=c17",
+                  "-fno-strict-aliasing",
+                  "-DYV_ALLOC_CHECK",
+                  "-O0",
+                  "-I",
+                  "/data1/workspace/github/workspace/yavo/compiler/runtime",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/errors51_unsupported_user_payload/stage2.c",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/errors51_unsupported_user_payload/selfhost-debug"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.15878638066351414
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/errors51_unsupported_user_payload/selfhost-debug"
+                ],
+                "exit": 0,
+                "stdout": "Message(code: 1)\n",
+                "stderr": "",
+                "seconds": 0.001069430261850357
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/stage0",
+                  "build",
+                  "/data1/workspace/github/workspace/yavo/selfhost/tests/errors51/programs/unsupported_user_payload.yv",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/errors51_unsupported_user_payload/stage0-release",
+                  "--release"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.2379240971058607
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/errors51_unsupported_user_payload/stage0-release"
+                ],
+                "exit": 0,
+                "stdout": "Message(code: 1)\n",
+                "stderr": "",
+                "seconds": 0.001016952097415924
+              },
+              {
+                "argv": [
+                  "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+                  "cc",
+                  "-std=c17",
+                  "-fno-strict-aliasing",
+                  "-DYV_ALLOC_CHECK",
+                  "-O2",
+                  "-I",
+                  "/data1/workspace/github/workspace/yavo/compiler/runtime",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/errors51_unsupported_user_payload/stage2.c",
+                  "-o",
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/errors51_unsupported_user_payload/selfhost-release"
+                ],
+                "exit": 0,
+                "stdout": "",
+                "stderr": "",
+                "seconds": 0.22909455932676792
+              },
+              {
+                "argv": [
+                  "/data1/workspace/github/workspace/yavo/compiler/target/batch53/promoted/errors51_unsupported_user_payload/selfhost-release"
+                ],
+                "exit": 0,
+                "stdout": "Message(code: 1)\n",
+                "stderr": "",
+                "seconds": 0.0011103786528110504
+              }
+            ],
+            "passed": true,
+            "c_identical": true,
+            "source_preserved": true,
+            "generated_c": {
+              "stage1": {
+                "path": "compiler/target/batch53/promoted/errors51_unsupported_user_payload/stage1.c",
+                "bytes": 3199,
+                "sha256": "4ab6e89d19d414e9a4ca649022ca0efe08a020ec0e229db2fa049008a9925def"
+              },
+              "stage2": {
+                "path": "compiler/target/batch53/promoted/errors51_unsupported_user_payload/stage2.c",
+                "bytes": 3199,
+                "sha256": "4ab6e89d19d414e9a4ca649022ca0efe08a020ec0e229db2fa049008a9925def"
+              }
+            }
+          }
+        ],
+        "schema": "yavo-patterns53-promotion-verification/1",
+        "phase": "integration snapshot before subsequent transient-match guard and C string compression",
+        "frontends": {
+          "stage0": {
+            "path": "compiler/target/batch53/stage0",
+            "bytes": 2947896,
+            "sha256": "85c72206a67c40627ed693283e900a2079f0720f788c6d7430a5608f0bb61880"
+          },
+          "stage1": {
+            "path": "compiler/target/batch53/stage1",
+            "bytes": 700352,
+            "sha256": "ec01a170df9b06f3dda1592393801ca61f61315712287afd871f13d7fa5cef70"
+          },
+          "stage2": {
+            "path": "compiler/target/batch53/stage2",
+            "bytes": 764224,
+            "sha256": "4cf34acd8f36bb257890ea4f8be94bc795eef139d283155ac0f3fd535dd4a84e"
+          }
+        },
+        "backend": {
+          "path": "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+          "version": "0.17.1"
+        }
+      }
+    },
+    "diagnostic_reference_update": {
+      "path": "selfhost/tests/diagnostics53/promotions.json",
+      "bytes": 3333,
+      "sha256": "aa9bf6c2a18deb81c5ed69179d49cbd271521dde6e742476aeb103ddf5f3cc87"
+    },
+    "legacy_c_reference_update": {
+      "path": "selfhost/tests/diagnostics53/legacy-product.json",
+      "bytes": 1307,
+      "sha256": "95036cf562e40c945476bcdfc006e67a4f595be48d2974110d89b2d6a73fd68f"
+    }
+  },
+  "local_full": {
+    "status": "running",
+    "output": "compiler/target/ci/selfhost-batch53-final",
+    "log": "compiler/target/batch53/full-bootstrap.log"
+  },
+  "ci": {
+    "status": "pending"
+  },
+  "metrics": null,
+  "failures_and_corrections": [
+    "Initial owned-view matching lost lifetime information; transient scrutinees are now rejected and immutable-parameter arm results retain source bits.",
+    "Existing stage0 Match result-loan omissions were found; three frozen boundary fixtures remain rejected by selfhost. Stage0 is unchanged.",
+    "Owned Optional promotion and safe C literal encoding changed frozen diagnostic/generated-C outcomes; versioned overlays preserve old source/freeze bytes and independently derive new expectations.",
+    "Temporary ENOSPC interrupted writes; availability recovered, affected types.yv restored from HEAD and exact edits replayed atomically; source completeness and checks reverified."
+  ],
+  "known_gaps": [
+    "Aggregate Optional/Tuple/Result/Heap payload composition, general references and mutable pattern binding remain unsupported.",
+    "All-blocker analysis remains a structural model with flow-sensitive/structural/capacity unknown; semantic_complete=false for blocked entries.",
+    "Stage0 Match-result borrowed lifetime/source defect is recorded in patterns53/CONTRACT.md; candidate conservatively refuses unsafe cases.",
+    "macOS/Windows Rust selected-suite gaps and Windows two I/O exclusions remain listed in HANDOFF; Windows RSS remains unavailable.",
+    "New paired agent-cost experiment still has zero metered participant sessions; EROFS initialization blocker from batch52 is unchanged."
+  ],
+  "next_batch": [
+    "Fix stage0 Match result-loan propagation with escaping/local/parameter-source tests.",
+    "Extend complete tuple and aggregate payload representation, including ownership; rerank candidates using final blocker sets.",
+    "Keep routine Core tier; Full cadence at batch55."
+  ]
+}

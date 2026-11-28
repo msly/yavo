@@ -1,0 +1,7 @@
+enum Item { Pair(text: String, nums: Vec[int]), Empty }
+fn takeText(s: sink String) -> String { return s }
+fn make() -> Item { return .Pair("moved".toString(),[1,2,3]) }
+fn main() {
+ match make() { .Pair(s,v) => { let t=takeText(s)
+ println("${t}:${v.len()}") }, .Empty => println("empty") }
+}

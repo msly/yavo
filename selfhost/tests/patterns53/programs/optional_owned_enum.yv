@@ -1,0 +1,7 @@
+enum E { Text(s:String), End }
+fn f(x:?E) { match x { some(.Text(s)) => println(s), some(.End) => println("end"), none => println("none") } }
+fn main() { let x:?E=some(.Text("hello".toString()))
+ f(x)
+ f(x)
+ f(some(.End))
+ f(none) }

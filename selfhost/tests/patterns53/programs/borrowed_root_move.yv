@@ -1,0 +1,4 @@
+enum E { Text(s:String) }
+fn consume(x:sink E) {}
+fn main() { let x=E.Text("x".toString())
+ match x { all => consume(all) } }

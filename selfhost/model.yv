@@ -55,7 +55,13 @@ pub struct FieldDecl {
     initial: int = -1
 }
 
-// fieldStart/fieldCount index Program.fields; variants index Program.lists.
+pub struct VariantDecl {
+    name: int
+    fieldStart: int = 0
+    fieldCount: int = 0
+}
+
+// fieldStart/fieldCount index Program.fields; variants index Program.variants.
 pub struct TypeDecl {
     kind: AggregateKind
     name: int
@@ -129,17 +135,32 @@ pub struct StringPart {
     spec: int = -1
 }
 
-// Only standard error enums have payload patterns in this subset. The parser
-// keeps the original spelling; checking selects the nominal error type.
+// Pattern trees keep child indices in Program.lists and preserve nominal
+// type spelling. Every discriminated shape uses this common representation.
 pub enum MatchPatternKind {
     Wild
     Bind
     Case
+    Some
+    None
+    Ok
+    Err
+}
+
+pub struct Pattern {
+    token: int
+    kind: MatchPatternKind
+    typeToken: int = -1
+    variant: int = -1
+    binding: int = -1
+    payloadStart: int = 0
+    payloadCount: int = 0
 }
 
 pub struct MatchArm {
     token: int
     kind: MatchPatternKind
+    pattern: int = -1
     typeToken: int = -1
     variant: int = -1
     binding: int = -1
@@ -241,10 +262,12 @@ pub struct Program {
     lists: Vec[int] = []
     params: Vec[Parameter] = []
     fields: Vec[FieldDecl] = []
+    variants: Vec[VariantDecl] = []
     resultTypes: Vec[ResultRef] = []
     tupleAtoms: Vec[TypeRef] = []
     stringParts: Vec[StringPart] = []
     matchArms: Vec[MatchArm] = []
+    patterns: Vec[Pattern] = []
     files: Vec[SourceFile] = []
     imports: Vec[ModuleImport] = []
 }

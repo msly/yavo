@@ -1,0 +1,9 @@
+enum Item { Pair(a:String,b:String), Empty }
+fn select(n:int) -> String {
+ let outer=["outer".toString()]
+ return match Item.Pair("a".toString(),"b".toString()) {
+ .Pair(a,b) => { if n==0 { return a }
+ return b }, .Empty => "empty".toString() }
+}
+fn main() { println(select(0))
+ println(select(1)) }

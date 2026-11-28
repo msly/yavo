@@ -1,0 +1,7 @@
+fn main() {
+ let x:?String=some("hello".toString())
+ match x { some(s) => println(s), none => println("none") }
+ match x { some(s) => println(s.len()), none => println(0) }
+ match some("temp".toString()) { some(s) => { let t:String=s
+ println(t) }, none => println("none") }
+}

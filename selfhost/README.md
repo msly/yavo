@@ -8,11 +8,16 @@ compiles them again to stage3 C. Stage2/stage3 C and binaries are byte-identical
 Rust remains a separate behavioral reference; no stage delegates an input back
 to Rust. Current validation is recorded below.
 
-**Batch 52:** integer radix prefixes and separators are handled in the lexer;
-the original UTF-8 hexadecimal fixture is restored. bootstrap.py now defaults
-to --tier core (fixed point plus stable and changed cases); --tier full
-retains every semantic/application gate. Full CI runs every fifth batch and on
-milestones/releases. See [validation tiers](../docs/validation-tiers.md).
+**Batch 53:** user enums with multiple Copy/owned payloads, recursive enum/Optional/Result
+patterns and owned String/named Optionals share one matcher with standard errors.
+Pattern matrices check exhaustiveness; temporary payloads move or drop before arm
+execution. Returned views retain immutable-parameter sources. C string literals now
+keep safe ASCII readable, reducing the embedded-runtime representation.
+See [batch 53 scope and evidence](../docs/batch53-patterns.md).
+
+bootstrap.py defaults to --tier core; --tier full runs every semantic/application
+gate. Full CI runs every fifth batch and on ownership milestones/releases; batch53
+is an ownership milestone. [Validation tiers](../docs/validation-tiers.md).
 subset-features/subset_sweep.py inspect complete module ASTs and typed IR,
 retain unresolved restrictions, and rank feature-set candidates without claiming
 future acceptance. [SH-3 exit checklist](../docs/sh3-roadmap.md).
@@ -36,7 +41,7 @@ module. Richer diagnostics and JSON build/run remain separate work. This closes 
 SH-3 entrypoint gap; it does not make selfhost the daily default.
 Batch 51 adds four nominal standard error enums and prelude Utf8Error, full
 Results from existing fallible calls, terminating named catches, error display
-and standard-error-only payload matching. These values remain Copy while owned
+and an initial standard-error payload matcher, unified with general patterns in batch 53. These values remain Copy while owned
 success payloads follow the existing movement and cleanup rules.
 Batch 48 is driven by the independently authored five-module
 [yavo-dep-index](../examples/dep-index/SPEC.md): `main`, `model`, `parser`,

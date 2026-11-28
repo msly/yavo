@@ -1,0 +1,6 @@
+enum Item { Pair(text: String, nums: Vec[int]), Empty }
+fn make() -> Item { return .Pair("drop".toString(),[1,2,3]) }
+fn main() {
+ match make() { .Pair(_,_) => println("dropped"), .Empty => println("empty") }
+ match make() { _ => println("whole") }
+}

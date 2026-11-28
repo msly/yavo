@@ -1,0 +1,4 @@
+enum Value { Num(n:int), Empty }
+fn make() -> Value { print("once:")
+ return .Num(8) }
+fn main() { println(match make() { .Num(n) => n, .Empty => 0 }) }

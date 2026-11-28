@@ -1,0 +1,5 @@
+enum E { Message(text:String), Stop }
+fn work(n:int) -> int ! E { if n==0 { return 7 }
+ return err(.Message("bad".toString())) }
+fn consume(s:sink String) { println(s) }
+fn main() { for n in 0..2 { match work(n) { ok(x) => println(x), err(.Message(s)) => consume(s), err(.Stop) => println("stop") } } }

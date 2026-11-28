@@ -1,0 +1,9 @@
+use std/fs
+fn work(n:int) -> String ! fs.Error { if n==0 { return "ok".toString() }
+ if n==1 { return err(.Utf8(7)) }
+ return err(.InvalidPath) }
+fn main() {
+ for n in 0..3 {
+ match work(n) { ok(s) => println(s), err(.Utf8(pos)) => println(pos), err(_e) => println("other") }
+ }
+}

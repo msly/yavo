@@ -1,16 +1,18 @@
-# Yavo 交接文档（2026-11-28，第五十二批：验收分层、跨模块阻塞分析与数值词法）
+# Yavo 交接文档（2026-11-28，第五十三批：通用枚举/模式、拥有型 Optional 与 C 发射压缩）
 
-给下一个会话：先读第1、2、32节及 docs/sh3-roadmap.md、docs/validation-tiers.md。第二十七至第三十批在 `history/handoff-batches-2026-11-23-to-24.md`，第十二至第二十六批在 `history/handoff-batches-2026-11-21-to-23.md`，第六至第十一批在 `history/handoff-batches-2026-11-19-to-21.md`。
+给下一个会话：先读第1、2、32、33节及 docs/sh3-roadmap.md、docs/validation-tiers.md。第二十七至第三十批在 `history/handoff-batches-2026-11-23-to-24.md`，第十二至第二十六批在 `history/handoff-batches-2026-11-21-to-23.md`，第六至第十一批在 `history/handoff-batches-2026-11-19-to-21.md`。
 
 ## 1. 一句话状态
 
-**第五十二批修复十六进制等整数字面量并恢复原稿；将日常验收改为核心门，完整门每5批/里程碑运行；新增跨模块 AST/HIR 阻塞集合与可计量12题复测入口。** 当前SH-2固定点、SH-4正式应用3/3；SH-3仍未默认接替Rust。 本机核心104/104、13/13；原语料125/394（去重62/224）、零退步/越界；[三平台核心CI](https://github.com/msly/yavo/actions/runs/46046011337)通过，完整门本批未执行。
+**第53批交付用户enum多字段Copy/拥有载荷、通用嵌套match、拥有型String/Named Optional；标准Error与用户enum/Optional/Result共用同一模式检查、穷尽矩阵、绑定与清理路径。** SH-3仍未默认接替Rust，SH-4仍3/3。
 
-本机与三平台结果、覆盖/体积/资源趋势见[本批验证索引](compiler/validation/batch52-direction-2026-11-28.json)。全阻塞规划区分已识别结构能力和未建模语义，未实现的特性组合只能给候选入口，不能冒充已解锁覆盖。后续优先完成通用enum/match、Optional/Result、完整元组、泛型/接口工作包，标准Error迁入同一match实现；Copy元组Vec不再按22个首错路径单独排期。[SH-3剩余项、验收标准与批次估计](docs/sh3-roadmap.md)。
+当前新59模式分类、12旧U0001原源码提升、7原稿Debug/Release与析构时序观察器通过；完整自举及三平台里程碑Full正在执行，最终状态见[第53批验证索引](compiler/validation/batch53-delivery-2026-11-28.json)。初扫125→135/394，完整模块图62→68/224。不能把初扫或候选快照写成最终CI验收。
 
-第41批 **953,599/443,536 B** 与第51批 **1,774,302/729,968 B** 原记录已核实；新增runtime嵌入及八进制字符串表示是主要C增长项，归因与可优化空间见[体积分析](docs/batch52-codegen-size.md)。第41批旧覆盖88在第42批已按原源码重建校正为91，历史数与可复现数分开保存。
+`cString`可打印ASCII直写并保留必要转义；同一源码比较生成C下降362,454字节（19.525%）。最终自编译耗时/RSS/C/二进制趋势以完整自举后的记录为准。[交付范围、语义边界与原稿收益](docs/batch53-patterns.md)。
 
-“相对Rust交付成本优势”尚未成立。R3/R4已有对照，旧报告token分别高32.3%/27.1%，缺原始usage；R5两语言各24/24且失败编译0，token缺失。本批12题新受试会话仍0：CLI初始化报只读文件系统错误，未取得usage；[原始失败、历史重算和可执行入口](experiments/cost-pilot-2026-11-28/README.md)。
+发现stage0既有Match结果借用来源缺口；三份固定原稿在selfhost中保守拒绝。第54批首先补此正确性缺口，再推进完整元组与组合载荷。结构分析仍保留unknown，不宣称穷尽全部U0001。
+
+“相对Rust交付成本优势”尚未成立。第52批12题复测仍无真实受试usage：CLI初始化EROFS环境阻塞尚未改变；不重复同一探测，不把源码重放算成新agent实验。[成本入口与证据](experiments/cost-pilot-2026-11-28/README.md)。
 
 ## 2. 仓库与环境
 
@@ -470,3 +472,12 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - **词法**：0x/0b/0o/分隔符归一为现有十进制token；u128词法容量和int/byte上下文范围分开。原utf8_consumed_failure.yv恢复，旧freeze/amendment保留历史身份。首次12abcE+3误判浮点已修正并补回归。
 - **平台已知缺口（单列）**：第51批macOS/Windows Rust仅native选定集，未覆盖build_cache、conformance、harness、p0_regressions、targets、verify；第55批逐套件补齐可移植部分。Windows标准错误门缺env_invalid_utf8与stdin_read_error：前者原始字节环境在Win32不适用，补Unicode/转换错误对应例；后者补可控句柄/管道读错例。WindowsRSS目前null，待原生计量；详见SH-3清单。
 - **报告**：每批只写交付、覆盖变化、失败/修正、下一批，数字、命令和原始证据放验证索引。历史第51批首页另存 history/handoff-batch51-summary.md，第31节原始记录未改。
+
+## 33. 第五十三批：通用模式与拥有枚举（2026-11-28）
+
+- 共同Pattern树、variant描述和唯一matchValue处理用户enum、标准Error、Optional/Result及scalar通配/绑定；矩阵穷尽检查覆盖嵌套和多字段关联，没有固定tag位数限制。
+- 已有place借用；拥有临时值绑定搬出后置零，未绑定字段进入arm前释放。只读参数视图保留来源，局部/临时视图仍有U0001边界。Utf8Error保持struct，标准Error nominal身份与ABI不变。
+- 新59语义用例、1字面量全ASCII/UTF8回环；12旧unsupported以原稿提升。旧diagnostics冻结历史不改，通过diagnostics53分层提升与独立C模板升级生效。
+- 本批新增枚举析构/布局，policy batch53 baseline5fa6401 milestone=true；触发一次Full。普通批次继续Core，第55批仍为周期Full。完成信息与最终commit/CI见[索引](compiler/validation/batch53-delivery-2026-11-28.json)。
+- 已知参考编译器缺口：stage0的loans_of未传播Match结果；生成C可在返回view前drop拥有String。本批selfhost拒绝，下一批修stage0并将对应边界迁为双方拒绝。此问题与SH-3默认切换无关，不能等切换完成再修。
+- 第32节平台缺口仍在：原生selected Rust套件、Windows两I/O场景与RSS缺口没有被本批新模式覆盖自动关闭。成本计量环境阻塞亦未关闭。

@@ -1,0 +1,278 @@
+{
+  "schema": "yavo-cstring-probe/1",
+  "batch": 53,
+  "date": "2026-11-28",
+  "fixture": "selfhost/tests/strings53/literal_roundtrip.yv",
+  "fixture_sha256": "73c1b94859974170c2bf3929c93b5b9dd60179ef281223d6bcf1e0b47345dbf4",
+  "expected_bytes": 256,
+  "expected_sha256": "3e92a9a4037c3f5c48b96d45c26d19657e0029eca54de072a5aef20e0291e31e",
+  "commands": [
+    {
+      "label": "stage0-build",
+      "argv": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/batch52/stage0-core",
+        "build",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/strings53/literal_roundtrip.yv",
+        "--release",
+        "-o",
+        "/data1/workspace/github/workspace/yavo/compiler/target/batch53/cstring/stage0-fixture"
+      ],
+      "exit_code": 0,
+      "seconds": 0.16171825304627419,
+      "stdout_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "stage0-run",
+      "argv": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/batch53/cstring/stage0-fixture"
+      ],
+      "exit_code": 0,
+      "seconds": 0.001381387934088707,
+      "stdout_bytes": 256,
+      "stdout_sha256": "3e92a9a4037c3f5c48b96d45c26d19657e0029eca54de072a5aef20e0291e31e",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "before-emit-fixture",
+      "argv": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/batch53/string-stage1-before",
+        "emit-c",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/strings53/literal_roundtrip.yv",
+        "-o",
+        "/data1/workspace/github/workspace/yavo/compiler/target/batch53/cstring/before-fixture.c"
+      ],
+      "exit_code": 0,
+      "seconds": 0.00204303115606308,
+      "stdout_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "before-compile-c17",
+      "argv": [
+        "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+        "cc",
+        "-std=c17",
+        "-fno-strict-aliasing",
+        "-DYV_ALLOC_CHECK",
+        "-O2",
+        "-s",
+        "-Werror=trigraphs",
+        "-I",
+        "/data1/workspace/github/workspace/yavo/compiler/runtime",
+        "/data1/workspace/github/workspace/yavo/compiler/target/batch53/cstring/before-fixture.c",
+        "-o",
+        "/data1/workspace/github/workspace/yavo/compiler/target/batch53/cstring/before-fixture"
+      ],
+      "exit_code": 0,
+      "seconds": 0.24102462455630302,
+      "stdout_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "before-run-fixture",
+      "argv": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/batch53/cstring/before-fixture"
+      ],
+      "exit_code": 0,
+      "seconds": 0.0013695135712623596,
+      "stdout_bytes": 256,
+      "stdout_sha256": "3e92a9a4037c3f5c48b96d45c26d19657e0029eca54de072a5aef20e0291e31e",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "before-emit-selfhost",
+      "argv": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/batch53/string-stage1-before",
+        "emit-c",
+        "/data1/workspace/github/workspace/yavo/compiler/target/batch53/cstring/source/main.yv",
+        "-o",
+        "/data1/workspace/github/workspace/yavo/compiler/target/batch53/cstring/before-selfhost.c"
+      ],
+      "exit_code": 0,
+      "seconds": 0.07290050946176052,
+      "stdout_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "after-emit-fixture",
+      "argv": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/batch53/string-stage1-after",
+        "emit-c",
+        "/data1/workspace/github/workspace/yavo/selfhost/tests/strings53/literal_roundtrip.yv",
+        "-o",
+        "/data1/workspace/github/workspace/yavo/compiler/target/batch53/cstring/after-fixture.c"
+      ],
+      "exit_code": 0,
+      "seconds": 0.00176195427775383,
+      "stdout_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "after-compile-c17",
+      "argv": [
+        "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+        "cc",
+        "-std=c17",
+        "-fno-strict-aliasing",
+        "-DYV_ALLOC_CHECK",
+        "-O2",
+        "-s",
+        "-Werror=trigraphs",
+        "-I",
+        "/data1/workspace/github/workspace/yavo/compiler/runtime",
+        "/data1/workspace/github/workspace/yavo/compiler/target/batch53/cstring/after-fixture.c",
+        "-o",
+        "/data1/workspace/github/workspace/yavo/compiler/target/batch53/cstring/after-fixture"
+      ],
+      "exit_code": 0,
+      "seconds": 0.22789187543094158,
+      "stdout_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "after-run-fixture",
+      "argv": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/batch53/cstring/after-fixture"
+      ],
+      "exit_code": 0,
+      "seconds": 0.0012447498738765717,
+      "stdout_bytes": 256,
+      "stdout_sha256": "3e92a9a4037c3f5c48b96d45c26d19657e0029eca54de072a5aef20e0291e31e",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "after-emit-selfhost",
+      "argv": [
+        "/data1/workspace/github/workspace/yavo/compiler/target/batch53/string-stage1-after",
+        "emit-c",
+        "/data1/workspace/github/workspace/yavo/compiler/target/batch53/cstring/source/main.yv",
+        "-o",
+        "/data1/workspace/github/workspace/yavo/compiler/target/batch53/cstring/after-selfhost.c"
+      ],
+      "exit_code": 0,
+      "seconds": 0.0711867194622755,
+      "stdout_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "snapshot": [
+    {
+      "file": "digest.yv",
+      "bytes": 4291,
+      "sha256": "e7c6a6a496bbdcdee401f897032ee9447f1b7f9982e23c1bf9f7e124f4cb68d7"
+    },
+    {
+      "file": "support.yv",
+      "bytes": 6399,
+      "sha256": "12a4b08856d7b8f1203e95f2d92639a6de7c3be56d35ad964cb0f526868197ce"
+    },
+    {
+      "file": "lexer.yv",
+      "bytes": 27576,
+      "sha256": "668743282425eaea209ded5e499a6a12608728bd4e6bae16fb03886fe7485b40"
+    },
+    {
+      "file": "model.yv",
+      "bytes": 6227,
+      "sha256": "6cac6c08a9fa708b8a586082ccb6cb0179ebefe0a48ff3a75537d1710f70cfd3"
+    },
+    {
+      "file": "parser.yv",
+      "bytes": 52789,
+      "sha256": "31c565dbf7705879ad7dd2cb538bdfee344e1a695272960109cd5606674e1687"
+    },
+    {
+      "file": "types.yv",
+      "bytes": 36828,
+      "sha256": "7bf34f875fadddd8463cf2e80beab8b5c18677ddf527274be6da73d00b05f291"
+    },
+    {
+      "file": "codegen.yv",
+      "bytes": 205522,
+      "sha256": "146db08285f644f66011fe02cf0c96b32a8bfd9f12af77f8f3bab34c24d3e5cd"
+    },
+    {
+      "file": "driver.yv",
+      "bytes": 10693,
+      "sha256": "01f543793f2bce65c2bf04aca0e463a894d1d9336feb0d96b55c335bec647464"
+    },
+    {
+      "file": "runtime_source.yv",
+      "bytes": 93029,
+      "sha256": "21a5f8f7d558d7c6570b2525d4525ede1d75d64e58371b8c8589315d2a18e754"
+    },
+    {
+      "file": "main.yv",
+      "bytes": 6758,
+      "sha256": "fcf554007b4dda50dcc0d7ef3e4c57b234878ca0352161a5055fa6001a203be5"
+    }
+  ],
+  "roundtrips": [
+    {
+      "generator": "before",
+      "bytes": 256,
+      "stdout_sha256": "3e92a9a4037c3f5c48b96d45c26d19657e0029eca54de072a5aef20e0291e31e",
+      "c_bytes": 4071,
+      "c_sha256": "e68be61b0265ab1a9dbb2bce319b359b03a24cbc077ea47811b670b6a03703dc",
+      "passed": true
+    },
+    {
+      "generator": "after",
+      "bytes": 256,
+      "stdout_sha256": "3e92a9a4037c3f5c48b96d45c26d19657e0029eca54de072a5aef20e0291e31e",
+      "c_bytes": 3219,
+      "c_sha256": "bae7a9fecbcfaca026b562725d0720ba666f22c9f2e8ce6d754a81c3994650f1",
+      "passed": true
+    }
+  ],
+  "selfhost_c": {
+    "before": {
+      "bytes": 1856352,
+      "sha256": "c335592743dce3a36d4867bd7b8f5ca45abc8d46b288a4658eb5c69f3f0c01f9",
+      "literal_normalized_sha256": "0571dc00b10698c52329d96cdb814513e7c197a64df96bd01157454bf5e48e11"
+    },
+    "after": {
+      "bytes": 1493898,
+      "sha256": "899a1f70ec8b61520ffdb1b1633f175bf77e768a91a253f8f5a8948eb1b6af61",
+      "literal_normalized_sha256": "0571dc00b10698c52329d96cdb814513e7c197a64df96bd01157454bf5e48e11"
+    }
+  },
+  "saved_c_bytes": 362454,
+  "saved_c_fraction": 0.195250685214873,
+  "literal_normalized_c_equal": true,
+  "passed": true,
+  "generators": {
+    "before": {
+      "path": "compiler/target/batch53/string-stage1-before",
+      "bytes": 700528,
+      "sha256": "172246976576740f2e4786c7bbcb8079bb57ebf18eefc068d8aed77f4eeba4c4",
+      "build_exit_code": 0
+    },
+    "after": {
+      "path": "compiler/target/batch53/string-stage1-after",
+      "bytes": 701312,
+      "sha256": "4dc94d48301b6bc96af93ee87815e72d86dc77092ce40e9119a06ed298996898",
+      "build_exit_code": 0
+    }
+  },
+  "interpretation": "Generated C size only; the decoded literal payload is unchanged. No executable-size saving is claimed. The final bootstrap measures the integrated compiler separately.",
+  "normalization": "Decode each C string literal including octal/simple/hex escapes and re-encode each byte as exactly three octal digits; leave every nonliteral byte unchanged. Both complete generated C byte streams then compare equal."
+}

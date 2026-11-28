@@ -1,0 +1,13 @@
+enum Shape { Circle(r: int), Rect(w: int, h: int), Empty }
+fn area(s: Shape) -> int {
+ return match s { .Circle(r) => 3*r*r, Shape.Rect(w,h) => w*h, .Empty => 0 }
+}
+fn main() {
+ let a=Shape.Circle(r:2)
+ let b: Shape=.Rect(h:4,w:3)
+ println(area(a))
+ println(area(b))
+ println(area(.Empty))
+ println(a)
+ println(b)
+}

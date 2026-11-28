@@ -171,6 +171,8 @@ def validate_json_diagnostics(bootstrap, compiler, stages, directory, command, b
                 raise ValueError("frozen legacy CLI supplement escapes its root")
             bind(path, expected)
         supplemental_cases = json.loads((supplement / "cases.json").read_bytes())["cases"]
+        _supplement_manifest, legacy_oracle = diagnostic_acceptance.load_supplement(bound)
+        detail["supplemental_product"] = legacy_oracle.product_upgrade
         expected_supplemental_ids = {case["id"] for case in supplemental_cases if "linux" in case["platforms"]}
         if len(supplemental_cases) != 8 or len(expected_supplemental_ids) != 8:
             raise ValueError("frozen Linux legacy CLI supplement inventory changed")
@@ -207,13 +209,15 @@ def validate_json_diagnostics(bootstrap, compiler, stages, directory, command, b
                 or candidate.get("freeze") != detail["freeze"]
                 or candidate.get("promotions") != detail["promotions"]
                 or candidate.get("supplemental_freeze") != detail["supplemental_freeze"]
+                or candidate.get("supplemental_product") != detail["supplemental_product"]
                 or candidate.get("excluded") != [] or candidate.get("special_files_removed_after_error") != []):
             raise ValueError("instrumented JSON candidate did not pass the complete frozen Linux gate")
         checks = candidate["checks"]
         check_names = {row["id"] for row in checks}
         required_checks = {"frozen_oracle", "oracle_controls", "complete_case_inventory",
                            "frozen_platform_inventory", "inputs_unchanged_during_run", "json_and_text_contracts",
-                           "frozen_legacy_cli_supplement", "legacy_cli_supplement", "explicit_diagnostic_promotions"}
+                           "frozen_legacy_cli_supplement", "legacy_cli_supplement", "explicit_diagnostic_promotions",
+                           "explicit_legacy_product_upgrade"}
         if (len(check_names) != len(checks) or not required_checks.issubset(check_names)
                 or not all(row.get("passed") is True for row in checks)):
             raise ValueError("instrumented JSON candidate omitted or failed a required check")
@@ -262,6 +266,9 @@ def validate_json_diagnostics(bootstrap, compiler, stages, directory, command, b
             bind(path, expected)
         required_inputs = {str(harness.resolve()), str(compiler.resolve()), str((fixtures / "freeze.json").resolve()),
                            str(diagnostic_acceptance.PROMOTIONS.resolve()),
+                           str(diagnostic_acceptance.PROMOTIONS53.resolve()),
+                           str(diagnostic_acceptance.PRODUCT53.resolve()),
+                           str(diagnostic_acceptance.PRODUCT53_C.resolve()),
                            str((supplement / "freeze.json").resolve()),
                            *[str((bootstrap.SELFHOST / part).resolve()) for part in bootstrap.COMPILER_PARTS],
                            *[str((fixtures / name).resolve()) for name in freeze["sha256"]],

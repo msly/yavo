@@ -1,0 +1,6 @@
+enum Bit { Zero, One }
+enum Pair { Both(left: Bit, right: Bit) }
+fn score(p: Pair) -> int { return match p { .Both(.Zero,_) => 10, .Both(_,.Zero) => 20, .Both(_,_) => 30 } }
+fn main() { println(score(.Both(.Zero,.One)))
+ println(score(.Both(.One,.Zero)))
+ println(score(.Both(.One,.One))) }

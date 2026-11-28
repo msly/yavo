@@ -1,0 +1,5 @@
+struct Point { x:int, y:int }
+enum E { Data(p:Point, b:byte, flag:bool), Empty }
+fn main() { let e=E.Data(Point{x:2,y:3},byte(4),true)
+ match e { .Data(p,b,f) => println("${p.x+p.y}:${b}:${f}"), .Empty => println("empty") }
+ println(e) }

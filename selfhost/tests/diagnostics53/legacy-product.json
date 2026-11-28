@@ -1,0 +1,24 @@
+{
+  "schema": "yavo-diagnostics53-legacy-product/1",
+  "batch": 53,
+  "protocol_unchanged": true,
+  "source_bytes_unchanged": true,
+  "case_ids": [
+    "emit_output_named_json",
+    "emit_output_named_json_diagnostics"
+  ],
+  "base_freeze_sha256": "e58c8c5b129a12d5aec9defd4f21988f88f7346182ed7870af603b4eb744334d",
+  "base_product_sha256": "d84bc08bf2216cfd2134b6c6807222733d03dc7aa729e9d18909e65d12c78f3c",
+  "source_sha256": "536e506bb90914c243a12b397b9a998f85ae2cbd9ba02dfd03a9e155ca5ca0f4",
+  "replacement": {
+    "path": "selfhost/tests/diagnostics53/expected.c",
+    "bytes": 2197,
+    "sha256": "817447c862f1ce22815730be3be07c07edbf8e29dea16200be14a1be0dbbcc35"
+  },
+  "expectation_basis": "Independently authored transformation of the unchanged batch-50 minimal C product: add the String Optional layout and destructor template, and encode the source filename main.yv using safe ASCII. The CLI scenarios, source bytes, historical product and freeze remain unchanged. No candidate output is used to construct this reference.",
+  "transformations": [
+    "insert String Optional layout after primitive Optional layouts",
+    "insert String Optional destructor before the first user function prototype",
+    "encode the fixed source filename main.yv as printable ASCII instead of octal escapes"
+  ]
+}

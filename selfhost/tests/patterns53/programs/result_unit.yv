@@ -1,0 +1,5 @@
+enum Failure { Bad }
+fn work(fail:bool) -> () ! Failure { if fail { return err(.Bad) }
+ return }
+fn main() { match work(false) { ok(_u) => println("yes"), err(.Bad) => println("no") }
+ match work(true) { ok(_) => println("yes"), err(_) => println("no") } }

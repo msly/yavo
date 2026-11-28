@@ -90,7 +90,7 @@ def inventory(corpus=None):
                 yield Path(directory)/name, {}
 
 
-def analyze(analyzer, path, timeout, profile="batch52"):
+def analyze(analyzer, path, timeout, profile="batch53"):
     try:
         done = subprocess.run([str(analyzer), "subset-features", path.name, "--profile", profile], cwd=path.parent,
                               capture_output=True, timeout=timeout, text=True, errors="replace")
@@ -176,8 +176,8 @@ def main():
     parser.add_argument("--corpus", "--baseline-corpus", type=Path, help="frozen source inventory")
     parser.add_argument("--timeout", type=float, default=30)
     parser.add_argument("--no-analysis", action="store_true", help="strict subset check only")
-    parser.add_argument("--profile", choices=("batch51", "batch52"), default="batch52",
-                        help="selfhost capability baseline (batch52 includes radix literals)")
+    parser.add_argument("--profile", choices=("batch51", "batch52", "batch53"), default="batch53",
+                        help="selfhost capability baseline (batch53 includes unified patterns and owned String/named Optional)")
     parser.add_argument("--enabled-feature", action="append", default=[],
                         help="capability independently verified in this selfhost since the batch51 profile")
     args = parser.parse_args()

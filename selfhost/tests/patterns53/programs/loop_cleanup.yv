@@ -1,0 +1,13 @@
+enum Item { Text(s:String), End }
+fn item(n:int) -> Item { if n==3 { return .End }
+ return .Text("kept".toString()) }
+fn main() {
+ var n=0
+ while n<4 { n+=1
+ let guard=["guard".toString()]
+ match item(n) { .Text(s) => { if n==1 { continue }
+ println(s)
+ println(guard.len()) }, .End => break }
+ }
+ println(n)
+}

@@ -6,6 +6,10 @@ use std::process::{Command, Stdio};
 mod common;
 
 fn profile(files: &[(&str, &str)]) -> (i32, Value) {
+    profile_at(files,"batch52")
+}
+
+fn profile_at(files: &[(&str, &str)], selected: &str) -> (i32, Value) {
     let scratch=common::Scratch::new("subset-features").unwrap();
     for (name,source) in files {
         let p=scratch.0.join(name);
@@ -15,7 +19,7 @@ fn profile(files: &[(&str, &str)]) -> (i32, Value) {
     let entry=scratch.0.join("main.yv");
     let before=fs::read(&entry).unwrap();
     let output=common::output(
-        Command::new(env!("CARGO_BIN_EXE_yavo")).arg("subset-features").arg(&entry).stdin(Stdio::null()),
+        Command::new(env!("CARGO_BIN_EXE_yavo")).arg("subset-features").arg(&entry).args(["--profile", selected]).stdin(Stdio::null()),
         common::RUN_TIMEOUT).unwrap();
     assert_eq!(fs::read(entry).unwrap(),before,"analysis edited its source");
     let result=serde_json::from_slice(&output.stdout).unwrap_or_else(|e|panic!("{e}: {output:?}"));
@@ -124,9 +128,13 @@ fn rejected_stage0_input_cannot_be_a_complete_profile() {
 
 
 fn fixture(relative: &str) -> Value {
+    fixture_at(relative,"batch52")
+}
+
+fn fixture_at(relative: &str, selected: &str) -> Value {
     let input=std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../selfhost/tests").join(relative);
     let output=common::output(Command::new(env!("CARGO_BIN_EXE_yavo"))
-        .arg("subset-features").arg(input).stdin(Stdio::null()),common::RUN_TIMEOUT).unwrap();
+        .arg("subset-features").arg(input).args(["--profile",selected]).stdin(Stdio::null()),common::RUN_TIMEOUT).unwrap();
     let report:Value=serde_json::from_slice(&output.stdout).unwrap();
     assert!(output.status.success(),"{relative}: {report}");
     report
@@ -169,4 +177,42 @@ fn heap_comparator_call_is_not_treated_as_supported_pure_expression() {
     let path="unsupported/batch48_heap_user_call_comparator.yv";
     let r=fixture(path);
     assert!(r["blockers"]["heap_comparator_expression"].is_array(),"{r}");
+}
+
+#[test]
+fn batch53_patterns_remove_only_delivered_structural_flags() {
+    for path in ["copy_fields","nested_product","nested_owned","optional_enum","optional_owned_string",
+                 "optional_owned_enum","result_utf8","result_standard_nested","result_owned_error",
+                 "vector_owned","scalar_bind","many_variants"] {
+        let file=format!("patterns53/programs/{path}.yv");
+        let before=fixture_at(&file,"batch52");
+        let after=fixture_at(&file,"batch53");
+        assert!(!before["blockers"].as_object().unwrap().is_empty(),"{path}: legacy baseline changed");
+        assert!(after["blockers"].as_object().unwrap().is_empty(),"{path}: {after}");
+        assert_eq!(after["semantic_complete"],false);
+        assert_eq!(after["profile"],"selfhost-batch53-structural-v1");
+    }
+}
+
+#[test]
+fn batch53_keeps_unsupported_payload_layout_and_optional_composition() {
+    let (code,r)=profile_at(&[("main.yv",r#"
+enum E { Nested(n: ?int), End }
+fn main() {
+ let x=E.Nested(some(1))
+ let y: ??int=some(some(1))
+ match x { .Nested(_) => println(1), .End => println(0) }
+}
+"#)],"batch53");
+    assert_eq!(code,0,"{r}");
+    assert!(r["blockers"]["enum_payload_composition"].is_array(),"{r}");
+    assert!(r["blockers"]["optional_general"].is_array(),"{r}");
+    assert!(r["blockers"].get("enum_payload").is_none(),"{r}");
+}
+
+#[test]
+fn batch53_does_not_certify_flow_sensitive_match_views() {
+    let r=fixture_at("patterns53/programs/escaping_view.yv","batch53");
+    assert_eq!(r["semantic_complete"],false);
+    assert!(r["unknown"].as_array().unwrap().iter().any(|x|x=="flow_sensitive_selfhost_restrictions"));
 }

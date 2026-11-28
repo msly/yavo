@@ -1,0 +1,4 @@
+enum E { Text(s:String), End }
+fn view(e:E) -> str of e { return match e { .Text(s) => s[0..s.len()], .End => "end" } }
+fn main() { let e=E.Text("view".toString())
+ println(view(e)) }

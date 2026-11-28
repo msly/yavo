@@ -19,6 +19,7 @@ def main():
     parser.add_argument("--analyzer",type=Path,required=True)
     parser.add_argument("--selfhost",type=Path,required=True)
     parser.add_argument("--json",type=Path,required=True)
+    parser.add_argument("--profile",choices=("batch51","batch52","batch53"),default="batch53")
     args=parser.parse_args()
     analyzer,selfhost=args.analyzer.resolve(),args.selfhost.resolve()
     manifest=json.loads((ROOT/"selfhost/tests/cases.json").read_text())
@@ -32,7 +33,7 @@ def main():
         else:
             path=ROOT/"selfhost/tests"/case["file"]
             actual=sweep.check(selfhost,path)
-            model=sweep.analyze(analyzer,path,30,"batch52")
+            model=sweep.analyze(analyzer,path,30,args.profile)
             row.update({"selfhost":actual,"raw_model_blockers":model.get("blockers",{}),
                         "unknown":model.get("unknown",[]),
                         "ast_complete":model.get("ast_complete",False)})

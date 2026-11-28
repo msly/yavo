@@ -19,7 +19,13 @@ pub struct Field {
     initial: int = -1
 }
 
-// fieldStart/fieldCount index Registry.fields; variants index Registry.variants.
+pub struct VariantInfo {
+    fieldStart: int = 0
+    fieldCount: int = 0
+}
+
+// fieldStart/fieldCount index Registry.fields (all payloads for an enum);
+// variants index the parallel Registry.variants and Registry.variantInfos.
 pub struct Info {
     kind: AggregateKind
     name: int
@@ -41,6 +47,7 @@ pub struct Registry {
     entries: Vec[Info] = []
     fields: Vec[Field] = []
     variants: Vec[int] = []
+    variantInfos: Vec[VariantInfo] = []
     order: Vec[int] = []
     results: Vec[ResultInfo] = []
     resultRefs: Vec[int] = []
@@ -126,6 +133,7 @@ pub fn cType(t: Type) -> String {
         if t.elementKind == .Int { return "sh_optional_int".toString() }
         if t.elementKind == .Byte { return "sh_optional_byte".toString() }
         if t.elementKind == .Bool { return "sh_optional_bool".toString() }
+        if t.elementKind == .String { return "sh_optional_string".toString() }
         if t.elementKind == .Named { return support.join2("sh_optional_", support.decimal(t.elementDecl)) }
         if t.elementKind == .Tuple { return support.join2("sh_optional_tuple_", support.decimal(t.elementDecl)) }
     }
@@ -258,6 +266,103 @@ pub fn standardVariantCount(ty: Type) -> int {
     if ty.kind != .StdError { return 0 }
     if ty.decl == 4 { return 2 }
     return 3
+}
+
+// Discriminant and payload metadata shared by every match shape. Layout
+// adapters in codegen translate these semantic tags into the C representation.
+// Optional: none=0, some=1. Result: err=0, ok=1.
+pub fn variantCount(reg: Registry, ty: Type) -> int {
+    if ty.kind == .StdError { return standardVariantCount(ty) }
+    if ty.kind == .Optional || ty.kind == .Result { return 2 }
+    if ty.kind == .Named && reg.entries[ty.decl].kind == .Enum {
+        return reg.entries[ty.decl].variantCount
+    }
+    return 0
+}
+
+pub fn enumPayload(reg: Registry, ty: Type) -> bool {
+    return ty.kind == .Named && reg.entries[ty.decl].kind == .Enum &&
+        reg.entries[ty.decl].fieldCount > 0
+}
+
+pub fn variantByName(reg: Registry, ts: Vec[Token], ty: Type, nameToken: int) -> int {
+    if ty.kind == .StdError { return standardVariant(ty, ts[nameToken].text) }
+    if ty.kind == .Named && reg.entries[ty.decl].kind == .Enum {
+        return variantIndex(reg, ts, ty.decl, nameToken)
+    }
+    return -1
+}
+
+pub fn variantPayloadCount(reg: Registry, ty: Type, variant: int) -> int {
+    if ty.kind == .StdError {
+        if variant == 2 { return 0 }
+        return 1
+    }
+    if ty.kind == .Optional {
+        if variant == 0 { return 0 }
+        return 1
+    }
+    if ty.kind == .Result { return 1 }
+    if ty.kind == .Named && reg.entries[ty.decl].kind == .Enum {
+        return reg.variantInfos[reg.entries[ty.decl].variantStart + variant].fieldCount
+    }
+    return 0
+}
+
+pub fn variantField(reg: Registry, ty: Type, variant: int, index: int) -> Field {
+    if ty.kind == .StdError { return Field{name: -1, ty: primitive(.Int)} }
+    if ty.kind == .Optional { return Field{name: -1, ty: element(ty)} }
+    if ty.kind == .Result {
+        if variant == 1 { return Field{name: -1, ty: resultOk(reg, ty)} }
+        return Field{name: -1, ty: resultError(reg, ty)}
+    }
+    let info = reg.variantInfos[reg.entries[ty.decl].variantStart + variant]
+    return reg.fields[info.fieldStart + index]
+}
+
+pub fn variantName(reg: Registry, ts: Vec[Token], ty: Type, variant: int) -> String {
+    if ty.kind == .StdError {
+        if variant == 0 { return "Utf8".toString() }
+        if variant == 1 { return "Io".toString() }
+        if ty.decl == 2 { return "InvalidPath".toString() }
+        return "InvalidArgument".toString()
+    }
+    if ty.kind == .Optional {
+        if variant == 0 { return "none".toString() }
+        return "some".toString()
+    }
+    if ty.kind == .Result {
+        if variant == 0 { return "err".toString() }
+        return "ok".toString()
+    }
+    return ts[reg.variants[reg.entries[ty.decl].variantStart + variant]].text.clone()
+}
+
+pub fn variantFieldName(reg: Registry, ts: Vec[Token], ty: Type, variant: int, index: int) -> String {
+    if ty.kind == .StdError {
+        if variant == 0 { return "offset".toString() }
+        return "code".toString()
+    }
+    let field = variantField(reg, ty, variant, index)
+    if field.name < 0 { return "".toString() }
+    return ts[field.name].text.clone()
+}
+
+// A qualified pattern retains the type's first token. Type.Case has one dot;
+// module.Type.Case has two, so it must not use resolve's type-annotation rule.
+pub fn patternType(reg: Registry, ts: Vec[Token], token: int) -> Type {
+    let builtin = builtinType(reg, ts, token)
+    if builtin.kind != .Unknown { return builtin }
+    var decl = -1
+    if ts[token + 3].text == "." {
+        decl = qualifiedType(reg, ts, token, token + 2)
+    } else {
+        decl = lookup(reg, ts, token)
+    }
+    if decl < 0 {
+        lexer.fail(ts, token, "E0010", support.join3("unknown enum type '", ts[token].text, "'"))
+    }
+    return Type{kind: .Named, decl: decl, elementKind: .Unknown}
 }
 
 // A user module named fs/io/os/process takes its own exported types. Standard
@@ -490,15 +595,13 @@ pub fn heap(reg: Registry, ts: Vec[Token], token: int, elem: Type) -> Type {
     return Type{kind: .Heap, elementKind: elem.kind, elementDecl: elem.decl}
 }
 
-pub fn optional(reg: Registry, ts: Vec[Token], token: int, elem: Type) -> Type {
+pub fn optional(_reg: Registry, ts: Vec[Token], token: int, elem: Type) -> Type {
     if elem.kind == .Unknown {
         lexer.fail(ts, token, "E0001", "cannot infer the Optional payload type")
     }
-    if elem.kind != .Int && elem.kind != .Byte && elem.kind != .Bool && elem.kind != .Named && elem.kind != .Tuple {
+    if elem.kind != .Int && elem.kind != .Byte && elem.kind != .Bool && elem.kind != .String &&
+        elem.kind != .Named && elem.kind != .Tuple {
         lexer.fail(ts, token, "U0001", "this Optional payload type is outside the selfhost subset")
-    }
-    if owned(reg, elem) && elem.kind != .Tuple {
-        lexer.fail(ts, token, "U0001", "owned Optional payloads other than flat String tuples are outside the selfhost subset")
     }
     return Type{kind: .Optional, elementKind: elem.kind, elementDecl: elem.decl}
 }
@@ -697,7 +800,15 @@ pub fn collect(p: Program, ts: Vec[Token]) -> Registry {
             if f.ty.kind == .Heap {
                 lexer.fail(ts, f.name, "U0001", "Heap fields are outside the selfhost subset")
             }
-            var k = fieldStart
+            var scopeStart = fieldStart
+            if d.kind == .Enum {
+                for vi in 0..d.variantCount {
+                    let variant = p.variants[d.variantStart + vi]
+                    let first = variant.fieldStart - d.fieldStart
+                    if j >= first && j < first + variant.fieldCount { scopeStart = fieldStart + first }
+                }
+            }
+            var k = scopeStart
             while k < reg.fields.len() {
                 if ts[reg.fields[k].name].text == ts[f.name].text {
                     lexer.fail(ts, f.name, "E0011", support.join3("field '", ts[f.name].text, "' is already declared"))
@@ -706,7 +817,7 @@ pub fn collect(p: Program, ts: Vec[Token]) -> Registry {
             }
             let ty = resolve(reg, ts, f.ty)
             if carriesBorrow(ty) {
-                lexer.fail(ts, f.name, "E0301", "a struct field cannot store a borrowed view; use an owned value")
+                lexer.fail(ts, f.name, "E0301", "an aggregate field cannot store a borrowed view; use an owned value")
             }
             if ty.kind == .Unit {
                 lexer.fail(ts, f.name, "U0001", "unit fields are outside the selfhost subset")
@@ -724,7 +835,8 @@ pub fn collect(p: Program, ts: Vec[Token]) -> Registry {
         let variantStart = reg.variants.len()
         j = 0
         while j < d.variantCount {
-            let name = p.lists[d.variantStart + j]
+            let variant = p.variants[d.variantStart + j]
+            let name = variant.name
             var k = variantStart
             while k < reg.variants.len() {
                 if ts[reg.variants[k]].text == ts[name].text {
@@ -733,6 +845,8 @@ pub fn collect(p: Program, ts: Vec[Token]) -> Registry {
                 k += 1
             }
             reg.variants.push(name)
+            reg.variantInfos.push(VariantInfo{
+                fieldStart: fieldStart + variant.fieldStart - d.fieldStart, fieldCount: variant.fieldCount})
             j += 1
         }
         reg.entries[i].variantStart = variantStart

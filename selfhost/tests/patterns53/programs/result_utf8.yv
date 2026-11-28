@@ -1,0 +1,6 @@
+fn main() {
+ let valid:Vec[byte]=[65,66]
+ match String.fromUtf8(valid) { ok(s) => println(s), err(e) => println(e.offset) }
+ let invalid:Vec[byte]=[102,255,111]
+ match String.fromUtf8(invalid) { ok(s) => println(s), err(e) => println(e.offset) }
+}

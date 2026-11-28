@@ -1,0 +1,10 @@
+enum Tag { First, Last }
+fn consume(s:sink String) { println(s) }
+fn work(t:Tag) {
+ let x="kept".toString()
+ match t { .First => { consume(x)
+ return }, .Last => println("last") }
+ println(x)
+}
+fn main() { work(.First)
+ work(.Last) }

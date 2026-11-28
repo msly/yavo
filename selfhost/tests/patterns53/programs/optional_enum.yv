@@ -1,0 +1,5 @@
+enum Shape { Point(x:int), Empty }
+fn score(x:?Shape) -> int { return match x { some(.Point(n)) => n, some(.Empty) => -1, none => -2 } }
+fn main() { println(score(some(.Point(4))))
+ println(score(some(.Empty)))
+ println(score(none)) }

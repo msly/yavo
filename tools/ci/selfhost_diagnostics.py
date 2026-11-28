@@ -24,6 +24,10 @@ FIXTURES = ROOT / "selfhost/tests/diagnostics50"
 SUPPLEMENT = FIXTURES / "supplemental"
 PROMOTIONS = ROOT / "selfhost/tests/diagnostics52/promotions.json"
 PROMOTED_IDS = {"unsupported_hex", "unsupported_hex_e_sign", "unsupported_separator"}
+PROMOTIONS53 = ROOT / "selfhost/tests/diagnostics53/promotions.json"
+PROMOTED_IDS53 = {"unsupported_owned_optional"}
+PRODUCT53 = ROOT / "selfhost/tests/diagnostics53/legacy-product.json"
+PRODUCT53_C = ROOT / "selfhost/tests/diagnostics53/expected.c"
 EXE = ".exe" if os.name == "nt" else ""
 EXPECTED = {"linux": 98, "darwin": 98, "win32": 94}
 EXPECTED_TEXT = {"linux": 80, "darwin": 80, "win32": 76}
@@ -71,16 +75,18 @@ def load_frozen(bound):
     return manifest, oracle
 
 
-def apply_promotions(manifest, oracle, bound):
+def apply_promotions(manifest, oracle, bound, *, path=None, batch=52, promoted_ids=None):
     """Apply explicit later semantics only after validating the original freeze."""
-    record = json.loads(PROMOTIONS.read_bytes())
+    path = PROMOTIONS if path is None else path
+    promoted_ids = PROMOTED_IDS if promoted_ids is None else promoted_ids
+    record = json.loads(path.read_bytes())
     rows = record.get("promotions", [])
-    if (record.get("schema") != "yavo-diagnostics52-promotions/1"
-            or record.get("batch") != 52 or record.get("source_bytes_unchanged") is not True
+    if (record.get("schema") != f"yavo-diagnostics{batch}-promotions/1"
+            or record.get("batch") != batch or record.get("source_bytes_unchanged") is not True
             or record.get("base_manifest") != "selfhost/tests/diagnostics50/cases.json"
             or record.get("base_manifest_sha256") != digest(FIXTURES / "cases.json")
             or record.get("base_freeze_sha256") != digest(FIXTURES / "freeze.json")
-            or len(rows) != len(PROMOTED_IDS) or {row["id"] for row in rows} != PROMOTED_IDS):
+            or len(rows) != len(promoted_ids) or {row["id"] for row in rows} != promoted_ids):
         raise ValueError("diagnostic promotion inventory or frozen baseline changed")
     effective = copy.deepcopy(manifest)
     by_id = {case["id"]: case for case in effective["cases"]}
@@ -104,16 +110,22 @@ def apply_promotions(manifest, oracle, bound):
                 or not oracle.strict_equal(oracle.legacy(case), row["after_legacy_text"])):
             raise ValueError("diagnostic promotion success expectation differs: " + row["id"])
         case["expected"] = expected
-    identity = bind(bound, PROMOTIONS)
-    return effective, {"record": identity, "ids": sorted(PROMOTED_IDS),
+    identity = bind(bound, path)
+    return effective, {"batch": batch, "record": identity, "ids": sorted(promoted_ids),
                        "base_manifest_sha256": record["base_manifest_sha256"],
                        "source_bytes_unchanged": True}
 
 
 def load_effective(bound):
     manifest, oracle = load_frozen(bound)
-    manifest, promotions = apply_promotions(manifest, oracle, bound)
-    return manifest, oracle, promotions
+    manifest, first = apply_promotions(manifest, oracle, bound)
+    manifest, second = apply_promotions(manifest, oracle, bound, path=PROMOTIONS53,
+                                        batch=53, promoted_ids=PROMOTED_IDS53)
+    return manifest, oracle, {"schema": "yavo-diagnostic-promotion-chain/1",
+                             "layers": [first, second],
+                             "ids": sorted(PROMOTED_IDS | PROMOTED_IDS53),
+                             "base_manifest_sha256": first["base_manifest_sha256"],
+                             "source_bytes_unchanged": True}
 
 
 def oracle_controls(oracle, cases):
@@ -147,6 +159,27 @@ def oracle_controls(oracle, cases):
     return rows
 
 
+def legacy_product53():
+    """Authored changes to the minimal C product; never read candidate output."""
+    product = (SUPPLEMENT / "expected.c").read_bytes()
+    changes = [
+        (b"typedef struct { bool has; bool val; } sh_optional_bool;\n",
+         b"typedef struct { bool has; bool val; } sh_optional_bool;\n"
+         b"typedef struct { bool has; yv_string val; } sh_optional_string;\n"),
+        (b"static void sh_fn_0(void);\n",
+         b"static void sh_optional_string_drop(sh_optional_string *p) {\n"
+         b"if (p->has) {\nyv_string_drop(&(p->val));\n}\n"
+         b"*p = (sh_optional_string){0};\n}\nstatic void sh_fn_0(void);\n"),
+        (b'yv_rt_init("\\155\\141\\151\\156\\056\\171\\166");\n',
+         b'yv_rt_init("main.yv");\n'),
+    ]
+    for before, after in changes:
+        if product.count(before) != 1:
+            raise ValueError("legacy C product upgrade anchor differs")
+        product = product.replace(before, after)
+    return product
+
+
 def load_supplement(bound):
     freeze = json.loads((SUPPLEMENT / "freeze.json").read_bytes())
     if freeze["schema"] != "yavo-diagnostics50-legacy-cli-freeze/1" or freeze["case_count"] != 8:
@@ -170,6 +203,26 @@ def load_supplement(bound):
     spec = importlib.util.spec_from_file_location("diagnostics50_legacy_cli_oracle", SUPPLEMENT / "oracle.py")
     oracle = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(oracle)
+    product = json.loads(PRODUCT53.read_bytes())
+    ids = sorted(case["id"] for case in manifest["cases"] if case["expected"].get("output") == "frozen_c")
+    if (product.get("schema") != "yavo-diagnostics53-legacy-product/1"
+            or product.get("batch") != 53 or product.get("protocol_unchanged") is not True
+            or product.get("source_bytes_unchanged") is not True
+            or product.get("case_ids") != ids
+            or product.get("base_freeze_sha256") != digest(SUPPLEMENT / "freeze.json")
+            or product.get("base_product_sha256") != digest(SUPPLEMENT / "expected.c")
+            or product.get("source_sha256") != digest(SUPPLEMENT / "main.yv")
+            or product.get("replacement") != {"path": "selfhost/tests/diagnostics53/expected.c",
+                                              "bytes": PRODUCT53_C.stat().st_size,
+                                              "sha256": digest(PRODUCT53_C)}
+            or PRODUCT53_C.read_bytes() != legacy_product53()):
+        raise ValueError("legacy C product upgrade identity or authored transformation differs")
+    # Reuse the unchanged comparator with an explicitly versioned reference.
+    # The original source, CLI scenarios and batch-50 product remain frozen.
+    oracle.ROOT = PRODUCT53_C.parent
+    oracle.product_upgrade = {"batch": 53, "record": bind(bound, PRODUCT53),
+                              "replacement": bind(bound, PRODUCT53_C), "case_ids": ids,
+                              "protocol_unchanged": True, "source_bytes_unchanged": True}
     return manifest, oracle
 
 
@@ -345,7 +398,9 @@ def main():
         check("oracle_controls", True, positive=True, negative_controls=controls)
         supplement, legacy_oracle = load_supplement(bound)
         report["supplemental_freeze"] = bind(bound, SUPPLEMENT / "freeze.json")
+        report["supplemental_product"] = legacy_oracle.product_upgrade
         check("frozen_legacy_cli_supplement", True, applicable=8, source_expectations=8)
+        check("explicit_legacy_product_upgrade", True, **legacy_oracle.product_upgrade)
         for source in [Path(__file__), ROOT / "tools/ci/csv_support.py", ROOT / "tools/ci/selfhost_driver.py",
                        ROOT / "compiler/runtime/yavo_rt.h", ROOT / "compiler/toolchain.lock", ROOT / "selfhost/bootstrap.py",
                        *sorted((ROOT / "selfhost").glob("*.yv"))]:
@@ -443,7 +498,7 @@ def main():
                     after = inventory(directory)
                     wanted_files = copy.deepcopy(before)
                     if case["expected"].get("output") == "frozen_c":
-                        reference = SUPPLEMENT / "expected.c"
+                        reference = legacy_oracle.ROOT / "expected.c"
                         wanted_files[case["output"]] = {"kind": "file", "bytes": reference.stat().st_size,
                                                        "sha256": digest(reference)}
                     if wanted_files != after:
