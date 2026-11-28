@@ -1,7 +1,7 @@
 {
   "schema": "yavo-batch54-delivery/1",
   "batch": 54,
-  "recorded_at_utc": "2026-11-28T09:45:56.497826+00:00",
+  "recorded_at_utc": "2026-11-28T09:48:30.318274+00:00",
   "baseline_commit": "f0183c07195c658de0d0fc859d79406b53893655",
   "status": "local_core_passed_ci_pending",
   "tested_commit": null,
@@ -112,8 +112,8 @@
   "implementation_file_identities": [
     {
       "path": ".github/workflows/ci.yml",
-      "bytes": 17129,
-      "sha256": "501967e91b06607299dbbbd74fcc348708fc83ebfc13554e0a15f3a3da9ca2a0"
+      "bytes": 17137,
+      "sha256": "b4195838302772882ffe81b5e275ed08efc1ff5e3e51ec6cd1483ab5f66195bf"
     },
     {
       "path": "compiler/src/check.rs",
@@ -710,11 +710,25 @@
     }
   },
   "ci": {
-    "status": "not_started",
+    "status": "retry_after_workflow_context_fix",
     "run": null,
     "native_core": null,
     "external_p0_sanitizers": null,
-    "paired_performance": null
+    "paired_performance": null,
+    "prior_runs": [
+      {
+        "id": 46132017263,
+        "url": "https://github.com/msly/yavo/actions/runs/46132017263",
+        "head_sha": "505f5f983b2391cbfc7f194d8908db2f7e622a88",
+        "status": "completed",
+        "conclusion": "failure",
+        "jobs_created": 0,
+        "performance_samples": 0,
+        "failure_phase": "workflow_validation",
+        "message": ".github/workflows/ci.yml Line 303 Col 18: Unrecognized named-value: 'runner'. Located at position 1 within expression: runner.temp",
+        "correction": "Move YAVO_HOME from paired-performance job env to its measurement step env; compiler and measurement scripts unchanged."
+      }
+    ]
   },
   "metrics": {
     "generated_c_bytes": 1494217,
@@ -894,6 +908,13 @@
     {
       "issue": "Writable-home CLI retry passed the EROFS failure point but thread/start failed in bwrap.",
       "correction": "Deleted temporary auth copy, stopped CLI retries, confirmed unauthenticated API reachability, and made key/model/budget decision explicit."
+    },
+    {
+      "issue": ".github/workflows/ci.yml Line 303 Col 18: Unrecognized named-value: 'runner'. Located at position 1 within expression: runner.temp",
+      "correction": "Move YAVO_HOME from paired-performance job env to its measurement step env; compiler and measurement scripts unchanged.",
+      "run_id": 46132017263,
+      "scope": "No jobs or measurements started."
     }
-  ]
+  ],
+  "implementation_commit": "505f5f983b2391cbfc7f194d8908db2f7e622a88"
 }

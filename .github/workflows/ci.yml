@@ -299,8 +299,6 @@ jobs:
     name: Isolated paired performance
     runs-on: ubuntu-24.04
     timeout-minutes: 45
-    env:
-      YAVO_HOME: ${{ runner.temp }}/yavo-home
     steps:
       - name: Preserve benchmark source bytes on checkout
         run: git config --global core.autocrlf false
@@ -316,6 +314,8 @@ jobs:
       # This job has its own hosted VM. The script prepares and measures revisions
       # sequentially, rejects competing build processes, and owns fresh build caches.
       - name: Measure batch52 and batch53 pairs and the current frontend
+        env:
+          YAVO_HOME: ${{ runner.temp }}/yavo-home
         run: python3 tools/ci/paired_performance.py --output compiler/target/ci/perf54 --backend-samples 7 --frontend-samples 9 --compile-samples 7 --observe-current
       - name: Preserve paired measurements and contamination checks
         if: always()
