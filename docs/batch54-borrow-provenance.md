@@ -49,6 +49,7 @@ stage0 现于表达式求值时保存借用来源，在 `match` arm、`catch` ha
 | 既有 `mutref_returns.rs` | 6/6 测试组，覆盖引用返回、转发、移动、重新绑定、复杂接收者、字段、guard 和独占访问。 |
 | 相关 P0 诊断 | 17 个入口的 code、行、列及警告严格一致；新增文件仅 `errors_expression_loans.yv`，run/panic 数量及 `p0.rs` 不变。 |
 | patterns53 参考检查 | 59/59，当前 32 run / 27 reject。 |
+| 阻塞分析合同 | 旧断言仍要求接受 escaping_view，在 CI 被正确的 E0305 拒绝触发失败；三条原例改为严格拒绝合同，合法 borrow_return 保留结构模型不完整性正控制，定向复验15/15。 |
 | 本机 Core | 90/90 用例、13/13 检查；固定点与二进制重现通过；校准 399 passed / 0 failed / 3 skipped。 |
 
 第53批保留的三个 stage0 漏检原例本批从 `unsupported` 安全重分类为 `reject`：

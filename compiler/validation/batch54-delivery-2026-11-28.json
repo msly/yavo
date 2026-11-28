@@ -1,10 +1,10 @@
 {
   "schema": "yavo-batch54-delivery/1",
   "batch": 54,
-  "recorded_at_utc": "2026-11-28T10:02:39.416033+00:00",
+  "recorded_at_utc": "2026-11-28T10:16:18.235767+00:00",
   "baseline_commit": "f0183c07195c658de0d0fc859d79406b53893655",
-  "status": "local_core_passed_ci_pending",
-  "tested_commit": null,
+  "status": "completed",
+  "tested_commit": "e58f5e5ff95cc2419f8d0740bd27c4c8ca260cf1",
   "validation_tier": {
     "routine": "core",
     "one_time_qualifications": [
@@ -122,6 +122,11 @@
       "path": "compiler/validation/batch54-p0-sanitizers-2026-11-28.json",
       "bytes": 40366,
       "sha256": "6cc213bc484f5539a9b003b376894706c1ecd926164036efcb7f448253570174"
+    },
+    "native_core": {
+      "path": "compiler/validation/batch54-native-core-2026-11-28.json",
+      "bytes": 86288,
+      "sha256": "e904ac5e872a829f592cb716aa7a48c2f8828209ae153de32efd13d74ec79750"
     }
   },
   "implementation_file_identities": [
@@ -732,15 +737,196 @@
       "passed": 15,
       "failed": 0,
       "command": "cargo test --manifest-path compiler/Cargo.toml --locked --offline --release --test subset_features",
-      "log": "compiler/target/batch54/subset-features-migration.log"
+      "log": "compiler/target/batch54/subset-features-migration.log",
+      "final_ci_platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ]
     }
   },
   "ci": {
-    "status": "qualified_special_jobs_complete_corrected_native_core_pending",
-    "run": null,
-    "native_core": null,
-    "external_p0_sanitizers": null,
-    "paired_performance": null,
+    "status": "completed",
+    "run": 46133275430,
+    "native_core": {
+      "linux": {
+        "status": "passed",
+        "bootstrap": {
+          "status": "passed",
+          "passed": 90,
+          "failed": 0,
+          "total": 90,
+          "checks_passed": 13,
+          "checks_failed": 0,
+          "checks_skipped": 0,
+          "case_counts": {
+            "panic": 10,
+            "reject": 20,
+            "run": 54,
+            "shared_unsupported": 2,
+            "unsupported": 4
+          },
+          "validation_tier": "core"
+        },
+        "calibration": {
+          "passed": 399,
+          "failed": 0,
+          "skipped": 3
+        },
+        "coverage": {
+          "sources": 622,
+          "stage0_accepted": {
+            "paths": 394,
+            "unique_entry_bytes": 224,
+            "unique_module_graphs": 224
+          },
+          "selfhost_accepted": {
+            "paths": 135,
+            "unique_entry_bytes": 68,
+            "unique_module_graphs": 68
+          },
+          "stage0_rejected": 228,
+          "blocked": {
+            "paths": 259,
+            "unique_entry_bytes": 156,
+            "unique_module_graphs": 156
+          },
+          "analysis_complete": 394,
+          "unresolved_semantics": 259,
+          "accepted_profile_false_positive_paths": 0
+        },
+        "artifact_id": 15257704107
+      },
+      "macos": {
+        "status": "passed",
+        "bootstrap": {
+          "status": "passed",
+          "passed": 90,
+          "failed": 0,
+          "total": 90,
+          "checks_passed": 13,
+          "checks_failed": 0,
+          "checks_skipped": 0,
+          "case_counts": {
+            "panic": 10,
+            "reject": 20,
+            "run": 54,
+            "shared_unsupported": 2,
+            "unsupported": 4
+          },
+          "validation_tier": "core"
+        },
+        "calibration": {
+          "passed": 399,
+          "failed": 0,
+          "skipped": 3
+        },
+        "coverage": {
+          "sources": 622,
+          "stage0_accepted": {
+            "paths": 394,
+            "unique_entry_bytes": 224,
+            "unique_module_graphs": 224
+          },
+          "selfhost_accepted": {
+            "paths": 135,
+            "unique_entry_bytes": 68,
+            "unique_module_graphs": 68
+          },
+          "stage0_rejected": 228,
+          "blocked": {
+            "paths": 259,
+            "unique_entry_bytes": 156,
+            "unique_module_graphs": 156
+          },
+          "analysis_complete": 394,
+          "unresolved_semantics": 259,
+          "accepted_profile_false_positive_paths": 0
+        },
+        "artifact_id": 15258404806
+      },
+      "windows": {
+        "status": "passed",
+        "bootstrap": {
+          "status": "passed",
+          "passed": 90,
+          "failed": 0,
+          "total": 90,
+          "checks_passed": 13,
+          "checks_failed": 0,
+          "checks_skipped": 0,
+          "case_counts": {
+            "panic": 10,
+            "reject": 20,
+            "run": 54,
+            "shared_unsupported": 2,
+            "unsupported": 4
+          },
+          "validation_tier": "core"
+        },
+        "calibration": {
+          "passed": 399,
+          "failed": 0,
+          "skipped": 3
+        },
+        "coverage": {
+          "sources": 622,
+          "stage0_accepted": {
+            "paths": 394,
+            "unique_entry_bytes": 224,
+            "unique_module_graphs": 224
+          },
+          "selfhost_accepted": {
+            "paths": 135,
+            "unique_entry_bytes": 68,
+            "unique_module_graphs": 68
+          },
+          "stage0_rejected": 228,
+          "blocked": {
+            "paths": 259,
+            "unique_entry_bytes": 156,
+            "unique_module_graphs": 156
+          },
+          "analysis_complete": 394,
+          "unresolved_semantics": 259,
+          "accepted_profile_false_positive_paths": 0
+        },
+        "artifact_id": 15259125922
+      }
+    },
+    "external_p0_sanitizers": {
+      "status": "passed",
+      "producer_commit": "cec3862644c477d1d3fb1e8e4bba8ad9636abbf8",
+      "run_id": 46132191802,
+      "job_id": 140939620892,
+      "run_cases": 50,
+      "panic_cases": 15,
+      "excluded": 0,
+      "controls": {
+        "positive": 1,
+        "negative": 2
+      },
+      "next_periodic_full_batch": 55,
+      "evidence": {
+        "path": "compiler/validation/batch54-p0-sanitizers-2026-11-28.json",
+        "bytes": 40366,
+        "sha256": "6cc213bc484f5539a9b003b376894706c1ecd926164036efcb7f448253570174"
+      }
+    },
+    "paired_performance": {
+      "status": "passed",
+      "producer_commit": "cec3862644c477d1d3fb1e8e4bba8ad9636abbf8",
+      "run_id": 46132191802,
+      "job_id": 140939620862,
+      "measurement_contract_valid": true,
+      "pch_target_arms_passed": 12,
+      "pch_target_arms_total": 12,
+      "evidence": {
+        "path": "compiler/validation/batch54-paired-performance-2026-11-28.json",
+        "bytes": 113965,
+        "sha256": "ce6b32ee62cad6461002a0f803f49507426b493fc1eba7d5a041e466b835feea"
+      }
+    },
     "prior_runs": [
       {
         "id": 46132017263,
@@ -899,6 +1085,827 @@
       "all_inputs_unchanged": true,
       "different_test_contract": "compiler/tests/subset_features.rs",
       "scope": "Reference the existing successful jobs; no new measurements are claimed for the later Core-only head."
+    },
+    "final_run": {
+      "id": 46133275430,
+      "html_url": "https://github.com/msly/yavo/actions/runs/46133275430",
+      "head_sha": "e58f5e5ff95cc2419f8d0740bd27c4c8ca260cf1",
+      "head_branch": "main",
+      "event": "push",
+      "run_attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-28T10:02:42Z",
+      "updated_at": "2026-11-28T10:11:18Z",
+      "successful_jobs": 4,
+      "skipped_jobs": 4,
+      "failed_jobs": 0,
+      "cancelled_jobs": 0,
+      "terminal_evidence": {
+        "path": "compiler/target/batch54/ci-watch-contract/terminal-evidence.json",
+        "bytes": 65982,
+        "sha256": "cbce6d69b045eeada50940acb67b6b3c0457a2716ed0c7e475d3aa8f0bb009fe"
+      },
+      "jobs": [
+        {
+          "id": 140942940435,
+          "name": "Validation tier",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-28T10:02:44Z",
+          "completed_at": "2026-11-28T10:02:53Z",
+          "seconds": 9.0,
+          "steps": [
+            {
+              "number": 1,
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 2,
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 3,
+              "name": "Check tier and changed-case selection controls",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 4,
+              "name": "Check preserved diagnostic fixture promotions",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 5,
+              "name": "Check accepted reference warning handling",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 6,
+              "name": "Check UTF-8 protocols under an ANSI default encoding",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 7,
+              "name": "Check complete P0 sanitizer inventory and execution protocol",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 8,
+              "name": "Check isolated performance measurement controls",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 9,
+              "name": "Run python3 tools/ci/validation_plan.py --requested \"$REQUESTED_TIER\"",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 18,
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 19,
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 140942981490,
+          "name": "Native Linux x86_64",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-28T10:02:55Z",
+          "completed_at": "2026-11-28T10:05:21Z",
+          "seconds": 146.0,
+          "steps": [
+            {
+              "number": 1,
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 2,
+              "name": "Preserve frozen input bytes on checkout",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 3,
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 4,
+              "name": "Restore the locked Zig toolchain",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 5,
+              "name": "Build compiler and install the locked Zig toolchain",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 6,
+              "name": "Run Debug and Release sequentially",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 7,
+              "name": "Check the complete blocker-analysis contract",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 8,
+              "name": "Compile starter-guide examples and ownership diagnostics",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 9,
+              "name": "Build and validate the Yavo-written subset frontend",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 10,
+              "name": "Sweep the original corpus with the final selfhost compiler",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 11,
+              "name": "Record self-compilation timing, memory and generated sizes",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 12,
+              "name": "Validate original enum and result programs",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 13,
+              "name": "Check pattern payload destruction before arm execution",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 14,
+              "name": "Check isolated application runner configurations",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 15,
+              "name": "Validate ordinary selfhost build and run",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 16,
+              "name": "Validate selfhost source hashing",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 17,
+              "name": "Validate selfhost structured diagnostics",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 18,
+              "name": "Validate selfhost standard error values",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 19,
+              "name": "Validate the test-summary CLI application",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 20,
+              "name": "Validate the csv-check CLI application",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 21,
+              "name": "Validate the dep-index CLI application",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 22,
+              "name": "Check Yavo-frontend C with independent ASan and UBSan",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 23,
+              "name": "Check system interfaces with required ASan and UBSan",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 24,
+              "name": "Package application evidence with adversarial filenames",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 25,
+              "name": "Package CSV application evidence",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 26,
+              "name": "Package dependency-index application evidence",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 27,
+              "name": "Package ordinary driver evidence",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 28,
+              "name": "Package selfhost source hashing evidence",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 29,
+              "name": "Package selfhost structured diagnostic evidence",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 30,
+              "name": "Package selfhost standard error evidence",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 31,
+              "name": "Package system interface sanitizer evidence",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 32,
+              "name": "Package selfhost sanitizer evidence",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 33,
+              "name": "Preserve logs and per-platform receipts",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 65,
+              "name": "Post Restore the locked Zig toolchain",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 66,
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 67,
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 140942981491,
+          "name": "Native macOS arm64",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-28T10:02:55Z",
+          "completed_at": "2026-11-28T10:05:40Z",
+          "seconds": 165.0,
+          "steps": [
+            {
+              "number": 1,
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 2,
+              "name": "Preserve frozen input bytes on checkout",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 3,
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 4,
+              "name": "Restore the locked Zig toolchain",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 5,
+              "name": "Build compiler and install the locked Zig toolchain",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 6,
+              "name": "Run Debug and Release sequentially",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 7,
+              "name": "Check the complete blocker-analysis contract",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 8,
+              "name": "Compile starter-guide examples and ownership diagnostics",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 9,
+              "name": "Build and validate the Yavo-written subset frontend",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 10,
+              "name": "Sweep the original corpus with the final selfhost compiler",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 11,
+              "name": "Record self-compilation timing, memory and generated sizes",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 12,
+              "name": "Validate original enum and result programs",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 13,
+              "name": "Check pattern payload destruction before arm execution",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 14,
+              "name": "Check isolated application runner configurations",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 15,
+              "name": "Validate ordinary selfhost build and run",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 16,
+              "name": "Validate selfhost source hashing",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 17,
+              "name": "Validate selfhost structured diagnostics",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 18,
+              "name": "Validate selfhost standard error values",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 19,
+              "name": "Validate the test-summary CLI application",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 20,
+              "name": "Validate the csv-check CLI application",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 21,
+              "name": "Validate the dep-index CLI application",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 22,
+              "name": "Check Yavo-frontend C with independent ASan and UBSan",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 23,
+              "name": "Check system interfaces with required ASan and UBSan",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 24,
+              "name": "Package application evidence with adversarial filenames",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 25,
+              "name": "Package CSV application evidence",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 26,
+              "name": "Package dependency-index application evidence",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 27,
+              "name": "Package ordinary driver evidence",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 28,
+              "name": "Package selfhost source hashing evidence",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 29,
+              "name": "Package selfhost structured diagnostic evidence",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 30,
+              "name": "Package selfhost standard error evidence",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 31,
+              "name": "Package system interface sanitizer evidence",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 32,
+              "name": "Package selfhost sanitizer evidence",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 33,
+              "name": "Preserve logs and per-platform receipts",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 65,
+              "name": "Post Restore the locked Zig toolchain",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 66,
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 67,
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 140942981514,
+          "name": "Native Windows x86_64",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-28T10:02:54Z",
+          "completed_at": "2026-11-28T10:11:17Z",
+          "seconds": 503.0,
+          "steps": [
+            {
+              "number": 1,
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 2,
+              "name": "Preserve frozen input bytes on checkout",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 3,
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 4,
+              "name": "Restore the locked Zig toolchain",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 5,
+              "name": "Build compiler and install the locked Zig toolchain",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 6,
+              "name": "Run Debug and Release sequentially",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 7,
+              "name": "Check the complete blocker-analysis contract",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 8,
+              "name": "Compile starter-guide examples and ownership diagnostics",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 9,
+              "name": "Build and validate the Yavo-written subset frontend",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 10,
+              "name": "Sweep the original corpus with the final selfhost compiler",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 11,
+              "name": "Record self-compilation timing, memory and generated sizes",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 12,
+              "name": "Validate original enum and result programs",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 13,
+              "name": "Check pattern payload destruction before arm execution",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 14,
+              "name": "Check isolated application runner configurations",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 15,
+              "name": "Validate ordinary selfhost build and run",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 16,
+              "name": "Validate selfhost source hashing",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 17,
+              "name": "Validate selfhost structured diagnostics",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 18,
+              "name": "Validate selfhost standard error values",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 19,
+              "name": "Validate the test-summary CLI application",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 20,
+              "name": "Validate the csv-check CLI application",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 21,
+              "name": "Validate the dep-index CLI application",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 22,
+              "name": "Check Yavo-frontend C with independent ASan and UBSan",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 23,
+              "name": "Check system interfaces with required ASan and UBSan",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 24,
+              "name": "Package application evidence with adversarial filenames",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 25,
+              "name": "Package CSV application evidence",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 26,
+              "name": "Package dependency-index application evidence",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 27,
+              "name": "Package ordinary driver evidence",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 28,
+              "name": "Package selfhost source hashing evidence",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 29,
+              "name": "Package selfhost structured diagnostic evidence",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 30,
+              "name": "Package selfhost standard error evidence",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 31,
+              "name": "Package system interface sanitizer evidence",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 32,
+              "name": "Package selfhost sanitizer evidence",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 33,
+              "name": "Preserve logs and per-platform receipts",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 65,
+              "name": "Post Restore the locked Zig toolchain",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 66,
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 67,
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 140942982397,
+          "name": "Isolated paired performance",
+          "status": "completed",
+          "conclusion": "skipped",
+          "started_at": "2026-11-28T10:02:53Z",
+          "completed_at": "2026-11-28T10:02:53Z",
+          "seconds": 0,
+          "steps": []
+        },
+        {
+          "id": 140942982587,
+          "name": "Agent evaluation preparation",
+          "status": "completed",
+          "conclusion": "skipped",
+          "started_at": "2026-11-28T10:02:53Z",
+          "completed_at": "2026-11-28T10:02:53Z",
+          "seconds": 0,
+          "steps": []
+        },
+        {
+          "id": 140942983018,
+          "name": "Independent Linux ASan and UBSan",
+          "status": "completed",
+          "conclusion": "skipped",
+          "started_at": "2026-11-28T10:02:53Z",
+          "completed_at": "2026-11-28T10:02:53Z",
+          "seconds": 0,
+          "steps": []
+        },
+        {
+          "id": 140942983145,
+          "name": "Round-five experiment evidence",
+          "status": "completed",
+          "conclusion": "skipped",
+          "started_at": "2026-11-28T10:02:53Z",
+          "completed_at": "2026-11-28T10:02:53Z",
+          "seconds": 0,
+          "steps": []
+        }
+      ]
     }
   },
   "metrics": {
@@ -1304,7 +2311,8 @@
       65,
       66
     ],
-    "schedule_note": "Batch54 correctness/measurement/CI corrections replace the originally planned tuple extension. Original estimates remain visible; tuple/composite work resumes after correction."
+    "schedule_note": "Batch54 correctness/measurement/CI corrections replace the originally planned tuple extension. Original estimates remain visible; tuple/composite work resumes after correction.",
+    "status": "batch54_completed_original_work_packages_still_open"
   },
   "known_gaps": [
     "SH-3 has not replaced the Rust stage0 default; all eight complete package acceptance criteria remain open despite partial implementation.",
@@ -1348,5 +2356,23 @@
     }
   ],
   "implementation_commit": "505f5f983b2391cbfc7f194d8908db2f7e622a88",
-  "workflow_context_fix_commit": "cec3862644c477d1d3fb1e8e4bba8ad9636abbf8"
+  "workflow_context_fix_commit": "cec3862644c477d1d3fb1e8e4bba8ad9636abbf8",
+  "contract_and_qualification_commit": "e58f5e5ff95cc2419f8d0740bd27c4c8ca260cf1",
+  "validation_cost_observation": {
+    "native_core_job_seconds": {
+      "Native Linux x86_64": 146.0,
+      "Native macOS arm64": 165.0,
+      "Native Windows x86_64": 503.0
+    },
+    "scope": "Observed CI job wall time includes setup, Core gates and artifact upload; not compiler benchmark time.",
+    "special_jobs_not_repeated_after_input_equivalent_test_fix": true,
+    "full_member_archive_audit_this_batch": false
+  },
+  "documentation": {
+    "borrow_provenance": "docs/batch54-borrow-provenance.md",
+    "performance": "docs/batch54-performance-protocol.md",
+    "cost_decision": "experiments/cost-pilot-2026-11-28/README.md",
+    "roadmap": "docs/sh3-roadmap.md",
+    "tiers": "docs/validation-tiers.md"
+  }
 }

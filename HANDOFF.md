@@ -1,22 +1,22 @@
-# Yavo 交接文档（2026-11-28，第54批进行中：借用来源、隔离计量与CI协议）
+# Yavo 交接文档（2026-11-28，第54批完成：借用来源、隔离计量与CI协议）
 
 给下一个会话：先读第1、2、33、34节及 docs/sh3-roadmap.md、docs/validation-tiers.md。第二十七至第三十批在 `history/handoff-batches-2026-11-23-to-24.md`，第十二至第二十六批在 `history/handoff-batches-2026-11-21-to-23.md`，第六至第十一批在 `history/handoff-batches-2026-11-19-to-21.md`。
 
 ## 1. 一句话状态
 
-**第54批进行中：修复stage0所有借用结果表达式的来源传播及跨清理边界，独立CI复测52/53后端和小程序编译，workflow全局UTF-8与完整P0周期ASan协议已接线。** 本机Core已通过90/90用例及13/13辅助检查；三平台Core和两项独立资格验证尚待CI。当前活动目录`compiler/target/batch54/`及正在使用的52/53参考产物需保留；本机测量不进入有效性能趋势。
+**第54批完成：本机及三平台Core全绿，独立性能与P0外部ASan/UBSan专项均已完成。** 实现提交505f5f9，工作流修正cec3862，旧阻塞分析断言修正及专项证据提交e58f5e5。[本批验证索引](compiler/validation/batch54-delivery-2026-11-28.json)保留每轮失败、源身份及资格引用；活动目录compiler/target/batch54/需保留。第53批已在7/7 Full CI成功后提交f0183c0，历史证据不改写。
 
-每批报告增加固定一行：**SH-3已完整验收0/8、剩余8；覆盖51批125/394→52批125/394→53批135/394→54批135/394。** 仅整包验收条件全部满足后关闭，部分能力交付不虚增完成数；[台账](compiler/validation/sh3-progress.json)保留原第65–66批窗口，偏差另报。
+stage0已审查全部34类AST表达式的借用结果来源：求值时冻结来源，只合并可达且产出值的分支，在match arm、catch handler及??右侧的清理边界前阻止视图逃逸；同时修正Copy绑定、inout地址和replace返回旧值的来源。[机制与审计](docs/batch54-borrow-provenance.md)。if表达式和独立块值仍是E0020语法边界；已支持的if/块内return有真实拥有局部值逃逸负例。selfhost的借用语义范围本批未扩大。
 
-**第53批交付用户enum多字段Copy/拥有载荷、通用嵌套match、拥有型String/Named Optional；标准Error与用户enum/Optional/Result共用同一模式检查、穷尽矩阵、绑定与清理路径。** SH-3仍未默认接替Rust，SH-4仍3/3。
+本机Core90/90、辅助13/13，C和二进制固定点通过，校准399通过/0失败/3跳过；新增借用7组及既有mutref6组、17P0诊断和59模式合同通过。最终[Core CI](https://github.com/msly/yavo/actions/runs/46133275430)4个执行作业全部成功，4项按policy跳过；三平台各90/90用例与13/13检查，固定点及原语料接受集合均通过。Linux/macOS/Windows作业分别2分26秒、2分45秒、8分23秒。三条旧模式fixture只迁移拒绝合同，原字节不变；原622路径、stage0接受394、自举接受135及模块图68/224与53批逐路径相同。生成C1,494,217 B、二进制766,512 B，大小与53批相同。
 
-本机最终stage2完整自举1209/1209、辅助20/20，C及二进制固定点通过；固定原622源中125→135/394，完整模块图62→68/224。7原稿Debug/Release共14产物、析构时序观察4产物、profile校准399项及标准错误门288项通过。最终dca2d52的[第四次Full CI](https://github.com/msly/yavo/actions/runs/46103424789) **7/7成功**，三平台完整自举固定点与新归档核验均通过，Windows作业85分29秒。第三轮Windows因90分19秒超过90分钟预算被标cancelled，执行门与完整归档审计通过的证据独立保留；Full预算现为120分钟、Core仍90。完整状态与身份见[第53批验证索引](compiler/validation/batch53-delivery-2026-11-28.json)。
+**SH-3工作包已完整验收0/8、剩余8；覆盖51批125/394→52批125/394→53批135/394→54批135/394（34.26%）。** SH-2固定点已完成，SH-4应用3/3单列。第54批插入来源正确性、计量与CI修正，原定元组扩展移至55；[台账](compiler/validation/sh3-progress.json)保留第65–66批原估计窗口，55按原稿实际解锁重新估计，不能静默顺延。
 
-第53批`cString`可打印ASCII直写并保留必要转义；同一源码比较生成C下降362,454字节（19.525%）。最终C为1,494,217 B（较52批−16.07%）、二进制766,512 B（+4.55%）。旧本机P50/RSS/后端时间现归为负载未隔离的历史观测，不作性能趋势；启动器RSS修正与宿主负载隔离是两件事。第54批独立CI将重建精确52/53基线，复测后端、自编译前端与小程序PCH，并另列当前54的PCH观测。[第53批范围与历史记录](docs/batch53-patterns.md)。
+有效配对复测来自独立4 vCPU Xeon 6975P-C runner：52→53后端P50为6.393912→6.644827秒（+3.92%，7/7配对较慢）；前端43.4216→44.7849ms，峰值RSS26.7773→27.2500MiB。当前54四个PCH编译P50为115.713–125.971ms，4/4低于200ms。旧共享主机时间/RSS均为unqualified，不能用跨主机绝对差值声称cordis影响或本批加速。本次CI的ELF+33,504 B中.text+32,688 B，主要在codegen模块；同程序不同字符串拼写实际生成同一二进制。[性能结果与归因](docs/batch54-performance-protocol.md)。
 
-第54批范围由用户扩为所有视图/借用表达式审查，覆盖Match及聚合载体、if/块内return、??、catch、方法链和会返回旧值的内建；既有不支持的if表达式/独立块值单列语法边界。来源修复先于组合类型扩展。结构分析仍保留unknown，不宣称穷尽全部U0001。
+workflow全局PYTHONUTF8=1，生产文本协议显式UTF-8，ANSI默认编码负控制保留。独立外部sanitizer已完整执行50个run_*和15个panic_*，零排除，1正/2负控制通过；后续随N=5的Full定期运行，下一次55。macOS/Windows Full选定Rust套件加入borrow_provenance，仍不称全Rust回归；平台缺口和55补齐计划见第34节及路线图。
 
-“相对Rust交付成本优势”尚未成立。第54批按用户要求把7个环境目录统一到可写临时目录、只复制认证文件后探测：EROFS已越过，但thread/start被宿主bwrap的NETLINK_ROUTE权限拒绝，无模型输出/usage。临时认证副本已删除；API HTTPS入口无认证预检返回401。当前明确等待用户选定项目key、精确模型/推理强度与USD总预算，尚未发起付费API调用。[成本决策与证据](experiments/cost-pilot-2026-11-28/README.md)。
+“相对Rust交付成本优势”尚无provider计量证据。按用户要求将7个环境目录统一至可写临时目录、仅复制认证文件后，EROFS已越过，CLI仍在thread/start被bwrap的NETLINK_ROUTE权限拒绝；无模型输出/usage，认证副本已删除。API HTTPS入口无认证预检返回401，当前等待项目key、精确模型/推理强度、USD总上限三项决策，尚未调用付费API。[12题成本实验与决策表](experiments/cost-pilot-2026-11-28/README.md)。
 
 ## 2. 仓库与环境
 
@@ -487,14 +487,24 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - 第32节平台缺口仍在：原生selected Rust套件、Windows两I/O场景与RSS缺口没有被本批新模式覆盖自动关闭。成本计量环境阻塞亦未关闭。
 
 
-## 34. 第54批：借用来源、隔离计量与CI协议（CI待执行）
+## 34. 第54批：借用来源、隔离计量与CI协议
 
-[验证索引](compiler/validation/batch54-delivery-2026-11-28.json)汇总本机Core、固定原语料集合、审计、计量资格和API决策。SH-3整包已完成0/8、剩余8；覆盖51批125/394→52批125/394→53批135/394→54批135/394（34.26%），模块图68/224。第54批插入正确性和计量修正，原定元组扩展尚未发生；原第65–66批总窗口保留，后续按实绩报告偏差。
+[交付索引](compiler/validation/batch54-delivery-2026-11-28.json)、[借用审计](compiler/validation/batch54-borrow-provenance-2026-11-28.json)、[性能汇总](compiler/validation/batch54-paired-performance-2026-11-28.json)、[完整原始性能报告](compiler/validation/batch54-paired-performance-raw-2026-11-28.json)、[外部P0 sanitizer回执](compiler/validation/batch54-p0-sanitizers-2026-11-28.json)。
 
-stage0在表达式求值时冻结返回值来源；只合并有值且可达的分支，在Match arm、catch handler和??右侧作用域清理前检查逃逸。访问pin与Copy载荷来源分别保留；replace保存旧值来源；InoutPlace保留底层地址来源。34类AST表达式逐项检查；if/块内return、方法链、嵌套借用载体均有负例。if表达式和独立块值仍为E0020语法边界，不计入借用安全负例。[审计及7+6测试组、17P0诊断、59模式合同证据](compiler/validation/batch54-borrow-provenance-2026-11-28.json)。三条旧模式fixture只迁移合同，原字节不变；固定原622/394集合逐路径无增减。
+| 验收 / 结果 | 证据与范围 |
+| --- | --- |
+| 本机Core | 90/90用例、13/13辅助检查、C与二进制固定点；校准399/0/3。固定原语料135/394、模块图68/224，接受集合无增减。 |
+| 借用修复 | 34种AST表达式、9类C清理边界；7+6组Rust借用回归、17个P0精确诊断、59模式合同。3条旧源码不改，仅迁移为E0305/E0303/E0303参考拒绝；selfhost为U0001/U0001/E0303。 |
+| 外部P0 sanitizer | cec3862 / run46132191802 / job140939620892成功；50run+15panic、零排除，clean正控制及ASan UAF/UBSan overflow负控制通过。原始P0 cwd、EOF和输出合同全部绑定。 |
+| 独立性能 | 同run job140939620862成功；199原始usage，精确52/53输入配对、当前54PCH单列；每样本负载/CPU/进程及wait4原始数据保留。12个PCH arm均≤200ms，条件阶段诊断未触发。 |
+| 最终三平台Core | e58f5e5 / run46133275430成功，plan加三平台4项执行全部成功、4项按policy跳过；三平台各90/90及13/13，校准399/0/3、原622字节与接受集合一致。每平台只读5份JSON回执，未做Full成员审计；专项producer仍绑定cec3862。 |
 
-本机Core90/90、辅助13/13、校准399通过/0失败/3跳过；C和二进制固定点通过。生成C1,494,217 B、二进制766,512 B，均与第53批大小一致。共享主机的本轮时间/RSS仍标unqualified；[独立性能协议](docs/batch54-performance-protocol.md)将重建精确52/53提交并另列54PCH观察。历史二进制+33,360 B中.text占+32,560 B，.rodata仅+374 B，函数归因待独立CI。
+两次失败均如实保留。505f5f9的run46132017263在作业创建前因job级env使用runner.temp失败，未执行任何测试或采样；cec3862将其移到测量step。随后三平台均在旧subset_features断言失败：旧测试仍要求stage0接受escaping_view，新checker正确报E0305。三条迁移负例现在严格核对退出1、来源分类及E0305/E0303/E0303，合法borrow_return仍证明结构模型不声称流敏感完整；本机该门15/15通过。该轮独立性能和sanitizer作业各自成功，未将整轮失败冒充全绿。
 
-workflow全局PYTHONUTF8=1；显式UTF-8读写与真实ANSI默认负控制同时保留。现有外部ASan+UBSan作业强化为精确覆盖全部50个run_*和15个panic_*，统一compiler工作目录、EOF输入和原P0输出合同。54专项验证一次，之后按每5批Full运行（下一次55）；不把54升级Full。macOS/Windows未来Full选定Rust套件加入borrow_provenance，仍不称全Rust回归。
+为避免重做已完成专项，policy记录cec3862的producer/run/job、不可变报告SHA及输入等价约束，关闭54一次性触发；三平台Core必须在修复head通过。55仍按周期Full执行P0 sanitizer。该复用只适用于未改编译器/runtime/selfhost/workload/测量器/导出器输入的测试或报告修正；真实输入改变须重新专项验证。
 
-平台已知缺口继续单列：macOS/Windows选定Rust套件与Linux全套不同；Windows标准错误门的env_invalid_utf8和stdin_read_error是POSIX语义场景，原生替代场景计划55；Windows峰值RSS尚不可得。成本实验EROFS已越过，当前bwrap权限阻断；无模型输出/usage、无付费API调用。等待用户项目key、精确模型/推理强度、USD总上限三个输入，详见[成本决策表](experiments/cost-pilot-2026-11-28/README.md)。
+历史C−16.07%与ELF+4.55%来自旧服务器的精确产物，字节身份有效。新独立CI在自身路径/CPU条件下为C−16.02%、ELF+4.53%，不能混用绝对大小。新.text净增32,688 B，codegen模块+28,609 B、types+1,817 B、parser+1,628 B；旧已存在的printValue与outputValue合并净增1,687 B，避免把内联变化误记为全新增逻辑。字符串只改变C字面量拼写的控制得到完全相同的773,080 B二进制。后端7/7对较慢、中位配对比+4.15%；它记录整组编译器变更的净构建成本，未对编译耗时做逐函数剖析，也不能还原旧共享主机12.2→13.9秒的因果来源。
+
+平台已知缺口继续单列：macOS/Windows Full目前选定14个Rust套件；Windows标准错误门的env_invalid_utf8和stdin_read_error是POSIX场景，原生对应测试计划55；Windows峰值RSS仍null。原生完整Rust套件的可移植/平台前提分类及可移植项补齐按路线图55执行。成本实验现为明确等待API配置决策，建议gpt-6.2-sol/high与10美元总上限仅为提案，未获付费执行授权。
+
+下一批：恢复完整元组与拥有载荷的共同表示/生命周期工作，按全部已识别阻塞集合排序并以原稿实编译确认收益；完成55周期Full及平台缺口核对。SH-3完整工作包0/8、剩余8，覆盖51–54批125→125→135→135（固定分母394）；本批新增覆盖0，原第65–66批窗口保留，偏差显式重估。

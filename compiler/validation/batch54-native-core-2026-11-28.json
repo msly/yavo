@@ -1,0 +1,1730 @@
+{
+  "schema": "yavo-batch54-native-core/1",
+  "status": "passed",
+  "recorded_at_utc": "2026-11-28T10:16:18.235767+00:00",
+  "run_id": 46133275430,
+  "head_sha": "e58f5e5ff95cc2419f8d0740bd27c4c8ca260cf1",
+  "run_url": "https://github.com/msly/yavo/actions/runs/46133275430",
+  "scope": "Three successful native Core jobs. Five explicitly named JSON receipts per platform; no full member-content audit, no nested-product archive audit, no rerun of compiler products.",
+  "platform_count": 3,
+  "selected_json_receipt_count": 15,
+  "native": {
+    "linux": {
+      "schema": "yavo-batch54-native-core-read/1",
+      "recorded_at_utc": "2026-11-28T10:08:14.017128+00:00",
+      "platform": "linux",
+      "status": "passed",
+      "run_id": 46133275430,
+      "head_sha": "e58f5e5ff95cc2419f8d0740bd27c4c8ca260cf1",
+      "job": {
+        "id": 140942981490,
+        "name": "Native Linux x86_64",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-11-28T10:02:55Z",
+        "completed_at": "2026-11-28T10:05:21Z"
+      },
+      "artifact": {
+        "id": 15257704107,
+        "node_id": "MDg6QXJ0aWZhY3QxNTI1NzcwNDEwNw==",
+        "name": "native-ubuntu-24.04-e58f5e5ff95cc2419f8d0740bd27c4c8ca260cf1",
+        "size_in_bytes": 165521630,
+        "url": "https://api.github.com/repos/msly/yavo/actions/artifacts/15257704107",
+        "archive_download_url": "https://api.github.com/repos/msly/yavo/actions/artifacts/15257704107/zip",
+        "expired": false,
+        "digest": "sha256:95c7dc89e7f41531260bc00910ef336a3965dcf4e731e084ef3aebf6220074e5",
+        "created_at": "2026-11-28T10:05:17Z",
+        "updated_at": "2026-11-28T10:05:17Z",
+        "expires_at": "2026-12-12T10:05:03Z",
+        "workflow_run": {
+          "id": 46133275430,
+          "repository_id": 1467240913,
+          "head_repository_id": 1467240913,
+          "head_branch": "main",
+          "head_sha": "e58f5e5ff95cc2419f8d0740bd27c4c8ca260cf1"
+        }
+      },
+      "inventory_sha256": "1c27b9fb1f560b857be2ecfa56ca12c5455cba8fa16a410f1e3352f5522aa508",
+      "selected_members": {
+        "results.json": {
+          "local_path": "compiler/target/batch54/native-core/e58f5e5/linux/results.json",
+          "bytes": 6006,
+          "sha256": "2fc7d0b72af8587115dae344e21d57ccc359d4312870a24d0adec3ddf4ac62c3"
+        },
+        "selfhost/receipt.json": {
+          "local_path": "compiler/target/batch54/native-core/e58f5e5/linux/selfhost-receipt.json",
+          "bytes": 1411636,
+          "sha256": "d62830f15944475bd77f969e18c109980a9f96e165321da090ae43bb55911774"
+        },
+        "selfhost/subset-sweep.json": {
+          "local_path": "compiler/target/batch54/native-core/e58f5e5/linux/selfhost-subset-sweep.json",
+          "bytes": 1508277,
+          "sha256": "b52a54f5c0a6187e045023ba8fdf8d7290bc924c6de0d9683ea8b9fbdf37b8bb"
+        },
+        "selfhost/profile-calibration.json": {
+          "local_path": "compiler/target/batch54/native-core/e58f5e5/linux/selfhost-profile-calibration.json",
+          "bytes": 196885,
+          "sha256": "7ddb0df51f909212317f787c70a499dd6fe1ac1a467d4fc7b506b8797eef5950"
+        },
+        "selfhost/metrics.json": {
+          "local_path": "compiler/target/batch54/native-core/e58f5e5/linux/selfhost-metrics.json",
+          "bytes": 17982,
+          "sha256": "f8675cbb3914f7b6c034bac0ada011b33e2287632d716635f8eb2a007f2cfa2d"
+        }
+      },
+      "verification_scope": "Read five named Core JSON receipts only; no full member-by-member archive audit, no nested product archives, no replayed runtime gate.",
+      "archive_tree_extracted": false,
+      "inputs_match_current_sources": {
+        "selfhost/tests/cases.json": true,
+        "selfhost/bootstrap.py": true,
+        "compiler/runtime/yavo_rt.h": true,
+        "selfhost/embed_runtime.py": true,
+        "compiler/toolchain.lock": true,
+        "tools/ci/validation-policy.json": true,
+        "selfhost/core_cases.py": true
+      },
+      "bootstrap": {
+        "status": "passed",
+        "passed": 90,
+        "failed": 0,
+        "total": 90,
+        "checks_passed": 13,
+        "checks_failed": 0,
+        "checks_skipped": 0,
+        "case_counts": {
+          "panic": 10,
+          "reject": 20,
+          "run": 54,
+          "shared_unsupported": 2,
+          "unsupported": 4
+        },
+        "validation_tier": "core"
+      },
+      "fixed_point": {
+        "stage2_c": {
+          "bytes": 1493942,
+          "sha256": "65b4ca70aac96662e3a163832faca3009ed41d22073f66f9428e811d6a64f5c2"
+        },
+        "stage3_c": {
+          "bytes": 1493942,
+          "sha256": "65b4ca70aac96662e3a163832faca3009ed41d22073f66f9428e811d6a64f5c2"
+        },
+        "stage2_sha256": "9c4f02cb6ff4d2d7fdd503f3b7cf905b4a15f82b4cd762b920cbba370e60f07c",
+        "stage3_sha256": "9c4f02cb6ff4d2d7fdd503f3b7cf905b4a15f82b4cd762b920cbba370e60f07c"
+      },
+      "sweep_summary": {
+        "sources": 622,
+        "stage0_accepted": {
+          "paths": 394,
+          "unique_entry_bytes": 224,
+          "unique_module_graphs": 224
+        },
+        "selfhost_accepted": {
+          "paths": 135,
+          "unique_entry_bytes": 68,
+          "unique_module_graphs": 68
+        },
+        "stage0_rejected": 228,
+        "blocked": {
+          "paths": 259,
+          "unique_entry_bytes": 156,
+          "unique_module_graphs": 156
+        },
+        "analysis_complete": 394,
+        "unresolved_semantics": 259,
+        "accepted_profile_false_positive_paths": 0
+      },
+      "accepted_path_sets_equal_local_core": true,
+      "calibration_summary": {
+        "passed": 399,
+        "failed": 0,
+        "skipped": 3
+      },
+      "metrics": {
+        "schema": "yavo-selfhost-metrics/1",
+        "batch": 54,
+        "host": {
+          "system": "Linux",
+          "machine": "x86_64",
+          "timestamp_utc": "2026-11-28T10:04:55.223500+00:00",
+          "load_average": [
+            1.03759765625,
+            0.54541015625,
+            0.21435546875
+          ]
+        },
+        "environment_qualification": {
+          "status": "github_hosted_observation",
+          "github_hosted": true,
+          "run_id": "46133275430",
+          "run_attempt": "1",
+          "head_sha": "e58f5e5ff95cc2419f8d0740bd27c4c8ca260cf1",
+          "runner_os": "Linux",
+          "runner_arch": "X64",
+          "runner_name": "GitHub Actions 1000001244",
+          "image_os": "ubuntu24",
+          "image_version": "20261122.23.1",
+          "cpu_model": "Intel(R) Xeon(R) 6975P-C",
+          "cpu_model_source": "/proc/cpuinfo",
+          "cpu_count": 4,
+          "affinity": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "isolation_evidence": "separate GitHub job; no per-sample foreign-build audit",
+          "eligible_for_controlled_performance_trend": false
+        },
+        "source": "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-b5v7prgo/selfhost-src/main.yv",
+        "compiler": {
+          "path": "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-b5v7prgo/stages/stage2/yavo-selfhost",
+          "bytes": 773176,
+          "sha256": "9c4f02cb6ff4d2d7fdd503f3b7cf905b4a15f82b4cd762b920cbba370e60f07c"
+        },
+        "generated_c": {
+          "path": "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-b5v7prgo/stages/stage3/yavo-selfhost.c",
+          "bytes": 1493942,
+          "sha256": "65b4ca70aac96662e3a163832faca3009ed41d22073f66f9428e811d6a64f5c2"
+        },
+        "warmups": 1,
+        "scope": "stage2 emit-c of the compiler itself; separate native backend observation",
+        "cache": "Yavo frontend cache disabled; existing OS and Zig caches; not cold builds",
+        "memory_scope": "OS wait4 RSS of the waited compiler child, not a process-tree sum; the measurement process does not parse the Full receipt; Python launcher floor remains; null where unavailable",
+        "receipt_loading": "separate short-lived reader process; its RSS is not used as compiler RSS",
+        "backend_scope": "single_observation_not_distribution",
+        "bootstrap_receipt": {
+          "path": "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/receipt.json",
+          "bytes": 1411636,
+          "sha256": "d62830f15944475bd77f969e18c109980a9f96e165321da090ae43bb55911774"
+        },
+        "formal_small_program_target": {
+          "compile_p50_ms": 200,
+          "stripped_linux_bytes": 250000,
+          "evaluated_by_this_self_compile_probe": false
+        },
+        "inputs": {
+          "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-b5v7prgo/stages/stage2/yavo-selfhost": "9c4f02cb6ff4d2d7fdd503f3b7cf905b4a15f82b4cd762b920cbba370e60f07c",
+          "/home/runner/work/_temp/yavo-home/toolchains/zig-x86_64-linux-0.17.1/zig": "58959f01285c05a74276f09327b551d42ed6006bf325a78dc661a024e314987b",
+          "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-b5v7prgo/stages/stage3/yavo-selfhost.c": "65b4ca70aac96662e3a163832faca3009ed41d22073f66f9428e811d6a64f5c2",
+          "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-b5v7prgo/selfhost-src/codegen.yv": "146db08285f644f66011fe02cf0c96b32a8bfd9f12af77f8f3bab34c24d3e5cd",
+          "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-b5v7prgo/selfhost-src/digest.yv": "e7c6a6a496bbdcdee401f897032ee9447f1b7f9982e23c1bf9f7e124f4cb68d7",
+          "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-b5v7prgo/selfhost-src/driver.yv": "01f543793f2bce65c2bf04aca0e463a894d1d9336feb0d96b55c335bec647464",
+          "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-b5v7prgo/selfhost-src/lexer.yv": "668743282425eaea209ded5e499a6a12608728bd4e6bae16fb03886fe7485b40",
+          "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-b5v7prgo/selfhost-src/lexer_test.yv": "9105c9728e6728237070fce90c7755e1c30acd652594534ccf11d875b46bf49f",
+          "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-b5v7prgo/selfhost-src/main.yv": "fcf554007b4dda50dcc0d7ef3e4c57b234878ca0352161a5055fa6001a203be5",
+          "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-b5v7prgo/selfhost-src/model.yv": "6cac6c08a9fa708b8a586082ccb6cb0179ebefe0a48ff3a75537d1710f70cfd3",
+          "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-b5v7prgo/selfhost-src/parser.yv": "31c565dbf7705879ad7dd2cb538bdfee344e1a695272960109cd5606674e1687",
+          "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-b5v7prgo/selfhost-src/runtime_source.yv": "21a5f8f7d558d7c6570b2525d4525ede1d75d64e58371b8c8589315d2a18e754",
+          "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-b5v7prgo/selfhost-src/support.yv": "12a4b08856d7b8f1203e95f2d92639a6de7c3be56d35ad964cb0f526868197ce",
+          "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-b5v7prgo/selfhost-src/types.yv": "7bf34f875fadddd8463cf2e80beab8b5c18677ddf527274be6da73d00b05f291",
+          "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/receipt.json": "d62830f15944475bd77f969e18c109980a9f96e165321da090ae43bb55911774"
+        },
+        "frontend_samples": [
+          {
+            "argv": [
+              "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-b5v7prgo/stages/stage2/yavo-selfhost",
+              "emit-c",
+              "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-b5v7prgo/selfhost-src/main.yv",
+              "-o",
+              "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-4oo708u6/sample-1.c"
+            ],
+            "cwd": "/home/runner/work/yavo/yavo",
+            "environment": {
+              "YAVO_NO_CACHE": "1",
+              "YAVO_ALLOC_CHECK": "1"
+            },
+            "exit_code": 0,
+            "timed_out": false,
+            "launch_error": null,
+            "elapsed_seconds": 0.04664215600001853,
+            "peak_process_memory_bytes": 28508160,
+            "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+            "stdout": {
+              "path": "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-4oo708u6/emit-1/stdout.bin",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stderr": {
+              "path": "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-4oo708u6/emit-1/stderr.bin",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stdin": {
+              "kind": "devnull"
+            },
+            "host_before": {
+              "timestamp_utc": "2026-11-28T10:04:55.276509+00:00",
+              "load_average": [
+                1.03759765625,
+                0.54541015625,
+                0.21435546875
+              ]
+            },
+            "host_after": {
+              "timestamp_utc": "2026-11-28T10:04:55.323699+00:00",
+              "load_average": [
+                1.03759765625,
+                0.54541015625,
+                0.21435546875
+              ]
+            },
+            "generated_c_bytes": 1493942,
+            "matches_fixed_point": true
+          },
+          {
+            "argv": [
+              "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-b5v7prgo/stages/stage2/yavo-selfhost",
+              "emit-c",
+              "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-b5v7prgo/selfhost-src/main.yv",
+              "-o",
+              "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-4oo708u6/sample-2.c"
+            ],
+            "cwd": "/home/runner/work/yavo/yavo",
+            "environment": {
+              "YAVO_NO_CACHE": "1",
+              "YAVO_ALLOC_CHECK": "1"
+            },
+            "exit_code": 0,
+            "timed_out": false,
+            "launch_error": null,
+            "elapsed_seconds": 0.04650842000000921,
+            "peak_process_memory_bytes": 28508160,
+            "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+            "stdout": {
+              "path": "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-4oo708u6/emit-2/stdout.bin",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stderr": {
+              "path": "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-4oo708u6/emit-2/stderr.bin",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stdin": {
+              "kind": "devnull"
+            },
+            "host_before": {
+              "timestamp_utc": "2026-11-28T10:04:55.325364+00:00",
+              "load_average": [
+                1.03759765625,
+                0.54541015625,
+                0.21435546875
+              ]
+            },
+            "host_after": {
+              "timestamp_utc": "2026-11-28T10:04:55.372443+00:00",
+              "load_average": [
+                1.03759765625,
+                0.54541015625,
+                0.21435546875
+              ]
+            },
+            "generated_c_bytes": 1493942,
+            "matches_fixed_point": true
+          },
+          {
+            "argv": [
+              "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-b5v7prgo/stages/stage2/yavo-selfhost",
+              "emit-c",
+              "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-b5v7prgo/selfhost-src/main.yv",
+              "-o",
+              "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-4oo708u6/sample-3.c"
+            ],
+            "cwd": "/home/runner/work/yavo/yavo",
+            "environment": {
+              "YAVO_NO_CACHE": "1",
+              "YAVO_ALLOC_CHECK": "1"
+            },
+            "exit_code": 0,
+            "timed_out": false,
+            "launch_error": null,
+            "elapsed_seconds": 0.046447129000000587,
+            "peak_process_memory_bytes": 28512256,
+            "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+            "stdout": {
+              "path": "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-4oo708u6/emit-3/stdout.bin",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stderr": {
+              "path": "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-4oo708u6/emit-3/stderr.bin",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stdin": {
+              "kind": "devnull"
+            },
+            "host_before": {
+              "timestamp_utc": "2026-11-28T10:04:55.373978+00:00",
+              "load_average": [
+                1.03759765625,
+                0.54541015625,
+                0.21435546875
+              ]
+            },
+            "host_after": {
+              "timestamp_utc": "2026-11-28T10:04:55.420926+00:00",
+              "load_average": [
+                1.03759765625,
+                0.54541015625,
+                0.21435546875
+              ]
+            },
+            "generated_c_bytes": 1493942,
+            "matches_fixed_point": true
+          },
+          {
+            "argv": [
+              "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-b5v7prgo/stages/stage2/yavo-selfhost",
+              "emit-c",
+              "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-b5v7prgo/selfhost-src/main.yv",
+              "-o",
+              "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-4oo708u6/sample-4.c"
+            ],
+            "cwd": "/home/runner/work/yavo/yavo",
+            "environment": {
+              "YAVO_NO_CACHE": "1",
+              "YAVO_ALLOC_CHECK": "1"
+            },
+            "exit_code": 0,
+            "timed_out": false,
+            "launch_error": null,
+            "elapsed_seconds": 0.04648426200000699,
+            "peak_process_memory_bytes": 28508160,
+            "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+            "stdout": {
+              "path": "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-4oo708u6/emit-4/stdout.bin",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stderr": {
+              "path": "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-4oo708u6/emit-4/stderr.bin",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stdin": {
+              "kind": "devnull"
+            },
+            "host_before": {
+              "timestamp_utc": "2026-11-28T10:04:55.422279+00:00",
+              "load_average": [
+                1.03759765625,
+                0.54541015625,
+                0.21435546875
+              ]
+            },
+            "host_after": {
+              "timestamp_utc": "2026-11-28T10:04:55.469288+00:00",
+              "load_average": [
+                1.03759765625,
+                0.54541015625,
+                0.21435546875
+              ]
+            },
+            "generated_c_bytes": 1493942,
+            "matches_fixed_point": true
+          },
+          {
+            "argv": [
+              "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-b5v7prgo/stages/stage2/yavo-selfhost",
+              "emit-c",
+              "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-b5v7prgo/selfhost-src/main.yv",
+              "-o",
+              "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-4oo708u6/sample-5.c"
+            ],
+            "cwd": "/home/runner/work/yavo/yavo",
+            "environment": {
+              "YAVO_NO_CACHE": "1",
+              "YAVO_ALLOC_CHECK": "1"
+            },
+            "exit_code": 0,
+            "timed_out": false,
+            "launch_error": null,
+            "elapsed_seconds": 0.04662057000001596,
+            "peak_process_memory_bytes": 28508160,
+            "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+            "stdout": {
+              "path": "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-4oo708u6/emit-5/stdout.bin",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stderr": {
+              "path": "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-4oo708u6/emit-5/stderr.bin",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stdin": {
+              "kind": "devnull"
+            },
+            "host_before": {
+              "timestamp_utc": "2026-11-28T10:04:55.470657+00:00",
+              "load_average": [
+                1.03759765625,
+                0.54541015625,
+                0.21435546875
+              ]
+            },
+            "host_after": {
+              "timestamp_utc": "2026-11-28T10:04:55.517782+00:00",
+              "load_average": [
+                1.03759765625,
+                0.54541015625,
+                0.21435546875
+              ]
+            },
+            "generated_c_bytes": 1493942,
+            "matches_fixed_point": true
+          }
+        ],
+        "warmup": {
+          "argv": [
+            "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-b5v7prgo/stages/stage2/yavo-selfhost",
+            "emit-c",
+            "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-b5v7prgo/selfhost-src/main.yv",
+            "-o",
+            "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-4oo708u6/sample-0.c"
+          ],
+          "cwd": "/home/runner/work/yavo/yavo",
+          "environment": {
+            "YAVO_NO_CACHE": "1",
+            "YAVO_ALLOC_CHECK": "1"
+          },
+          "exit_code": 0,
+          "timed_out": false,
+          "launch_error": null,
+          "elapsed_seconds": 0.047581580000013446,
+          "peak_process_memory_bytes": 28504064,
+          "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+          "stdout": {
+            "path": "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-4oo708u6/emit-0/stdout.bin",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stderr": {
+            "path": "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-4oo708u6/emit-0/stderr.bin",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stdin": {
+            "kind": "devnull"
+          },
+          "host_before": {
+            "timestamp_utc": "2026-11-28T10:04:55.226930+00:00",
+            "load_average": [
+              1.03759765625,
+              0.54541015625,
+              0.21435546875
+            ]
+          },
+          "host_after": {
+            "timestamp_utc": "2026-11-28T10:04:55.275079+00:00",
+            "load_average": [
+              1.03759765625,
+              0.54541015625,
+              0.21435546875
+            ]
+          },
+          "generated_c_bytes": 1493942,
+          "matches_fixed_point": true
+        },
+        "frontend": {
+          "samples": 5,
+          "p50_seconds": 0.04650842000000921,
+          "p95_seconds": 0.04664215600001853,
+          "peak_rss_bytes": 28512256,
+          "rss_observations": 5
+        },
+        "backend_observation": {
+          "argv": [
+            "/home/runner/work/_temp/yavo-home/toolchains/zig-x86_64-linux-0.17.1/zig",
+            "cc",
+            "-std=c17",
+            "-fno-strict-aliasing",
+            "-DYV_ALLOC_CHECK",
+            "-O2",
+            "-s",
+            "-I",
+            "/home/runner/work/yavo/yavo/compiler/runtime",
+            "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-4oo708u6/sample-5.c",
+            "-o",
+            "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-4oo708u6/yavo-selfhost"
+          ],
+          "cwd": "/home/runner/work/yavo/yavo",
+          "environment": {
+            "YAVO_NO_CACHE": "1",
+            "YAVO_ALLOC_CHECK": "1"
+          },
+          "exit_code": 0,
+          "timed_out": false,
+          "launch_error": null,
+          "elapsed_seconds": 6.847884660999995,
+          "peak_process_memory_bytes": 201797632,
+          "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+          "stdout": {
+            "path": "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-4oo708u6/backend/stdout.bin",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stderr": {
+            "path": "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-4oo708u6/backend/stderr.bin",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stdin": {
+            "kind": "devnull"
+          },
+          "host_before": {
+            "timestamp_utc": "2026-11-28T10:04:55.519240+00:00",
+            "load_average": [
+              1.03759765625,
+              0.54541015625,
+              0.21435546875
+            ]
+          },
+          "host_after": {
+            "timestamp_utc": "2026-11-28T10:05:02.367710+00:00",
+            "load_average": [
+              1.0341796875,
+              0.55322265625,
+              0.21875
+            ]
+          }
+        },
+        "input_changes": [],
+        "status": "passed"
+      },
+      "fetch_source_sha256": "e58dd1795a91c96192f54749deabd1bfee64d2b883af57b91a5c51b3398c961d",
+      "local_reader_receipt": {
+        "path": "compiler/target/batch54/native-core/e58f5e5/linux/core-evidence.json",
+        "bytes": 23597,
+        "sha256": "18bb176722cc28b1ea22e2f6d9a68a3aef45f70ed1caa56a18de3f31ab48bcd5"
+      }
+    },
+    "macos": {
+      "schema": "yavo-batch54-native-core-read/1",
+      "recorded_at_utc": "2026-11-28T10:08:09.428380+00:00",
+      "platform": "macos",
+      "status": "passed",
+      "run_id": 46133275430,
+      "head_sha": "e58f5e5ff95cc2419f8d0740bd27c4c8ca260cf1",
+      "job": {
+        "id": 140942981491,
+        "name": "Native macOS arm64",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-11-28T10:02:55Z",
+        "completed_at": "2026-11-28T10:05:40Z"
+      },
+      "artifact": {
+        "id": 15258404806,
+        "node_id": "MDg6QXJ0aWZhY3QxNTI1ODQwNDgwNg==",
+        "name": "native-macos-15-e58f5e5ff95cc2419f8d0740bd27c4c8ca260cf1",
+        "size_in_bytes": 45482974,
+        "url": "https://api.github.com/repos/msly/yavo/actions/artifacts/15258404806",
+        "archive_download_url": "https://api.github.com/repos/msly/yavo/actions/artifacts/15258404806/zip",
+        "expired": false,
+        "digest": "sha256:0de90ca0d0996efa6b3e185871ddec824f13c54f4cbe56e8016f01e9b6bf7f3a",
+        "created_at": "2026-11-28T10:05:36Z",
+        "updated_at": "2026-11-28T10:05:36Z",
+        "expires_at": "2026-12-12T10:05:31Z",
+        "workflow_run": {
+          "id": 46133275430,
+          "repository_id": 1467240913,
+          "head_repository_id": 1467240913,
+          "head_branch": "main",
+          "head_sha": "e58f5e5ff95cc2419f8d0740bd27c4c8ca260cf1"
+        }
+      },
+      "inventory_sha256": "1c27b9fb1f560b857be2ecfa56ca12c5455cba8fa16a410f1e3352f5522aa508",
+      "selected_members": {
+        "results.json": {
+          "local_path": "compiler/target/batch54/native-core/e58f5e5/macos/results.json",
+          "bytes": 6013,
+          "sha256": "11cd6cfe2139f984db5b006ea1306314a8527270643129807933c0bd4cad757b"
+        },
+        "selfhost/receipt.json": {
+          "local_path": "compiler/target/batch54/native-core/e58f5e5/macos/selfhost-receipt.json",
+          "bytes": 1590562,
+          "sha256": "efb8bac047b7a5f4efea7550f07901a630a11568a6066f8aa44107ba4abe1f13"
+        },
+        "selfhost/subset-sweep.json": {
+          "local_path": "compiler/target/batch54/native-core/e58f5e5/macos/selfhost-subset-sweep.json",
+          "bytes": 1507743,
+          "sha256": "a4e9ee2097cdd003b75827b2953271e3ee59dad49e6097ba5352eda9a6114829"
+        },
+        "selfhost/profile-calibration.json": {
+          "local_path": "compiler/target/batch54/native-core/e58f5e5/macos/selfhost-profile-calibration.json",
+          "bytes": 196722,
+          "sha256": "eb99e48dc33b921f9a32516af04fb5ffbd2a359b375d1ca37d4bd750890905df"
+        },
+        "selfhost/metrics.json": {
+          "local_path": "compiler/target/batch54/native-core/e58f5e5/macos/selfhost-metrics.json",
+          "bytes": 17906,
+          "sha256": "811cc4f78468ef51cf9b2ae38c75de78cbc923b4eaf7c5edca3a8e61b9123142"
+        }
+      },
+      "verification_scope": "Read five named Core JSON receipts only; no full member-by-member archive audit, no nested product archives, no replayed runtime gate.",
+      "archive_tree_extracted": false,
+      "inputs_match_current_sources": {
+        "selfhost/tests/cases.json": true,
+        "selfhost/bootstrap.py": true,
+        "compiler/runtime/yavo_rt.h": true,
+        "selfhost/embed_runtime.py": true,
+        "compiler/toolchain.lock": true,
+        "tools/ci/validation-policy.json": true,
+        "selfhost/core_cases.py": true
+      },
+      "bootstrap": {
+        "status": "passed",
+        "passed": 90,
+        "failed": 0,
+        "total": 90,
+        "checks_passed": 13,
+        "checks_failed": 0,
+        "checks_skipped": 0,
+        "case_counts": {
+          "panic": 10,
+          "reject": 20,
+          "run": 54,
+          "shared_unsupported": 2,
+          "unsupported": 4
+        },
+        "validation_tier": "core"
+      },
+      "fixed_point": {
+        "stage2_c": {
+          "bytes": 1493953,
+          "sha256": "24d49a6e998464d630ba5f5e8c6a164d753811fadbbf3759e0ac0aada7dfb0af"
+        },
+        "stage3_c": {
+          "bytes": 1493953,
+          "sha256": "24d49a6e998464d630ba5f5e8c6a164d753811fadbbf3759e0ac0aada7dfb0af"
+        },
+        "stage2_sha256": "26cc9c1999f42cea45610d2a721c111c59b87293f6fab42dd9672c632603ca47",
+        "stage3_sha256": "26cc9c1999f42cea45610d2a721c111c59b87293f6fab42dd9672c632603ca47"
+      },
+      "sweep_summary": {
+        "sources": 622,
+        "stage0_accepted": {
+          "paths": 394,
+          "unique_entry_bytes": 224,
+          "unique_module_graphs": 224
+        },
+        "selfhost_accepted": {
+          "paths": 135,
+          "unique_entry_bytes": 68,
+          "unique_module_graphs": 68
+        },
+        "stage0_rejected": 228,
+        "blocked": {
+          "paths": 259,
+          "unique_entry_bytes": 156,
+          "unique_module_graphs": 156
+        },
+        "analysis_complete": 394,
+        "unresolved_semantics": 259,
+        "accepted_profile_false_positive_paths": 0
+      },
+      "accepted_path_sets_equal_local_core": true,
+      "calibration_summary": {
+        "passed": 399,
+        "failed": 0,
+        "skipped": 3
+      },
+      "metrics": {
+        "schema": "yavo-selfhost-metrics/1",
+        "batch": 54,
+        "host": {
+          "system": "Darwin",
+          "machine": "arm64",
+          "timestamp_utc": "2026-11-28T10:05:23.918919+00:00",
+          "load_average": [
+            8.90478515625,
+            16.5107421875,
+            9.26611328125
+          ]
+        },
+        "environment_qualification": {
+          "status": "github_hosted_observation",
+          "github_hosted": true,
+          "run_id": "46133275430",
+          "run_attempt": "1",
+          "head_sha": "e58f5e5ff95cc2419f8d0740bd27c4c8ca260cf1",
+          "runner_os": "macOS",
+          "runner_arch": "ARM64",
+          "runner_name": "GitHub Actions 1000001245",
+          "image_os": "macos15",
+          "image_version": "20261123.0558.1",
+          "cpu_model": "Apple M1 (Virtual)",
+          "cpu_model_source": "sysctl machdep.cpu.brand_string",
+          "cpu_count": 3,
+          "affinity": null,
+          "isolation_evidence": "separate GitHub job; no per-sample foreign-build audit",
+          "eligible_for_controlled_performance_trend": false
+        },
+        "source": "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-axrnq6b2/selfhost-src/main.yv",
+        "compiler": {
+          "path": "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-axrnq6b2/stages/stage2/yavo-selfhost",
+          "bytes": 700576,
+          "sha256": "26cc9c1999f42cea45610d2a721c111c59b87293f6fab42dd9672c632603ca47"
+        },
+        "generated_c": {
+          "path": "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-axrnq6b2/stages/stage3/yavo-selfhost.c",
+          "bytes": 1493953,
+          "sha256": "24d49a6e998464d630ba5f5e8c6a164d753811fadbbf3759e0ac0aada7dfb0af"
+        },
+        "warmups": 1,
+        "scope": "stage2 emit-c of the compiler itself; separate native backend observation",
+        "cache": "Yavo frontend cache disabled; existing OS and Zig caches; not cold builds",
+        "memory_scope": "OS wait4 RSS of the waited compiler child, not a process-tree sum; the measurement process does not parse the Full receipt; Python launcher floor remains; null where unavailable",
+        "receipt_loading": "separate short-lived reader process; its RSS is not used as compiler RSS",
+        "backend_scope": "single_observation_not_distribution",
+        "bootstrap_receipt": {
+          "path": "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/receipt.json",
+          "bytes": 1590562,
+          "sha256": "efb8bac047b7a5f4efea7550f07901a630a11568a6066f8aa44107ba4abe1f13"
+        },
+        "formal_small_program_target": {
+          "compile_p50_ms": 200,
+          "stripped_linux_bytes": 250000,
+          "evaluated_by_this_self_compile_probe": false
+        },
+        "inputs": {
+          "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-axrnq6b2/stages/stage2/yavo-selfhost": "26cc9c1999f42cea45610d2a721c111c59b87293f6fab42dd9672c632603ca47",
+          "/Users/runner/work/_temp/yavo-home/toolchains/zig-aarch64-macos-0.17.1/zig": "bb6397b497438ce9e9d0d668fbfb42e777082f2b0af87ab06dec5ec928e19df5",
+          "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-axrnq6b2/stages/stage3/yavo-selfhost.c": "24d49a6e998464d630ba5f5e8c6a164d753811fadbbf3759e0ac0aada7dfb0af",
+          "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-axrnq6b2/selfhost-src/codegen.yv": "146db08285f644f66011fe02cf0c96b32a8bfd9f12af77f8f3bab34c24d3e5cd",
+          "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-axrnq6b2/selfhost-src/digest.yv": "e7c6a6a496bbdcdee401f897032ee9447f1b7f9982e23c1bf9f7e124f4cb68d7",
+          "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-axrnq6b2/selfhost-src/driver.yv": "01f543793f2bce65c2bf04aca0e463a894d1d9336feb0d96b55c335bec647464",
+          "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-axrnq6b2/selfhost-src/lexer.yv": "668743282425eaea209ded5e499a6a12608728bd4e6bae16fb03886fe7485b40",
+          "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-axrnq6b2/selfhost-src/lexer_test.yv": "9105c9728e6728237070fce90c7755e1c30acd652594534ccf11d875b46bf49f",
+          "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-axrnq6b2/selfhost-src/main.yv": "fcf554007b4dda50dcc0d7ef3e4c57b234878ca0352161a5055fa6001a203be5",
+          "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-axrnq6b2/selfhost-src/model.yv": "6cac6c08a9fa708b8a586082ccb6cb0179ebefe0a48ff3a75537d1710f70cfd3",
+          "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-axrnq6b2/selfhost-src/parser.yv": "31c565dbf7705879ad7dd2cb538bdfee344e1a695272960109cd5606674e1687",
+          "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-axrnq6b2/selfhost-src/runtime_source.yv": "21a5f8f7d558d7c6570b2525d4525ede1d75d64e58371b8c8589315d2a18e754",
+          "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-axrnq6b2/selfhost-src/support.yv": "12a4b08856d7b8f1203e95f2d92639a6de7c3be56d35ad964cb0f526868197ce",
+          "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-axrnq6b2/selfhost-src/types.yv": "7bf34f875fadddd8463cf2e80beab8b5c18677ddf527274be6da73d00b05f291",
+          "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/receipt.json": "efb8bac047b7a5f4efea7550f07901a630a11568a6066f8aa44107ba4abe1f13"
+        },
+        "frontend_samples": [
+          {
+            "argv": [
+              "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-axrnq6b2/stages/stage2/yavo-selfhost",
+              "emit-c",
+              "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-axrnq6b2/selfhost-src/main.yv",
+              "-o",
+              "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-vssd5zi5/sample-1.c"
+            ],
+            "cwd": "/Users/runner/work/yavo/yavo",
+            "environment": {
+              "YAVO_NO_CACHE": "1",
+              "YAVO_ALLOC_CHECK": "1"
+            },
+            "exit_code": 0,
+            "timed_out": false,
+            "launch_error": null,
+            "elapsed_seconds": 0.06518549999998413,
+            "peak_process_memory_bytes": 34439168,
+            "memory_measurement": "wait4 ru_maxrss (bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+            "stdout": {
+              "path": "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-vssd5zi5/emit-1/stdout.bin",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stderr": {
+              "path": "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-vssd5zi5/emit-1/stderr.bin",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stdin": {
+              "kind": "devnull"
+            },
+            "host_before": {
+              "timestamp_utc": "2026-11-28T10:05:23.988604+00:00",
+              "load_average": [
+                8.90478515625,
+                16.5107421875,
+                9.26611328125
+              ]
+            },
+            "host_after": {
+              "timestamp_utc": "2026-11-28T10:05:24.054533+00:00",
+              "load_average": [
+                8.90478515625,
+                16.5107421875,
+                9.26611328125
+              ]
+            },
+            "generated_c_bytes": 1493953,
+            "matches_fixed_point": true
+          },
+          {
+            "argv": [
+              "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-axrnq6b2/stages/stage2/yavo-selfhost",
+              "emit-c",
+              "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-axrnq6b2/selfhost-src/main.yv",
+              "-o",
+              "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-vssd5zi5/sample-2.c"
+            ],
+            "cwd": "/Users/runner/work/yavo/yavo",
+            "environment": {
+              "YAVO_NO_CACHE": "1",
+              "YAVO_ALLOC_CHECK": "1"
+            },
+            "exit_code": 0,
+            "timed_out": false,
+            "launch_error": null,
+            "elapsed_seconds": 0.0578911670000366,
+            "peak_process_memory_bytes": 34996224,
+            "memory_measurement": "wait4 ru_maxrss (bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+            "stdout": {
+              "path": "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-vssd5zi5/emit-2/stdout.bin",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stderr": {
+              "path": "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-vssd5zi5/emit-2/stderr.bin",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stdin": {
+              "kind": "devnull"
+            },
+            "host_before": {
+              "timestamp_utc": "2026-11-28T10:05:24.055175+00:00",
+              "load_average": [
+                8.90478515625,
+                16.5107421875,
+                9.26611328125
+              ]
+            },
+            "host_after": {
+              "timestamp_utc": "2026-11-28T10:05:24.113749+00:00",
+              "load_average": [
+                8.90478515625,
+                16.5107421875,
+                9.26611328125
+              ]
+            },
+            "generated_c_bytes": 1493953,
+            "matches_fixed_point": true
+          },
+          {
+            "argv": [
+              "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-axrnq6b2/stages/stage2/yavo-selfhost",
+              "emit-c",
+              "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-axrnq6b2/selfhost-src/main.yv",
+              "-o",
+              "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-vssd5zi5/sample-3.c"
+            ],
+            "cwd": "/Users/runner/work/yavo/yavo",
+            "environment": {
+              "YAVO_NO_CACHE": "1",
+              "YAVO_ALLOC_CHECK": "1"
+            },
+            "exit_code": 0,
+            "timed_out": false,
+            "launch_error": null,
+            "elapsed_seconds": 0.06284895800001777,
+            "peak_process_memory_bytes": 35389440,
+            "memory_measurement": "wait4 ru_maxrss (bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+            "stdout": {
+              "path": "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-vssd5zi5/emit-3/stdout.bin",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stderr": {
+              "path": "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-vssd5zi5/emit-3/stderr.bin",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stdin": {
+              "kind": "devnull"
+            },
+            "host_before": {
+              "timestamp_utc": "2026-11-28T10:05:24.114316+00:00",
+              "load_average": [
+                8.90478515625,
+                16.5107421875,
+                9.26611328125
+              ]
+            },
+            "host_after": {
+              "timestamp_utc": "2026-11-28T10:05:24.178001+00:00",
+              "load_average": [
+                8.90478515625,
+                16.5107421875,
+                9.26611328125
+              ]
+            },
+            "generated_c_bytes": 1493953,
+            "matches_fixed_point": true
+          },
+          {
+            "argv": [
+              "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-axrnq6b2/stages/stage2/yavo-selfhost",
+              "emit-c",
+              "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-axrnq6b2/selfhost-src/main.yv",
+              "-o",
+              "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-vssd5zi5/sample-4.c"
+            ],
+            "cwd": "/Users/runner/work/yavo/yavo",
+            "environment": {
+              "YAVO_NO_CACHE": "1",
+              "YAVO_ALLOC_CHECK": "1"
+            },
+            "exit_code": 0,
+            "timed_out": false,
+            "launch_error": null,
+            "elapsed_seconds": 0.05990191699999059,
+            "peak_process_memory_bytes": 35700736,
+            "memory_measurement": "wait4 ru_maxrss (bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+            "stdout": {
+              "path": "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-vssd5zi5/emit-4/stdout.bin",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stderr": {
+              "path": "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-vssd5zi5/emit-4/stderr.bin",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stdin": {
+              "kind": "devnull"
+            },
+            "host_before": {
+              "timestamp_utc": "2026-11-28T10:05:24.178601+00:00",
+              "load_average": [
+                8.90478515625,
+                16.5107421875,
+                9.26611328125
+              ]
+            },
+            "host_after": {
+              "timestamp_utc": "2026-11-28T10:05:24.239178+00:00",
+              "load_average": [
+                8.90478515625,
+                16.5107421875,
+                9.26611328125
+              ]
+            },
+            "generated_c_bytes": 1493953,
+            "matches_fixed_point": true
+          },
+          {
+            "argv": [
+              "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-axrnq6b2/stages/stage2/yavo-selfhost",
+              "emit-c",
+              "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-axrnq6b2/selfhost-src/main.yv",
+              "-o",
+              "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-vssd5zi5/sample-5.c"
+            ],
+            "cwd": "/Users/runner/work/yavo/yavo",
+            "environment": {
+              "YAVO_NO_CACHE": "1",
+              "YAVO_ALLOC_CHECK": "1"
+            },
+            "exit_code": 0,
+            "timed_out": false,
+            "launch_error": null,
+            "elapsed_seconds": 0.0584529579999753,
+            "peak_process_memory_bytes": 35586048,
+            "memory_measurement": "wait4 ru_maxrss (bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+            "stdout": {
+              "path": "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-vssd5zi5/emit-5/stdout.bin",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stderr": {
+              "path": "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-vssd5zi5/emit-5/stderr.bin",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stdin": {
+              "kind": "devnull"
+            },
+            "host_before": {
+              "timestamp_utc": "2026-11-28T10:05:24.239745+00:00",
+              "load_average": [
+                8.90478515625,
+                16.5107421875,
+                9.26611328125
+              ]
+            },
+            "host_after": {
+              "timestamp_utc": "2026-11-28T10:05:24.298879+00:00",
+              "load_average": [
+                8.90478515625,
+                16.5107421875,
+                9.26611328125
+              ]
+            },
+            "generated_c_bytes": 1493953,
+            "matches_fixed_point": true
+          }
+        ],
+        "warmup": {
+          "argv": [
+            "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-axrnq6b2/stages/stage2/yavo-selfhost",
+            "emit-c",
+            "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-axrnq6b2/selfhost-src/main.yv",
+            "-o",
+            "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-vssd5zi5/sample-0.c"
+          ],
+          "cwd": "/Users/runner/work/yavo/yavo",
+          "environment": {
+            "YAVO_NO_CACHE": "1",
+            "YAVO_ALLOC_CHECK": "1"
+          },
+          "exit_code": 0,
+          "timed_out": false,
+          "launch_error": null,
+          "elapsed_seconds": 0.059737084000005325,
+          "peak_process_memory_bytes": 35471360,
+          "memory_measurement": "wait4 ru_maxrss (bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+          "stdout": {
+            "path": "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-vssd5zi5/emit-0/stdout.bin",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stderr": {
+            "path": "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-vssd5zi5/emit-0/stderr.bin",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stdin": {
+            "kind": "devnull"
+          },
+          "host_before": {
+            "timestamp_utc": "2026-11-28T10:05:23.927563+00:00",
+            "load_average": [
+              8.90478515625,
+              16.5107421875,
+              9.26611328125
+            ]
+          },
+          "host_after": {
+            "timestamp_utc": "2026-11-28T10:05:23.988059+00:00",
+            "load_average": [
+              8.90478515625,
+              16.5107421875,
+              9.26611328125
+            ]
+          },
+          "generated_c_bytes": 1493953,
+          "matches_fixed_point": true
+        },
+        "frontend": {
+          "samples": 5,
+          "p50_seconds": 0.05990191699999059,
+          "p95_seconds": 0.06518549999998413,
+          "peak_rss_bytes": 35700736,
+          "rss_observations": 5
+        },
+        "backend_observation": {
+          "argv": [
+            "/Users/runner/work/_temp/yavo-home/toolchains/zig-aarch64-macos-0.17.1/zig",
+            "cc",
+            "-std=c17",
+            "-fno-strict-aliasing",
+            "-DYV_ALLOC_CHECK",
+            "-O2",
+            "-s",
+            "-I",
+            "/Users/runner/work/yavo/yavo/compiler/runtime",
+            "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-vssd5zi5/sample-5.c",
+            "-o",
+            "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-vssd5zi5/yavo-selfhost"
+          ],
+          "cwd": "/Users/runner/work/yavo/yavo",
+          "environment": {
+            "YAVO_NO_CACHE": "1",
+            "YAVO_ALLOC_CHECK": "1"
+          },
+          "exit_code": 0,
+          "timed_out": false,
+          "launch_error": null,
+          "elapsed_seconds": 5.913343291999979,
+          "peak_process_memory_bytes": 238288896,
+          "memory_measurement": "wait4 ru_maxrss (bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+          "stdout": {
+            "path": "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-vssd5zi5/backend/stdout.bin",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stderr": {
+            "path": "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-vssd5zi5/backend/stderr.bin",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stdin": {
+            "kind": "devnull"
+          },
+          "host_before": {
+            "timestamp_utc": "2026-11-28T10:05:24.299470+00:00",
+            "load_average": [
+              8.90478515625,
+              16.5107421875,
+              9.26611328125
+            ]
+          },
+          "host_after": {
+            "timestamp_utc": "2026-11-28T10:05:30.220333+00:00",
+            "load_average": [
+              8.431640625,
+              16.2861328125,
+              9.22900390625
+            ]
+          }
+        },
+        "input_changes": [],
+        "status": "passed"
+      },
+      "fetch_source_sha256": "e58dd1795a91c96192f54749deabd1bfee64d2b883af57b91a5c51b3398c961d",
+      "local_reader_receipt": {
+        "path": "compiler/target/batch54/native-core/e58f5e5/macos/core-evidence.json",
+        "bytes": 23505,
+        "sha256": "cbb4ea61cd17c61ef00aefe7e1f905352c4d3615e262f2980ab931763499cb8f"
+      }
+    },
+    "windows": {
+      "schema": "yavo-batch54-native-core-read/1",
+      "recorded_at_utc": "2026-11-28T10:13:36.416300+00:00",
+      "platform": "windows",
+      "status": "passed",
+      "run_id": 46133275430,
+      "head_sha": "e58f5e5ff95cc2419f8d0740bd27c4c8ca260cf1",
+      "job": {
+        "id": 140942981514,
+        "name": "Native Windows x86_64",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-11-28T10:02:54Z",
+        "completed_at": "2026-11-28T10:11:17Z"
+      },
+      "artifact": {
+        "id": 15259125922,
+        "node_id": "MDg6QXJ0aWZhY3QxNTI1OTEyNTkyMg==",
+        "name": "native-windows-2025-e58f5e5ff95cc2419f8d0740bd27c4c8ca260cf1",
+        "size_in_bytes": 142252488,
+        "url": "https://api.github.com/repos/msly/yavo/actions/artifacts/15259125922",
+        "archive_download_url": "https://api.github.com/repos/msly/yavo/actions/artifacts/15259125922/zip",
+        "expired": false,
+        "digest": "sha256:62634dfb09164dcfbc8f5c708b900fa2464a44ec450760a76991cf7a5f713f10",
+        "created_at": "2026-11-28T10:11:12Z",
+        "updated_at": "2026-11-28T10:11:12Z",
+        "expires_at": "2026-12-12T10:10:54Z",
+        "workflow_run": {
+          "id": 46133275430,
+          "repository_id": 1467240913,
+          "head_repository_id": 1467240913,
+          "head_branch": "main",
+          "head_sha": "e58f5e5ff95cc2419f8d0740bd27c4c8ca260cf1"
+        }
+      },
+      "inventory_sha256": "7e8e4aa81333c9a76e843818da1e13d5b6dd200bf87b12ed52a5769c566b63a8",
+      "selected_members": {
+        "results.json": {
+          "local_path": "compiler/target/batch54/native-core/e58f5e5/windows/results.json",
+          "bytes": 6002,
+          "sha256": "bf3b02e7dea0a08f0cf52e7baf0fd6719873a4dace64f7ba6c65f7be291804ba"
+        },
+        "selfhost/receipt.json": {
+          "local_path": "compiler/target/batch54/native-core/e58f5e5/windows/selfhost-receipt.json",
+          "bytes": 3059337,
+          "sha256": "6b49d4fb1843a8b373077b02a48427889400716ce7bca22f6d7435b4a947307a"
+        },
+        "selfhost/subset-sweep.json": {
+          "local_path": "compiler/target/batch54/native-core/e58f5e5/windows/selfhost-subset-sweep.json",
+          "bytes": 1552099,
+          "sha256": "4087631cb1666deec71d3f3c1f2607fc05725cd65aae3c0a84cc44aec68efd1a"
+        },
+        "selfhost/profile-calibration.json": {
+          "local_path": "compiler/target/batch54/native-core/e58f5e5/windows/selfhost-profile-calibration.json",
+          "bytes": 201788,
+          "sha256": "9f39a34b0922609c7d0836a6a05d1976cf3642c1b125320223ba10b8fecb25c4"
+        },
+        "selfhost/metrics.json": {
+          "local_path": "compiler/target/batch54/native-core/e58f5e5/windows/selfhost-metrics.json",
+          "bytes": 16626,
+          "sha256": "5ade5849dec69ca59a90813575ffe9ff56cb308cd9bb38141bd8014d13740cf9"
+        }
+      },
+      "verification_scope": "Read five named Core JSON receipts only; no full member-by-member archive audit, no nested product archives, no replayed runtime gate.",
+      "archive_tree_extracted": false,
+      "inputs_match_current_sources": {
+        "selfhost/tests/cases.json": true,
+        "selfhost/bootstrap.py": true,
+        "compiler/runtime/yavo_rt.h": true,
+        "selfhost/embed_runtime.py": true,
+        "compiler/toolchain.lock": true,
+        "tools/ci/validation-policy.json": true,
+        "selfhost/core_cases.py": true
+      },
+      "bootstrap": {
+        "status": "passed",
+        "passed": 90,
+        "failed": 0,
+        "total": 90,
+        "checks_passed": 13,
+        "checks_failed": 0,
+        "checks_skipped": 0,
+        "case_counts": {
+          "panic": 10,
+          "reject": 20,
+          "run": 54,
+          "shared_unsupported": 2,
+          "unsupported": 4
+        },
+        "validation_tier": "core"
+      },
+      "fixed_point": {
+        "stage2_c": {
+          "bytes": 1493909,
+          "sha256": "bbfa4ccac23cb2daccad814263428433a9af1f795447713cbf3fc19eeb8d4f52"
+        },
+        "stage3_c": {
+          "bytes": 1493909,
+          "sha256": "bbfa4ccac23cb2daccad814263428433a9af1f795447713cbf3fc19eeb8d4f52"
+        },
+        "stage2_sha256": "cd2a8b031ffc6e5e28c549f06571114c332ed466722c57ef5017dcfc33522820",
+        "stage3_sha256": "cd2a8b031ffc6e5e28c549f06571114c332ed466722c57ef5017dcfc33522820"
+      },
+      "sweep_summary": {
+        "sources": 622,
+        "stage0_accepted": {
+          "paths": 394,
+          "unique_entry_bytes": 224,
+          "unique_module_graphs": 224
+        },
+        "selfhost_accepted": {
+          "paths": 135,
+          "unique_entry_bytes": 68,
+          "unique_module_graphs": 68
+        },
+        "stage0_rejected": 228,
+        "blocked": {
+          "paths": 259,
+          "unique_entry_bytes": 156,
+          "unique_module_graphs": 156
+        },
+        "analysis_complete": 394,
+        "unresolved_semantics": 259,
+        "accepted_profile_false_positive_paths": 0
+      },
+      "accepted_path_sets_equal_local_core": true,
+      "calibration_summary": {
+        "passed": 399,
+        "failed": 0,
+        "skipped": 3
+      },
+      "metrics": {
+        "schema": "yavo-selfhost-metrics/1",
+        "batch": 54,
+        "host": {
+          "system": "Windows",
+          "machine": "AMD64",
+          "timestamp_utc": "2026-11-28T10:10:41.151445+00:00",
+          "load_average": null
+        },
+        "environment_qualification": {
+          "status": "github_hosted_observation",
+          "github_hosted": true,
+          "run_id": "46133275430",
+          "run_attempt": "1",
+          "head_sha": "e58f5e5ff95cc2419f8d0740bd27c4c8ca260cf1",
+          "runner_os": "Windows",
+          "runner_arch": "X64",
+          "runner_name": "GitHub Actions 1000001246",
+          "image_os": null,
+          "image_version": null,
+          "cpu_model": "Intel64 Family 6 Model 207 Stepping 2, GenuineIntel",
+          "cpu_model_source": "platform.processor/PROCESSOR_IDENTIFIER",
+          "cpu_count": 4,
+          "affinity": null,
+          "isolation_evidence": "separate GitHub job; no per-sample foreign-build audit",
+          "eligible_for_controlled_performance_trend": false
+        },
+        "source": "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\run-w25t2z4u\\selfhost-src\\main.yv",
+        "compiler": {
+          "path": "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\run-w25t2z4u\\stages\\stage2\\yavo-selfhost.exe",
+          "bytes": 863744,
+          "sha256": "cd2a8b031ffc6e5e28c549f06571114c332ed466722c57ef5017dcfc33522820"
+        },
+        "generated_c": {
+          "path": "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\run-w25t2z4u\\stages\\stage3\\yavo-selfhost.c",
+          "bytes": 1493909,
+          "sha256": "bbfa4ccac23cb2daccad814263428433a9af1f795447713cbf3fc19eeb8d4f52"
+        },
+        "warmups": 1,
+        "scope": "stage2 emit-c of the compiler itself; separate native backend observation",
+        "cache": "Yavo frontend cache disabled; existing OS and Zig caches; not cold builds",
+        "memory_scope": "OS wait4 RSS of the waited compiler child, not a process-tree sum; the measurement process does not parse the Full receipt; Python launcher floor remains; null where unavailable",
+        "receipt_loading": "separate short-lived reader process; its RSS is not used as compiler RSS",
+        "backend_scope": "single_observation_not_distribution",
+        "bootstrap_receipt": {
+          "path": "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\receipt.json",
+          "bytes": 3059337,
+          "sha256": "6b49d4fb1843a8b373077b02a48427889400716ce7bca22f6d7435b4a947307a"
+        },
+        "formal_small_program_target": {
+          "compile_p50_ms": 200,
+          "stripped_linux_bytes": 250000,
+          "evaluated_by_this_self_compile_probe": false
+        },
+        "inputs": {
+          "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\run-w25t2z4u\\stages\\stage2\\yavo-selfhost.exe": "cd2a8b031ffc6e5e28c549f06571114c332ed466722c57ef5017dcfc33522820",
+          "D:\\a\\_temp\\yavo-home\\toolchains\\zig-x86_64-windows-0.17.1\\zig.exe": "8d6f248cdb0fc2ecd5e17c5282ef3f8a4b614beac12e6d27d12462cde59fe56b",
+          "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\run-w25t2z4u\\stages\\stage3\\yavo-selfhost.c": "bbfa4ccac23cb2daccad814263428433a9af1f795447713cbf3fc19eeb8d4f52",
+          "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\run-w25t2z4u\\selfhost-src\\codegen.yv": "146db08285f644f66011fe02cf0c96b32a8bfd9f12af77f8f3bab34c24d3e5cd",
+          "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\run-w25t2z4u\\selfhost-src\\digest.yv": "e7c6a6a496bbdcdee401f897032ee9447f1b7f9982e23c1bf9f7e124f4cb68d7",
+          "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\run-w25t2z4u\\selfhost-src\\driver.yv": "01f543793f2bce65c2bf04aca0e463a894d1d9336feb0d96b55c335bec647464",
+          "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\run-w25t2z4u\\selfhost-src\\lexer.yv": "668743282425eaea209ded5e499a6a12608728bd4e6bae16fb03886fe7485b40",
+          "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\run-w25t2z4u\\selfhost-src\\lexer_test.yv": "9105c9728e6728237070fce90c7755e1c30acd652594534ccf11d875b46bf49f",
+          "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\run-w25t2z4u\\selfhost-src\\main.yv": "fcf554007b4dda50dcc0d7ef3e4c57b234878ca0352161a5055fa6001a203be5",
+          "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\run-w25t2z4u\\selfhost-src\\model.yv": "6cac6c08a9fa708b8a586082ccb6cb0179ebefe0a48ff3a75537d1710f70cfd3",
+          "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\run-w25t2z4u\\selfhost-src\\parser.yv": "31c565dbf7705879ad7dd2cb538bdfee344e1a695272960109cd5606674e1687",
+          "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\run-w25t2z4u\\selfhost-src\\runtime_source.yv": "21a5f8f7d558d7c6570b2525d4525ede1d75d64e58371b8c8589315d2a18e754",
+          "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\run-w25t2z4u\\selfhost-src\\support.yv": "12a4b08856d7b8f1203e95f2d92639a6de7c3be56d35ad964cb0f526868197ce",
+          "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\run-w25t2z4u\\selfhost-src\\types.yv": "7bf34f875fadddd8463cf2e80beab8b5c18677ddf527274be6da73d00b05f291",
+          "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\receipt.json": "6b49d4fb1843a8b373077b02a48427889400716ce7bca22f6d7435b4a947307a"
+        },
+        "frontend_samples": [
+          {
+            "argv": [
+              "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\run-w25t2z4u\\stages\\stage2\\yavo-selfhost.exe",
+              "emit-c",
+              "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\run-w25t2z4u\\selfhost-src\\main.yv",
+              "-o",
+              "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\metrics-2ppk2gwz\\sample-1.c"
+            ],
+            "cwd": "D:\\a\\yavo\\yavo",
+            "environment": {
+              "YAVO_NO_CACHE": "1",
+              "YAVO_ALLOC_CHECK": "1"
+            },
+            "exit_code": 0,
+            "timed_out": false,
+            "launch_error": null,
+            "elapsed_seconds": 0.09300000000007458,
+            "peak_process_memory_bytes": null,
+            "memory_measurement": "unavailable: wait4 ru_maxrss is not supported by this runner on win32",
+            "stdout": {
+              "path": "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\metrics-2ppk2gwz\\emit-1\\stdout.bin",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stderr": {
+              "path": "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\metrics-2ppk2gwz\\emit-1\\stderr.bin",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stdin": {
+              "kind": "devnull"
+            },
+            "host_before": {
+              "timestamp_utc": "2026-11-28T10:10:41.278548+00:00",
+              "load_average": null
+            },
+            "host_after": {
+              "timestamp_utc": "2026-11-28T10:10:41.380915+00:00",
+              "load_average": null
+            },
+            "generated_c_bytes": 1493909,
+            "matches_fixed_point": true
+          },
+          {
+            "argv": [
+              "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\run-w25t2z4u\\stages\\stage2\\yavo-selfhost.exe",
+              "emit-c",
+              "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\run-w25t2z4u\\selfhost-src\\main.yv",
+              "-o",
+              "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\metrics-2ppk2gwz\\sample-2.c"
+            ],
+            "cwd": "D:\\a\\yavo\\yavo",
+            "environment": {
+              "YAVO_NO_CACHE": "1",
+              "YAVO_ALLOC_CHECK": "1"
+            },
+            "exit_code": 0,
+            "timed_out": false,
+            "launch_error": null,
+            "elapsed_seconds": 0.10999999999989996,
+            "peak_process_memory_bytes": null,
+            "memory_measurement": "unavailable: wait4 ru_maxrss is not supported by this runner on win32",
+            "stdout": {
+              "path": "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\metrics-2ppk2gwz\\emit-2\\stdout.bin",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stderr": {
+              "path": "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\metrics-2ppk2gwz\\emit-2\\stderr.bin",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stdin": {
+              "kind": "devnull"
+            },
+            "host_before": {
+              "timestamp_utc": "2026-11-28T10:10:41.382948+00:00",
+              "load_average": null
+            },
+            "host_after": {
+              "timestamp_utc": "2026-11-28T10:10:41.482295+00:00",
+              "load_average": null
+            },
+            "generated_c_bytes": 1493909,
+            "matches_fixed_point": true
+          },
+          {
+            "argv": [
+              "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\run-w25t2z4u\\stages\\stage2\\yavo-selfhost.exe",
+              "emit-c",
+              "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\run-w25t2z4u\\selfhost-src\\main.yv",
+              "-o",
+              "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\metrics-2ppk2gwz\\sample-3.c"
+            ],
+            "cwd": "D:\\a\\yavo\\yavo",
+            "environment": {
+              "YAVO_NO_CACHE": "1",
+              "YAVO_ALLOC_CHECK": "1"
+            },
+            "exit_code": 0,
+            "timed_out": false,
+            "launch_error": null,
+            "elapsed_seconds": 0.09400000000005093,
+            "peak_process_memory_bytes": null,
+            "memory_measurement": "unavailable: wait4 ru_maxrss is not supported by this runner on win32",
+            "stdout": {
+              "path": "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\metrics-2ppk2gwz\\emit-3\\stdout.bin",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stderr": {
+              "path": "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\metrics-2ppk2gwz\\emit-3\\stderr.bin",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stdin": {
+              "kind": "devnull"
+            },
+            "host_before": {
+              "timestamp_utc": "2026-11-28T10:10:41.484305+00:00",
+              "load_average": null
+            },
+            "host_after": {
+              "timestamp_utc": "2026-11-28T10:10:41.585002+00:00",
+              "load_average": null
+            },
+            "generated_c_bytes": 1493909,
+            "matches_fixed_point": true
+          },
+          {
+            "argv": [
+              "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\run-w25t2z4u\\stages\\stage2\\yavo-selfhost.exe",
+              "emit-c",
+              "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\run-w25t2z4u\\selfhost-src\\main.yv",
+              "-o",
+              "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\metrics-2ppk2gwz\\sample-4.c"
+            ],
+            "cwd": "D:\\a\\yavo\\yavo",
+            "environment": {
+              "YAVO_NO_CACHE": "1",
+              "YAVO_ALLOC_CHECK": "1"
+            },
+            "exit_code": 0,
+            "timed_out": false,
+            "launch_error": null,
+            "elapsed_seconds": 0.10900000000003729,
+            "peak_process_memory_bytes": null,
+            "memory_measurement": "unavailable: wait4 ru_maxrss is not supported by this runner on win32",
+            "stdout": {
+              "path": "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\metrics-2ppk2gwz\\emit-4\\stdout.bin",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stderr": {
+              "path": "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\metrics-2ppk2gwz\\emit-4\\stderr.bin",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stdin": {
+              "kind": "devnull"
+            },
+            "host_before": {
+              "timestamp_utc": "2026-11-28T10:10:41.587012+00:00",
+              "load_average": null
+            },
+            "host_after": {
+              "timestamp_utc": "2026-11-28T10:10:41.685950+00:00",
+              "load_average": null
+            },
+            "generated_c_bytes": 1493909,
+            "matches_fixed_point": true
+          },
+          {
+            "argv": [
+              "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\run-w25t2z4u\\stages\\stage2\\yavo-selfhost.exe",
+              "emit-c",
+              "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\run-w25t2z4u\\selfhost-src\\main.yv",
+              "-o",
+              "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\metrics-2ppk2gwz\\sample-5.c"
+            ],
+            "cwd": "D:\\a\\yavo\\yavo",
+            "environment": {
+              "YAVO_NO_CACHE": "1",
+              "YAVO_ALLOC_CHECK": "1"
+            },
+            "exit_code": 0,
+            "timed_out": false,
+            "launch_error": null,
+            "elapsed_seconds": 0.09399999999993724,
+            "peak_process_memory_bytes": null,
+            "memory_measurement": "unavailable: wait4 ru_maxrss is not supported by this runner on win32",
+            "stdout": {
+              "path": "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\metrics-2ppk2gwz\\emit-5\\stdout.bin",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stderr": {
+              "path": "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\metrics-2ppk2gwz\\emit-5\\stderr.bin",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stdin": {
+              "kind": "devnull"
+            },
+            "host_before": {
+              "timestamp_utc": "2026-11-28T10:10:41.687959+00:00",
+              "load_average": null
+            },
+            "host_after": {
+              "timestamp_utc": "2026-11-28T10:10:41.787199+00:00",
+              "load_average": null
+            },
+            "generated_c_bytes": 1493909,
+            "matches_fixed_point": true
+          }
+        ],
+        "warmup": {
+          "argv": [
+            "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\run-w25t2z4u\\stages\\stage2\\yavo-selfhost.exe",
+            "emit-c",
+            "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\run-w25t2z4u\\selfhost-src\\main.yv",
+            "-o",
+            "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\metrics-2ppk2gwz\\sample-0.c"
+          ],
+          "cwd": "D:\\a\\yavo\\yavo",
+          "environment": {
+            "YAVO_NO_CACHE": "1",
+            "YAVO_ALLOC_CHECK": "1"
+          },
+          "exit_code": 0,
+          "timed_out": false,
+          "launch_error": null,
+          "elapsed_seconds": 0.09400000000005093,
+          "peak_process_memory_bytes": null,
+          "memory_measurement": "unavailable: wait4 ru_maxrss is not supported by this runner on win32",
+          "stdout": {
+            "path": "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\metrics-2ppk2gwz\\emit-0\\stdout.bin",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stderr": {
+            "path": "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\metrics-2ppk2gwz\\emit-0\\stderr.bin",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stdin": {
+            "kind": "devnull"
+          },
+          "host_before": {
+            "timestamp_utc": "2026-11-28T10:10:41.167548+00:00",
+            "load_average": null
+          },
+          "host_after": {
+            "timestamp_utc": "2026-11-28T10:10:41.272487+00:00",
+            "load_average": null
+          },
+          "generated_c_bytes": 1493909,
+          "matches_fixed_point": true
+        },
+        "frontend": {
+          "samples": 5,
+          "p50_seconds": 0.09400000000005093,
+          "p95_seconds": 0.10999999999989996,
+          "peak_rss_bytes": null,
+          "rss_observations": 0
+        },
+        "backend_observation": {
+          "argv": [
+            "D:\\a\\_temp\\yavo-home\\toolchains\\zig-x86_64-windows-0.17.1\\zig.exe",
+            "cc",
+            "-std=c17",
+            "-fno-strict-aliasing",
+            "-DYV_ALLOC_CHECK",
+            "-O2",
+            "-s",
+            "-I",
+            "D:\\a\\yavo\\yavo\\compiler\\runtime",
+            "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\metrics-2ppk2gwz\\sample-5.c",
+            "-o",
+            "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\metrics-2ppk2gwz\\yavo-selfhost.exe"
+          ],
+          "cwd": "D:\\a\\yavo\\yavo",
+          "environment": {
+            "YAVO_NO_CACHE": "1",
+            "YAVO_ALLOC_CHECK": "1"
+          },
+          "exit_code": 0,
+          "timed_out": false,
+          "launch_error": null,
+          "elapsed_seconds": 10.687000000000012,
+          "peak_process_memory_bytes": null,
+          "memory_measurement": "unavailable: wait4 ru_maxrss is not supported by this runner on win32",
+          "stdout": {
+            "path": "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\metrics-2ppk2gwz\\backend\\stdout.bin",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stderr": {
+            "path": "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\metrics-2ppk2gwz\\backend\\stderr.bin",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stdin": {
+            "kind": "devnull"
+          },
+          "host_before": {
+            "timestamp_utc": "2026-11-28T10:10:41.789258+00:00",
+            "load_average": null
+          },
+          "host_after": {
+            "timestamp_utc": "2026-11-28T10:10:52.472427+00:00",
+            "load_average": null
+          }
+        },
+        "input_changes": [],
+        "status": "passed"
+      },
+      "fetch_source_sha256": "e58dd1795a91c96192f54749deabd1bfee64d2b883af57b91a5c51b3398c961d",
+      "local_reader_receipt": {
+        "path": "compiler/target/batch54/native-core/e58f5e5/windows/core-evidence.json",
+        "bytes": 21736,
+        "sha256": "e4122c71486783ac7a8e74b6f9e29095ec67933d790220f5fc932bb831309640"
+      }
+    }
+  },
+  "terminal_evidence": {
+    "path": "compiler/target/batch54/ci-watch-contract/terminal-evidence.json",
+    "bytes": 65982,
+    "sha256": "cbce6d69b045eeada50940acb67b6b3c0457a2716ed0c7e475d3aa8f0bb009fe"
+  },
+  "reader": {
+    "path": "compiler/target/batch54/fetch_native_core.py",
+    "bytes": 8861,
+    "sha256": "e58dd1795a91c96192f54749deabd1bfee64d2b883af57b91a5c51b3398c961d",
+    "source": "#!/usr/bin/env python3\n\"\"\"Read only Core receipts from a successful, precisely identified native job.\"\"\"\nimport argparse\nimport datetime\nimport hashlib\nimport importlib.util\nimport json\nfrom pathlib import Path\nimport re\nimport shutil\nimport stat\nimport zipfile\n\nROOT = Path.cwd()\nspec = importlib.util.spec_from_file_location('safe_artifact_fetch', ROOT / 'compiler/target/batch51/download_ci_artifact.py')\nsafe = importlib.util.module_from_spec(spec)\nspec.loader.exec_module(safe)\nPLATFORMS = {'linux': ('ubuntu-24.04', 'Native Linux x86_64'), 'macos': ('macos-15', 'Native macOS arm64'), 'windows': ('windows-2025', 'Native Windows x86_64')}\nSELECTED = ('results.json', 'selfhost/receipt.json', 'selfhost/subset-sweep.json', 'selfhost/profile-calibration.json', 'selfhost/metrics.json')\n\ndef sha(path):\n    with Path(path).open('rb') as stream:\n        return hashlib.file_digest(stream, 'sha256').hexdigest()\n\ndef save(path, data):\n    Path(path).write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\\n', encoding='utf-8')\n\ndef accepted(sweep, compiler):\n    return {x['path'] for x in sweep['rows'] if x['stage0']['exit'] == 0 and (compiler == 'stage0' or x.get('selfhost', {}).get('exit') == 0)}\n\ndef main():\n    ap = argparse.ArgumentParser()\n    ap.add_argument('--platform', choices=PLATFORMS, required=True)\n    ap.add_argument('--run-id', type=int, required=True)\n    ap.add_argument('--head', required=True)\n    ap.add_argument('--watch', type=Path, required=True)\n    args = ap.parse_args()\n    safe.require(re.fullmatch('[0-9a-f]{40}', args.head), 'invalid exact head')\n    runner, jobname = PLATFORMS[args.platform]\n    jobs = json.loads((args.watch / 'jobs-latest.json').read_text(encoding='utf-8'))['jobs']\n    candidates = [j for j in jobs if j['name'] == jobname and j.get('head_sha') == args.head]\n    safe.require(len(candidates) == 1, 'missing or duplicate native job')\n    job = candidates[0]\n    safe.require(job['status'] == 'completed' and job['conclusion'] == 'success', 'native job is not successful and complete')\n    inventory_path = args.watch / 'artifacts-latest.json'\n    inventory = json.loads(inventory_path.read_text(encoding='utf-8'))\n    candidates = [a for a in inventory['artifacts'] if a['name'] == 'native-' + runner + '-' + args.head]\n    safe.require(len(candidates) == 1, 'missing or duplicate native artifact')\n    artifact = candidates[0]\n    run = artifact['workflow_run']\n    safe.require(run['id'] == args.run_id and run['head_sha'] == args.head and run['head_branch'] == 'main', 'wrong artifact producer')\n    safe.require(run['repository_id'] == run['head_repository_id'] == safe.REPOSITORY_ID, 'wrong artifact repository')\n    api = 'https://api.github.com/repos/msly/yavo/actions/artifacts/' + str(artifact['id'])\n    safe.require(artifact['url'] == api and artifact['archive_download_url'] == api + '/zip', 'wrong artifact API ownership')\n    safe.require(not artifact.get('expired') and artifact['size_in_bytes'] > 0 and re.fullmatch('sha256:[0-9a-f]{64}', artifact['digest']), 'invalid artifact metadata')\n    out = ROOT / 'compiler/target/batch54/native-core' / args.head[:7] / args.platform\n    out.mkdir(parents=True, exist_ok=True)\n    archive_path = out / 'artifact.zip'\n    if not archive_path.exists():\n        safe.require(shutil.disk_usage(out).free > artifact['size_in_bytes'] + 256 * 1024**2, 'insufficient artifact download space')\n        temp = out / 'artifact.zip.part'\n        digest = hashlib.sha256()\n        size = 0\n        try:\n            with safe.artifact_response(artifact['archive_download_url']) as response, temp.open('wb') as stream:\n                while data := response.read(1024**2):\n                    size += len(data)\n                    safe.require(size <= artifact['size_in_bytes'], 'artifact exceeds declared size')\n                    stream.write(data)\n                    digest.update(data)\n        except Exception:\n            raise RuntimeError('Artifact transfer failed; credentials and signed URL redacted') from None\n        safe.require(size == artifact['size_in_bytes'] and 'sha256:' + digest.hexdigest() == artifact['digest'], 'artifact container identity mismatch')\n        temp.replace(archive_path)\n    safe.require(archive_path.stat().st_size == artifact['size_in_bytes'] and 'sha256:' + sha(archive_path) == artifact['digest'], 'stored artifact container identity mismatch')\n    selected = {}\n    data_by_name = {}\n    with zipfile.ZipFile(archive_path) as archive:\n        infos = archive.infolist()\n        for name in SELECTED:\n            matches = [x for x in infos if x.filename == name]\n            safe.require(len(matches) == 1, 'selected receipt missing or duplicated: ' + name)\n            member = matches[0]\n            safe.require(not member.is_dir() and not member.flag_bits & 1 and stat.S_IFMT(member.external_attr >> 16) in (0, stat.S_IFREG), 'invalid selected receipt kind')\n            safe.require(0 < member.file_size <= 20 * 1024**2, 'selected receipt exceeds size limit')\n            raw = archive.read(member)\n            local = name.replace('/', '-')\n            (out / local).write_bytes(raw)\n            data_by_name[name] = json.loads(raw)\n            selected[name] = {'local_path': str((out / local).relative_to(ROOT)), 'bytes': len(raw), 'sha256': hashlib.sha256(raw).hexdigest()}\n    r = data_by_name['selfhost/receipt.json']\n    sweep = data_by_name['selfhost/subset-sweep.json']\n    calibration = data_by_name['selfhost/profile-calibration.json']\n    metrics = data_by_name['selfhost/metrics.json']\n    safe.require(r['status'] == 'passed' and r['validation_tier'] == 'core' and r['failed'] == r['checks_failed'] == 0, 'native Core receipt failed or wrong tier')\n    safe.require(r['stages']['stage2_c'] == r['stages']['stage3_c'] and r['stages']['stage2_sha256'] == r['stages']['stage3_sha256'], 'native fixed point differs')\n    safe.require(r['case_selection']['baseline_commit'] == 'f0183c07195c658de0d0fc859d79406b53893655', 'wrong Core selection baseline')\n    expected_inputs = {'manifest_sha256': 'selfhost/tests/cases.json', 'harness_sha256': 'selfhost/bootstrap.py', 'runtime_sha256': 'compiler/runtime/yavo_rt.h', 'runtime_generator_sha256': 'selfhost/embed_runtime.py', 'toolchain_lock_sha256': 'compiler/toolchain.lock', 'validation_policy_sha256': 'tools/ci/validation-policy.json', 'core_selector_sha256': 'selfhost/core_cases.py'}\n    identity_checks = {}\n    for field, path in expected_inputs.items():\n        identity_checks[path] = r['inputs'][field] == sha(ROOT / path)\n    safe.require(all(identity_checks.values()), 'native input identity differs from current exact sources')\n    local = json.loads((ROOT / 'compiler/target/ci/selfhost-batch54-final/subset-sweep.json').read_text(encoding='utf-8'))\n    safe.require(sweep['passed'] and calibration['passed'] and metrics['status'] == 'passed', 'Core sweep/calibration/metrics failed')\n    safe.require({x['path']: x['sha256'] for x in sweep['rows']} == {x['path']: x['sha256'] for x in local['rows']}, 'fixed original source inventory differs')\n    safe.require(all(accepted(sweep, c) == accepted(local, c) for c in ('stage0', 'selfhost')), 'fixed original accepted path sets differ')\n    q = metrics['environment_qualification']\n    safe.require(q['github_hosted'] and q['head_sha'] == args.head and str(q['run_id']) == str(args.run_id), 'metrics runner identity differs')\n    evidence = {'schema': 'yavo-batch54-native-core-read/1', 'recorded_at_utc': datetime.datetime.now(datetime.timezone.utc).isoformat(), 'platform': args.platform, 'status': 'passed', 'run_id': args.run_id, 'head_sha': args.head, 'job': {k: job[k] for k in ('id', 'name', 'status', 'conclusion', 'started_at', 'completed_at')}, 'artifact': artifact, 'inventory_sha256': sha(inventory_path), 'selected_members': selected, 'verification_scope': 'Read five named Core JSON receipts only; no full member-by-member archive audit, no nested product archives, no replayed runtime gate.', 'archive_tree_extracted': False, 'inputs_match_current_sources': identity_checks, 'bootstrap': {k: r[k] for k in ('status', 'passed', 'failed', 'total', 'checks_passed', 'checks_failed', 'checks_skipped', 'case_counts', 'validation_tier')}, 'fixed_point': {k: r['stages'][k] for k in ('stage2_c', 'stage3_c', 'stage2_sha256', 'stage3_sha256')}, 'sweep_summary': sweep['summary'], 'accepted_path_sets_equal_local_core': True, 'calibration_summary': calibration['summary'], 'metrics': metrics, 'fetch_source_sha256': sha(Path(__file__))}\n    save(out / 'core-evidence.json', evidence)\n    print(json.dumps({'platform': args.platform, 'status': evidence['status'], 'core': evidence['bootstrap'], 'coverage': sweep['summary'], 'selected_receipts': len(selected), 'path': str(out / 'core-evidence.json')}, ensure_ascii=False), flush=True)\n\nif __name__ == '__main__':\n    main()\n"
+  }
+}

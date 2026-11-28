@@ -160,5 +160,565 @@
       0.822265625
     ],
     "scope": "These observed startup values are preserved; they establish neither absence nor presence of cordis-rs overlap throughout the samples."
+  },
+  "controlled_series": [
+    {
+      "id": "batch54-isolated-52-53-pair",
+      "recorded_at_utc": "2026-11-28T10:04:28.776993+00:00",
+      "qualification": "controlled_dedicated_github_hosted_pair",
+      "source": "compiler/validation/batch54-paired-performance-2026-11-28.json",
+      "source_sha256": "ce6b32ee62cad6461002a0f803f49507426b493fc1eba7d5a041e466b835feea",
+      "producer": {
+        "run_id": 46132191802,
+        "head_sha": "cec3862644c477d1d3fb1e8e4bba8ad9636abbf8",
+        "job_id": 140939620862,
+        "job_conclusion": "success"
+      },
+      "cpu_model": "Intel(R) Xeon(R) 6975P-C",
+      "cpu_count": 4,
+      "versions": {
+        "52": "5fa6401db5726c635a34f8d4ce5c6cc32abc88cc",
+        "53": "f0183c07195c658de0d0fc859d79406b53893655",
+        "54": "cec3862644c477d1d3fb1e8e4bba8ad9636abbf8"
+      },
+      "cache_and_order_scope": {
+        "clock": "C supervisor CLOCK_MONOTONIC immediately before fork through wait4",
+        "usage": "raw Linux wait4 rusage; maxrss is kernel peak accounting, not simultaneous tree-RSS sum",
+        "python_receipts": "no Full receipt is parsed; child fork occurs in a low-RSS C supervisor",
+        "primary_backend": "fresh translation-unit contents; independent arm caches; warmed toolchain after one recorded warmup",
+        "small_program": "Rust stage0 Release/default native target; edited sources/build-cache miss; PCH hit required",
+        "small_target_ms": 200,
+        "formal_general_performance_goal_completed": false,
+        "job_pass_means": "identity, isolation, correctness and sample contract completed; threshold results are separate",
+        "cold_cache_warmups": "retained single observations, not a cold-build distribution"
+      },
+      "rows": [
+        {
+          "batch": 52,
+          "frontend_p50_seconds": 0.043421612,
+          "frontend_peak_rss_bytes": 28078080,
+          "frontend_samples": 9,
+          "backend_p50_seconds": 6.393912075,
+          "backend_peak_rss_bytes": 205324288,
+          "backend_samples": 7
+        },
+        {
+          "batch": 53,
+          "frontend_p50_seconds": 0.04478489,
+          "frontend_peak_rss_bytes": 28573696,
+          "frontend_samples": 9,
+          "backend_p50_seconds": 6.644826959,
+          "backend_peak_rss_bytes": 210759680,
+          "backend_samples": 7
+        }
+      ],
+      "comparison_rule": "Compare these two versions only within this runner and method. Historical shared-server absolute time/RSS values remain unqualified; current54 PCH is a separate observation, not a paired 53-to-54 causal estimate.",
+      "sizes_under_this_runner": {
+        "52": {
+          "generated_c": {
+            "path": "/home/runner/work/yavo/yavo/compiler/target/ci/perf54/artifacts/52/selfhost.c",
+            "bytes": 1778752,
+            "sha256": "1df5d9c8fc255081556924bfd54bdb34385d45fc927adbd2e84c8f4780d872e6"
+          },
+          "stripped_binary": {
+            "path": "/home/runner/work/yavo/yavo/compiler/target/ci/perf54/artifacts/52/selfhost",
+            "bytes": 739576,
+            "sha256": "f15f62ad179cda4d9f0447d3cfcfd2603f4fa77542f0a0480b5bcd930b795782"
+          },
+          "canonical_c_bytes": 1779238
+        },
+        "53": {
+          "generated_c": {
+            "path": "/home/runner/work/yavo/yavo/compiler/target/ci/perf54/artifacts/53/selfhost.c",
+            "bytes": 1493832,
+            "sha256": "c93898b1a7b061da4f0e12c9c0ae3f36f38c8aa20c8a908c16cc2a5b7e45f913"
+          },
+          "stripped_binary": {
+            "path": "/home/runner/work/yavo/yavo/compiler/target/ci/perf54/artifacts/53/selfhost",
+            "bytes": 773080,
+            "sha256": "0099d37771484484c6ee44ac3766dae59663e4a501feacc4e994b8365289a175"
+          },
+          "canonical_c_bytes": 1856574
+        }
+      },
+      "small_programs": [
+        {
+          "case": "integer_recurrence",
+          "52": {
+            "plain": {
+              "p50_ms": 143.86449000000002,
+              "p95_ms": 144.77804799999998,
+              "peak_rss_mib": 79.9140625,
+              "samples": 7,
+              "target_p50_le_200ms": null
+            },
+            "pch": {
+              "p50_ms": 115.080346,
+              "p95_ms": 117.194651,
+              "peak_rss_mib": 76.59765625,
+              "samples": 7,
+              "target_p50_le_200ms": true
+            },
+            "pch_savings_ms": 28.784144000000012,
+            "pch_savings_percent": 20.007817078418732
+          },
+          "53": {
+            "plain": {
+              "p50_ms": 142.821071,
+              "p95_ms": 144.316522,
+              "peak_rss_mib": 79.60546875,
+              "samples": 7,
+              "target_p50_le_200ms": null
+            },
+            "pch": {
+              "p50_ms": 113.387698,
+              "p95_ms": 116.97840599999999,
+              "peak_rss_mib": 76.66015625,
+              "samples": 7,
+              "target_p50_le_200ms": true
+            },
+            "pch_savings_ms": 29.43337299999999,
+            "pch_savings_percent": 20.608564824443864
+          },
+          "54_pch_separate_observation": {
+            "p50_ms": 115.712867,
+            "p95_ms": 116.738093,
+            "peak_rss_mib": 76.41015625,
+            "samples": 7,
+            "target_p50_le_200ms": true
+          }
+        },
+        {
+          "case": "vec_transform",
+          "52": {
+            "plain": {
+              "p50_ms": 154.431342,
+              "p95_ms": 161.17576,
+              "peak_rss_mib": 80.5390625,
+              "samples": 7,
+              "target_p50_le_200ms": null
+            },
+            "pch": {
+              "p50_ms": 126.147603,
+              "p95_ms": 129.655817,
+              "peak_rss_mib": 77.41015625,
+              "samples": 7,
+              "target_p50_le_200ms": true
+            },
+            "pch_savings_ms": 28.283738999999997,
+            "pch_savings_percent": 18.31476605312411
+          },
+          "53": {
+            "plain": {
+              "p50_ms": 153.327993,
+              "p95_ms": 155.230934,
+              "peak_rss_mib": 80.6640625,
+              "samples": 7,
+              "target_p50_le_200ms": null
+            },
+            "pch": {
+              "p50_ms": 124.890379,
+              "p95_ms": 129.11566599999998,
+              "peak_rss_mib": 77.16015625,
+              "samples": 7,
+              "target_p50_le_200ms": true
+            },
+            "pch_savings_ms": 28.437613999999996,
+            "pch_savings_percent": 18.54691595682727
+          },
+          "54_pch_separate_observation": {
+            "p50_ms": 123.287416,
+            "p95_ms": 124.1989,
+            "peak_rss_mib": 77.6015625,
+            "samples": 7,
+            "target_p50_le_200ms": true
+          }
+        },
+        {
+          "case": "mutref_scatter",
+          "52": {
+            "plain": {
+              "p50_ms": 153.592245,
+              "p95_ms": 159.104237,
+              "peak_rss_mib": 80.1640625,
+              "samples": 7,
+              "target_p50_le_200ms": null
+            },
+            "pch": {
+              "p50_ms": 126.00398099999998,
+              "p95_ms": 127.72995100000001,
+              "peak_rss_mib": 77.1640625,
+              "samples": 7,
+              "target_p50_le_200ms": true
+            },
+            "pch_savings_ms": 27.58826400000001,
+            "pch_savings_percent": 17.962016246328073
+          },
+          "53": {
+            "plain": {
+              "p50_ms": 155.489263,
+              "p95_ms": 160.60129,
+              "peak_rss_mib": 79.9140625,
+              "samples": 7,
+              "target_p50_le_200ms": null
+            },
+            "pch": {
+              "p50_ms": 126.054215,
+              "p95_ms": 126.98845,
+              "peak_rss_mib": 76.78515625,
+              "samples": 7,
+              "target_p50_le_200ms": true
+            },
+            "pch_savings_ms": 29.435047999999995,
+            "pch_savings_percent": 18.930598442671887
+          },
+          "54_pch_separate_observation": {
+            "p50_ms": 122.19972399999999,
+            "p95_ms": 122.832916,
+            "peak_rss_mib": 76.91015625,
+            "samples": 7,
+            "target_p50_le_200ms": true
+          }
+        },
+        {
+          "case": "deque_ring",
+          "52": {
+            "plain": {
+              "p50_ms": 156.937515,
+              "p95_ms": 161.899453,
+              "peak_rss_mib": 80.0390625,
+              "samples": 7,
+              "target_p50_le_200ms": null
+            },
+            "pch": {
+              "p50_ms": 128.153292,
+              "p95_ms": 130.937176,
+              "peak_rss_mib": 77.03515625,
+              "samples": 7,
+              "target_p50_le_200ms": true
+            },
+            "pch_savings_ms": 28.784222999999997,
+            "pch_savings_percent": 18.341199680649968
+          },
+          "53": {
+            "plain": {
+              "p50_ms": 156.43864599999998,
+              "p95_ms": 166.636051,
+              "peak_rss_mib": 80.0390625,
+              "samples": 7,
+              "target_p50_le_200ms": null
+            },
+            "pch": {
+              "p50_ms": 128.936378,
+              "p95_ms": 133.55184,
+              "peak_rss_mib": 77.1015625,
+              "samples": 7,
+              "target_p50_le_200ms": true
+            },
+            "pch_savings_ms": 27.502267999999987,
+            "pch_savings_percent": 17.580226308018542
+          },
+          "54_pch_separate_observation": {
+            "p50_ms": 125.97060600000002,
+            "p95_ms": 126.70678399999998,
+            "peak_rss_mib": 77.41015625,
+            "samples": 7,
+            "target_p50_le_200ms": true
+          }
+        }
+      ],
+      "performance_target": {
+        "pch_limit_ms": 200,
+        "measured_pch_arms": 12,
+        "passed": 12,
+        "general_performance_goal_closed": false
+      }
+    }
+  ],
+  "series_separation_note": "The size rows above retain their original source-path/host identities. New controlled CI performance and its corresponding sizes are a separate series; their absolute values are not spliced into old shared-host time/RSS trends.",
+  "native_ci_observations": {
+    "batch": 54,
+    "source": "compiler/validation/batch54-native-core-2026-11-28.json",
+    "run_id": 46133275430,
+    "head_sha": "e58f5e5ff95cc2419f8d0740bd27c4c8ca260cf1",
+    "scope": "Native per-batch observations with host/load metadata and the existing Python wait4 method; separate from the controlled C-supervisor paired experiment. No cross-platform absolute timing comparison.",
+    "platforms": {
+      "linux": {
+        "environment_qualification": {
+          "status": "github_hosted_observation",
+          "github_hosted": true,
+          "run_id": "46133275430",
+          "run_attempt": "1",
+          "head_sha": "e58f5e5ff95cc2419f8d0740bd27c4c8ca260cf1",
+          "runner_os": "Linux",
+          "runner_arch": "X64",
+          "runner_name": "GitHub Actions 1000001244",
+          "image_os": "ubuntu24",
+          "image_version": "20261122.23.1",
+          "cpu_model": "Intel(R) Xeon(R) 6975P-C",
+          "cpu_model_source": "/proc/cpuinfo",
+          "cpu_count": 4,
+          "affinity": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "isolation_evidence": "separate GitHub job; no per-sample foreign-build audit",
+          "eligible_for_controlled_performance_trend": false
+        },
+        "frontend": {
+          "samples": 5,
+          "p50_seconds": 0.04650842000000921,
+          "p95_seconds": 0.04664215600001853,
+          "peak_rss_bytes": 28512256,
+          "rss_observations": 5
+        },
+        "backend_observation": {
+          "argv": [
+            "/home/runner/work/_temp/yavo-home/toolchains/zig-x86_64-linux-0.17.1/zig",
+            "cc",
+            "-std=c17",
+            "-fno-strict-aliasing",
+            "-DYV_ALLOC_CHECK",
+            "-O2",
+            "-s",
+            "-I",
+            "/home/runner/work/yavo/yavo/compiler/runtime",
+            "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-4oo708u6/sample-5.c",
+            "-o",
+            "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-4oo708u6/yavo-selfhost"
+          ],
+          "cwd": "/home/runner/work/yavo/yavo",
+          "environment": {
+            "YAVO_NO_CACHE": "1",
+            "YAVO_ALLOC_CHECK": "1"
+          },
+          "exit_code": 0,
+          "timed_out": false,
+          "launch_error": null,
+          "elapsed_seconds": 6.847884660999995,
+          "peak_process_memory_bytes": 201797632,
+          "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+          "stdout": {
+            "path": "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-4oo708u6/backend/stdout.bin",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stderr": {
+            "path": "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-4oo708u6/backend/stderr.bin",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stdin": {
+            "kind": "devnull"
+          },
+          "host_before": {
+            "timestamp_utc": "2026-11-28T10:04:55.519240+00:00",
+            "load_average": [
+              1.03759765625,
+              0.54541015625,
+              0.21435546875
+            ]
+          },
+          "host_after": {
+            "timestamp_utc": "2026-11-28T10:05:02.367710+00:00",
+            "load_average": [
+              1.0341796875,
+              0.55322265625,
+              0.21875
+            ]
+          }
+        },
+        "generated_c": {
+          "path": "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-b5v7prgo/stages/stage3/yavo-selfhost.c",
+          "bytes": 1493942,
+          "sha256": "65b4ca70aac96662e3a163832faca3009ed41d22073f66f9428e811d6a64f5c2"
+        },
+        "compiler": {
+          "path": "/home/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-b5v7prgo/stages/stage2/yavo-selfhost",
+          "bytes": 773176,
+          "sha256": "9c4f02cb6ff4d2d7fdd503f3b7cf905b4a15f82b4cd762b920cbba370e60f07c"
+        }
+      },
+      "macos": {
+        "environment_qualification": {
+          "status": "github_hosted_observation",
+          "github_hosted": true,
+          "run_id": "46133275430",
+          "run_attempt": "1",
+          "head_sha": "e58f5e5ff95cc2419f8d0740bd27c4c8ca260cf1",
+          "runner_os": "macOS",
+          "runner_arch": "ARM64",
+          "runner_name": "GitHub Actions 1000001245",
+          "image_os": "macos15",
+          "image_version": "20261123.0558.1",
+          "cpu_model": "Apple M1 (Virtual)",
+          "cpu_model_source": "sysctl machdep.cpu.brand_string",
+          "cpu_count": 3,
+          "affinity": null,
+          "isolation_evidence": "separate GitHub job; no per-sample foreign-build audit",
+          "eligible_for_controlled_performance_trend": false
+        },
+        "frontend": {
+          "samples": 5,
+          "p50_seconds": 0.05990191699999059,
+          "p95_seconds": 0.06518549999998413,
+          "peak_rss_bytes": 35700736,
+          "rss_observations": 5
+        },
+        "backend_observation": {
+          "argv": [
+            "/Users/runner/work/_temp/yavo-home/toolchains/zig-aarch64-macos-0.17.1/zig",
+            "cc",
+            "-std=c17",
+            "-fno-strict-aliasing",
+            "-DYV_ALLOC_CHECK",
+            "-O2",
+            "-s",
+            "-I",
+            "/Users/runner/work/yavo/yavo/compiler/runtime",
+            "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-vssd5zi5/sample-5.c",
+            "-o",
+            "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-vssd5zi5/yavo-selfhost"
+          ],
+          "cwd": "/Users/runner/work/yavo/yavo",
+          "environment": {
+            "YAVO_NO_CACHE": "1",
+            "YAVO_ALLOC_CHECK": "1"
+          },
+          "exit_code": 0,
+          "timed_out": false,
+          "launch_error": null,
+          "elapsed_seconds": 5.913343291999979,
+          "peak_process_memory_bytes": 238288896,
+          "memory_measurement": "wait4 ru_maxrss (bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+          "stdout": {
+            "path": "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-vssd5zi5/backend/stdout.bin",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stderr": {
+            "path": "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/metrics-vssd5zi5/backend/stderr.bin",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stdin": {
+            "kind": "devnull"
+          },
+          "host_before": {
+            "timestamp_utc": "2026-11-28T10:05:24.299470+00:00",
+            "load_average": [
+              8.90478515625,
+              16.5107421875,
+              9.26611328125
+            ]
+          },
+          "host_after": {
+            "timestamp_utc": "2026-11-28T10:05:30.220333+00:00",
+            "load_average": [
+              8.431640625,
+              16.2861328125,
+              9.22900390625
+            ]
+          }
+        },
+        "generated_c": {
+          "path": "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-axrnq6b2/stages/stage3/yavo-selfhost.c",
+          "bytes": 1493953,
+          "sha256": "24d49a6e998464d630ba5f5e8c6a164d753811fadbbf3759e0ac0aada7dfb0af"
+        },
+        "compiler": {
+          "path": "/Users/runner/work/yavo/yavo/compiler/target/ci/selfhost/run-axrnq6b2/stages/stage2/yavo-selfhost",
+          "bytes": 700576,
+          "sha256": "26cc9c1999f42cea45610d2a721c111c59b87293f6fab42dd9672c632603ca47"
+        }
+      },
+      "windows": {
+        "environment_qualification": {
+          "status": "github_hosted_observation",
+          "github_hosted": true,
+          "run_id": "46133275430",
+          "run_attempt": "1",
+          "head_sha": "e58f5e5ff95cc2419f8d0740bd27c4c8ca260cf1",
+          "runner_os": "Windows",
+          "runner_arch": "X64",
+          "runner_name": "GitHub Actions 1000001246",
+          "image_os": null,
+          "image_version": null,
+          "cpu_model": "Intel64 Family 6 Model 207 Stepping 2, GenuineIntel",
+          "cpu_model_source": "platform.processor/PROCESSOR_IDENTIFIER",
+          "cpu_count": 4,
+          "affinity": null,
+          "isolation_evidence": "separate GitHub job; no per-sample foreign-build audit",
+          "eligible_for_controlled_performance_trend": false
+        },
+        "frontend": {
+          "samples": 5,
+          "p50_seconds": 0.09400000000005093,
+          "p95_seconds": 0.10999999999989996,
+          "peak_rss_bytes": null,
+          "rss_observations": 0
+        },
+        "backend_observation": {
+          "argv": [
+            "D:\\a\\_temp\\yavo-home\\toolchains\\zig-x86_64-windows-0.17.1\\zig.exe",
+            "cc",
+            "-std=c17",
+            "-fno-strict-aliasing",
+            "-DYV_ALLOC_CHECK",
+            "-O2",
+            "-s",
+            "-I",
+            "D:\\a\\yavo\\yavo\\compiler\\runtime",
+            "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\metrics-2ppk2gwz\\sample-5.c",
+            "-o",
+            "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\metrics-2ppk2gwz\\yavo-selfhost.exe"
+          ],
+          "cwd": "D:\\a\\yavo\\yavo",
+          "environment": {
+            "YAVO_NO_CACHE": "1",
+            "YAVO_ALLOC_CHECK": "1"
+          },
+          "exit_code": 0,
+          "timed_out": false,
+          "launch_error": null,
+          "elapsed_seconds": 10.687000000000012,
+          "peak_process_memory_bytes": null,
+          "memory_measurement": "unavailable: wait4 ru_maxrss is not supported by this runner on win32",
+          "stdout": {
+            "path": "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\metrics-2ppk2gwz\\backend\\stdout.bin",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stderr": {
+            "path": "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\metrics-2ppk2gwz\\backend\\stderr.bin",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stdin": {
+            "kind": "devnull"
+          },
+          "host_before": {
+            "timestamp_utc": "2026-11-28T10:10:41.789258+00:00",
+            "load_average": null
+          },
+          "host_after": {
+            "timestamp_utc": "2026-11-28T10:10:52.472427+00:00",
+            "load_average": null
+          }
+        },
+        "generated_c": {
+          "path": "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\run-w25t2z4u\\stages\\stage3\\yavo-selfhost.c",
+          "bytes": 1493909,
+          "sha256": "bbfa4ccac23cb2daccad814263428433a9af1f795447713cbf3fc19eeb8d4f52"
+        },
+        "compiler": {
+          "path": "D:\\a\\yavo\\yavo\\compiler\\target\\ci\\selfhost\\run-w25t2z4u\\stages\\stage2\\yavo-selfhost.exe",
+          "bytes": 863744,
+          "sha256": "cd2a8b031ffc6e5e28c549f06571114c332ed466722c57ef5017dcfc33522820"
+        }
+      }
+    }
   }
 }
