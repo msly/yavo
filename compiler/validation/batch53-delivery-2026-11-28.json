@@ -1,9 +1,9 @@
 {
   "schema": "yavo-batch53-delivery/1",
   "batch": 53,
-  "recorded_at_utc": "2026-11-28T00:52:23.851021+00:00",
+  "recorded_at_utc": "2026-11-28T05:05:07.229176+00:00",
   "baseline_commit": "5fa6401db5726c635a34f8d4ce5c6cc32abc88cc",
-  "status": "local_complete_ci_rerun_required",
+  "status": "completed",
   "validation_tier": {
     "schema": "yavo-validation-policy/1",
     "batch": 53,
@@ -20,7 +20,7 @@
     "safe ASCII C literal encoding with exact-byte roundtrip"
   ],
   "coverage": {
-    "status": "preliminary; final stage2 sweep follows full bootstrap",
+    "status": "verified against final stage2",
     "original_corpus": {
       "path": "selfhost/tests/original-corpus.json",
       "bytes": 116250,
@@ -68,7 +68,7 @@
       },
       "analysis_complete": 394,
       "unresolved_semantics": 259,
-      "accepted_profile_false_positive_paths": 10
+      "accepted_profile_false_positive_paths": 0
     },
     "new_paths": [
       {
@@ -165,7 +165,12 @@
     "regressions": [],
     "violations": [],
     "timeouts": [],
-    "abnormal_exits": []
+    "abnormal_exits": [],
+    "blocker_index": {
+      "path": "compiler/validation/batch53-subset-blockers-2026-11-28.json",
+      "bytes": 1439472,
+      "sha256": "5f939ad51ba40af21361f98523d5fe7f46dedff18d6e181be0e13daefbb4ce09"
+    }
   },
   "semantic_inventory": {
     "manifest": {
@@ -183,7 +188,20 @@
     "total": 1209,
     "new_patterns": 59,
     "new_literal_roundtrip": 1,
-    "unchanged_source_promotions": 12
+    "unchanged_source_promotions": 12,
+    "retained_historical_reason_fields": {
+      "case_ids": [
+        "unsupported_vec_pop_string",
+        "unsupported_vec_pop_owned_struct",
+        "unsupported_optional_string",
+        "unsupported_optional_owned_struct",
+        "unsupported_optional_match",
+        "unsupported_optional_none_owned_hint",
+        "batch48_optional_owned_string"
+      ],
+      "interpretation": "These promoted cases retain their original unsupported reason text as historical metadata. Their current kind=run, batch=patterns53, expected stdout and completed bootstrap results are authoritative; the reason does not describe a current unsupported boundary.",
+      "manifest_identity": "Preserved exactly as executed by the final Full bootstrap and CI."
+    }
   },
   "evidence": {
     "patterns": {
@@ -2060,7 +2078,7 @@
     "c_and_binary_fixed_point": true
   },
   "ci": {
-    "status": "rerun_required",
+    "status": "completed",
     "first_run": {
       "id": 46090262118,
       "url": "https://github.com/msly/yavo/actions/runs/46090262118",
@@ -2070,8 +2088,1927 @@
         "Linux x86_64": "Validate selfhost standard error values"
       },
       "diagnosis": "same gate failure reproduced locally: legal stage0 W0001 on original hex source was treated as rejection; strict JSON success handling fixes it",
-      "log_access": "GitHub job-log API returned 403; local same-source reproduction retained"
-    }
+      "log_access": "Initially unauthenticated log requests returned 403. Existing repository credentials later retrieved Linux/macOS logs confirming original_hex precheck failure with zero executions; exact W0001 text remains from local same-source reproduction.",
+      "conclusion": "cancelled",
+      "superseded_by": 46092069170
+    },
+    "second_run": {
+      "id": 46092069170,
+      "url": "https://github.com/msly/yavo/actions/runs/46092069170",
+      "head_sha": "1242a2cb5b7ba9bb79d9c1bcb6207d11d8fa7e07",
+      "conclusion": "failure",
+      "successful_jobs": 6,
+      "failed_jobs": 1,
+      "failed_step": "Windows: Sweep the original corpus with the final selfhost compiler",
+      "diagnosis": "Windows cp1252 default decoding rejects UTF-8 Full receipt at byte 0x8f; actual remote traceback retained; bootstrap passed and sweep had not launched.",
+      "log_access": "Actual Windows job log retrieved using existing repository authentication; UTF-8/cp1252 traceback confirms failure before sweep launch.",
+      "traceback_excerpt": "2026-11-28T01:50:34.0464885Z   RUST_BACKTRACE: 1\n2026-11-28T01:50:34.0465107Z   YAVO_CI_MACHINE: AMD64\n2026-11-28T01:50:34.0465330Z ##[endgroup]\n2026-11-28T01:50:34.3932375Z Traceback (most recent call last):\n2026-11-28T01:50:34.3932848Z   File \"D:\\a\\yavo\\yavo\\tools\\ci\\subset_core.py\", line 41, in <module>\n2026-11-28T01:50:34.3934163Z     sys.exit(main())\n2026-11-28T01:50:34.4102414Z              ^^^^^^\n2026-11-28T01:50:34.4103008Z   File \"D:\\a\\yavo\\yavo\\tools\\ci\\subset_core.py\", line 18, in main\n2026-11-28T01:50:34.4104155Z     receipt = json.loads((args.bootstrap_output / \"receipt.json\").read_text())\n2026-11-28T01:50:34.4104585Z                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n2026-11-28T01:50:34.4105200Z   File \"C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\Lib\\pathlib.py\", line 1028, in read_text\n2026-11-28T01:50:34.4169383Z     return f.read()\n2026-11-28T01:50:34.4169743Z            ^^^^^^^^\n2026-11-28T01:50:34.4170396Z   File \"C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\Lib\\encodings\\cp1252.py\", line 23, in decode\n2026-11-28T01:50:34.4217743Z     return codecs.charmap_decode(input,self.errors,decoding_table)[0]\n2026-11-28T01:50:34.4218380Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n2026-11-28T01:50:34.4219012Z UnicodeDecodeError: 'charmap' codec can't decode byte 0x8f in position 29081060: character maps to <undefined>\n2026-11-28T01:50:34.5279809Z ##[error]Process completed with exit code 1.\n2026-11-28T01:50:34.5463991Z ##[group]Run python tools/ci/package_test_summary.py\n",
+      "bootstrap": "passed; native source snapshot and complete fixed-point validation finished before the wrapper failed to decode its receipt"
+    },
+    "remote_failure_evidence": [
+      {
+        "run_id": 46092069170,
+        "head_sha": "1242a2cb5b7ba9bb79d9c1bcb6207d11d8fa7e07",
+        "job_id": 140815499430,
+        "log": {
+          "path": "compiler/target/batch53/ci-watch-fixed/windows-job.log",
+          "bytes": 155181,
+          "sha256": "08c66eca25c01eeccfacba46870c2379b97f5e3c3c0735b97b2c808c8b134d9b"
+        },
+        "excerpt": {
+          "path": "compiler/target/batch53/ci-watch-fixed/windows-sweep-failure-excerpt.txt",
+          "bytes": 1558,
+          "sha256": "bf3e3925137c91181243f36d22b47214f8a5d833a5cafb0cbda11b58856daeff"
+        },
+        "matched_lines": 1,
+        "warning_W0001_printed": false
+      },
+      {
+        "run_id": 46090262118,
+        "head_sha": "cc81bca93c62f6394be84b32e53320dd316e1ee7",
+        "job_id": 140809317880,
+        "log": {
+          "path": "compiler/target/batch53/ci-watch/linux-job.log",
+          "bytes": 214744,
+          "sha256": "fbb9f8da6d743dd18aadddfdd12ac534df3cea5b1d37f1041d892ed9f764c0d6"
+        },
+        "excerpt": {
+          "path": "compiler/target/batch53/ci-watch/linux-standard-errors-failure-excerpt.txt",
+          "bytes": 1574,
+          "sha256": "905e7002ba55951b7c00f31f0d482eb0b9fd8be0480fd5682d72b6b627d993d3"
+        },
+        "matched_lines": 1,
+        "warning_W0001_printed": false
+      },
+      {
+        "run_id": 46090262118,
+        "head_sha": "cc81bca93c62f6394be84b32e53320dd316e1ee7",
+        "job_id": 140809317973,
+        "log": {
+          "path": "compiler/target/batch53/ci-watch/macos-job.log",
+          "bytes": 186990,
+          "sha256": "f4b0a6dac55d400f855f53b5c96082ba328d8600d3cf7dd8a27759680c72be83"
+        },
+        "excerpt": {
+          "path": "compiler/target/batch53/ci-watch/macos-standard-errors-failure-excerpt.txt",
+          "bytes": 1568,
+          "sha256": "f6a0e4f788ba7cbb8033e7131214f7e1f0b5079b3055f601da664d72efe0cf5a"
+        },
+        "matched_lines": 1,
+        "warning_W0001_printed": false
+      }
+    ],
+    "third_run": {
+      "id": 46095621191,
+      "url": "https://github.com/msly/yavo/actions/runs/46095621191",
+      "head_sha": "8710c54a7f66c19825bedf88d3d5bf4bf1c985bb",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "successful_jobs": 6,
+      "cancelled_jobs": 1,
+      "jobs": [
+        {
+          "id": 140826163638,
+          "name": "Validation tier",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-28T01:56:56Z",
+          "completed_at": "2026-11-28T01:57:12Z",
+          "seconds": 16.0,
+          "active_step": [],
+          "failed_steps": []
+        },
+        {
+          "id": 140826233829,
+          "name": "Native macOS arm64",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-28T01:57:13Z",
+          "completed_at": "2026-11-28T02:16:21Z",
+          "seconds": 1148.0,
+          "active_step": [],
+          "failed_steps": []
+        },
+        {
+          "id": 140826233836,
+          "name": "Native Linux x86_64",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-28T01:57:13Z",
+          "completed_at": "2026-11-28T02:19:23Z",
+          "seconds": 1330.0,
+          "active_step": [],
+          "failed_steps": []
+        },
+        {
+          "id": 140826233838,
+          "name": "Round-five experiment evidence",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-28T01:57:14Z",
+          "completed_at": "2026-11-28T01:57:29Z",
+          "seconds": 15.0,
+          "active_step": [],
+          "failed_steps": []
+        },
+        {
+          "id": 140826233852,
+          "name": "Agent evaluation preparation",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-28T01:57:14Z",
+          "completed_at": "2026-11-28T01:57:38Z",
+          "seconds": 24.0,
+          "active_step": [],
+          "failed_steps": []
+        },
+        {
+          "id": 140826233870,
+          "name": "Independent Linux ASan and UBSan",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-28T01:57:13Z",
+          "completed_at": "2026-11-28T01:58:04Z",
+          "seconds": 51.0,
+          "active_step": [],
+          "failed_steps": []
+        },
+        {
+          "id": 140826233886,
+          "name": "Native Windows x86_64",
+          "status": "completed",
+          "conclusion": "cancelled",
+          "started_at": "2026-11-28T01:57:14Z",
+          "completed_at": "2026-11-28T03:27:33Z",
+          "seconds": 5419.0,
+          "active_step": [],
+          "failed_steps": []
+        }
+      ],
+      "reason": "Windows exceeded the 90-minute job budget: 90m19s total; every test, packaging, upload and post step succeeded or was an explicitly selected skip. Upload finalized before the cancelled job conclusion.",
+      "terminal_evidence": {
+        "path": "compiler/target/batch53/ci-watch-utf8/terminal-evidence.json",
+        "bytes": 33776,
+        "sha256": "44eb0ea222013b8e3ed343f372c186f400199766d56d236824e0f22e87c409dc"
+      },
+      "complete_archives_audit": {
+        "path": "compiler/validation/batch53-native-archives-8710c54-2026-11-28.json",
+        "bytes": 5331222,
+        "sha256": "3a0478ea0fc6a246d62f094b207149393f34479d86fafb71ac5c824fa6443d20"
+      },
+      "archive_integrity_passed": true,
+      "ci_success": false,
+      "validation_cost_observation": {
+        "job_id": 140826233886,
+        "job_seconds": 5419,
+        "largest_steps": [
+          {
+            "name": "Build and validate the Yavo-written subset frontend",
+            "conclusion": "success",
+            "started_at": "2026-11-28T02:08:51Z",
+            "completed_at": "2026-11-28T02:46:49Z",
+            "seconds": 2278
+          },
+          {
+            "name": "Validate the csv-check CLI application",
+            "conclusion": "success",
+            "started_at": "2026-11-28T03:05:47Z",
+            "completed_at": "2026-11-28T03:15:12Z",
+            "seconds": 565
+          },
+          {
+            "name": "Validate the dep-index CLI application",
+            "conclusion": "success",
+            "started_at": "2026-11-28T03:15:12Z",
+            "completed_at": "2026-11-28T03:24:34Z",
+            "seconds": 562
+          },
+          {
+            "name": "Run Debug and Release sequentially",
+            "conclusion": "success",
+            "started_at": "2026-11-28T02:02:20Z",
+            "completed_at": "2026-11-28T02:08:49Z",
+            "seconds": 389
+          },
+          {
+            "name": "Validate the test-summary CLI application",
+            "conclusion": "success",
+            "started_at": "2026-11-28T03:00:23Z",
+            "completed_at": "2026-11-28T03:05:47Z",
+            "seconds": 324
+          }
+        ],
+        "largest_steps_total_seconds": 4118,
+        "largest_steps_fraction": 0.7599188042074183,
+        "raw_jobs": {
+          "path": "compiler/target/batch53/ci-watch-utf8/jobs-latest.json",
+          "bytes": 31638,
+          "sha256": "4ca8143983c8b08c17f94500209663e00d7cef528e9994feb9083097bf068b9d"
+        },
+        "scope": "Observed CI wall time includes builds, execution and evidence work. It is not a compiler benchmark or an estimate of removable validation time."
+      }
+    },
+    "final_run": {
+      "id": 46103424789,
+      "url": "https://github.com/msly/yavo/actions/runs/46103424789",
+      "head_sha": "dca2d52223ea72f7e8cc4e71349790b8b3bdaeba",
+      "status": "completed",
+      "conclusion": "success",
+      "successful_jobs": 7,
+      "failed_jobs": 0,
+      "cancelled_jobs": 0,
+      "run_attempt": 1,
+      "head_branch": "main",
+      "event": "push",
+      "run_created_at": "2026-11-28T03:33:25Z",
+      "run_started_at": "2026-11-28T03:33:25Z",
+      "run_updated_at": "2026-11-28T04:59:07Z",
+      "last_job_completed_at": "2026-11-28T04:59:06Z",
+      "seconds_to_last_job_completion": 5141.0,
+      "jobs": [
+        {
+          "id": 140850750895,
+          "name": "Validation tier",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-28T03:33:27Z",
+          "completed_at": "2026-11-28T03:33:36Z",
+          "seconds": 9
+        },
+        {
+          "id": 140850796858,
+          "name": "Independent Linux ASan and UBSan",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-28T03:33:38Z",
+          "completed_at": "2026-11-28T03:34:28Z",
+          "seconds": 50
+        },
+        {
+          "id": 140850796889,
+          "name": "Native Windows x86_64",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-28T03:33:37Z",
+          "completed_at": "2026-11-28T04:59:06Z",
+          "seconds": 5129,
+          "steps": [
+            {
+              "number": 1,
+              "name": "Set up job",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:33:38Z",
+              "completed_at": "2026-11-28T03:33:39Z",
+              "seconds": 1
+            },
+            {
+              "number": 2,
+              "name": "Preserve frozen input bytes on checkout",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:33:39Z",
+              "completed_at": "2026-11-28T03:33:40Z",
+              "seconds": 1
+            },
+            {
+              "number": 3,
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:33:40Z",
+              "completed_at": "2026-11-28T03:33:50Z",
+              "seconds": 10
+            },
+            {
+              "number": 4,
+              "name": "Restore the locked Zig toolchain",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:33:50Z",
+              "completed_at": "2026-11-28T03:33:57Z",
+              "seconds": 7
+            },
+            {
+              "number": 5,
+              "name": "Build compiler and install the locked Zig toolchain",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:33:57Z",
+              "completed_at": "2026-11-28T03:38:23Z",
+              "seconds": 266
+            },
+            {
+              "number": 6,
+              "name": "Run Debug and Release sequentially",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:38:23Z",
+              "completed_at": "2026-11-28T03:44:31Z",
+              "seconds": 368
+            },
+            {
+              "number": 7,
+              "name": "Check the complete blocker-analysis contract",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:44:31Z",
+              "completed_at": "2026-11-28T03:44:33Z",
+              "seconds": 2
+            },
+            {
+              "number": 8,
+              "name": "Compile starter-guide examples and ownership diagnostics",
+              "conclusion": "skipped",
+              "started_at": "2026-11-28T03:44:33Z",
+              "completed_at": "2026-11-28T03:44:33Z",
+              "seconds": 0
+            },
+            {
+              "number": 9,
+              "name": "Build and validate the Yavo-written subset frontend",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:44:33Z",
+              "completed_at": "2026-11-28T04:20:16Z",
+              "seconds": 2143
+            },
+            {
+              "number": 10,
+              "name": "Sweep the original corpus with the final selfhost compiler",
+              "conclusion": "success",
+              "started_at": "2026-11-28T04:20:16Z",
+              "completed_at": "2026-11-28T04:20:36Z",
+              "seconds": 20
+            },
+            {
+              "number": 11,
+              "name": "Record self-compilation timing, memory and generated sizes",
+              "conclusion": "success",
+              "started_at": "2026-11-28T04:20:36Z",
+              "completed_at": "2026-11-28T04:20:49Z",
+              "seconds": 13
+            },
+            {
+              "number": 12,
+              "name": "Validate original enum and result programs",
+              "conclusion": "success",
+              "started_at": "2026-11-28T04:20:49Z",
+              "completed_at": "2026-11-28T04:21:03Z",
+              "seconds": 14
+            },
+            {
+              "number": 13,
+              "name": "Check pattern payload destruction before arm execution",
+              "conclusion": "success",
+              "started_at": "2026-11-28T04:21:03Z",
+              "completed_at": "2026-11-28T04:21:07Z",
+              "seconds": 4
+            },
+            {
+              "number": 14,
+              "name": "Check isolated application runner configurations",
+              "conclusion": "success",
+              "started_at": "2026-11-28T04:21:07Z",
+              "completed_at": "2026-11-28T04:21:08Z",
+              "seconds": 1
+            },
+            {
+              "number": 15,
+              "name": "Validate ordinary selfhost build and run",
+              "conclusion": "success",
+              "started_at": "2026-11-28T04:21:08Z",
+              "completed_at": "2026-11-28T04:24:46Z",
+              "seconds": 218
+            },
+            {
+              "number": 16,
+              "name": "Validate selfhost source hashing",
+              "conclusion": "success",
+              "started_at": "2026-11-28T04:24:46Z",
+              "completed_at": "2026-11-28T04:28:31Z",
+              "seconds": 225
+            },
+            {
+              "number": 17,
+              "name": "Validate selfhost structured diagnostics",
+              "conclusion": "success",
+              "started_at": "2026-11-28T04:28:31Z",
+              "completed_at": "2026-11-28T04:29:07Z",
+              "seconds": 36
+            },
+            {
+              "number": 18,
+              "name": "Validate selfhost standard error values",
+              "conclusion": "success",
+              "started_at": "2026-11-28T04:29:07Z",
+              "completed_at": "2026-11-28T04:33:02Z",
+              "seconds": 235
+            },
+            {
+              "number": 19,
+              "name": "Validate the test-summary CLI application",
+              "conclusion": "success",
+              "started_at": "2026-11-28T04:33:02Z",
+              "completed_at": "2026-11-28T04:38:09Z",
+              "seconds": 307
+            },
+            {
+              "number": 20,
+              "name": "Validate the csv-check CLI application",
+              "conclusion": "success",
+              "started_at": "2026-11-28T04:38:09Z",
+              "completed_at": "2026-11-28T04:47:09Z",
+              "seconds": 540
+            },
+            {
+              "number": 21,
+              "name": "Validate the dep-index CLI application",
+              "conclusion": "success",
+              "started_at": "2026-11-28T04:47:09Z",
+              "completed_at": "2026-11-28T04:56:08Z",
+              "seconds": 539
+            },
+            {
+              "number": 22,
+              "name": "Check Yavo-frontend C with independent ASan and UBSan",
+              "conclusion": "skipped",
+              "started_at": "2026-11-28T04:56:08Z",
+              "completed_at": "2026-11-28T04:56:08Z",
+              "seconds": 0
+            },
+            {
+              "number": 23,
+              "name": "Check system interfaces with required ASan and UBSan",
+              "conclusion": "skipped",
+              "started_at": "2026-11-28T04:56:08Z",
+              "completed_at": "2026-11-28T04:56:08Z",
+              "seconds": 0
+            },
+            {
+              "number": 24,
+              "name": "Package application evidence with adversarial filenames",
+              "conclusion": "success",
+              "started_at": "2026-11-28T04:56:08Z",
+              "completed_at": "2026-11-28T04:56:11Z",
+              "seconds": 3
+            },
+            {
+              "number": 25,
+              "name": "Package CSV application evidence",
+              "conclusion": "success",
+              "started_at": "2026-11-28T04:56:11Z",
+              "completed_at": "2026-11-28T04:56:13Z",
+              "seconds": 2
+            },
+            {
+              "number": 26,
+              "name": "Package dependency-index application evidence",
+              "conclusion": "success",
+              "started_at": "2026-11-28T04:56:13Z",
+              "completed_at": "2026-11-28T04:56:16Z",
+              "seconds": 3
+            },
+            {
+              "number": 27,
+              "name": "Package ordinary driver evidence",
+              "conclusion": "success",
+              "started_at": "2026-11-28T04:56:16Z",
+              "completed_at": "2026-11-28T04:56:23Z",
+              "seconds": 7
+            },
+            {
+              "number": 28,
+              "name": "Package selfhost source hashing evidence",
+              "conclusion": "success",
+              "started_at": "2026-11-28T04:56:23Z",
+              "completed_at": "2026-11-28T04:56:26Z",
+              "seconds": 3
+            },
+            {
+              "number": 29,
+              "name": "Package selfhost structured diagnostic evidence",
+              "conclusion": "success",
+              "started_at": "2026-11-28T04:56:26Z",
+              "completed_at": "2026-11-28T04:56:28Z",
+              "seconds": 2
+            },
+            {
+              "number": 30,
+              "name": "Package selfhost standard error evidence",
+              "conclusion": "success",
+              "started_at": "2026-11-28T04:56:28Z",
+              "completed_at": "2026-11-28T04:56:33Z",
+              "seconds": 5
+            },
+            {
+              "number": 31,
+              "name": "Package system interface sanitizer evidence",
+              "conclusion": "skipped",
+              "started_at": "2026-11-28T04:56:33Z",
+              "completed_at": "2026-11-28T04:56:33Z",
+              "seconds": 0
+            },
+            {
+              "number": 32,
+              "name": "Package selfhost sanitizer evidence",
+              "conclusion": "skipped",
+              "started_at": "2026-11-28T04:56:33Z",
+              "completed_at": "2026-11-28T04:56:33Z",
+              "seconds": 0
+            },
+            {
+              "number": 33,
+              "name": "Preserve logs and per-platform receipts",
+              "conclusion": "success",
+              "started_at": "2026-11-28T04:56:33Z",
+              "completed_at": "2026-11-28T04:59:01Z",
+              "seconds": 148
+            },
+            {
+              "number": 65,
+              "name": "Post Restore the locked Zig toolchain",
+              "conclusion": "success",
+              "started_at": "2026-11-28T04:59:01Z",
+              "completed_at": "2026-11-28T04:59:02Z",
+              "seconds": 1
+            },
+            {
+              "number": 66,
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "conclusion": "success",
+              "started_at": "2026-11-28T04:59:02Z",
+              "completed_at": "2026-11-28T04:59:04Z",
+              "seconds": 2
+            },
+            {
+              "number": 67,
+              "name": "Complete job",
+              "conclusion": "success",
+              "started_at": "2026-11-28T04:59:04Z",
+              "completed_at": "2026-11-28T04:59:04Z",
+              "seconds": 0
+            }
+          ]
+        },
+        {
+          "id": 140850796898,
+          "name": "Agent evaluation preparation",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-28T03:33:38Z",
+          "completed_at": "2026-11-28T03:33:54Z",
+          "seconds": 16
+        },
+        {
+          "id": 140850796926,
+          "name": "Native macOS arm64",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-28T03:33:38Z",
+          "completed_at": "2026-11-28T03:50:26Z",
+          "seconds": 1008,
+          "steps": [
+            {
+              "number": 1,
+              "name": "Set up job",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:33:38Z",
+              "completed_at": "2026-11-28T03:33:39Z",
+              "seconds": 1
+            },
+            {
+              "number": 2,
+              "name": "Preserve frozen input bytes on checkout",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:33:39Z",
+              "completed_at": "2026-11-28T03:33:39Z",
+              "seconds": 0
+            },
+            {
+              "number": 3,
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:33:39Z",
+              "completed_at": "2026-11-28T03:33:42Z",
+              "seconds": 3
+            },
+            {
+              "number": 4,
+              "name": "Restore the locked Zig toolchain",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:33:42Z",
+              "completed_at": "2026-11-28T03:33:46Z",
+              "seconds": 4
+            },
+            {
+              "number": 5,
+              "name": "Build compiler and install the locked Zig toolchain",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:33:46Z",
+              "completed_at": "2026-11-28T03:34:25Z",
+              "seconds": 39
+            },
+            {
+              "number": 6,
+              "name": "Run Debug and Release sequentially",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:34:25Z",
+              "completed_at": "2026-11-28T03:37:27Z",
+              "seconds": 182
+            },
+            {
+              "number": 7,
+              "name": "Check the complete blocker-analysis contract",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:37:27Z",
+              "completed_at": "2026-11-28T03:37:28Z",
+              "seconds": 1
+            },
+            {
+              "number": 8,
+              "name": "Compile starter-guide examples and ownership diagnostics",
+              "conclusion": "skipped",
+              "started_at": "2026-11-28T03:37:28Z",
+              "completed_at": "2026-11-28T03:37:28Z",
+              "seconds": 0
+            },
+            {
+              "number": 9,
+              "name": "Build and validate the Yavo-written subset frontend",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:37:28Z",
+              "completed_at": "2026-11-28T03:46:39Z",
+              "seconds": 551
+            },
+            {
+              "number": 10,
+              "name": "Sweep the original corpus with the final selfhost compiler",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:46:39Z",
+              "completed_at": "2026-11-28T03:46:47Z",
+              "seconds": 8
+            },
+            {
+              "number": 11,
+              "name": "Record self-compilation timing, memory and generated sizes",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:46:47Z",
+              "completed_at": "2026-11-28T03:46:54Z",
+              "seconds": 7
+            },
+            {
+              "number": 12,
+              "name": "Validate original enum and result programs",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:46:54Z",
+              "completed_at": "2026-11-28T03:46:58Z",
+              "seconds": 4
+            },
+            {
+              "number": 13,
+              "name": "Check pattern payload destruction before arm execution",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:46:58Z",
+              "completed_at": "2026-11-28T03:47:00Z",
+              "seconds": 2
+            },
+            {
+              "number": 14,
+              "name": "Check isolated application runner configurations",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:47:00Z",
+              "completed_at": "2026-11-28T03:47:00Z",
+              "seconds": 0
+            },
+            {
+              "number": 15,
+              "name": "Validate ordinary selfhost build and run",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:47:00Z",
+              "completed_at": "2026-11-28T03:47:28Z",
+              "seconds": 28
+            },
+            {
+              "number": 16,
+              "name": "Validate selfhost source hashing",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:47:28Z",
+              "completed_at": "2026-11-28T03:47:41Z",
+              "seconds": 13
+            },
+            {
+              "number": 17,
+              "name": "Validate selfhost structured diagnostics",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:47:41Z",
+              "completed_at": "2026-11-28T03:47:52Z",
+              "seconds": 11
+            },
+            {
+              "number": 18,
+              "name": "Validate selfhost standard error values",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:47:52Z",
+              "completed_at": "2026-11-28T03:48:09Z",
+              "seconds": 17
+            },
+            {
+              "number": 19,
+              "name": "Validate the test-summary CLI application",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:48:09Z",
+              "completed_at": "2026-11-28T03:48:26Z",
+              "seconds": 17
+            },
+            {
+              "number": 20,
+              "name": "Validate the csv-check CLI application",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:48:26Z",
+              "completed_at": "2026-11-28T03:49:02Z",
+              "seconds": 36
+            },
+            {
+              "number": 21,
+              "name": "Validate the dep-index CLI application",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:49:02Z",
+              "completed_at": "2026-11-28T03:49:37Z",
+              "seconds": 35
+            },
+            {
+              "number": 22,
+              "name": "Check Yavo-frontend C with independent ASan and UBSan",
+              "conclusion": "skipped",
+              "started_at": "2026-11-28T03:49:37Z",
+              "completed_at": "2026-11-28T03:49:37Z",
+              "seconds": 0
+            },
+            {
+              "number": 23,
+              "name": "Check system interfaces with required ASan and UBSan",
+              "conclusion": "skipped",
+              "started_at": "2026-11-28T03:49:37Z",
+              "completed_at": "2026-11-28T03:49:37Z",
+              "seconds": 0
+            },
+            {
+              "number": 24,
+              "name": "Package application evidence with adversarial filenames",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:49:37Z",
+              "completed_at": "2026-11-28T03:49:37Z",
+              "seconds": 0
+            },
+            {
+              "number": 25,
+              "name": "Package CSV application evidence",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:49:37Z",
+              "completed_at": "2026-11-28T03:49:37Z",
+              "seconds": 0
+            },
+            {
+              "number": 26,
+              "name": "Package dependency-index application evidence",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:49:37Z",
+              "completed_at": "2026-11-28T03:49:38Z",
+              "seconds": 1
+            },
+            {
+              "number": 27,
+              "name": "Package ordinary driver evidence",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:49:38Z",
+              "completed_at": "2026-11-28T03:49:38Z",
+              "seconds": 0
+            },
+            {
+              "number": 28,
+              "name": "Package selfhost source hashing evidence",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:49:38Z",
+              "completed_at": "2026-11-28T03:49:39Z",
+              "seconds": 1
+            },
+            {
+              "number": 29,
+              "name": "Package selfhost structured diagnostic evidence",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:49:39Z",
+              "completed_at": "2026-11-28T03:49:39Z",
+              "seconds": 0
+            },
+            {
+              "number": 30,
+              "name": "Package selfhost standard error evidence",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:49:39Z",
+              "completed_at": "2026-11-28T03:49:40Z",
+              "seconds": 1
+            },
+            {
+              "number": 31,
+              "name": "Package system interface sanitizer evidence",
+              "conclusion": "skipped",
+              "started_at": "2026-11-28T03:49:40Z",
+              "completed_at": "2026-11-28T03:49:40Z",
+              "seconds": 0
+            },
+            {
+              "number": 32,
+              "name": "Package selfhost sanitizer evidence",
+              "conclusion": "skipped",
+              "started_at": "2026-11-28T03:49:40Z",
+              "completed_at": "2026-11-28T03:49:40Z",
+              "seconds": 0
+            },
+            {
+              "number": 33,
+              "name": "Preserve logs and per-platform receipts",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:49:40Z",
+              "completed_at": "2026-11-28T03:50:20Z",
+              "seconds": 40
+            },
+            {
+              "number": 65,
+              "name": "Post Restore the locked Zig toolchain",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:50:20Z",
+              "completed_at": "2026-11-28T03:50:21Z",
+              "seconds": 1
+            },
+            {
+              "number": 66,
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:50:21Z",
+              "completed_at": "2026-11-28T03:50:21Z",
+              "seconds": 0
+            },
+            {
+              "number": 67,
+              "name": "Complete job",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:50:21Z",
+              "completed_at": "2026-11-28T03:50:23Z",
+              "seconds": 2
+            }
+          ]
+        },
+        {
+          "id": 140850796928,
+          "name": "Native Linux x86_64",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-28T03:33:38Z",
+          "completed_at": "2026-11-28T04:03:03Z",
+          "seconds": 1765,
+          "steps": [
+            {
+              "number": 1,
+              "name": "Set up job",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:33:39Z",
+              "completed_at": "2026-11-28T03:33:40Z",
+              "seconds": 1
+            },
+            {
+              "number": 2,
+              "name": "Preserve frozen input bytes on checkout",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:33:40Z",
+              "completed_at": "2026-11-28T03:33:40Z",
+              "seconds": 0
+            },
+            {
+              "number": 3,
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:33:40Z",
+              "completed_at": "2026-11-28T03:33:41Z",
+              "seconds": 1
+            },
+            {
+              "number": 4,
+              "name": "Restore the locked Zig toolchain",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:33:41Z",
+              "completed_at": "2026-11-28T03:33:44Z",
+              "seconds": 3
+            },
+            {
+              "number": 5,
+              "name": "Build compiler and install the locked Zig toolchain",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:33:44Z",
+              "completed_at": "2026-11-28T03:34:31Z",
+              "seconds": 47
+            },
+            {
+              "number": 6,
+              "name": "Run Debug and Release sequentially",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:34:31Z",
+              "completed_at": "2026-11-28T03:42:01Z",
+              "seconds": 450
+            },
+            {
+              "number": 7,
+              "name": "Check the complete blocker-analysis contract",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:42:01Z",
+              "completed_at": "2026-11-28T03:42:01Z",
+              "seconds": 0
+            },
+            {
+              "number": 8,
+              "name": "Compile starter-guide examples and ownership diagnostics",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:42:01Z",
+              "completed_at": "2026-11-28T03:42:02Z",
+              "seconds": 1
+            },
+            {
+              "number": 9,
+              "name": "Build and validate the Yavo-written subset frontend",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:42:02Z",
+              "completed_at": "2026-11-28T03:53:20Z",
+              "seconds": 678
+            },
+            {
+              "number": 10,
+              "name": "Sweep the original corpus with the final selfhost compiler",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:53:20Z",
+              "completed_at": "2026-11-28T03:53:23Z",
+              "seconds": 3
+            },
+            {
+              "number": 11,
+              "name": "Record self-compilation timing, memory and generated sizes",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:53:23Z",
+              "completed_at": "2026-11-28T03:53:33Z",
+              "seconds": 10
+            },
+            {
+              "number": 12,
+              "name": "Validate original enum and result programs",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:53:33Z",
+              "completed_at": "2026-11-28T03:53:36Z",
+              "seconds": 3
+            },
+            {
+              "number": 13,
+              "name": "Check pattern payload destruction before arm execution",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:53:36Z",
+              "completed_at": "2026-11-28T03:53:37Z",
+              "seconds": 1
+            },
+            {
+              "number": 14,
+              "name": "Check isolated application runner configurations",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:53:37Z",
+              "completed_at": "2026-11-28T03:53:37Z",
+              "seconds": 0
+            },
+            {
+              "number": 15,
+              "name": "Validate ordinary selfhost build and run",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:53:37Z",
+              "completed_at": "2026-11-28T03:54:17Z",
+              "seconds": 40
+            },
+            {
+              "number": 16,
+              "name": "Validate selfhost source hashing",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:54:17Z",
+              "completed_at": "2026-11-28T03:54:39Z",
+              "seconds": 22
+            },
+            {
+              "number": 17,
+              "name": "Validate selfhost structured diagnostics",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:54:39Z",
+              "completed_at": "2026-11-28T03:54:59Z",
+              "seconds": 20
+            },
+            {
+              "number": 18,
+              "name": "Validate selfhost standard error values",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:54:59Z",
+              "completed_at": "2026-11-28T03:55:25Z",
+              "seconds": 26
+            },
+            {
+              "number": 19,
+              "name": "Validate the test-summary CLI application",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:55:25Z",
+              "completed_at": "2026-11-28T03:55:49Z",
+              "seconds": 24
+            },
+            {
+              "number": 20,
+              "name": "Validate the csv-check CLI application",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:55:49Z",
+              "completed_at": "2026-11-28T03:56:59Z",
+              "seconds": 70
+            },
+            {
+              "number": 21,
+              "name": "Validate the dep-index CLI application",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:56:59Z",
+              "completed_at": "2026-11-28T03:58:01Z",
+              "seconds": 62
+            },
+            {
+              "number": 22,
+              "name": "Check Yavo-frontend C with independent ASan and UBSan",
+              "conclusion": "success",
+              "started_at": "2026-11-28T03:58:01Z",
+              "completed_at": "2026-11-28T04:00:02Z",
+              "seconds": 121
+            },
+            {
+              "number": 23,
+              "name": "Check system interfaces with required ASan and UBSan",
+              "conclusion": "success",
+              "started_at": "2026-11-28T04:00:02Z",
+              "completed_at": "2026-11-28T04:00:08Z",
+              "seconds": 6
+            },
+            {
+              "number": 24,
+              "name": "Package application evidence with adversarial filenames",
+              "conclusion": "success",
+              "started_at": "2026-11-28T04:00:08Z",
+              "completed_at": "2026-11-28T04:00:09Z",
+              "seconds": 1
+            },
+            {
+              "number": 25,
+              "name": "Package CSV application evidence",
+              "conclusion": "success",
+              "started_at": "2026-11-28T04:00:09Z",
+              "completed_at": "2026-11-28T04:00:14Z",
+              "seconds": 5
+            },
+            {
+              "number": 26,
+              "name": "Package dependency-index application evidence",
+              "conclusion": "success",
+              "started_at": "2026-11-28T04:00:14Z",
+              "completed_at": "2026-11-28T04:00:20Z",
+              "seconds": 6
+            },
+            {
+              "number": 27,
+              "name": "Package ordinary driver evidence",
+              "conclusion": "success",
+              "started_at": "2026-11-28T04:00:20Z",
+              "completed_at": "2026-11-28T04:00:27Z",
+              "seconds": 7
+            },
+            {
+              "number": 28,
+              "name": "Package selfhost source hashing evidence",
+              "conclusion": "success",
+              "started_at": "2026-11-28T04:00:27Z",
+              "completed_at": "2026-11-28T04:00:29Z",
+              "seconds": 2
+            },
+            {
+              "number": 29,
+              "name": "Package selfhost structured diagnostic evidence",
+              "conclusion": "success",
+              "started_at": "2026-11-28T04:00:29Z",
+              "completed_at": "2026-11-28T04:00:31Z",
+              "seconds": 2
+            },
+            {
+              "number": 30,
+              "name": "Package selfhost standard error evidence",
+              "conclusion": "success",
+              "started_at": "2026-11-28T04:00:31Z",
+              "completed_at": "2026-11-28T04:00:36Z",
+              "seconds": 5
+            },
+            {
+              "number": 31,
+              "name": "Package system interface sanitizer evidence",
+              "conclusion": "success",
+              "started_at": "2026-11-28T04:00:36Z",
+              "completed_at": "2026-11-28T04:00:36Z",
+              "seconds": 0
+            },
+            {
+              "number": 32,
+              "name": "Package selfhost sanitizer evidence",
+              "conclusion": "success",
+              "started_at": "2026-11-28T04:00:36Z",
+              "completed_at": "2026-11-28T04:00:53Z",
+              "seconds": 17
+            },
+            {
+              "number": 33,
+              "name": "Preserve logs and per-platform receipts",
+              "conclusion": "success",
+              "started_at": "2026-11-28T04:00:53Z",
+              "completed_at": "2026-11-28T04:02:59Z",
+              "seconds": 126
+            },
+            {
+              "number": 65,
+              "name": "Post Restore the locked Zig toolchain",
+              "conclusion": "success",
+              "started_at": "2026-11-28T04:02:59Z",
+              "completed_at": "2026-11-28T04:02:59Z",
+              "seconds": 0
+            },
+            {
+              "number": 66,
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "conclusion": "success",
+              "started_at": "2026-11-28T04:02:59Z",
+              "completed_at": "2026-11-28T04:02:59Z",
+              "seconds": 0
+            },
+            {
+              "number": 67,
+              "name": "Complete job",
+              "conclusion": "success",
+              "started_at": "2026-11-28T04:02:59Z",
+              "completed_at": "2026-11-28T04:02:59Z",
+              "seconds": 0
+            }
+          ]
+        },
+        {
+          "id": 140850796934,
+          "name": "Round-five experiment evidence",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-28T03:33:38Z",
+          "completed_at": "2026-11-28T03:33:49Z",
+          "seconds": 11
+        }
+      ],
+      "all_steps_success_or_skipped": true,
+      "raw_evidence": {
+        "run_latest": {
+          "path": "compiler/target/batch53/ci-watch-budget/run-latest.json",
+          "bytes": 10954,
+          "sha256": "6738033181a04a9ec96fe4ef1d07d2a912298bb9ee5680e90e7462afbe879deb"
+        },
+        "jobs_latest": {
+          "path": "compiler/target/batch53/ci-watch-budget/jobs-latest.json",
+          "bytes": 31636,
+          "sha256": "a05540d7c3f4822253fd30918121b94a01519008d8fd930b8e87733a6665cdbf"
+        },
+        "artifacts_latest": {
+          "path": "compiler/target/batch53/ci-watch-budget/artifacts-latest.json",
+          "bytes": 4278,
+          "sha256": "1db7c94e2ae534a5eb9e55029085a01e5b436aef4411a98c26a6ae767d4869bb"
+        },
+        "final_summary": {
+          "path": "compiler/target/batch53/ci-watch-budget/final-summary.json",
+          "bytes": 2358,
+          "sha256": "64e9dada32f42fd76848af9134a72012cf2074998ca2402a145c1c599d34ce46"
+        }
+      },
+      "terminal_evidence": {
+        "path": "compiler/target/batch53/ci-watch-budget/terminal-evidence.json",
+        "bytes": 33444,
+        "sha256": "66cefed84941137a245efd4cb321eb7f5df0124945b3e0f248ee3c8750274a05"
+      },
+      "complete_archives_audit": {
+        "path": "compiler/validation/batch53-native-archives-2026-11-28.json",
+        "bytes": 5319164,
+        "sha256": "18dd6faef5e7e40828e80a04e53617c2185a21969085450848d58efdc1b6f591"
+      },
+      "archive_audit_source_sha256": "20bf30be98a05dddf830a0955121f3d38ffef7f0d9955f789f83a9188df8b83d",
+      "archive_integrity_passed": true,
+      "all_native_jobs_success": true,
+      "ci_success": true,
+      "native_platforms": {
+        "linux": {
+          "status": "passed",
+          "ci_job": {
+            "id": 140850796928,
+            "name": "Native Linux x86_64",
+            "head_sha": "dca2d52223ea72f7e8cc4e71349790b8b3bdaeba",
+            "conclusion": "success"
+          },
+          "github_artifact": {
+            "id": 15246819397,
+            "name": "native-ubuntu-24.04-dca2d52223ea72f7e8cc4e71349790b8b3bdaeba",
+            "size_in_bytes": 1106584426,
+            "digest": "sha256:ecd93d0aec5b092bf73903820b1d074676b872dc16fe13c88e8d7e92fbd24fe1",
+            "workflow_run": {
+              "id": 46103424789,
+              "repository_id": 1467240913,
+              "head_repository_id": 1467240913,
+              "head_branch": "main",
+              "head_sha": "dca2d52223ea72f7e8cc4e71349790b8b3bdaeba"
+            }
+          },
+          "independent_download": {
+            "bytes": 1106584426,
+            "sha256": "ecd93d0aec5b092bf73903820b1d074676b872dc16fe13c88e8d7e92fbd24fe1",
+            "metadata_match": true
+          },
+          "member_counts": {
+            "outer_zip": 39218,
+            "all_entries": 73346,
+            "files_and_links": 61869,
+            "nested_tar": 34128
+          },
+          "bootstrap": {
+            "cases": 1209,
+            "passed": 1209,
+            "checks": 20,
+            "checks_passed": 20,
+            "skipped_checks": [],
+            "case_counts": {
+              "panic": 34,
+              "reject": 636,
+              "run": 368,
+              "shared_unsupported": 42,
+              "unsupported": 129
+            },
+            "products": {
+              "stage2": {
+                "generated_c": {
+                  "kind": "file",
+                  "bytes": 1493942,
+                  "sha256": "8e226f224d6e8f11252bb7699351b956a1020bb64d39546615d6f05225f2c820"
+                },
+                "binary": {
+                  "kind": "file",
+                  "bytes": 773176,
+                  "sha256": "ce04a32fe69b825fa9b6c19dc228682ce89e0cbf35324bfcc063959c84da5c70"
+                }
+              },
+              "stage3": {
+                "generated_c": {
+                  "kind": "file",
+                  "bytes": 1493942,
+                  "sha256": "8e226f224d6e8f11252bb7699351b956a1020bb64d39546615d6f05225f2c820"
+                },
+                "binary": {
+                  "kind": "file",
+                  "bytes": 773176,
+                  "sha256": "ce04a32fe69b825fa9b6c19dc228682ce89e0cbf35324bfcc063959c84da5c70"
+                }
+              }
+            },
+            "fixed_point_c_byte_identical": true,
+            "fixed_point_binary_hash_equal": true
+          },
+          "coverage": {
+            "sources": 622,
+            "stage0_accepted": {
+              "paths": 394,
+              "unique_entry_bytes": 224,
+              "unique_module_graphs": 224
+            },
+            "selfhost_accepted": {
+              "paths": 135,
+              "unique_entry_bytes": 68,
+              "unique_module_graphs": 68
+            },
+            "stage0_rejected": 228,
+            "blocked": {
+              "paths": 259,
+              "unique_entry_bytes": 156,
+              "unique_module_graphs": 156
+            },
+            "analysis_complete": 394,
+            "unresolved_semantics": 259,
+            "accepted_profile_false_positive_paths": 0
+          },
+          "calibration": {
+            "passed": 399,
+            "failed": 0,
+            "skipped": 3
+          },
+          "patterns": {
+            "originals": {
+              "cases": 7,
+              "passed": 7,
+              "products": 14,
+              "failed": 0
+            },
+            "focused": {
+              "cases": 1,
+              "passed": 1,
+              "products": 4,
+              "failed": 0
+            }
+          },
+          "native_rust": {
+            "scope": "All Cargo tests and frozen conformance on Linux x86_64",
+            "host": {
+              "platform": "Linux-7.0.0-1020-azure-x86_64-with-glibc2.39",
+              "machine": "x86_64"
+            },
+            "suites": {
+              "debug": {
+                "totals": {
+                  "passed": 165,
+                  "failed": 0,
+                  "ignored": 1,
+                  "measured": 0,
+                  "filtered_out": 0
+                },
+                "selection": [],
+                "log_sha256": "df001f2434bc88d43d24ffa213afa5a764efe6f444043f1843d1d7635437d0f1"
+              },
+              "release": {
+                "totals": {
+                  "passed": 165,
+                  "failed": 0,
+                  "ignored": 1,
+                  "measured": 0,
+                  "filtered_out": 0
+                },
+                "selection": [],
+                "log_sha256": "9bd3c9fc038b2b14acffda7f70e1f2372552c34c31ffce0105ee12428a1657a2"
+              }
+            }
+          },
+          "gates": {
+            "test-summary": {
+              "schema": "yavo-test-summary-acceptance/1",
+              "status": "passed",
+              "passed": 213,
+              "failed": 0
+            },
+            "csv-check": {
+              "schema": "yavo-csv-check-acceptance/1",
+              "status": "passed",
+              "passed": 414,
+              "failed": 0
+            },
+            "dep-index": {
+              "schema": "yavo-dep-index-acceptance/1",
+              "status": "passed",
+              "passed": 336,
+              "failed": 0
+            },
+            "selfhost-driver": {
+              "schema": "yavo-selfhost-driver-acceptance/1",
+              "status": "passed",
+              "passed": 114,
+              "failed": 0,
+              "case_count": 114
+            },
+            "selfhost-digest": {
+              "schema": "yavo-selfhost-digest/1",
+              "status": "passed",
+              "passed": 276,
+              "failed": 0
+            },
+            "selfhost-diagnostics": {
+              "schema": "yavo-selfhost-diagnostics-acceptance/1",
+              "status": "passed",
+              "passed": 196,
+              "failed": 0,
+              "case_count": 196,
+              "text_case_count": 160
+            },
+            "selfhost-errors": {
+              "schema": "yavo-selfhost-errors/1",
+              "status": "passed",
+              "passed": 288,
+              "failed": 0
+            },
+            "system-sanitize": {
+              "schema": "yavo-system-sanitizers/1",
+              "status": "passed"
+            },
+            "selfhost-sanitizers": {
+              "schema": "yavo-selfhost-sanitizer-validation/1",
+              "status": "passed",
+              "passed": 403,
+              "failed": 0
+            }
+          }
+        },
+        "macos": {
+          "status": "passed",
+          "ci_job": {
+            "id": 140850796926,
+            "name": "Native macOS arm64",
+            "head_sha": "dca2d52223ea72f7e8cc4e71349790b8b3bdaeba",
+            "conclusion": "success"
+          },
+          "github_artifact": {
+            "id": 15247355810,
+            "name": "native-macos-15-dca2d52223ea72f7e8cc4e71349790b8b3bdaeba",
+            "size_in_bytes": 288087783,
+            "digest": "sha256:3ed6ab194d024fb0981de9446bb8d9ec8ec85d9d0c7828b2a0eaea48b7b3db90",
+            "workflow_run": {
+              "id": 46103424789,
+              "repository_id": 1467240913,
+              "head_repository_id": 1467240913,
+              "head_branch": "main",
+              "head_sha": "dca2d52223ea72f7e8cc4e71349790b8b3bdaeba"
+            }
+          },
+          "independent_download": {
+            "bytes": 288087783,
+            "sha256": "3ed6ab194d024fb0981de9446bb8d9ec8ec85d9d0c7828b2a0eaea48b7b3db90",
+            "metadata_match": true
+          },
+          "member_counts": {
+            "outer_zip": 39110,
+            "all_entries": 55841,
+            "files_and_links": 49301,
+            "nested_tar": 16731
+          },
+          "bootstrap": {
+            "cases": 1209,
+            "passed": 1209,
+            "checks": 20,
+            "checks_passed": 20,
+            "skipped_checks": [],
+            "case_counts": {
+              "panic": 34,
+              "reject": 636,
+              "run": 368,
+              "shared_unsupported": 42,
+              "unsupported": 129
+            },
+            "products": {
+              "stage2": {
+                "generated_c": {
+                  "kind": "file",
+                  "bytes": 1493953,
+                  "sha256": "e185e374ccd61792c16f4ab634c2bcc9e01e011622ab1a71d29e56c1da8bb2fb"
+                },
+                "binary": {
+                  "kind": "file",
+                  "bytes": 700576,
+                  "sha256": "7d8b18da2a3072a7d10c5f554b1f0a82b56012054c1c8d9a988b9b5a6001f351"
+                }
+              },
+              "stage3": {
+                "generated_c": {
+                  "kind": "file",
+                  "bytes": 1493953,
+                  "sha256": "e185e374ccd61792c16f4ab634c2bcc9e01e011622ab1a71d29e56c1da8bb2fb"
+                },
+                "binary": {
+                  "kind": "file",
+                  "bytes": 700576,
+                  "sha256": "7d8b18da2a3072a7d10c5f554b1f0a82b56012054c1c8d9a988b9b5a6001f351"
+                }
+              }
+            },
+            "fixed_point_c_byte_identical": true,
+            "fixed_point_binary_hash_equal": true
+          },
+          "coverage": {
+            "sources": 622,
+            "stage0_accepted": {
+              "paths": 394,
+              "unique_entry_bytes": 224,
+              "unique_module_graphs": 224
+            },
+            "selfhost_accepted": {
+              "paths": 135,
+              "unique_entry_bytes": 68,
+              "unique_module_graphs": 68
+            },
+            "stage0_rejected": 228,
+            "blocked": {
+              "paths": 259,
+              "unique_entry_bytes": 156,
+              "unique_module_graphs": 156
+            },
+            "analysis_complete": 394,
+            "unresolved_semantics": 259,
+            "accepted_profile_false_positive_paths": 0
+          },
+          "calibration": {
+            "passed": 399,
+            "failed": 0,
+            "skipped": 3
+          },
+          "patterns": {
+            "originals": {
+              "cases": 7,
+              "passed": 7,
+              "products": 14,
+              "failed": 0
+            },
+            "focused": {
+              "cases": 1,
+              "passed": 1,
+              "products": 4,
+              "failed": 0
+            }
+          },
+          "native_rust": {
+            "scope": "Native compiler unit tests plus p0, alloc_check, arena, modules, index_assignment, mutref_returns, collections, fix, runtime_io_concurrency, stdlib_io, fs_create_new, selfhost_blockers, system; excludes platform-limited frozen conformance",
+            "host": {
+              "platform": "macOS-15.8.2-arm64-arm-64bit-Mach-O",
+              "machine": "arm64"
+            },
+            "suites": {
+              "debug": {
+                "totals": {
+                  "passed": 90,
+                  "failed": 0,
+                  "ignored": 1,
+                  "measured": 0,
+                  "filtered_out": 0
+                },
+                "selection": [
+                  "--bin",
+                  "yavo",
+                  "--test",
+                  "p0",
+                  "--test",
+                  "alloc_check",
+                  "--test",
+                  "arena",
+                  "--test",
+                  "modules",
+                  "--test",
+                  "index_assignment",
+                  "--test",
+                  "mutref_returns",
+                  "--test",
+                  "collections",
+                  "--test",
+                  "fix",
+                  "--test",
+                  "runtime_io_concurrency",
+                  "--test",
+                  "stdlib_io",
+                  "--test",
+                  "fs_create_new",
+                  "--test",
+                  "selfhost_blockers",
+                  "--test",
+                  "system"
+                ],
+                "log_sha256": "1b5a03db34c79ad59b55fcfcb04c2eca73a33549940e1e54fcc514b6f7543fe7"
+              },
+              "release": {
+                "totals": {
+                  "passed": 90,
+                  "failed": 0,
+                  "ignored": 1,
+                  "measured": 0,
+                  "filtered_out": 0
+                },
+                "selection": [
+                  "--bin",
+                  "yavo",
+                  "--test",
+                  "p0",
+                  "--test",
+                  "alloc_check",
+                  "--test",
+                  "arena",
+                  "--test",
+                  "modules",
+                  "--test",
+                  "index_assignment",
+                  "--test",
+                  "mutref_returns",
+                  "--test",
+                  "collections",
+                  "--test",
+                  "fix",
+                  "--test",
+                  "runtime_io_concurrency",
+                  "--test",
+                  "stdlib_io",
+                  "--test",
+                  "fs_create_new",
+                  "--test",
+                  "selfhost_blockers",
+                  "--test",
+                  "system"
+                ],
+                "log_sha256": "c4a1c3e51bc2e3e391faf629928d4fe01f7fb69ce65c0f6b63e915ff3edc1b29"
+              }
+            }
+          },
+          "gates": {
+            "test-summary": {
+              "schema": "yavo-test-summary-acceptance/1",
+              "status": "passed",
+              "passed": 213,
+              "failed": 0
+            },
+            "csv-check": {
+              "schema": "yavo-csv-check-acceptance/1",
+              "status": "passed",
+              "passed": 414,
+              "failed": 0
+            },
+            "dep-index": {
+              "schema": "yavo-dep-index-acceptance/1",
+              "status": "passed",
+              "passed": 336,
+              "failed": 0
+            },
+            "selfhost-driver": {
+              "schema": "yavo-selfhost-driver-acceptance/1",
+              "status": "passed",
+              "passed": 114,
+              "failed": 0,
+              "case_count": 114
+            },
+            "selfhost-digest": {
+              "schema": "yavo-selfhost-digest/1",
+              "status": "passed",
+              "passed": 276,
+              "failed": 0
+            },
+            "selfhost-diagnostics": {
+              "schema": "yavo-selfhost-diagnostics-acceptance/1",
+              "status": "passed",
+              "passed": 196,
+              "failed": 0,
+              "case_count": 196,
+              "text_case_count": 160
+            },
+            "selfhost-errors": {
+              "schema": "yavo-selfhost-errors/1",
+              "status": "passed",
+              "passed": 288,
+              "failed": 0
+            }
+          }
+        },
+        "windows": {
+          "status": "passed",
+          "ci_job": {
+            "id": 140850796889,
+            "name": "Native Windows x86_64",
+            "head_sha": "dca2d52223ea72f7e8cc4e71349790b8b3bdaeba",
+            "conclusion": "success"
+          },
+          "github_artifact": {
+            "id": 15249222635,
+            "name": "native-windows-2025-dca2d52223ea72f7e8cc4e71349790b8b3bdaeba",
+            "size_in_bytes": 937913201,
+            "digest": "sha256:127e5a0f4145355a757c51f1975618686d99c0dea16089c0ddf1d70374c0fe5d",
+            "workflow_run": {
+              "id": 46103424789,
+              "repository_id": 1467240913,
+              "head_repository_id": 1467240913,
+              "head_branch": "main",
+              "head_sha": "dca2d52223ea72f7e8cc4e71349790b8b3bdaeba"
+            }
+          },
+          "independent_download": {
+            "bytes": 937913201,
+            "sha256": "127e5a0f4145355a757c51f1975618686d99c0dea16089c0ddf1d70374c0fe5d",
+            "metadata_match": true
+          },
+          "member_counts": {
+            "outer_zip": 39801,
+            "all_entries": 56029,
+            "files_and_links": 49711,
+            "nested_tar": 16228
+          },
+          "bootstrap": {
+            "cases": 1209,
+            "passed": 1209,
+            "checks": 20,
+            "checks_passed": 20,
+            "skipped_checks": [],
+            "case_counts": {
+              "panic": 34,
+              "reject": 636,
+              "run": 368,
+              "shared_unsupported": 42,
+              "unsupported": 129
+            },
+            "products": {
+              "stage2": {
+                "generated_c": {
+                  "kind": "file",
+                  "bytes": 1493909,
+                  "sha256": "627810f1b3d380379be89c4a0a4f5e6df9eeed3c7635f659b805505cdbe3ee3e"
+                },
+                "binary": {
+                  "kind": "file",
+                  "bytes": 856576,
+                  "sha256": "d0453308b0fba4f24fad6f6d5c50297988bcf217818d4e3be1d6f3af67e4b56f"
+                }
+              },
+              "stage3": {
+                "generated_c": {
+                  "kind": "file",
+                  "bytes": 1493909,
+                  "sha256": "627810f1b3d380379be89c4a0a4f5e6df9eeed3c7635f659b805505cdbe3ee3e"
+                },
+                "binary": {
+                  "kind": "file",
+                  "bytes": 856576,
+                  "sha256": "d0453308b0fba4f24fad6f6d5c50297988bcf217818d4e3be1d6f3af67e4b56f"
+                }
+              }
+            },
+            "fixed_point_c_byte_identical": true,
+            "fixed_point_binary_hash_equal": true
+          },
+          "coverage": {
+            "sources": 622,
+            "stage0_accepted": {
+              "paths": 394,
+              "unique_entry_bytes": 224,
+              "unique_module_graphs": 224
+            },
+            "selfhost_accepted": {
+              "paths": 135,
+              "unique_entry_bytes": 68,
+              "unique_module_graphs": 68
+            },
+            "stage0_rejected": 228,
+            "blocked": {
+              "paths": 259,
+              "unique_entry_bytes": 156,
+              "unique_module_graphs": 156
+            },
+            "analysis_complete": 394,
+            "unresolved_semantics": 259,
+            "accepted_profile_false_positive_paths": 0
+          },
+          "calibration": {
+            "passed": 399,
+            "failed": 0,
+            "skipped": 3
+          },
+          "patterns": {
+            "originals": {
+              "cases": 7,
+              "passed": 7,
+              "products": 14,
+              "failed": 0
+            },
+            "focused": {
+              "cases": 1,
+              "passed": 1,
+              "products": 4,
+              "failed": 0
+            }
+          },
+          "native_rust": {
+            "scope": "Native compiler unit tests plus p0, alloc_check, arena, modules, index_assignment, mutref_returns, collections, fix, runtime_io_concurrency, stdlib_io, fs_create_new, selfhost_blockers, system; excludes platform-limited frozen conformance",
+            "host": {
+              "platform": "Windows-2025Server-10.0.26100-SP0",
+              "machine": "AMD64"
+            },
+            "suites": {
+              "debug": {
+                "totals": {
+                  "passed": 87,
+                  "failed": 0,
+                  "ignored": 1,
+                  "measured": 0,
+                  "filtered_out": 0
+                },
+                "selection": [
+                  "--bin",
+                  "yavo",
+                  "--test",
+                  "p0",
+                  "--test",
+                  "alloc_check",
+                  "--test",
+                  "arena",
+                  "--test",
+                  "modules",
+                  "--test",
+                  "index_assignment",
+                  "--test",
+                  "mutref_returns",
+                  "--test",
+                  "collections",
+                  "--test",
+                  "fix",
+                  "--test",
+                  "runtime_io_concurrency",
+                  "--test",
+                  "stdlib_io",
+                  "--test",
+                  "fs_create_new",
+                  "--test",
+                  "selfhost_blockers",
+                  "--test",
+                  "system"
+                ],
+                "log_sha256": "fe03a9299449d2d6de0340314b5a032860afa1e764e82e0f27cbf31c32b50f1f"
+              },
+              "release": {
+                "totals": {
+                  "passed": 87,
+                  "failed": 0,
+                  "ignored": 1,
+                  "measured": 0,
+                  "filtered_out": 0
+                },
+                "selection": [
+                  "--bin",
+                  "yavo",
+                  "--test",
+                  "p0",
+                  "--test",
+                  "alloc_check",
+                  "--test",
+                  "arena",
+                  "--test",
+                  "modules",
+                  "--test",
+                  "index_assignment",
+                  "--test",
+                  "mutref_returns",
+                  "--test",
+                  "collections",
+                  "--test",
+                  "fix",
+                  "--test",
+                  "runtime_io_concurrency",
+                  "--test",
+                  "stdlib_io",
+                  "--test",
+                  "fs_create_new",
+                  "--test",
+                  "selfhost_blockers",
+                  "--test",
+                  "system"
+                ],
+                "log_sha256": "6df7f99de7e5e273ec3ba93aaea48e997195d16f0feaaf87bea8ce0db1c3ac8c"
+              }
+            }
+          },
+          "gates": {
+            "test-summary": {
+              "schema": "yavo-test-summary-acceptance/1",
+              "status": "passed",
+              "passed": 213,
+              "failed": 0
+            },
+            "csv-check": {
+              "schema": "yavo-csv-check-acceptance/1",
+              "status": "passed",
+              "passed": 411,
+              "failed": 0
+            },
+            "dep-index": {
+              "schema": "yavo-dep-index-acceptance/1",
+              "status": "passed",
+              "passed": 321,
+              "failed": 0
+            },
+            "selfhost-driver": {
+              "schema": "yavo-selfhost-driver-acceptance/1",
+              "status": "passed",
+              "passed": 108,
+              "failed": 0,
+              "case_count": 108
+            },
+            "selfhost-digest": {
+              "schema": "yavo-selfhost-digest/1",
+              "status": "passed",
+              "passed": 276,
+              "failed": 0
+            },
+            "selfhost-diagnostics": {
+              "schema": "yavo-selfhost-diagnostics-acceptance/1",
+              "status": "passed",
+              "passed": 188,
+              "failed": 0,
+              "case_count": 188,
+              "text_case_count": 152
+            },
+            "selfhost-errors": {
+              "schema": "yavo-selfhost-errors/1",
+              "status": "passed",
+              "passed": 276,
+              "failed": 0
+            }
+          }
+        }
+      }
+    },
+    "conclusion": "success"
   },
   "metrics": {
     "compiler": {
@@ -2149,7 +4086,9 @@
     "Owned Optional promotion and safe C literal encoding changed frozen diagnostic/generated-C outcomes; versioned overlays preserve old source/freeze bytes and independently derive new expectations.",
     "Temporary ENOSPC interrupted writes; availability recovered, affected types.yv restored from HEAD and exact edits replayed atomically; source completeness and checks reverified.",
     "Full receipt parsing contaminated child RSS; isolated configuration reader and same-binary ballast controls repair the metric, with paired batch52 remeasurement.",
-    "First Full CI exposed the batch52 original-hex precheck treating a valid stage0 warning as failure; use structured reference diagnostics, retain selfhost empty-stream contract, add three control methods."
+    "First Full CI exposed the batch52 original-hex precheck treating a valid stage0 warning as failure; use structured reference diagnostics, retain selfhost empty-stream contract, add three control methods.",
+    "Windows Full bootstrap passed, then the sweep wrapper decoded the UTF-8 receipt with cp1252 and failed before scanning. JSON readers now consume bytes; runtime and diagnostic/report text protocols explicitly use UTF-8. ANSI-default controls cover wrapper path preservation, real subprocess UTF-8, and calibration output.",
+    "Third CI completed all Windows execution, packaging, upload and post steps, but the job was cancelled at 90m19s by its 90-minute budget. The complete uploaded artifact passed independent audit. Full job budget is now 120 minutes; Core stays at 90 and all gate selection remains unchanged. The final Full run 46103424789 at dca2d52223ea72f7e8cc4e71349790b8b3bdaeba completed successfully with all seven jobs passing."
   ],
   "known_gaps": [
     "Aggregate Optional/Tuple/Result/Heap payload composition, general references and mutable pattern binding remain unsupported.",
@@ -2168,5 +4107,116 @@
     "path": "compiler/validation/batch53-metrics-correction-2026-11-28.json",
     "bytes": 13705,
     "sha256": "178882e13b993113242a1581a63c2f5dd2b5fab79d6cbe87b9b6384e5d5d7ebf"
-  }
+  },
+  "validation_fix_commit": "1242a2cb5b7ba9bb79d9c1bcb6207d11d8fa7e07",
+  "final_stage2_checks": {
+    "original_runtime": {
+      "summary": {
+        "cases": 7,
+        "passed": 7,
+        "products": 14,
+        "failed": 0
+      },
+      "receipt": {
+        "path": "compiler/target/ci/selfhost-batch53-final/patterns53/originals/receipt.json",
+        "bytes": 85320,
+        "sha256": "a429c16cc222fdcc04af1977cc810e436c04e09124dbef6c9cca0c46941aff45"
+      }
+    },
+    "drop_observer": {
+      "summary": {
+        "cases": 1,
+        "passed": 1,
+        "products": 4,
+        "failed": 0
+      },
+      "receipt": {
+        "path": "compiler/target/ci/selfhost-batch53-final/patterns53/focused/receipt.json",
+        "bytes": 22405,
+        "sha256": "0d97059e7dcf10db6861aed4624c14cd2c42d1a29a0d5734fd54c0cbe7393c2e"
+      }
+    },
+    "profile_calibration": {
+      "summary": {
+        "passed": 399,
+        "failed": 0,
+        "skipped": 3
+      },
+      "receipt": {
+        "path": "compiler/target/batch53/encoding-rerun/profile-calibration.json",
+        "bytes": 196868,
+        "sha256": "1c6501287f60d66c9ef21e48113a79f85f6344fcfdf9ae6e1359334b729c704d"
+      }
+    },
+    "standard_errors": {
+      "status": "passed",
+      "passed": 288,
+      "receipt": {
+        "path": "compiler/target/ci/selfhost-errors-batch53/receipt.json",
+        "bytes": 753509,
+        "sha256": "cbb70ac66dcf3cf0f0f7ffc206ef8eea6bdd2731936ecc8024fe24feaf2141d8"
+      },
+      "scope": "Local fixed-toolchain standard-error six-product gate, sanitizers off; independent ASan/UBSan runs in Linux Full CI."
+    },
+    "utf8_wrapper_rerun": {
+      "status": "passed",
+      "sweep": {
+        "path": "compiler/target/batch53/encoding-rerun/subset-sweep.json",
+        "bytes": 1508068,
+        "sha256": "0f3c0e2a7098afec0ddb4fcb4630f62af38bae140fe39c0cd313f6550f5a589b"
+      },
+      "calibration": {
+        "path": "compiler/target/batch53/encoding-rerun/profile-calibration.json",
+        "bytes": 196868,
+        "sha256": "1c6501287f60d66c9ef21e48113a79f85f6344fcfdf9ae6e1359334b729c704d"
+      },
+      "summary": {
+        "sources": 622,
+        "stage0_accepted": {
+          "paths": 394,
+          "unique_entry_bytes": 224,
+          "unique_module_graphs": 224
+        },
+        "selfhost_accepted": {
+          "paths": 135,
+          "unique_entry_bytes": 68,
+          "unique_module_graphs": 68
+        },
+        "stage0_rejected": 228,
+        "blocked": {
+          "paths": 259,
+          "unique_entry_bytes": 156,
+          "unique_module_graphs": 156
+        },
+        "analysis_complete": 394,
+        "unresolved_semantics": 259,
+        "accepted_profile_false_positive_paths": 0
+      }
+    },
+    "ansi_default_controls": {
+      "file": "tools/ci/subset_encoding_test.py",
+      "tests": 3,
+      "passed": 3,
+      "previous_scripts_control": "Same tests against the pre-fix scripts fail with two cp1252 UnicodeDecodeErrors and one UTF-8 diagnostic corruption assertion; old scripts loaded in memory without overwriting current files.",
+      "compiler_builds": 0
+    }
+  },
+  "encoding_fix_commit": "8710c54a7f66c19825bedf88d3d5bf4bf1c985bb",
+  "compiler_sources_unchanged_by_validation_fixes": {
+    "from": "cc81bca93c62f6394be84b32e53320dd316e1ee7",
+    "to": "dca2d52223ea72f7e8cc4e71349790b8b3bdaeba",
+    "paths": [
+      "selfhost/*.yv",
+      "compiler/src",
+      "compiler/runtime",
+      "selfhost/tests/cases.json"
+    ],
+    "git_diff_names": []
+  },
+  "budget_fix_commit": "dca2d52223ea72f7e8cc4e71349790b8b3bdaeba",
+  "validation_job_budget_minutes": {
+    "core": 90,
+    "full": 120
+  },
+  "tested_commit": "dca2d52223ea72f7e8cc4e71349790b8b3bdaeba"
 }

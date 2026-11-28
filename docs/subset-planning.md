@@ -1,5 +1,22 @@
 # Selfhost 子集选题：完整语法图、阻塞集合与兑现收益
 
+## 第53批当前状态
+
+最终stage2原稿135/394、完整模块图68/224，较52批增加10路径/6图；raw已接受入口误报0，run/panic夹具校准399/399（3个source_prefix组合显式跳过）。用户enum、嵌套match和String/Named拥有Optional组合已兑现；259个剩余入口仍保留结构、流敏感和容量unknown。不能称为全部语义阻塞集合。
+
+| 剩余通用工作包 | 模型候选路径 / 模块图 |
+| --- | ---: |
+| 泛型、接口、方法与泛型构造 | 14 / 8 |
+| 完整元组及组合布局 | 9 / 5 |
+| 仅Copy元组Vec | 6 / 2 |
+
+这些是候选而非已确认解锁；枚举/模式的共同基础扩大了后续组合收益。元组/组合包的9路径/5图由Copy元组Vec的6/2、拥有元组及结构组合的1/1、仅Optional/Result组合的2/2构成，不能全部算作元组收益。泛型包的8图中有3图的已建模阻塞仅有methods，其余5图包含泛型或接口的不同组合。
+
+下一批先关闭已发现的stage0 Match来源缺口，随后暂接完整元组与组合布局，补齐本批拥有载荷表示和清理的剩余边界；这个排期依据实现连续性。索引未测两包的实现成本，不能据候选数宣称元组包成本收益更优；开工前须拆解两包的实际依赖并重排，不能把14/8或9/5写成覆盖承诺。[第53批逐入口集合](../compiler/validation/batch53-subset-blockers-2026-11-28.json)。
+
+## 第52批工具与规划快照
+
+
 批次：52。原语料冻结于第 51 批 `61b17c4`；最终扫描使用第52批核心自举的实际 stage2 和 batch52 profile。原语料保持 622 个路径；stage0 接受 394 个，selfhost 接受 125 个，覆盖未变。新分析命令不参与正式编译，也不改变 `check` 的首错及退出行为。
 
 ## 工具与证据
@@ -28,7 +45,7 @@ python3 selfhost/subset_sweep.py \
   --json compiler/target/subset-sweep.json
 ```
 
-默认 `--profile batch52` 包含十六进制/二进制字面量。回测第 51 批用 `--profile batch51`。新的只读 CLI 为 `yavo subset-features file.yv [--profile batch51|batch52]`。它加载源码而不执行用户程序、不生成 C、不修改输入。
+默认 `--profile batch53` 包含本批通用模式与已支持的拥有Optional；回测第51/52批使用对应历史profile。只读 CLI 为 `yavo subset-features file.yv [--profile batch51|batch52|batch53]`。它加载源码而不执行用户程序、不生成 C、不修改输入。
 
 622 路径的固定清单已入库；其中 30 份过去被 ignored 的 R5 原始副本纳入 git，保持原路径、原字节，clean CI 不再依赖服务器残留文件。新的成本实验样本不进入这个固定分母。
 
@@ -56,7 +73,7 @@ python3 selfhost/subset_sweep.py \
 
 这些数字限制“下一批可增加多少覆盖”的承诺，不改变通用特性的优先方向。先建立共用 enum/pattern 表示，再按组合验收用户 enum、Optional、Result；避免为了一个计数再扩标准 Error 的特殊分支。
 
-## 标准 Error match 合流设计
+## 第52批的标准 Error match 合流设计（第53批已按共同路径实现）
 
 当前语法已共用 `parser.matchExpression` 和 `MatchArm`，特殊逻辑集中在 `codegen.matchValue`：它只接受 `.StdError`，用 `standardVariantCount/standardVariant` 查询变体，并假定 payload 是单个 int，绑定调用 `declareErrorBinding`。通用化应在这条路径上扩展，不新增另一套 `match` 发射器。
 
@@ -66,7 +83,7 @@ python3 selfhost/subset_sweep.py \
 4. `matchValue` 接受共用判别形状，发射同一分支过程。Optional/Result 的 has/ok 表示通过标签/投影适配器进入同一过程；适配器只负责存储布局。
 5. 首次通用 enum/match 交付必须让现有标准 Error 测试走共用路径；删去“仅 StdError”分支以及硬编码 payload int/arity 判断。核心验证覆盖原标准 Error 行为、用户 enum Copy/拥有载荷、名义类型不混用、穷尽性、单次求值及分支退出清理。重型内存门随该所有权里程碑运行。
 
-## 本批验证与剩余工作
+## 第52批验证与剩余工作（历史）
 
 - 聚焦 Rust 集成测试 `subset_features`：11/11。覆盖跨函数继续、未实例化泛型体、完整模块图、源码不变、字符串/注释不误报、已支持数值辅助/Set、标准 Error 与用户 enum 分类、非法输入拒绝。
 - 冻结原 622 路径：394 个 stage0 接受、125 个 selfhost 接受、228 个 stage0 拒绝；0 越界、0 超时、0 异常退出。

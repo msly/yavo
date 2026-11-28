@@ -56,7 +56,29 @@ The ignored Cargo test is the old exploratory P0 conformance report; the current
 
 Source modules support top-level exports, per-file imports, cyclic imports and original-file diagnostics. Package dependencies and a program lockfile remain open. Multi-file `fix` returns `U0001` without writing; symlink module aliases are unsupported.
 
-### Standard error values and real I/O acceptance (batch 51, 2026-11-27)
+### Shared enum patterns and owned payloads (batch 53, 2026-11-28)
+
+User enums now support multiple Copy or owned payload fields. User enum, standard
+Error, Optional and Result patterns share one recursive checker and exhaustiveness
+matrix. Owned temporary payloads move or drop before an arm executes; readonly
+parameter views retain their declared sources. String and owned named Optionals
+are supported. Safe C string literals remove the full-octal representation overhead.
+
+| Current local evidence | Result |
+| --- | --- |
+| Complete bootstrap | **1,209/1,209 cases, 20/20 checks**, C and binary fixed points |
+| Original 622-source corpus | **125→135/394**, complete module graphs **62→68/224**; zero regressions or subset violations |
+| Generated C / compiler binary | **1,494,217 / 766,512 bytes**; C decreases 16.1%, binary grows 4.6% |
+| Paired resource probe | Frontend P50 **87.67→87.99 ms**, peak RSS **30.43→30.38 MB**; separate backend observation **12.22→13.95 s** |
+
+See the [batch 53 delivery index](compiler/validation/batch53-delivery-2026-11-28.json)
+for exact source/compiler identities and native CI status. Batch53 runs Full as an
+ownership milestone; routine batches use Core. SH-3 is still open and SH-4 remains
+3/3. A stage0 Match-result loan defect is recorded; selfhost rejects the unsafe
+boundary examples. The new agent-cost pilot remains blocked on actual usage
+collection, with no new metered participant sessions.
+
+### Historical standard-error acceptance (batch 51, 2026-11-27)
 
 The Yavo-written compiler now supports distinct `fs.Error`, `io.Error`, `os.Error`
 and `process.Error` Copy values, the `Utf8Error.offset` field, and full Results

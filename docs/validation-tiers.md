@@ -1,6 +1,6 @@
 # 自举验收分层（第 52 批起）
 
-每批保留三平台真实固定点、核心语义和全原语料分类；重复产品矩阵与归档审计移至完整门。策略由 [`validation-policy.json`](../tools/ci/validation-policy.json) 驱动，当前批次 52，基线 `61b17c4`，间隔 **N=5**。
+每批保留三平台真实固定点、核心语义和全原语料分类；重复产品矩阵与归档审计移至完整门。策略由 [`validation-policy.json`](../tools/ci/validation-policy.json) 驱动，当前批次 53，基线 `5fa6401`，间隔 **N=5**；本批新增拥有型枚举布局与清理，按里程碑执行 Full。
 
 | 层级 | 触发 | 必跑项目 | 不计作本层通过的项目 |
 | --- | --- | --- | --- |
@@ -37,3 +37,9 @@ python3 selfhost/bootstrap.py --tier full
 | macOS arm64 | 20分31秒 | 3分48秒 |
 
 原始job/step时间及精确提交见[第52批索引](../compiler/validation/batch52-direction-2026-11-28.json)。本批没有下载或逐成员审计ZIP；完整门在约定周期执行。
+
+第53批修正RSS启动器污染：Full回执在单独短命进程读取，测量进程只接收路径与身份，避免JSON展开的历史高水位进入编译器子进程统计。使用直接编译器wait4，仍保留Python启动下限；Windows无wait4仍null。旧记录不回写，跨方法比较以[同口径复测](../compiler/validation/batch53-metrics-correction-2026-11-28.json)为准。
+
+第53批第三次CI的Windows全部执行、打包和上传步骤成功，总90分19秒导致90分钟job超时取消；完整上传归档已独立审计。自dca2d52起，Full原生job预算为120分钟，Core仍90分钟；触发规则和必跑范围保持本表定义。取消记录与修正后CI分别保留在本批索引。
+
+该轮Windows前五项为bootstrap 37分58秒、csv-check 9分25秒、dep-index 9分22秒、Rust Debug/Release 6分29秒、test-summary 5分24秒，合计68分38秒，占90分19秒的76%。bootstrap与原生应用门确有同源stage0参考构建，但后者使用隔离源码快照、相对入口、空缓存并禁用PCH，当前不满足直接共享条件。后续先分析三项应用的参考构建契约能否统一；保留双前端、双模式、独立Release重建、exit-shim及缓存状态的区别。逐step时间尚未拆分构建与用例执行，不据此估计可节省分钟数。

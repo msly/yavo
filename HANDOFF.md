@@ -6,9 +6,9 @@
 
 **第53批交付用户enum多字段Copy/拥有载荷、通用嵌套match、拥有型String/Named Optional；标准Error与用户enum/Optional/Result共用同一模式检查、穷尽矩阵、绑定与清理路径。** SH-3仍未默认接替Rust，SH-4仍3/3。
 
-当前新59模式分类、12旧U0001原源码提升、7原稿Debug/Release与析构时序观察器通过；完整自举及三平台里程碑Full正在执行，最终状态见[第53批验证索引](compiler/validation/batch53-delivery-2026-11-28.json)。初扫125→135/394，完整模块图62→68/224。不能把初扫或候选快照写成最终CI验收。
+本机最终stage2完整自举1209/1209、辅助20/20，C及二进制固定点通过；固定原622源中125→135/394，完整模块图62→68/224。7原稿Debug/Release共14产物、析构时序观察4产物、profile校准399项及标准错误门288项通过。最终dca2d52的[第四次Full CI](https://github.com/msly/yavo/actions/runs/46103424789) **7/7成功**，三平台完整自举固定点与新归档核验均通过，Windows作业85分29秒。第三轮Windows因90分19秒超过90分钟预算被标cancelled，执行门与完整归档审计通过的证据独立保留；Full预算现为120分钟、Core仍90。完整状态与身份见[第53批验证索引](compiler/validation/batch53-delivery-2026-11-28.json)。
 
-`cString`可打印ASCII直写并保留必要转义；同一源码比较生成C下降362,454字节（19.525%）。最终自编译耗时/RSS/C/二进制趋势以完整自举后的记录为准。[交付范围、语义边界与原稿收益](docs/batch53-patterns.md)。
+`cString`可打印ASCII直写并保留必要转义；同一源码比较生成C下降362,454字节（19.525%）。最终C为1,494,217 B（较52批−16.07%）、二进制766,512 B（+4.55%）；相同修正计量方法复测52→53：前端P50为87.668→87.992 ms，RSS为30,429,184→30,380,032 B，后端单次12.221→13.948 s。Full receipt读取曾污染启动器RSS，现由独立进程解析，历史错误值另存。[交付范围、语义边界与原稿收益](docs/batch53-patterns.md)。
 
 发现stage0既有Match结果借用来源缺口；三份固定原稿在selfhost中保守拒绝。第54批首先补此正确性缺口，再推进完整元组与组合载荷。结构分析仍保留unknown，不宣称穷尽全部U0001。
 
@@ -198,13 +198,13 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 
 ## 10. 下一个会话的第一步
 
-1. 核对Git与最新CI，先读第31节、[自举路线](docs/self-hosting.md)、[selfhost支持范围](selfhost/README.md)和[验证索引](compiler/validation/batch51-standard-errors-2026-11-27.json)。正式本机1136/1136、20/20，标准错误288，JSON/text/supplement196/160/16、SHA256276、普通driver114/9。实现提交 `76915bc` 的 [run 46028799189](https://github.com/msly/yavo/actions/runs/46028799189) **6/6 成功**；三平台标准错误六产物门分别通过 Linux/macOS 288、Windows 276 次，Linux 原 stage0 与实际最终 stage2 C 的独立 ASan+UBSan 通过96次。三份原生 ZIP 的 GitHub 大小/哈希、原始回执、源输入和产物身份已复核。 首次 [run 46018585973](https://github.com/msly/yavo/actions/runs/46018585973) 为5/6：Windows新错误门因原生反斜杠与冻结POSIX路径比较不等，在发射C和执行场景前退出。该处已改用 `.as_posix()`，路径正负控8/8、本机错误门288/288复验通过；首次失败和原始归档保留。
-2. **下一批优先 Copy 元组 Vec：当前首阻塞共25路径/11份入口字节，其中Copy为22/8，另3/3是包含String的拥有型元组。先冻结空/非空构造、push/pop、字段及参数/返回、索引读写/遍历与边界诊断，再用原文暴露后续限制。Map值首阻塞27/14混合Counter、元组、String、Vec和Set，不统一归入Copy。首阻塞计数不等于预期覆盖增量。** 保留原622文件及全部原例字节；新增能力必须经旧stage0独立预期与声明的U0001边界验收。
-3. 本批标准Error是四种不同名义Copy类型，短名Error不会由std导入自动引入。Utf8Error是有offset字段的Copy struct，直接显示仍E0001；标准Error-only match不能顺带开放用户enum/Optional/Result匹配。现有十个fallible调用使用完整Result并共享传播/清理路径。
-4. 保留[测试输入修订记录](selfhost/tests/errors51/semantic-amendment.json)：原hex源和失败不能删除，也不能把本批描述成73份新源码全程未修订。五个旧例的name/PATH环境和独立cwd仅在执行时生效，编译环境与ASAN/UBSAN控制不改。
-5. 394个stage0接受入口仍有 **269** 个未接受，按入口字节去重为 **162** 个。原生普通build/run和首错check JSON已交付；接着按实际依赖迁移交叉目标、cache/PCH、安装及fix/verify等工具。build/run JSON、warning/note/fix和多错误恢复各自冻结合同；冻结agent文档不可直接改写。
+1. 核对Git与第53批最终CI，先读第1、32、33节、[验证索引](compiler/validation/batch53-delivery-2026-11-28.json)、[能力规划](docs/subset-planning.md)和[SH-3剩余项](docs/sh3-roadmap.md)。语义提交cc81bca、警告/RSS修正1242a2c、Windows编码修正8710c54、Full预算修正dca2d52；第51批状态保留在第31节与history/handoff-batch51-summary.md。
+2. **先修stage0 Match结果借用来源传播。** 以patterns53/CONTRACT.md中的三份原稿及借用来源审查为回归，补局部/拥有临时值逃逸与参数来源标注检查；selfhost已有保守拒绝不放松。
+3. 下一步推进含拥有型的完整元组及组合载荷，实施前按最终blocker索引确认范围。当前已建模全阻塞集合的候选：泛型/接口/方法及泛型构造14路径/8模块图，完整元组与组合9/5，仅Copy元组Vec为6/2；各入口仍有未建模语义unknown，以上均非已证实覆盖增量。保留原622路径及源码字节，用最终stage2复扫核销收益。
+4. 标准Error专用match已并入唯一matchValue及共同Pattern/variant矩阵，保留名义类型与ABI适配；Utf8Error仍为struct。后续模式能力在共同实现扩展，不能恢复两套。第52批hex修复及原稿恢复、历史freeze/amendment继续保留。
+5. 第54批默认Core；仅实际布局/所有权里程碑才触发额外Full，第55批仍按周期Full。macOS/Windows选定Rust套件、Windows两个I/O场景及RSS缺口见第32节。成本试验待可运行的独立agent及真实usage计量，未解阻前不得把源码重放计为新受试会话。
 
-正式门槛仍按`docs/plan.md`：配对通过率差的单侧95%下界至少−5个百分点，单位成功交付成本较Rust低至少20%并独立复现；冻结运行基准几何均值不超过C的1.5倍。小程序编译P50≤200ms、Linux小程序strip产物≤250KB、原生平台和可复现构建分别验收。本批命令耗时/RSS是单次观测，token/金额/P50未测。
+正式门槛按`docs/plan.md`：配对通过率差单侧95%下界至少−5个百分点，单位成功交付成本较Rust低至少20%并独立复现；运行基准几何均值不超过C的1.5倍。小程序编译P50≤200ms、Linux小程序strip产物≤250KB分别验收；第52批小程序P50约206–221 ms尚未达标。第53批自编译前端P50为5次采样，后端为单次观测，不能替代小程序目标；成本token/金额仍缺真实usage。
 
 ## 历史批次（已移出）
 
