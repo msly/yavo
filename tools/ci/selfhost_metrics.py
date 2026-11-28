@@ -71,7 +71,7 @@ def main():
     overrides = {"YAVO_NO_CACHE": "1", "YAVO_ALLOC_CHECK": "1"}
     rows = []
     report = {"schema": "yavo-selfhost-metrics/1", "batch": json.loads(
-        (ROOT / "tools/ci/validation-policy.json").read_text())["batch"],
+        (ROOT / "tools/ci/validation-policy.json").read_bytes())["batch"],
         "host": {"system": platform.system(), "machine": platform.machine(),
                  "load_average": list(os.getloadavg()) if hasattr(os, "getloadavg") else None},
         "source": str(source), "compiler": execution.identity(compiler),

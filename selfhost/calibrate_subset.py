@@ -22,7 +22,7 @@ def main():
     parser.add_argument("--profile",choices=("batch51","batch52","batch53"),default="batch53")
     args=parser.parse_args()
     analyzer,selfhost=args.analyzer.resolve(),args.selfhost.resolve()
-    manifest=json.loads((ROOT/"selfhost/tests/cases.json").read_text())
+    manifest=json.loads((ROOT/"selfhost/tests/cases.json").read_bytes())
     rows=[]
     for case in manifest["cases"]:
         if case["kind"] not in ("run","panic"):continue
@@ -46,7 +46,7 @@ def main():
             "rows":rows}
     report["passed"]=report["summary"]["failed"]==0
     args.json.parent.mkdir(parents=True,exist_ok=True)
-    args.json.write_text(json.dumps(report,ensure_ascii=False,indent=2)+"\n")
+    args.json.write_text(json.dumps(report,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     print(json.dumps(report["summary"]))
     for row in rows:
         if row["status"]=="failed":

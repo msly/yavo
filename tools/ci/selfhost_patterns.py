@@ -16,9 +16,9 @@ def completed(r,code=0):
     return r['exit_code']==code and not r['timed_out'] and not r['launch_error']
 def save(path,value):
     path.parent.mkdir(parents=True,exist_ok=True)
-    temp=path.with_suffix('.tmp');temp.write_text(json.dumps(value,indent=2)+'\n');temp.replace(path)
+    temp=path.with_suffix('.tmp');temp.write_text(json.dumps(value,indent=2)+'\n',encoding='utf-8');temp.replace(path)
 def observed_runtime(directory,markers):
-    src=(ROOT/'compiler/runtime/yavo_rt.h').read_text()
+    src=(ROOT/'compiler/runtime/yavo_rt.h').read_text(encoding='utf-8')
     anchor='static int yv_rt_exit(void) {'
     if src.count(anchor)!=1:raise ValueError('runtime exit observer anchor changed')
     src=src.replace(anchor,'static int yv_patterns53_events = 0;\n'+anchor+'\n'+
@@ -33,7 +33,7 @@ def observed_runtime(directory,markers):
             '        ++yv_patterns53_events;\n    }')
     src=src.replace(anchor,anchor+'\n'+'\n'.join(checks))
     directory.mkdir(parents=True,exist_ok=True)
-    p=directory/'yavo_rt.h';p.write_text(src);return p
+    p=directory/'yavo_rt.h';p.write_text(src,encoding='utf-8');return p
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
@@ -52,7 +52,7 @@ def main():
     if args.bootstrap_output:
         if args.role!='selfhost':parser.error('--bootstrap-output requires the selfhost role')
         bootstrap=args.bootstrap_output.resolve()/'receipt.json'
-        receipt=json.loads(bootstrap.read_text())
+        receipt=json.loads(bootstrap.read_bytes())
         if receipt['status']!='passed':raise ValueError('pattern verification requires a passing fixed point')
         args.compiler=Path(receipt['work'])/'stages/stage2'/('yavo-selfhost.exe' if os.name=='nt' else 'yavo-selfhost')
         if args.zig is None:args.zig=Path(receipt['inputs']['zig']['path'])
@@ -63,7 +63,7 @@ def main():
     output.mkdir(parents=True,exist_ok=True);work=Path(tempfile.mkdtemp(prefix='run-',dir=output))
     env=dict(os.environ,YAVO_NO_CACHE='1',YAVO_ALLOC_CHECK='1')
     for key in ('YAVO_CC','YAVO_CACHE_TRACE','YAVO_UPDATE_BASELINE'):env.pop(key,None)
-    manifest=json.loads((FIXTURES/'cases.json').read_text())
+    manifest=json.loads((FIXTURES/'cases.json').read_bytes())
     pool=manifest['originals'] if args.originals else manifest['cases']
     cases=[c for c in pool if not args.case or c['id'] in args.case]
     def source(c):return ROOT/c['repository_file'] if 'repository_file' in c else ROOT/'selfhost/tests'/c['file']

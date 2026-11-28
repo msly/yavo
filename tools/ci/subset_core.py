@@ -15,7 +15,7 @@ def main():
     parser.add_argument("--analyzer", type=Path,
                         help="current Rust analyzer when bootstrap used a preserved historical stage0")
     args = parser.parse_args()
-    receipt = json.loads((args.bootstrap_output / "receipt.json").read_text())
+    receipt = json.loads((args.bootstrap_output / "receipt.json").read_bytes())
     if receipt["status"] != "passed":
         raise RuntimeError("core sweep requires a passing fixed point")
     suffix = ".exe" if sys.platform == "win32" else ""

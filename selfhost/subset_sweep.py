@@ -50,7 +50,7 @@ def check(compiler, path, timeout=30):
     started = time.monotonic()
     try:
         done = subprocess.run([str(compiler), "check", path.name], cwd=path.parent,
-                              capture_output=True, timeout=timeout, text=True, errors="replace")
+                              capture_output=True, timeout=timeout, text=True, encoding="utf-8", errors="replace")
     except subprocess.TimeoutExpired:
         return {"exit": None, "first": "timeout", "code": None, "seconds": time.monotonic()-started}
     lines = done.stderr.strip().splitlines()
@@ -93,7 +93,7 @@ def inventory(corpus=None):
 def analyze(analyzer, path, timeout, profile="batch53"):
     try:
         done = subprocess.run([str(analyzer), "subset-features", path.name, "--profile", profile], cwd=path.parent,
-                              capture_output=True, timeout=timeout, text=True, errors="replace")
+                              capture_output=True, timeout=timeout, text=True, encoding="utf-8", errors="replace")
     except subprocess.TimeoutExpired:
         return {"ast_complete": False, "semantic_complete": False, "blockers": {},
                 "unknown": ["analyzer_timeout"]}
