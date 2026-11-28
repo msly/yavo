@@ -3,7 +3,7 @@
   "batch": 53,
   "recorded_at_utc": "2026-11-28T00:52:23.851021+00:00",
   "baseline_commit": "5fa6401db5726c635a34f8d4ce5c6cc32abc88cc",
-  "status": "local_full_and_ci_pending",
+  "status": "local_complete_ci_rerun_required",
   "validation_tier": {
     "schema": "yavo-validation-policy/1",
     "batch": 53,
@@ -2046,19 +2046,110 @@
     }
   },
   "local_full": {
-    "status": "running",
+    "status": "passed",
     "output": "compiler/target/ci/selfhost-batch53-final",
-    "log": "compiler/target/batch53/full-bootstrap.log"
+    "receipt": {
+      "path": "compiler/target/ci/selfhost-batch53-final/receipt.json",
+      "bytes": 17828297,
+      "sha256": "2d4406e2d3b4bfd93b1936a1f7deb04d505c89637342905133d7778d8ab6b0e1"
+    },
+    "total": 1209,
+    "passed": 1209,
+    "auxiliary_total": 20,
+    "auxiliary_passed": 20,
+    "c_and_binary_fixed_point": true
   },
   "ci": {
-    "status": "pending"
+    "status": "rerun_required",
+    "first_run": {
+      "id": 46090262118,
+      "url": "https://github.com/msly/yavo/actions/runs/46090262118",
+      "head_sha": "cc81bca93c62f6394be84b32e53320dd316e1ee7",
+      "failed_steps": {
+        "macOS arm64": "Validate selfhost standard error values",
+        "Linux x86_64": "Validate selfhost standard error values"
+      },
+      "diagnosis": "same gate failure reproduced locally: legal stage0 W0001 on original hex source was treated as rejection; strict JSON success handling fixes it",
+      "log_access": "GitHub job-log API returned 403; local same-source reproduction retained"
+    }
   },
-  "metrics": null,
+  "metrics": {
+    "compiler": {
+      "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch53-final/run-179er036/stages/stage2/yavo-selfhost",
+      "bytes": 766512,
+      "sha256": "6dde1be270fcde1ac87d4b862ca9fc01303c939e3b122506ed8eb95b547ffa9f"
+    },
+    "generated_c": {
+      "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch53-final/run-179er036/stages/stage3/yavo-selfhost.c",
+      "bytes": 1494217,
+      "sha256": "92c65ef72ec2cab00ccda3358a9c9c972d0e45b56604307eb06ec65967f5fb68"
+    },
+    "frontend": {
+      "samples": 5,
+      "p50_seconds": 0.08799215033650398,
+      "p95_seconds": 0.09818404540419579,
+      "peak_rss_bytes": 30380032,
+      "rss_observations": 5
+    },
+    "backend_observation": {
+      "argv": [
+        "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+        "cc",
+        "-std=c17",
+        "-fno-strict-aliasing",
+        "-DYV_ALLOC_CHECK",
+        "-O2",
+        "-s",
+        "-I",
+        "/data1/workspace/github/workspace/yavo/compiler/runtime",
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch53-final/metrics-8p_2qwhz/sample-5.c",
+        "-o",
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch53-final/metrics-8p_2qwhz/yavo-selfhost"
+      ],
+      "cwd": "/data1/workspace/github/workspace/yavo",
+      "environment": {
+        "YAVO_NO_CACHE": "1",
+        "YAVO_ALLOC_CHECK": "1"
+      },
+      "exit_code": 0,
+      "timed_out": false,
+      "launch_error": null,
+      "elapsed_seconds": 13.947603506967425,
+      "peak_process_memory_bytes": 203980800,
+      "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+      "stdout": {
+        "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch53-final/metrics-8p_2qwhz/backend/stdout.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch53-final/metrics-8p_2qwhz/backend/stderr.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stdin": {
+        "kind": "devnull"
+      }
+    },
+    "host": {
+      "system": "Linux",
+      "machine": "x86_64",
+      "load_average": [
+        0.005859375,
+        0.4248046875,
+        0.822265625
+      ]
+    },
+    "cache": "Yavo frontend cache disabled; existing OS and Zig caches; not cold builds",
+    "memory_scope": "OS wait4 RSS of the waited compiler child, not a process-tree sum; the measurement process does not parse the Full receipt; Python launcher floor remains; null where unavailable"
+  },
   "failures_and_corrections": [
     "Initial owned-view matching lost lifetime information; transient scrutinees are now rejected and immutable-parameter arm results retain source bits.",
     "Existing stage0 Match result-loan omissions were found; three frozen boundary fixtures remain rejected by selfhost. Stage0 is unchanged.",
     "Owned Optional promotion and safe C literal encoding changed frozen diagnostic/generated-C outcomes; versioned overlays preserve old source/freeze bytes and independently derive new expectations.",
-    "Temporary ENOSPC interrupted writes; availability recovered, affected types.yv restored from HEAD and exact edits replayed atomically; source completeness and checks reverified."
+    "Temporary ENOSPC interrupted writes; availability recovered, affected types.yv restored from HEAD and exact edits replayed atomically; source completeness and checks reverified.",
+    "Full receipt parsing contaminated child RSS; isolated configuration reader and same-binary ballast controls repair the metric, with paired batch52 remeasurement.",
+    "First Full CI exposed the batch52 original-hex precheck treating a valid stage0 warning as failure; use structured reference diagnostics, retain selfhost empty-stream contract, add three control methods."
   ],
   "known_gaps": [
     "Aggregate Optional/Tuple/Result/Heap payload composition, general references and mutable pattern binding remain unsupported.",
@@ -2071,5 +2162,11 @@
     "Fix stage0 Match result-loan propagation with escaping/local/parameter-source tests.",
     "Extend complete tuple and aggregate payload representation, including ownership; rerank candidates using final blocker sets.",
     "Keep routine Core tier; Full cadence at batch55."
-  ]
+  ],
+  "implementation_commit": "cc81bca93c62f6394be84b32e53320dd316e1ee7",
+  "metrics_correction": {
+    "path": "compiler/validation/batch53-metrics-correction-2026-11-28.json",
+    "bytes": 13705,
+    "sha256": "178882e13b993113242a1581a63c2f5dd2b5fab79d6cbe87b9b6384e5d5d7ebf"
+  }
 }

@@ -2,12 +2,14 @@
 """Record reproducible frontend samples and a separate backend observation."""
 from __future__ import annotations
 import argparse
+import hashlib
 import json
 import math
 import os
 from pathlib import Path
 import platform
 import statistics
+import subprocess
 import sys
 import tempfile
 
@@ -15,6 +17,25 @@ import csv_support as execution
 
 ROOT = Path(__file__).resolve().parents[2]
 EXE = ".exe" if os.name == "nt" else ""
+
+
+def receipt_configuration(path):
+    """Run only in the short-lived reader; a Full receipt can expand to >80 MB."""
+    payload = path.read_bytes()
+    receipt = json.loads(payload)
+    if receipt["status"] != "passed":
+        raise RuntimeError("metrics require a passing bootstrap")
+    return {"work": receipt["work"], "zig": receipt["inputs"]["zig"]["path"],
+            "receipt": {"path": str(path.resolve()), "bytes": len(payload),
+                        "sha256": hashlib.sha256(payload).hexdigest()}}
+
+
+def isolated_configuration(path):
+    # Linux fork/exec can retain the launcher's historical RSS high-water mark.
+    # Never parse the large validation receipt in the process that measures the
+    # compiler. Deleting the parsed object or collecting garbage does not reset it.
+    command = [sys.executable, str(Path(__file__).resolve()), "--receipt-config", str(path)]
+    return json.loads(subprocess.check_output(command))
 
 
 def distribution(rows):
@@ -34,17 +55,16 @@ def main():
     args = parser.parse_args()
     if args.samples < 3:
         parser.error("at least three samples are required")
-    receipt = json.loads((args.bootstrap_output / "receipt.json").read_text())
-    if receipt["status"] != "passed":
-        raise RuntimeError("metrics require a passing bootstrap")
-    work = Path(receipt["work"])
+    config = isolated_configuration(args.bootstrap_output / "receipt.json")
+    work = Path(config["work"])
     compiler = work / "stages/stage2" / ("yavo-selfhost" + EXE)
     source = work / "selfhost-src/main.yv"
     expected_c = work / "stages/stage3/yavo-selfhost.c"
-    zig = Path(receipt["inputs"]["zig"]["path"])
+    zig = Path(config["zig"])
     directory = Path(tempfile.mkdtemp(prefix="metrics-", dir=args.bootstrap_output.resolve()))
     inputs = {str(path): execution.digest(path) for path in
               [compiler, zig, expected_c, *sorted(source.parent.glob("*.yv"))]}
+    inputs[config["receipt"]["path"]] = config["receipt"]["sha256"]
     env = dict(os.environ)
     # Bootstrap uses the allocation counter; metrics keep that same compiler
     # identity. These observations are not the no-counter small-program gate.
@@ -58,7 +78,9 @@ def main():
         "generated_c": execution.identity(expected_c), "warmups": 1,
         "scope": "stage2 emit-c of the compiler itself; separate native backend observation",
         "cache": "Yavo frontend cache disabled; existing OS and Zig caches; not cold builds",
-        "memory_scope": "OS wait4 RSS of the waited child, not sum of process-tree peaks; null where unavailable",
+        "memory_scope": "OS wait4 RSS of the waited compiler child, not a process-tree sum; the measurement process does not parse the Full receipt; Python launcher floor remains; null where unavailable",
+        "receipt_loading": "separate short-lived reader process; its RSS is not used as compiler RSS",
+        "bootstrap_receipt": config["receipt"],
         "formal_small_program_target": {"compile_p50_ms": 200, "stripped_linux_bytes": 250000,
                                         "evaluated_by_this_self_compile_probe": False},
         "inputs": inputs, "frontend_samples": rows}
@@ -95,4 +117,7 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    if len(sys.argv) == 3 and sys.argv[1] == "--receipt-config":
+        print(json.dumps(receipt_configuration(Path(sys.argv[2]))))
+    else:
+        sys.exit(main())

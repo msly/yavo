@@ -1,0 +1,353 @@
+{
+  "schema": "yavo-metrics53-correction/1",
+  "recorded_at_utc": "2026-11-28T01:14:08.210120+00:00",
+  "cause": "Full receipt JSON parsing raised the Python launcher high-water RSS; fork/exec children inherit that high-water mark. GC does not repair the observation.",
+  "before_invalid": {
+    "compiler": {
+      "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch53-final/run-179er036/stages/stage2/yavo-selfhost",
+      "bytes": 766512,
+      "sha256": "6dde1be270fcde1ac87d4b862ca9fc01303c939e3b122506ed8eb95b547ffa9f"
+    },
+    "generated_c": {
+      "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch53-final/run-179er036/stages/stage3/yavo-selfhost.c",
+      "bytes": 1494217,
+      "sha256": "92c65ef72ec2cab00ccda3358a9c9c972d0e45b56604307eb06ec65967f5fb68"
+    },
+    "frontend": {
+      "samples": 5,
+      "p50_seconds": 0.10877600871026516,
+      "p95_seconds": 0.10982712544500828,
+      "peak_rss_bytes": 87810048,
+      "rss_observations": 5
+    },
+    "backend_observation": {
+      "argv": [
+        "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+        "cc",
+        "-std=c17",
+        "-fno-strict-aliasing",
+        "-DYV_ALLOC_CHECK",
+        "-O2",
+        "-s",
+        "-I",
+        "/data1/workspace/github/workspace/yavo/compiler/runtime",
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch53-final/metrics-jwt9fs4e/sample-5.c",
+        "-o",
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch53-final/metrics-jwt9fs4e/yavo-selfhost"
+      ],
+      "cwd": "/data1/workspace/github/workspace/yavo",
+      "environment": {
+        "YAVO_NO_CACHE": "1",
+        "YAVO_ALLOC_CHECK": "1"
+      },
+      "exit_code": 0,
+      "timed_out": false,
+      "launch_error": null,
+      "elapsed_seconds": 13.12619817070663,
+      "peak_process_memory_bytes": 200273920,
+      "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+      "stdout": {
+        "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch53-final/metrics-jwt9fs4e/backend/stdout.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch53-final/metrics-jwt9fs4e/backend/stderr.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stdin": {
+        "kind": "devnull"
+      }
+    },
+    "host": {
+      "system": "Linux",
+      "machine": "x86_64",
+      "load_average": [
+        0.9111328125,
+        1.095703125,
+        1.125
+      ]
+    },
+    "cache": "Yavo frontend cache disabled; existing OS and Zig caches; not cold builds",
+    "memory_scope": "OS wait4 RSS of the waited child, not sum of process-tree peaks; null where unavailable"
+  },
+  "after_valid": {
+    "compiler": {
+      "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch53-final/run-179er036/stages/stage2/yavo-selfhost",
+      "bytes": 766512,
+      "sha256": "6dde1be270fcde1ac87d4b862ca9fc01303c939e3b122506ed8eb95b547ffa9f"
+    },
+    "generated_c": {
+      "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch53-final/run-179er036/stages/stage3/yavo-selfhost.c",
+      "bytes": 1494217,
+      "sha256": "92c65ef72ec2cab00ccda3358a9c9c972d0e45b56604307eb06ec65967f5fb68"
+    },
+    "frontend": {
+      "samples": 5,
+      "p50_seconds": 0.08799215033650398,
+      "p95_seconds": 0.09818404540419579,
+      "peak_rss_bytes": 30380032,
+      "rss_observations": 5
+    },
+    "backend_observation": {
+      "argv": [
+        "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+        "cc",
+        "-std=c17",
+        "-fno-strict-aliasing",
+        "-DYV_ALLOC_CHECK",
+        "-O2",
+        "-s",
+        "-I",
+        "/data1/workspace/github/workspace/yavo/compiler/runtime",
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch53-final/metrics-8p_2qwhz/sample-5.c",
+        "-o",
+        "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch53-final/metrics-8p_2qwhz/yavo-selfhost"
+      ],
+      "cwd": "/data1/workspace/github/workspace/yavo",
+      "environment": {
+        "YAVO_NO_CACHE": "1",
+        "YAVO_ALLOC_CHECK": "1"
+      },
+      "exit_code": 0,
+      "timed_out": false,
+      "launch_error": null,
+      "elapsed_seconds": 13.947603506967425,
+      "peak_process_memory_bytes": 203980800,
+      "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+      "stdout": {
+        "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch53-final/metrics-8p_2qwhz/backend/stdout.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch53-final/metrics-8p_2qwhz/backend/stderr.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stdin": {
+        "kind": "devnull"
+      }
+    },
+    "host": {
+      "system": "Linux",
+      "machine": "x86_64",
+      "load_average": [
+        0.005859375,
+        0.4248046875,
+        0.822265625
+      ]
+    },
+    "cache": "Yavo frontend cache disabled; existing OS and Zig caches; not cold builds",
+    "memory_scope": "OS wait4 RSS of the waited compiler child, not a process-tree sum; the measurement process does not parse the Full receipt; Python launcher floor remains; null where unavailable"
+  },
+  "batch52_paired_remeasurement": {
+    "compiler": {
+      "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch52-final2/run-ofvhiukz/stages/stage2/yavo-selfhost",
+      "bytes": 733152,
+      "sha256": "e0e27e417737f373fa6d363e04e6fe6a35e6aaa4d81f77ad4cf20d26b2816020"
+    },
+    "generated_c": {
+      "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch52-final2/run-ofvhiukz/stages/stage3/yavo-selfhost.c",
+      "bytes": 1780336,
+      "sha256": "92af61c8544abe05f6599ce76de4da228b4ac58a7fb95cdd281d231cccd7d677"
+    },
+    "frontend": {
+      "samples": 5,
+      "p50_seconds": 0.08766848035156727,
+      "p95_seconds": 0.08814369328320026,
+      "peak_rss_bytes": 30429184,
+      "rss_observations": 5
+    },
+    "backend_observation": {
+      "argv": [
+        "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+        "cc",
+        "-std=c17",
+        "-fno-strict-aliasing",
+        "-DYV_ALLOC_CHECK",
+        "-O2",
+        "-s",
+        "-I",
+        "/data1/workspace/github/workspace/yavo/compiler/runtime",
+        "/data1/workspace/github/workspace/yavo/compiler/target/batch53/baseline52-remeasure/metrics-mndi75e0/sample-5.c",
+        "-o",
+        "/data1/workspace/github/workspace/yavo/compiler/target/batch53/baseline52-remeasure/metrics-mndi75e0/yavo-selfhost"
+      ],
+      "cwd": "/data1/workspace/github/workspace/yavo",
+      "environment": {
+        "YAVO_NO_CACHE": "1",
+        "YAVO_ALLOC_CHECK": "1"
+      },
+      "exit_code": 0,
+      "timed_out": false,
+      "launch_error": null,
+      "elapsed_seconds": 12.22082351706922,
+      "peak_process_memory_bytes": 205021184,
+      "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+      "stdout": {
+        "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch53/baseline52-remeasure/metrics-mndi75e0/backend/stdout.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "/data1/workspace/github/workspace/yavo/compiler/target/batch53/baseline52-remeasure/metrics-mndi75e0/backend/stderr.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stdin": {
+        "kind": "devnull"
+      }
+    },
+    "host": {
+      "system": "Linux",
+      "machine": "x86_64",
+      "load_average": [
+        0.07421875,
+        0.3623046875,
+        0.76708984375
+      ]
+    },
+    "cache": "Yavo frontend cache disabled; existing OS and Zig caches; not cold builds",
+    "memory_scope": "OS wait4 RSS of the waited compiler child, not a process-tree sum; the measurement process does not parse the Full receipt; Python launcher floor remains; null where unavailable"
+  },
+  "controls": {
+    "fork": {
+      "schema": "yavo-rss-fork-audit/1",
+      "batch": 53,
+      "compiler": {
+        "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch53-final/run-179er036/stages/stage2/yavo-selfhost",
+        "bytes": 766512,
+        "sha256": "6dde1be270fcde1ac87d4b862ca9fc01303c939e3b122506ed8eb95b547ffa9f"
+      },
+      "source": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch53-final/run-179er036/selfhost-src/main.yv",
+      "expected_c_sha256": "92c65ef72ec2cab00ccda3358a9c9c972d0e45b56604307eb06ec65967f5fb68",
+      "receipt_bytes": 17828297,
+      "usr_bin_time_available": false,
+      "rows": [
+        {
+          "label": "true-0mb",
+          "parent": {
+            "VmHWM": 19333120,
+            "VmRSS": 19333120
+          },
+          "elapsed_seconds": 0.0022195931524038315,
+          "exit_code": 0,
+          "wait4_maxrss_bytes": 19333120,
+          "stderr": ""
+        },
+        {
+          "label": "emit-0mb",
+          "parent": {
+            "VmHWM": 19333120,
+            "VmRSS": 19333120
+          },
+          "elapsed_seconds": 0.10470218025147915,
+          "exit_code": 0,
+          "wait4_maxrss_bytes": 29687808,
+          "stderr": "",
+          "generated_c_sha256": "92c65ef72ec2cab00ccda3358a9c9c972d0e45b56604307eb06ec65967f5fb68",
+          "matches_fixed_point": true
+        },
+        {
+          "label": "true-64mb",
+          "parent": {
+            "VmHWM": 86437888,
+            "VmRSS": 86437888
+          },
+          "elapsed_seconds": 0.0011762715876102448,
+          "exit_code": 0,
+          "wait4_maxrss_bytes": 86437888,
+          "stderr": ""
+        },
+        {
+          "label": "emit-64mb",
+          "parent": {
+            "VmHWM": 86437888,
+            "VmRSS": 86437888
+          },
+          "elapsed_seconds": 0.08594596199691296,
+          "exit_code": 0,
+          "wait4_maxrss_bytes": 86437888,
+          "stderr": "",
+          "generated_c_sha256": "92c65ef72ec2cab00ccda3358a9c9c972d0e45b56604307eb06ec65967f5fb68",
+          "matches_fixed_point": true
+        },
+        {
+          "label": "true-128mb",
+          "parent": {
+            "VmHWM": 154857472,
+            "VmRSS": 154857472
+          },
+          "elapsed_seconds": 0.0015325509011745453,
+          "exit_code": 0,
+          "wait4_maxrss_bytes": 154857472,
+          "stderr": ""
+        },
+        {
+          "label": "emit-128mb",
+          "parent": {
+            "VmHWM": 154857472,
+            "VmRSS": 154857472
+          },
+          "elapsed_seconds": 0.08856783993542194,
+          "exit_code": 0,
+          "wait4_maxrss_bytes": 154857472,
+          "stderr": "",
+          "generated_c_sha256": "92c65ef72ec2cab00ccda3358a9c9c972d0e45b56604307eb06ec65967f5fb68",
+          "matches_fixed_point": true
+        },
+        {
+          "label": "true-after-free",
+          "parent": {
+            "VmHWM": 154857472,
+            "VmRSS": 20852736
+          },
+          "elapsed_seconds": 0.0010415371507406235,
+          "exit_code": 0,
+          "wait4_maxrss_bytes": 154857472,
+          "stderr": ""
+        },
+        {
+          "label": "emit-after-free",
+          "parent": {
+            "VmHWM": 154857472,
+            "VmRSS": 20852736
+          },
+          "elapsed_seconds": 0.0899567399173975,
+          "exit_code": 0,
+          "wait4_maxrss_bytes": 154857472,
+          "stderr": "",
+          "generated_c_sha256": "92c65ef72ec2cab00ccda3358a9c9c972d0e45b56604307eb06ec65967f5fb68",
+          "matches_fixed_point": true
+        }
+      ]
+    },
+    "nested_worker": {
+      "worker_proc": {
+        "VmHWM": 19054592,
+        "VmRSS": 19054592
+      },
+      "worker_ru_maxrss": 151408640,
+      "child_exit_code": 0,
+      "child_wait4_maxrss_bytes": 28213248,
+      "generated_c_sha256": "92c65ef72ec2cab00ccda3358a9c9c972d0e45b56604307eb06ec65967f5fb68",
+      "stderr_bytes": 0,
+      "expected_sha256": "92c65ef72ec2cab00ccda3358a9c9c972d0e45b56604307eb06ec65967f5fb68",
+      "matches_fixed_point": true
+    }
+  },
+  "fix": "Read the full bootstrap receipt in a separate short-lived subprocess. The compiler measurement process receives only configuration and receipt identity, and records its own direct compiler child wait4 usage.",
+  "limits": [
+    "Python launcher floor remains; this probe is for the self-compiling frontend, whose RSS exceeds that floor.",
+    "Windows RSS remains null.",
+    "One warmup and five frontend samples; backend is one separate observation with existing OS/Zig caches, not a cold build.",
+    "Historical batch52 metric row remains unchanged; the paired remeasurement uses its original stage2 binary and source snapshot."
+  ],
+  "implementation_source": {
+    "path": "tools/ci/selfhost_metrics.py",
+    "bytes": 6387,
+    "sha256": "cd758579ae061721b7a92053d95bed7381720eeecfd761297f3886b0730ce59b"
+  }
+}

@@ -167,16 +167,44 @@ def load_frozen(bound):
     return applicable, oracle, records
 
 
+def original_literal_accepted(role, source, command, out, err):
+    if not producers.completed(command) or err != b"":
+        return False
+    if role != "stage0":
+        return out == b""
+    # The restored source deliberately keeps an unused allocation guard.
+    # A reference warning does not turn an accepted program into a rejection.
+    try:
+        document = json.loads(out)
+    except (ValueError, UnicodeError):
+        return False
+    if not isinstance(document, dict):
+        return False
+    diagnostics = document.get("diagnostics")
+    warnings = document.get("warning_count")
+    return (document.get("schema") == "yavo-diagnostics/p0"
+            and document.get("source_sha256") == execution.digest(source)
+            and type(document.get("error_count")) is int and document["error_count"] == 0
+            and type(warnings) is int and isinstance(diagnostics, list) and warnings == len(diagnostics)
+            and all(isinstance(row, dict) and row.get("severity") == "WARN"
+                    and isinstance(row.get("code"), str)
+                    and re.fullmatch(r"W[0-9]{4}", row["code"]) for row in diagnostics))
+
+
 def original_literal_checks(compilers, work, environment):
     source = FIXTURES / "programs/utf8_consumed_failure.yv"
     rows = []
     for role, binary in compilers:
-        command, out, err = execution.execute([binary, "check", source],
+        argv = [binary, "check", source]
+        if role == "stage0":
+            argv.append("--json")
+        command, out, err = execution.execute(argv,
                                               work / "commands" / (role + "-original-hex-supported"),
                                               ROOT, environment, {"PATH": ""}, 30)
-        passed = producers.completed(command) and out == b"" and err == b""
+        passed = original_literal_accepted(role, source, command, out, err)
         rows.append({"producer": role, "source": execution.identity(source), "command": command,
-                     "expected_exit": 0, "expected_diagnostic": None, "passed": passed})
+                     "expected_exit": 0, "expected_error_count": 0,
+                     "reference_warnings_allowed": role == "stage0", "passed": passed})
     require(all(row["passed"] for row in rows), "the restored hexadecimal source was not accepted")
     return rows
 
