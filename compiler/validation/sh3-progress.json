@@ -1,0 +1,163 @@
+{
+  "schema": "yavo-sh3-progress/1",
+  "recorded_at_utc": "2026-11-28T09:45:56.497826+00:00",
+  "baseline_commit": "f0183c07195c658de0d0fc859d79406b53893655",
+  "baseline_target_completion_batches": [
+    65,
+    66
+  ],
+  "counting_rule": "Use the eight original SH-3 roadmap packages. A package closes only after all acceptance conditions have bound evidence; partial deliveries remain open. SH-2 and SH-4 are separate milestones.",
+  "packages": [
+    {
+      "id": "SH3-01",
+      "name": "用户 enum＋通用 match",
+      "acceptance": "第53批交付用户多载荷枚举、表达式/语句及嵌套match、模式矩阵、名义类型、移动/借用/清理与Error合流；剩余组合字段、通用引用及精确借用收口",
+      "baseline_estimate_batches": [
+        53,
+        55
+      ],
+      "status": "open",
+      "completed_batch": null,
+      "completion_evidence": null
+    },
+    {
+      "id": "SH3-02",
+      "name": "Optional/Result 模式和拥有载荷",
+      "acceptance": "原语料需要的拥有/嵌套 payload、字段/容器、匹配、try/catch 与提前退出；正向原稿通过，错误码/资源拒绝用例无回退",
+      "baseline_estimate_batches": [
+        54,
+        57
+      ],
+      "status": "open",
+      "completed_batch": null,
+      "completion_evidence": null
+    },
+    {
+      "id": "SH3-03",
+      "name": "完整元组（按 stage0 已支持范围）",
+      "acceptance": "Copy/拥有字段、任意已支持元数、容器元素、结构字段、参数/返回、字段投影及析构；Copy Vec 作为共同布局/生命周期的一部分",
+      "baseline_estimate_batches": [
+        54,
+        58
+      ],
+      "status": "open",
+      "completed_batch": null,
+      "completion_evidence": null
+    },
+    {
+      "id": "SH3-04",
+      "name": "泛型与接口",
+      "acceptance": "stage0 已有泛型函数/结构、约束与接口调用；单态化、所有权与 Send/Sync 规则一致；未实例化函数等既定边界明确",
+      "baseline_estimate_batches": [
+        57,
+        61
+      ],
+      "status": "open",
+      "completed_batch": null,
+      "completion_evidence": null
+    },
+    {
+      "id": "SH3-05",
+      "name": "其余原语料语义与库缺口",
+      "acceptance": "按完整集合推进数值/Map/Set、方法/闭包、并发等；固定 394 个 stage0 接受入口逐个有结论；严格子集 0 越界、0 已支持退步；源码/模块图去重同时报告",
+      "baseline_estimate_batches": [
+        59,
+        64
+      ],
+      "status": "open",
+      "completed_batch": null,
+      "completion_evidence": null
+    },
+    {
+      "id": "SH3-06",
+      "name": "日常构建与分发",
+      "acceptance": "原生 build/run JSON、锁定后端安装/离线、交叉目标、缓存/PCH；干净目录独立构建，三平台原生执行；默认命令不偷偷委托 Rust 前端",
+      "baseline_estimate_batches": [
+        60,
+        64
+      ],
+      "status": "open",
+      "completed_batch": null,
+      "completion_evidence": null
+    },
+    {
+      "id": "SH3-07",
+      "name": "现有工具入口与结构化诊断",
+      "acceptance": "对齐 stage0 已交付的 check/fix/verify/allocations/toolchain；明确错误码、源范围、多文件与 stdout 协议；outline/type-at/explain/doc/audit 仍按原产品路线另列，不能冒充 stage0 已有能力",
+      "baseline_estimate_batches": [
+        62,
+        65
+      ],
+      "status": "open",
+      "completed_batch": null,
+      "completion_evidence": null
+    },
+    {
+      "id": "SH3-08",
+      "name": "默认接替与平台收口",
+      "acceptance": "干净检出由 selfhost 完成自身和既有应用的常规开发；完整门通过；回滚入口保留；Windows/macOS 各套件缺口逐项关闭或列明不适用",
+      "baseline_estimate_batches": [
+        65,
+        66
+      ],
+      "status": "open",
+      "completed_batch": null,
+      "completion_evidence": null
+    }
+  ],
+  "completed_work_packages": 0,
+  "remaining_work_packages": 8,
+  "total_work_packages": 8,
+  "coverage_history": [
+    {
+      "batch": 51,
+      "accepted_paths": 125,
+      "reference_accepted_paths": 394,
+      "coverage_percent": 31.7259,
+      "accepted_module_graphs": 62,
+      "reference_module_graphs": 224,
+      "source": "compiler/validation/batch51-standard-errors-2026-11-27.json"
+    },
+    {
+      "batch": 52,
+      "accepted_paths": 125,
+      "reference_accepted_paths": 394,
+      "coverage_percent": 31.7259,
+      "accepted_module_graphs": 62,
+      "reference_module_graphs": 224,
+      "source": "compiler/validation/batch52-direction-2026-11-28.json"
+    },
+    {
+      "batch": 53,
+      "accepted_paths": 135,
+      "reference_accepted_paths": 394,
+      "coverage_percent": 34.264,
+      "accepted_module_graphs": 68,
+      "reference_module_graphs": 224,
+      "source": "compiler/validation/batch53-delivery-2026-11-28.json"
+    },
+    {
+      "batch": 54,
+      "accepted_paths": 135,
+      "reference_accepted_paths": 394,
+      "coverage_percent": 34.264,
+      "accepted_module_graphs": 68,
+      "reference_module_graphs": 224,
+      "source": "compiler/validation/batch54-delivery-2026-11-28.json",
+      "qualification": "local_core_passed_ci_pending"
+    }
+  ],
+  "current_batch": {
+    "batch": 54,
+    "status": "local_core_passed_ci_pending",
+    "accepted_paths": 135,
+    "accepted_module_graphs": 68,
+    "stage0_reclassifications": {
+      "added": [],
+      "removed": []
+    },
+    "schedule_note": "Correctness, measurement isolation and CI reliability corrections inserted; original package estimate windows remain visible. Tuple/composite feature work is replanned after these corrections."
+  },
+  "report_line_template": "SH-3工作包：已完成{completed}/8、剩余{remaining}；原稿覆盖：51批125/394→52批125/394→53批135/394→本批{accepted}/394。",
+  "denominator_rule": "Keep original 622 source paths and the historical 394 accepted-reference denominator. Record any stage0 correctness reclassification separately; never rewrite historical coverage."
+}

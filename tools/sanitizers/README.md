@@ -68,3 +68,40 @@ measurements are separate checks.
 Retain the bundle and complete output directory for review. Commit the report
 and harness with the project; do not commit generated executables or large
 temporary bundles. Re-export and rerun after compiler/runtime changes.
+
+
+## Periodic complete P0 gate
+
+The existing Linux external-sanitizer job runs with Full validation (every fifth
+batch, milestones, releases, or an explicit Full request). Batch 54 selects one
+qualification of this job while the native matrix remains Core; its batch-scoped
+policy does not enable this heavy gate on later ordinary batches. No duplicate
+sanitizer job is added.
+
+CI invokes the runner with `--p0-root <checkout>`. This mode requires every
+`compiler/tests/p0/run_*.yv` and `panic_*.yv` exactly once, including new entries.
+The current batch 54 inventory is **50 run entries and 15 panic entries**, with
+**no POSIX exclusions**. A missing, duplicated, altered, or extra bundle entry is
+an error. Per-entry output comes from the unchanged source headers and the
+source-hash-bound `expectations.json`; rejected lifetime fixtures are never
+executed as sanitizer programs.
+
+The original oracle is `compiler/tests/p0.rs` (not `p0_regressions.rs`). Program
+stdin remains DEVNULL and cwd is the checkout's **`compiler` directory**, exactly
+as inherited by the Cargo P0 harness. The harness supplies no additional runtime
+file fixtures or stdin payload. Its source identity is frozen in
+`p0_contract.py`, so a future protocol change requires explicit review. The C
+emission and external ASan+UBSan controls remain those of the existing exporter
+and runner; the locked production toolchain is unchanged.
+
+The runner records the full source/oracle inventory in `p0_contract`, and every
+entry's result plus required/executed/passed/failed counts in `p0_coverage`.
+Both fields are retained in the CI summary. No application pass is recorded until
+the clean/UAF/overflow capability controls succeed. Input identities are checked
+again after execution.
+
+`python3 tools/sanitizers/p0_contract_test.py` is the small plan-stage control. It
+checks missing/duplicate/new entries, changed oracles, rejected-source exclusion,
+and stale protocol identities; with Linux GCC it also runs two handwritten C
+controls through the real runner to verify package cwd, EOF stdin, and complete
+result accounting. These controls do not compile the 65 P0 programs.

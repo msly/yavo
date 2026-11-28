@@ -1,0 +1,68 @@
+// expect-error: E0303 18:12
+// expect-error: E0305 21:65
+// expect-error: E0303 24:12
+// expect-error: E0303 29:16
+// expect-error: E0303 36:16
+// expect-error: E0303 42:12
+// expect-error: E0305 46:40
+// expect-error: E0303 50:12
+// expect-error: E0303 54:12
+// expect-error: E0303 58:12
+// expect-error: E0303 62:12
+// expect-error: E0303 66:12
+// Expression-result origins survive branch exit and nested borrow-carrying values.
+// Syntax/storage boundaries are tested separately in borrow_provenance.rs.
+enum LoanBox { Text(value: String) }
+fn matchLocal() -> str of static {
+    let owner = "x".toString()
+    return match owner[0..1] { view => view }
+}
+fn matchOwned() -> str of static {
+    return match LoanBox.Text("x".toString()) { .Text(value) => value[0..value.len()] }
+}
+fn wrongParameter(a: str, _b: str) -> str of _b {
+    return match a { view => view }
+}
+fn ifLocal(flag: bool) -> str of static {
+    if flag {
+        let owner = "x".toString()
+        return owner[0..1]
+    }
+    return ""
+}
+fn blockLocal() -> str of static {
+    {
+        let owner = "x".toString()
+        return owner[0..1]
+    }
+}
+fn coalesceLocal() -> str of static {
+    let owner = "x".toString()
+    let view: ?str = owner[0..1]
+    return view ?? ""
+}
+fn failedText() -> str ! String of static { return err("x".toString()) }
+fn catchOwned() -> str of static {
+    return failedText() catch error => error[0..error.len()]
+}
+fn chainLocal() -> str of static {
+    let owner = " x ".toString()
+    return (match owner[0..owner.len()] { view => view }).trim().trim()
+}
+fn tupleLocal() -> (?str, int) of static {
+    let owner = "x".toString()
+    return match 0 { _ => (some(owner[0..1]), 1) }
+}
+fn vectorLocal() -> Vec[str] of static {
+    let owner = "x".toString()
+    return match 0 { _ => [owner[0..1]] }
+}
+fn resultLocal() -> str ! int of static {
+    let owner = "x".toString()
+    return ok(match 0 { _ => owner[0..1] })
+}
+fn sliceLocal() -> []int of static {
+    let owner: Vec[int] = [1]
+    return match 0 { _ => owner[0..1] }
+}
+fn main() {}

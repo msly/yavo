@@ -1,6 +1,6 @@
 # 自举验收分层（第 52 批起）
 
-每批保留三平台真实固定点、核心语义和全原语料分类；重复产品矩阵与归档审计移至完整门。策略由 [`validation-policy.json`](../tools/ci/validation-policy.json) 驱动，当前批次 53，基线 `5fa6401`，间隔 **N=5**；本批新增拥有型枚举布局与清理，按里程碑执行 Full。
+每批保留三平台真实固定点、核心语义和全原语料分类；重复产品矩阵与归档审计移至完整门。策略由[`validation-policy.json`](../tools/ci/validation-policy.json)驱动，当前批次54、基线`f0183c0`，间隔**N=5**。本批保持Core，另对强化后的既有P0外部sanitizer门做一次资格验证，并在另一独占runner执行52/53配对性能复测；这两项资格标志仅匹配第54批，不把后续普通批次升级为Full。
 
 | 层级 | 触发 | 必跑项目 | 不计作本层通过的项目 |
 | --- | --- | --- | --- |
@@ -18,9 +18,11 @@ python3 tools/ci/selfhost_metrics.py --bootstrap-output compiler/target/ci/selfh
 python3 selfhost/bootstrap.py --tier full
 ```
 
-完整门的六产物、sanitizer 和打包由 CI 条件执行。每批报告只给交付、覆盖变化、失败/修正和下一批；命令、样本、平台差异及详细数字写入 `compiler/validation/` 索引。旧批次的 freeze、失败日志、ZIP 审计与原源码保持为历史证据。
+完整门的六产物、sanitizer和打包由CI条件执行。每批报告给交付、覆盖变化、失败/修正和下一批，另附“SH-3已完成工作包/剩余工作包＋覆盖率趋势”一行，口径见[固定台账](../compiler/validation/sh3-progress.json)。命令、样本、平台差异及详细数字写入`compiler/validation/`索引。旧批次的freeze、失败日志、ZIP审计与原源码保持为历史证据。
 
 ## 资源口径
+
+性能结论使用独立CI runner的测量，或已证明无其他负载且记录loadavg的本机测量。共享服务器未隔离的P50/RSS/后端时间只能作为诊断记录，排除出有效趋势；C/ELF大小及身份继续有效。第52/53批原始时间数据不改写，趋势索引将其移入unqualified_historical_measurement。本次配对复测与当前第54批观测分列；CI测量作业成功表示协议有效完成，≤200ms等目标是否达标另列。
 
 `selfhost_metrics.py` 对同一固定源码运行一次预热、五次真正 stage2 `emit-c`，逐次记录 wall time 和 OS wait4 RSS，输出 P50/P95、峰值、C 大小与 compiler 大小；另测一次后端构建。前端、后端分别报告，不用前端时间冒充完整构建时间。Windows 无 wait4 时 RSS 留 null 并写原因。已有 OS/Zig 缓存不清空，明确标记非冷构建；编译器固定点使用的分配计数设置保持不变。
 
@@ -38,7 +40,7 @@ python3 selfhost/bootstrap.py --tier full
 
 原始job/step时间及精确提交见[第52批索引](../compiler/validation/batch52-direction-2026-11-28.json)。本批没有下载或逐成员审计ZIP；完整门在约定周期执行。
 
-第53批修正RSS启动器污染：Full回执在单独短命进程读取，测量进程只接收路径与身份，避免JSON展开的历史高水位进入编译器子进程统计。使用直接编译器wait4，仍保留Python启动下限；Windows无wait4仍null。旧记录不回写，跨方法比较以[同口径复测](../compiler/validation/batch53-metrics-correction-2026-11-28.json)为准。
+第53批修正RSS启动器污染：Full回执在单独短命进程读取，测量进程只接收路径与身份，避免JSON展开的历史高水位进入编译器子进程统计。使用直接编译器wait4，仍保留Python启动下限；Windows无wait4仍null。[该历史复测](../compiler/validation/batch53-metrics-correction-2026-11-28.json)证明了启动器污染及其修正，未证明宿主负载隔离，不再用作性能趋势基线。
 
 第53批第三次CI的Windows全部执行、打包和上传步骤成功，总90分19秒导致90分钟job超时取消；完整上传归档已独立审计。自dca2d52起，Full原生job预算为120分钟，Core仍90分钟；触发规则和必跑范围保持本表定义。取消记录与修正后CI分别保留在本批索引。
 

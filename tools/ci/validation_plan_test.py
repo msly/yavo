@@ -101,8 +101,20 @@ class TierTests(unittest.TestCase):
             self.assertEqual(plan.resolve(self.policy(), requested, "refs/heads/main")["tier"], "core")
         self.assertEqual(plan.resolve(self.policy(), "full")["tier"], "full")
 
+    def test_qualifications_are_explicit_single_batch_without_full_escalation(self):
+        options = {"p0_sanitizer_qualification_batch": 54, "performance_qualification_batch": 54}
+        for batch, tier, qualified in ((54, "core", True), (55, "full", False), (56, "core", False)):
+            result = plan.resolve(self.policy(batch=batch, **options), "core", "refs/heads/main")
+            self.assertEqual(result["tier"], tier)
+            self.assertEqual(result["p0_sanitizer_qualification"], qualified)
+            self.assertEqual(result["paired_performance"], qualified)
+        ordinary = plan.resolve(self.policy(batch=54))
+        self.assertFalse(ordinary["p0_sanitizer_qualification"])
+        self.assertFalse(ordinary["paired_performance"])
+
     def test_invalid_cadence_and_boolean_policy_are_rejected(self):
-        for changes in ({"batch": True}, {"full_every_batches": 0}, {"milestone": "false"}):
+        for changes in ({"batch": True}, {"full_every_batches": 0}, {"milestone": "false"},
+                        {"p0_sanitizer_qualification_batch": True}, {"performance_qualification_batch": 0}):
             with self.assertRaises(ValueError):
                 plan.resolve(self.policy(**changes))
 

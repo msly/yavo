@@ -34,7 +34,11 @@ calibrate = load("subset_calibrate_encoding_control", "selfhost/calibrate_subset
 
 @contextlib.contextmanager
 def ansi_default():
-    """Change unspecified encodings, while respecting explicit UTF-8 and bytes."""
+    """Force ANSI defaults even when the outer interpreter uses PYTHONUTF8=1.
+
+    Patching these default-selection boundaries intentionally bypasses UTF-8 mode;
+    explicit UTF-8 and byte I/O retain their production behavior.
+    """
     read_text, write_text = Path.read_text, Path.write_text
 
     def ansi_read(path, encoding=None, errors=None, **kwargs):
@@ -69,7 +73,7 @@ class SubsetEncodingTests(unittest.TestCase):
             })
             with ansi_default(), patch.object(sys, "argv", ["subset_core", "--bootstrap-output", str(output)]), \
                     patch.object(core.subprocess, "call", return_value=0) as call:
-                # Confirms this tiny fixture reproduces the old default-decoding failure.
+                # Deliberate default decoding proves ansi_default overrides UTF-8 mode.
                 with self.assertRaises(UnicodeDecodeError):
                     receipt.read_text()
                 self.assertEqual(core.main(), 0)

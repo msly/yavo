@@ -1,18 +1,22 @@
-# Yavo 交接文档（2026-11-28，第五十三批：通用枚举/模式、拥有型 Optional 与 C 发射压缩）
+# Yavo 交接文档（2026-11-28，第54批进行中：借用来源、隔离计量与CI协议）
 
-给下一个会话：先读第1、2、32、33节及 docs/sh3-roadmap.md、docs/validation-tiers.md。第二十七至第三十批在 `history/handoff-batches-2026-11-23-to-24.md`，第十二至第二十六批在 `history/handoff-batches-2026-11-21-to-23.md`，第六至第十一批在 `history/handoff-batches-2026-11-19-to-21.md`。
+给下一个会话：先读第1、2、33、34节及 docs/sh3-roadmap.md、docs/validation-tiers.md。第二十七至第三十批在 `history/handoff-batches-2026-11-23-to-24.md`，第十二至第二十六批在 `history/handoff-batches-2026-11-21-to-23.md`，第六至第十一批在 `history/handoff-batches-2026-11-19-to-21.md`。
 
 ## 1. 一句话状态
+
+**第54批进行中：修复stage0所有借用结果表达式的来源传播及跨清理边界，独立CI复测52/53后端和小程序编译，workflow全局UTF-8与完整P0周期ASan协议已接线。** 本机Core已通过90/90用例及13/13辅助检查；三平台Core和两项独立资格验证尚待CI。当前活动目录`compiler/target/batch54/`及正在使用的52/53参考产物需保留；本机测量不进入有效性能趋势。
+
+每批报告增加固定一行：**SH-3已完整验收0/8、剩余8；覆盖51批125/394→52批125/394→53批135/394→54批135/394。** 仅整包验收条件全部满足后关闭，部分能力交付不虚增完成数；[台账](compiler/validation/sh3-progress.json)保留原第65–66批窗口，偏差另报。
 
 **第53批交付用户enum多字段Copy/拥有载荷、通用嵌套match、拥有型String/Named Optional；标准Error与用户enum/Optional/Result共用同一模式检查、穷尽矩阵、绑定与清理路径。** SH-3仍未默认接替Rust，SH-4仍3/3。
 
 本机最终stage2完整自举1209/1209、辅助20/20，C及二进制固定点通过；固定原622源中125→135/394，完整模块图62→68/224。7原稿Debug/Release共14产物、析构时序观察4产物、profile校准399项及标准错误门288项通过。最终dca2d52的[第四次Full CI](https://github.com/msly/yavo/actions/runs/46103424789) **7/7成功**，三平台完整自举固定点与新归档核验均通过，Windows作业85分29秒。第三轮Windows因90分19秒超过90分钟预算被标cancelled，执行门与完整归档审计通过的证据独立保留；Full预算现为120分钟、Core仍90。完整状态与身份见[第53批验证索引](compiler/validation/batch53-delivery-2026-11-28.json)。
 
-`cString`可打印ASCII直写并保留必要转义；同一源码比较生成C下降362,454字节（19.525%）。最终C为1,494,217 B（较52批−16.07%）、二进制766,512 B（+4.55%）；相同修正计量方法复测52→53：前端P50为87.668→87.992 ms，RSS为30,429,184→30,380,032 B，后端单次12.221→13.948 s。Full receipt读取曾污染启动器RSS，现由独立进程解析，历史错误值另存。[交付范围、语义边界与原稿收益](docs/batch53-patterns.md)。
+第53批`cString`可打印ASCII直写并保留必要转义；同一源码比较生成C下降362,454字节（19.525%）。最终C为1,494,217 B（较52批−16.07%）、二进制766,512 B（+4.55%）。旧本机P50/RSS/后端时间现归为负载未隔离的历史观测，不作性能趋势；启动器RSS修正与宿主负载隔离是两件事。第54批独立CI将重建精确52/53基线，复测后端、自编译前端与小程序PCH，并另列当前54的PCH观测。[第53批范围与历史记录](docs/batch53-patterns.md)。
 
-发现stage0既有Match结果借用来源缺口；三份固定原稿在selfhost中保守拒绝。第54批首先补此正确性缺口，再推进完整元组与组合载荷。结构分析仍保留unknown，不宣称穷尽全部U0001。
+第54批范围由用户扩为所有视图/借用表达式审查，覆盖Match及聚合载体、if/块内return、??、catch、方法链和会返回旧值的内建；既有不支持的if表达式/独立块值单列语法边界。来源修复先于组合类型扩展。结构分析仍保留unknown，不宣称穷尽全部U0001。
 
-“相对Rust交付成本优势”尚未成立。第52批12题复测仍无真实受试usage：CLI初始化EROFS环境阻塞尚未改变；不重复同一探测，不把源码重放算成新agent实验。[成本入口与证据](experiments/cost-pilot-2026-11-28/README.md)。
+“相对Rust交付成本优势”尚未成立。第54批按用户要求把7个环境目录统一到可写临时目录、只复制认证文件后探测：EROFS已越过，但thread/start被宿主bwrap的NETLINK_ROUTE权限拒绝，无模型输出/usage。临时认证副本已删除；API HTTPS入口无认证预检返回401。当前明确等待用户选定项目key、精确模型/推理强度与USD总预算，尚未发起付费API调用。[成本决策与证据](experiments/cost-pilot-2026-11-28/README.md)。
 
 ## 2. 仓库与环境
 
@@ -481,3 +485,16 @@ YAVO_UPDATE_BASELINE=1 cargo test --locked --offline --test conformance   # 有�
 - 本批新增枚举析构/布局，policy batch53 baseline5fa6401 milestone=true；触发一次Full。普通批次继续Core，第55批仍为周期Full。完成信息与最终commit/CI见[索引](compiler/validation/batch53-delivery-2026-11-28.json)。
 - 已知参考编译器缺口：stage0的loans_of未传播Match结果；生成C可在返回view前drop拥有String。本批selfhost拒绝，下一批修stage0并将对应边界迁为双方拒绝。此问题与SH-3默认切换无关，不能等切换完成再修。
 - 第32节平台缺口仍在：原生selected Rust套件、Windows两I/O场景与RSS缺口没有被本批新模式覆盖自动关闭。成本计量环境阻塞亦未关闭。
+
+
+## 34. 第54批：借用来源、隔离计量与CI协议（CI待执行）
+
+[验证索引](compiler/validation/batch54-delivery-2026-11-28.json)汇总本机Core、固定原语料集合、审计、计量资格和API决策。SH-3整包已完成0/8、剩余8；覆盖51批125/394→52批125/394→53批135/394→54批135/394（34.26%），模块图68/224。第54批插入正确性和计量修正，原定元组扩展尚未发生；原第65–66批总窗口保留，后续按实绩报告偏差。
+
+stage0在表达式求值时冻结返回值来源；只合并有值且可达的分支，在Match arm、catch handler和??右侧作用域清理前检查逃逸。访问pin与Copy载荷来源分别保留；replace保存旧值来源；InoutPlace保留底层地址来源。34类AST表达式逐项检查；if/块内return、方法链、嵌套借用载体均有负例。if表达式和独立块值仍为E0020语法边界，不计入借用安全负例。[审计及7+6测试组、17P0诊断、59模式合同证据](compiler/validation/batch54-borrow-provenance-2026-11-28.json)。三条旧模式fixture只迁移合同，原字节不变；固定原622/394集合逐路径无增减。
+
+本机Core90/90、辅助13/13、校准399通过/0失败/3跳过；C和二进制固定点通过。生成C1,494,217 B、二进制766,512 B，均与第53批大小一致。共享主机的本轮时间/RSS仍标unqualified；[独立性能协议](docs/batch54-performance-protocol.md)将重建精确52/53提交并另列54PCH观察。历史二进制+33,360 B中.text占+32,560 B，.rodata仅+374 B，函数归因待独立CI。
+
+workflow全局PYTHONUTF8=1；显式UTF-8读写与真实ANSI默认负控制同时保留。现有外部ASan+UBSan作业强化为精确覆盖全部50个run_*和15个panic_*，统一compiler工作目录、EOF输入和原P0输出合同。54专项验证一次，之后按每5批Full运行（下一次55）；不把54升级Full。macOS/Windows未来Full选定Rust套件加入borrow_provenance，仍不称全Rust回归。
+
+平台已知缺口继续单列：macOS/Windows选定Rust套件与Linux全套不同；Windows标准错误门的env_invalid_utf8和stdin_read_error是POSIX语义场景，原生替代场景计划55；Windows峰值RSS尚不可得。成本实验EROFS已越过，当前bwrap权限阻断；无模型输出/usage、无付费API调用。等待用户项目key、精确模型/推理强度、USD总上限三个输入，详见[成本决策表](experiments/cost-pilot-2026-11-28/README.md)。

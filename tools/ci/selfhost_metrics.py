@@ -2,6 +2,7 @@
 """Record reproducible frontend samples and a separate backend observation."""
 from __future__ import annotations
 import argparse
+from datetime import datetime, timezone
 import hashlib
 import json
 import math
@@ -17,6 +18,52 @@ import csv_support as execution
 
 ROOT = Path(__file__).resolve().parents[2]
 EXE = ".exe" if os.name == "nt" else ""
+
+
+def host_snapshot():
+    try:
+        load = list(os.getloadavg())
+    except (AttributeError, OSError):
+        load = None
+    return {"timestamp_utc": datetime.now(timezone.utc).isoformat(), "load_average": load}
+
+
+def environment_qualification(env):
+    # Keep this probe small: loading a complete /proc/cpuinfo on a large host can
+    # itself inflate the Python launcher's historical RSS before the compiler.
+    cpu = platform.processor() or env.get("PROCESSOR_IDENTIFIER") or None
+    cpu_source = "platform.processor/PROCESSOR_IDENTIFIER"
+    if platform.system() == "Linux":
+        try:
+            with open("/proc/cpuinfo", encoding="utf-8") as stream:
+                for line in stream:
+                    if line.startswith(("model name", "Hardware")):
+                        cpu = line.partition(":")[2].strip()
+                        cpu_source = "/proc/cpuinfo"
+                        break
+        except OSError:
+            pass
+    elif platform.system() == "Darwin":
+        try:
+            cpu = subprocess.check_output(["sysctl", "-n", "machdep.cpu.brand_string"],
+                encoding="utf-8", timeout=3).strip()
+            cpu_source = "sysctl machdep.cpu.brand_string"
+        except (OSError, subprocess.SubprocessError):
+            pass
+    try:
+        affinity = sorted(os.sched_getaffinity(0))
+    except (AttributeError, OSError):
+        affinity = None
+    hosted = env.get("GITHUB_ACTIONS") == "true" and env.get("RUNNER_ENVIRONMENT") == "github-hosted"
+    return {"status": "github_hosted_observation" if hosted else "unqualified",
+            "github_hosted": hosted, "run_id": env.get("GITHUB_RUN_ID"),
+            "run_attempt": env.get("GITHUB_RUN_ATTEMPT"), "head_sha": env.get("GITHUB_SHA"),
+            "runner_os": env.get("RUNNER_OS"), "runner_arch": env.get("RUNNER_ARCH"),
+            "runner_name": env.get("RUNNER_NAME"), "image_os": env.get("ImageOS"),
+            "image_version": env.get("ImageVersion"), "cpu_model": cpu, "cpu_model_source": cpu_source,
+            "cpu_count": os.cpu_count(), "affinity": affinity,
+            "isolation_evidence": "separate GitHub job; no per-sample foreign-build audit" if hosted else "not demonstrated",
+            "eligible_for_controlled_performance_trend": False}
 
 
 def receipt_configuration(path):
@@ -72,14 +119,15 @@ def main():
     rows = []
     report = {"schema": "yavo-selfhost-metrics/1", "batch": json.loads(
         (ROOT / "tools/ci/validation-policy.json").read_bytes())["batch"],
-        "host": {"system": platform.system(), "machine": platform.machine(),
-                 "load_average": list(os.getloadavg()) if hasattr(os, "getloadavg") else None},
+        "host": {"system": platform.system(), "machine": platform.machine(), **host_snapshot()},
+        "environment_qualification": environment_qualification(env),
         "source": str(source), "compiler": execution.identity(compiler),
         "generated_c": execution.identity(expected_c), "warmups": 1,
         "scope": "stage2 emit-c of the compiler itself; separate native backend observation",
         "cache": "Yavo frontend cache disabled; existing OS and Zig caches; not cold builds",
         "memory_scope": "OS wait4 RSS of the waited compiler child, not a process-tree sum; the measurement process does not parse the Full receipt; Python launcher floor remains; null where unavailable",
         "receipt_loading": "separate short-lived reader process; its RSS is not used as compiler RSS",
+        "backend_scope": "single_observation_not_distribution",
         "bootstrap_receipt": config["receipt"],
         "formal_small_program_target": {"compile_p50_ms": 200, "stripped_linux_bytes": 250000,
                                         "evaluated_by_this_self_compile_probe": False},
@@ -87,8 +135,11 @@ def main():
     ok = True
     for sample in range(args.samples + 1):
         output = directory / ("sample-" + str(sample) + ".c")
+        before = host_snapshot()
         row, _, _ = execution.execute([compiler, "emit-c", source, "-o", output],
             directory / ("emit-" + str(sample)), ROOT, env, overrides, 120)
+        row["host_before"] = before
+        row["host_after"] = host_snapshot()
         row["generated_c_bytes"] = output.stat().st_size if output.exists() else None
         row["matches_fixed_point"] = output.exists() and output.read_bytes() == expected_c.read_bytes()
         ok &= row["exit_code"] == 0 and not row["timed_out"] and row["matches_fixed_point"]
@@ -100,7 +151,10 @@ def main():
     binary = directory / ("yavo-selfhost" + EXE)
     command = [zig, "cc", "-std=c17", "-fno-strict-aliasing", "-DYV_ALLOC_CHECK",
                "-O2", "-s", "-I", ROOT / "compiler/runtime", output, "-o", binary]
+    before = host_snapshot()
     backend, _, _ = execution.execute(command, directory / "backend", ROOT, env, overrides, 600)
+    backend["host_before"] = before
+    backend["host_after"] = host_snapshot()
     report["backend_observation"] = backend
     ok &= backend["exit_code"] == 0 and not backend["timed_out"] and binary.is_file()
     report["input_changes"] = [path for path, value in inputs.items()
@@ -111,6 +165,7 @@ def main():
     print(json.dumps({"status": report["status"], "frontend": report["frontend"],
                       "generated_c_bytes": report["generated_c"]["bytes"],
                       "binary_bytes": report["compiler"]["bytes"],
+                      "environment_qualification": report["environment_qualification"],
                       "backend_seconds": backend["elapsed_seconds"],
                       "backend_peak_rss_bytes": backend["peak_process_memory_bytes"]}))
     return 0 if report["status"] == "passed" else 1

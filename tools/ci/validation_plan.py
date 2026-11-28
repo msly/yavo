@@ -27,22 +27,31 @@ def resolve(policy, requested="auto", ref=""):
         reasons.append("release tag")
     if requested == "full":
         reasons.append("manual full request")
-    return {"tier": "full" if reasons else "core", "batch": batch,
-            "baseline_commit": policy["baseline_commit"],
-            "reasons": reasons or ["ordinary batch"]}
+    result = {"tier": "full" if reasons else "core", "batch": batch,
+              "baseline_commit": policy["baseline_commit"],
+              "reasons": reasons or ["ordinary batch"]}
+    for field, output in (("p0_sanitizer_qualification_batch", "p0_sanitizer_qualification"),
+                          ("performance_qualification_batch", "paired_performance")):
+        qualification = policy.get(field)
+        if qualification is not None and (type(qualification) is not int or qualification < 1):
+            raise ValueError("qualification batch must be a positive integer")
+        result[output] = qualification == batch
+    return result
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--requested", default="auto", choices=("auto", "core", "full"))
     args = parser.parse_args()
-    policy = json.loads((ROOT / "tools/ci/validation-policy.json").read_text())
+    policy = json.loads((ROOT / "tools/ci/validation-policy.json").read_bytes())
     result = resolve(policy, args.requested, os.environ.get("GITHUB_REF", ""))
     print(json.dumps(result, ensure_ascii=False))
     if os.environ.get("GITHUB_OUTPUT"):
         with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as out:
             out.write("tier=" + result["tier"] + "\n")
             out.write("baseline=" + result["baseline_commit"] + "\n")
+            for name in ("p0_sanitizer_qualification", "paired_performance"):
+                out.write(name + "=" + str(result[name]).lower() + "\n")
 
 
 if __name__ == "__main__":

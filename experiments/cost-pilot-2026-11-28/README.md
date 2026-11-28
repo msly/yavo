@@ -1,6 +1,6 @@
 # 交付成本审计与十二题轻量复测（2026-11-28）
 
-**Yavo 与 Rust 已做过对照，尚无证据证明 Yavo 的交付成本更低。本次新受试会话为 0，token 计量仍阻塞。** 本目录补齐历史证据分级、可直接执行的十二题 CLI 计量入口和当前失败回执；没有把准备工作或既有程序回放写成新实验。
+**Yavo 与 Rust 已做过对照，尚无证据证明 Yavo 的交付成本更低。新受试会话为0；第54批已越过EROFS，当前CLI阻塞于宿主bwrap权限，API方案等待用户选定key、模型和预算。** 本目录保留历史证据分级、十二题计量协议和实际失败回执。
 
 ## 已有结果
 
@@ -15,13 +15,31 @@ R3/R4 的额外构建为 11/2、4/0，包含环境错误、输出文件冲突和
 
 [historical-audit.json](evidence/historical-audit.json) 从 R3/R4 任务 LOG 重算逐题构建次数，从 R5 `events.jsonl` 和既有裁判重算已记录成本。旧 token 数字明确列在 `reported_token_totals`，未声称本次取得原始计量。
 
-## 本次执行阻塞
+## 第52批执行阻塞（历史）
 
 服务器没有 Codex/Claude CLI，未提供 API key。本地已有 `codex-cli 0.172.0-alpha.2`，正常执行 `codex exec --ephemeral --sandbox read-only --json` 后在初始化 app-server 时失败：`Read-only file system (os error 30)`，没有模型输出或 `turn.completed`。没有改变访问控制、移动凭据或重设 HOME/CODEX_HOME。
 
 实际入口探针见 [cli-probe/probe.json](evidence/cli-probe/probe.json) 及 [stderr.txt](evidence/cli-probe/stderr.txt)。失败发生在受试运行之前；当前无法生成真实新 token 对照结果。需要能正常执行现有登录会话的 Codex CLI 主机，或已授权且能返回 usage 的模型执行接口。这是执行环境缺口，不依赖 SH-3。
 
 追加的有限诊断使用[官方配置项](https://learn.chatgpt.com/docs/config-file/config-reference) `sqlite_home` 与 `log_dir` 指向本任务临时目录：状态库和日志库实际创建成功，初始化仍在 5.45 秒后报 EROFS，事件和 usage 仍为空。此次新建日志中没有对应的 EROFS 错误记录；系统禁止 ptrace，未取得具体失败文件操作，不能把剩余失败唯一归因于默认 `state_5.sqlite` 路径。诊断至此停止，十二题协议不变；仅保留[脱敏配置探针回执](../../compiler/validation/batch52-cli-config-probe-2026-11-28.json)，未归档数据库、凭据或无关日志。
+
+## 第54批：完整临时环境探测与API决策
+
+按用户要求，将子进程的HOME、CODEX_HOME、XDG_CONFIG_HOME、XDG_DATA_HOME、XDG_STATE_HOME、XDG_CACHE_HOME和TMPDIR全部指向同一个可写临时目录，仅复制auth.json（副本权限0600），原环境不变。8.01秒后退出1：先前EROFS未再出现，状态库和模型缓存已创建，但thread/start在读取环境指令时被宿主拒绝：`bwrap: loopback: Failed to create NETLINK_ROUTE socket: Operation not permitted`。没有模型输出或usage；探测结束后删除临时认证副本和目录。源码与脱敏回执见[本次探针](../../compiler/validation/batch54-cli-home-probe-2026-11-28.json)。
+
+当前状态为**等待用户决定API参数**；尚未发起付费API调用。需要三项：
+
+服务器对官方`GET /v1/models`的无认证请求已得到HTTP 401和缺少Bearer认证的结构化响应，确认HTTPS入口可达；没有发送密钥或生成请求。[网络预检](../../compiler/validation/batch54-api-network-preflight-2026-11-28.json)。
+
+| 配置 | 用户需提供或确定 | 建议起点 |
+| --- | --- | --- |
+| 认证 | 可调用所选模型的项目API key，由服务器环境变量OPENAI_API_KEY或受控秘密存储提供 | OpenAI官方Responses API；若选其他服务，同时给出base URL |
+| 模型 | 精确model ID、推理强度，两语言完全一致 | gpt-6.2-sol / high；保留请求ID、响应model及完整usage |
+| 预算 | 整次实验的USD总上限，包含资格探测、失败和修复调用 | 10 USD总上限；这是建议上限，不是费用预测，不自动追加 |
+
+沿用12题、两语言、每题最多4轮的固定协议。API版本在获得以上配置后接入；每次生成前按所选模型的价格快照、输入计数及输出上限预留预算，余额不足或usage缺失即停止并明确未完成范围。原始input、cached input、output及reasoning计数分别保存；cached属于input，不重复累加。所选服务的计费和缓存写入规则须纳入实际费用，不能只用可见输出长度估算。
+
+官方依据：[认证与请求身份](https://developers.openai.com/api/reference/overview)、[输入计数及输出上限](https://developers.openai.com/api/docs/guides/token-counting)、[模型与价格](https://developers.openai.com/api/docs/models/compare?model=gpt-6.2-astra&model=gpt-6.2-sol)。启动时重新核对价格和权限。
 
 ## 轻量复测口径
 

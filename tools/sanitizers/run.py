@@ -81,7 +81,7 @@ def invoke(argv, directory, prefix, environment, timeout, cwd=None, environment_
             except subprocess.TimeoutExpired:
                 os.killpg(process.pid, signal.SIGKILL)
                 code = process.wait(timeout=5)
-    record = {"argv": argv, "cwd": str(command_cwd), "exit_code": code,
+    record = {"argv": argv, "cwd": str(command_cwd), "stdin": {"kind": "devnull"}, "exit_code": code,
             "timed_out": timed_out, "timeout_seconds": timeout,
             "elapsed_seconds": time.monotonic() - started,
             "stdout": artifact(stdout_path), "stderr": artifact(stderr_path)}
@@ -102,6 +102,8 @@ def main():
     parser.add_argument("--out", type=Path, required=True, help="new artifact directory")
     parser.add_argument("--cc", default="gcc", help="one C compiler executable, not shell text")
     parser.add_argument("--jobs", type=int, default=2)
+    parser.add_argument("--p0-root", type=Path,
+                        help="require every current P0 run/panic entry and its original Cargo-package cwd")
     args = parser.parse_args()
     if not 1 <= args.jobs <= 16:
         parser.error("--jobs must be between 1 and 16")
@@ -120,6 +122,12 @@ def main():
     programs = bundle.get("programs")
     if not isinstance(programs, list) or not programs:
         parser.error("bundle has no programs")
+    p0 = None
+    if args.p0_root is not None:
+        if sys.platform != "linux":
+            parser.error("the periodic P0 sanitizer contract requires Linux")
+        import p0_contract
+        p0 = p0_contract.validate_bundle(args.p0_root, bundle)
     ids = set()
     header = bundle["runtime"]["content"].encode("utf-8")
     check_digest(header, bundle["runtime"]["sha256"], "runtime")
@@ -160,6 +168,8 @@ def main():
             "ASan and UBSan are enabled separately in one artifact; TSan is not part of this report.",
             "LeakSanitizer is disabled in this ptrace-compatible profile; normal returns use YV_ALLOC_CHECK=1.",
             "Only this Linux host is executed; this is not Windows, macOS, or cross-architecture validation."]}
+    if p0 is not None:
+        report["p0_contract"] = p0
     version = invoke([cc, "--version"], directory, "compiler-version", environment, 10)
     report["c_compiler"]["version"] = bytes_of(version, "stdout").decode("utf-8", "strict").splitlines()[0]
     report["c_compiler"]["version_receipt"] = version
@@ -171,7 +181,7 @@ def main():
     report["c_compiler"]["runtime_libraries"] = libraries
 
     def save():
-        (directory / "report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n")
+        (directory / "report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
     probe_src = r'''#include <stdlib.h>
 #include <limits.h>
@@ -185,7 +195,7 @@ int main(int argc, char **argv) {
 }
 '''
     probe_path = directory / "capability.c"
-    probe_path.write_text(probe_src)
+    probe_path.write_text(probe_src, encoding="utf-8")
     probe_binary = directory / "capability"
     built = invoke([cc, *flags, str(probe_path), "-lm", "-o", str(probe_binary)], directory, "capability-build", environment, 90)
     report["capability_build"] = built
@@ -224,7 +234,7 @@ int main(int argc, char **argv) {
             row["diagnostic"] = bytes_of(built, "stderr").decode("utf-8", "replace")
             return row
         row["artifact"] = artifact(binary)
-        execution_cwd = None
+        execution_cwd = p0["execution"]["cwd"] if p0 is not None else None
         if p.get("isolated_cwd", False):
             execution_cwd = local / "isolated-cwd"
             execution_cwd.mkdir(exist_ok=False)
@@ -261,6 +271,10 @@ int main(int argc, char **argv) {
             print(("PASS " if row["passed"] else "FAIL ") + row["id"], flush=True)
             save()
     report["results"].sort(key=lambda row: row["id"])
+    if p0 is not None:
+        if p0_contract.validate_bundle(args.p0_root, bundle) != p0:
+            raise ValueError("P0 source/oracle/runtime inputs changed during sanitizer execution")
+        report["p0_coverage"] = p0_contract.coverage(p0, report["results"])
     report["passed"] = sum(row["passed"] for row in report["results"])
     report["failed"] = len(programs) - report["passed"]
     report["status"] = "passed" if report["failed"] == 0 else "failed"

@@ -24,23 +24,141 @@
       "batch": 52,
       "generated_c_bytes": 1780336,
       "binary_bytes": 733152,
-      "frontend_p50_seconds": 0.08785274811089039,
-      "frontend_peak_rss_bytes": 31199232,
-      "backend_seconds": 12.359970524907112,
-      "backend_peak_rss_bytes": 204967936,
-      "source": "compiler/validation/batch52-direction-2026-11-28.json"
+      "frontend_p50_seconds": null,
+      "frontend_peak_rss_bytes": null,
+      "backend_seconds": null,
+      "backend_peak_rss_bytes": null,
+      "source": "compiler/validation/batch52-direction-2026-11-28.json",
+      "unqualified_historical_measurement": {
+        "frontend_p50_seconds": 0.08785274811089039,
+        "frontend_peak_rss_bytes": 31199232,
+        "backend_seconds": 12.359970524907112,
+        "backend_peak_rss_bytes": 204967936
+      },
+      "performance_status": "unqualified_shared_host_load",
+      "performance_exclusion_reason": "The host is shared with other project workloads. A startup loadavg observation does not prove the full sample interval was free of competing work; there is no per-sample concurrent-process/isolation evidence. Excluded from controlled performance conclusions.",
+      "size_identity_status": "valid; deterministic C/ELF byte identities are independent of competing CPU load",
+      "load_observation_scope": "startup observation only; not a whole-interval isolation audit"
     },
     {
       "batch": 53,
       "generated_c_bytes": 1494217,
       "binary_bytes": 766512,
-      "frontend_p50_seconds": 0.08799215033650398,
-      "frontend_peak_rss_bytes": 30380032,
-      "backend_seconds": 13.947603506967425,
-      "backend_peak_rss_bytes": 203980800,
+      "frontend_p50_seconds": null,
+      "frontend_peak_rss_bytes": null,
+      "backend_seconds": null,
+      "backend_peak_rss_bytes": null,
       "measurement_method": "isolated receipt configuration reader; direct compiler wait4, Python launcher floor remains",
-      "source": "compiler/validation/batch53-delivery-2026-11-28.json"
+      "source": "compiler/validation/batch53-delivery-2026-11-28.json",
+      "unqualified_historical_measurement": {
+        "frontend_p50_seconds": 0.08799215033650398,
+        "frontend_peak_rss_bytes": 30380032,
+        "backend_seconds": 13.947603506967425,
+        "backend_peak_rss_bytes": 203980800
+      },
+      "performance_status": "unqualified_shared_host_load",
+      "performance_exclusion_reason": "The host is shared with other project workloads. A startup loadavg observation does not prove the full sample interval was free of competing work; there is no per-sample concurrent-process/isolation evidence. Excluded from controlled performance conclusions.",
+      "size_identity_status": "valid; deterministic C/ELF byte identities are independent of competing CPU load",
+      "load_observation_scope": "startup observation only; not a whole-interval isolation audit",
+      "recorded_start_load_average": [
+        0.005859375,
+        0.4248046875,
+        0.822265625
+      ]
+    },
+    {
+      "batch": 54,
+      "generated_c_bytes": 1494217,
+      "binary_bytes": 766512,
+      "frontend_p50_seconds": null,
+      "frontend_peak_rss_bytes": null,
+      "backend_seconds": null,
+      "backend_peak_rss_bytes": null,
+      "performance_status": "unqualified_shared_host_load",
+      "source": "compiler/validation/batch54-delivery-2026-11-28.json",
+      "unqualified_historical_measurement": {
+        "frontend": {
+          "samples": 5,
+          "p50_seconds": 0.0982758142054081,
+          "p95_seconds": 0.09891381487250328,
+          "peak_rss_bytes": 30937088,
+          "rss_observations": 5
+        },
+        "backend": {
+          "argv": [
+            "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+            "cc",
+            "-std=c17",
+            "-fno-strict-aliasing",
+            "-DYV_ALLOC_CHECK",
+            "-O2",
+            "-s",
+            "-I",
+            "/data1/workspace/github/workspace/yavo/compiler/runtime",
+            "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch54-final/metrics-qjy7gx61/sample-5.c",
+            "-o",
+            "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch54-final/metrics-qjy7gx61/yavo-selfhost"
+          ],
+          "cwd": "/data1/workspace/github/workspace/yavo",
+          "environment": {
+            "YAVO_NO_CACHE": "1",
+            "YAVO_ALLOC_CHECK": "1"
+          },
+          "exit_code": 0,
+          "timed_out": false,
+          "launch_error": null,
+          "elapsed_seconds": 14.243610624223948,
+          "peak_process_memory_bytes": 199413760,
+          "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+          "stdout": {
+            "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch54-final/metrics-qjy7gx61/backend/stdout.bin",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stderr": {
+            "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch54-final/metrics-qjy7gx61/backend/stderr.bin",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stdin": {
+            "kind": "devnull"
+          },
+          "host_before": {
+            "timestamp_utc": "2026-11-28T09:32:17.969970+00:00",
+            "load_average": [
+              1.09619140625,
+              0.60888671875,
+              0.64306640625
+            ]
+          },
+          "host_after": {
+            "timestamp_utc": "2026-11-28T09:32:32.214761+00:00",
+            "load_average": [
+              1.07421875,
+              0.62890625,
+              0.64892578125
+            ]
+          }
+        }
+      },
+      "performance_exclusion_reason": "Shared host; no valid whole-interval isolation evidence. Dedicated paired CI results will be recorded separately with their exact runner and cache conditions.",
+      "size_identity_status": "valid deterministic byte-size observation; selfhost source and runtime unchanged from batch53"
     }
   ],
-  "paired_measurement_correction": "compiler/validation/batch53-metrics-correction-2026-11-28.json"
+  "paired_measurement_correction": "compiler/validation/batch53-metrics-correction-2026-11-28.json",
+  "performance_qualification_note": "Batch54 preserves raw historical receipts and byte sizes. Unqualified timing/RSS values remain under unqualified_historical_measurement, not in the active performance series. The batch53 launcher/RSS correction did not establish host-load isolation.",
+  "paired_startup_load_observations": {
+    "source": "compiler/validation/batch53-metrics-correction-2026-11-28.json",
+    "batch52": [
+      0.07421875,
+      0.3623046875,
+      0.76708984375
+    ],
+    "batch53": [
+      0.005859375,
+      0.4248046875,
+      0.822265625
+    ],
+    "scope": "These observed startup values are preserved; they establish neither absence nor presence of cordis-rs overlap throughout the samples."
+  }
 }

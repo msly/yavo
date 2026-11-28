@@ -40,6 +40,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
+  PYTHONUTF8: '1'
   RUSTUP_TOOLCHAIN: 1.99.1
   CARGO_TERM_COLOR: never
   RUST_BACKTRACE: 1
@@ -51,6 +52,8 @@ jobs:
     outputs:
       tier: ${{ steps.plan.outputs.tier }}
       baseline: ${{ steps.plan.outputs.baseline }}
+      p0_sanitizer_qualification: ${{ steps.plan.outputs.p0_sanitizer_qualification }}
+      paired_performance: ${{ steps.plan.outputs.paired_performance }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - name: Check tier and changed-case selection controls
@@ -61,6 +64,10 @@ jobs:
         run: python3 tools/ci/selfhost_errors_test.py
       - name: Check UTF-8 protocols under an ANSI default encoding
         run: python3 tools/ci/subset_encoding_test.py
+      - name: Check complete P0 sanitizer inventory and execution protocol
+        run: python3 tools/sanitizers/p0_contract_test.py
+      - name: Check isolated performance measurement controls
+        run: python3 tools/ci/paired_performance_test.py
       - id: plan
         env:
           REQUESTED_TIER: ${{ inputs.tier || 'auto' }}
@@ -265,7 +272,7 @@ jobs:
 
   sanitizers:
     needs: plan
-    if: needs.plan.outputs.tier == 'full'
+    if: needs.plan.outputs.tier == 'full' || needs.plan.outputs.p0_sanitizer_qualification == 'true'
     name: Independent Linux ASan and UBSan
     runs-on: ubuntu-24.04
     timeout-minutes: 30
@@ -283,6 +290,39 @@ jobs:
         with:
           name: sanitizers-linux-${{ github.sha }}
           path: compiler/target/ci/
+          if-no-files-found: error
+          retention-days: 14
+
+  paired-performance:
+    needs: plan
+    if: needs.plan.outputs.paired_performance == 'true'
+    name: Isolated paired performance
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      YAVO_HOME: ${{ runner.temp }}/yavo-home
+    steps:
+      - name: Preserve benchmark source bytes on checkout
+        run: git config --global core.autocrlf false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Restore only the locked toolchain download
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/yavo-home/toolchains
+          key: yavo-zig-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('compiler/toolchain.lock') }}
+      # This job has its own hosted VM. The script prepares and measures revisions
+      # sequentially, rejects competing build processes, and owns fresh build caches.
+      - name: Measure batch52 and batch53 pairs and the current frontend
+        run: python3 tools/ci/paired_performance.py --output compiler/target/ci/perf54 --backend-samples 7 --frontend-samples 9 --compile-samples 7 --observe-current
+      - name: Preserve paired measurements and contamination checks
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: paired-performance-${{ github.sha }}
+          path: compiler/target/ci/perf54/**
           if-no-files-found: error
           retention-days: 14
 

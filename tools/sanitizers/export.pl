@@ -84,7 +84,7 @@ sub snapshot {
     return [ map { file_record($_) }
         sort grep { !$seen{$_}++ && -f $_ &&
             (/^compiler\/(?:src\/.*\.rs|runtime\/.*\.h|Cargo\.(?:toml|lock)|toolchain\.lock)$/ || /^toolchain\.lock$/ ||
-             /\.yv$/ || /^tools\/sanitizers\//) } @names ];
+             /\.yv$/ || /^compiler\/tests\/p0\.rs$/ || /^tools\/sanitizers\//) } @names ];
 }
 my $before = snapshot();
 my $build = capture('cargo-build', "$root/compiler", 900, 'cargo', 'build', '--locked', '--offline', '--release');

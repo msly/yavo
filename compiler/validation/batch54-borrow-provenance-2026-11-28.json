@@ -1,0 +1,2866 @@
+{
+  "schema": "yavo-borrow-provenance-audit/v1",
+  "batch": 54,
+  "created_at": "2026-11-28T09:31:27.104067+00:00",
+  "status": "targeted_validation_passed",
+  "baseline_commit": "f0183c07195c658de0d0fc859d79406b53893655",
+  "scope": "stage0 表达式结果借用来源、生成 C 提前清理边界、模式合同安全重分类；不是全平台或 sanitizer 验收回执。",
+  "source_identities": [
+    {
+      "path": "compiler/src/check.rs",
+      "bytes": 450633,
+      "sha256": "2849c4bc65c19b61bdb6ede7b074cc19187574342db03a297f4b065e900448cb"
+    },
+    {
+      "path": "compiler/src/ast.rs",
+      "bytes": 10250,
+      "sha256": "e2205244e7dfd902c6860c044c1ff4ca8dae79db123d7d80c0799bc23ed1b343"
+    },
+    {
+      "path": "compiler/src/types.rs",
+      "bytes": 34882,
+      "sha256": "6affdbd9bd5dd15c7a8ff251cba4821e1a2a15ad18cfd7c61480527909696d15"
+    },
+    {
+      "path": "compiler/src/codegen.rs",
+      "bytes": 137645,
+      "sha256": "67ea9af58d22cbf067a2bfdd449349cc2f1683f8a3b8e7e847e506c535857218"
+    },
+    {
+      "path": "compiler/tests/borrow_provenance.rs",
+      "bytes": 14240,
+      "sha256": "5503268bc89029fa6202ecc8a89eda06935f85d54f71daa6d42271d73b0c2f91"
+    },
+    {
+      "path": "compiler/tests/mutref_returns.rs",
+      "bytes": 9030,
+      "sha256": "d2435939078b9cc79efcfc2f4b29b6a9fbf45d14d36d2609f52d822658cf7618"
+    },
+    {
+      "path": "compiler/tests/p0/errors_expression_loans.yv",
+      "bytes": 2046,
+      "sha256": "0ba31377c1174ef791a0c048332028d3adc280085c4dfd35528e6f3222b4025f"
+    },
+    {
+      "path": "compiler/tests/p0.rs",
+      "bytes": 8734,
+      "sha256": "8b10a54fc6d371b295363164c7a02b852e66649451d7ae1e53fbf08012b1af3a"
+    },
+    {
+      "path": "selfhost/tests/cases.json",
+      "bytes": 262260,
+      "sha256": "f59dc941e31defa2c5544a3faeba66bc15ba23bb786c3d0b9065ce7638782370"
+    },
+    {
+      "path": "selfhost/tests/patterns53/cases.json",
+      "bytes": 12572,
+      "sha256": "30a7796647efde416e46701f704558fef4b34a70e173301ff0b7e5febc358d93"
+    },
+    {
+      "path": "selfhost/tests/patterns53/CONTRACT.md",
+      "bytes": 5027,
+      "sha256": "c4b2e5f83b99bcdc24da151e13b6faff78db69f63cef88b9e83e9acb833a4ef2"
+    }
+  ],
+  "mechanisms": [
+    "HExpr.result_loans 在表达式求值完成时保存来源，后续状态恢复、合流或操作数检查不重解释已经求出的值。",
+    "Match 在 arm scope 存活时保存结果，只合并 reachable 且 nondivergent 的值分支；活分支流状态使用相同可达性。",
+    "Copy pattern 的 value_loans 表示复制内容的真实来源，LocalState.loans 继续保留来源 place 的访问 pin，避免把局部描述符误判为数据来源或松开活跃借用。",
+    "branch_result 在三类 C 清理边界前核验；只将作用域即将结束的 RefMut 描述符归一为底层来源，真实拥有存储、guard 和临时值不被抹除。",
+    "replace 返回旧值，必须在新值求值和 store_loans 前保存旧来源；take/pop/remove 保守保留 receiver 历史来源，swap 合并两边来源。",
+    "InoutPlace 携带地址，不能因其 HIR.ty 是 String 等非借用目标类型而提前丢弃来源。"
+  ],
+  "invariants": [
+    "LocalId 单调追加，pop_scope 仅删除名字可见性，不回收或复用 locals 槽位。",
+    "嵌套 Tuple/Optional/Vec/Map/Result 的来源由 carries_borrow 递归保留；普通结构/枚举字段递归含借用仍 E0301。",
+    "真实存储根、Temp 和活跃权限描述符不能在值来源归一时消失。",
+    "完整外层语句中的临时借用仍合法；仅被分支提前清理的临时 owner 导致 E0305。",
+    "返回声明 of 使用参数身份，分支局部来源不因 scope 结束变成参数或 static。",
+    "语法/语义边界单列，不作为支持语言范围内的生命周期拒绝测试计数。"
+  ],
+  "ast_variant_count": 34,
+  "ast_variant_coverage_exact": true,
+  "ast_expression_audit": [
+    {
+      "ast_kind": "Int",
+      "status": "no_borrow_result",
+      "provenance_rule": "整数值不包含借用。",
+      "source_evidence": "check.rs::expr_inner; types.rs::Ty::carries_borrow"
+    },
+    {
+      "ast_kind": "Float",
+      "status": "no_borrow_result",
+      "provenance_rule": "浮点值不包含借用。",
+      "source_evidence": "check.rs::expr_inner; types.rs::Ty::carries_borrow"
+    },
+    {
+      "ast_kind": "Byte",
+      "status": "no_borrow_result",
+      "provenance_rule": "byte 作为整数值处理，不包含借用。",
+      "source_evidence": "check.rs::expr_inner; types.rs::Ty::carries_borrow"
+    },
+    {
+      "ast_kind": "Bool",
+      "status": "no_borrow_result",
+      "provenance_rule": "bool 不包含借用。",
+      "source_evidence": "check.rs::expr_inner; types.rs::Ty::carries_borrow"
+    },
+    {
+      "ast_kind": "Str",
+      "status": "supported_static_or_output_context",
+      "provenance_rule": "普通字符串字面量为静态来源，loan 集为空；插值在打印或 format 的专门上下文检查，format 返回拥有 String。",
+      "source_evidence": "check.rs::expr_inner, print, call (format branch)"
+    },
+    {
+      "ast_kind": "Ident",
+      "status": "supported",
+      "provenance_rule": "在该次求值结束时冻结局部值来源；Copy 模式绑定读取 value_loans，其余读取 loans。参数用自身 LocalId 表示外部来源。",
+      "source_evidence": "check.rs::expr, loans_of, function"
+    },
+    {
+      "ast_kind": "Call",
+      "status": "supported",
+      "provenance_rule": "用户函数、方法及接口调用按签名 ret_of 参数索引传播实际参数来源；内建视图按接收者内容或拥有存储传播。拥有临时接收者保留 Temp。",
+      "source_evidence": "check.rs::call, loans_of::Call/DynCall, recv_loans"
+    },
+    {
+      "ast_kind": "Field",
+      "status": "supported",
+      "provenance_rule": "借用型元组成员保守继承整个元组的来源；拥有结构字段被借用时追溯根存储。结构/枚举不能保存递归含借用的字段。",
+      "source_evidence": "check.rs::expr_inner, loans_of::Field, storage_loans, member_fields"
+    },
+    {
+      "ast_kind": "StructLit",
+      "status": "supported_with_storage_boundary",
+      "provenance_rule": "普通结构字段递归含借用时 E0301；String/Vec/Map/Set/Arena/Deque 等空构造没有初始外部来源，后续写入仍记录来源。Heap 保存的闭包不能捕获借用。",
+      "source_evidence": "check.rs::struct_lit, member_fields, lift_closure"
+    },
+    {
+      "ast_kind": "Generic",
+      "status": "callee_only",
+      "provenance_rule": "显式泛型应用作为 Call 的 callee，实例化后使用同一签名来源规则；单独作为值报 E0001。",
+      "source_evidence": "check.rs::expr_inner::Generic, call"
+    },
+    {
+      "ast_kind": "VecLit",
+      "status": "supported",
+      "provenance_rule": "逐元素按求值顺序冻结来源，结果合并所有借用型元素来源，含嵌套容器。",
+      "source_evidence": "check.rs::vec_lit, expr, loans_of::VecLit"
+    },
+    {
+      "ast_kind": "MapLit",
+      "status": "supported",
+      "provenance_rule": "键和值的借用来源都合入结果，使用各自求值快照。",
+      "source_evidence": "check.rs::map_lit, loans_of::MapLit"
+    },
+    {
+      "ast_kind": "Index",
+      "status": "supported",
+      "provenance_rule": "复制出来的借用型元素保留内容来源；Ref/RefMut 元素视图保留容器存储及递归来源。",
+      "source_evidence": "check.rs::index, loans_of::Index, storage_loans"
+    },
+    {
+      "ast_kind": "SliceRange",
+      "status": "supported",
+      "provenance_rule": "对 str/[]T 再切片保留已有来源；对拥有值切片追溯根存储，临时拥有值附带 Temp。",
+      "source_evidence": "check.rs::slice_range, loans_of::SliceRange"
+    },
+    {
+      "ast_kind": "Borrow",
+      "status": "supported_with_permission_context",
+      "provenance_rule": "引用传播实际存储及可变重借用的底层来源；InoutPlace 的 HIR 类型虽可能是 String 等非借用类型，仍必须传播地址来源。缺少读写权限上下文的独立 &x 按原规则拒绝。",
+      "source_evidence": "check.rs::borrow_mut, inout_arg, loans_of::InoutPlace, storage_loans"
+    },
+    {
+      "ast_kind": "Unary",
+      "status": "supported",
+      "provenance_rule": "解引用保留指针来源；数值取负和逻辑非结果不含借用。",
+      "source_evidence": "check.rs::expr_inner::Unary, loans_of::Deref"
+    },
+    {
+      "ast_kind": "Binary",
+      "status": "no_borrow_result",
+      "provenance_rule": "算术、比较、逻辑和拥有字符串运算不返回借用；短路 RHS 虽提前清理临时值，结果只能为 bool。",
+      "source_evidence": "check.rs::binary; codegen.rs::expr::Binary (And/Or)"
+    },
+    {
+      "ast_kind": "Paren",
+      "status": "supported",
+      "provenance_rule": "复用子表达式及其来源快照，仅调整诊断 span，不按 span 查找历史来源。",
+      "source_evidence": "check.rs::expr_inner::Paren"
+    },
+    {
+      "ast_kind": "None",
+      "status": "supported_empty_source",
+      "provenance_rule": "带类型 Optional 的 none 无借用载荷，来源为空。",
+      "source_evidence": "check.rs::expr_inner::None, loans_of"
+    },
+    {
+      "ast_kind": "Coalesce",
+      "status": "supported",
+      "provenance_rule": "合并 LHS 成功值与非跳转 RHS 的来源快照；仅 RHS 跨其生成 C 清理边界时检查 Temp，LHS 的拥有临时值仍活到外层完整语句结束。",
+      "source_evidence": "check.rs::coalesce, branch_result, loans_of::Coalesce; codegen.rs::Coalesce"
+    },
+    {
+      "ast_kind": "Return",
+      "status": "control_transfer",
+      "provenance_rule": "return_value 在退出前检查声明的 of 来源；该路径不作为 Match/Catch 的值来源合并。",
+      "source_evidence": "check.rs::diverge, return_value, check_returned"
+    },
+    {
+      "ast_kind": "Break",
+      "status": "control_transfer",
+      "provenance_rule": "无借用结果；记录循环控制流状态，跳转分支不贡献表达式结果。",
+      "source_evidence": "check.rs::diverge, loop_body, match_general"
+    },
+    {
+      "ast_kind": "Continue",
+      "status": "control_transfer",
+      "provenance_rule": "无借用结果；循环来源状态按已有不动点传播，跳转分支不贡献表达式结果。",
+      "source_evidence": "check.rs::diverge, loop_body, match_general"
+    },
+    {
+      "ast_kind": "Unit",
+      "status": "no_value_or_special_context",
+      "provenance_rule": "独立 () 无值，按原规则 E0001；return () 和 ok(()) 的专门位置不含借用。",
+      "source_evidence": "check.rs::expr_inner::Unit, return_value, result_value"
+    },
+    {
+      "ast_kind": "Tuple",
+      "status": "supported",
+      "provenance_rule": "逐成员快照并合并所有递归借用来源；Optional/Vec/Map/Result 内的借用均受 carries_borrow 递归判断。",
+      "source_evidence": "check.rs::expr_inner::Tuple, loans_of::TupleLit; types.rs::Ty::carries_borrow"
+    },
+    {
+      "ast_kind": "Closure",
+      "status": "restricted_callback_context",
+      "provenance_rule": "独立闭包值 U0001；sortBy/update/Heap 等专门回调约束返回类型与捕获，保存的捕获含借用时 E0307。未把不支持的闭包值计作生命周期负例。",
+      "source_evidence": "check.rs::expr_inner::Closure, lift_closure, update_call, call (Heap.by branch)"
+    },
+    {
+      "ast_kind": "Case",
+      "status": "supported_with_storage_boundary",
+      "provenance_rule": "枚举载荷字段由 member_fields 递归禁止借用 E0301；拥有载荷在模式绑定后的视图按真实拥有存储追溯。",
+      "source_evidence": "check.rs::enum_case, member_fields, check_pat"
+    },
+    {
+      "ast_kind": "Named",
+      "status": "enum_argument_only",
+      "provenance_rule": "只在枚举载荷参数分派中解包检查，独立 named argument E0001；不另建会丢失来源的值层。",
+      "source_evidence": "check.rs::enum_case, expr_inner::Named"
+    },
+    {
+      "ast_kind": "Err",
+      "status": "supported_with_error_type_boundary",
+      "provenance_rule": "Result 的错误类型递归含借用一律 E0301；成功载荷可包含借用并由 Ok 转发。",
+      "source_evidence": "check.rs::resolve_ty_inner::!, result_value, loans_of::ErrVal/Ok"
+    },
+    {
+      "ast_kind": "Try",
+      "status": "supported",
+      "provenance_rule": "成功结果保留 Result 的借用来源；隐式错误返回会清理，但错误类型不能含借用，因此不产生借用逃逸。",
+      "source_evidence": "check.rs::try_expr, resolve_ty_inner::!, loans_of::Try; codegen.rs::Try"
+    },
+    {
+      "ast_kind": "Spawn",
+      "status": "supported_with_thread_boundary",
+      "provenance_rule": "线程结果必须 Send 且拥有数据，借用型返回报 E0701；线程参数借用记录在 scope，不能借 Join 绕过来源检查。",
+      "source_evidence": "check.rs::spawn_expr; types.rs::Ty::carries_borrow"
+    },
+    {
+      "ast_kind": "Catch",
+      "status": "supported",
+      "provenance_rule": "输入 success 来源保持快照；handler 值退出错误绑定作用域前核验 Temp/局部拥有存储，只合并继续执行的 handler；输入临时 owner 不在 handler 清理集合。",
+      "source_evidence": "check.rs::catch_expr, branch_result, loans_of::Catch; codegen.rs::Catch"
+    },
+    {
+      "ast_kind": "Match",
+      "status": "supported",
+      "provenance_rule": "每个有用且产出值的 arm 在 pop_scope 前核验和冻结来源；复制载荷来源与 place pin 分开；结束作用域的透明 RefMut 描述符归一为底层来源。拥有绑定或 arm 临时值的视图报 E0305。",
+      "source_evidence": "check.rs::match_general, check_pat, branch_result; codegen.rs::match_code"
+    },
+    {
+      "ast_kind": "Block",
+      "status": "diverging_branch_context_only",
+      "provenance_rule": "表达式 AST Block 只用于必须跳转的 match/catch 分支；独立块值 E0020，非跳转分支块按既有错误拒绝。真实语句块内 return 仍按 E0303 检查。",
+      "source_evidence": "ast.rs::ExprKind::Block; check.rs::match_general, catch_expr, block, return_value"
+    }
+  ],
+  "non_ast_control_flow": [
+    {
+      "construct": "if expression",
+      "status": "not_in_ast_E0020",
+      "validation": "syntax_and_storage_boundaries_are_not_counted_as_borrow_escape_checks"
+    },
+    {
+      "construct": "if statement with return",
+      "status": "supported",
+      "negative": "local owning value returned as view is E0303",
+      "positive": "parameter alias return executes"
+    },
+    {
+      "construct": "statement block with return",
+      "status": "supported",
+      "negative": "local owning value returned as view is E0303",
+      "positive": "parameter alias return executes"
+    }
+  ],
+  "c_cleanup_boundary_audit": [
+    {
+      "boundary": "Match expression arm",
+      "cleanup": "arm-created temps then owned arm scope",
+      "check": "branch_result before pop_scope; real expired sources E0305"
+    },
+    {
+      "boundary": "Coalesce RHS",
+      "cleanup": "RHS-created temps only",
+      "check": "branch_result on RHS only; LHS temp owner remains statement-live"
+    },
+    {
+      "boundary": "Catch handler",
+      "cleanup": "handler-created temps then owned error binding",
+      "check": "branch_result before pop_scope; input success temp owner remains statement-live"
+    },
+    {
+      "boundary": "statement Match / if-let before body",
+      "cleanup": "scrutinee temps",
+      "check": "existing binding store_loans rejects transient borrowed scrutinee E0305"
+    },
+    {
+      "boundary": "short-circuit RHS",
+      "cleanup": "RHS-created temps",
+      "check": "result restricted to bool; RHS complete-use views remain valid"
+    },
+    {
+      "boundary": "return / jump",
+      "cleanup": "statement and outer temps then exited scopes",
+      "check": "return_value/check_returned validate before exit; break/continue have no value"
+    },
+    {
+      "boundary": "try error exit",
+      "cleanup": "temps and scopes before implicit error return",
+      "check": "error.carries_borrow prohibited by E0301"
+    },
+    {
+      "boundary": "ordinary full statement",
+      "cleanup": "flush_temps after complete statement use",
+      "check": "direct println(temporary String.trim()) accepted and executed"
+    },
+    {
+      "boundary": "LetTemp",
+      "cleanup": "none at LetTemp boundary",
+      "check": "hidden receiver descriptor forwards actual storage sources"
+    }
+  ],
+  "mutator_source_audit": [
+    {
+      "operation": "replace",
+      "result": "old value",
+      "rule": "save previous loans before evaluating/storing replacement",
+      "new_regression": "parameter a old result remains of a after replacing by b"
+    },
+    {
+      "operation": "take",
+      "result": "old value",
+      "rule": "checker source set not cleared; result snapshot retains previous sources"
+    },
+    {
+      "operation": "swap",
+      "result": "unit",
+      "rule": "both destinations conservatively union previous sources; no dropped source"
+    },
+    {
+      "operation": "Vec/Heap pop",
+      "result": "removed optional element",
+      "rule": "HExprKind::Pop retains receiver content sources"
+    },
+    {
+      "operation": "Deque popFront/popBack",
+      "result": "removed optional element",
+      "rule": "HExprKind::DequePop retains receiver content sources"
+    },
+    {
+      "operation": "Map/Arena remove",
+      "result": "removed optional value",
+      "rule": "receiver source state not cleared; result snapshot retains content sources"
+    },
+    {
+      "operation": "Set remove",
+      "result": "bool",
+      "rule": "no borrow-carrying result"
+    }
+  ],
+  "targeted_rust_tests": [
+    {
+      "command": "cargo test --manifest-path compiler/Cargo.toml --test borrow_provenance",
+      "passed_tests": 7,
+      "failed_tests": 0,
+      "log": "   Compiling yavo v0.0.1 (/data1/workspace/github/workspace/yavo/compiler)\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.26s\n     Running tests/borrow_provenance.rs (compiler/target/debug/deps/borrow_provenance-ed52f5bb73263f0f)\n\nrunning 7 tests\ntest branch_cleanup_rejects_expired_views_even_for_immediate_consumers ... ok\ntest nested_borrow_carrying_values_and_wrong_parameters_retain_all_sources ... ok\ntest local_or_temporary_views_cannot_escape_any_supported_control_flow_form ... ok\ntest mutating_builtins_keep_previous_value_sources ... ok\ntest syntax_and_storage_boundaries_are_not_counted_as_borrow_escape_checks ... ok\ntest unreachable_or_diverging_arms_do_not_invent_result_origins ... ok\ntest supported_parameter_aliases_and_owned_results_execute_without_false_rejections ... ok\n\ntest result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.97s\n\n"
+    },
+    {
+      "command": "cargo test --manifest-path compiler/Cargo.toml --test mutref_returns",
+      "passed_tests": 6,
+      "failed_tests": 0,
+      "log": "   Compiling yavo v0.0.1 (/data1/workspace/github/workspace/yavo/compiler)\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.70s\n     Running tests/mutref_returns.rs (compiler/target/debug/deps/mutref_returns-35b832a1d32ee36d)\n\nrunning 6 tests\ntest frozen_complex_receiver_case_reports_one_conflict ... ok\ntest return_and_alias_violations_are_rejected_semantically ... ok\ntest returned_map_receiver_borrows_the_map_instead_of_the_hidden_descriptor ... ok\ntest complex_receiver_fix_remains_candidate_only_and_changes_order_explicitly ... ok\ntest complex_receiver_runs_once_before_argument_and_owned_results_drop ... ok\ntest returned_references_support_index_fields_forwarding_moves_and_rebinding ... ok\n\ntest result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.83s\n\n"
+    }
+  ],
+  "positive_runtime_controls": {
+    "profiles": [
+      "Debug",
+      "Release"
+    ],
+    "allocation_check": true,
+    "stdout_and_stderr": "exact assertions in borrow_provenance.rs",
+    "includes": [
+      "parameter and alias origins",
+      "outer live owned values",
+      "owned result transfer",
+      "branch-produced reborrow",
+      "inout owned field source",
+      "full-statement temporary view",
+      "Coalesce LHS temporary owner",
+      "Catch input temporary owner",
+      "replace previous-value source"
+    ]
+  },
+  "contract_checks": {
+    "schema": "yavo-borrow-contract-checks/v1",
+    "compiler_sha256": "f12f35d32d669ea25892c62929bfa3d294e0957edd796d0bf1b5b3bab7a6fd30",
+    "checker_source_sha256": "2849c4bc65c19b61bdb6ede7b074cc19187574342db03a297f4b065e900448cb",
+    "p0_diagnostics": [
+      {
+        "path": "compiler/tests/p0/errors_box.yv",
+        "source_sha256": "7458fb9c3a9c63b92417edd0aa8c9c882bcdd0d7fdaab5c8ac0b64e617e225e2",
+        "expected": [
+          [
+            "E0012",
+            39,
+            15
+          ],
+          [
+            "E0101",
+            28,
+            9
+          ],
+          [
+            "E0102",
+            22,
+            23
+          ],
+          [
+            "E0301",
+            34,
+            20
+          ],
+          [
+            "E0301",
+            35,
+            23
+          ],
+          [
+            "E0401",
+            38,
+            16
+          ],
+          [
+            "E0405",
+            37,
+            22
+          ],
+          [
+            "W0001",
+            38,
+            9
+          ]
+        ],
+        "actual": [
+          [
+            "E0012",
+            39,
+            15
+          ],
+          [
+            "E0101",
+            28,
+            9
+          ],
+          [
+            "E0102",
+            22,
+            23
+          ],
+          [
+            "E0301",
+            34,
+            20
+          ],
+          [
+            "E0301",
+            35,
+            23
+          ],
+          [
+            "E0401",
+            38,
+            16
+          ],
+          [
+            "E0405",
+            37,
+            22
+          ],
+          [
+            "W0001",
+            38,
+            9
+          ]
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "path": "compiler/tests/p0/errors_catch_break_return.yv",
+        "source_sha256": "c62a879c2d18a0eb394b21b62217d6bcf646a7db4801d5204950199857a9832c",
+        "expected": [
+          [
+            "E0013",
+            30,
+            1
+          ],
+          [
+            "E0013",
+            34,
+            1
+          ],
+          [
+            "E0013",
+            38,
+            1
+          ],
+          [
+            "E0013",
+            42,
+            1
+          ],
+          [
+            "E0013",
+            46,
+            1
+          ],
+          [
+            "E0013",
+            50,
+            1
+          ],
+          [
+            "E0013",
+            54,
+            1
+          ],
+          [
+            "E0013",
+            60,
+            1
+          ],
+          [
+            "E0013",
+            64,
+            1
+          ],
+          [
+            "E0013",
+            69,
+            1
+          ],
+          [
+            "E0013",
+            73,
+            1
+          ],
+          [
+            "E0013",
+            82,
+            1
+          ],
+          [
+            "E0013",
+            86,
+            1
+          ],
+          [
+            "E0013",
+            90,
+            1
+          ],
+          [
+            "E0013",
+            94,
+            1
+          ],
+          [
+            "E0013",
+            99,
+            1
+          ],
+          [
+            "E0013",
+            103,
+            1
+          ],
+          [
+            "E0013",
+            109,
+            1
+          ]
+        ],
+        "actual": [
+          [
+            "E0013",
+            30,
+            1
+          ],
+          [
+            "E0013",
+            34,
+            1
+          ],
+          [
+            "E0013",
+            38,
+            1
+          ],
+          [
+            "E0013",
+            42,
+            1
+          ],
+          [
+            "E0013",
+            46,
+            1
+          ],
+          [
+            "E0013",
+            50,
+            1
+          ],
+          [
+            "E0013",
+            54,
+            1
+          ],
+          [
+            "E0013",
+            60,
+            1
+          ],
+          [
+            "E0013",
+            64,
+            1
+          ],
+          [
+            "E0013",
+            69,
+            1
+          ],
+          [
+            "E0013",
+            73,
+            1
+          ],
+          [
+            "E0013",
+            82,
+            1
+          ],
+          [
+            "E0013",
+            86,
+            1
+          ],
+          [
+            "E0013",
+            90,
+            1
+          ],
+          [
+            "E0013",
+            94,
+            1
+          ],
+          [
+            "E0013",
+            99,
+            1
+          ],
+          [
+            "E0013",
+            103,
+            1
+          ],
+          [
+            "E0013",
+            109,
+            1
+          ]
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "path": "compiler/tests/p0/errors_deref.yv",
+        "source_sha256": "235628c5f67edba69ee4595b806e235e3af801052befd865fec5681bff5359e1",
+        "expected": [
+          [
+            "E0001",
+            89,
+            5
+          ],
+          [
+            "E0004",
+            23,
+            13
+          ],
+          [
+            "E0014",
+            67,
+            26
+          ],
+          [
+            "E0014",
+            83,
+            5
+          ],
+          [
+            "E0101",
+            18,
+            5
+          ],
+          [
+            "E0101",
+            30,
+            9
+          ],
+          [
+            "E0102",
+            37,
+            13
+          ],
+          [
+            "E0102",
+            44,
+            26
+          ],
+          [
+            "E0102",
+            52,
+            26
+          ],
+          [
+            "E0102",
+            61,
+            5
+          ],
+          [
+            "E0305",
+            105,
+            13
+          ],
+          [
+            "E0401",
+            95,
+            14
+          ],
+          [
+            "E0402",
+            75,
+            6
+          ],
+          [
+            "U0001",
+            110,
+            16
+          ]
+        ],
+        "actual": [
+          [
+            "E0001",
+            89,
+            5
+          ],
+          [
+            "E0004",
+            23,
+            13
+          ],
+          [
+            "E0014",
+            67,
+            26
+          ],
+          [
+            "E0014",
+            83,
+            5
+          ],
+          [
+            "E0101",
+            18,
+            5
+          ],
+          [
+            "E0101",
+            30,
+            9
+          ],
+          [
+            "E0102",
+            37,
+            13
+          ],
+          [
+            "E0102",
+            44,
+            26
+          ],
+          [
+            "E0102",
+            52,
+            26
+          ],
+          [
+            "E0102",
+            61,
+            5
+          ],
+          [
+            "E0305",
+            105,
+            13
+          ],
+          [
+            "E0401",
+            95,
+            14
+          ],
+          [
+            "E0402",
+            75,
+            6
+          ],
+          [
+            "U0001",
+            110,
+            16
+          ]
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "path": "compiler/tests/p0/errors_expression_loans.yv",
+        "source_sha256": "0ba31377c1174ef791a0c048332028d3adc280085c4dfd35528e6f3222b4025f",
+        "expected": [
+          [
+            "E0303",
+            18,
+            12
+          ],
+          [
+            "E0303",
+            24,
+            12
+          ],
+          [
+            "E0303",
+            29,
+            16
+          ],
+          [
+            "E0303",
+            36,
+            16
+          ],
+          [
+            "E0303",
+            42,
+            12
+          ],
+          [
+            "E0303",
+            50,
+            12
+          ],
+          [
+            "E0303",
+            54,
+            12
+          ],
+          [
+            "E0303",
+            58,
+            12
+          ],
+          [
+            "E0303",
+            62,
+            12
+          ],
+          [
+            "E0303",
+            66,
+            12
+          ],
+          [
+            "E0305",
+            21,
+            65
+          ],
+          [
+            "E0305",
+            46,
+            40
+          ]
+        ],
+        "actual": [
+          [
+            "E0303",
+            18,
+            12
+          ],
+          [
+            "E0303",
+            24,
+            12
+          ],
+          [
+            "E0303",
+            29,
+            16
+          ],
+          [
+            "E0303",
+            36,
+            16
+          ],
+          [
+            "E0303",
+            42,
+            12
+          ],
+          [
+            "E0303",
+            50,
+            12
+          ],
+          [
+            "E0303",
+            54,
+            12
+          ],
+          [
+            "E0303",
+            58,
+            12
+          ],
+          [
+            "E0303",
+            62,
+            12
+          ],
+          [
+            "E0303",
+            66,
+            12
+          ],
+          [
+            "E0305",
+            21,
+            65
+          ],
+          [
+            "E0305",
+            46,
+            40
+          ]
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "path": "compiler/tests/p0/errors_loan_paths.yv",
+        "source_sha256": "4e20003099ece2e4ccf459aea7403b63329e7d9bf83ffd2b6d2c4a77619703c3",
+        "expected": [
+          [
+            "E0303",
+            21,
+            12
+          ],
+          [
+            "E0303",
+            30,
+            12
+          ],
+          [
+            "E0303",
+            37,
+            28
+          ],
+          [
+            "E0303",
+            48,
+            28
+          ],
+          [
+            "E0303",
+            57,
+            28
+          ],
+          [
+            "E0303",
+            72,
+            12
+          ],
+          [
+            "E0303",
+            80,
+            28
+          ],
+          [
+            "E0303",
+            96,
+            12
+          ],
+          [
+            "E0306",
+            103,
+            13
+          ]
+        ],
+        "actual": [
+          [
+            "E0303",
+            21,
+            12
+          ],
+          [
+            "E0303",
+            30,
+            12
+          ],
+          [
+            "E0303",
+            37,
+            28
+          ],
+          [
+            "E0303",
+            48,
+            28
+          ],
+          [
+            "E0303",
+            57,
+            28
+          ],
+          [
+            "E0303",
+            72,
+            12
+          ],
+          [
+            "E0303",
+            80,
+            28
+          ],
+          [
+            "E0303",
+            96,
+            12
+          ],
+          [
+            "E0306",
+            103,
+            13
+          ]
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "path": "compiler/tests/p0/errors_owned_view_args.yv",
+        "source_sha256": "27e14b29fc03753cb93103329d5de1e6e46d6ce41d081f5988eef90e4f617218",
+        "expected": [
+          [
+            "E0102",
+            25,
+            5
+          ],
+          [
+            "E0102",
+            32,
+            5
+          ],
+          [
+            "E0102",
+            39,
+            5
+          ]
+        ],
+        "actual": [
+          [
+            "E0102",
+            25,
+            5
+          ],
+          [
+            "E0102",
+            32,
+            5
+          ],
+          [
+            "E0102",
+            39,
+            5
+          ]
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "path": "compiler/tests/p0/errors_ownership.yv",
+        "source_sha256": "027f5d01586623517e2a1c0db8fabb9a0f04d56c7d84001b0505b53057e45556",
+        "expected": [
+          [
+            "E0001",
+            61,
+            14
+          ],
+          [
+            "E0001",
+            69,
+            13
+          ],
+          [
+            "E0014",
+            58,
+            5
+          ],
+          [
+            "E0102",
+            50,
+            22
+          ],
+          [
+            "E0401",
+            46,
+            12
+          ],
+          [
+            "E0402",
+            22,
+            13
+          ],
+          [
+            "E0402",
+            27,
+            23
+          ],
+          [
+            "E0402",
+            35,
+            13
+          ],
+          [
+            "E0403",
+            54,
+            12
+          ],
+          [
+            "E0404",
+            65,
+            26
+          ]
+        ],
+        "actual": [
+          [
+            "E0001",
+            61,
+            14
+          ],
+          [
+            "E0001",
+            69,
+            13
+          ],
+          [
+            "E0014",
+            58,
+            5
+          ],
+          [
+            "E0102",
+            50,
+            22
+          ],
+          [
+            "E0401",
+            46,
+            12
+          ],
+          [
+            "E0402",
+            22,
+            13
+          ],
+          [
+            "E0402",
+            27,
+            23
+          ],
+          [
+            "E0402",
+            35,
+            13
+          ],
+          [
+            "E0403",
+            54,
+            12
+          ],
+          [
+            "E0404",
+            65,
+            26
+          ]
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "path": "compiler/tests/p0/errors_refs.yv",
+        "source_sha256": "47faa9d9051bd47720916e220ba283e8c92e84edd68ae753ced9c82ed04c662f",
+        "expected": [
+          [
+            "E0001",
+            36,
+            11
+          ],
+          [
+            "E0014",
+            31,
+            12
+          ],
+          [
+            "E0102",
+            21,
+            9
+          ],
+          [
+            "E0102",
+            26,
+            15
+          ],
+          [
+            "E0102",
+            47,
+            5
+          ],
+          [
+            "E0305",
+            55,
+            14
+          ],
+          [
+            "E0306",
+            39,
+            14
+          ],
+          [
+            "E0401",
+            52,
+            19
+          ],
+          [
+            "E0404",
+            42,
+            12
+          ]
+        ],
+        "actual": [
+          [
+            "E0001",
+            36,
+            11
+          ],
+          [
+            "E0014",
+            31,
+            12
+          ],
+          [
+            "E0102",
+            21,
+            9
+          ],
+          [
+            "E0102",
+            26,
+            15
+          ],
+          [
+            "E0102",
+            47,
+            5
+          ],
+          [
+            "E0305",
+            55,
+            14
+          ],
+          [
+            "E0306",
+            39,
+            14
+          ],
+          [
+            "E0401",
+            52,
+            19
+          ],
+          [
+            "E0404",
+            42,
+            12
+          ]
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "path": "compiler/tests/p0/errors_return.yv",
+        "source_sha256": "3f8f737c563a714d9dbee454e008b9b4c1bdd6308aea0409bf33ee6e6e2cf70d",
+        "expected": [
+          [
+            "E0013",
+            6,
+            1
+          ]
+        ],
+        "actual": [
+          [
+            "E0013",
+            6,
+            1
+          ]
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "path": "compiler/tests/p0/errors_saved_collections.yv",
+        "source_sha256": "6659f2fe3e40e6d488fc84db93d04aa04af0d67e2d96d8817cb224cc270b19d1",
+        "expected": [
+          [
+            "E0001",
+            116,
+            15
+          ],
+          [
+            "E0014",
+            61,
+            9
+          ],
+          [
+            "E0102",
+            71,
+            5
+          ],
+          [
+            "E0102",
+            80,
+            5
+          ],
+          [
+            "E0303",
+            90,
+            12
+          ],
+          [
+            "E0306",
+            85,
+            16
+          ],
+          [
+            "E0307",
+            26,
+            27
+          ],
+          [
+            "E0307",
+            31,
+            27
+          ],
+          [
+            "E0307",
+            37,
+            27
+          ],
+          [
+            "E0401",
+            47,
+            27
+          ],
+          [
+            "E0401",
+            53,
+            17
+          ],
+          [
+            "E0401",
+            126,
+            13
+          ],
+          [
+            "E0402",
+            43,
+            13
+          ],
+          [
+            "E0402",
+            122,
+            13
+          ],
+          [
+            "U0001",
+            101,
+            28
+          ],
+          [
+            "U0001",
+            111,
+            15
+          ]
+        ],
+        "actual": [
+          [
+            "E0001",
+            116,
+            15
+          ],
+          [
+            "E0014",
+            61,
+            9
+          ],
+          [
+            "E0102",
+            71,
+            5
+          ],
+          [
+            "E0102",
+            80,
+            5
+          ],
+          [
+            "E0303",
+            90,
+            12
+          ],
+          [
+            "E0306",
+            85,
+            16
+          ],
+          [
+            "E0307",
+            26,
+            27
+          ],
+          [
+            "E0307",
+            31,
+            27
+          ],
+          [
+            "E0307",
+            37,
+            27
+          ],
+          [
+            "E0401",
+            47,
+            27
+          ],
+          [
+            "E0401",
+            53,
+            17
+          ],
+          [
+            "E0401",
+            126,
+            13
+          ],
+          [
+            "E0402",
+            43,
+            13
+          ],
+          [
+            "E0402",
+            122,
+            13
+          ],
+          [
+            "U0001",
+            101,
+            28
+          ],
+          [
+            "U0001",
+            111,
+            15
+          ]
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "path": "compiler/tests/p0/errors_slices.yv",
+        "source_sha256": "e9c91fd73e962d4bb9b8bcbbb401d47ee2c75c54eacb71b7d61ce53070b31c49",
+        "expected": [
+          [
+            "E0001",
+            8,
+            13
+          ],
+          [
+            "E0001",
+            10,
+            15
+          ],
+          [
+            "E0001",
+            12,
+            13
+          ],
+          [
+            "E0305",
+            16,
+            16
+          ],
+          [
+            "W0001",
+            10,
+            9
+          ]
+        ],
+        "actual": [
+          [
+            "E0001",
+            8,
+            13
+          ],
+          [
+            "E0001",
+            10,
+            15
+          ],
+          [
+            "E0001",
+            12,
+            13
+          ],
+          [
+            "E0305",
+            16,
+            16
+          ],
+          [
+            "W0001",
+            10,
+            9
+          ]
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "path": "compiler/tests/p0/errors_sync_local.yv",
+        "source_sha256": "c2ded73417508955aaa6ec26318253207e56e94057170e80c1035f9aafda3a43",
+        "expected": [
+          [
+            "E0001",
+            48,
+            14
+          ],
+          [
+            "E0101",
+            16,
+            5
+          ],
+          [
+            "E0101",
+            21,
+            5
+          ],
+          [
+            "E0102",
+            42,
+            15
+          ],
+          [
+            "E0301",
+            26,
+            16
+          ],
+          [
+            "E0703",
+            34,
+            17
+          ]
+        ],
+        "actual": [
+          [
+            "E0001",
+            48,
+            14
+          ],
+          [
+            "E0101",
+            16,
+            5
+          ],
+          [
+            "E0101",
+            21,
+            5
+          ],
+          [
+            "E0102",
+            42,
+            15
+          ],
+          [
+            "E0301",
+            26,
+            16
+          ],
+          [
+            "E0703",
+            34,
+            17
+          ]
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "path": "compiler/tests/p0/errors_thread_mutable_borrow.yv",
+        "source_sha256": "0d3c4a02c35606a70df50afbde6fb3b335d9ca23e4cf77d6bd26c96d896d4e0f",
+        "expected": [
+          [
+            "U0001",
+            19,
+            33
+          ],
+          [
+            "U0001",
+            30,
+            35
+          ]
+        ],
+        "actual": [
+          [
+            "U0001",
+            19,
+            33
+          ],
+          [
+            "U0001",
+            30,
+            35
+          ]
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "path": "compiler/tests/p0/errors_tuples.yv",
+        "source_sha256": "94d44fe0aee55da838393ef82b762fec4816d3f2d7cb6fd364bbe9f27e474272",
+        "expected": [
+          [
+            "E0001",
+            28,
+            21
+          ],
+          [
+            "E0001",
+            29,
+            18
+          ],
+          [
+            "E0001",
+            43,
+            17
+          ],
+          [
+            "E0010",
+            30,
+            13
+          ],
+          [
+            "E0305",
+            37,
+            16
+          ],
+          [
+            "E0401",
+            15,
+            16
+          ],
+          [
+            "E0402",
+            22,
+            13
+          ]
+        ],
+        "actual": [
+          [
+            "E0001",
+            28,
+            21
+          ],
+          [
+            "E0001",
+            29,
+            18
+          ],
+          [
+            "E0001",
+            43,
+            17
+          ],
+          [
+            "E0010",
+            30,
+            13
+          ],
+          [
+            "E0305",
+            37,
+            16
+          ],
+          [
+            "E0401",
+            15,
+            16
+          ],
+          [
+            "E0402",
+            22,
+            13
+          ]
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "path": "compiler/tests/p0/errors_views.yv",
+        "source_sha256": "30203b67df574096cc249f886bd7d91a96085f05706bc191172c06d62b6ff60a",
+        "expected": [
+          [
+            "E0102",
+            28,
+            5
+          ],
+          [
+            "E0102",
+            34,
+            14
+          ],
+          [
+            "E0102",
+            42,
+            9
+          ],
+          [
+            "E0102",
+            63,
+            5
+          ],
+          [
+            "E0302",
+            12,
+            21
+          ],
+          [
+            "E0303",
+            16,
+            12
+          ],
+          [
+            "E0303",
+            23,
+            12
+          ],
+          [
+            "E0304",
+            18,
+            38
+          ],
+          [
+            "E0305",
+            49,
+            16
+          ],
+          [
+            "E0305",
+            54,
+            13
+          ]
+        ],
+        "actual": [
+          [
+            "E0102",
+            28,
+            5
+          ],
+          [
+            "E0102",
+            34,
+            14
+          ],
+          [
+            "E0102",
+            42,
+            9
+          ],
+          [
+            "E0102",
+            63,
+            5
+          ],
+          [
+            "E0302",
+            12,
+            21
+          ],
+          [
+            "E0303",
+            16,
+            12
+          ],
+          [
+            "E0303",
+            23,
+            12
+          ],
+          [
+            "E0304",
+            18,
+            38
+          ],
+          [
+            "E0305",
+            49,
+            16
+          ],
+          [
+            "E0305",
+            54,
+            13
+          ]
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "path": "compiler/tests/p0/errors_output_part_borrows.yv",
+        "source_sha256": "4c8a7c8594e30a7b1a0b1307eaadbe505412309da6313de42044d794787d42a3",
+        "expected": [
+          [
+            "E0102",
+            47,
+            38
+          ],
+          [
+            "E0102",
+            52,
+            50
+          ],
+          [
+            "E0102",
+            58,
+            44
+          ],
+          [
+            "E0102",
+            63,
+            39
+          ],
+          [
+            "E0102",
+            68,
+            43
+          ],
+          [
+            "E0102",
+            74,
+            35
+          ],
+          [
+            "E0102",
+            79,
+            56
+          ],
+          [
+            "E0102",
+            84,
+            33
+          ],
+          [
+            "E0102",
+            89,
+            36
+          ],
+          [
+            "E0102",
+            94,
+            44
+          ],
+          [
+            "E0102",
+            99,
+            39
+          ]
+        ],
+        "actual": [
+          [
+            "E0102",
+            47,
+            38
+          ],
+          [
+            "E0102",
+            52,
+            50
+          ],
+          [
+            "E0102",
+            58,
+            44
+          ],
+          [
+            "E0102",
+            63,
+            39
+          ],
+          [
+            "E0102",
+            68,
+            43
+          ],
+          [
+            "E0102",
+            74,
+            35
+          ],
+          [
+            "E0102",
+            79,
+            56
+          ],
+          [
+            "E0102",
+            84,
+            33
+          ],
+          [
+            "E0102",
+            89,
+            36
+          ],
+          [
+            "E0102",
+            94,
+            44
+          ],
+          [
+            "E0102",
+            99,
+            39
+          ]
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "path": "compiler/tests/p0/errors_text_method_receiver.yv",
+        "source_sha256": "8f510c4a16f2a7120c0a669cb63e8aa908946b4d8e0b2e12550278e1f2ae96cf",
+        "expected": [
+          [
+            "E0102",
+            15,
+            34
+          ],
+          [
+            "E0102",
+            20,
+            32
+          ],
+          [
+            "E0102",
+            25,
+            32
+          ],
+          [
+            "E0102",
+            30,
+            28
+          ],
+          [
+            "E0102",
+            35,
+            29
+          ]
+        ],
+        "actual": [
+          [
+            "E0102",
+            15,
+            34
+          ],
+          [
+            "E0102",
+            20,
+            32
+          ],
+          [
+            "E0102",
+            25,
+            32
+          ],
+          [
+            "E0102",
+            30,
+            28
+          ],
+          [
+            "E0102",
+            35,
+            29
+          ]
+        ],
+        "exit_code": 1,
+        "passed": true
+      }
+    ],
+    "patterns53_reference_checks": [
+      {
+        "id": "patterns53_copy_fields",
+        "path": "selfhost/tests/patterns53/programs/copy_fields.yv",
+        "source_sha256": "1c25c33c345b68e00c7f9919e889ac57be0154fb44376357c618179fa5323099",
+        "kind": "run",
+        "reference_diagnostic": null,
+        "selfhost_diagnostic": null,
+        "actual_codes": [],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "id": "patterns53_constructor_order",
+        "path": "selfhost/tests/patterns53/programs/constructor_order.yv",
+        "source_sha256": "bfd38be54862695d414b7d1b74d34aacc136f58938ebeacd0d5d69d7139ec957",
+        "kind": "run",
+        "reference_diagnostic": null,
+        "selfhost_diagnostic": null,
+        "actual_codes": [],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "id": "patterns53_owned_place",
+        "path": "selfhost/tests/patterns53/programs/owned_place.yv",
+        "source_sha256": "bbf35bb840ddebd2b781b48d0b01e0fe00b4778e2377c387966c28293df31bdc",
+        "kind": "run",
+        "reference_diagnostic": null,
+        "selfhost_diagnostic": null,
+        "actual_codes": [],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "id": "patterns53_owned_temporary",
+        "path": "selfhost/tests/patterns53/programs/owned_temporary.yv",
+        "source_sha256": "ec1aacc84904a3d0e2c2db23bdb487d237ed0ab45329bb9d62ce7e640803811d",
+        "kind": "run",
+        "reference_diagnostic": null,
+        "selfhost_diagnostic": null,
+        "actual_codes": [],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "id": "patterns53_owned_wildcard",
+        "path": "selfhost/tests/patterns53/programs/owned_wildcard.yv",
+        "source_sha256": "8e749eaf4b15178db0d901f27e20bca161586688c030b78d1bc21bec439911f9",
+        "kind": "run",
+        "reference_diagnostic": null,
+        "selfhost_diagnostic": null,
+        "actual_codes": [],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "id": "patterns53_owned_root_bind",
+        "path": "selfhost/tests/patterns53/programs/owned_root_bind.yv",
+        "source_sha256": "881753bc0223398fabf576a9250f50d630a4ae5330db323bb7db39ab2aa2995b",
+        "kind": "run",
+        "reference_diagnostic": null,
+        "selfhost_diagnostic": null,
+        "actual_codes": [],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "id": "patterns53_nested_owned",
+        "path": "selfhost/tests/patterns53/programs/nested_owned.yv",
+        "source_sha256": "6b3e2d9374ee707f3501842e29660df05d70898c3ce05604289cacf8b9ad0245",
+        "kind": "run",
+        "reference_diagnostic": null,
+        "selfhost_diagnostic": null,
+        "actual_codes": [],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "id": "patterns53_nested_product",
+        "path": "selfhost/tests/patterns53/programs/nested_product.yv",
+        "source_sha256": "969e10bf8ff750e084307f518b23dbc6bea233a0e074c9746a49e66739e20f39",
+        "kind": "run",
+        "reference_diagnostic": null,
+        "selfhost_diagnostic": null,
+        "actual_codes": [],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "id": "patterns53_nested_wildcard_rows",
+        "path": "selfhost/tests/patterns53/programs/nested_wildcard_rows.yv",
+        "source_sha256": "98557d4f5b98d4f12c756aeceffc48a0cc8e19ba49f8618ff192be5240832c5e",
+        "kind": "run",
+        "reference_diagnostic": null,
+        "selfhost_diagnostic": null,
+        "actual_codes": [],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "id": "patterns53_optional_scalar",
+        "path": "selfhost/tests/patterns53/programs/optional_scalar.yv",
+        "source_sha256": "5b8d7bb20078ee60a63068146e341308e50b961fff6680076465a212561dc52c",
+        "kind": "run",
+        "reference_diagnostic": null,
+        "selfhost_diagnostic": null,
+        "actual_codes": [],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "id": "patterns53_optional_enum",
+        "path": "selfhost/tests/patterns53/programs/optional_enum.yv",
+        "source_sha256": "a12028ec41ff462c891ad77e4ec9e16e5fc6721e402aefb37891a38fa6e82783",
+        "kind": "run",
+        "reference_diagnostic": null,
+        "selfhost_diagnostic": null,
+        "actual_codes": [],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "id": "patterns53_result_utf8",
+        "path": "selfhost/tests/patterns53/programs/result_utf8.yv",
+        "source_sha256": "691aad0ca4013bb3eaec99d392509a51ce79766bb6ea1b34179438dd682b7cc6",
+        "kind": "run",
+        "reference_diagnostic": null,
+        "selfhost_diagnostic": null,
+        "actual_codes": [],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "id": "patterns53_result_standard_nested",
+        "path": "selfhost/tests/patterns53/programs/result_standard_nested.yv",
+        "source_sha256": "5351c18b6adbcacd50afe6f020de5562cc03adb7234147cff6803dc87de586a5",
+        "kind": "run",
+        "reference_diagnostic": null,
+        "selfhost_diagnostic": null,
+        "actual_codes": [],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "id": "patterns53_result_user_payload",
+        "path": "selfhost/tests/patterns53/programs/result_user_payload.yv",
+        "source_sha256": "07626873fd089b076af948b58e4ae207d558793c26ab07e93f18f893edffdd32",
+        "kind": "run",
+        "reference_diagnostic": null,
+        "selfhost_diagnostic": null,
+        "actual_codes": [],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "id": "patterns53_result_unit",
+        "path": "selfhost/tests/patterns53/programs/result_unit.yv",
+        "source_sha256": "4662babf1c94b34a214586f59ae327faeb3fa251f8ca2890b0d23fd73668fb89",
+        "kind": "run",
+        "reference_diagnostic": null,
+        "selfhost_diagnostic": null,
+        "actual_codes": [],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "id": "patterns53_borrow_field",
+        "path": "selfhost/tests/patterns53/programs/borrow_field.yv",
+        "source_sha256": "c2d7aa81a83d86e68377bdb28b9364ec69bcf690a1388c8b64e59089ba991190",
+        "kind": "run",
+        "reference_diagnostic": null,
+        "selfhost_diagnostic": null,
+        "actual_codes": [],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "id": "patterns53_vector_owned",
+        "path": "selfhost/tests/patterns53/programs/vector_owned.yv",
+        "source_sha256": "5464e8bea6ed4059eb8267dcb9d70f9f5122ea6111b2697fc148f8be280d0549",
+        "kind": "run",
+        "reference_diagnostic": null,
+        "selfhost_diagnostic": null,
+        "actual_codes": [],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "id": "patterns53_loop_cleanup",
+        "path": "selfhost/tests/patterns53/programs/loop_cleanup.yv",
+        "source_sha256": "c361e50dda730baee923319f892a9b4cf8874aaa0c758eb8fb80eaa9c304b9a3",
+        "kind": "run",
+        "reference_diagnostic": null,
+        "selfhost_diagnostic": null,
+        "actual_codes": [],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "id": "patterns53_return_cleanup",
+        "path": "selfhost/tests/patterns53/programs/return_cleanup.yv",
+        "source_sha256": "447c007420bc70cbf8f6da90bc5fedfe898f973d16568c6d3b6331105eb7a1f7",
+        "kind": "run",
+        "reference_diagnostic": null,
+        "selfhost_diagnostic": null,
+        "actual_codes": [],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "id": "patterns53_branch_move_live",
+        "path": "selfhost/tests/patterns53/programs/branch_move_live.yv",
+        "source_sha256": "c742804aec51c237a7601d92431caeb6a281e0a2f58f1f1d9edf90dfc9f5ba38",
+        "kind": "run",
+        "reference_diagnostic": null,
+        "selfhost_diagnostic": null,
+        "actual_codes": [],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "id": "patterns53_single_eval",
+        "path": "selfhost/tests/patterns53/programs/single_eval.yv",
+        "source_sha256": "ef19fa4febe607a6321bcd10125bf74edc8d7b7ce3fdac0b54ae89d942837b34",
+        "kind": "run",
+        "reference_diagnostic": null,
+        "selfhost_diagnostic": null,
+        "actual_codes": [],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "id": "patterns53_scalar_bind",
+        "path": "selfhost/tests/patterns53/programs/scalar_bind.yv",
+        "source_sha256": "af5955e56ad1595586b8f29aa1554bff44cd75eae2c01319b2dd265e41da49d1",
+        "kind": "run",
+        "reference_diagnostic": null,
+        "selfhost_diagnostic": null,
+        "actual_codes": [],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "id": "patterns53_duplicate_warning",
+        "path": "selfhost/tests/patterns53/programs/duplicate_warning.yv",
+        "source_sha256": "c3094451dff6a0bd0d7cd5da109263a409b2473d3c1bb953a56a9edf379e23ec",
+        "kind": "run",
+        "reference_diagnostic": null,
+        "selfhost_diagnostic": null,
+        "actual_codes": [],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "id": "patterns53_many_variants",
+        "path": "selfhost/tests/patterns53/programs/many_variants.yv",
+        "source_sha256": "62bb4d4a7da14149c9f1aad63b5f5c0a8480650fac92c9e74512628f95a312ae",
+        "kind": "run",
+        "reference_diagnostic": null,
+        "selfhost_diagnostic": null,
+        "actual_codes": [],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "id": "patterns53_missing_variant",
+        "path": "selfhost/tests/patterns53/programs/missing_variant.yv",
+        "source_sha256": "8299c07528e54722b53b61e88e3d470d6824da5acb3aeb17ee4fa3f6e5ff6b37",
+        "kind": "reject",
+        "reference_diagnostic": "E0602",
+        "selfhost_diagnostic": "E0602",
+        "actual_codes": [
+          "E0602"
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "id": "patterns53_missing_nested",
+        "path": "selfhost/tests/patterns53/programs/missing_nested.yv",
+        "source_sha256": "461d0986548c47d4c25ed7f16ccb3847d88b91fae827b0d111169e1839ba231f",
+        "kind": "reject",
+        "reference_diagnostic": "E0602",
+        "selfhost_diagnostic": "E0602",
+        "actual_codes": [
+          "E0602"
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "id": "patterns53_missing_optional",
+        "path": "selfhost/tests/patterns53/programs/missing_optional.yv",
+        "source_sha256": "b8b66ee913d8663d0fd85deeb166f5ed84fe2db7551565512136f64916ffe20d",
+        "kind": "reject",
+        "reference_diagnostic": "E0602",
+        "selfhost_diagnostic": "E0602",
+        "actual_codes": [
+          "E0602"
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "id": "patterns53_missing_result",
+        "path": "selfhost/tests/patterns53/programs/missing_result.yv",
+        "source_sha256": "4c7bce5e82cd3742e942e6f4d2d10f091ea7f0d3805fafc60d23eca38fd22980",
+        "kind": "reject",
+        "reference_diagnostic": "E0602",
+        "selfhost_diagnostic": "E0602",
+        "actual_codes": [
+          "E0602"
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "id": "patterns53_wrong_nominal",
+        "path": "selfhost/tests/patterns53/programs/wrong_nominal.yv",
+        "source_sha256": "acac00b30de3df43a2ac836507d4ec942f172ae734765dbba94ee253317782dc",
+        "kind": "reject",
+        "reference_diagnostic": "E0001",
+        "selfhost_diagnostic": "E0001",
+        "actual_codes": [
+          "E0001"
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "id": "patterns53_wrong_pattern_type",
+        "path": "selfhost/tests/patterns53/programs/wrong_pattern_type.yv",
+        "source_sha256": "41c10a824e07ba524d7d6fddd9700c60cc942a942c2149b388d4f7996a678aec",
+        "kind": "reject",
+        "reference_diagnostic": "E0001",
+        "selfhost_diagnostic": "E0001",
+        "actual_codes": [
+          "E0001"
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "id": "patterns53_unknown_variant",
+        "path": "selfhost/tests/patterns53/programs/unknown_variant.yv",
+        "source_sha256": "df58dfea2902936fbf9e58fba28f54a1ae1cc7038b9947a863cb280b34f9b1c7",
+        "kind": "reject",
+        "reference_diagnostic": "E0010",
+        "selfhost_diagnostic": "E0010",
+        "actual_codes": [
+          "E0010"
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "id": "patterns53_wrong_arity",
+        "path": "selfhost/tests/patterns53/programs/wrong_arity.yv",
+        "source_sha256": "2953359325b6708d94d17e6fb188312c967ca43d8b3f89ed0baea8566038519c",
+        "kind": "reject",
+        "reference_diagnostic": "E0012",
+        "selfhost_diagnostic": "E0012",
+        "actual_codes": [
+          "E0012"
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "id": "patterns53_borrowed_move",
+        "path": "selfhost/tests/patterns53/programs/borrowed_move.yv",
+        "source_sha256": "8c4ebecb466e206c9fbf61b411cd381cffc57ab0d07ac517d627ac233671f6ca",
+        "kind": "reject",
+        "reference_diagnostic": "E0401",
+        "selfhost_diagnostic": "E0401",
+        "actual_codes": [
+          "E0401"
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "id": "patterns53_borrowed_root_move",
+        "path": "selfhost/tests/patterns53/programs/borrowed_root_move.yv",
+        "source_sha256": "e65fdeca8d1963335b9508b64522e54903ce253a5feebb2c0198ae7889f8faec",
+        "kind": "reject",
+        "reference_diagnostic": "E0401",
+        "selfhost_diagnostic": "E0401",
+        "actual_codes": [
+          "E0401"
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "id": "patterns53_source_mutation",
+        "path": "selfhost/tests/patterns53/programs/source_mutation.yv",
+        "source_sha256": "8dbf868cba8a4ce1ceae48c38c911e156be377c0c59e19c0ea54186a6f5b3963",
+        "kind": "reject",
+        "reference_diagnostic": "E0102",
+        "selfhost_diagnostic": "U0001",
+        "actual_codes": [
+          "E0102"
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "id": "patterns53_borrowed_mutation",
+        "path": "selfhost/tests/patterns53/programs/borrowed_mutation.yv",
+        "source_sha256": "fc71faf29beb24692dab1204ca3f7524587ad2ba5c6730085dc338ce6e85641d",
+        "kind": "reject",
+        "reference_diagnostic": "E0101",
+        "selfhost_diagnostic": "E0101",
+        "actual_codes": [
+          "E0101"
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "id": "patterns53_branch_move_join",
+        "path": "selfhost/tests/patterns53/programs/branch_move_join.yv",
+        "source_sha256": "f68db6539dd428973d77b7c08b948460536a786733d9e8d84791d25912a86290",
+        "kind": "reject",
+        "reference_diagnostic": "E0402",
+        "selfhost_diagnostic": "E0402",
+        "actual_codes": [
+          "E0402"
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "id": "patterns53_arm_type",
+        "path": "selfhost/tests/patterns53/programs/arm_type.yv",
+        "source_sha256": "d0f13f8b6690f95393d3aee418d7a4c3a34b15e11051d109bd72bca18a665214",
+        "kind": "reject",
+        "reference_diagnostic": "E0001",
+        "selfhost_diagnostic": "E0001",
+        "actual_codes": [
+          "E0001"
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "id": "patterns53_binding_scope",
+        "path": "selfhost/tests/patterns53/programs/binding_scope.yv",
+        "source_sha256": "e08bb43faa849e8ccc89fb30200c037f4b40191ba4f88c1dd20cb66a4203fa4a",
+        "kind": "reject",
+        "reference_diagnostic": "E0010",
+        "selfhost_diagnostic": "E0010",
+        "actual_codes": [
+          "E0010"
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "id": "patterns53_duplicate_binding",
+        "path": "selfhost/tests/patterns53/programs/duplicate_binding.yv",
+        "source_sha256": "6f513ba7d5417879897235b92e87567d67c5e47cd2fc65956b63a9170625967a",
+        "kind": "reject",
+        "reference_diagnostic": "E0011",
+        "selfhost_diagnostic": "E0011",
+        "actual_codes": [
+          "E0011"
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "id": "patterns53_escaping_view",
+        "path": "selfhost/tests/patterns53/programs/escaping_view.yv",
+        "source_sha256": "2ae45f41b21ea89776a5dd4d637318813d20622f8c534085b096699f4706cb3c",
+        "kind": "reject",
+        "reference_diagnostic": "E0305",
+        "selfhost_diagnostic": "U0001",
+        "actual_codes": [
+          "E0305"
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "id": "patterns53_construct_wrong_payload",
+        "path": "selfhost/tests/patterns53/programs/construct_wrong_payload.yv",
+        "source_sha256": "fb7639d12bcf24ad134d7f7c452f529de9beb901e662ee42c57ac9ef7999e088",
+        "kind": "reject",
+        "reference_diagnostic": "E0001",
+        "selfhost_diagnostic": "E0001",
+        "actual_codes": [
+          "E0001"
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "id": "patterns53_construct_missing_payload",
+        "path": "selfhost/tests/patterns53/programs/construct_missing_payload.yv",
+        "source_sha256": "5bbf18fb62be7208e0bf19c4a70b0e5aa3319e66d6afb438f1e67dffcf19b510",
+        "kind": "reject",
+        "reference_diagnostic": "E0018",
+        "selfhost_diagnostic": "E0018",
+        "actual_codes": [
+          "E0018"
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "id": "patterns53_recursive_layout",
+        "path": "selfhost/tests/patterns53/programs/recursive_layout.yv",
+        "source_sha256": "700967ea2fa8f7e88c652276b54b84242600c05df5f4e09fda4644ceb22fb78f",
+        "kind": "reject",
+        "reference_diagnostic": "E0017",
+        "selfhost_diagnostic": "E0017",
+        "actual_codes": [
+          "E0017"
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "id": "patterns53_optional_owned_string",
+        "path": "selfhost/tests/patterns53/programs/optional_owned_string.yv",
+        "source_sha256": "16bce203e86d0c5da472f7d0ff25dfbfc15f669b73ead725157a751707632d7d",
+        "kind": "run",
+        "reference_diagnostic": null,
+        "selfhost_diagnostic": null,
+        "actual_codes": [],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "id": "patterns53_optional_owned_enum",
+        "path": "selfhost/tests/patterns53/programs/optional_owned_enum.yv",
+        "source_sha256": "319251be09c7979f762995c3d668faeac75ff66f11287aae165548d49f25ab91",
+        "kind": "run",
+        "reference_diagnostic": null,
+        "selfhost_diagnostic": null,
+        "actual_codes": [],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "id": "patterns53_result_owned_error",
+        "path": "selfhost/tests/patterns53/programs/result_owned_error.yv",
+        "source_sha256": "0a1021cfb3131d59f2208228ba36330d16a433a17c6bcc1de66910766f6b2835",
+        "kind": "run",
+        "reference_diagnostic": null,
+        "selfhost_diagnostic": null,
+        "actual_codes": [],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "id": "patterns53_mixed_arguments",
+        "path": "selfhost/tests/patterns53/programs/mixed_arguments.yv",
+        "source_sha256": "1d48f07eea5a361f372fa1234db9808931716b29818df147a55d83734c4fd74f",
+        "kind": "run",
+        "reference_diagnostic": null,
+        "selfhost_diagnostic": null,
+        "actual_codes": [],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "id": "patterns53_borrow_return",
+        "path": "selfhost/tests/patterns53/programs/borrow_return.yv",
+        "source_sha256": "c6714ede4c331fa470ddaadd4131c4ace06234a45433ed9e1d7c0ee8df56715f",
+        "kind": "run",
+        "reference_diagnostic": null,
+        "selfhost_diagnostic": null,
+        "actual_codes": [],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "id": "patterns53_aggregate_payload",
+        "path": "selfhost/tests/patterns53/programs/aggregate_payload.yv",
+        "source_sha256": "76c23bc62840065c19db3a63c97d0d4087b6ac3885ede87089085e7d5cf89afa",
+        "kind": "run",
+        "reference_diagnostic": null,
+        "selfhost_diagnostic": null,
+        "actual_codes": [],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "id": "patterns53_empty_enum",
+        "path": "selfhost/tests/patterns53/programs/empty_enum.yv",
+        "source_sha256": "ccf04adb08ef2f5699fa0a609001472371bf9cd78da5df3fbf283c78cd43b2df",
+        "kind": "run",
+        "reference_diagnostic": null,
+        "selfhost_diagnostic": null,
+        "actual_codes": [],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "id": "patterns53_empty_match",
+        "path": "selfhost/tests/patterns53/programs/empty_match.yv",
+        "source_sha256": "71cc7791b61117aa881755a7255a15089ff7af939d2ba75d76eb0815bdbd15d9",
+        "kind": "reject",
+        "reference_diagnostic": "E0602",
+        "selfhost_diagnostic": "E0602",
+        "actual_codes": [
+          "E0602"
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "id": "patterns53_duplicate_field",
+        "path": "selfhost/tests/patterns53/programs/duplicate_field.yv",
+        "source_sha256": "9c836889d15b3ee8ba27a9cbb62755e4bdf09c3fadc0e4acd7248173ce41151b",
+        "kind": "reject",
+        "reference_diagnostic": "E0011",
+        "selfhost_diagnostic": "E0011",
+        "actual_codes": [
+          "E0011"
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "id": "patterns53_unknown_field",
+        "path": "selfhost/tests/patterns53/programs/unknown_field.yv",
+        "source_sha256": "abb106c637047e662866243b008b1d655c991357801681aa3649c944de017b77",
+        "kind": "reject",
+        "reference_diagnostic": "E0010",
+        "selfhost_diagnostic": "E0010",
+        "actual_codes": [
+          "E0010"
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "id": "patterns53_payload_equality",
+        "path": "selfhost/tests/patterns53/programs/payload_equality.yv",
+        "source_sha256": "4d3756680733dfd4a1ef97972fe89bbc36540c8c0994792b329bcebdd1ab9d7d",
+        "kind": "reject",
+        "reference_diagnostic": "E0501",
+        "selfhost_diagnostic": "E0501",
+        "actual_codes": [
+          "E0501"
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "id": "patterns53_drop_before_body",
+        "path": "selfhost/tests/patterns53/programs/drop_before_body.yv",
+        "source_sha256": "018d677027d716ffc7a86359fdf7ed23ae96c1bcae685033f6cdfebf5d35a510",
+        "kind": "run",
+        "reference_diagnostic": null,
+        "selfhost_diagnostic": null,
+        "actual_codes": [],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "id": "patterns53_escape_local_view",
+        "path": "selfhost/tests/patterns53/programs/escape_local_view.yv",
+        "source_sha256": "80e6cb826cc44ebf5c90f90a802834a20a254ab55b612b5969825594882ba06c",
+        "kind": "reject",
+        "reference_diagnostic": "E0303",
+        "selfhost_diagnostic": "U0001",
+        "actual_codes": [
+          "E0303"
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "id": "patterns53_escape_temporary_view",
+        "path": "selfhost/tests/patterns53/programs/escape_temporary_view.yv",
+        "source_sha256": "fcf154d75babe154438e6d8dd6990daf3ba10fe785041028130f0d05d07159dc",
+        "kind": "reject",
+        "reference_diagnostic": "E0305",
+        "selfhost_diagnostic": "U0001",
+        "actual_codes": [
+          "E0305",
+          "E0305"
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "id": "patterns53_borrow_wrong_source",
+        "path": "selfhost/tests/patterns53/programs/borrow_wrong_source.yv",
+        "source_sha256": "810f2d63c0c9b866a61e8f335566a8a79fd2d8576048665f76c00a8c343c80d3",
+        "kind": "reject",
+        "reference_diagnostic": "E0303",
+        "selfhost_diagnostic": "E0303",
+        "actual_codes": [
+          "E0303"
+        ],
+        "exit_code": 1,
+        "passed": true
+      }
+    ],
+    "passed": true
+  },
+  "selfhost_migration_check": {
+    "binary": "compiler/target/batch53/candidate",
+    "binary_sha256": "34bdbc331828f6bb3974c8379899751d74bc7c4c04de6f260cf412e1970f18e1",
+    "checks": [
+      {
+        "name": "escaping_view",
+        "exit_code": 1,
+        "stdout": "{\"schema\":\"yavo-diagnostics/p0\",\"frontend\":\"selfhost\",\"diagnostic_mode\":\"first-error\",\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/patterns53/programs/escaping_view.yv\",\"source_sha256\":\"2ae45f41b21ea89776a5dd4d637318813d20622f8c534085b096699f4706cb3c\",\"sources\":[{\"path\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/patterns53/programs/escaping_view.yv\",\"bytes\":138,\"sha256\":\"2ae45f41b21ea89776a5dd4d637318813d20622f8c534085b096699f4706cb3c\"}],\"error_count\":1,\"warning_count\":0,\"diagnostics\":[{\"severity\":\"ERROR\",\"code\":\"U0001\",\"message\":\"a match result view requires an immutable parameter source\",\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/patterns53/programs/escaping_view.yv\",\"line\":2,\"column\":83,\"end_line\":2,\"end_column\":84,\"primary\":{\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/patterns53/programs/escaping_view.yv\",\"line\":2,\"column\":83,\"end_line\":2,\"end_column\":84,\"start\":108,\"end\":109},\"notes\":[],\"fixes\":[]}]}\n",
+        "stderr": ""
+      },
+      {
+        "name": "escape_local_view",
+        "exit_code": 1,
+        "stdout": "{\"schema\":\"yavo-diagnostics/p0\",\"frontend\":\"selfhost\",\"diagnostic_mode\":\"first-error\",\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/patterns53/programs/escape_local_view.yv\",\"source_sha256\":\"80e6cb826cc44ebf5c90f90a802834a20a254ab55b612b5969825594882ba06c\",\"sources\":[{\"path\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/patterns53/programs/escape_local_view.yv\",\"bytes\":108,\"sha256\":\"80e6cb826cc44ebf5c90f90a802834a20a254ab55b612b5969825594882ba06c\"}],\"error_count\":1,\"warning_count\":0,\"diagnostics\":[{\"severity\":\"ERROR\",\"code\":\"U0001\",\"message\":\"matching a transient owned view requires tracked pattern lifetimes\",\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/patterns53/programs/escape_local_view.yv\",\"line\":2,\"column\":9,\"end_line\":2,\"end_column\":14,\"primary\":{\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/patterns53/programs/escape_local_view.yv\",\"line\":2,\"column\":9,\"end_line\":2,\"end_column\":14,\"start\":64,\"end\":69},\"notes\":[],\"fixes\":[]}]}\n",
+        "stderr": ""
+      },
+      {
+        "name": "borrow_wrong_source",
+        "exit_code": 1,
+        "stdout": "{\"schema\":\"yavo-diagnostics/p0\",\"frontend\":\"selfhost\",\"diagnostic_mode\":\"first-error\",\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/patterns53/programs/borrow_wrong_source.yv\",\"source_sha256\":\"810f2d63c0c9b866a61e8f335566a8a79fd2d8576048665f76c00a8c343c80d3\",\"sources\":[{\"path\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/patterns53/programs/borrow_wrong_source.yv\",\"bytes\":131,\"sha256\":\"810f2d63c0c9b866a61e8f335566a8a79fd2d8576048665f76c00a8c343c80d3\"}],\"error_count\":1,\"warning_count\":0,\"diagnostics\":[{\"severity\":\"ERROR\",\"code\":\"E0303\",\"message\":\"the returned value points into a parameter that of does not list\",\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/patterns53/programs/borrow_wrong_source.yv\",\"line\":2,\"column\":37,\"end_line\":2,\"end_column\":42,\"primary\":{\"file\":\"/data1/workspace/github/workspace/yavo/selfhost/tests/patterns53/programs/borrow_wrong_source.yv\",\"line\":2,\"column\":37,\"end_line\":2,\"end_column\":42,\"start\":67,\"end\":72},\"notes\":[],\"fixes\":[]}]}\n",
+        "stderr": ""
+      }
+    ]
+  },
+  "safety_reclassifications": [
+    {
+      "path": "selfhost/tests/patterns53/programs/escaping_view.yv",
+      "bytes": 138,
+      "sha256": "2ae45f41b21ea89776a5dd4d637318813d20622f8c534085b096699f4706cb3c",
+      "original_bytes_unchanged": true,
+      "batch53_kind": "unsupported",
+      "batch54_kind": "reject",
+      "stage0_actual_codes": [
+        "E0305"
+      ],
+      "selfhost_actual_codes": [
+        "U0001"
+      ],
+      "selfhost_still_conservative_boundary": true,
+      "counts_as_feature_coverage_gain": false
+    },
+    {
+      "path": "selfhost/tests/patterns53/programs/escape_local_view.yv",
+      "bytes": 108,
+      "sha256": "80e6cb826cc44ebf5c90f90a802834a20a254ab55b612b5969825594882ba06c",
+      "original_bytes_unchanged": true,
+      "batch53_kind": "unsupported",
+      "batch54_kind": "reject",
+      "stage0_actual_codes": [
+        "E0303"
+      ],
+      "selfhost_actual_codes": [
+        "U0001"
+      ],
+      "selfhost_still_conservative_boundary": true,
+      "counts_as_feature_coverage_gain": false
+    },
+    {
+      "path": "selfhost/tests/patterns53/programs/borrow_wrong_source.yv",
+      "bytes": 131,
+      "sha256": "810f2d63c0c9b866a61e8f335566a8a79fd2d8576048665f76c00a8c343c80d3",
+      "original_bytes_unchanged": true,
+      "batch53_kind": "unsupported",
+      "batch54_kind": "reject",
+      "stage0_actual_codes": [
+        "E0303"
+      ],
+      "selfhost_actual_codes": [
+        "E0303"
+      ],
+      "selfhost_still_conservative_boundary": false,
+      "counts_as_feature_coverage_gain": false
+    }
+  ],
+  "frozen_corpus": {
+    "original_paths": 622,
+    "previous_stage0_accepted": 394,
+    "original_sources_edited": false,
+    "denominator_changed": false,
+    "added_tests_enter_frozen_corpus": false,
+    "full_corpus_acceptance_delta": "central Core sweep will record separately; this report covers the 59-pattern contract and selected P0 diagnostics"
+  },
+  "p0_fixture_changes": {
+    "new_error_fixtures": [
+      "compiler/tests/p0/errors_expression_loans.yv"
+    ],
+    "new_run_fixtures": 0,
+    "new_panic_fixtures": 0,
+    "p0_rs_edited": false
+  },
+  "independent_review": {
+    "agent": "/root/enum_tests",
+    "mode": "read-only",
+    "finding_fixed": "InoutPlace address provenance must survive nonborrow target HIR type",
+    "final_result": "No further concrete issue found in final snapshot/cleanup/source-pin increment; no file edits or extra compilation by reviewer."
+  }
+}

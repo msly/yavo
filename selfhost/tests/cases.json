@@ -8125,10 +8125,11 @@
     },
     {
       "id": "patterns53_escaping_view",
-      "kind": "unsupported",
+      "kind": "reject",
       "file": "patterns53/programs/escaping_view.yv",
       "diagnostic": "U0001",
-      "note": "stage0 accepts but emitted view outlives moved binding; selfhost conservatively rejects"
+      "note": "Batch54 safety reclassification: stage0 now rejects the view with E0305 before the match arm drops its owned binding; original source and selfhost diagnostic remain unchanged. Batch53 recorded this input as stage0-accepted unsupported.",
+      "reference_diagnostic": "E0305"
     },
     {
       "id": "patterns53_construct_wrong_payload",
@@ -8227,10 +8228,11 @@
     },
     {
       "id": "patterns53_escape_local_view",
-      "kind": "unsupported",
+      "kind": "reject",
       "file": "patterns53/programs/escape_local_view.yv",
       "diagnostic": "U0001",
-      "note": "stage0 omits match arm result loans; candidate rejects escaping view"
+      "note": "Batch54 safety reclassification: stage0 now preserves match result provenance and rejects with E0303; original source and selfhost diagnostic remain unchanged. Batch53 recorded this input as stage0-accepted unsupported.",
+      "reference_diagnostic": "E0303"
     },
     {
       "id": "patterns53_escape_temporary_view",
@@ -8248,10 +8250,11 @@
     },
     {
       "id": "patterns53_borrow_wrong_source",
-      "kind": "unsupported",
+      "kind": "reject",
       "file": "patterns53/programs/borrow_wrong_source.yv",
       "diagnostic": "E0303",
-      "note": "stage0 currently loses match arm result loans; selfhost rejects return sourced from an unlisted parameter"
+      "note": "Batch54 safety reclassification: stage0 now preserves match result provenance and rejects with E0303; original source and selfhost diagnostic remain unchanged. Batch53 recorded this input as stage0-accepted unsupported.",
+      "reference_diagnostic": "E0303"
     }
   ],
   "promotions": [

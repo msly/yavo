@@ -190,6 +190,10 @@ pub struct HPlace {
 }
 
 pub struct HExpr {
+    /// Borrow provenance of this evaluated value, captured before another branch or
+    /// expression can replace a local's loan state. `None` denotes an internal HIR
+    /// node that has not crossed the expression-checking boundary yet.
+    result_loans: Option<Vec<Loan>>,
     pub kind: HExprKind,
     pub ty: Ty,
     /// Full source range, used for diagnostics.
@@ -511,6 +515,9 @@ struct LocalState {
     depth: usize,
     /// For a value that carries a borrow: the variables it points into.
     loans: Vec<Loan>,
+    /// Copy pattern bindings retain their source-place access restriction in `loans`,
+    /// but the copied value points only where the scrutinee's contents pointed.
+    value_loans: Option<Vec<Loan>>,
     /// A key bound by `for k, v in m`: keys are never writable (A5).
     map_key: bool,
     /// A lock guard bound by `with`: borrows taken through it cannot leave the block (P4).
@@ -1031,6 +1038,8 @@ struct PatCx<'a> {
     kind: LocalKind,
     /// What a binding into the scrutinee points into.
     loans: &'a [Loan],
+    /// Borrow provenance of copied payload contents, without the source-place pin.
+    value_loans: &'a [Loan],
     /// Last statement of the arm, if it has statements.
     scope_end: Option<usize>,
     /// The arm belongs to a `match` expression.
@@ -1485,7 +1494,7 @@ pub fn check(prog: &Program, diags: &mut Diags) -> Option<HProgram> {
 }
 
 fn err_expr(span: Span) -> HExpr {
-    HExpr { kind: HExprKind::Error, ty: Ty::Error, span, at: span }
+    HExpr { result_loans: None, kind: HExprKind::Error, ty: Ty::Error, span, at: span }
 }
 
 fn literal_magnitude(e: &Expr) -> Option<u128> {
@@ -1916,14 +1925,14 @@ impl Checker<'_> {
                 self.diags.error("E0001", init.value.span, "`Arena[T]{}` takes no fields; insert elements with `add`");
                 return err_expr(span);
             }
-            return HExpr { kind: HExprKind::ArenaNew, ty, span, at: span };
+            return HExpr { result_loans: None, kind: HExprKind::ArenaNew, ty, span, at: span };
         }
         if name == "Id" {
             self.diags.error("E0001", name_span, "an Id is produced by `Arena.add`; it cannot be constructed directly");
             return err_expr(span);
         }
         if name == "String" && inits.is_empty() {
-            return HExpr { kind: HExprKind::EmptyString, ty: Ty::String, span, at: span };
+            return HExpr { result_loans: None, kind: HExprKind::EmptyString, ty: Ty::String, span, at: span };
         }
         // The built-in empty constructor has the same element rules as a typed [].
         if name == "Vec" {
@@ -1940,7 +1949,7 @@ impl Checker<'_> {
                 self.diags.error("E0001", init.value.span, "`Deque[T]{}` takes no fields; insert elements with `pushBack` or `pushFront`");
                 return err_expr(span);
             }
-            return HExpr { kind: HExprKind::DequeNew, ty, span, at: span };
+            return HExpr { result_loans: None, kind: HExprKind::DequeNew, ty, span, at: span };
         }
         // `Set[T]{}`: an empty set.
         if name == "Set" {
@@ -1953,7 +1962,7 @@ impl Checker<'_> {
             if ty == Ty::Error {
                 return err_expr(span);
             }
-            return HExpr { kind: HExprKind::MapLit(Vec::new()), ty, span, at: span };
+            return HExpr { result_loans: None, kind: HExprKind::MapLit(Vec::new()), ty, span, at: span };
         }
         // `Wrapper[String]{...}`, or a generic struct's own name inside its methods.
         let generic = if !targs.is_empty() || self.subst.contains_key(name) || self.gen_structs.contains_key(name) {
@@ -2053,7 +2062,7 @@ impl Checker<'_> {
         for (fi, (_, fty)) in decl.iter().enumerate() {
             if !seen[fi] && matches!(fty, Ty::Opt(_)) {
                 seen[fi] = true;
-                out.push((fi, HExpr { kind: HExprKind::None, ty: *fty, span, at: span }));
+                out.push((fi, HExpr { result_loans: None, kind: HExprKind::None, ty: *fty, span, at: span }));
             }
         }
         let missing: Vec<String> =
@@ -2067,7 +2076,7 @@ impl Checker<'_> {
         if !ok {
             return err_expr(span);
         }
-        HExpr { kind: HExprKind::StructLit { fields: out }, ty: sty, span, at: span }
+        HExpr { result_loans: None, kind: HExprKind::StructLit { fields: out }, ty: sty, span, at: span }
     }
 
     /// `T: Drop` needs exactly `fn drop(inout self)` (V10, E0802); the name `drop` is reserved
@@ -2299,7 +2308,7 @@ impl Checker<'_> {
             if j != iface && dyn_base(j) == dyn_base(iface) {
                 let ((s1, y1), (s2, y2)) = (dyn_caps(j), dyn_caps(iface));
                 if (s1 || !s2) && (y1 || !y2) {
-                    return HExpr { ty: Ty::Dyn(iface), ..h };
+                    return HExpr { result_loans: None, ty: Ty::Dyn(iface), ..h };
                 }
             }
             return h;
@@ -2319,7 +2328,7 @@ impl Checker<'_> {
         }
         let (span, at) = (h.span, h.at);
         let h = self.consume(h, cx);
-        HExpr { kind: HExprKind::ToDyn { value: Box::new(h), imp }, ty: Ty::Dyn(iface), span, at }
+        HExpr { result_loans: None, kind: HExprKind::ToDyn { value: Box::new(h), imp }, ty: Ty::Dyn(iface), span, at }
     }
 
     /// Whether values of `t` are compared through a user protocol: `(cmp, eq)` functions.
@@ -2337,11 +2346,11 @@ impl Checker<'_> {
         let addr = |r: HExpr| {
             let (s, a) = (r.span, r.at);
             let ty = Ty::Ref(ref_of(r.ty));
-            HExpr { kind: HExprKind::AddrOf(Box::new(r)), ty, span: s, at: a }
+            HExpr { result_loans: None, kind: HExprKind::AddrOf(Box::new(r)), ty, span: s, at: a }
         };
         if let Some(fi) = cmp {
             let ord = self.structs[self.struct_index["Ordering"]].ty;
-            let call = HExpr { kind: HExprKind::Call { func: fi, args: vec![l, addr(r)] }, ty: ord, span, at };
+            let call = HExpr { result_loans: None, kind: HExprKind::Call { func: fi, args: vec![l, addr(r)] }, ty: ord, span, at };
             // Less 0, Equal 1, Greater 2.
             let (tag, eq) = match op {
                 BinOp::Lt => (0, true),
@@ -2351,7 +2360,7 @@ impl Checker<'_> {
                 BinOp::Eq => (1, true),
                 _ => (1, false),
             };
-            return Some(HExpr { kind: HExprKind::TagTest { value: Box::new(call), tag, eq }, ty: Ty::Bool, span, at });
+            return Some(HExpr { result_loans: None, kind: HExprKind::TagTest { value: Box::new(call), tag, eq }, ty: Ty::Bool, span, at });
         }
         let fi = eq?;
         if !matches!(op, BinOp::Eq | BinOp::Ne) {
@@ -2360,9 +2369,9 @@ impl Checker<'_> {
                 .note("declare `Ord` and write `fn cmp(self, other: &T) -> Ordering`");
             return Some(err_expr(span));
         }
-        let call = HExpr { kind: HExprKind::Call { func: fi, args: vec![l, addr(r)] }, ty: Ty::Bool, span, at };
+        let call = HExpr { result_loans: None, kind: HExprKind::Call { func: fi, args: vec![l, addr(r)] }, ty: Ty::Bool, span, at };
         if op == BinOp::Ne {
-            return Some(HExpr { kind: HExprKind::Not(Box::new(call)), ty: Ty::Bool, span, at });
+            return Some(HExpr { result_loans: None, kind: HExprKind::Not(Box::new(call)), ty: Ty::Bool, span, at });
         }
         Some(call)
     }
@@ -3214,7 +3223,7 @@ impl Checker<'_> {
                 ccx.locals[pid].loans = vec![Loan::Local(pid)];
             }
             ids.push(pid);
-            let cap = HExpr { kind: HExprKind::Local(id), ty, span: e.span, at: e.span };
+            let cap = HExpr { result_loans: None, kind: HExprKind::Local(id), ty, span: e.span, at: e.span };
             cap_exprs.push(if saved { self.consume(cap, cx) } else { cap });
         }
         for ((n, sp, t), &pt) in params.iter().zip(param_tys) {
@@ -3284,7 +3293,7 @@ impl Checker<'_> {
         }
         let tramp = self.tramps.len();
         self.tramps.push(Tramp { func, caps: caps.iter().map(|c| c.ty).collect(), elem, by_cmp: false, saved: false });
-        HExpr { kind: HExprKind::SortBy { place, tramp, caps }, ty: Ty::Unit, span, at }
+        HExpr { result_loans: None, kind: HExprKind::SortBy { place, tramp, caps }, ty: Ty::Unit, span, at }
     }
 
     /// `m.update(key, initial, (v) => ...)`: the closure runs exactly once, on the stored value
@@ -3326,7 +3335,7 @@ impl Checker<'_> {
             self.diags.error("E0102", fa.span, format!("`{local}` is being updated, so the closure cannot use it"));
             return err_expr(span);
         }
-        HExpr { kind: HExprKind::MapUpdate { place, key: Box::new(kh), init: Box::new(ih), func, caps }, ty: Ty::Unit, span, at }
+        HExpr { result_loans: None, kind: HExprKind::MapUpdate { place, key: Box::new(kh), init: Box::new(ih), func, caps }, ty: Ty::Unit, span, at }
     }
 
     fn lookup(&self, cx: &FnCx, name: &str) -> Option<LocalId> {
@@ -3361,6 +3370,7 @@ impl Checker<'_> {
             scope_end,
             depth,
             loans: Vec::new(),
+            value_loans: None,
             map_key: false,
             guard: false,
             pinned: false,
@@ -3480,13 +3490,13 @@ impl Checker<'_> {
             }
             let (span, at) = (h.span, h.at);
             let h = self.consume(h, cx);
-            return HExpr { kind: HExprKind::Ok(Some(Box::new(h))), ty: expected, span, at };
+            return HExpr { result_loans: None, kind: HExprKind::Ok(Some(Box::new(h))), ty: expected, span, at };
         }
         // A vector is viewed as a slice where `[]T` is expected (section 8 whitelist).
         if let (Ty::Slice(s), Ty::Vec(v)) = (expected, h.ty) {
             if slice_elem(s) == vec_elem(v) {
                 let (span, at) = (h.span, h.at);
-                return HExpr { kind: HExprKind::SliceOf(Box::new(h)), ty: expected, span, at };
+                return HExpr { result_loans: None, kind: HExprKind::SliceOf(Box::new(h)), ty: expected, span, at };
             }
         }
         let Ty::Opt(o) = expected else { return h };
@@ -3501,7 +3511,7 @@ impl Checker<'_> {
         }
         let (span, at) = (h.span, h.at);
         let h = self.consume(h, cx);
-        HExpr { kind: HExprKind::Some(Box::new(h)), ty: expected, span, at }
+        HExpr { result_loans: None, kind: HExprKind::Some(Box::new(h)), ty: expected, span, at }
     }
 
     /// `coerce`, then report a type mismatch.
@@ -3522,7 +3532,7 @@ impl Checker<'_> {
                     _ => unreachable!(),
                 };
                 let (span, at) = (h.span, h.at);
-                HExpr { kind: HExprKind::Deref(Box::new(h)), ty: inner, span, at }
+                HExpr { result_loans: None, kind: HExprKind::Deref(Box::new(h)), ty: inner, span, at }
             }
             _ => h,
         }
@@ -3551,7 +3561,7 @@ impl Checker<'_> {
             }
             mut_borrowed.push(place.local);
             let ty = place.ty;
-            let h = HExpr { kind: HExprKind::InoutPlace(place), ty, span, at: span };
+            let h = HExpr { result_loans: None, kind: HExprKind::InoutPlace(place), ty, span, at: span };
             if let Some(t) = exp {
                 self.expect_ty(&h, t);
             }
@@ -3582,7 +3592,7 @@ impl Checker<'_> {
                 self.check_not_borrowed(cx, id, inner.span, "borrow mutably");
                 mut_borrowed.push(id);
                 let place = HPlace { local: id, path: Vec::new(), ty: target };
-                return HExpr { kind: HExprKind::InoutPlace(place), ty: target, span, at: span };
+                return HExpr { result_loans: None, kind: HExprKind::InoutPlace(place), ty: target, span, at: span };
             }
         }
         match cx.locals[id].kind {
@@ -3606,7 +3616,7 @@ impl Checker<'_> {
         }
         self.check_not_borrowed(cx, id, inner.span, "borrow mutably");
         mut_borrowed.push(id);
-        let h = HExpr { kind: HExprKind::InoutArg(id), ty: cx.locals[id].ty, span, at: span };
+        let h = HExpr { result_loans: None, kind: HExprKind::InoutArg(id), ty: cx.locals[id].ty, span, at: span };
         if let Some(t) = exp {
             self.expect_ty(&h, t);
         }
@@ -3682,7 +3692,7 @@ impl Checker<'_> {
             self.diags.error("E0701", name_span, format!("a channel cannot carry `{elem}`: it is not `Send`")).note(hint);
             return err_expr(span);
         }
-        HExpr { kind: HExprKind::ChanNew(Box::new(cap)), ty, span, at: name_span }
+        HExpr { result_loans: None, kind: HExprKind::ChanNew(Box::new(cap)), ty, span, at: name_span }
     }
 
     /// `SendError[T]` (stdlib contract §6): `enum { Closed(value: T) }`, made on first use.
@@ -3714,7 +3724,7 @@ impl Checker<'_> {
         cx.locals[local].pinned = true;
         cx.locals[local].used = true;
         cx.thread_scopes.push(local);
-        let mut stmts = vec![HStmt { kind: HStmtKind::Let { local, init: HExpr { kind: HExprKind::ScopeNew, ty, span, at: span } }, span }];
+        let mut stmts = vec![HStmt { kind: HStmtKind::Let { local, init: HExpr { result_loans: None, kind: HExprKind::ScopeNew, ty, span, at: span } }, span }];
         stmts.extend(self.stmts(&body.stmts, cx));
         cx.thread_scopes.pop();
         self.pop_scope(cx);
@@ -3831,7 +3841,7 @@ impl Checker<'_> {
         }
         self.store_loans(cx, scope, loans, span, false);
         let ty = Ty::Sync(sync_of(SyncKind::Join, ret));
-        HExpr { kind: HExprKind::Spawn { scope, func, args }, ty, span, at: span }
+        HExpr { result_loans: None, kind: HExprKind::Spawn { scope, func, args }, ty, span, at: span }
     }
 
     /// Thread capability propagation for an erased Heap environment needs a public
@@ -3990,7 +4000,7 @@ impl Checker<'_> {
         }
         let h = self.consume(h, cx);
         let ty = Ty::Sync(sync_of(kind, h.ty));
-        HExpr { kind: HExprKind::SyncNew { kind, value: Box::new(h) }, ty, span, at }
+        HExpr { result_loans: None, kind: HExprKind::SyncNew { kind, value: Box::new(h) }, ty, span, at }
     }
 
     /// `&place` where an `&inout T` is expected (A7): the place must be writable, and nothing
@@ -4021,7 +4031,7 @@ impl Checker<'_> {
                     self.check_exclusive(cx, id, span);
                 }
                 let ty = Ty::RefMut(ref_mut_of(place.ty));
-                HExpr { kind: HExprKind::InoutPlace(place), ty, span, at: span }
+                HExpr { result_loans: None, kind: HExprKind::InoutPlace(place), ty, span, at: span }
             }
             ExprKind::Field { base, name } => {
                 let pointer = self.mutable_address(base, cx);
@@ -4033,8 +4043,8 @@ impl Checker<'_> {
                     self.diags.error("E0001", span, format!("a value of type `{}` has no field `{name}`", b.ty));
                     return err_expr(span);
                 };
-                let field = HExpr { kind: HExprKind::Field { base: Box::new(b), field }, ty, span, at: span };
-                HExpr { kind: HExprKind::AddrOf(Box::new(field)), ty: Ty::RefMut(ref_mut_of(ty)), span, at: span }
+                let field = HExpr { result_loans: None, kind: HExprKind::Field { base: Box::new(b), field }, ty, span, at: span };
+                HExpr { result_loans: None, kind: HExprKind::AddrOf(Box::new(field)), ty: Ty::RefMut(ref_mut_of(ty)), span, at: span }
             }
             ExprKind::Index { base, index } => {
                 let pointer = self.mutable_address(base, cx);
@@ -4061,7 +4071,7 @@ impl Checker<'_> {
                 if !matches!(i.ty, Ty::Int(_) | Ty::Error) {
                     self.diags.error("E0001", i.span, format!("an index must be an integer, found `{}`", i.ty));
                 }
-                HExpr { kind: HExprKind::Index { base: Box::new(b), index: Box::new(i) },
+                HExpr { result_loans: None, kind: HExprKind::Index { base: Box::new(b), index: Box::new(i) },
                     ty: Ty::RefMut(ref_mut_of(vec_elem(v))), span, at: span }
             }
             ExprKind::Unary { op: UnOp::Deref, expr, .. } => {
@@ -4095,7 +4105,7 @@ impl Checker<'_> {
                 return err_expr(h.span);
             }
             let (span, at) = (h.span, h.at);
-            h = HExpr { kind: HExprKind::Unbox(Box::new(h)), ty, span, at };
+            h = HExpr { result_loans: None, kind: HExprKind::Unbox(Box::new(h)), ty, span, at };
         }
         h
     }
@@ -4214,6 +4224,14 @@ impl Checker<'_> {
 
     /// The variables a value of a borrow-carrying type points into.
     fn loans_of(&self, h: &HExpr, cx: &FnCx) -> Vec<Loan> {
+        // InoutPlace carries an address although its HIR type is the target's
+        // value type (e.g. String for `&owner.text`), rather than a Ref type.
+        if !h.ty.carries_borrow() && !matches!(h.kind, HExprKind::InoutPlace(_)) {
+            return Vec::new();
+        }
+        if let Some(loans) = &h.result_loans {
+            return loans.clone();
+        }
         let ret = h.ty;
         let recv_loans = |r: &HExpr| -> Vec<Loan> {
             match (&r.kind, r.ty) {
@@ -4255,7 +4273,7 @@ impl Checker<'_> {
             }
         };
         match &h.kind {
-            HExprKind::Local(id) | HExprKind::Move(id) => cx.locals[*id].loans.clone(),
+            HExprKind::Local(id) | HExprKind::Move(id) => cx.locals[*id].value_loans.as_ref().unwrap_or(&cx.locals[*id].loans).clone(),
             HExprKind::LetTemp { value, .. } => self.loans_of(value, cx),
             // A guard is `of` its mutex (stdlib contract §6).
             HExprKind::Lock { mutex, .. } => self.storage_loans(mutex, cx),
@@ -4402,6 +4420,50 @@ impl Checker<'_> {
             HExprKind::Index { base, .. } => self.storage_loans(base, cx),
             _ => vec![Loan::Temp],
         }
+    }
+
+    /// A control-flow value crosses a C cleanup boundary before its caller can
+    /// use it. Check it here, even if the caller only prints/discards it. A local
+    /// mutable-reference descriptor is transparent when its scope ends: expand
+    /// its pointee sources while that scope's state is still available. Real
+    /// storage, lock guards and branch temporaries may not escape the boundary.
+    fn branch_result(&mut self, mut value: HExpr, cx: &FnCx, surviving_depth: usize) -> HExpr {
+        if !value.ty.carries_borrow() {
+            return value;
+        }
+        let mut pending = self.loans_of(&value, cx);
+        let mut expanded = Vec::new();
+        let mut loans = Vec::new();
+        while let Some(loan) = pending.pop() {
+            if let Loan::Local(id) = loan {
+                let local = &cx.locals[id];
+                if local.depth > surviving_depth && matches!(local.ty, Ty::RefMut(_)) {
+                    if !expanded.contains(&id) {
+                        expanded.push(id);
+                        pending.extend(local.loans.iter().copied());
+                    }
+                    continue;
+                }
+            }
+            if !loans.contains(&loan) {
+                loans.push(loan);
+            }
+        }
+        for loan in &loans {
+            let reason = match *loan {
+                Loan::Temp => Some("a temporary is dropped before this expression's result can be used".to_string()),
+                Loan::Local(id) if cx.locals[id].depth > surviving_depth =>
+                    Some(format!("`{}` is dropped before this expression's result can be used", cx.locals[id].name)),
+                Loan::Local(_) => None,
+            };
+            if let Some(reason) = reason {
+                self.diags.error("E0305", value.span, format!("this value keeps a borrow, but {reason}"))
+                    .note("return an owned value, or borrow data declared outside this expression's branch");
+                return err_expr(value.span);
+            }
+        }
+        value.result_loans = Some(loans);
+        value
     }
 
     fn outlives(cx: &FnCx, s: LocalId, v: LocalId) -> bool {
@@ -4757,7 +4819,7 @@ impl Checker<'_> {
                 let id = cx.locals.len();
                 cx.locals.push(LocalState { name: name.clone(), ty, kind: LocalKind::Let,
                     used: true, span: *span, decl: 0, scope_end: 0, depth: cx.scopes.len(),
-                    loans: Vec::new(), map_key: false, guard: false, pinned: false });
+                    loans: Vec::new(), value_loans: None, map_key: false, guard: false, pinned: false });
                 cx.scopes.last_mut().unwrap().push(id);
             }
             (Pattern::Some(inner), Ty::Opt(o)) => self.assignment_pattern_types(inner, opt_inner(o), cx),
@@ -4944,11 +5006,11 @@ impl Checker<'_> {
         cx.locals[slot].used = true;
         cx.locals[slot].loans = slot_loans;
         stmts.push(HStmt { kind: HStmtKind::Let { local: slot, init: slot_h }, span });
-        let tv_expr = HExpr { kind: HExprKind::Local(tv), ty: cx.locals[tv].ty, span: value.span, at: value.span };
+        let tv_expr = HExpr { result_loans: None, kind: HExprKind::Local(tv), ty: cx.locals[tv].ty, span: value.span, at: value.span };
         let new = match op {
             None => self.consume(tv_expr, cx),
             Some(op) => {
-                let slot_expr = HExpr { kind: HExprKind::Local(slot), ty: cx.locals[slot].ty, span: place.span, at: place.span };
+                let slot_expr = HExpr { result_loans: None, kind: HExprKind::Local(slot), ty: cx.locals[slot].ty, span: place.span, at: place.span };
                 let mut lhs = self.deref(slot_expr);
                 for &fi in &path[1..] {
                     if fi == BOX_STEP {
@@ -4957,7 +5019,7 @@ impl Checker<'_> {
                     }
                     let Ty::Struct(sid) = lhs.ty else { unreachable!() };
                     let ty = self.structs[sid as usize].fields[fi].1;
-                    lhs = HExpr { kind: HExprKind::Field { base: Box::new(lhs), field: fi }, ty, span: target.span, at: target.span };
+                    lhs = HExpr { result_loans: None, kind: HExprKind::Field { base: Box::new(lhs), field: fi }, ty, span: target.span, at: target.span };
                 }
                 self.arith(op, lhs, tv_expr, op_span, span)
             }
@@ -5251,7 +5313,7 @@ impl Checker<'_> {
                         cx.locals[id].used = true;
                         self.check_not_borrowed(cx, id, target.span, if star.is_some() { "write through" } else { "assign to" });
                         let mut lhs =
-                            HExpr { kind: HExprKind::Local(id), ty: cx.locals[id].ty, span: root.span, at: root.span };
+                            HExpr { result_loans: None, kind: HExprKind::Local(id), ty: cx.locals[id].ty, span: root.span, at: root.span };
                         if through {
                             lhs = self.deref(lhs);
                         }
@@ -5267,7 +5329,7 @@ impl Checker<'_> {
                             }
                             let Ty::Struct(sid) = ty else { unreachable!() };
                             ty = self.structs[sid as usize].fields[fi].1;
-                            lhs = HExpr { kind: HExprKind::Field { base: Box::new(lhs), field: fi }, ty, span: target.span, at: target.span };
+                            lhs = HExpr { result_loans: None, kind: HExprKind::Field { base: Box::new(lhs), field: fi }, ty, span: target.span, at: target.span };
                         }
                         let rhs = self.expr(value, Some(lty), cx);
                         // A copyable value read through `&T`/`&inout T` is copied (C4).
@@ -5372,7 +5434,7 @@ impl Checker<'_> {
                 } else {
                     let garms: Vec<GArm> =
                         arms.iter().map(|a| GArm { pat: &a.pat, span: a.span, body: GBody::Block(&a.body) }).collect();
-                    let (scrut, owned, arms, _) = self.match_general(value, &garms, s.span, None, None, cx)?;
+                    let (scrut, owned, arms, _, _) = self.match_general(value, &garms, s.span, None, None, cx)?;
                     HStmtKind::Match { scrut, owned, arms }
                 }
             }
@@ -5438,7 +5500,7 @@ impl Checker<'_> {
         // `return` or `return ()` in a function returning `() ! E` is a success.
         if let Ty::Res(r) = ret {
             if res_parts(r).0 == Ty::Unit && value.is_none_or(|e| matches!(e.kind, ExprKind::Unit)) {
-                return Some(HExpr { kind: HExprKind::Ok(None), ty: ret, span, at: span });
+                return Some(HExpr { result_loans: None, kind: HExprKind::Ok(None), ty: ret, span, at: span });
             }
         }
         match value {
@@ -5465,7 +5527,7 @@ impl Checker<'_> {
                     && matches!(h.kind, HExprKind::Local(_) | HExprKind::Field { .. } | HExprKind::Deref(_) | HExprKind::Unbox(_))
                 {
                     let (span, at) = (h.span, h.at);
-                    HExpr { kind: HExprKind::StrView(Box::new(h)), ty: Ty::Str, span, at }
+                    HExpr { result_loans: None, kind: HExprKind::StrView(Box::new(h)), ty: Ty::Str, span, at }
                 } else {
                     h
                 };
@@ -5545,7 +5607,7 @@ impl Checker<'_> {
                     guarded = loans.iter().filter_map(|l| if let Loan::Local(v) = l { Some(*v) } else { None }).collect();
                     let rty = Ty::Ref(ref_of(it.ty));
                     let (isp, at) = (it.span, it.at);
-                    let init = HExpr { kind: HExprKind::AddrOf(Box::new(it)), ty: rty, span: isp, at };
+                    let init = HExpr { result_loans: None, kind: HExprKind::AddrOf(Box::new(it)), ty: rty, span: isp, at };
                     let hidden = format!("$iter{}", cx.locals.len());
                     let id = self.declare(cx, &hidden, iter.span, rty, LocalKind::Let);
                     cx.locals[id].used = true;
@@ -5744,6 +5806,7 @@ impl Checker<'_> {
             _ => Vec::new(),
         };
 
+        let value_loans = self.loans_of(&scrut, cx);
         // Which arm handles `some`, which handles `none`; `_` takes whatever is left.
         #[derive(Clone, Copy, PartialEq)]
         enum Role {
@@ -5811,6 +5874,9 @@ impl Checker<'_> {
                 }
                 if !loans.is_empty() || bind_ty.carries_borrow() {
                     self.store_loans(cx, x, loans.clone(), scrut.span, true);
+                }
+                if mode == BindMode::Copy && inner.carries_borrow() {
+                    cx.locals[x].value_loans = Some(value_loans.clone());
                 }
                 local = Some(x);
                 let out = match arm.body {
@@ -5968,7 +6034,7 @@ impl Checker<'_> {
         // a literal's type).
         if let Some(Ty::Float(f)) = expected {
             let v = mag as f64;
-            return HExpr { kind: HExprKind::Float(if negative { -v } else { v }), ty: Ty::Float(f), span, at: span };
+            return HExpr { result_loans: None, kind: HExprKind::Float(if negative { -v } else { v }), ty: Ty::Float(f), span, at: span };
         }
         let it = match expected {
             Some(Ty::Int(t)) => t,
@@ -5977,7 +6043,7 @@ impl Checker<'_> {
         let value = (mag <= u64::MAX as u128).then(|| if negative { -(mag as i128) } else { mag as i128 });
         match value {
             Some(v) if v >= it.min() && v <= it.max() => {
-                HExpr { kind: HExprKind::Int(v), ty: Ty::Int(it), span, at: span }
+                HExpr { result_loans: None, kind: HExprKind::Int(v), ty: Ty::Int(it), span, at: span }
             }
             _ => {
                 let text = format!("{}{mag}", if negative { "-" } else { "" });
@@ -5989,7 +6055,7 @@ impl Checker<'_> {
                 if expected.is_none() && !negative && mag <= u64::MAX as u128 {
                     d.note("give it an explicit type, e.g. `let x: u64 = ...`");
                 }
-                HExpr { kind: HExprKind::Error, ty: Ty::Int(it), span, at: span }
+                HExpr { result_loans: None, kind: HExprKind::Error, ty: Ty::Int(it), span, at: span }
             }
         }
     }
@@ -6047,10 +6113,18 @@ impl Checker<'_> {
                 Ty::Error
             }
         };
-        HExpr { kind: HExprKind::Binary { op, lhs: Box::new(l), rhs: Box::new(r) }, ty, span, at }
+        HExpr { result_loans: None, kind: HExprKind::Binary { op, lhs: Box::new(l), rhs: Box::new(r) }, ty, span, at }
     }
 
     fn expr(&mut self, e: &Expr, expected: Option<Ty>, cx: &mut FnCx) -> HExpr {
+        let mut h = self.expr_inner(e, expected, cx);
+        if h.ty.carries_borrow() {
+            h.result_loans = Some(self.loans_of(&h, cx));
+        }
+        h
+    }
+
+    fn expr_inner(&mut self, e: &Expr, expected: Option<Ty>, cx: &mut FnCx) -> HExpr {
         let span = e.span;
         match &e.kind {
             ExprKind::Int(v) => self.int_lit(*v, false, expected, span),
@@ -6060,10 +6134,10 @@ impl Checker<'_> {
                     _ => FloatTy::F64,
                 };
                 let v = if ft == FloatTy::F32 { *v as f32 as f64 } else { *v };
-                HExpr { kind: HExprKind::Float(v), ty: Ty::Float(ft), span, at: span }
+                HExpr { result_loans: None, kind: HExprKind::Float(v), ty: Ty::Float(ft), span, at: span }
             }
-            ExprKind::Byte(b) => HExpr { kind: HExprKind::Int(*b as i128), ty: Ty::Int(IntTy::U8), span, at: span },
-            ExprKind::Bool(b) => HExpr { kind: HExprKind::Bool(*b), ty: Ty::Bool, span, at: span },
+            ExprKind::Byte(b) => HExpr { result_loans: None, kind: HExprKind::Int(*b as i128), ty: Ty::Int(IntTy::U8), span, at: span },
+            ExprKind::Bool(b) => HExpr { result_loans: None, kind: HExprKind::Bool(*b), ty: Ty::Bool, span, at: span },
             ExprKind::Paren(inner) => {
                 let mut h = self.expr(inner, expected, cx);
                 h.span = span;
@@ -6079,7 +6153,7 @@ impl Checker<'_> {
                     return err_expr(span);
                 }
                 let text: String = segs.iter().map(|s| if let StrSeg::Text(t) = s { t.as_str() } else { "" }).collect();
-                HExpr { kind: HExprKind::Str(text), ty: Ty::Str, span, at: span }
+                HExpr { result_loans: None, kind: HExprKind::Str(text), ty: Ty::Str, span, at: span }
             }
             ExprKind::Unary { op: UnOp::Neg, op_span, expr: inner } => {
                 if let Some(mag) = literal_magnitude(inner) {
@@ -6088,9 +6162,9 @@ impl Checker<'_> {
                 let h = self.expr(inner, expected, cx);
                 match h.ty {
                     Ty::Int(t) if t.signed() => {
-                        HExpr { kind: HExprKind::Neg(Box::new(h)), ty: Ty::Int(t), span, at: *op_span }
+                        HExpr { result_loans: None, kind: HExprKind::Neg(Box::new(h)), ty: Ty::Int(t), span, at: *op_span }
                     }
-                    Ty::Float(t) => HExpr { kind: HExprKind::Neg(Box::new(h)), ty: Ty::Float(t), span, at: *op_span },
+                    Ty::Float(t) => HExpr { result_loans: None, kind: HExprKind::Neg(Box::new(h)), ty: Ty::Float(t), span, at: *op_span },
                     Ty::Int(t) => {
                         self.diags
                             .error("E0001", span, format!("cannot negate a value of unsigned type `{t}`"))
@@ -6110,7 +6184,7 @@ impl Checker<'_> {
             ExprKind::Unary { op: UnOp::Not, expr: inner, .. } => {
                 let h = self.expr(inner, Some(Ty::Bool), cx);
                 self.expect_ty(&h, Ty::Bool);
-                HExpr { kind: HExprKind::Not(Box::new(h)), ty: Ty::Bool, span, at: span }
+                HExpr { result_loans: None, kind: HExprKind::Not(Box::new(h)), ty: Ty::Bool, span, at: span }
             }
             // `*p` reads the place `p` points to: a copy for a `Copy` target, otherwise read-only
             // access (A6). Never moves the target out.
@@ -6134,7 +6208,7 @@ impl Checker<'_> {
                     cx.locals[id].used = true;
                     self.check_moved(cx, id, span);
                     self.check_exclusive(cx, id, span);
-                    return HExpr { kind: HExprKind::Local(id), ty: cx.locals[id].ty, span, at: span };
+                    return HExpr { result_loans: None, kind: HExprKind::Local(id), ty: cx.locals[id].ty, span, at: span };
                 }
                 if self.index.contains_key(name) {
                     self.diags.error(
@@ -6168,13 +6242,13 @@ impl Checker<'_> {
                                 _ => None,
                             };
                             if let Some(v) = v {
-                                return HExpr { kind: HExprKind::Int(v), ty: Ty::Int(it), span, at: span };
+                                return HExpr { result_loans: None, kind: HExprKind::Int(v), ty: Ty::Int(it), span, at: span };
                             }
                         }
                         if self.module_ref(tn, base.span) {
                             if tn == "math" && matches!(name.as_str(), "pi" | "e") {
                                 let v = if name == "pi" { std::f64::consts::PI } else { std::f64::consts::E };
-                                return HExpr { kind: HExprKind::Float(v), ty: Ty::Float(FloatTy::F64), span, at: span };
+                                return HExpr { result_loans: None, kind: HExprKind::Float(v), ty: Ty::Float(FloatTy::F64), span, at: span };
                             }
                             self.diags.error("U0001", span, format!("`{tn}.{name}` is not supported yet"));
                             return err_expr(span);
@@ -6192,7 +6266,7 @@ impl Checker<'_> {
                         Ty::Struct(_) => {
                             return match self.struct_field(b.ty, name) {
                                 Some((field, ty)) => {
-                                    HExpr { kind: HExprKind::Field { base: Box::new(b), field }, ty, span, at: span }
+                                    HExpr { result_loans: None, kind: HExprKind::Field { base: Box::new(b), field }, ty, span, at: span }
                                 }
                                 None => {
                                     self.no_field(b.ty, name, span);
@@ -6205,7 +6279,7 @@ impl Checker<'_> {
                             return match name.parse::<usize>().ok().filter(|i| *i < elems.len()) {
                                 Some(field) => {
                                     let ty = elems[field];
-                                    HExpr { kind: HExprKind::Field { base: Box::new(b), field }, ty, span, at: span }
+                                    HExpr { result_loans: None, kind: HExprKind::Field { base: Box::new(b), field }, ty, span, at: span }
                                 }
                                 None => {
                                     self.diags.error(
@@ -6261,7 +6335,7 @@ impl Checker<'_> {
                     return err_expr(span);
                 }
                 let ty = Ty::Tuple(tuple_of(hs.iter().map(|h| h.ty).collect()));
-                HExpr { kind: HExprKind::TupleLit(hs), ty, span, at: span }
+                HExpr { result_loans: None, kind: HExprKind::TupleLit(hs), ty, span, at: span }
             }
             ExprKind::Closure { .. } => {
                 self.diags
@@ -6285,7 +6359,7 @@ impl Checker<'_> {
                     self.diags.error("E0001", span, format!("mismatched types: expected `&{want}`, found `&{}`", h.ty));
                     return err_expr(span);
                 }
-                HExpr { kind: HExprKind::AddrOf(Box::new(h)), ty: Ty::Ref(r), span, at: span }
+                HExpr { result_loans: None, kind: HExprKind::AddrOf(Box::new(h)), ty: Ty::Ref(r), span, at: span }
             }
             // `&place` where an `&inout T` is expected: an exclusive, writable reference (A7).
             ExprKind::Borrow(inner) if matches!(expected, Some(Ty::RefMut(_))) => {
@@ -6306,7 +6380,7 @@ impl Checker<'_> {
             }
             ExprKind::Call { callee, args } => self.call(callee, args, expected, span, cx),
             ExprKind::None => match expected {
-                Some(t @ Ty::Opt(_)) => HExpr { kind: HExprKind::None, ty: t, span, at: span },
+                Some(t @ Ty::Opt(_)) => HExpr { result_loans: None, kind: HExprKind::None, ty: t, span, at: span },
                 Some(Ty::Error) => err_expr(span),
                 _ => {
                     self.diags
@@ -6359,12 +6433,12 @@ impl Checker<'_> {
             ExprKind::Match { value, arms } => {
                 let garms: Vec<GArm> = arms.iter().map(|a| GArm { pat: &a.pat, span: a.span, body: GBody::Expr(&a.body) }).collect();
                 match self.match_general(value, &garms, span, Some(span.start), expected, cx) {
-                    Some((scrut, owned, arms, ty)) => {
+                    Some((scrut, owned, arms, ty, result_loans)) => {
                         if ty == Ty::Unit {
                             self.diags.error("E0001", span, "every arm of this `match` leaves, so it has no value");
                             return err_expr(span);
                         }
-                        HExpr { kind: HExprKind::Match { scrut: Box::new(scrut), owned, arms }, ty, span, at: span }
+                        HExpr { result_loans: Some(result_loans), kind: HExprKind::Match { scrut: Box::new(scrut), owned, arms }, ty, span, at: span }
                     }
                     None => err_expr(span),
                 }
@@ -6427,10 +6501,14 @@ impl Checker<'_> {
                 if inner != Ty::Error {
                     self.expect_ty(&r, inner);
                 }
-                self.consume(r, cx)
+                let r = self.consume(r, cx);
+                self.branch_result(r, cx, cx.scopes.len())
             }
         };
-        HExpr { kind: HExprKind::Coalesce { lhs: Box::new(l), rhs: Box::new(r) }, ty: inner, span, at }
+        if r.ty == Ty::Error {
+            return err_expr(span);
+        }
+        HExpr { result_loans: None, kind: HExprKind::Coalesce { lhs: Box::new(l), rhs: Box::new(r) }, ty: inner, span, at }
     }
 
     /// `return [value]`, `break` or `continue` on the right side of `??`.
@@ -6458,7 +6536,7 @@ impl Checker<'_> {
                 }
             }
         };
-        HExpr { kind, ty: Ty::Unit, span, at: span }
+        HExpr { result_loans: None, kind, ty: Ty::Unit, span, at: span }
     }
 
     /// `some(value)`: moves `value` into a new optional.
@@ -6486,7 +6564,7 @@ impl Checker<'_> {
         }
         let h = self.consume(h, cx);
         let ty = Ty::Opt(opt_of(h.ty));
-        HExpr { kind: HExprKind::Some(Box::new(h)), ty, span, at }
+        HExpr { result_loans: None, kind: HExprKind::Some(Box::new(h)), ty, span, at }
     }
 
     /// `&place` given to `take`, `replace` or `swap`: a writable variable or field of one.
@@ -6599,7 +6677,7 @@ impl Checker<'_> {
     fn unbox(&self, mut h: HExpr) -> HExpr {
         while let Some(inner) = ptr_inner(h.ty) {
             let (span, at) = (h.span, h.at);
-            h = HExpr { kind: HExprKind::Unbox(Box::new(h)), ty: inner, span, at };
+            h = HExpr { result_loans: None, kind: HExprKind::Unbox(Box::new(h)), ty: inner, span, at };
         }
         h
     }
@@ -6653,7 +6731,7 @@ impl Checker<'_> {
         }
         let h = self.consume(h, cx);
         let ty = Ty::Box(box_of(h.ty));
-        HExpr { kind: HExprKind::BoxNew(Box::new(h)), ty, span, at }
+        HExpr { result_loans: None, kind: HExprKind::BoxNew(Box::new(h)), ty, span, at }
     }
 
     /// Whether variable `id` may be modified; reports why not.
@@ -6701,10 +6779,12 @@ impl Checker<'_> {
                     return err_expr(span);
                 }
                 let ty = p.ty;
-                HExpr { kind: HExprKind::Take(p), ty, span, at }
+                HExpr { result_loans: None, kind: HExprKind::Take(p), ty, span, at }
             }
             "replace" => {
                 let Some(p) = self.place(&args[0], name, cx) else { return err_expr(span) };
+                // The result is the previous value, not the union after storing `v`.
+                let result_loans = cx.locals[p.local].loans.clone();
                 let root = cx.locals[p.local].name.clone();
                 if mentions(&args[1], &root) {
                     self.diags
@@ -6726,7 +6806,7 @@ impl Checker<'_> {
                     }
                 }
                 let ty = p.ty;
-                HExpr { kind: HExprKind::Replace(p, Box::new(v)), ty, span, at }
+                HExpr { result_loans: Some(result_loans), kind: HExprKind::Replace(p, Box::new(v)), ty, span, at }
             }
             _ => {
                 let a = self.place(&args[0], name, cx);
@@ -6756,7 +6836,7 @@ impl Checker<'_> {
                     self.store_loans(cx, a.local, lb, args[1].span, false);
                     self.store_loans(cx, b.local, la, args[0].span, false);
                 }
-                HExpr { kind: HExprKind::Swap(a, b), ty: Ty::Unit, span, at }
+                HExpr { result_loans: None, kind: HExprKind::Swap(a, b), ty: Ty::Unit, span, at }
             }
         }
     }
@@ -6776,7 +6856,7 @@ impl Checker<'_> {
             BinOp::And | BinOp::Or => {
                 let l = self.cond(lhs, cx);
                 let r = self.cond(rhs, cx);
-                HExpr { kind: HExprKind::Binary { op, lhs: Box::new(l), rhs: Box::new(r) }, ty: Ty::Bool, span, at }
+                HExpr { result_loans: None, kind: HExprKind::Binary { op, lhs: Box::new(l), rhs: Box::new(r) }, ty: Ty::Bool, span, at }
             }
             BinOp::Shl | BinOp::Shr => {
                 let l = self.expr(lhs, expected, cx);
@@ -6793,14 +6873,14 @@ impl Checker<'_> {
                         Ty::Error
                     }
                 };
-                HExpr { kind: HExprKind::Binary { op, lhs: Box::new(l), rhs: Box::new(r) }, ty, span, at }
+                HExpr { result_loans: None, kind: HExprKind::Binary { op, lhs: Box::new(l), rhs: Box::new(r) }, ty, span, at }
             }
             BinOp::Eq | BinOp::Ne | BinOp::Lt | BinOp::Le | BinOp::Gt | BinOp::Ge => {
                 let (l, r) = self.pair(lhs, rhs, None, cx);
                 // `String` and `str` compare by their text (K1): the owned side is viewed.
                 let view = |h: HExpr| {
                     let (span, at) = (h.span, h.at);
-                    HExpr { kind: HExprKind::StrView(Box::new(h)), ty: Ty::Str, span, at }
+                    HExpr { result_loans: None, kind: HExprKind::StrView(Box::new(h)), ty: Ty::Str, span, at }
                 };
                 let (l, r) = match (l.ty, r.ty) {
                     (Ty::String, Ty::Str) => (view(l), r),
@@ -6815,7 +6895,7 @@ impl Checker<'_> {
                     let si = self.structs.iter().position(|s| s.ty == Ty::Enum(id)).expect("registered enum");
                     if self.structs[si].variants.iter().all(|v| v.fields.is_empty()) {
                         let eq = op == BinOp::Eq;
-                        return HExpr { kind: HExprKind::SameTag { lhs: Box::new(l), rhs: Box::new(r), eq }, ty: Ty::Bool, span, at };
+                        return HExpr { result_loans: None, kind: HExprKind::SameTag { lhs: Box::new(l), rhs: Box::new(r), eq }, ty: Ty::Bool, span, at };
                     }
                 }
                 if l.ty != Ty::Error && r.ty != Ty::Error {
@@ -6836,7 +6916,7 @@ impl Checker<'_> {
                         self.diags.error("E0501", span, format!("values of type `{}` cannot be {what}", l.ty));
                     }
                 }
-                HExpr { kind: HExprKind::Binary { op, lhs: Box::new(l), rhs: Box::new(r) }, ty: Ty::Bool, span, at }
+                HExpr { result_loans: None, kind: HExprKind::Binary { op, lhs: Box::new(l), rhs: Box::new(r) }, ty: Ty::Bool, span, at }
             }
             _ => {
                 let (l, r) = self.pair(lhs, rhs, expected, cx);
@@ -6885,7 +6965,7 @@ impl Checker<'_> {
                                 return err_expr(span);
                             };
                             let parts = self.print_parts(arg, cx);
-                            return HExpr { kind: HExprKind::Format(parts), ty: Ty::String, span, at: callee.span };
+                            return HExpr { result_loans: None, kind: HExprKind::Format(parts), ty: Ty::String, span, at: callee.span };
                         }
                         "min" | "max" => return self.min_max(name == "max", args, expected, span, callee.span, cx),
                         "abs" => {
@@ -6896,10 +6976,10 @@ impl Checker<'_> {
                             let h = self.expr(arg, expected, cx);
                             let h = self.deref(h);
                             return match h.ty {
-                                Ty::Int(t) if t.signed() => HExpr { kind: HExprKind::Abs(Box::new(h)), ty: Ty::Int(t), span, at: callee.span },
+                                Ty::Int(t) if t.signed() => HExpr { result_loans: None, kind: HExprKind::Abs(Box::new(h)), ty: Ty::Int(t), span, at: callee.span },
                                 Ty::Float(_) => {
                                     let ty = h.ty;
-                                    HExpr { kind: HExprKind::Math { func: "fabs", args: vec![h] }, ty, span, at: callee.span }
+                                    HExpr { result_loans: None, kind: HExprKind::Math { func: "fabs", args: vec![h] }, ty, span, at: callee.span }
                                 }
                                 Ty::Int(_) => h,
                                 Ty::Error => err_expr(span),
@@ -7004,12 +7084,12 @@ impl Checker<'_> {
             } else { h };
             let h = if exp == Some(Ty::Str) && h.ty == Ty::String {
                 let (span, at) = (h.span, h.at);
-                HExpr { kind: HExprKind::StrView(Box::new(h)), ty: Ty::Str, span, at }
+                HExpr { result_loans: None, kind: HExprKind::StrView(Box::new(h)), ty: Ty::Str, span, at }
             } else { h };
             let h = match (exp, h.ty) {
                 (Some(Ty::Slice(s)), Ty::Vec(v)) if slice_elem(s) == vec_elem(v) => {
                     let (span, at) = (h.span, h.at);
-                    HExpr { kind: HExprKind::SliceOf(Box::new(h)), ty: Ty::Slice(s), span, at }
+                    HExpr { result_loans: None, kind: HExprKind::SliceOf(Box::new(h)), ty: Ty::Slice(s), span, at }
                 }
                 _ => h,
             };
@@ -7028,7 +7108,7 @@ impl Checker<'_> {
             Some(&(iface, method)) => HExprKind::DynCall { iface, method, sig: fi, args: hargs },
             None => HExprKind::Call { func: fi, args: hargs },
         };
-        HExpr { kind, ty: ret, span, at }
+        HExpr { result_loans: None, kind, ty: ret, span, at }
     }
 
     fn hold_call_argument(&self, h: &HExpr, inout: bool, sink: bool, cx: &mut FnCx) {
@@ -7123,7 +7203,7 @@ impl Checker<'_> {
                 let Some((func, caps)) = self.lift_closure(callback, &[elem, elem], Ty::Bool, "Heap.by", true, cx) else { return err_expr(span) };
                 let tramp = self.tramps.len();
                 self.tramps.push(Tramp { func, caps: caps.iter().map(|c| c.ty).collect(), elem, by_cmp: false, saved: true });
-                return HExpr { kind: HExprKind::HeapNew { tramp, caps }, ty, span, at };
+                return HExpr { result_loans: None, kind: HExprKind::HeapNew { tramp, caps }, ty, span, at };
             }
         }
         // `v[i].push(x)`, `grid[r][c].f.set(k, x)`, `pts[i].moveBy(1)`: a modifying method
@@ -7150,7 +7230,7 @@ impl Checker<'_> {
             let value = self.method_call_inner(&receiver, name, args, span, at, cx, None);
             self.pop_scope(cx);
             let ty = value.ty;
-            return HExpr { kind: HExprKind::LetTemp { local, init: Box::new(init), value: Box::new(value) }, ty, span, at };
+            return HExpr { result_loans: None, kind: HExprKind::LetTemp { local, init: Box::new(init), value: Box::new(value) }, ty, span, at };
         }
         // Calls returning an exclusive descriptor can be receivers directly. Bind
         // the descriptor once; the callee's declared sources remain pinned while
@@ -7173,7 +7253,7 @@ impl Checker<'_> {
                 let value = self.method_call_inner(&receiver, name, args, span, at, cx, None);
                 self.pop_scope(cx);
                 let ty = value.ty;
-                return HExpr { kind: HExprKind::LetTemp { local, init: Box::new(init), value: Box::new(value) }, ty, span, at };
+                return HExpr { result_loans: None, kind: HExprKind::LetTemp { local, init: Box::new(init), value: Box::new(value) }, ty, span, at };
             }
             return self.method_call_inner(base, name, args, span, at, cx, Some(init));
         }
@@ -7328,7 +7408,7 @@ impl Checker<'_> {
                 let int = Ty::Int(IntTy::I64);
                 let n = self.expr(arg, Some(int), cx);
                 let n = self.fit(n, int, cx);
-                return HExpr { kind: HExprKind::Reserve { place, n: Box::new(n) }, ty: Ty::Unit, span, at };
+                return HExpr { result_loans: None, kind: HExprKind::Reserve { place, n: Box::new(n) }, ty: Ty::Unit, span, at };
             }
         }
         if name == "sort" {
@@ -7365,11 +7445,11 @@ impl Checker<'_> {
                         if let (SyncKind::Join, ret) = sync_parts(sid) {
                             cx.locals[id].used = true;
                             self.check_moved(cx, id, base.span);
-                            let recv = HExpr { kind: HExprKind::Local(id), ty: cx.locals[id].ty, span: base.span, at: base.span };
+                            let recv = HExpr { result_loans: None, kind: HExprKind::Local(id), ty: cx.locals[id].ty, span: base.span, at: base.span };
                             if id < cx.moved.len() {
                                 cx.moved[id] = Some(base.span);
                             }
-                            return HExpr { kind: HExprKind::JoinCall(Box::new(recv)), ty: ret, span, at };
+                            return HExpr { result_loans: None, kind: HExprKind::JoinCall(Box::new(recv)), ty: ret, span, at };
                         }
                     }
                 }
@@ -7382,7 +7462,7 @@ impl Checker<'_> {
             if let Ty::Sync(id) = recv.ty {
                 if matches!(sync_parts(id).0, SyncKind::Rc | SyncKind::Arc | SyncKind::Channel) {
                     let ty = recv.ty;
-                    return HExpr { kind: HExprKind::SyncClone(Box::new(recv)), ty, span, at };
+                    return HExpr { result_loans: None, kind: HExprKind::SyncClone(Box::new(recv)), ty, span, at };
                 }
             }
         }
@@ -7403,10 +7483,10 @@ impl Checker<'_> {
                         let v = self.fit(v, inner, cx);
                         let v = self.consume(v, cx);
                         let err = self.send_error_ty(inner);
-                        HExpr { kind: HExprKind::ChanSend { chan, value: Box::new(v) }, ty: Ty::Res(res_of(Ty::Unit, err)), span, at }
+                        HExpr { result_loans: None, kind: HExprKind::ChanSend { chan, value: Box::new(v) }, ty: Ty::Res(res_of(Ty::Unit, err)), span, at }
                     }
-                    "recv" => HExpr { kind: HExprKind::ChanRecv(chan), ty: Ty::Opt(opt_of(inner)), span, at },
-                    _ => HExpr { kind: HExprKind::ChanClose(chan), ty: Ty::Unit, span, at },
+                    "recv" => HExpr { result_loans: None, kind: HExprKind::ChanRecv(chan), ty: Ty::Opt(opt_of(inner)), span, at },
+                    _ => HExpr { result_loans: None, kind: HExprKind::ChanClose(chan), ty: Ty::Unit, span, at },
                 };
             }
             if kind == SyncKind::Mutex && matches!(name, "lock" | "tryLock") {
@@ -7417,7 +7497,7 @@ impl Checker<'_> {
                 let guard = Ty::Sync(sync_of(SyncKind::Guard, inner));
                 let try_ = name == "tryLock";
                 let ty = if try_ { Ty::Opt(opt_of(guard)) } else { guard };
-                return HExpr { kind: HExprKind::Lock { mutex: Box::new(recv), try_ }, ty, span, at };
+                return HExpr { result_loans: None, kind: HExprKind::Lock { mutex: Box::new(recv), try_ }, ty, span, at };
             }
         }
         if let Some((fi, full)) = self.user_method(recv.ty, name, at) {
@@ -7539,7 +7619,7 @@ impl Checker<'_> {
             self.diags.error("E0012", span, format!("`{name}` takes no arguments"));
             return err_expr(span);
         }
-        HExpr { kind: HExprKind::Method { method, recv: Box::new(recv) }, ty, span, at }
+        HExpr { result_loans: None, kind: HExprKind::Method { method, recv: Box::new(recv) }, ty, span, at }
     }
 
     /// The method `name` of a struct or enum type, with its full name `Type.name`. A function
@@ -7600,7 +7680,7 @@ impl Checker<'_> {
                 return err_expr(span);
             };
             let ty = place.ty;
-            HExpr { kind: HExprKind::InoutPlace(place), ty, span: base.span, at: base.span }
+            HExpr { result_loans: None, kind: HExprKind::InoutPlace(place), ty, span: base.span, at: base.span }
         } else {
             let h = self.expr(base, None, cx);
             let h = self.deref(h);
@@ -7624,7 +7704,7 @@ impl Checker<'_> {
         let h = self.expr(arg, Some(int), cx);
         let h = self.fit(h, int, cx);
         cx.exit_calls.insert((span.start, span.end));
-        HExpr { kind: HExprKind::Exit(Box::new(h)), ty: Ty::Unit, span, at }
+        HExpr { result_loans: None, kind: HExprKind::Exit(Box::new(h)), ty: Ty::Unit, span, at }
     }
 
     /// The key argument of a map lookup: `String` and `str` keys are looked up with a `str`
@@ -7635,7 +7715,7 @@ impl Checker<'_> {
         let h = self.deref(h);
         let h = if q == Ty::Str && h.ty == Ty::String {
             let (span, at) = (h.span, h.at);
-            HExpr { kind: HExprKind::StrView(Box::new(h)), ty: Ty::Str, span, at }
+            HExpr { result_loans: None, kind: HExprKind::StrView(Box::new(h)), ty: Ty::Str, span, at }
         } else {
             h
         };
@@ -7669,7 +7749,7 @@ impl Checker<'_> {
             }
             _ => (MapRead::Has, Ty::Bool),
         };
-        HExpr { kind: HExprKind::ArenaRead { op, recv: Box::new(recv), key: Box::new(key) }, ty, span, at }
+        HExpr { result_loans: None, kind: HExprKind::ArenaRead { op, recv: Box::new(recv), key: Box::new(key) }, ty, span, at }
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -7716,7 +7796,7 @@ impl Checker<'_> {
             "remove" => (ArenaWrite::Remove, Ty::Opt(opt_of(elem))),
             _ => (ArenaWrite::GetMut, Ty::Opt(opt_of(Ty::RefMut(ref_mut_of(elem))))),
         };
-        HExpr { kind: HExprKind::ArenaWrite { op, place, value: Box::new(value) }, ty, span, at }
+        HExpr { result_loans: None, kind: HExprKind::ArenaWrite { op, place, value: Box::new(value) }, ty, span, at }
     }
 
     /// `m.get(k)`, `m.getCopy(k)`, `m.has(k)` (stdlib contract §3).
@@ -7741,7 +7821,7 @@ impl Checker<'_> {
             }
             _ => (MapRead::Has, Ty::Bool),
         };
-        HExpr { kind: HExprKind::MapRead { op, recv: Box::new(recv), key: Box::new(key) }, ty, span, at }
+        HExpr { result_loans: None, kind: HExprKind::MapRead { op, recv: Box::new(recv), key: Box::new(key) }, ty, span, at }
     }
 
     /// `m.set(k, v)`, `m.remove(k)`, `m.getMut(k)` on a writable map variable.
@@ -7805,7 +7885,7 @@ impl Checker<'_> {
                 }
             }
         };
-        HExpr { kind: HExprKind::MapWrite { op, place, args: hargs }, ty, span, at }
+        HExpr { result_loans: None, kind: HExprKind::MapWrite { op, place, args: hargs }, ty, span, at }
     }
 
     /// `s.add(x)` (consumes `x`; adding an element that is already there changes nothing) and
@@ -7829,8 +7909,8 @@ impl Checker<'_> {
                 return err_expr(span);
             }
             let removed =
-                HExpr { kind: HExprKind::MapWrite { op: MapWrite::Remove, place, args: vec![key] }, ty: Ty::Opt(opt_of(Ty::Bool)), span, at };
-            return HExpr { kind: HExprKind::Method { method: Builtin::IsSome, recv: Box::new(removed) }, ty: Ty::Bool, span, at };
+                HExpr { result_loans: None, kind: HExprKind::MapWrite { op: MapWrite::Remove, place, args: vec![key] }, ty: Ty::Opt(opt_of(Ty::Bool)), span, at };
+            return HExpr { result_loans: None, kind: HExprKind::Method { method: Builtin::IsSome, recv: Box::new(removed) }, ty: Ty::Bool, span, at };
         }
         let kh = self.expr(arg, Some(k), cx);
         let kh = self.fit(kh, k, cx);
@@ -7850,8 +7930,8 @@ impl Checker<'_> {
                 }
             }
         }
-        let yes = HExpr { kind: HExprKind::Bool(true), ty: Ty::Bool, span, at };
-        HExpr { kind: HExprKind::MapWrite { op: MapWrite::Set, place, args: vec![kh, yes] }, ty: Ty::Unit, span, at }
+        let yes = HExpr { result_loans: None, kind: HExprKind::Bool(true), ty: Ty::Bool, span, at };
+        HExpr { result_loans: None, kind: HExprKind::MapWrite { op: MapWrite::Set, place, args: vec![kh, yes] }, ty: Ty::Unit, span, at }
     }
 
     /// The type of a variable or a field chain rooted at one, without reporting anything (an
@@ -8018,7 +8098,7 @@ impl Checker<'_> {
                 self.diags.error("E0012", span, format!("`{method}` takes no arguments"));
                 return err_expr(span);
             }
-            return HExpr { kind: HExprKind::DequePop { place, front }, ty: Ty::Opt(opt_of(et)), span, at };
+            return HExpr { result_loans: None, kind: HExprKind::DequePop { place, front }, ty: Ty::Opt(opt_of(et)), span, at };
         }
         let [arg] = args else {
             self.diags.error("E0012", span, format!("`{method}` takes one value"));
@@ -8042,7 +8122,7 @@ impl Checker<'_> {
                 self.store_loans(cx, id, loans, h.span, false);
             }
         }
-        HExpr { kind: HExprKind::DequePush { place, value: Box::new(h), front }, ty: Ty::Unit, span, at }
+        HExpr { result_loans: None, kind: HExprKind::DequePush { place, value: Box::new(h), front }, ty: Ty::Unit, span, at }
     }
 
     /// `v.pop()`: the last element as an owned `?T`.
@@ -8053,7 +8133,7 @@ impl Checker<'_> {
             return err_expr(span);
         }
         match place.ty {
-            Ty::Vec(vid) | Ty::Heap(vid) => HExpr { kind: HExprKind::Pop(place), ty: Ty::Opt(opt_of(vec_elem(vid))), span, at },
+            Ty::Vec(vid) | Ty::Heap(vid) => HExpr { result_loans: None, kind: HExprKind::Pop(place), ty: Ty::Opt(opt_of(vec_elem(vid))), span, at },
             Ty::Error => err_expr(span),
             other => {
                 self.diags.error("U0001", at, format!("method `pop` on `{other}` is not supported yet"));
@@ -8122,7 +8202,7 @@ impl Checker<'_> {
                 return err_expr(span);
             }
         };
-        HExpr { kind: HExprKind::Push { place, value: Box::new(value) }, ty: Ty::Unit, span, at }
+        HExpr { result_loans: None, kind: HExprKind::Push { place, value: Box::new(value) }, ty: Ty::Unit, span, at }
     }
 
     fn vec_lit(&mut self, items: &[Expr], expected: Option<Ty>, span: Span, cx: &mut FnCx) -> HExpr {
@@ -8131,7 +8211,7 @@ impl Checker<'_> {
         }
         // `var s: Set[String] = []`: an empty set.
         if let (Some(t @ Ty::Set(_)), true) = (expected, items.is_empty()) {
-            return HExpr { kind: HExprKind::MapLit(Vec::new()), ty: t, span, at: span };
+            return HExpr { result_loans: None, kind: HExprKind::MapLit(Vec::new()), ty: t, span, at: span };
         }
         let mut elem = match expected {
             Some(Ty::Vec(id)) => Some(vec_elem(id)),
@@ -8166,7 +8246,7 @@ impl Checker<'_> {
             self.diags.error("U0001", span, "collections of `&inout` references are not supported yet");
             return err_expr(span);
         }
-        HExpr { kind: HExprKind::VecLit(out), ty: Ty::Vec(vec_of(elem)), span, at: span }
+        HExpr { result_loans: None, kind: HExprKind::VecLit(out), ty: Ty::Vec(vec_of(elem)), span, at: span }
     }
 
     /// `[:]` or `[k: v, ...]`; keys and values are evaluated and moved in the order written.
@@ -8175,7 +8255,7 @@ impl Checker<'_> {
             return err_expr(span);
         }
         if let (Some(t @ Ty::Set(_)), true) = (expected, entries.is_empty()) {
-            return HExpr { kind: HExprKind::MapLit(Vec::new()), ty: t, span, at: span };
+            return HExpr { result_loans: None, kind: HExprKind::MapLit(Vec::new()), ty: t, span, at: span };
         }
         let mut parts = match expected {
             Some(Ty::Map(id)) => Some(map_parts(id)),
@@ -8217,7 +8297,7 @@ impl Checker<'_> {
             self.diags.error("U0001", span, "collections of `&inout` references are not supported yet");
             return err_expr(span);
         }
-        HExpr { kind: HExprKind::MapLit(out), ty: Ty::Map(map_of(kt, vt)), span, at: span }
+        HExpr { result_loans: None, kind: HExprKind::MapLit(out), ty: Ty::Map(map_of(kt, vt)), span, at: span }
     }
 
     fn index(&mut self, base: &Expr, index: &Expr, span: Span, cx: &mut FnCx) -> HExpr {
@@ -8249,7 +8329,7 @@ impl Checker<'_> {
         };
         // A non-copyable element is read in place: `v[i]` is a `&T` into `v`.
         let ty = if elem.is_copy() { elem } else { Ty::Ref(ref_of(elem)) };
-        HExpr { kind: HExprKind::Index { base: Box::new(b), index: Box::new(i) }, ty, span, at: span }
+        HExpr { result_loans: None, kind: HExprKind::Index { base: Box::new(b), index: Box::new(i) }, ty, span, at: span }
     }
 
     fn conversion(&mut self, to: IntTy, checked: bool, args: &[Expr], at: Span, span: Span, cx: &mut FnCx) -> HExpr {
@@ -8289,7 +8369,7 @@ impl Checker<'_> {
         if s.ty == Ty::Error || e.ty == Ty::Error {
             return err_expr(span);
         }
-        HExpr { kind: HExprKind::SliceRange { base: Box::new(b), start: Box::new(s), end: Box::new(e) }, ty, span, at: span }
+        HExpr { result_loans: None, kind: HExprKind::SliceRange { base: Box::new(b), start: Box::new(s), end: Box::new(e) }, ty, span, at: span }
     }
 
     /// The enum a type path names: `Shape`, or `fs.Error` (a module's enum). Not a variable.
@@ -8341,7 +8421,7 @@ impl Checker<'_> {
                     .note(format!("write `{ename}.{case}({})`", decl.iter().map(|(n, _)| format!("{n}: ...")).collect::<Vec<_>>().join(", ")));
                 return err_expr(span);
             }
-            return HExpr { kind: HExprKind::EnumLit { variant: vi, fields: Vec::new() }, ty, span, at: span };
+            return HExpr { result_loans: None, kind: HExprKind::EnumLit { variant: vi, fields: Vec::new() }, ty, span, at: span };
         };
         let mut seen = vec![false; decl.len()];
         let mut out = Vec::new();
@@ -8402,7 +8482,7 @@ impl Checker<'_> {
         if !ok {
             return err_expr(span);
         }
-        HExpr { kind: HExprKind::EnumLit { variant: vi, fields: out }, ty, span, at: span }
+        HExpr { result_loans: None, kind: HExprKind::EnumLit { variant: vi, fields: out }, ty, span, at: span }
     }
 
     /// The enum a `.Case` shorthand refers to, from the expected type.
@@ -8437,7 +8517,7 @@ impl Checker<'_> {
                 self.diags.error("E0001", arg.span, "this result has no success value: write `ok(())`");
                 return err_expr(span);
             }
-            return HExpr { kind: HExprKind::Ok(None), ty, span, at: span };
+            return HExpr { result_loans: None, kind: HExprKind::Ok(None), ty, span, at: span };
         }
         let want = if is_ok { okt } else { errt };
         let h = self.expr(arg, Some(want), cx);
@@ -8447,7 +8527,7 @@ impl Checker<'_> {
         }
         let h = self.consume(h, cx);
         let kind = if is_ok { HExprKind::Ok(Some(Box::new(h))) } else { HExprKind::ErrVal(Box::new(h)) };
-        HExpr { kind, ty, span, at: span }
+        HExpr { result_loans: None, kind, ty, span, at: span }
     }
 
     /// `try value` (semantic table V3, V12): the success value; an error is returned from the
@@ -8482,7 +8562,7 @@ impl Checker<'_> {
             }
         }
         let h = self.consume(h, cx);
-        HExpr { kind: HExprKind::Try(Box::new(h)), ty: okt, span, at: span }
+        HExpr { result_loans: None, kind: HExprKind::Try(Box::new(h)), ty: okt, span, at: span }
     }
 
     /// `value catch e => handler` / `value catch e { ... }` (semantic table V8, V12).
@@ -8575,6 +8655,12 @@ impl Checker<'_> {
                 }
             }
         };
+        let h = match h {
+            CatchHandler::Value(value) if !div =>
+                CatchHandler::Value(Box::new(self.branch_result(*value, cx, cx.scopes.len() - 1))),
+            other => other,
+        };
+        let invalid_result = matches!(&h, CatchHandler::Value(value) if value.ty == Ty::Error);
         self.pop_scope(cx);
         let after = std::mem::replace(&mut cx.moved, before.clone());
         // The error path continues after the expression only when the handler gives a value.
@@ -8582,10 +8668,10 @@ impl Checker<'_> {
         let loans_after = loans_snapshot(cx);
         let joined = if div { loans_before } else { loans_union(&loans_before, &loans_after) };
         loans_restore(cx, &joined);
-        if okt == Ty::Error {
+        if okt == Ty::Error || invalid_result {
             return err_expr(span);
         }
-        HExpr { kind: HExprKind::Catch { value: Box::new(v), bind, handler: h }, ty: okt, span, at: span }
+        HExpr { result_loans: None, kind: HExprKind::Catch { value: Box::new(v), bind, handler: h }, ty: okt, span, at: span }
     }
 
     /// `match` on enums, results and nested patterns (semantic table C7), as a statement
@@ -8600,7 +8686,7 @@ impl Checker<'_> {
         expr_start: Option<usize>,
         expected: Option<Ty>,
         cx: &mut FnCx,
-    ) -> Option<(HExpr, bool, Vec<HArm>, Ty)> {
+    ) -> Option<(HExpr, bool, Vec<HArm>, Ty, Vec<Loan>)> {
         let stmt_idx = cx.cur;
         let scrut = self.expr(value, None, cx);
         let via_ref = matches!(scrut.ty, Ty::Ref(_));
@@ -8625,6 +8711,8 @@ impl Checker<'_> {
         };
         let before = cx.moved.clone();
         let loans_before = loans_snapshot(cx);
+        let mut result_loans = Vec::new();
+        let value_loans = self.loans_of(&scrut, cx);
         let mut harms: Vec<HArm> = Vec::new();
         let mut ends: Vec<(Moved, bool)> = Vec::new();
         let mut loan_ends: Vec<(Loans, bool)> = Vec::new();
@@ -8639,11 +8727,13 @@ impl Checker<'_> {
                 None => cx.pre.bind_end.get(&(stmt_idx, i)).copied(),
                 Some(s) => cx.pre.expr_end.get(&(s, i)).copied().map(|e| e.max(cx.cur)),
             };
-            let pc = PatCx { owned, kind, loans: &loans, scope_end, in_expr: expr_start.is_some(), span: arm.span };
+            let pc = PatCx { owned, kind, loans: &loans, value_loans: &value_loans, scope_end, in_expr: expr_start.is_some(), span: arm.span };
             let mut ok = true;
             let pat = self.check_pat(arm.pat, mty, &pc, &mut ok, cx);
             all_ok &= ok;
             pats_ok.push(ok);
+            let prior: Vec<Vec<&HPat>> = harms.iter().map(|a| vec![&a.pat]).collect();
+            let reachable = !ok || self.useful(&prior, &[&pat], &[mty]);
             let (body, value, div) = match arm.body {
                 GBody::Block(b) => {
                     let out = self.stmts(&b.stmts, cx);
@@ -8677,9 +8767,26 @@ impl Checker<'_> {
                     }
                 },
             };
+            let value = match value {
+                Some(value) if reachable && !div => {
+                    let value = self.branch_result(value, cx, cx.scopes.len() - 1);
+                    all_ok &= value.ty != Ty::Error;
+                    Some(value)
+                }
+                other => other,
+            };
+            if reachable && !div {
+                if let Some(value) = &value {
+                    for loan in self.loans_of(value, cx) {
+                        if !result_loans.contains(&loan) {
+                            result_loans.push(loan);
+                        }
+                    }
+                }
+            }
             self.pop_scope(cx);
-            ends.push((std::mem::take(&mut cx.moved), div));
-            loan_ends.push((loans_snapshot(cx), div));
+            ends.push((std::mem::take(&mut cx.moved), div || !reachable));
+            loan_ends.push((loans_snapshot(cx), div || !reachable));
             harms.push(HArm { pat, body, value });
         }
         // A branch that cannot fall through does not affect the code after the `match`.
@@ -8710,7 +8817,7 @@ impl Checker<'_> {
                 .note(format!("add a `{missing} => ...` arm, or `_ => ...` for every remaining case"));
             return None;
         }
-        Some((scrut, owned, harms, result_ty.unwrap_or(Ty::Unit)))
+        Some((scrut, owned, harms, result_ty.unwrap_or(Ty::Unit), result_loans))
     }
 
     /// Checks a pattern against a value of type `ty` and declares its bindings.
@@ -8753,6 +8860,9 @@ impl Checker<'_> {
                 }
                 if !pc.loans.is_empty() || bty.carries_borrow() {
                     self.store_loans(cx, x, pc.loans.to_vec(), *span, true);
+                }
+                if ty.is_copy() && ty.carries_borrow() {
+                    cx.locals[x].value_loans = Some(pc.value_loans.to_vec());
                 }
                 HPat::Bind { local: x, by_ref }
             }
@@ -8949,7 +9059,7 @@ impl Checker<'_> {
         if cond.is_none() {
             cx.exit_calls.insert((span.start, span.end));
         }
-        HExpr { kind: HExprKind::Panic { cond, parts }, ty: Ty::Unit, span, at }
+        HExpr { result_loans: None, kind: HExprKind::Panic { cond, parts }, ty: Ty::Unit, span, at }
     }
 
     fn conversion_inner(&mut self, to: IntTy, checked: bool, args: &[Expr], at: Span, span: Span, cx: &mut FnCx) -> HExpr {
@@ -8968,10 +9078,10 @@ impl Checker<'_> {
         match (ha.ty, hb.ty) {
             (Ty::Error, _) | (_, Ty::Error) => err_expr(span),
             (Ty::Int(x), Ty::Int(y)) if x == y => {
-                HExpr { kind: HExprKind::MinMax { max, a: Box::new(ha), b: Box::new(hb) }, ty: Ty::Int(x), span, at }
+                HExpr { result_loans: None, kind: HExprKind::MinMax { max, a: Box::new(ha), b: Box::new(hb) }, ty: Ty::Int(x), span, at }
             }
             (Ty::Float(x), Ty::Float(y)) if x == y => {
-                HExpr { kind: HExprKind::MinMax { max, a: Box::new(ha), b: Box::new(hb) }, ty: Ty::Float(x), span, at }
+                HExpr { result_loans: None, kind: HExprKind::MinMax { max, a: Box::new(ha), b: Box::new(hb) }, ty: Ty::Float(x), span, at }
             }
             (x, y) => {
                 self.diags
@@ -8998,7 +9108,7 @@ impl Checker<'_> {
         let h = self.consume(h, cx);
         let err = self.structs[self.struct_index["Utf8Error"]].ty;
         let ty = Ty::Res(res_of(Ty::String, err));
-        HExpr { kind: HExprKind::FromUtf8(Box::new(h)), ty, span, at }
+        HExpr { result_loans: None, kind: HExprKind::FromUtf8(Box::new(h)), ty, span, at }
     }
 
     /// `io.readAll()`, `io.readLine()`, `fs.readText(path)`, `fs.writeText(path, text)`,
@@ -9024,7 +9134,7 @@ impl Checker<'_> {
                 let h = self.fit(h, f64t, cx);
                 hargs.push(h);
             }
-            return Some(HExpr { kind: HExprKind::Math { func, args: hargs }, ty: f64t, span, at });
+            return Some(HExpr { result_loans: None, kind: HExprKind::Math { func, args: hargs }, ty: f64t, span, at });
         }
         let lib = |this: &Self, e: &str| -> Ty { this.structs[this.struct_index[e]].ty };
         let (op, nargs, ty) = match (m, name) {
@@ -9033,7 +9143,7 @@ impl Checker<'_> {
                     self.diags.error("E0012", span, "`os.args` takes no arguments");
                     return Some(err_expr(span));
                 }
-                return Some(HExpr { kind: HExprKind::OsArgs, ty: Ty::Slice(slice_of(Ty::Str)), span, at });
+                return Some(HExpr { result_loans: None, kind: HExprKind::OsArgs, ty: Ty::Slice(slice_of(Ty::Str)), span, at });
             }
             ("io", "readAll") => (IoOp::ReadAll, 0, Ty::Res(res_of(Ty::String, lib(self, "io.Error")))),
             ("io", "readLine") => (IoOp::ReadLine, 0, Ty::Res(res_of(Ty::Opt(opt_of(Ty::String)), lib(self, "io.Error")))),
@@ -9066,14 +9176,14 @@ impl Checker<'_> {
             let h = self.deref(h);
             let h = if expected == Ty::Str && h.ty == Ty::String {
                 let (span, at) = (h.span, h.at);
-                HExpr { kind: HExprKind::StrView(Box::new(h)), ty: Ty::Str, span, at }
+                HExpr { result_loans: None, kind: HExprKind::StrView(Box::new(h)), ty: Ty::Str, span, at }
             } else {
                 h
             };
             let h = match (expected, h.ty) {
                 (Ty::Slice(s), Ty::Vec(v)) if slice_elem(s) == vec_elem(v) => {
                     let (span, at) = (h.span, h.at);
-                    HExpr { kind: HExprKind::SliceOf(Box::new(h)), ty: expected, span, at }
+                    HExpr { result_loans: None, kind: HExprKind::SliceOf(Box::new(h)), ty: expected, span, at }
                 }
                 _ => h,
             };
@@ -9083,7 +9193,7 @@ impl Checker<'_> {
         }
         cx.call_shared.truncate(shared_mark);
         cx.call_mut.truncate(mutable_mark);
-        Some(HExpr { kind: HExprKind::Io { op, args: hargs }, ty, span, at })
+        Some(HExpr { result_loans: None, kind: HExprKind::Io { op, args: hargs }, ty, span, at })
     }
 
     /// `v.sort()`: a stable sort of a writable vector whose elements are ordered (K1).
@@ -9097,13 +9207,13 @@ impl Checker<'_> {
         }
         match place.ty {
             Ty::Vec(v) => match vec_elem(v) {
-                Ty::Int(_) | Ty::Str | Ty::String | Ty::Id(_) => HExpr { kind: HExprKind::Sort(place), ty: Ty::Unit, span, at },
+                Ty::Int(_) | Ty::Str | Ty::String | Ty::Id(_) => HExpr { result_loans: None, kind: HExprKind::Sort(place), ty: Ty::Unit, span, at },
                 Ty::Error => err_expr(span),
                 e if self.protocol(e).is_some_and(|(cmp, _)| cmp.is_some()) => {
                     let func = self.protocol(e).and_then(|(cmp, _)| cmp).expect("checked above");
                     let tramp = self.tramps.len();
                     self.tramps.push(Tramp { func, caps: Vec::new(), elem: e, by_cmp: true, saved: false });
-                    HExpr { kind: HExprKind::SortBy { place, tramp, caps: Vec::new() }, ty: Ty::Unit, span, at }
+                    HExpr { result_loans: None, kind: HExprKind::SortBy { place, tramp, caps: Vec::new() }, ty: Ty::Unit, span, at }
                 }
                 e => {
                     self.diags
@@ -9179,14 +9289,14 @@ impl Checker<'_> {
             let h = self.deref(h);
             let h = if t == Ty::Str && h.ty == Ty::String {
                 let (span, at) = (h.span, h.at);
-                HExpr { kind: HExprKind::StrView(Box::new(h)), ty: Ty::Str, span, at }
+                HExpr { result_loans: None, kind: HExprKind::StrView(Box::new(h)), ty: Ty::Str, span, at }
             } else {
                 h
             };
             self.expect_ty(&h, t);
             hargs.push(h);
         }
-        Ok(HExpr { kind: HExprKind::Call2 { method, recv: Box::new(recv), args: hargs }, ty, span, at })
+        Ok(HExpr { result_loans: None, kind: HExprKind::Call2 { method, recv: Box::new(recv), args: hargs }, ty, span, at })
     }
 
     fn conversion_body(&mut self, to: IntTy, checked: bool, args: &[Expr], at: Span, span: Span, cx: &mut FnCx) -> HExpr {
@@ -9198,8 +9308,8 @@ impl Checker<'_> {
         let h = self.expr(arg, None, cx);
         match h.ty {
             Ty::Int(from) if checked && from == to => h,
-            Ty::Int(_) => HExpr { kind: HExprKind::Convert { to, checked, expr: Box::new(h) }, ty: Ty::Int(to), span, at },
-            Ty::Float(_) if checked => HExpr { kind: HExprKind::FloatToInt { to, expr: Box::new(h) }, ty: Ty::Int(to), span, at },
+            Ty::Int(_) => HExpr { result_loans: None, kind: HExprKind::Convert { to, checked, expr: Box::new(h) }, ty: Ty::Int(to), span, at },
+            Ty::Float(_) if checked => HExpr { result_loans: None, kind: HExprKind::FloatToInt { to, expr: Box::new(h) }, ty: Ty::Int(to), span, at },
             Ty::Error => err_expr(span),
             other => {
                 let d = self.diags.error("E0001", arg.span, format!("cannot convert `{other}` to `{to}`"));
@@ -9224,7 +9334,7 @@ impl Checker<'_> {
         let h = self.deref(h);
         match h.ty {
             Ty::Float(from) if from == to => h,
-            Ty::Int(_) | Ty::Float(_) => HExpr { kind: HExprKind::ToFloat(Box::new(h)), ty: Ty::Float(to), span, at },
+            Ty::Int(_) | Ty::Float(_) => HExpr { result_loans: None, kind: HExprKind::ToFloat(Box::new(h)), ty: Ty::Float(to), span, at },
             Ty::Error => err_expr(span),
             other => {
                 self.diags.error("E0001", arg.span, format!("cannot convert `{other}` to `{}`", to.name()));

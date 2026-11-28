@@ -1,0 +1,899 @@
+{
+  "schema": "yavo-batch54-delivery/1",
+  "batch": 54,
+  "recorded_at_utc": "2026-11-28T09:45:56.497826+00:00",
+  "baseline_commit": "f0183c07195c658de0d0fc859d79406b53893655",
+  "status": "local_core_passed_ci_pending",
+  "tested_commit": null,
+  "validation_tier": {
+    "routine": "core",
+    "one_time_qualifications": [
+      "complete external Linux P0 ASan+UBSan protocol",
+      "isolated batch52/batch53 paired performance plus current54 PCH observations"
+    ],
+    "next_periodic_full_batch": 55
+  },
+  "delivered": [
+    "Stage0 freezes borrowed-result provenance when an expression is checked; joins reachable value-producing branches before scope cleanup.",
+    "All 34 AST expression kinds audited; Match arms, catch handlers and coalesce RHS share cleanup-boundary validation; replace preserves old-value origins and InoutPlace preserves storage origins.",
+    "Global workflow PYTHONUTF8=1 while explicit UTF-8 protocols and genuine ANSI-default adversarial controls remain active.",
+    "The existing external sanitizer job now requires every current P0 run_* and panic_* entry with its actual cwd, stdin and exact output/panic contract; periodic Full cadence retained.",
+    "Old shared-host performance observations are explicitly unqualified; dedicated hosted-runner experiment records paired order, fresh owned caches, load/process evidence, true child wait4 usage and exact source/toolchain identities.",
+    "CLI writable-home retry resolved EROFS but failed at bwrap NETLINK_ROUTE permissions; API requirements and the user decision are explicit.",
+    "The original eight SH-3 work packages and their original estimated windows are tracked without redefining package closure."
+  ],
+  "coverage": {
+    "original_corpus": {
+      "path": "selfhost/tests/original-corpus.json",
+      "bytes": 116250,
+      "sha256": "a6fef66afce2c2e2d87c6a7df3cd5b98e5bb33f41516c4e945db88931d5669b0"
+    },
+    "summary": {
+      "sources": 622,
+      "stage0_accepted": {
+        "paths": 394,
+        "unique_entry_bytes": 224,
+        "unique_module_graphs": 224
+      },
+      "selfhost_accepted": {
+        "paths": 135,
+        "unique_entry_bytes": 68,
+        "unique_module_graphs": 68
+      },
+      "stage0_rejected": 228,
+      "blocked": {
+        "paths": 259,
+        "unique_entry_bytes": 156,
+        "unique_module_graphs": 156
+      },
+      "analysis_complete": 394,
+      "unresolved_semantics": 259,
+      "accepted_profile_false_positive_paths": 0
+    },
+    "reference_denominator": 394,
+    "coverage_percent": 34.264,
+    "delta_accepted_paths": 0,
+    "delta_module_graphs": 0,
+    "path_set_changes_from_batch53": {
+      "stage0": {
+        "added": [],
+        "removed": []
+      },
+      "selfhost": {
+        "added": [],
+        "removed": []
+      }
+    },
+    "frozen_original_source_paths": 622,
+    "pattern_fixture_safety_reclassifications": [
+      {
+        "id": "patterns53_escaping_view",
+        "stage0": "E0305",
+        "selfhost": "U0001",
+        "source_bytes_changed": false
+      },
+      {
+        "id": "patterns53_escape_local_view",
+        "stage0": "E0303",
+        "selfhost": "U0001",
+        "source_bytes_changed": false
+      },
+      {
+        "id": "patterns53_borrow_wrong_source",
+        "stage0": "E0303",
+        "selfhost": "E0303",
+        "source_bytes_changed": false
+      }
+    ],
+    "analysis_limits": "The 259 blocked entries retain unresolved flow-sensitive/structural/capacity semantics. Modeled candidates are not confirmed unlocks."
+  },
+  "evidence": {
+    "borrow_provenance": {
+      "path": "compiler/validation/batch54-borrow-provenance-2026-11-28.json",
+      "bytes": 79004,
+      "sha256": "14b456c9961beb43cd1f6cd44085e2d52618d276a1d5b5ad9cf733d5e91a76d6"
+    },
+    "cli_writable_environment_probe": {
+      "path": "compiler/validation/batch54-cli-home-probe-2026-11-28.json",
+      "bytes": 7810,
+      "sha256": "c925a785ec6f8d7b647723e9818a50b9365053bf634187f183c167f72f47cc7b"
+    },
+    "api_network_preflight": {
+      "path": "compiler/validation/batch54-api-network-preflight-2026-11-28.json",
+      "bytes": 444,
+      "sha256": "e1029cd959517ebc2ac5d0cb5af4eadc7ce3e1473e8a7a82e80a0dfa930c17c1"
+    },
+    "static_size_attribution": {
+      "path": "compiler/validation/batch54-static-size-2026-11-28.json",
+      "bytes": 39602,
+      "sha256": "3946b223b7e33527d88c5f0300090aaefc64e1025e6de18d52396b512a38a5ed"
+    }
+  },
+  "implementation_file_identities": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "bytes": 17129,
+      "sha256": "501967e91b06607299dbbbd74fcc348708fc83ebfc13554e0a15f3a3da9ca2a0"
+    },
+    {
+      "path": "compiler/src/check.rs",
+      "bytes": 450633,
+      "sha256": "2849c4bc65c19b61bdb6ede7b074cc19187574342db03a297f4b065e900448cb"
+    },
+    {
+      "path": "compiler/tests/borrow_provenance.rs",
+      "bytes": 14240,
+      "sha256": "5503268bc89029fa6202ecc8a89eda06935f85d54f71daa6d42271d73b0c2f91"
+    },
+    {
+      "path": "compiler/tests/p0/errors_expression_loans.yv",
+      "bytes": 2046,
+      "sha256": "0ba31377c1174ef791a0c048332028d3adc280085c4dfd35528e6f3222b4025f"
+    },
+    {
+      "path": "selfhost/tests/cases.json",
+      "bytes": 262260,
+      "sha256": "f59dc941e31defa2c5544a3faeba66bc15ba23bb786c3d0b9065ce7638782370"
+    },
+    {
+      "path": "selfhost/tests/patterns53/CONTRACT.md",
+      "bytes": 5027,
+      "sha256": "c4b2e5f83b99bcdc24da151e13b6faff78db69f63cef88b9e83e9acb833a4ef2"
+    },
+    {
+      "path": "selfhost/tests/patterns53/cases.json",
+      "bytes": 12572,
+      "sha256": "30a7796647efde416e46701f704558fef4b34a70e173301ff0b7e5febc358d93"
+    },
+    {
+      "path": "tools/ci/paired_performance.py",
+      "bytes": 36556,
+      "sha256": "f4c5fe66b3f64c9efc5c7a841b958a1dca7153a0f56d90ac57db683c6431232f"
+    },
+    {
+      "path": "tools/ci/paired_performance_test.py",
+      "bytes": 10227,
+      "sha256": "fa53bc7db3563316051b646ebca2af890ffed36aa3fa7df1c658ba3fb8442c42"
+    },
+    {
+      "path": "tools/ci/perf_support.py",
+      "bytes": 26624,
+      "sha256": "bd566adbcbeea168857bda0497303933586e5f9be467e37bc846ebf6ccb71efd"
+    },
+    {
+      "path": "tools/ci/perf_wait4.c",
+      "bytes": 4491,
+      "sha256": "2beeac075d84553e30c79d8c74d2cc8d87b289331ec6dc876bb5a89e6a45df83"
+    },
+    {
+      "path": "tools/ci/run.py",
+      "bytes": 13092,
+      "sha256": "7d42117f228f0085177920a82fc686b5595925e7dead0a6e5ccbd79c3fddeb53"
+    },
+    {
+      "path": "tools/ci/selfhost_metrics.py",
+      "bytes": 9072,
+      "sha256": "3d7fd34ee22f72f1cf980531ad0cbc4f19e30a0f360f7c43cd116169ccec5529"
+    },
+    {
+      "path": "tools/ci/subset_encoding_test.py",
+      "bytes": 7693,
+      "sha256": "6cf8dbe97e45fe704277607a353cc96f78070a205b34b7dfa3389a580e2918dc"
+    },
+    {
+      "path": "tools/ci/validation-policy.json",
+      "bytes": 690,
+      "sha256": "8a2edd0a5986bb4aee77042dfcdd74ef39e5835d98d1dd8d3f66abf4041fe7e3"
+    },
+    {
+      "path": "tools/ci/validation_plan.py",
+      "bytes": 2575,
+      "sha256": "daa78948d53b6cc70e7784d09567bbf38553bd4d496641cdcef947007889c876"
+    },
+    {
+      "path": "tools/ci/validation_plan_test.py",
+      "bytes": 6475,
+      "sha256": "eb04da45ecd84c97cf71161d23407b4cca8ab7ffb72ab8c4aaaee454b6d53e27"
+    },
+    {
+      "path": "tools/sanitizers/README.md",
+      "bytes": 5894,
+      "sha256": "78fbbd12497a88fc8e70fc316597ea3a9d7a309120d98deecb3e1bd4f068398b"
+    },
+    {
+      "path": "tools/sanitizers/export.pl",
+      "bytes": 7320,
+      "sha256": "a7be6290c4c39a9d75b3ac2b9a4d73c12e7684820a35aec8694578136c1b0ab6"
+    },
+    {
+      "path": "tools/sanitizers/p0_contract.py",
+      "bytes": 6411,
+      "sha256": "b10baa2afdcc5afd153877cfa8e92d8f5f0336dc24b5016673033e18e5a511b9"
+    },
+    {
+      "path": "tools/sanitizers/p0_contract_test.py",
+      "bytes": 6677,
+      "sha256": "15fdf24f81ea46a4c5dfc0925568c313bf93afb4f1d2e4d67debefaf267ead71"
+    },
+    {
+      "path": "tools/sanitizers/run.py",
+      "bytes": 15050,
+      "sha256": "c7c7bb0dae8957e1f737d8fcb578cc715422f80f3a49fe605c9c94993a024c61"
+    }
+  ],
+  "local_core": {
+    "receipt": {
+      "path": "compiler/target/ci/selfhost-batch54-final/receipt.json",
+      "bytes": 1404959,
+      "sha256": "de4d0d85ee714fcf5ab51df7a2345c20504ded5579edabbb1d63a7b9f845e991"
+    },
+    "subset_sweep": {
+      "path": "compiler/target/ci/selfhost-batch54-final/subset-sweep.json",
+      "bytes": 1507986,
+      "sha256": "534ccef38432b69e194b61dfa0df2101ca750ee124cc8602fa5633738c11c9d1"
+    },
+    "profile_calibration": {
+      "path": "compiler/target/ci/selfhost-batch54-final/profile-calibration.json",
+      "bytes": 196828,
+      "sha256": "c718cde7029aaf7a8b785dda81c44346a6caa4e2856cc5116b4c4ea433ddf8c9"
+    },
+    "metrics": {
+      "path": "compiler/target/ci/selfhost-batch54-final/metrics.json",
+      "bytes": 19191,
+      "sha256": "e41a241a9bcb19c9cf1e91809c79f334acafa4be279ac9a43750a43d75a49537"
+    },
+    "summary": {
+      "status": "passed",
+      "validation_tier": "core",
+      "passed": 90,
+      "failed": 0,
+      "total": 90,
+      "checks_passed": 13,
+      "checks_failed": 0,
+      "checks_skipped": 0,
+      "case_counts": {
+        "panic": 10,
+        "reject": 20,
+        "run": 54,
+        "shared_unsupported": 2,
+        "unsupported": 4
+      }
+    },
+    "case_selection": {
+      "available_cases": 1209,
+      "baseline_commit": "f0183c07195c658de0d0fc859d79406b53893655",
+      "reasons": {
+        "aggregate_copy": [
+          "semantic spine"
+        ],
+        "aggregate_functions": [
+          "semantic spine"
+        ],
+        "aggregate_nested_forward": [
+          "semantic spine"
+        ],
+        "annotation_mismatch": [
+          "semantic spine"
+        ],
+        "arithmetic": [
+          "semantic spine"
+        ],
+        "assertion": [
+          "semantic spine"
+        ],
+        "borrowed_index_temporary_lifetimes": [
+          "semantic spine"
+        ],
+        "borrowed_index_token_scan": [
+          "semantic spine"
+        ],
+        "byte_conversions": [
+          "semantic spine"
+        ],
+        "byte_vector_lifecycle": [
+          "semantic spine"
+        ],
+        "constructor_wrong_nominal": [
+          "semantic spine"
+        ],
+        "control": [
+          "semantic spine"
+        ],
+        "division_overflow": [
+          "semantic spine"
+        ],
+        "division_zero": [
+          "semantic spine"
+        ],
+        "duplicate_function": [
+          "semantic spine"
+        ],
+        "enum_nominal_context": [
+          "semantic spine"
+        ],
+        "evaluation_order": [
+          "semantic spine"
+        ],
+        "immutable_assignment": [
+          "semantic spine"
+        ],
+        "inout_params": [
+          "semantic spine"
+        ],
+        "integer_limits": [
+          "semantic spine"
+        ],
+        "integer_out_of_range": [
+          "semantic spine"
+        ],
+        "invalid_escape": [
+          "semantic spine"
+        ],
+        "missing_return": [
+          "semantic spine"
+        ],
+        "model_original_source": [
+          "semantic spine"
+        ],
+        "model_original_traversal": [
+          "semantic spine"
+        ],
+        "modules_panic_in_module": [
+          "semantic spine"
+        ],
+        "negative_out_of_range": [
+          "semantic spine"
+        ],
+        "newline_rules": [
+          "semantic spine"
+        ],
+        "overflow_add": [
+          "semantic spine"
+        ],
+        "overflow_neg": [
+          "semantic spine"
+        ],
+        "owned_argument_order": [
+          "semantic spine"
+        ],
+        "owned_branch_cleanup": [
+          "semantic spine"
+        ],
+        "owned_branch_move_use": [
+          "semantic spine"
+        ],
+        "owned_field_defaults": [
+          "semantic spine"
+        ],
+        "owned_field_move": [
+          "semantic spine"
+        ],
+        "owned_loop_cleanup": [
+          "semantic spine"
+        ],
+        "owned_loop_move": [
+          "semantic spine"
+        ],
+        "owned_nested_fields": [
+          "semantic spine"
+        ],
+        "owned_parameter_move": [
+          "semantic spine"
+        ],
+        "owned_push_alias": [
+          "semantic spine"
+        ],
+        "owned_return_cleanup": [
+          "semantic spine"
+        ],
+        "owned_string_returns": [
+          "semantic spine"
+        ],
+        "owned_string_utf8_nul": [
+          "semantic spine"
+        ],
+        "owned_struct_move": [
+          "semantic spine"
+        ],
+        "owned_temporary_borrows": [
+          "semantic spine"
+        ],
+        "owned_use_after_move": [
+          "semantic spine"
+        ],
+        "owned_vec_literal_temporaries": [
+          "semantic spine"
+        ],
+        "owned_vec_recursive_node": [
+          "semantic spine"
+        ],
+        "owned_vec_string_clone_lifetimes": [
+          "semantic spine"
+        ],
+        "patterns53_borrow_wrong_source": [
+          "new or changed expectation"
+        ],
+        "patterns53_escape_local_view": [
+          "new or changed expectation"
+        ],
+        "patterns53_escaping_view": [
+          "new or changed expectation"
+        ],
+        "recursion": [
+          "semantic spine"
+        ],
+        "recursive_struct_direct": [
+          "semantic spine"
+        ],
+        "result_argument_try_order": [
+          "semantic spine"
+        ],
+        "result_catch_return": [
+          "semantic spine"
+        ],
+        "result_forms": [
+          "semantic spine"
+        ],
+        "result_multilevel_try": [
+          "semantic spine"
+        ],
+        "result_owned_string": [
+          "semantic spine"
+        ],
+        "result_owned_vec": [
+          "semantic spine"
+        ],
+        "scopes": [
+          "semantic spine"
+        ],
+        "shift_range": [
+          "semantic spine"
+        ],
+        "short_circuit": [
+          "semantic spine"
+        ],
+        "sort45_unknown_name": [
+          "semantic spine"
+        ],
+        "std_catch_args": [
+          "semantic spine"
+        ],
+        "string_view_binding": [
+          "semantic spine"
+        ],
+        "strings": [
+          "semantic spine"
+        ],
+        "struct_basic": [
+          "semantic spine"
+        ],
+        "take_places": [
+          "semantic spine"
+        ],
+        "text_slice_boundary": [
+          "semantic spine"
+        ],
+        "text_slice_owned_print": [
+          "semantic spine"
+        ],
+        "text_slices": [
+          "semantic spine"
+        ],
+        "tuple43_pair_len": [
+          "semantic spine"
+        ],
+        "tuple43_pair_vec": [
+          "semantic spine"
+        ],
+        "unit_return": [
+          "semantic spine"
+        ],
+        "unknown_name": [
+          "semantic spine"
+        ],
+        "unsupported_enum_payload": [
+          "semantic spine"
+        ],
+        "unsupported_generic": [
+          "semantic spine"
+        ],
+        "unsupported_optional_field": [
+          "semantic spine"
+        ],
+        "unsupported_optional_match": [
+          "semantic spine"
+        ],
+        "unsupported_result_vec_element": [
+          "semantic spine"
+        ],
+        "unterminated_string": [
+          "semantic spine"
+        ],
+        "vec_assignment_bounds_order": [
+          "semantic spine"
+        ],
+        "vec_clone_independence": [
+          "semantic spine"
+        ],
+        "vec_control_flow_cleanup": [
+          "semantic spine"
+        ],
+        "vec_index_evaluation_order": [
+          "semantic spine"
+        ],
+        "vec_loop_move_reinitialize": [
+          "semantic spine"
+        ],
+        "vec_upper_index": [
+          "semantic spine"
+        ],
+        "vector_basic": [
+          "semantic spine"
+        ],
+        "while_condition": [
+          "semantic spine"
+        ]
+      },
+      "selected_cases": 90
+    },
+    "checks": [
+      {
+        "id": "embedded_runtime_freshness",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "id": "locked_zig",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "id": "build_yavo_frontend",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "id": "self_compilation_fixed_point",
+        "passed": true,
+        "stage2_c_equals_stage3_c": true,
+        "status": "passed"
+      },
+      {
+        "id": "stage3_binary_reproduces_stage2",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "id": "lexer_units",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "id": "lexer_units_selfhost",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "id": "input_output_guard",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "id": "existing_output_guard",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "id": "dot_alias_output_guard",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "id": "hardlink_output_guard",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "id": "symlink_output_guard",
+        "passed": true,
+        "status": "passed"
+      },
+      {
+        "id": "inputs_unchanged_during_run",
+        "passed": true,
+        "status": "passed"
+      }
+    ],
+    "fixed_point": {
+      "stage2_c": {
+        "bytes": 1494217,
+        "sha256": "3c4b78958231fdbf0ca14ca1badeeaef3ab6d838e61e469b2d57f20b773cfdf7"
+      },
+      "stage3_c": {
+        "bytes": 1494217,
+        "sha256": "3c4b78958231fdbf0ca14ca1badeeaef3ab6d838e61e469b2d57f20b773cfdf7"
+      },
+      "stage2_sha256": "a50a085938ec946656d090dc9979ec2dfbd5e9fda8f3c00a5872743617e095e3",
+      "stage3_sha256": "a50a085938ec946656d090dc9979ec2dfbd5e9fda8f3c00a5872743617e095e3"
+    },
+    "calibration_summary": {
+      "passed": 399,
+      "failed": 0,
+      "skipped": 3
+    },
+    "source_inputs": {
+      "manifest_sha256": "f59dc941e31defa2c5544a3faeba66bc15ba23bb786c3d0b9065ce7638782370",
+      "harness_sha256": "986509439ec26395af5304db7c1572275b7fc99de1aad657e3f48a90d52a86dd",
+      "core_selector_sha256": "1187d1561aee60b43e593b84f652d3f0c618147ca3cc093137abe7db76251aa6",
+      "runtime_sha256": "4b490ca18f810211b35acca525e9ec1b1284e1488dd38d9ce6e391c78ac79b0a",
+      "toolchain_lock_sha256": "a9bbe83e644b0e1cee19c8dba8b5157eaed3e9ddc71b96d8aab2b2d2bb15f53c",
+      "stage0": {
+        "path": "/data1/workspace/github/workspace/yavo/compiler/target/release/yavo",
+        "sha256": "9956abbacb30c23bf4aeb588ef4aa2580c6a4962a6b6407b6f4f46e14ed475cb"
+      },
+      "zig": {
+        "expected_version": "0.17.1",
+        "path": "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+        "sha256": "58959f01285c05a74276f09327b551d42ed6006bf325a78dc661a024e314987b"
+      }
+    },
+    "performance_qualification": {
+      "status": "unqualified",
+      "github_hosted": false,
+      "run_id": null,
+      "run_attempt": null,
+      "head_sha": null,
+      "runner_os": null,
+      "runner_arch": null,
+      "runner_name": null,
+      "image_os": null,
+      "image_version": null,
+      "cpu_model": "AMD EPYC Processor",
+      "cpu_model_source": "/proc/cpuinfo",
+      "cpu_count": 4,
+      "affinity": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "isolation_evidence": "not demonstrated",
+      "eligible_for_controlled_performance_trend": false
+    }
+  },
+  "targeted_validation": {
+    "borrow_provenance_groups": {
+      "passed": 7,
+      "failed": 0
+    },
+    "existing_mutref_returns_groups": {
+      "passed": 6,
+      "failed": 0
+    },
+    "p0_exact_diagnostic_entries": {
+      "passed": 17,
+      "failed": 0
+    },
+    "patterns53_reference_contracts": {
+      "passed": 59,
+      "failed": 0,
+      "run": 32,
+      "reject": 27
+    },
+    "adversarial_encoding": {
+      "current_passed": 3,
+      "historical_negative_control_detected": [
+        "two UnicodeDecodeError failures",
+        "one diagnostic corruption"
+      ]
+    },
+    "format_observation": "cargo fmt --check reports existing repository-wide style differences in 44 files; HEAD check.rs also independently fails rustfmt. No broad style rewrite was made. git diff --check passes. This is not a validation gate.",
+    "isolated_performance_microcontrols": {
+      "passed": 12,
+      "failed": 0,
+      "skipped": 0,
+      "execution_environment": "main execution environment with actual GCC; no shared-server performance samples"
+    },
+    "p0_sanitizer_protocol_microcontrols": {
+      "passed": 3,
+      "failed": 0,
+      "execution_environment": "main execution environment with actual GCC; clean/UAF/UBSan controls and cwd/EOF contract"
+    },
+    "performance_mapping_static_controls": {
+      "batch52_functions": 300,
+      "batch53_functions": 316,
+      "batch52_unique_body_anchors": 477,
+      "batch53_unique_body_anchors": 478,
+      "modules_each": 9,
+      "main_function_index_each": 6,
+      "sources": "existing exact historical source and C bytes; no recompile or performance measurement"
+    }
+  },
+  "ci": {
+    "status": "not_started",
+    "run": null,
+    "native_core": null,
+    "external_p0_sanitizers": null,
+    "paired_performance": null
+  },
+  "metrics": {
+    "generated_c_bytes": 1494217,
+    "binary_bytes": 766512,
+    "size_delta_from_batch53": {
+      "generated_c_bytes": 0,
+      "binary_bytes": 0
+    },
+    "controlled_timing_status": "awaiting isolated CI; local observations are excluded",
+    "unqualified_local_observation": {
+      "frontend": {
+        "samples": 5,
+        "p50_seconds": 0.0982758142054081,
+        "p95_seconds": 0.09891381487250328,
+        "peak_rss_bytes": 30937088,
+        "rss_observations": 5
+      },
+      "backend_observation": {
+        "argv": [
+          "/home/appops/.yavo/toolchains/zig-x86_64-linux-0.17.1/zig",
+          "cc",
+          "-std=c17",
+          "-fno-strict-aliasing",
+          "-DYV_ALLOC_CHECK",
+          "-O2",
+          "-s",
+          "-I",
+          "/data1/workspace/github/workspace/yavo/compiler/runtime",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch54-final/metrics-qjy7gx61/sample-5.c",
+          "-o",
+          "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch54-final/metrics-qjy7gx61/yavo-selfhost"
+        ],
+        "cwd": "/data1/workspace/github/workspace/yavo",
+        "environment": {
+          "YAVO_NO_CACHE": "1",
+          "YAVO_ALLOC_CHECK": "1"
+        },
+        "exit_code": 0,
+        "timed_out": false,
+        "launch_error": null,
+        "elapsed_seconds": 14.243610624223948,
+        "peak_process_memory_bytes": 199413760,
+        "memory_measurement": "wait4 ru_maxrss (KiB converted to bytes); OS-reported RSS for the waited child; not a simultaneous process-tree RSS sum",
+        "stdout": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch54-final/metrics-qjy7gx61/backend/stdout.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stderr": {
+          "path": "/data1/workspace/github/workspace/yavo/compiler/target/ci/selfhost-batch54-final/metrics-qjy7gx61/backend/stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdin": {
+          "kind": "devnull"
+        },
+        "host_before": {
+          "timestamp_utc": "2026-11-28T09:32:17.969970+00:00",
+          "load_average": [
+            1.09619140625,
+            0.60888671875,
+            0.64306640625
+          ]
+        },
+        "host_after": {
+          "timestamp_utc": "2026-11-28T09:32:32.214761+00:00",
+          "load_average": [
+            1.07421875,
+            0.62890625,
+            0.64892578125
+          ]
+        }
+      },
+      "environment_qualification": {
+        "status": "unqualified",
+        "github_hosted": false,
+        "run_id": null,
+        "run_attempt": null,
+        "head_sha": null,
+        "runner_os": null,
+        "runner_arch": null,
+        "runner_name": null,
+        "image_os": null,
+        "image_version": null,
+        "cpu_model": "AMD EPYC Processor",
+        "cpu_model_source": "/proc/cpuinfo",
+        "cpu_count": 4,
+        "affinity": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "isolation_evidence": "not demonstrated",
+        "eligible_for_controlled_performance_trend": false
+      }
+    },
+    "historical_size_explanation": {
+      "batch52_to_batch53_elf_growth_bytes": 33360,
+      "text_growth_bytes": 32560,
+      "rodata_growth_bytes": 374,
+      "text_fraction_of_total_growth": 0.9760191846522782,
+      "function_level_attribution": "awaiting same-toolchain isolated CI"
+    }
+  },
+  "cost_experiment": {
+    "status": "awaiting_user_api_configuration_decision",
+    "metered_participant_sessions": 0,
+    "paid_api_calls": 0,
+    "cli_retry": {
+      "all_seven_directories_equal_and_writable": true,
+      "only_auth_file_copied": true,
+      "authentication_copy_removed": true,
+      "erofs_reproduced": false,
+      "blocking_error": "bwrap: loopback: Failed to create NETLINK_ROUTE socket: Operation not permitted"
+    },
+    "api_network_preflight": {
+      "credentials_sent": false,
+      "model_generation_requested": false,
+      "http_status": 401,
+      "meaning": "HTTPS API endpoint is reachable; key permissions and billing are not yet tested"
+    },
+    "required_user_inputs": [
+      "Project API key supplied through OPENAI_API_KEY or a secret store",
+      "Exact model ID and reasoning effort, identical for both languages",
+      "Total USD budget cap including failed requests, qualification and repair rounds"
+    ],
+    "proposed_not_authorized_defaults": {
+      "model": "gpt-6.2-sol",
+      "reasoning_effort": "high",
+      "total_usd_cap": 10
+    },
+    "design": {
+      "paired_tasks": 12,
+      "languages": [
+        "Yavo",
+        "Rust"
+      ],
+      "max_rounds_each": 4,
+      "raw_provider_usage_required": true
+    },
+    "details": "experiments/cost-pilot-2026-11-28/README.md"
+  },
+  "sh3": {
+    "completed_work_packages": 0,
+    "remaining_work_packages": 8,
+    "total_work_packages": 8,
+    "ledger": "compiler/validation/sh3-progress.json",
+    "original_target_completion_batches": [
+      65,
+      66
+    ],
+    "schedule_note": "Batch54 correctness/measurement/CI corrections replace the originally planned tuple extension. Original estimates remain visible; tuple/composite work resumes after correction."
+  },
+  "known_gaps": [
+    "SH-3 has not replaced the Rust stage0 default; all eight complete package acceptance criteria remain open despite partial implementation.",
+    "Selfhost still conservatively rejects the two unsafe branch-owned view cases with U0001 while stage0 now emits precise borrow errors.",
+    "General Optional/Result/Tuple payload composition, references, generics/interfaces and other original-corpus features remain open.",
+    "Standalone if expressions and standalone block values are not legal stage0 expression syntax; they are E0020 boundaries, not counted as borrow-safety negatives.",
+    "macOS/Windows Full Rust regressions still use selected suites. Windows env_invalid_utf8 and stdin_read_error POSIX scenarios lack native equivalents; Windows RSS remains unavailable.",
+    "The agent cost hypothesis has zero provider-metered paired sessions; the next action requires the user API key/model/budget decision."
+  ],
+  "next_batch": [
+    "Resume tuple and aggregate ownership work from complete blocker sets; report confirmed original-source unlocks only.",
+    "Batch55 is the scheduled Full milestone, including complete external Linux P0 run/panic sanitizer coverage.",
+    "Close or explicitly re-estimate native platform gaps; retain original eight-package schedule and coverage trend."
+  ],
+  "failures_and_corrections": [
+    {
+      "issue": "Prior stage0 Match result origins could be lost across scope cleanup and branch merge.",
+      "correction": "Freeze expression result origins and validate branch-produced views before cleanup; preserve InoutPlace and old-value mutator origins."
+    },
+    {
+      "issue": "Historical shared-host performance values lack whole-interval isolation evidence.",
+      "correction": "Preserve raw records but exclude time/RSS from controlled trends; run exact-source paired measurements on a dedicated CI job."
+    },
+    {
+      "issue": "Writable-home CLI retry passed the EROFS failure point but thread/start failed in bwrap.",
+      "correction": "Deleted temporary auth copy, stopped CLI retries, confirmed unauthenticated API reachability, and made key/model/budget decision explicit."
+    }
+  ]
+}

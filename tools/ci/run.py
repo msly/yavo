@@ -20,7 +20,7 @@ OUTPUT = COMPILER / "target" / "ci"
 REPORT = OUTPUT / "results.json"
 NATIVE_TESTS = [
     "p0", "alloc_check", "arena", "modules", "index_assignment",
-    "mutref_returns", "collections", "fix", "runtime_io_concurrency", "stdlib_io",
+    "mutref_returns", "borrow_provenance", "collections", "fix", "runtime_io_concurrency", "stdlib_io",
     "fs_create_new", "selfhost_blockers", "system",
 ]
 SUMMARY = re.compile(
@@ -235,17 +235,18 @@ def main():
                 break
         report["status"] = "failed" if failed else "passed"
     else:
-        report["scope"] = "Independent Linux GCC ASan+UBSan of all exported P0 run/panic fixtures; pinned Zig conformance unchanged"
+        report["scope"] = "Independent Linux GCC ASan+UBSan of every current P0 run/panic fixture with original stdin and Cargo-package cwd; pinned Zig conformance unchanged"
         bundle = OUTPUT / "sanitizers-bundle.json"
         run_dir = OUTPUT / "sanitizers-run"
         row, _ = invoke(report, "sanitizers-export", ["perl", "tools/sanitizers/export.pl", "--out", str(bundle)], cwd=ROOT)
         if row["exit_code"] == 0:
             row, _ = invoke(report, "sanitizers-run", [sys.executable, "tools/sanitizers/run.py", str(bundle),
-                             "--cc", "gcc", "--jobs", "2", "--out", str(run_dir)], cwd=ROOT)
+                             "--cc", "gcc", "--jobs", "2", "--p0-root", str(ROOT), "--out", str(run_dir)], cwd=ROOT)
         sanitizer_report = run_dir / "report.json"
         if sanitizer_report.is_file():
             details = json.loads(sanitizer_report.read_text(encoding="utf-8"))
-            report["sanitizers"] = {key: details.get(key) for key in ("status", "passed", "failed", "capabilities")}
+            report["sanitizers"] = {key: details.get(key) for key in
+                                    ("status", "passed", "failed", "capabilities", "p0_contract", "p0_coverage")}
         report["status"] = "passed" if row["exit_code"] == 0 and report.get("sanitizers", {}).get("status") == "passed" else "failed"
     write_report(report)
     summarize(report)
