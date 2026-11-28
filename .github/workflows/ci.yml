@@ -70,8 +70,9 @@ jobs:
     needs: plan
     name: Native ${{ matrix.platform }}
     runs-on: ${{ matrix.runner }}
-    # Full milestone runs retain the larger timeout; core omits duplicate product gates.
-    timeout-minutes: 90
+    # Batch53 Windows finished every Full gate and upload in 90m19s.
+    # Leave headroom for Full validation and archiving; retain the Core budget.
+    timeout-minutes: ${{ needs.plan.outputs.tier == 'full' && 120 || 90 }}
     strategy:
       fail-fast: false
       matrix:
